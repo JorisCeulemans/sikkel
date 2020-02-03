@@ -83,16 +83,17 @@ data IsValue {n : ℕ} : Expr n → Set where
   valString : (s : String) → IsValue (exString s)
   valOut    : IsValue exOut
   valLam    : (body : Expr (suc n)) → IsValue (ex-lam body)
-
+-}
 -- Value : Set
 -- Value = Σ[ e ∈ Expr zero ] IsValue e
 
-SemValue-open : Premonad lzero → Open-rec
-SemValue-open m n IH = Bool +
-                       (String +
-                       ((String → type m ⊤) +
-                       (((k : ℕ) (kn-ineq : k < n) → IH k kn-ineq → type m (IH , n [≤ k , kn-ineq ])) +
-                       (⊤ + ⊤))))
+{-
+SemValue-open : ?
+SemValue-open n IH = Bool +
+                     (String +
+                     ((String → type m ⊤) +
+                     (((k : ℕ) (kn-ineq : k < n) → IH k kn-ineq → type m (IH , n [≤ k , kn-ineq ])) +
+                     (⊤ + ⊤))))
 
 SemValue : Premonad lzero → ℕ → Set
 SemValue m = rec (SemValue-open m)
