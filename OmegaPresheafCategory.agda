@@ -6,7 +6,8 @@ open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂) renaming (_,_ t
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
 open import Level renaming (suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Axiom.Extensionality.Propositional
 
 variable
   ℓ : Level
@@ -63,6 +64,7 @@ func (empty-subst Γ) = λ _ → lift tt
 naturality (empty-subst Γ) = refl
 
 record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
+  constructor MkTy
   field
     type : (n : ℕ) (γ : Γ ⟨ n ⟩) → Set ℓ
     morph : ∀ {m n} (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) → type n γ → type m (Γ ⟪ m≤n ⟫ γ)
@@ -79,10 +81,45 @@ T ⟪ ineq , γ ⟫ t = (T ⟪ ineq , γ ⟫) t
 
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
-morph (T [ σ ]) ineq δ rewrite sym (cong-app (naturality σ {ineq = ineq}) δ) = T ⟪ ineq , func σ δ ⟫
+morph (T [ σ ]) ineq δ t = subst (λ x → type T _ (x δ)) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ t)
+
+subst-trans : ∀ {a p} {A : Set a} {x y z : A} {P : A → Set p} {p : P x} (eq₁ : x ≡ y) (eq₂ : y ≡ z) → subst P (trans eq₁ eq₂) p ≡ subst P eq₂ (subst P eq₁ p)
+subst-trans refl refl = refl
 
 subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} {τ : Γ ⇒ Θ} {σ : Δ ⇒ Γ} → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-subst-comp = {!!}
+subst-comp {ℓ} {Δ} {Γ} {Θ} {T} {τ} {σ} =
+    cong (MkTy _) (funextI (funextI (funext λ ineq → funext′ λ δ → funext′ λ t →
+      subst (λ x → type T _ (func τ (x δ))) (naturality σ)
+      (subst (λ x → type T _ (x (func σ δ))) (naturality τ)
+       (morph T ineq (func τ (func σ δ)) t))
+       ≡⟨ subst-∘ (naturality σ)  ⟩
+      subst (λ x → type T _ (x δ)) (cong (func τ ∘_) (naturality σ))
+      (subst (λ x → type T _ (x (func σ δ))) (naturality τ)
+       (morph T ineq (func τ (func σ δ)) t))
+       ≡⟨ cong (subst (λ x → type T _ (x δ)) (cong (func τ ∘_) (naturality σ))) (subst-∘ (naturality τ)) ⟩
+      subst (λ x → type T _ (x δ)) (cong (func τ ∘_) (naturality σ))
+      (subst (λ x → type T _ (x δ)) (cong (_∘ func σ) (naturality τ))
+       (morph T ineq (func τ (func σ δ)) t))
+       ≡⟨ subst-subst (cong (_∘ func σ) (naturality τ))  ⟩
+      subst (λ x → type T _ (x δ))
+        (trans (cong (_∘ func σ) (naturality τ)) (cong (func τ ∘_) (naturality σ)))
+        (morph T ineq (func τ (func σ δ)) t)
+       ≡⟨ cong
+            (λ p →
+               subst (λ x → type T _ (x δ)) p
+               (morph T ineq (func τ (func σ δ)) t))
+            (cong (trans (cong (_∘ func σ) (naturality τ))) (sym (trans-reflʳ (cong (func τ ∘_) (naturality σ))))) ⟩
+       subst (λ x → type T _ (x δ))
+         (trans (cong (_∘ func σ) (naturality τ))
+           (trans (cong (func τ ∘_) (naturality σ))
+         refl))
+       (morph T ineq (func τ (func σ δ)) t) ∎
+      )))
+    where
+      open ≡-Reasoning
+      postulate funext : Extensionality _ _
+                funext′ : Extensionality _ _
+                funextI : ExtensionalityImplicit _ _
 
 record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set ℓ where
   field
@@ -96,9 +133,9 @@ t ⟨ n , γ ⟩' = term t n γ
 _⟪_,_⟫' : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟪ ineq , γ ⟫ (t ⟨ n , γ ⟩') ≡ t ⟨ m , Γ ⟪ ineq ⟫ γ ⟩'
 t ⟪ ineq , γ ⟫' = naturality t ineq γ
 
-_[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
-term (t [ σ ]') = λ n δ → t ⟨ n , func σ δ ⟩'
-naturality (t [ σ ]') ineq δ rewrite sym (cong-app (naturality σ {ineq = ineq}) δ) = t ⟪ ineq , func σ δ ⟫'
+-- _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
+-- term (t [ σ ]') = λ n δ → t ⟨ n , func σ δ ⟩'
+-- naturality (t [ σ ]') ineq δ rewrite sym (cong-app (naturality σ {ineq = ineq}) δ) = t ⟪ ineq , func σ δ ⟫'
 
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
 set (Γ ,, T) = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
