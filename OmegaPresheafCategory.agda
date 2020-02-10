@@ -10,7 +10,7 @@ open import Level renaming (suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 variable
-  ℓ : Level
+  ℓ ℓ' : Level
   m n : ℕ
 
 infixl 15 _,,_
@@ -116,8 +116,8 @@ subst-comp {ℓ} {Δ} {Γ} {Θ} {T} {τ} {σ} = {!!}
 subst-trans : ∀ {a p} {A : Set a} {x y z : A} {P : A → Set p} {p : P x} (eq₁ : x ≡ y) (eq₂ : y ≡ z) → subst P (trans eq₁ eq₂) p ≡ subst P eq₂ (subst P eq₁ p)
 subst-trans refl refl = refl
 
-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} {τ : Γ ⇒ Θ} {σ : Δ ⇒ Γ} → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-subst-comp {ℓ} {Δ} {Γ} {Θ} {T} {τ} {σ} =
+subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
+subst-comp T τ σ =
     cong (MkTy _) (funextI (funextI (funext λ ineq → funext′ λ δ → funext′ λ t →
       subst (λ x → T ⟨ _ , func τ (x δ) ⟩) (naturality σ)
       (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (naturality τ)
@@ -163,16 +163,23 @@ t ⟨ n , γ ⟩' = term t n γ
 _⟪_,_⟫' : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟪ ineq , γ ⟫ (t ⟨ n , γ ⟩') ≡ t ⟨ m , Γ ⟪ ineq ⟫ γ ⟩'
 t ⟪ ineq , γ ⟫' = naturality t ineq γ
 
+cong-d : {A : Set ℓ} {B : A → Set ℓ'}
+         (f : (x : A) → B x)
+         {a a' : A} (e : a ≡ a') →
+         subst B e (f a) ≡ f a'
+cong-d f refl = refl
+
 _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
 term (t [ σ ]') = λ n δ → t ⟨ n , func σ δ ⟩'
 naturality (_[_]'  {Δ = Δ}{Γ}{T} t σ) ineq δ = 
-  (T [ σ ]) ⟪ ineq , δ ⟫ (t [ σ ]' ⟨ _ , δ ⟩') ≡⟨⟩
-  subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ (t ⟨ _ , func σ δ ⟩')) ≡⟨ cong (subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq})) (t ⟪ ineq , func σ δ ⟫') ⟩
-  subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq}) (t ⟨ _ , Γ ⟪ ineq ⟫ (func σ δ) ⟩') ≡⟨ {!!} ⟩
+  (T [ σ ]) ⟪ ineq , δ ⟫ (t [ σ ]' ⟨ _ , δ ⟩')
+        ≡⟨⟩
+  subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ (t ⟨ _ , func σ δ ⟩'))
+        ≡⟨ cong (subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq})) (t ⟪ ineq , func σ δ ⟫') ⟩
+  subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq}) (t ⟨ _ , Γ ⟪ ineq ⟫ (func σ δ) ⟩')
+        ≡⟨ cong-d (λ x → t ⟨ _ , x δ ⟩') (naturality σ) ⟩
   t ⟨ _ , func σ (Δ ⟪ ineq ⟫ δ) ⟩' ∎
   where open ≡-Reasoning
-
--- t ⟪ ineq , func σ δ ⟫'
 
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
 set (Γ ,, T) = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
@@ -189,7 +196,7 @@ term ξ = λ _ → proj₂
 naturality ξ = λ _ _ → refl
 
 ctx-ext-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))
-ctx-ext-subst τ = [ π ⊚ τ , {!ξ [ τ ]'!} ]
+ctx-ext-subst {Δ = Δ}{Γ}{T} τ = [ π ⊚ τ , subst (Tm Δ) (subst-comp T π τ) (ξ {Γ = Γ} [ τ ]') ]
 
 ctx-ext-subst⁻¹ : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
 func (ctx-ext-subst⁻¹ [ σ , t ]) = λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ]
