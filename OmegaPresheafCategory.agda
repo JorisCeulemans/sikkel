@@ -1,6 +1,7 @@
 module OmegaPresheafCategory where
 
 open import Axiom.Extensionality.Propositional
+open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
@@ -204,12 +205,12 @@ subst2 : ∀ {a b c} {A : Set a} {B : A → Set b} (C : (x : A) → B x → Set 
          C x y → C x' y'
 subst2 C refl refl c = c
 
-cong₂-d : ∀ {a b c d} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c} {D : A → Set d}
+cong₃-d : ∀ {a b c d} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c} {D : A → Set d}
          (f : (x : A) (y : B x) → C x y → D x)
          {x x' : A} {y : B x} {y' : B x'} {z : C x y} {z' : C x' y'}
          (ex : x ≡ x') (ey : subst B ex y ≡ y') (ez : subst2 C ex ey z ≡ z') →
          subst D ex (f x y z) ≡ f x' y' z'
-cong₂-d f refl refl refl = refl
+cong₃-d f refl refl refl = refl
 
 subst₂-∘ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c}
            (f : (x : A) (y : B x) → C x y)
@@ -221,11 +222,11 @@ subst₂-∘ = {!!}
 test : {A : Set ℓ} {B C : Set ℓ'} (f : A → B) (e : B ≡ C) (a : A) →
        subst (λ x → A → x) e f a ≡ subst id e (f a)
 test f refl a = refl
-
+{-
 tm-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 subst (Tm Δ) (ty-subst-comp T τ σ) (t [ τ ]' [ σ ]') ≡ t [ τ ⊚ σ ]'
 tm-subst-comp {T = T} t τ σ = cong₂-d (λ S → MkTm {T = S}) (ty-subst-comp T τ σ) (funext (λ n → funext λ δ → {!!})) (funextI (funextI λ {_} → funext λ _ → funext λ _ → uip)) -- cong₂-d MkTm {!!} {!!}
-
+-}
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
 set (Γ ,, T) = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
 rel (Γ ,, T) = λ { ineq [ γ , t ] → [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ] }
@@ -271,6 +272,58 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   snd : Tm Γ (T ×' S) → Tm Γ S
   term (snd p) = λ n γ → proj₂ (p ⟨ n , γ ⟩')
   naturality (snd p) = λ ineq γ → cong proj₂ (p ⟪ _ , γ ⟫')
+
+
+--------------------------------------------------
+-- Discrete types
+--------------------------------------------------
+
+cong₂-d : ∀ {a b c} {A : Set a} {B : A → Set b} {C : Set c}
+          (f : (x : A) → B x → C)
+          {x x' : A} {y : B x} {y' : B x'}
+          (ex : x ≡ x') (ey : subst B ex y ≡ y') →
+          f x y ≡ f x' y'
+cong₂-d f refl refl = refl
+
+Discr : (A : Set ℓ) → Ty ◇
+type (Discr A) = λ _ _ → A
+morph (Discr A) = λ _ _ → id
+
+discr : {A : Set ℓ} → A → Tm ◇ (Discr A)
+term (discr a) = λ _ _ → a
+naturality (discr a) = λ _ _ → refl
+
+undiscr : {A : Set ℓ} → Tm ◇ (Discr A) → A
+undiscr t = t ⟨ 0 , lift tt ⟩'
+
+undiscr-discr : {A : Set ℓ} (a : A) → undiscr (discr a) ≡ a
+undiscr-discr a = refl
+
+discr-undiscr : {A : Set ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≡ t
+discr-undiscr t = cong₂-d MkTm
+                          (sym (funext λ n → funext λ γ → t ⟪ z≤n , lift tt ⟫'))
+                          (funextI (funextI (funext λ ineq → funext λ _ → uip)))
+
+Unit' : Ty ◇
+Unit' = Discr ⊤
+
+tt' : Tm ◇ Unit'
+tt' = discr tt
+
+Bool' : Ty ◇
+Bool' = Discr Bool
+
+true' : Tm ◇ Bool'
+true' = discr true
+
+false' : Tm ◇ Bool'
+false' = discr false
+
+if'_then'_else' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm ◇ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
+term (if' c then' t else' f) = λ n γ → if c ⟨ n , lift tt ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
+naturality (if' c then' t else' f) {m} {n} ineq γ with c ⟨ m , lift tt ⟩' | c ⟨ n , lift tt ⟩' | c ⟪ ineq , lift tt ⟫'
+naturality (if' c then' t else' f) {m} {n} ineq γ | false | .false | refl = f ⟪ ineq , γ ⟫'
+naturality (if' c then' t else' f) {m} {n} ineq γ | true | .true | refl = t ⟪ ineq , γ ⟫'
 
 
 --------------------------------------------------
