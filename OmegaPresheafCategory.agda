@@ -3,18 +3,26 @@ module OmegaPresheafCategory where
 open import Axiom.Extensionality.Propositional
 open import Data.Nat
 open import Data.Nat.Properties
-open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂) renaming (_,_ to [_,_])
+open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
 open import Level renaming (suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
+postulate
+  funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
+  funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
+
 variable
   ℓ ℓ' : Level
   m n : ℕ
 
+uip : {A : Set ℓ} {x y : A} {e1 e2 : x ≡ y} → e1 ≡ e2
+uip {e1 = refl} {refl} = refl
+
 infixl 15 _,,_
 infix 10 _⇒_
+infix 15 _⟨_,_⟩
 
 record Ctx ℓ : Set (lsuc ℓ) where
   field
@@ -43,11 +51,7 @@ rel-comp ◇ = λ _ _ → refl
 set (𝕪 n) = λ m → m ≤ n
 rel (𝕪 n) = ≤-trans
 rel-id (𝕪 n) = funext (λ _ → ≤-irrelevant _ _)
-  where
-    postulate funext : Extensionality _ _
 rel-comp (𝕪 n) = λ m1≤m2 m2≤m3 → funext (λ _ → ≤-irrelevant _ _)
-  where
-    postulate funext : Extensionality _ _
 
 record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
   constructor MkSubst
@@ -71,6 +75,14 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {ineq = ineq} =
 empty-subst : (Γ : Ctx ℓ) → Γ ⇒ ◇
 func (empty-subst Γ) = λ _ → lift tt
 naturality (empty-subst Γ) = refl
+
+-- Currently implemented by pattern matching on both e1 and e2. Can also be implemented
+-- with option --without-K enabled since A → Lift ℓ ⊤ has decidable equality (Hedberg's theorem).
+to-⊤-hset : {A : Set ℓ'} {f g : A → Lift ℓ ⊤} (e1 e2 : f ≡ g) → e1 ≡ e2
+to-⊤-hset refl refl = refl
+
+empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
+empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI λ {ineq} → to-⊤-hset _ _)))
 
 record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
   constructor MkTy
@@ -113,12 +125,15 @@ subst-comp {ℓ} {Δ} {Γ} {Θ} {T} {τ} {σ} = {!!}
     α = {!!}-}
 -}
 
+ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
+ty-subst-id T = refl
+
 subst-trans : ∀ {a p} {A : Set a} {x y z : A} {P : A → Set p} {p : P x} (eq₁ : x ≡ y) (eq₂ : y ≡ z) → subst P (trans eq₁ eq₂) p ≡ subst P eq₂ (subst P eq₁ p)
 subst-trans refl refl = refl
 
-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-subst-comp T τ σ =
-    cong (MkTy _) (funextI (funextI (funext λ ineq → funext′ λ δ → funext′ λ t →
+ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
+ty-subst-comp T τ σ =
+    cong (MkTy _) (funextI (funextI (funext λ ineq → funext λ δ → funext λ t →
       subst (λ x → T ⟨ _ , func τ (x δ) ⟩) (naturality σ)
       (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (naturality τ)
        (T ⟪ ineq , func τ (func σ δ) ⟫ t))
@@ -147,11 +162,9 @@ subst-comp T τ σ =
       )))
     where
       open ≡-Reasoning
-      postulate funext : Extensionality _ _
-                funext′ : Extensionality _ _
-                funextI : ExtensionalityImplicit _ _
 
 record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set ℓ where
+  constructor MkTm
   field
     term : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
     naturality : ∀ {m n} (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟪ ineq , γ ⟫ (term n γ) ≡ term m (Γ ⟪ ineq ⟫ γ)
@@ -181,11 +194,43 @@ naturality (_[_]'  {Δ = Δ}{Γ}{T} t σ) ineq δ =
   t ⟨ _ , func σ (Δ ⟪ ineq ⟫ δ) ⟩' ∎
   where open ≡-Reasoning
 
+tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → t [ id-subst Γ ]' ≡ t
+tm-subst-id t = cong (MkTm _) (funextI (funextI (funext λ ineq → funext λ δ →
+                               trans (trans-reflʳ _) (cong-id _))))
+
+subst2 : ∀ {a b c} {A : Set a} {B : A → Set b} (C : (x : A) → B x → Set c)
+         {x x' : A} {y : B x} {y' : B x'}
+         (ex : x ≡ x') (ey : subst B ex y ≡ y') →
+         C x y → C x' y'
+subst2 C refl refl c = c
+
+cong₂-d : ∀ {a b c d} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c} {D : A → Set d}
+         (f : (x : A) (y : B x) → C x y → D x)
+         {x x' : A} {y : B x} {y' : B x'} {z : C x y} {z' : C x' y'}
+         (ex : x ≡ x') (ey : subst B ex y ≡ y') (ez : subst2 C ex ey z ≡ z') →
+         subst D ex (f x y z) ≡ f x' y' z'
+cong₂-d f refl refl refl = refl
+
+subst₂-∘ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c}
+           (f : (x : A) (y : B x) → C x y)
+           {x x' : A} {y : B x} {y' : B x'}
+           (ex : x ≡ x') (ey : subst B ex y ≡ y') →
+           subst (λ x → (y : B x) → C x y) ex (λ y → f x y) y' ≡ subst2 C ex ey (f x y)
+subst₂-∘ = {!!}
+
+test : {A : Set ℓ} {B C : Set ℓ'} (f : A → B) (e : B ≡ C) (a : A) →
+       subst (λ x → A → x) e f a ≡ subst id e (f a)
+test f refl a = refl
+
+tm-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
+                subst (Tm Δ) (ty-subst-comp T τ σ) (t [ τ ]' [ σ ]') ≡ t [ τ ⊚ σ ]'
+tm-subst-comp {T = T} t τ σ = cong₂-d (λ S → MkTm {T = S}) (ty-subst-comp T τ σ) (funext (λ n → funext λ δ → {!!})) (funextI (funextI λ {_} → funext λ _ → funext λ _ → uip)) -- cong₂-d MkTm {!!} {!!}
+
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
 set (Γ ,, T) = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
 rel (Γ ,, T) = λ { ineq [ γ , t ] → [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ] }
-rel-id (Γ ,, T) = {!!}
-rel-comp (Γ ,, T) = {!!}
+rel-id (Γ ,, T) = funext λ { [ γ , t ] → {!!} }
+rel-comp (Γ ,, T) = λ k≤m m≤n → funext λ { [ γ , t ] → {!!} }
 
 π : {Γ : Ctx ℓ} {T : Ty Γ} → Γ ,, T ⇒ Γ
 func π = proj₁
@@ -196,11 +241,41 @@ term ξ = λ _ → proj₂
 naturality ξ = λ _ _ → refl
 
 ctx-ext-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))
-ctx-ext-subst {Δ = Δ}{Γ}{T} τ = [ π ⊚ τ , subst (Tm Δ) (subst-comp T π τ) (ξ {Γ = Γ} [ τ ]') ]
+ctx-ext-subst {Δ = Δ}{Γ}{T} τ = [ π ⊚ τ , subst (Tm Δ) (ty-subst-comp T π τ) (ξ {Γ = Γ} [ τ ]') ]
 
 ctx-ext-subst⁻¹ : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
 func (ctx-ext-subst⁻¹ [ σ , t ]) = λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ]
-naturality (ctx-ext-subst⁻¹ [ σ , t ]) = {!!}
+naturality (ctx-ext-subst⁻¹ [ σ , t ]) = funext (λ δ → {!!})
+
+
+--------------------------------------------------
+-- (Non-dependent) product types
+--------------------------------------------------
+
+_×'_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
+type (T ×' S) = λ n γ → T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩
+morph (T ×' S) = λ { ineq γ [ t , s ] → [ T ⟪ ineq , γ ⟫ t , S ⟪ ineq , γ ⟫ s ] }
+
+module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
+  pair : Tm Γ T → Tm Γ S → Tm Γ (T ×' S)
+  term (pair t s) = λ n γ → [ t ⟨ n , γ ⟩' , s ⟨ n , γ ⟩' ]
+  naturality (pair t s) = λ ineq γ → cong₂ [_,_] (t ⟪ ineq , γ ⟫') (s ⟪ ineq , γ ⟫')
+
+  fst : Tm Γ (T ×' S) → Tm Γ T
+  term (fst p) = λ n γ → proj₁ (p ⟨ n , γ ⟩')
+  naturality (fst p) = λ ineq γ →
+    T ⟪ ineq , γ ⟫ ((fst p) ⟨ _ , γ ⟩') ≡⟨ cong proj₁ (p ⟪ _ , γ ⟫') ⟩
+    fst p ⟨ _ , Γ ⟪ ineq ⟫ γ ⟩' ∎
+    where open ≡-Reasoning
+
+  snd : Tm Γ (T ×' S) → Tm Γ S
+  term (snd p) = λ n γ → proj₂ (p ⟨ n , γ ⟩')
+  naturality (snd p) = λ ineq γ → cong proj₂ (p ⟪ _ , γ ⟫')
+
+
+--------------------------------------------------
+-- Later modality for types
+--------------------------------------------------
 
 ▻ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ
 type (▻ {Γ = Γ} T) = λ { zero _ → Lift _ ⊤ ; (suc n) γ → T ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩ }
