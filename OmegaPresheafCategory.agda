@@ -22,9 +22,14 @@ variable
 uip : {A : Set ℓ} {x y : A} {e1 e2 : x ≡ y} → e1 ≡ e2
 uip {e1 = refl} {refl} = refl
 
-infixl 15 _,,_
+-- infixl 15 _,,_
 infix 10 _⇒_
 infix 15 _⟨_,_⟩
+infixl 20 _⊚_
+
+--------------------------------------------------
+-- Contexts and substitutions + category structure
+--------------------------------------------------
 
 record Ctx ℓ : Set (lsuc ℓ) where
   field
@@ -43,12 +48,14 @@ _⟪_⟫ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 _⟪_⟫_ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 Γ ⟪ ineq ⟫ γ = (Γ ⟪ ineq ⟫) γ
 
+-- The empty context
 ◇ : Ctx ℓ
 set ◇ = λ _ → Lift _ ⊤
 rel ◇ = λ _ _ → lift tt
 rel-id ◇ = refl
 rel-comp ◇ = λ _ _ → refl
 
+-- Yoneda embedding
 𝕪 : ℕ → Ctx 0ℓ
 set (𝕪 n) = λ m → m ≤ n
 rel (𝕪 n) = ≤-trans
@@ -74,6 +81,43 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {ineq = ineq} =
   func τ ∘ func σ ∘ Δ ⟪ ineq ⟫ ∎
   where open ≡-Reasoning
 
+⊚-id-substʳ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≡ σ
+⊚-id-substʳ σ = cong (MkSubst _) (funextI (funextI (funextI (trans (trans-reflʳ _) (cong-id _)))))
+
+⊚-id-substˡ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≡ σ
+⊚-id-substˡ σ = cong (MkSubst _) (funextI (funextI (funextI (trans (trans-reflʳ _) (cong-id _)))))
+
+⊚-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : Ctx ℓ} (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) → σ₃₄ ⊚ σ₂₃ ⊚ σ₁₂ ≡ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
+⊚-assoc σ₃₄ σ₂₃ σ₁₂ = cong (MkSubst _) (funextI (funextI (funextI uip)))
+{-
+  naturality (σ₃₄ ⊚ σ₂₃ ⊚ σ₁₂)
+    ≡⟨⟩
+  trans (cong (_∘ func σ₁₂) (trans (cong (_∘ func σ₂₃) (naturality σ₃₄))
+                                   (trans (cong (func σ₃₄ ∘_) (naturality σ₂₃)) refl)))
+        (trans (cong ((func σ₃₄ ∘ func σ₂₃) ∘_) (naturality σ₁₂)) refl)
+    ≡⟨ cong (λ x → trans (cong (_∘ func σ₁₂) (trans (cong (_∘ func σ₂₃) (naturality σ₃₄))
+                                              (trans (cong (func σ₃₄ ∘_) (naturality σ₂₃)) refl)))
+                          (trans x refl)) (cong-∘ _) ⟩
+  trans (cong (_∘ func σ₁₂) (trans (cong (_∘ func σ₂₃) (naturality σ₃₄))
+                                   (trans (cong (func σ₃₄ ∘_) (naturality σ₂₃)) refl)))
+        (trans (cong (func σ₃₄ ∘_) (cong (func σ₂₃ ∘_) (naturality σ₁₂))) refl)
+    ≡⟨ {!!} ⟩
+  trans (cong (_∘ func σ₁₂) (cong (_∘ func σ₂₃) (naturality σ₃₄)))
+        (trans (cong (func σ₃₄ ∘_) (trans (cong (_∘ func σ₁₂) (naturality σ₂₃))
+                                          (trans (cong (func σ₂₃ ∘_) (naturality σ₁₂)) refl)))
+               refl)
+    ≡⟨ cong (λ x → trans x (trans (cong (func σ₃₄ ∘_) (trans (cong (_∘ func σ₁₂) (naturality σ₂₃))
+                                                           (trans (cong (func σ₂₃ ∘_) (naturality σ₁₂)) refl)))
+                                   refl)) (sym (cong-∘ (naturality σ₃₄))) ⟩
+  trans (cong (_∘ (func σ₂₃ ∘ func σ₁₂)) (naturality σ₃₄))
+        (trans (cong (func σ₃₄ ∘_) (trans (cong (_∘ func σ₁₂) (naturality σ₂₃))
+                                          (trans (cong (func σ₂₃ ∘_) (naturality σ₁₂)) refl)))
+               refl)
+    ≡⟨⟩
+  naturality (σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)) ∎))))
+  where open ≡-Reasoning
+-}
+
 empty-subst : (Γ : Ctx ℓ) → Γ ⇒ ◇
 func (empty-subst Γ) = λ _ → lift tt
 naturality (empty-subst Γ) = refl
@@ -86,14 +130,19 @@ to-⊤-hset refl refl = refl
 empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
 empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI λ {ineq} → to-⊤-hset _ _)))
 
+
+--------------------------------------------------
+-- Types
+--------------------------------------------------
+
 record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
   constructor MkTy
   field
     type : (n : ℕ) (γ : Γ ⟨ n ⟩) → Set ℓ
     morph : ∀ {m n} (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) → type n γ → type m (Γ ⟪ m≤n ⟫ γ)
---    morph-id : ∀ {n} (γ : Γ ⟨ n ⟩) → subst (λ f → type n (f γ)) (rel-id Γ {n}) ∘ morph ≤-refl γ ≡ id
---    morph-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) →
---                 subst (λ f → type k (f γ)) (rel-comp Γ k≤m m≤n) ∘ morph (≤-trans k≤m m≤n) γ ≡ morph k≤m (Γ ⟪ m≤n ⟫ γ) ∘ morph m≤n γ
+    morph-id : ∀ {n} (γ : Γ ⟨ n ⟩) → subst (λ x → type n (x γ)) (rel-id Γ {n}) ∘ morph ≤-refl γ ≡ id
+    morph-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) →
+                 subst (λ x → type k (x γ)) (rel-comp Γ k≤m m≤n) ∘ morph (≤-trans k≤m m≤n) γ ≡ morph k≤m (Γ ⟪ m≤n ⟫ γ) ∘ morph m≤n γ
 open Ty
 
 _⟨_,_⟩ : {Γ : Ctx ℓ} → Ty Γ → (n : ℕ) → Γ ⟨ n ⟩ → Set ℓ
@@ -107,26 +156,22 @@ T ⟪ ineq , γ ⟫ t = (T ⟪ ineq , γ ⟫) t
 
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
--- morph (T [ σ ]) ineq δ rewrite sym (cong-app (naturality σ {ineq = ineq}) δ) = T ⟪ ineq , func σ δ ⟫ -- subst (λ x → T ⟨ _ , x ⟩) (cong-app (naturality σ {ineq = ineq}) δ) ∘ (T ⟪ ineq , func σ δ ⟫)
-morph (T [ σ ]) ineq δ t = subst (λ x → T ⟨ _ , (x δ) ⟩) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ t)
--- morph-id (T [ σ ]) δ = {!!}
--- morph-comp (T [ σ ]) k≤m m≤n δ = {!!}
+morph (T [ σ ]) ineq δ t = subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ t)
+morph-id (_[_] {Δ = Δ}{Γ} T σ) δ = funext (λ t →
+  subst (λ x → T ⟨ _ , func σ (x δ) ⟩) (rel-id Δ) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
+    ≡⟨ subst-∘ (rel-id Δ) ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-id Δ)) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
+    ≡⟨ subst-subst (naturality σ) ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (trans (naturality σ) (cong (func σ ∘_) (rel-id Δ))) (T ⟪ ≤-refl , func σ δ ⟫ t)
+    ≡⟨ {!!} ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-id Γ)) (T ⟪ ≤-refl , func σ δ ⟫ t)
+    ≡⟨ sym (subst-∘ (rel-id Γ)) ⟩
+  subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-id Γ) (T ⟪ ≤-refl , func σ δ ⟫ t)
+    ≡⟨ cong-app (morph-id T (func σ δ)) t ⟩
+  t ∎)
+  where open ≡-Reasoning
+morph-comp (T [ σ ]) k≤m m≤n δ = {!!}
 {-
-subst-comp-test : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} {τ : Γ ⇒ Θ} {σ : Δ ⇒ Γ} (ineq : m ≤ n) (δ : Δ ⟨ n ⟩) (t : T [ τ ] [ σ ] ⟨ n , δ ⟩) → (T [ τ ] [ σ ]) ⟪ ineq , δ ⟫ t ≡ (T [ τ ⊚ σ ]) ⟪ ineq , δ ⟫ t
-subst-comp-test {Δ = Δ}{Γ}{Θ}{T}{τ}{σ} ineq δ t = {!!}
-
-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} {τ : Γ ⇒ Θ} {σ : Δ ⇒ Γ} → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-subst-comp {ℓ} {Δ} {Γ} {Θ} {T} {τ} {σ} = {!!}
-{-  (T [ τ ]) [ σ ] ≡⟨ refl ⟩
-  record { type = λ n δ → T ⟨ n , func τ (func σ δ) ⟩ ; morph = morph ((T [ τ ]) [ σ ]) } ≡⟨ cong (λ x → record { type = λ n δ → T ⟨ n , func τ (func σ δ) ⟩ ; morph = λ {m n} ineq δ → x m n ineq δ }) α ⟩
-  record { type = λ n δ → T ⟨ n , func τ (func σ δ) ⟩ ; morph = morph (T [ τ ⊚ σ ]) } ≡⟨ refl ⟩
-  T [ τ ⊚ σ ] ∎
-  where
-    open ≡-Reasoning
-    α : {!!} ≡ {!!}
-    α = {!!}-}
--}
-
 ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
 ty-subst-id T = refl
 
@@ -218,7 +263,7 @@ subst₂-∘ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : (x : A) → B x �
            {x x' : A} {y : B x} {y' : B x'}
            (ex : x ≡ x') (ey : subst B ex y ≡ y') →
            subst (λ x → (y : B x) → C x y) ex (λ y → f x y) y' ≡ subst2 C ex ey (f x y)
-subst₂-∘ = {!!}
+subst₂-∘ f refl refl = refl
 
 test : {A : Set ℓ} {B C : Set ℓ'} (f : A → B) (e : B ≡ C) (a : A) →
        subst (λ x → A → x) e f a ≡ subst id e (f a)
@@ -366,3 +411,4 @@ morph (▻ {Γ = Γ} T) = λ { z≤n γ → λ _ → lift tt ; (s≤s ineq) γ �
 next : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm Γ (▻ T)
 term (next {Γ = Γ} t) = λ { zero γ → lift tt ; (suc n) γ → t ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩' }
 naturality (next t) = λ ineq γ → {!!}
+-}
