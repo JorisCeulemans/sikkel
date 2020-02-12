@@ -2,12 +2,13 @@ module OmegaPresheafCategory where
 
 open import Axiom.Extensionality.Propositional
 open import Data.Bool using (Bool; true; false; if_then_else_)
-open import Data.Nat
+open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
-open import Level renaming (suc to lsuc)
+open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 postulate
@@ -273,6 +274,23 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   term (snd p) = λ n γ → proj₂ (p ⟨ n , γ ⟩')
   naturality (snd p) = λ ineq γ → cong proj₂ (p ⟪ _ , γ ⟫')
 
+--------------------------------------------------
+-- Sum types
+--------------------------------------------------
+
+_⊎'_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
+type (T ⊎' S) = λ n γ → T ⟨ n , γ ⟩ ⊎ S ⟨ n , γ ⟩
+morph (T ⊎' S) = λ { ineq γ (inl t) → inl (T ⟪ ineq , γ ⟫ t) ; ineq γ (inr s) → inr (S ⟪ ineq , γ ⟫ s) }
+
+module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
+  inl' : Tm Γ T → Tm Γ (T ⊎' S)
+  term (inl' t) = λ n γ → inl (t ⟨ n , γ ⟩')
+  naturality (inl' t) = λ ineq γ → cong inl (t ⟪ ineq , γ ⟫')
+
+  inr' : Tm Γ S → Tm Γ (T ⊎' S)
+  term (inr' s) = λ n γ → inr (s ⟨ n , γ ⟩')
+  naturality (inr' s) = λ ineq γ → cong inr (s ⟪ ineq , γ ⟫')
+
 
 --------------------------------------------------
 -- Discrete types
@@ -319,11 +337,20 @@ true' = discr true
 false' : Tm ◇ Bool'
 false' = discr false
 
-if'_then'_else' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm ◇ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
-term (if' c then' t else' f) = λ n γ → if c ⟨ n , lift tt ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
-naturality (if' c then' t else' f) {m} {n} ineq γ with c ⟨ m , lift tt ⟩' | c ⟨ n , lift tt ⟩' | c ⟪ ineq , lift tt ⟫'
-naturality (if' c then' t else' f) {m} {n} ineq γ | false | .false | refl = f ⟪ ineq , γ ⟫'
-naturality (if' c then' t else' f) {m} {n} ineq γ | true | .true | refl = t ⟪ ineq , γ ⟫'
+if'_then'_else'_ : {Γ : Ctx 0ℓ} {T : Ty Γ} → Tm Γ (Bool' [ empty-subst Γ ]) → Tm Γ T → Tm Γ T → Tm Γ T
+term (if' c then' t else' f) = λ n γ → if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
+naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq γ with c ⟨ m , Γ ⟪ ineq ⟫ γ ⟩' | c ⟨ n , γ ⟩' | c ⟪ ineq , γ ⟫'
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq γ | false | .false | refl = f ⟪ ineq , γ ⟫'
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq γ | true  | .true  | refl = t ⟪ ineq , γ ⟫'
+
+Nat' : Ty ◇
+Nat' = Discr ℕ
+
+zero' : Tm ◇ Nat'
+zero' = discr zero
+
+suc' : Tm ◇ Nat' → Tm ◇ Nat'
+suc' t = discr (suc (undiscr t))
 
 
 --------------------------------------------------
