@@ -1,6 +1,7 @@
 module OmegaPresheafCategory where
 
 open import Axiom.Extensionality.Propositional
+open import Axiom.UniquenessOfIdentityProofs
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
@@ -11,16 +12,16 @@ open import Function hiding (_⟨_⟩_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
-postulate
-  funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
-  funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
-
 variable
   ℓ ℓ' : Level
   m n : ℕ
 
-uip : {A : Set ℓ} {x y : A} {e1 e2 : x ≡ y} → e1 ≡ e2
-uip {e1 = refl} {refl} = refl
+postulate
+  funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
+  funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
+
+uip : ∀ {a} {A : Set a} → UIP A
+uip refl refl = refl
 
 -- infixl 15 _,,_
 infix 10 _⇒_
@@ -88,7 +89,7 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {ineq = ineq} =
 ⊚-id-substˡ σ = cong (MkSubst _) (funextI (funextI (funextI (trans (trans-reflʳ _) (cong-id _)))))
 
 ⊚-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : Ctx ℓ} (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) → σ₃₄ ⊚ σ₂₃ ⊚ σ₁₂ ≡ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
-⊚-assoc σ₃₄ σ₂₃ σ₁₂ = cong (MkSubst _) (funextI (funextI (funextI uip)))
+⊚-assoc σ₃₄ σ₂₃ σ₁₂ = cong (MkSubst _) (funextI (funextI (funextI (uip _ _))))
 {-
   naturality (σ₃₄ ⊚ σ₂₃ ⊚ σ₁₂)
     ≡⟨⟩
@@ -123,12 +124,13 @@ func (empty-subst Γ) = λ _ → lift tt
 naturality (empty-subst Γ) = refl
 
 -- Currently implemented by pattern matching on both e1 and e2. Can also be implemented
--- with option --without-K enabled since A → Lift ℓ ⊤ has decidable equality (Hedberg's theorem).
+-- with option --without-K enabled since A → Lift ℓ ⊤ has decidable equality and is
+-- therefore an hset (Hedberg's theorem).
 to-⊤-hset : {A : Set ℓ'} {f g : A → Lift ℓ ⊤} (e1 e2 : f ≡ g) → e1 ≡ e2
 to-⊤-hset refl refl = refl
 
 empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
-empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI λ {ineq} → to-⊤-hset _ _)))
+empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI λ {_} → to-⊤-hset _ _)))
 
 
 --------------------------------------------------
@@ -154,6 +156,13 @@ T ⟪ ineq , γ ⟫ = morph T ineq γ
 _⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
 T ⟪ ineq , γ ⟫ t = (T ⟪ ineq , γ ⟫) t
 
+probeersel : ∀ {a b c} {A : Set a} {B : A → Set b} {C : (x : A) → Set c}
+             (f : (x : A) → B x → C x)
+             {x x' : A} {y : B x}
+             (ex : x ≡ x') →
+             subst C ex (f x y) ≡ f x' (subst B ex y)
+probeersel f refl = refl
+
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
 morph (T [ σ ]) ineq δ t = subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ t)
@@ -163,14 +172,38 @@ morph-id (_[_] {Δ = Δ}{Γ} T σ) δ = funext (λ t →
   subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-id Δ)) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
     ≡⟨ subst-subst (naturality σ) ⟩
   subst (λ x → T ⟨ _ , x δ ⟩) (trans (naturality σ) (cong (func σ ∘_) (rel-id Δ))) (T ⟪ ≤-refl , func σ δ ⟫ t)
-    ≡⟨ {!!} ⟩
+    ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x δ ⟩) y (T ⟪ ≤-refl , func σ δ ⟫ t)) (uip _ (cong (_∘ func σ) (rel-id Γ))) ⟩
+      -- Currently this equality is proven using uip. In a setting without uip, we would need to impose an extra coherence requirement
+      -- on substitutions, ensuring that trans (naturality σ) (cong (func σ ∘_) (rel-id Δ)) ≡ cong (_∘ func σ) (rel-id Γ).
   subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-id Γ)) (T ⟪ ≤-refl , func σ δ ⟫ t)
     ≡⟨ sym (subst-∘ (rel-id Γ)) ⟩
   subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-id Γ) (T ⟪ ≤-refl , func σ δ ⟫ t)
     ≡⟨ cong-app (morph-id T (func σ δ)) t ⟩
   t ∎)
   where open ≡-Reasoning
-morph-comp (T [ σ ]) k≤m m≤n δ = {!!}
+morph-comp (_[_] {Δ = Δ}{Γ} T σ) k≤m m≤n δ = funext (λ t →
+  subst (λ x → T ⟨ _ , func σ (x δ) ⟩) (rel-comp Δ k≤m m≤n) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+    ≡⟨ subst-∘ (rel-comp Δ k≤m m≤n) ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n)) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+    ≡⟨ subst-subst (naturality σ) ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (trans (naturality σ) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n))) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)
+    ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x δ ⟩) y (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)) (uip (trans (naturality σ) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n))) _) ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (trans (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))) (cong (_∘ Δ ⟪ m≤n ⟫) (naturality σ))) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)
+    ≡⟨ sym (subst-subst (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))) ⟩
+  subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ Δ ⟪ m≤n ⟫) (naturality σ)) (subst (λ x → T ⟨ _ , x δ ⟩) (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+    ≡⟨ sym (subst-∘ (naturality σ)) ⟩
+  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+    ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (sym (subst-subst (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)))) ⟩
+  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)))
+    ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) y)) (sym (subst-∘ (rel-comp Γ k≤m m≤n))) ⟩
+  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-comp Γ k≤m m≤n) (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)))
+    ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) y)) (cong-app (morph-comp T k≤m m≤n (func σ δ)) t) ⟩
+  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) (T ⟪ k≤m , Γ ⟪ m≤n ⟫ (func σ δ) ⟫ (T ⟪ m≤n , func σ δ ⟫ t)))
+    ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (sym (subst-∘ (naturality σ))) ⟩
+  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , Γ ⟪ k≤m ⟫ (x δ) ⟩) (naturality σ) (T ⟪ k≤m , Γ ⟪ m≤n ⟫ (func σ δ) ⟫ (T ⟪ m≤n , func σ δ ⟫ t)))
+    ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (probeersel (λ x y → T ⟪ k≤m , x δ ⟫ y) (naturality σ {ineq = m≤n})) ⟩
+  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (T ⟪ k≤m , func σ (Δ ⟪ m≤n ⟫ δ) ⟫ (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ {ineq = m≤n}) (T ⟪ m≤n , func σ δ ⟫ t))) ∎) --      morph (T [ σ ]) k≤m (Δ ⟪ m≤n ⟫ δ) ((morph (T [ σ ]) m≤n δ) t) ∎)
+  where open ≡-Reasoning
 {-
 ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
 ty-subst-id T = refl
