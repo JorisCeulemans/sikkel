@@ -14,7 +14,7 @@ variable
 to-⊤-hset : {A : Set ℓ'} {f g : A → Lift ℓ ⊤} (e1 e2 : f ≡ g) → e1 ≡ e2
 to-⊤-hset refl refl = refl
 
-weak-subst-application : ∀ {a b c} {A : Set a} {B : A → Set b} {C : (x : A) → Set c}
+weak-subst-application : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
                          (f : (x : A) → B x → C x)
                          {x x' : A} {y : B x}
                          (ex : x ≡ x') →
