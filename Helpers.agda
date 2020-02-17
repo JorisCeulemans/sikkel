@@ -1,12 +1,23 @@
 module Helpers where
 
+open import Axiom.Extensionality.Propositional
+open import Axiom.UniquenessOfIdentityProofs
 open import Level
-open import Data.Unit
+open import Data.Nat
 open import Data.Product using (Σ; _,_)
-open import Relation.Binary.PropositionalEquality hiding (subst₂)
+open import Data.Unit
+open import Relation.Binary.PropositionalEquality hiding (subst₂; Extensionality)
 
 variable
   ℓ ℓ' : Level
+  k m n : ℕ
+
+postulate
+  funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
+  funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
+
+uip : ∀ {a} {A : Set a} → UIP A
+uip refl refl = refl
 
 -- Currently implemented by pattern matching on both e1 and e2. Can also be implemented
 -- with option --without-K enabled since A → Lift ℓ ⊤ has decidable equality and is
