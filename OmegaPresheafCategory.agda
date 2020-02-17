@@ -15,7 +15,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 open import Helpers
 
 variable
-  m n : ℕ
+  k m n : ℕ
 
 postulate
   funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
@@ -150,6 +150,14 @@ T ⟪ ineq , γ ⟫ = morph T ineq γ
 
 _⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
 T ⟪ ineq , γ ⟫ t = (T ⟪ ineq , γ ⟫) t
+
+morph-id-app : {Γ : Ctx ℓ} (T : Ty Γ) (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
+               subst (λ x → T ⟨ n , x ⟩) (cong-app (rel-id Γ) γ) (T ⟪ ≤-refl , γ ⟫ t) ≡ t
+morph-id-app {Γ = Γ} T γ t = trans (subst-cong-app (rel-id Γ) (T ⟪ ≤-refl , γ ⟫ t)) (cong-app (morph-id T γ) t)
+
+morph-comp-app : {Γ : Ctx ℓ} (T : Ty Γ) {k≤m : k ≤ m} {m≤n : m ≤ n} (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
+                 subst (λ x → T ⟨ k , x ⟩) (cong-app (rel-comp Γ k≤m m≤n) γ) (T ⟪ ≤-trans k≤m m≤n , γ ⟫ t) ≡ T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ (T ⟪ m≤n , γ ⟫ t)
+morph-comp-app {Γ = Γ} T {k≤m}{m≤n} γ t = trans (subst-cong-app (rel-comp Γ k≤m m≤n) _) (cong-app (morph-comp T k≤m m≤n γ) t)
 
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
@@ -291,17 +299,19 @@ naturality (_[_]'  {Δ = Δ}{Γ}{T} t σ) ineq δ =
     ≡⟨⟩
   t [ σ ]' ⟨ _ , Δ ⟪ ineq ⟫ δ ⟩' ∎
   where open ≡-Reasoning
-{-
+
 tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → subst (Tm Γ) (ty-subst-id T) (t [ id-subst Γ ]') ≡ t
 tm-subst-id {Γ = Γ}{T = T} t = cong₂-d MkTm
   (term (subst (Tm Γ) (ty-subst-id T) (t [ id-subst Γ ]'))
       ≡⟨ sym (weak-subst-application {B = λ x → Tm Γ x} (λ x y → term y) (ty-subst-id T)) ⟩
     subst (λ x → (n : ℕ) (γ : Γ ⟨ n ⟩) → x ⟨ n , γ ⟩) (ty-subst-id T) (term (t [ id-subst Γ ]'))
-      ≡⟨ funext (λ n → funext (λ γ → subst (λ x → (n' : ℕ) (γ' : Γ ⟨ n' ⟩) → x ⟨ n' , γ' ⟩) (ty-subst-id T) (term (t [ id-subst Γ ]')) n γ ≡⟨ {!!} ⟩ {!!})) ⟩
+--      ≡⟨ cong (λ x → subst (λ x → (n : ℕ) (γ : Γ ⟨ n ⟩) → x ⟨ n , γ ⟩) x λ n γ → t ⟨ n , γ ⟩') {!uip _ _!} ⟩
+--    subst (λ x → (n : ℕ) (γ : Γ ⟨ n ⟩) → x ⟨ n , γ ⟩) refl (λ n γ → t ⟨ n , γ ⟩')
+      ≡⟨ {!!} ⟩
     term t ∎)
   {!!}
   where open ≡-Reasoning
-
+{-
 -- Earlier version of tm-subst-id (when there were no laws for types
 --   cong (MkTm _) (funextI (funextI (funext λ ineq → funext λ δ →
 --                    trans (trans-reflʳ _) (cong-id _))))
@@ -311,14 +321,20 @@ tm-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} (t : Tm Θ T) (τ : Γ ⇒ Θ) 
 tm-subst-comp {T = T} t τ σ = cong₂-d (λ S → MkTm {T = S}) (ty-subst-comp T τ σ) (funext (λ n → funext λ δ → {!!})) (funextI (funextI λ {_} → funext λ _ → funext λ _ → uip)) -- cong₂-d MkTm {!!} {!!}
 -}
 
- 
-
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
-set (Γ ,, T) = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
-rel (Γ ,, T) = λ ineq → λ { [ γ , t ] → [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ] }
-rel-id (Γ ,, T) = funext λ { [ γ , t ] → cong₂-d [_,_] (cong-app (rel-id Γ) γ) (trans {!!} (cong-app (morph-id T γ) t)) }
-rel-comp (Γ ,, T) = λ k≤m m≤n → funext λ { [ γ , t ] → {!!} }
-
+Γ ,, T = record { set = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
+                ; rel = λ { ineq [ γ , t ] → [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ] }
+                ; rel-id = funext λ { [ γ , t ] → to-Σ-eq (cong-app (rel-id Γ) γ) (morph-id-app T γ t) }
+                ; rel-comp = λ k≤m m≤n → funext λ { [ γ , t ] → to-Σ-eq (cong-app (rel-comp Γ k≤m m≤n) γ) (morph-comp-app T γ t) }
+                }
+{- Same definition using copattern matching (currently fails, but will probably work in Agda 2.6.1).
+set (Γ ,, T) n = Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
+rel (Γ ,, T) ineq [ γ , t ] = [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ]
+rel-id (Γ ,, T) = funext λ { [ γ , t ] → to-Σ-eq (cong-app (rel-id Γ) γ) (trans {!!} (cong-app (morph-id T γ) t)) }
+rel-comp (Γ ,, T) = λ k≤m m≤n → funext λ { [ γ , t ] → {!to-Σ-eq ? ?!} }
+  -- Strange behaviour here (termination checking seems to fail).
+  -- It is possible that this will be solved by https://github.com/agda/agda/pull/4424 in Agda 2.6.1.
+-}
 π : {Γ : Ctx ℓ} {T : Ty Γ} → Γ ,, T ⇒ Γ
 func π = proj₁
 naturality π = refl
@@ -329,16 +345,16 @@ naturality ξ = λ _ _ → refl
 
 ctx-ext-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))
 ctx-ext-subst {Δ = Δ}{Γ}{T} τ = [ π {T = T} ⊚ τ , subst (Tm Δ) (ty-subst-comp T (π {T = T}) τ) (ξ {T = T} [ τ ]') ]
-{-
+
 ctx-ext-subst⁻¹ : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
 func (ctx-ext-subst⁻¹ [ σ , t ]) = λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ]
-naturality (ctx-ext-subst⁻¹ [ σ , t ]) = funext (λ δ → {!!})
+naturality (ctx-ext-subst⁻¹ [ σ , t ]) = funext (λ δ → to-Σ-eq (cong-app (naturality σ) δ) (trans (subst-cong-app (naturality σ) _) (naturality t _ δ)))
 
 
 --------------------------------------------------
 -- (Non-dependent) product types
 --------------------------------------------------
-
+{-
 _×'_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ×' S) = λ n γ → T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩
 morph (T ×' S) = λ { ineq γ [ t , s ] → [ T ⟪ ineq , γ ⟫ t , S ⟪ ineq , γ ⟫ s ] }

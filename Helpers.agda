@@ -2,6 +2,7 @@ module Helpers where
 
 open import Level
 open import Data.Unit
+open import Data.Product using (Σ; _,_)
 open import Relation.Binary.PropositionalEquality hiding (subst₂)
 
 variable
@@ -52,4 +53,16 @@ test : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : A → B → C → 
        (e : x ≡ x') →
        subst (λ u → (v : B) (w : C) → D u v w) e (f x) y z ≡ subst (λ u → D u y z) e (f x y z)
 test f refl = refl
+
+subst-cong-app : ∀ {a b c} {A : Set a} {B : Set b} {C : B → Set c}
+                 {f g : A → B} (e : f ≡ g)
+                 {x : A} (z : C (f x)) →
+                 subst C (cong-app e x) z ≡ subst (λ - → C (- x)) e z
+subst-cong-app refl z = refl
+
+to-Σ-eq : {A : Set ℓ} {B : A → Set ℓ'}
+          {a a' : A} {b : B a} {b' : B a'}
+          (e1 : a ≡ a') (e2 : subst B e1 b ≡ b') →
+          (a , b) ≡ (a' , b')
+to-Σ-eq e1 e2 = cong₂-d _,_ e1 e2
 
