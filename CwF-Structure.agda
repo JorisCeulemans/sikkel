@@ -264,7 +264,7 @@ record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set ℓ where
   field
     term : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
     naturality : ∀ {m n} (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟪ ineq , γ ⟫ (term n γ) ≡ term m (Γ ⟪ ineq ⟫ γ)
-open Tm
+open Tm public
 
 _⟨_,_⟩' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (n : ℕ) → (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
 t ⟨ n , γ ⟩' = term t n γ
