@@ -2,7 +2,8 @@ module Types where
 
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat hiding (_⊔_)
-open import Data.Product using (proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.Nat.Properties
+open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
@@ -11,7 +12,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 
 open import Helpers
 open import CwF-Structure
-
+{-
 --------------------------------------------------
 -- (Non-dependent) product types
 --------------------------------------------------
@@ -94,11 +95,35 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
       term (snd (subst (Tm Δ) ×'-natural (p [ σ ]'))) ∎)
     (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
     where open ≡-Reasoning
+-}
+
+--------------------------------------------------
+-- (Non-dependent) function types
+--------------------------------------------------
+
+record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
+  constructor MkFunc
+  field
+    _$⟨_⟩_ : ∀ {m} (ineq : m ≤ n) → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩ → S ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
+    naturality : ∀ {k m} (k≤m : k ≤ m) (m≤n : m ≤ n) →
+                 _$⟨_⟩_ (≤-trans k≤m m≤n) ∘ subst (λ x → T ⟨ k , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) ∘ T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ ≡
+                   subst (λ x → S ⟨ k , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) ∘ (S ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫) ∘ _$⟨_⟩_ m≤n
+open PresheafFunc public
+
+_⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
+type (_⇛_ {Γ = Γ} T S) = λ n γ → PresheafFunc T S n γ
+morph (_⇛_ {Γ = Γ} T S) = λ m≤n γ f → MkFunc (λ k≤m → subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ k≤m m≤n)
+                                                         ∘ f $⟨ ≤-trans k≤m m≤n ⟩_
+                                                         ∘ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)))
+                                               (λ k≤m m≤n → funext λ t → {!!})
+morph-id (T ⇛ S) = {!!}
+morph-comp (T ⇛ S) = {!!}
+
 
 --------------------------------------------------
 -- Sum types
 --------------------------------------------------
-
+{-
 subst-⊎ˡ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
            {x x' : A} (e : x ≡ x') {y : B x} →
            subst (λ x → B x ⊎ C x) e (inl y) ≡ inl (subst B e y)
@@ -175,7 +200,7 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
       term (inr'⟨ T [ σ ] ⟩ (s [ σ ]')) ∎)
     (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
     where open ≡-Reasoning
-
+-}
 
 --------------------------------------------------
 -- Discrete types

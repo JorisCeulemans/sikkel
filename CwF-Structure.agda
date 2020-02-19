@@ -43,13 +43,6 @@ rel ◇ = λ _ _ → lift tt
 rel-id ◇ = refl
 rel-comp ◇ = λ _ _ → refl
 
--- Yoneda embedding
-𝕪 : ℕ → Ctx 0ℓ
-set (𝕪 n) = λ m → m ≤ n
-rel (𝕪 n) = ≤-trans
-rel-id (𝕪 n) = funext (λ _ → ≤-irrelevant _ _)
-rel-comp (𝕪 n) = λ m1≤m2 m2≤m3 → funext (λ _ → ≤-irrelevant _ _)
-
 record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
   constructor MkSubst
   field
