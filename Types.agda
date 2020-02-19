@@ -48,6 +48,53 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   term (snd p) = λ n γ → proj₂ (p ⟨ n , γ ⟩')
   naturality (snd p) = λ ineq γ → cong proj₂ (p ⟪ _ , γ ⟫')
 
+module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
+  abstract
+    ×'-natural : (T ×' S) [ σ ] ≡ (T [ σ ]) ×' (S [ σ ])
+    ×'-natural = cong₃-d (MkTy _)
+                         (funextI (funextI (funext λ ineq → funext λ δ → funext λ { [ t , s ] →
+                           subst-× (naturality σ) [ T ⟪ ineq , func σ δ ⟫ t , S ⟪ ineq , func σ δ ⟫ s ] })))
+                         (funextI (funext (λ _ → uip _ _)))
+                         (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+
+  pair-natural : (t : Tm Γ T) (s : Tm Γ S) → subst (Tm Δ) ×'-natural ((pair t s) [ σ ]') ≡ pair (t [ σ ]') (s [ σ ]')
+  pair-natural t s = cong₂-d MkTm
+    (term (subst (Tm Δ) ×'-natural (pair t s [ σ ]'))
+        ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ×'-natural) ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z ⟨ n , δ ⟩) ×'-natural (term (pair t s [ σ ]'))
+        ≡⟨ subst-∘ ×'-natural ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type ×'-natural) (term (pair t s [ σ ]'))
+        ≡⟨ cong (λ y → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) y (term (pair t s [ σ ]'))) {x = cong type ×'-natural} {y = refl} (uip _ _) ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) {x = type ((T ×' S) [ σ ])} refl (term (pair (t [ σ ]') (s [ σ ]')))
+        ≡⟨⟩
+      term (pair (t [ σ ]') (s [ σ ]')) ∎)
+    (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+    where open ≡-Reasoning
+
+  fst-natural : (p : Tm Γ (T ×' S)) → (fst p) [ σ ]' ≡ fst (subst (Tm Δ) ×'-natural (p [ σ ]'))
+  fst-natural p = cong₂-d MkTm
+    (term (fst p [ σ ]')
+        ≡⟨ cong (λ z → λ n δ → proj₁ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) z (term (p [ σ ]')) n δ)) {x = refl} {y = cong type ×'-natural} (uip _ _) ⟩
+      (λ n δ → proj₁ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) (cong type ×'-natural) (term (p [ σ ]')) n δ))
+        ≡⟨ cong (λ z n δ → proj₁ (z n δ)) (sym (subst-∘ {P = λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ} {f = type} ×'-natural)) ⟩
+      (λ n δ → proj₁ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z ⟨ n₁ , γ ⟩) ×'-natural (term (p [ σ ]')) n δ))
+        ≡⟨ cong (λ z n δ → proj₁ (z n δ)) (weak-subst-application {B = Tm Δ} (λ x y → term y) ×'-natural) ⟩
+      term (fst (subst (Tm Δ) ×'-natural (p [ σ ]'))) ∎)
+    (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+    where open ≡-Reasoning
+
+  snd-natural : (p : Tm Γ (T ×' S)) → (snd p) [ σ ]' ≡ snd (subst (Tm Δ) ×'-natural (p [ σ ]'))
+  snd-natural p = cong₂-d MkTm
+    (term (snd p [ σ ]')
+        ≡⟨ cong (λ z → λ n δ → proj₂ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) z (term (p [ σ ]')) n δ)) {x = refl} {y = cong type ×'-natural} (uip _ _) ⟩
+      (λ n δ → proj₂ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) (cong type ×'-natural) (term (p [ σ ]')) n δ))
+        ≡⟨ cong (λ z n δ → proj₂ (z n δ)) (sym (subst-∘ {P = λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ} {f = type} ×'-natural)) ⟩
+      (λ n δ → proj₂ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z ⟨ n₁ , γ ⟩) ×'-natural (term (p [ σ ]')) n δ))
+        ≡⟨ cong (λ z n δ → proj₂ (z n δ)) (weak-subst-application {B = Tm Δ} (λ x y → term y) ×'-natural) ⟩
+      term (snd (subst (Tm Δ) ×'-natural (p [ σ ]'))) ∎)
+    (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+    where open ≡-Reasoning
+
 --------------------------------------------------
 -- Sum types
 --------------------------------------------------
@@ -84,6 +131,50 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   inr' : Tm Γ S → Tm Γ (T ⊎' S)
   term (inr' s) = λ n γ → inr (s ⟨ n , γ ⟩')
   naturality (inr' s) = λ ineq γ → cong inr (s ⟪ ineq , γ ⟫')
+
+inl'⟨_⟩_ : {Γ : Ctx ℓ} {T : Ty Γ} (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊎' S)
+inl'⟨ S ⟩ t = inl' {S = S} t
+
+inr'⟨_⟩_ : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} (s : Tm Γ S) → Tm Γ (T ⊎' S)
+inr'⟨ T ⟩ s = inr' {T = T} s
+
+module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
+  abstract
+    ⊎'-natural : (T ⊎' S) [ σ ] ≡ (T [ σ ]) ⊎' (S [ σ ])
+    ⊎'-natural = cong₃-d (MkTy _)
+                          (funextI (funextI (funext λ ineq → funext λ δ → funext λ {
+                            (inl t) → subst-⊎ˡ (naturality σ) ;
+                            (inr s) → subst-⊎ʳ (naturality σ) })))
+                          (funextI (funext (λ _ → uip _ _)))
+                          (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+
+  inl'-natural : (t : Tm Γ T) → subst (Tm Δ) ⊎'-natural ((inl' t) [ σ ]') ≡ inl' (t [ σ ]')
+  inl'-natural t = cong₂-d MkTm
+    (term (subst (Tm Δ) ⊎'-natural (inl' t [ σ ]'))
+        ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ⊎'-natural) ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z ⟨ n , δ ⟩) ⊎'-natural (term (inl'⟨ S [ σ ] ⟩ (t [ σ ]')))
+        ≡⟨ subst-∘ ⊎'-natural ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type ⊎'-natural) (term (inl'⟨ S [ σ ] ⟩ (t [ σ ]')))
+        ≡⟨ cong (λ y → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) y (term (inl'⟨ S [ σ ] ⟩ (t [ σ ]')))) {x = cong type ⊎'-natural} {y = refl} (uip _ _) ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) {x = type ((T ⊎' S) [ σ ])} refl (term (inl'⟨ S [ σ ] ⟩ (t [ σ ]')))
+        ≡⟨⟩
+      term (inl'⟨ S [ σ ] ⟩ (t [ σ ]')) ∎)
+    (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+    where open ≡-Reasoning
+
+  inr'-natural : (s : Tm Γ S) → subst (Tm Δ) ⊎'-natural ((inr' s) [ σ ]') ≡ inr' (s [ σ ]')
+  inr'-natural s = cong₂-d MkTm
+    (term (subst (Tm Δ) ⊎'-natural (inr' s [ σ ]'))
+        ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ⊎'-natural) ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z ⟨ n , δ ⟩) ⊎'-natural (term (inr'⟨ T [ σ ] ⟩ (s [ σ ]')))
+        ≡⟨ subst-∘ ⊎'-natural ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type ⊎'-natural) (term (inr'⟨ T [ σ ] ⟩ (s [ σ ]')))
+        ≡⟨ cong (λ y → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) y (term (inr'⟨ T [ σ ] ⟩ (s [ σ ]')))) {x = cong type ⊎'-natural} {y = refl} (uip _ _) ⟩
+      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) {x = type ((T ⊎' S) [ σ ])} refl (term (inr'⟨ T [ σ ] ⟩ (s [ σ ]')))
+        ≡⟨⟩
+      term (inr'⟨ T [ σ ] ⟩ (s [ σ ]')) ∎)
+    (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+    where open ≡-Reasoning
 
 
 --------------------------------------------------

@@ -6,7 +6,7 @@ open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming 
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
 
@@ -148,111 +148,118 @@ morph-comp-app {Γ = Γ} T {k≤m}{m≤n} γ t = trans (subst-cong-app (rel-comp
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
 morph (T [ σ ]) ineq δ t = subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ {ineq = ineq}) (T ⟪ ineq , func σ δ ⟫ t)
-morph-id (_[_] {Δ = Δ}{Γ} T σ) δ = funext (λ t →
-  subst (λ x → T ⟨ _ , func σ (x δ) ⟩) (rel-id Δ) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
-    ≡⟨ subst-∘ (rel-id Δ) ⟩
-  subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-id Δ)) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
-    ≡⟨ subst-subst (naturality σ) ⟩
-  subst (λ x → T ⟨ _ , x δ ⟩) (trans (naturality σ) (cong (func σ ∘_) (rel-id Δ))) (T ⟪ ≤-refl , func σ δ ⟫ t)
-    ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x δ ⟩) y (T ⟪ ≤-refl , func σ δ ⟫ t)) (uip _ (cong (_∘ func σ) (rel-id Γ))) ⟩
-      -- Currently this equality is proven using uip. In a setting without uip, we would need to impose an extra coherence requirement
-      -- on substitutions, ensuring that trans (naturality σ) (cong (func σ ∘_) (rel-id Δ)) ≡ cong (_∘ func σ) (rel-id Γ).
-  subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-id Γ)) (T ⟪ ≤-refl , func σ δ ⟫ t)
-    ≡⟨ sym (subst-∘ (rel-id Γ)) ⟩
-  subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-id Γ) (T ⟪ ≤-refl , func σ δ ⟫ t)
-    ≡⟨ cong-app (morph-id T (func σ δ)) t ⟩
-  t ∎)
-  where open ≡-Reasoning
-morph-comp (_[_] {Δ = Δ}{Γ} T σ) k≤m m≤n δ = funext (λ t →
-  subst (λ x → T ⟨ _ , func σ (x δ) ⟩) (rel-comp Δ k≤m m≤n)
-    (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ)
-      (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
-  ≡⟨ subst-∘ (rel-comp Δ k≤m m≤n) ⟩
-  subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n))
-    (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ)
-      (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
-  ≡⟨ subst-subst (naturality σ) ⟩
-  subst (λ x → T ⟨ _ , x δ ⟩)
-    (trans (naturality σ) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n)))
-      (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)
-  ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x δ ⟩) y (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
-          (uip (trans (naturality σ) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n))) _) ⟩
-    -- Again, without uip we would need to include an extra coherence law for substitutions.
-  subst (λ x → T ⟨ _ , x δ ⟩)
-    (trans (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))) (cong (_∘ Δ ⟪ m≤n ⟫) (naturality σ)))
-      (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)
-  ≡⟨ sym (subst-subst (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))) ⟩
-  subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ Δ ⟪ m≤n ⟫) (naturality σ))
-    (subst (λ x → T ⟨ _ , x δ ⟩) (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))
-      (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
-  ≡⟨ sym (subst-∘ (naturality σ)) ⟩
-  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
-    (subst (λ x → T ⟨ _ , x δ ⟩) (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))
-      (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
-  ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (sym (subst-subst (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)))) ⟩
-  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
-    (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))
-      (subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-comp Γ k≤m m≤n))
-        (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)))
-  ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) y))
-          (sym (subst-∘ (rel-comp Γ k≤m m≤n))) ⟩
-  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
-    (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))
-      (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-comp Γ k≤m m≤n)
-        (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)))
-  ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) y))
-          (cong-app (morph-comp T k≤m m≤n (func σ δ)) t) ⟩
-  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
-    (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))
-      (T ⟪ k≤m , Γ ⟪ m≤n ⟫ (func σ δ) ⟫ (T ⟪ m≤n , func σ δ ⟫ t)))
-  ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (sym (subst-∘ (naturality σ))) ⟩
-  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
-    (subst (λ x → T ⟨ _ , Γ ⟪ k≤m ⟫ (x δ) ⟩) (naturality σ)
-      (T ⟪ k≤m , Γ ⟪ m≤n ⟫ (func σ δ) ⟫ (T ⟪ m≤n , func σ δ ⟫ t)))
-  ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ))
-          (weak-subst-application (λ x y → T ⟪ k≤m , x δ ⟫ y) (naturality σ)) ⟩
-  subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
-    (T ⟪ k≤m , func σ (Δ ⟪ m≤n ⟫ δ) ⟫
-      (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ m≤n , func σ δ ⟫ t))) ∎)
-  where open ≡-Reasoning
+morph-id (_[_] {Δ = Δ}{Γ} T σ) δ = proof
+  where
+     open ≡-Reasoning
+     abstract
+       proof = funext (λ t →
+         subst (λ x → T ⟨ _ , func σ (x δ) ⟩) (rel-id Δ) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
+           ≡⟨ subst-∘ (rel-id Δ) ⟩
+         subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-id Δ)) (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ ≤-refl , func σ δ ⟫ t))
+           ≡⟨ subst-subst (naturality σ) ⟩
+         subst (λ x → T ⟨ _ , x δ ⟩) (trans (naturality σ) (cong (func σ ∘_) (rel-id Δ))) (T ⟪ ≤-refl , func σ δ ⟫ t)
+           ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x δ ⟩) y (T ⟪ ≤-refl , func σ δ ⟫ t)) (uip _ (cong (_∘ func σ) (rel-id Γ))) ⟩
+             -- Currently this equality is proven using uip. In a setting without uip, we would need to impose an extra coherence requirement
+             -- on substitutions, ensuring that trans (naturality σ) (cong (func σ ∘_) (rel-id Δ)) ≡ cong (_∘ func σ) (rel-id Γ).
+         subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-id Γ)) (T ⟪ ≤-refl , func σ δ ⟫ t)
+           ≡⟨ sym (subst-∘ (rel-id Γ)) ⟩
+         subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-id Γ) (T ⟪ ≤-refl , func σ δ ⟫ t)
+           ≡⟨ cong-app (morph-id T (func σ δ)) t ⟩
+         t ∎)
+morph-comp (_[_] {Δ = Δ}{Γ} T σ) k≤m m≤n δ = proof
+  where
+     open ≡-Reasoning
+     abstract
+       proof = funext (λ t →
+         subst (λ x → T ⟨ _ , func σ (x δ) ⟩) (rel-comp Δ k≤m m≤n)
+           (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ)
+             (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+           ≡⟨ subst-∘ (rel-comp Δ k≤m m≤n) ⟩
+         subst (λ x → T ⟨ _ , x δ ⟩) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n))
+           (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ)
+             (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+           ≡⟨ subst-subst (naturality σ) ⟩
+         subst (λ x → T ⟨ _ , x δ ⟩)
+           (trans (naturality σ) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n)))
+             (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)
+           ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x δ ⟩) y (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+                   (uip (trans (naturality σ) (cong (func σ ∘_) (rel-comp Δ k≤m m≤n))) _) ⟩
+           -- Again, without uip we would need to include an extra coherence law for substitutions.
+         subst (λ x → T ⟨ _ , x δ ⟩)
+           (trans (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))) (cong (_∘ Δ ⟪ m≤n ⟫) (naturality σ)))
+             (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)
+           ≡⟨ sym (subst-subst (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))) ⟩
+         subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ Δ ⟪ m≤n ⟫) (naturality σ))
+           (subst (λ x → T ⟨ _ , x δ ⟩) (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))
+             (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+           ≡⟨ sym (subst-∘ (naturality σ)) ⟩
+         subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
+           (subst (λ x → T ⟨ _ , x δ ⟩) (trans (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)))
+             (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t))
+           ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (sym (subst-subst (cong (_∘ func σ) (rel-comp Γ k≤m m≤n)))) ⟩
+         subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
+           (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))
+             (subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (rel-comp Γ k≤m m≤n))
+               (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)))
+           ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) y))
+                   (sym (subst-∘ (rel-comp Γ k≤m m≤n))) ⟩
+         subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
+           (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))
+             (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (rel-comp Γ k≤m m≤n)
+               (T ⟪ ≤-trans k≤m m≤n , func σ δ ⟫ t)))
+           ≡⟨ cong (λ y → subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ) (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ)) y))
+                   (cong-app (morph-comp T k≤m m≤n (func σ δ)) t) ⟩
+         subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
+           (subst (λ x → T ⟨ _ , x δ ⟩) (cong (Γ ⟪ k≤m ⟫ ∘_) (naturality σ))
+             (T ⟪ k≤m , Γ ⟪ m≤n ⟫ (func σ δ) ⟫ (T ⟪ m≤n , func σ δ ⟫ t)))
+           ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)) (sym (subst-∘ (naturality σ))) ⟩
+         subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
+           (subst (λ x → T ⟨ _ , Γ ⟪ k≤m ⟫ (x δ) ⟩) (naturality σ)
+             (T ⟪ k≤m , Γ ⟪ m≤n ⟫ (func σ δ) ⟫ (T ⟪ m≤n , func σ δ ⟫ t)))
+           ≡⟨ cong (subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ))
+                   (weak-subst-application (λ x y → T ⟪ k≤m , x δ ⟫ y) (naturality σ)) ⟩
+         subst (λ x → T ⟨ _ , x (Δ ⟪ m≤n ⟫ δ) ⟩) (naturality σ)
+           (T ⟪ k≤m , func σ (Δ ⟪ m≤n ⟫ δ) ⟫
+             (subst (λ x → T ⟨ _ , x δ ⟩) (naturality σ) (T ⟪ m≤n , func σ δ ⟫ t))) ∎)
 
-ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
-ty-subst-id T = cong₂-d (MkTy _ _)
-                        (funextI (funext λ _ → uip _ _))
-                        (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+abstract
+  ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
+  ty-subst-id T = cong₂-d (MkTy _ _)
+                          (funextI (funext λ _ → uip _ _))
+                          (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
 
-ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-ty-subst-comp T τ σ = cong₃-d (MkTy _)
-  (funextI (funextI (funext λ ineq → funext λ δ → funext λ t →
-      subst (λ x → T ⟨ _ , func τ (x δ) ⟩) (naturality σ)
-      (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (naturality τ)
-       (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-       ≡⟨ subst-∘ (naturality σ)  ⟩
-      subst (λ x → T ⟨ _ , x δ ⟩) (cong (func τ ∘_) (naturality σ))
-      (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (naturality τ)
-       (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-       ≡⟨ cong (subst (λ x → T ⟨ _  , x δ ⟩) (cong (func τ ∘_) (naturality σ))) (subst-∘ (naturality τ)) ⟩
-      subst (λ x → T ⟨ _ , x δ ⟩) (cong (func τ ∘_) (naturality σ))
-      (subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (naturality τ))
-       (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-       ≡⟨ subst-subst (cong (_∘ func σ) (naturality τ))  ⟩
-      subst (λ x → T ⟨ _ , x δ ⟩)
-        (trans (cong (_∘ func σ) (naturality τ)) (cong (func τ ∘_) (naturality σ)))
-        (T ⟪ ineq , func τ (func σ δ) ⟫ t)
-       ≡⟨ cong
-            (λ p →
-               subst (λ x → T ⟨ _ , x δ ⟩) p
-               (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-            (cong (trans (cong (_∘ func σ) (naturality τ))) (sym (trans-reflʳ (cong (func τ ∘_) (naturality σ))))) ⟩
-       subst (λ x → T ⟨ _ , x δ ⟩)
-         (trans (cong (_∘ func σ) (naturality τ))
-           (trans (cong (func τ ∘_) (naturality σ))
-         refl))
-       (T ⟪ ineq , func τ (func σ δ) ⟫ t) ∎
-      )))
-  (funextI (funext (λ _ → uip _ _)))
-  (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
-  where open ≡-Reasoning
+  ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
+  ty-subst-comp T τ σ = cong₃-d (MkTy _)
+    (funextI (funextI (funext λ ineq → funext λ δ → funext λ t →
+        subst (λ x → T ⟨ _ , func τ (x δ) ⟩) (naturality σ)
+        (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (naturality τ)
+         (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+         ≡⟨ subst-∘ (naturality σ)  ⟩
+        subst (λ x → T ⟨ _ , x δ ⟩) (cong (func τ ∘_) (naturality σ))
+        (subst (λ x → T ⟨ _ , x (func σ δ) ⟩) (naturality τ)
+         (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+         ≡⟨ cong (subst (λ x → T ⟨ _  , x δ ⟩) (cong (func τ ∘_) (naturality σ))) (subst-∘ (naturality τ)) ⟩
+        subst (λ x → T ⟨ _ , x δ ⟩) (cong (func τ ∘_) (naturality σ))
+        (subst (λ x → T ⟨ _ , x δ ⟩) (cong (_∘ func σ) (naturality τ))
+         (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+         ≡⟨ subst-subst (cong (_∘ func σ) (naturality τ))  ⟩
+        subst (λ x → T ⟨ _ , x δ ⟩)
+          (trans (cong (_∘ func σ) (naturality τ)) (cong (func τ ∘_) (naturality σ)))
+          (T ⟪ ineq , func τ (func σ δ) ⟫ t)
+         ≡⟨ cong
+              (λ p →
+                 subst (λ x → T ⟨ _ , x δ ⟩) p
+                 (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+              (cong (trans (cong (_∘ func σ) (naturality τ))) (sym (trans-reflʳ (cong (func τ ∘_) (naturality σ))))) ⟩
+         subst (λ x → T ⟨ _ , x δ ⟩)
+           (trans (cong (_∘ func σ) (naturality τ))
+             (trans (cong (func τ ∘_) (naturality σ))
+           refl))
+         (T ⟪ ineq , func τ (func σ δ) ⟫ t) ∎
+        )))
+    (funextI (funext (λ _ → uip _ _)))
+    (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+    where open ≡-Reasoning
 
 
 --------------------------------------------------
@@ -346,4 +353,6 @@ ctx-ext-subst {Δ = Δ}{Γ}{T} τ = [ π {T = T} ⊚ τ , subst (Tm Δ) (ty-subs
 
 ctx-ext-subst⁻¹ : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
 func (ctx-ext-subst⁻¹ [ σ , t ]) = λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ]
-naturality (ctx-ext-subst⁻¹ [ σ , t ]) = funext (λ δ → to-Σ-eq (cong-app (naturality σ) δ) (trans (subst-cong-app (naturality σ) _) (naturality t _ δ)))
+naturality (ctx-ext-subst⁻¹ [ σ , t ]) = funext (λ δ → to-Σ-eq (cong-app (naturality σ) δ)
+                                                                (trans (subst-cong-app (naturality σ) _)
+                                                                       (naturality t _ δ)))

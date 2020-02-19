@@ -2,11 +2,11 @@ module Helpers where
 
 open import Axiom.Extensionality.Propositional
 open import Axiom.UniquenessOfIdentityProofs
-open import Level
-open import Data.Nat
-open import Data.Product using (Σ; _,_)
-open import Data.Unit
-open import Relation.Binary.PropositionalEquality hiding (subst₂; Extensionality)
+open import Data.Nat hiding (_⊔_)
+open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.Unit using (⊤; tt)
+open import Level renaming (zero to lzero; suc to lsuc)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 variable
   ℓ ℓ' : Level
@@ -74,6 +74,6 @@ subst-cong-app refl z = refl
 to-Σ-eq : {A : Set ℓ} {B : A → Set ℓ'}
           {a a' : A} {b : B a} {b' : B a'}
           (e1 : a ≡ a') (e2 : subst B e1 b ≡ b') →
-          (a , b) ≡ (a' , b')
-to-Σ-eq e1 e2 = cong₂-d _,_ e1 e2
+          [ a , b ] ≡ [ a' , b' ]
+to-Σ-eq e1 e2 = cong₂-d [_,_] e1 e2
 
