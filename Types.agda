@@ -12,6 +12,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 
 open import Helpers
 open import CwF-Structure
+open import Yoneda
 {-
 --------------------------------------------------
 -- (Non-dependent) product types
@@ -101,6 +102,7 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
 -- (Non-dependent) function types
 --------------------------------------------------
 
+{-
 record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
   constructor MkFunc
   field
@@ -116,6 +118,13 @@ morph (_⇛_ {Γ = Γ} T S) = λ m≤n γ f → MkFunc (λ k≤m → subst (λ x
                                                          ∘ f $⟨ ≤-trans k≤m m≤n ⟩_
                                                          ∘ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)))
                                                (λ k≤m m≤n → funext λ t → {!!})
+morph-id (T ⇛ S) = {!!}
+morph-comp (T ⇛ S) = {!!}
+-}
+
+_⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
+type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
+morph (T ⇛ S) = λ m≤n γ s → {!s [ (to-𝕪⇒𝕪 m≤n) ⊹ ]'!}
 morph-id (T ⇛ S) = {!!}
 morph-comp (T ⇛ S) = {!!}
 
