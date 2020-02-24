@@ -102,7 +102,6 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
 -- (Non-dependent) function types
 --------------------------------------------------
 
-{-
 record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
   constructor MkFunc
   field
@@ -117,11 +116,40 @@ type (_⇛_ {Γ = Γ} T S) = λ n γ → PresheafFunc T S n γ
 morph (_⇛_ {Γ = Γ} T S) = λ m≤n γ f → MkFunc (λ k≤m → subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ k≤m m≤n)
                                                          ∘ f $⟨ ≤-trans k≤m m≤n ⟩_
                                                          ∘ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)))
-                                               (λ k≤m m≤n → funext λ t → {!!})
+                                               (λ k≤l l≤m → funext λ t →
+                                                 subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n)
+                                                   (f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n ⟩
+                                                   subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ (≤-trans k≤l l≤m) m≤n))
+                                                   (subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-comp Γ k≤l l≤m))
+                                                   (T ⟪ k≤l , Γ ⟪ l≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟫ t)))
+                                                     ≡⟨ {!!} ⟩
+                                                 subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n)
+                                                   (subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))
+                                                   (f $⟨ ≤-trans k≤l (≤-trans l≤m m≤n) ⟩
+                                                   subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤l (≤-trans l≤m m≤n)))
+                                                   (T ⟪ k≤l , Γ ⟪ ≤-trans l≤m m≤n ⟫ γ ⟫
+                                                   subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ l≤m m≤n)) t)))
+                                                     ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n)
+                                                                    (subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))
+                                                                    (z
+                                                                    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ l≤m m≤n)) t))))
+                                                             (naturality f k≤l (≤-trans l≤m m≤n)) ⟩
+                                                 subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n)
+                                                   (subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))
+                                                   (subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤l (≤-trans l≤m m≤n)))
+                                                   (S ⟪ k≤l , Γ ⟪ ≤-trans l≤m m≤n ⟫ γ ⟫
+                                                   (f $⟨ ≤-trans l≤m m≤n ⟩
+                                                   subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ l≤m m≤n)) t))))
+                                                     ≡⟨ {!!} ⟩
+                                                 subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-comp Γ k≤l l≤m))
+                                                   (S ⟪ k≤l , Γ ⟪ l≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟫
+                                                   subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ l≤m m≤n)
+                                                   (f $⟨ ≤-trans l≤m m≤n ⟩
+                                                   subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ l≤m m≤n)) t)) ∎)
+  where open ≡-Reasoning
 morph-id (T ⇛ S) = {!!}
 morph-comp (T ⇛ S) = {!!}
--}
-
+{-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
 morph (_⇛_ {Γ = Γ} T S) = λ m≤n γ s → helper (s [ (to-𝕪⇒𝕪 m≤n) ⊹ ]')
@@ -151,7 +179,7 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
 
   app : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
   app f t = {!ap f [ ? ]'!}
-
+-}
 
 --------------------------------------------------
 -- Sum types
