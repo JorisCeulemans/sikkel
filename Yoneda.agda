@@ -26,7 +26,7 @@ rel-comp (𝕪 n) = λ _ _ → funext λ { (lift _) → cong lift (≤-irrelevan
 𝕪[_]_ : ∀ ℓ → ℕ → Ctx ℓ
 𝕪[ ℓ ] n = 𝕪 {ℓ} n
 
--- The Yonede lemma
+-- The Yoneda lemma
 to-𝕪⇒* : {Γ : Ctx ℓ} {n : ℕ} → Γ ⟨ n ⟩ → 𝕪 n ⇒ Γ
 func (to-𝕪⇒* {Γ = Γ} γ) (lift ineq) = Γ ⟪ ineq ⟫ γ
 naturality (to-𝕪⇒* {Γ = Γ} γ) = funext (λ { (lift ineq) → cong-app (sym (rel-comp Γ _ ineq)) γ })
