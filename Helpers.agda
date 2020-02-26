@@ -76,4 +76,3 @@ to-Σ-eq : {A : Set ℓ} {B : A → Set ℓ'}
           (e1 : a ≡ a') (e2 : subst B e1 b ≡ b') →
           [ a , b ] ≡ [ a' , b' ]
 to-Σ-eq e1 e2 = cong₂-d [_,_] e1 e2
-
