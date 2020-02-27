@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 
 variable
   ℓ ℓ' : Level
-  k m n : ℕ
+  k l m n : ℕ
 
 postulate
   funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
@@ -31,6 +31,12 @@ weak-subst-application : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Se
                          (ex : x ≡ x') →
                          subst C ex (f x y) ≡ f x' (subst B ex y)
 weak-subst-application f refl = refl
+
+function-subst : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
+                 {x x' : A} (ex : x ≡ x') {y : B x'}
+                 (f : B x → C x) →
+                 (subst (λ z → B z → C z) ex f) y ≡ subst C ex (f (subst B (sym ex) y))
+function-subst refl f = refl
 
 subst₂ : ∀ {a b c} {A : Set a} {B : A → Set b} (C : (x : A) → B x → Set c)
          {x x' : A} {y : B x} {y' : B x'}
