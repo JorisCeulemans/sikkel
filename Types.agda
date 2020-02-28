@@ -97,11 +97,22 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
     (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
     where open ≡-Reasoning
 
+β-×-fst : {Γ : Ctx ℓ} {T S : Ty Γ} (t : Tm Γ T) (s : Tm Γ S) →
+          fst (pair t s) ≡ t
+β-×-fst t s = cong₂-d MkTm refl {!!}
+
+β-×-snd : {Γ : Ctx ℓ} {T S : Ty Γ} (t : Tm Γ T) (s : Tm Γ S) →
+          snd (pair t s) ≡ s
+β-×-snd t s = cong₂-d MkTm refl {!!}
+
+η-× : {Γ : Ctx ℓ} {T S : Ty Γ} (p : Tm Γ (T ×' S)) →
+      p ≡ pair (fst p) (snd p)
+η-× p = cong₂-d MkTm refl {!!}
 
 --------------------------------------------------
 -- (Non-dependent) function types
 --------------------------------------------------
-
+{-
 record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
   constructor MkFunc
   field
@@ -372,6 +383,7 @@ morph-comp (_⇛_ {Γ = Γ} T S) = λ l≤m m≤n γ → funext λ f → to-pshf
               (subst-subst-sym (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))) ⟩
   ((T ⇛ S) ⟪ l≤m , Γ ⟪ m≤n ⟫ γ ⟫) ((T ⇛ S) ⟪ m≤n , γ ⟫ f) $⟨ k≤l ⟩ t ∎
   where open ≡-Reasoning
+-}
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
@@ -531,6 +543,14 @@ term (if' c then' t else' f) = λ n γ → if c ⟨ n , γ ⟩' then t ⟨ n , �
 naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq γ with c ⟨ m , Γ ⟪ ineq ⟫ γ ⟩' | c ⟨ n , γ ⟩' | c ⟪ ineq , γ ⟫'
 naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq γ | false | .false | refl = f ⟪ ineq , γ ⟫'
 naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq γ | true  | .true  | refl = t ⟪ ineq , γ ⟫'
+
+β-Bool'-true : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
+               if' true' [ empty-subst Γ ]' then' t else' t' ≡ t
+β-Bool'-true t t' = refl
+
+β-Bool'-false : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
+               if' false' [ empty-subst Γ ]' then' t else' t' ≡ t'
+β-Bool'-false t t' = refl
 
 Nat' : Ty ◇
 Nat' = Discr ℕ
