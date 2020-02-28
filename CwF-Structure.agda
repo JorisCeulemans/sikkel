@@ -9,12 +9,12 @@ open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-
+{-
 infixl 15 _,,_
 infix 10 _⇒_
 infix 15 _⟨_,_⟩
 infixl 20 _⊚_
-
+-}
 --------------------------------------------------
 -- Contexts and substitutions + category structure
 --------------------------------------------------
@@ -22,18 +22,18 @@ infixl 20 _⊚_
 record Ctx ℓ : Set (lsuc ℓ) where
   field
     set : ℕ → Set ℓ
-    rel : ∀ {m n} → m ≤ n → set n → set m
+    rel : ∀ {m n} → .(m ≤ n) → set n → set m
     rel-id : ∀ {n} → rel {n} (≤-refl) ≡ id
-    rel-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) → rel (≤-trans k≤m m≤n) ≡ rel k≤m ∘ rel m≤n
+    rel-comp : ∀ {k m n} .(k≤m : k ≤ m) .(m≤n : m ≤ n) → rel (≤-trans k≤m m≤n) ≡ rel k≤m ∘ rel m≤n
 open Ctx public
 
 _⟨_⟩ : Ctx ℓ → ℕ → Set ℓ
 Γ ⟨ n ⟩ = set Γ n
 
-_⟪_⟫ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
+_⟪_⟫ : (Γ : Ctx ℓ) .(ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 Γ ⟪ ineq ⟫ = rel Γ ineq
 
-_⟪_⟫_ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
+_⟪_⟫_ : (Γ : Ctx ℓ) .(ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 Γ ⟪ ineq ⟫ γ = (Γ ⟪ ineq ⟫) γ
 
 -- The empty context
@@ -47,7 +47,7 @@ record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
   constructor MkSubst
   field
     func : ∀ {n} → Δ ⟨ n ⟩ → Γ ⟨ n ⟩
-    naturality : ∀ {m n ineq} → (Γ ⟪ ineq ⟫) ∘ func {n} ≡ func {m} ∘ (Δ ⟪ ineq ⟫)
+    naturality : ∀ {m n} .{ineq} → (Γ ⟪ ineq ⟫) ∘ func {n} ≡ func {m} ∘ (Δ ⟪ ineq ⟫)
 open _⇒_ public
 
 id-subst : (Γ : Ctx ℓ) → Γ ⇒ Γ
@@ -63,8 +63,8 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {ineq = ineq} =
   where open ≡-Reasoning
 
 ⊚-id-substʳ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≡ σ
-⊚-id-substʳ σ = cong (MkSubst _) (funextI (funextI (funextI (trans (trans-reflʳ _) (cong-id _)))))
-
+⊚-id-substʳ σ = cong (MkSubst _) (funextI (funextI {!funextI-irr {!trans (trans-reflʳ _) (cong-id _)!}!}))
+{-
 ⊚-id-substˡ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≡ σ
 ⊚-id-substˡ σ = cong (MkSubst _) (funextI (funextI (funextI (trans (trans-reflʳ _) (cong-id _)))))
 
@@ -512,3 +512,4 @@ _⊹ {Δ = Δ} {T = T} σ = to-ext-subst [ σ ⊚ π , subst (Tm (Δ ,, T [ σ ]
 module _ {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊹-π-comm : π {T = T} ⊚ (σ ⊹) ≡ σ ⊚ π
   ⊹-π-comm = cong (MkSubst _) (funextI (funextI (funextI (uip _ _))))
+-}

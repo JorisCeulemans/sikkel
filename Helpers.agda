@@ -15,6 +15,8 @@ variable
 postulate
   funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
   funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
+  funextI-irr : {A : Set ℓ} {B : .A → Set ℓ'} {f g : .{x : A} → B x} →
+                (∀ {x} → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ (λ {x} → g {x})
 
 uip : ∀ {a} {A : Set a} → UIP A
 uip refl refl = refl
