@@ -512,3 +512,9 @@ _⊹ {Δ = Δ} {T = T} σ = to-ext-subst [ σ ⊚ π , subst (Tm (Δ ,, T [ σ ]
 module _ {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊹-π-comm : π {T = T} ⊚ (σ ⊹) ≡ σ ⊚ π
   ⊹-π-comm = cong (MkSubst _) (funextI (funextI (funextI (uip _ _))))
+{-
+⊹-tm-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (S : Ty (Θ ,, T)) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
+            Tm (Δ ,, T [ τ ] [ σ ]) (S [ τ ⊹ ] [ σ ⊹ ]) → Tm (Δ ,, T [ τ ⊚ σ ]) (S [ (τ ⊚ σ) ⊹ ])
+term (⊹-tm-comp T S τ σ s) n [ δ , t ] = {!s ⟨ n , ? ⟩'!}
+naturality (⊹-tm-comp T S τ σ s) = {!!}
+-}

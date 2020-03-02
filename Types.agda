@@ -17,7 +17,7 @@ open import Yoneda
 --------------------------------------------------
 -- (Non-dependent) product types
 --------------------------------------------------
-
+{-
 subst-× : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
           {x x' : A} (e : x ≡ x')
           (p : B x × C x) →
@@ -108,11 +108,11 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
 η-× : {Γ : Ctx ℓ} {T S : Ty Γ} (p : Tm Γ (T ×' S)) →
       p ≡ pair (fst p) (snd p)
 η-× p = cong₂-d MkTm refl {!!}
-
+-}
 --------------------------------------------------
 -- (Non-dependent) function types
 --------------------------------------------------
-{-
+
 record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
   constructor MkFunc
   field
@@ -383,7 +383,32 @@ morph-comp (_⇛_ {Γ = Γ} T S) = λ l≤m m≤n γ → funext λ f → to-pshf
               (subst-subst-sym (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))) ⟩
   ((T ⇛ S) ⟪ l≤m , Γ ⟪ m≤n ⟫ γ ⟫) ((T ⇛ S) ⟪ m≤n , γ ⟫ f) $⟨ k≤l ⟩ t ∎
   where open ≡-Reasoning
--}
+
+lam : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
+term (lam {Γ = Γ} T {S} b) = λ n γ → MkFunc (λ m≤n t → b ⟨ _ , [ Γ ⟪ m≤n ⟫ γ , t ] ⟩')
+                                             (λ k≤m m≤n → funext λ t →
+  b ⟨ _ , [ Γ ⟪ ≤-trans k≤m m≤n ⟫ γ , subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) ((T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫) t) ] ⟩'
+    ≡⟨ sym (weak-subst-application (λ x y → b ⟨ _ , [ x γ , y ] ⟩') (sym (rel-comp Γ k≤m m≤n))) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) (b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ t ] ⟩')
+    ≡⟨ cong (subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n))) (sym (naturality b k≤m [ Γ ⟪ m≤n ⟫ γ , t ])) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) (S ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ (b ⟨ _ , [ Γ ⟪ m≤n ⟫ γ , t ] ⟩')) ∎)
+  where open ≡-Reasoning
+naturality (lam {Γ = Γ} T {S} b) = λ m≤n γ → to-pshfun-eq (λ k≤m t →
+  subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ k≤m m≤n) (b ⟨ _ , [ Γ ⟪ ≤-trans k≤m m≤n ⟫ γ , subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) t ] ⟩')
+    ≡⟨ weak-subst-application (λ x y → b ⟨ _ , [ x γ , y ] ⟩') (rel-comp Γ k≤m m≤n) ⟩
+  b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , subst (λ x → T ⟨ _ , x γ ⟩) (rel-comp Γ k≤m m≤n) (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) t) ] ⟩'
+    ≡⟨ cong (λ z → b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , z ] ⟩') (subst-subst-sym (rel-comp Γ k≤m m≤n)) ⟩
+  b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , t ] ⟩' ∎)
+  where open ≡-Reasoning
+
+ap : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm (Γ ,, T) (S [ π ])
+term (ap {Γ = Γ}{T}{S} f) n [ γ , t ] = subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ) ((f ⟨ n , γ ⟩') $⟨ ≤-refl ⟩ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
+naturality (ap f) = {!!}
+
+app : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
+term (app {Γ = Γ}{T}{S} f t) = λ n γ → subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ) ((f ⟨ n , γ ⟩') $⟨ ≤-refl ⟩ (t ⟨ n , Γ ⟪ ≤-refl ⟫ γ ⟩'))
+naturality (app f t) = {!!}
+
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
@@ -400,7 +425,26 @@ morph (_⇛_ {Γ = Γ} T S) = λ m≤n γ s → helper (s [ (to-𝕪⇒𝕪 m≤
                                subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) x) (ty-subst-comp S (to-𝕪⇒* γ ⊚ π) ((to-𝕪⇒𝕪 m≤n) ⊹))
 morph-id (T ⇛ S) = {!!}
 morph-comp (T ⇛ S) = {!!}
-
+-}
+{-
+Π : {Γ : Ctx ℓ} (T : Ty Γ) (S : Ty (Γ ,, T)) → Ty Γ
+type (Π T S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊹ ])
+morph (Π {Γ = Γ} T S) {m = m} m≤n γ s = subst (λ x → Tm (𝕪 m ,, T [ x ]) (S [ x ⊹ ])) (𝕪-comp m≤n γ)
+                                        (subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ⊚ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) {!!} {!s [ (to-𝕪⇒𝕪 m≤n) ⊹ ]'!})
+{-  where
+    helper : ∀ {m n} {m≤n : m ≤ n} {γ : Γ ⟨ n ⟩} →
+             Tm (𝕪 m ,, (T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ])) (S [ to-𝕪⇒* γ ⊹ ] [ to-𝕪⇒𝕪 m≤n ⊹ ]) →
+             Tm (𝕪 m ,, (T [ to-𝕪⇒* (Γ ⟪ m≤n ⟫ γ) ])) (S [ to-𝕪⇒* (Γ ⟪ m≤n ⟫ γ) ⊹ ])
+    helper {m} {n} {m≤n} {γ} = {!subst (λ x → Tm (𝕪 m ,, T [ x ]) (S [ x ⊚ π ])) (𝕪-comp m≤n γ) ∘
+                               subst (λ x → Tm (𝕪 m ,, x) (S [ to-𝕪⇒* γ ⊚ to-𝕪⇒𝕪 m≤n ⊚ π {T = x}])) (ty-subst-comp T (to-𝕪⇒* γ) (to-𝕪⇒𝕪 m≤n)) ∘
+                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) (sym (⊚-assoc (to-𝕪⇒* γ) (to-𝕪⇒𝕪 m≤n) π)) ∘
+                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ to-𝕪⇒* γ ⊚ x ])) (⊹-π-comm (to-𝕪⇒𝕪 m≤n)) ∘
+                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) (⊚-assoc (to-𝕪⇒* γ) π ((to-𝕪⇒𝕪 m≤n) ⊹))!} ∘
+                               {!subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) x) (ty-subst-comp S (to-𝕪⇒* γ ⊹) (to-𝕪⇒𝕪 m≤n ⊹))!}-}
+morph-id (Π T S) = {!!}
+morph-comp (Π T S) = {!!}
+-}
+{-
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   lam : Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
   term (lam b) = λ n γ → subst (λ x → Tm (𝕪 n ,, T [ to-𝕪⇒* γ ]) (S [ x ])) (⊹-π-comm (to-𝕪⇒* γ))
@@ -419,7 +463,7 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
 --------------------------------------------------
 -- Sum types
 --------------------------------------------------
-
+{-
 subst-⊎ˡ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
            {x x' : A} (e : x ≡ x') {y : B x} →
            subst (λ x → B x ⊎ C x) e (inl y) ≡ inl (subst B e y)
@@ -560,3 +604,4 @@ zero' = discr zero
 
 suc' : Tm ◇ Nat' → Tm ◇ Nat'
 suc' t = discr (suc (undiscr t))
+-}
