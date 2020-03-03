@@ -13,6 +13,7 @@ open import Helpers
 infixl 15 _,,_
 infix 10 _⇒_
 infix 15 _⟨_,_⟩
+infixr 11 _⟪_,_⟫_
 infixl 20 _⊚_
 
 --------------------------------------------------

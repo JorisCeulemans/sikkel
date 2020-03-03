@@ -64,6 +64,12 @@ cong₃-d : ∀ {a b c d} {A : Set a} {B : A → Set b} {C : (x : A) → B x →
           f x y z ≡ f x' y' z'
 cong₃-d f refl refl refl = refl
 
+cong-sym : ∀ {a b} {A : Set a} {B : Set b}
+           (f : A → B)
+           {a a' : A} (e : a ≡ a') →
+           cong f (sym e) ≡ sym (cong f e)
+cong-sym f refl = refl
+
 test : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : A → B → C → Set d}
        (f : (x : A) (y : B) (z : C) → D x y z)
        {x x' : A} {y : B} {z : C}

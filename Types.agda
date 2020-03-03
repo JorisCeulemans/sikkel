@@ -120,6 +120,7 @@ record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n 
     naturality : ∀ {k m} (k≤m : k ≤ m) (m≤n : m ≤ n) →
                  _$⟨_⟩_ (≤-trans k≤m m≤n) ∘ subst (λ x → T ⟨ k , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) ∘ T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ ≡
                    subst (λ x → S ⟨ k , x γ ⟩) (sym (rel-comp Γ k≤m m≤n)) ∘ (S ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫) ∘ _$⟨_⟩_ m≤n
+  infix 13 _$⟨_⟩_
 open PresheafFunc public
 
 to-pshfun-eq : {Γ : Ctx ℓ} {T S : Ty Γ} {n : ℕ} {γ : Γ ⟨ n ⟩} {f g : PresheafFunc T S n γ} →
@@ -134,8 +135,8 @@ lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n γ f = MkFunc g g-nat
   where
     g : ∀ {k} (k≤m : k ≤ m) → T ⟨ k , Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟩ → S ⟨ k , Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟩
     g k≤m = subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ k≤m m≤n)
-        ∘ f $⟨ ≤-trans k≤m m≤n ⟩_
-        ∘ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n))
+            ∘ f $⟨ ≤-trans k≤m m≤n ⟩_
+            ∘ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ k≤m m≤n))
     open ≡-Reasoning
     abstract
       g-nat : ∀ {k l} (k≤l : k ≤ l) (l≤m : l ≤ m) → _
@@ -401,13 +402,187 @@ naturality (lam {Γ = Γ} T {S} b) = λ m≤n γ → to-pshfun-eq (λ k≤m t �
   b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , t ] ⟩' ∎)
   where open ≡-Reasoning
 
-ap : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm (Γ ,, T) (S [ π ])
-term (ap {Γ = Γ}{T}{S} f) n [ γ , t ] = subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ) ((f ⟨ n , γ ⟩') $⟨ ≤-refl ⟩ subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
-naturality (ap f) = {!!}
+func-term-natural : {Γ : Ctx ℓ} {T S : Ty Γ} (f : Tm Γ (T ⇛ S))
+                    (m≤n : m ≤ n) {γ : Γ ⟨ n ⟩} (t : T ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩) →
+                    f ⟨ n , γ ⟩' $⟨ m≤n ⟩ t ≡
+                      subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+                            (f ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩ (subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ)) t))
+func-term-natural {Γ = Γ}{T}{S} f m≤n {γ} t =
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩ t
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (sym (subst-subst-sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+    (subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) t)
+      ≡⟨ sym (weak-subst-application (λ x y → f ⟨ _ , γ ⟩' $⟨ x ⟩ y) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) t)
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+                      (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩ z))
+              (subst-∘ (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) t)
+      ≡⟨ subst-∘ (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) t)
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))
+                            (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+                            subst (λ x → T ⟨ _ , x γ ⟩) z t))
+              (uip (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) _) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (trans (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) (sym (rel-comp Γ ≤-refl m≤n))) t)
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x γ ⟩) z
+                      (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+                      subst (λ x → T ⟨ _ , x γ ⟩) (trans (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) (sym (rel-comp Γ ≤-refl m≤n))) t))
+              (uip (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) _) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (trans (rel-comp Γ ≤-refl m≤n) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ)))
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (trans (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) (sym (rel-comp Γ ≤-refl m≤n))) t)
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x γ ⟩) (trans (rel-comp Γ ≤-refl m≤n) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ)))
+                      (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩ z))
+              (sym (subst-subst (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))))) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (trans (rel-comp Γ ≤-refl m≤n) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ)))
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) t))
+      ≡⟨ sym (subst-subst (rel-comp Γ ≤-refl m≤n)) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))
+    (subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ ≤-refl m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) t)))
+      ≡⟨⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))
+    (((T ⇛ S) ⟪ m≤n , γ ⟫ f ⟨ _ , γ ⟩') $⟨ ≤-refl ⟩
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) t))
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x γ ⟩) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))
+                      (z $⟨ ≤-refl ⟩
+                      (subst (λ x → T ⟨ _ , x γ ⟩) (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) t)))
+              (naturality f m≤n γ) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) t)
+      ≡⟨ sym (subst-∘ (rel-id Γ)) ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) t)
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+                      (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+                      subst (λ x → T ⟨ _ , x γ ⟩) z t))
+              (sym (cong-sym (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))) ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ))) t)
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+                      (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩ z))
+              (sym (subst-∘ (sym (rel-id Γ)))) ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ)) t) ∎
+  where open ≡-Reasoning
 
 app : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
-term (app {Γ = Γ}{T}{S} f t) = λ n γ → subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ) ((f ⟨ n , γ ⟩') $⟨ ≤-refl ⟩ (t ⟨ n , Γ ⟪ ≤-refl ⟫ γ ⟩'))
-naturality (app f t) = {!!}
+term (app {Γ = Γ}{T}{S} f t) = λ n γ → subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ)
+                                              (f ⟨ n , γ ⟩' $⟨ ≤-refl ⟩ t ⟨ n , Γ ⟪ ≤-refl ⟫ γ ⟩')
+naturality (app {Γ = Γ}{T}{S} f t) = λ m≤n γ →
+  S ⟪ m≤n , γ ⟫ ((app f t) ⟨ _ , γ ⟩')
+      ≡⟨⟩
+  S ⟪ m≤n , γ ⟫
+    subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩')
+      ≡⟨ sym (weak-subst-application (λ x y → S ⟪ m≤n , x γ ⟫ y) (rel-id Γ)) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩')
+      ≡⟨ subst-∘ (rel-id Γ) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (Γ ⟪ m≤n ⟫ ∘_) (rel-id Γ))
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩')
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x γ ⟩) z
+                      (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+                      f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+                      t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩'))
+              (uip (cong (Γ ⟪ m≤n ⟫ ∘_) (rel-id Γ)) _) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (trans (sym (rel-comp Γ m≤n ≤-refl))
+                                     (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)))
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩')
+      ≡⟨ sym (subst-subst (sym (rel-comp Γ m≤n ≤-refl))) ⟩
+  subst (λ x → S ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))
+    (subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩'))
+      ≡⟨ sym (subst-∘ (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩'))
+      ≡⟨ cong (subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))
+              (cong-app (sym (naturality (f ⟨ _ , γ ⟩') m≤n ≤-refl)) (t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩')) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans m≤n ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (T ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩'))
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+                      (f ⟨ _ , γ ⟩' $⟨ ≤-trans m≤n ≤-refl ⟩
+                      subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl)) z))
+              (naturality t m≤n (rel Γ ≤-refl γ)) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans m≤n ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩'))
+      ≡⟨ weak-subst-application (λ x y → f ⟨ _ , γ ⟩' $⟨ x ⟩ y) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩'))
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (subst-∘ (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩'))
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (subst-subst (sym (rel-comp Γ m≤n ≤-refl))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (trans (sym (rel-comp Γ m≤n ≤-refl))
+                                       (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)))
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩')
+      ≡⟨ cong (λ z → f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+                     subst (λ x → T ⟨ _ , x γ ⟩) z
+                     (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩'))
+              (uip _ (cong (Γ ⟪ m≤n ⟫ ∘_) (rel-id Γ))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (cong (Γ ⟪ m≤n ⟫ ∘_) (rel-id Γ))
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩')
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (sym (subst-∘ (rel-id Γ))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ ≤-refl ⟫ γ) ⟩')
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (cong-d (λ x → t ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩') (rel-id Γ)) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩ t ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩'
+      ≡⟨ func-term-natural f m≤n (t ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩') ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+    (t ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩'))
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+                            (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩ z))
+              (cong-d (λ x → t ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩') (sym (rel-id Γ))) ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    t ⟨ _ , Γ ⟪ ≤-refl ⟫ (Γ ⟪ m≤n ⟫ γ) ⟩')
+      ≡⟨⟩
+  (app f t) ⟨ _  , Γ ⟪ m≤n ⟫ γ ⟩' ∎
+  where open ≡-Reasoning
 
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
