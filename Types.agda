@@ -482,6 +482,37 @@ naturality (app {Γ = Γ}{T}{S} f t) = λ m≤n γ →
   (app f t) ⟨ _  , Γ ⟪ m≤n ⟫ γ ⟩' ∎
   where open ≡-Reasoning
 
+β-func : {Γ : Ctx ℓ} {T S : Ty Γ}
+         (b : Tm (Γ ,, T) (S [ π ])) (t : Tm Γ T) →
+         app (lam T b) t ≡ b ⌈ t ⌋
+β-func {Γ = Γ}{T}{S} b t = cong₂-d MkTm
+  (term (app (lam T b) t)
+      ≡⟨ (funext λ n → funext λ γ →
+         sym (subst-cong-app (rel-id Γ) (b ⟨ _ , [ Γ ⟪ ≤-refl ⟫ γ , t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩' ] ⟩'))) ⟩
+    (λ n γ → subst (λ x → S ⟨ _ , x ⟩) (cong-app (rel-id Γ) γ)
+                    (b ⟨ _ , [ Γ ⟪ ≤-refl ⟫ γ , t ⟨ _ , Γ ⟪ ≤-refl ⟫ γ ⟩' ] ⟩'))
+      ≡⟨ (funext λ n → funext λ γ →
+         cong-d (λ z → b ⟨ _ , [ z , t ⟨ _ , z ⟩' ] ⟩') (cong-app (rel-id Γ) γ)) ⟩
+    term (b [ to-ext-subst (id-subst Γ) (t [ id-subst Γ ]') ]')
+      ≡⟨ cong (λ y → subst (λ z → (n : ℕ) (γ : Γ ⟨ n ⟩) → z n γ) y
+                             (term (b [ to-ext-subst (id-subst Γ) (t [ id-subst Γ ]') ]')))
+              (uip refl (cong type S[π][t]=S)) ⟩
+    subst (λ z → (n : ℕ) (γ : Γ ⟨ n ⟩) → z n γ) (cong type S[π][t]=S)
+      (term (b [ to-ext-subst (id-subst Γ) (t [ id-subst Γ ]') ]'))
+      ≡⟨ sym (subst-∘ S[π][t]=S) ⟩
+    subst (λ z → (n : ℕ) (γ : Γ ⟨ n ⟩) → z ⟨ n , γ ⟩) S[π][t]=S
+      (term (b [ to-ext-subst (id-subst Γ) (t [ id-subst Γ ]') ]'))
+      ≡⟨ weak-subst-application (λ x y → term y) S[π][t]=S ⟩
+    term
+      (subst (Tm Γ) S[π][t]=S
+      (b [ to-ext-subst (id-subst Γ) (t [ id-subst Γ ]') ]')) ∎)
+  (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+  where
+    open ≡-Reasoning
+    S[π][t]=S : S [ π ] [ to-ext-subst (id-subst Γ) (t [ id-subst Γ ]') ] ≡ S
+    S[π][t]=S = trans (trans (ty-subst-comp S π (to-ext-subst (id-subst Γ) (t [ id-subst Γ ]')))
+                             (trans (cong (_[_] S) (π-ext-comp (id-subst Γ) (t [ id-subst Γ ]'))) refl))
+                      (trans (ty-subst-id S) refl)
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
