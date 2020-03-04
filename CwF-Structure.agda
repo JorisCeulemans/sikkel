@@ -107,7 +107,7 @@ naturality (empty-subst Γ) = refl
 empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
 empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI λ {_} → to-⊤-hset _ _)))
 
--- The following 2 proofs are needed to define function types in Hofmann style
+-- The following proofs are needed to define function types in Hofmann style
 -- In each of the proofs, the idea is to rewrite the different substitutions as one subst with a more complex equality proof
 -- and then apply uip.
 ctx-≤-trans-assoc : (Γ : Ctx ℓ) {k≤l : k ≤ l} {l≤m : l ≤ m} {m≤n : m ≤ n}
@@ -156,6 +156,7 @@ ctx-≤-trans-assoc Γ {k≤l}{l≤m}{m≤n} A {γ}{a} =
     (subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n)) a)) ∎
   where open ≡-Reasoning
 
+-- The following result can also be proved using the previous one, but it would probably not be much shorter
 ctx-≤-trans-sym-assoc : (Γ : Ctx ℓ) {k≤l : k ≤ l} {l≤m : l ≤ m} {m≤n : m ≤ n}
                         (A : Γ ⟨ k ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ k≤l ⟫ (Γ ⟪ l≤m ⟫ (Γ ⟪ m≤n ⟫ γ)))} →
                         subst (λ x → A (x γ)) (sym (rel-comp Γ k≤l (≤-trans l≤m m≤n)))
@@ -203,6 +204,92 @@ ctx-≤-trans-sym-assoc Γ {k≤l}{l≤m}{m≤n} A {γ}{a} =
   subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n)))
     (subst (λ x → A (x γ)) (sym (rel-comp Γ (≤-trans k≤l l≤m) m≤n))
     (subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (sym (rel-comp Γ k≤l l≤m)) a)) ∎
+  where open ≡-Reasoning
+
+ctx-≤-trans-right-id : (Γ : Ctx ℓ) {m≤n : m ≤ n}
+                       (A : Γ ⟨ m ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ ≤-trans m≤n ≤-refl ⟫ γ)} →
+                       subst (λ x → A (Γ ⟪ m≤n ⟫ (x γ))) (rel-id Γ)
+                         (subst (λ x → A (x γ)) (rel-comp Γ m≤n ≤-refl) a) ≡
+                       subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n) a
+ctx-≤-trans-right-id Γ {m≤n} A {γ} {a} =
+  subst (λ x → A (Γ ⟪ m≤n ⟫ x γ)) (rel-id Γ)
+    (subst (λ x → A (x γ)) (rel-comp Γ m≤n ≤-refl) a)
+      ≡⟨ subst-∘ (rel-id Γ) ⟩
+  subst (λ x → A (x γ)) (cong (Γ ⟪ m≤n ⟫ ∘_) (rel-id Γ))
+    (subst (λ x → A (x γ)) (rel-comp Γ m≤n ≤-refl) a)
+      ≡⟨ subst-subst (rel-comp Γ m≤n ≤-refl) ⟩
+  subst (λ x → A (x γ)) (trans (rel-comp Γ m≤n ≤-refl)
+                                (cong (Γ ⟪ m≤n ⟫ ∘_) (rel-id Γ)))
+    a
+      ≡⟨ cong (λ z → subst (λ x → A (x γ)) z a) (uip _ (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))) ⟩
+  subst (λ x → A (x γ)) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) a
+      ≡⟨ sym (subst-∘ (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) ⟩
+  subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n) a ∎
+  where open ≡-Reasoning
+
+-- Again, we can prove this using ctx-≤-trans-right-id, but the resulting proof would be equally long.
+ctx-≤-trans-sym-right-id : (Γ : Ctx ℓ) {m≤n : m ≤ n}
+                           (A : Γ ⟨ m ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ m≤n ⟫ γ)} →
+                           subst (λ x → A (x γ)) (sym (rel-comp Γ m≤n ≤-refl))
+                             (subst (λ x → A (Γ ⟪ m≤n ⟫ (x γ))) (sym (rel-id Γ)) a) ≡
+                           subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) a
+ctx-≤-trans-sym-right-id Γ {m≤n} A {γ} {a} =
+  subst (λ x → A (x γ)) (sym (rel-comp Γ m≤n ≤-refl))
+    (subst (λ x → A (Γ ⟪ m≤n ⟫ x γ)) (sym (rel-id Γ)) a)
+      ≡⟨ cong (subst (λ x → A (x γ)) (sym (rel-comp Γ m≤n ≤-refl))) (subst-∘ (sym (rel-id Γ))) ⟩
+  subst (λ x → A (x γ)) (sym (rel-comp Γ m≤n ≤-refl))
+    (subst (λ x → A (x γ)) (cong (Γ ⟪ m≤n ⟫ ∘_) (sym (rel-id Γ))) a)
+      ≡⟨ subst-subst (cong (Γ ⟪ m≤n ⟫ ∘_) (sym (rel-id Γ))) ⟩
+  subst (λ x → A (x γ)) (trans (cong (Γ ⟪ m≤n ⟫ ∘_) (sym (rel-id Γ)))
+                                (sym (rel-comp Γ m≤n ≤-refl)))
+    a
+      ≡⟨ cong (λ z → subst (λ x → A (x γ)) z a) (uip _ (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)))) ⟩
+  subst (λ x → A (x γ)) (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))) a
+      ≡⟨ sym (subst-∘ (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))) ⟩
+  subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) a ∎
+  where open ≡-Reasoning
+
+ctx-≤-trans-left-id : (Γ : Ctx ℓ) {m≤n : m ≤ n}
+                      (A : Γ ⟨ m ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ ≤-trans ≤-refl m≤n ⟫ γ)} →
+                      subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (rel-id Γ)
+                        (subst (λ x → A (x γ)) (rel-comp Γ ≤-refl m≤n) a) ≡
+                      subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n) a
+ctx-≤-trans-left-id Γ {m≤n} A {γ} {a} =
+  subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (rel-id Γ)
+    (subst (λ x → A (x γ)) (rel-comp Γ ≤-refl m≤n) a)
+      ≡⟨ subst-∘ (rel-id Γ) ⟩
+  subst (λ x → A (x γ)) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))
+    (subst (λ x → A (x γ)) (rel-comp Γ ≤-refl m≤n) a)
+      ≡⟨ subst-subst (rel-comp Γ ≤-refl m≤n) ⟩
+  subst (λ x → A (x γ)) (trans (rel-comp Γ ≤-refl m≤n)
+                                (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ)))
+    a
+      ≡⟨ cong (λ z → subst (λ x → A (x γ)) z a) (uip _ (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
+  subst (λ x → A (x γ)) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a
+      ≡⟨ sym (subst-∘ (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) ⟩
+  subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n) a ∎
+  where open ≡-Reasoning
+
+-- Again, we can prove this using ctx-≤-trans-left-id, but the resulting proof would be equally long.
+ctx-≤-trans-sym-left-id : (Γ : Ctx ℓ) {m≤n : m ≤ n}
+                          (A : Γ ⟨ m ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ m≤n ⟫ γ)} →
+                          subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))
+                            (subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (sym (rel-id Γ)) a) ≡
+                          subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a
+ctx-≤-trans-sym-left-id Γ {m≤n} A {γ} {a} =
+  subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (sym (rel-id Γ)) a)
+      ≡⟨ cong (subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))) (subst-∘ (sym (rel-id Γ))) ⟩
+  subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → A (x γ)) (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ))) a)
+      ≡⟨ subst-subst (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ))) ⟩
+  subst (λ x → A (x γ)) (trans (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ)))
+                                (sym (rel-comp Γ ≤-refl m≤n)))
+    a
+      ≡⟨ cong (λ z → subst (λ x → A (x γ)) z a) (uip _ (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)))) ⟩
+  subst (λ x → A (x γ)) (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) a
+      ≡⟨ sym (subst-∘ (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
+  subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a ∎
   where open ≡-Reasoning
 
 
