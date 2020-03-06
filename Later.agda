@@ -130,3 +130,26 @@ naturality (next {Γ = Γ}{T} t) (s≤s m≤n) γ =
       ≡⟨ t ⟪ m≤n , γ ⟫' ⟩
   t ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎
   where open ≡-Reasoning
+
+Löb : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ (▻ T ⇛ T) → Tm Γ T
+term (Löb f) zero γ = f €⟨ zero , γ ⟩ lift tt
+term (Löb {Γ = Γ} f) (suc n) γ = f €⟨ suc n , γ ⟩ (Löb f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+naturality (Löb f) {n = zero} z≤n γ = {!!}
+naturality (Löb f) {n = suc n} z≤n γ = {!!}
+naturality (Löb f) (s≤s m≤n) γ = {!!}
+
+▻' : {Γ : Ctx ℓ} → Ty (◄ Γ) → Ty Γ
+type (▻' {Γ = Γ} T) zero _ = Lift _ ⊤
+type (▻' {Γ = Γ} T) (suc n) γ = T ⟨ n , γ ⟩
+morph (▻' {Γ = Γ} T) z≤n γ _ = lift tt
+morph (▻' {Γ = Γ} T) (s≤s m≤n) γ = T ⟪ m≤n , γ ⟫
+morph-id (▻' {Γ = Γ} T) {zero} γ = refl
+morph-id (▻' {Γ = Γ} T) {suc n} = morph-id T
+morph-comp (▻' {Γ = Γ} T) z≤n m≤n γ = refl
+morph-comp (▻' {Γ = Γ} T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m≤n
+
+next' : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} → Tm (◄ Γ) T → Tm Γ (▻' T)
+term (next' t) zero γ = lift tt
+term (next' t) (suc n) γ = t ⟨ n , γ ⟩'
+naturality (next' t) z≤n γ = refl
+naturality (next' t) (s≤s m≤n) γ = t ⟪ m≤n , γ ⟫'

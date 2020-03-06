@@ -245,7 +245,7 @@ morph-comp (_⇛_ {Γ = Γ} T S) = λ l≤m m≤n γ → funext λ f → to-pshf
               (subst-subst-sym (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))) ⟩
   ((T ⇛ S) ⟪ l≤m , Γ ⟪ m≤n ⟫ γ ⟫) ((T ⇛ S) ⟪ m≤n , γ ⟫ f) $⟨ k≤l ⟩ t ∎
   where open ≡-Reasoning
-
+{-
 lam : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam {Γ = Γ} T {S} b) = λ n γ → MkFunc (λ m≤n t → b ⟨ _ , [ Γ ⟪ m≤n ⟫ γ , t ] ⟩')
                                              (λ k≤m m≤n → funext λ t →
@@ -413,6 +413,35 @@ naturality (app {Γ = Γ}{T}{S} f t) = λ m≤n γ →
     S[π][t]=S = trans (trans (ty-subst-comp S π (to-ext-subst (id-subst Γ) (t [ id-subst Γ ]')))
                              (trans (cong (_[_] S) (π-ext-comp (id-subst Γ) (t [ id-subst Γ ]'))) refl))
                       (trans (ty-subst-id S) refl)
+-}
+_€⟨_,_⟩_ : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → S ⟨ n , γ ⟩
+_€⟨_,_⟩_ {Γ = Γ}{T}{S} f n γ t = subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ)
+                                  (f ⟨ n , γ ⟩' $⟨ ≤-refl ⟩
+                                  subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
+
+€-natural : {Γ : Ctx ℓ} {T S : Ty Γ} (f : Tm Γ (T ⇛ S)) (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
+            S ⟪ m≤n , γ ⟫ (f €⟨ n , γ ⟩ t) ≡ f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩ (T ⟪ m≤n , γ ⟫ t)
+€-natural {Γ = Γ}{T}{S} f m≤n γ t =
+  S ⟪ m≤n , γ ⟫ (f €⟨ _ , γ ⟩ t)
+      ≡⟨⟩
+  S ⟪ m≤n , γ ⟫
+    subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
+      ≡⟨ sym (weak-subst-application (λ x y → S ⟪ m≤n , x γ ⟫ y) (rel-id Γ)) ⟩
+  subst (λ z → S ⟨ _ , Γ ⟪ m≤n ⟫ (z γ) ⟩) (rel-id Γ)
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
+      ≡⟨ {!!} ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+    (T ⟪ m≤n , γ ⟫ t))
+      ≡⟨⟩
+  f €⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩ (T ⟪ m≤n , γ ⟫ t) ∎
+  where open ≡-Reasoning
+
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
