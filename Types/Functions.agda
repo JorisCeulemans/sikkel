@@ -9,6 +9,9 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 open import Helpers
 open import CwF-Structure
 
+-- TODO: show that everything is natural with respect to the context (so e.g. that
+-- (T ⇛ S) [ σ ] ≡ T [ σ ] ⇛ S [ σ ])
+
 --------------------------------------------------
 -- (Non-dependent) function types
 --------------------------------------------------
@@ -245,7 +248,7 @@ morph-comp (_⇛_ {Γ = Γ} T S) = λ l≤m m≤n γ → funext λ f → to-pshf
               (subst-subst-sym (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))) ⟩
   ((T ⇛ S) ⟪ l≤m , Γ ⟪ m≤n ⟫ γ ⟫) ((T ⇛ S) ⟪ m≤n , γ ⟫ f) $⟨ k≤l ⟩ t ∎
   where open ≡-Reasoning
-{-
+
 lam : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam {Γ = Γ} T {S} b) = λ n γ → MkFunc (λ m≤n t → b ⟨ _ , [ Γ ⟪ m≤n ⟫ γ , t ] ⟩')
                                              (λ k≤m m≤n → funext λ t →
@@ -413,7 +416,9 @@ naturality (app {Γ = Γ}{T}{S} f t) = λ m≤n γ →
     S[π][t]=S = trans (trans (ty-subst-comp S π (to-ext-subst (id-subst Γ) (t [ id-subst Γ ]')))
                              (trans (cong (_[_] S) (π-ext-comp (id-subst Γ) (t [ id-subst Γ ]'))) refl))
                       (trans (ty-subst-id S) refl)
--}
+
+-- TODO: The proof of €-natural resembles that of the naturality of app. It is probably a good idea
+-- to define app in terms of _€⟨_,_⟩_
 _€⟨_,_⟩_ : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → S ⟨ n , γ ⟩
 _€⟨_,_⟩_ {Γ = Γ}{T}{S} f n γ t = subst (λ x → S ⟨ _ , x γ ⟩) (rel-id Γ)
                                   (f ⟨ n , γ ⟩' $⟨ ≤-refl ⟩
@@ -429,11 +434,97 @@ _€⟨_,_⟩_ {Γ = Γ}{T}{S} f n γ t = subst (λ x → S ⟨ _ , x γ ⟩) (r
     (f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
     subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
       ≡⟨ sym (weak-subst-application (λ x y → S ⟪ m≤n , x γ ⟫ y) (rel-id Γ)) ⟩
-  subst (λ z → S ⟨ _ , Γ ⟪ m≤n ⟫ (z γ) ⟩) (rel-id Γ)
+  subst (λ x → S ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
     (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
     f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
     subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
-      ≡⟨ {!!} ⟩
+      ≡⟨ cong (subst (λ x → S ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ))
+              (sym (subst-subst-sym (rel-comp Γ m≤n ≤-refl))) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
+    (subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ m≤n ≤-refl)
+    (subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)))
+      ≡⟨ ctx-≤-trans-right-id Γ (λ x → S ⟨ _ , x ⟩) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (subst (λ x → S ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (S ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t))
+      ≡⟨ cong (subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))
+              (cong-app (sym (naturality (f ⟨ _ , γ ⟩') m≤n ≤-refl)) _) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans m≤n ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (T ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t))
+      ≡⟨ weak-subst-application (λ x y → f ⟨ _ , γ ⟩' $⟨ x ⟩ y) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (T ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t))
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (sym (ctx-≤-trans-right-id Γ (λ x → T ⟨ _ , x ⟩))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
+    (subst (λ x → T ⟨ _ , x γ ⟩) (rel-comp Γ m≤n ≤-refl)
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ m≤n ≤-refl))
+    (T ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)))
+      ≡⟨ cong (λ z → f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+                      subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ) z)
+              (subst-subst-sym (rel-comp Γ m≤n ≤-refl)) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
+    (T ⟪ m≤n , Γ ⟪ ≤-refl ⟫ γ ⟫
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-id Γ)) t)
+      ≡⟨ cong (λ z → f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+                      subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ) z)
+              (sym (weak-subst-application (λ x → T ⟪ m≤n , x γ ⟫) (sym (rel-id Γ)))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (rel-id Γ)
+    (subst (λ x → T ⟨ _ , Γ ⟪ m≤n ⟫ (x γ) ⟩) (sym (rel-id Γ))
+    (T ⟪ m≤n , γ ⟫ t))
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_) (subst-subst-sym (rel-id Γ)) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩ (T ⟪ m≤n , γ ⟫ t)
+      ≡⟨ cong (f ⟨ _ , γ ⟩' $⟨ m≤n ⟩_)
+              (sym (subst-subst-sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+    (subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))
+    (T ⟪ m≤n , γ ⟫ t))
+      ≡⟨ cong (λ z → f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+                      subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n) z)
+              (sym (ctx-≤-trans-sym-left-id Γ λ x → T ⟨ _ , x ⟩)) ⟩
+  f ⟨ _ , γ ⟩' $⟨ m≤n ⟩
+    subst (λ x → T ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+    (subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+    (T ⟪ m≤n , γ ⟫ t)))
+      ≡⟨ sym (weak-subst-application (λ x → f ⟨ _ , γ ⟩' $⟨ x ⟩_) (≤-irrelevant (≤-trans (≤-reflexive refl) m≤n) m≤n)) ⟩
+  subst (λ x → S ⟨ _ , Γ ⟪ x ⟫ γ ⟩) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+    (T ⟪ m≤n , γ ⟫ t)))
+      ≡⟨ sym (ctx-≤-trans-left-id Γ (λ x → S ⟨ _ , x ⟩)) ⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (subst (λ x → S ⟨ _ , x γ ⟩) (rel-comp Γ ≤-refl m≤n)
+    (f ⟨ _ , γ ⟩' $⟨ ≤-trans ≤-refl m≤n ⟩
+    subst (λ x → T ⟨ _ , x γ ⟩) (sym (rel-comp Γ ≤-refl m≤n))
+    (subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+    (T ⟪ m≤n , γ ⟫ t))))
+      ≡⟨⟩
+  subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+    (((T ⇛ S) ⟪ m≤n , γ ⟫ f ⟨ _ , γ ⟩') $⟨ ≤-refl ⟩
+    subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+    (T ⟪ m≤n , γ ⟫ t))
+      ≡⟨ cong (λ z → subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
+                      (z $⟨ ≤-refl ⟩
+                      subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
+                      (T ⟪ m≤n , γ ⟫ t)))
+              (naturality f m≤n γ) ⟩
   subst (λ x → S ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (rel-id Γ)
     (f ⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩' $⟨ ≤-refl ⟩
     subst (λ x → T ⟨ _ , x (Γ ⟪ m≤n ⟫ γ) ⟩) (sym (rel-id Γ))
@@ -442,6 +533,7 @@ _€⟨_,_⟩_ {Γ = Γ}{T}{S} f n γ t = subst (λ x → S ⟨ _ , x γ ⟩) (r
   f €⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩ (T ⟪ m≤n , γ ⟫ t) ∎
   where open ≡-Reasoning
 
+-- Another approach to the introduction of function types (based on https://arxiv.org/pdf/1805.08684.pdf).
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])

@@ -134,9 +134,25 @@ naturality (next {Γ = Γ}{T} t) (s≤s m≤n) γ =
 Löb : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ (▻ T ⇛ T) → Tm Γ T
 term (Löb f) zero γ = f €⟨ zero , γ ⟩ lift tt
 term (Löb {Γ = Γ} f) (suc n) γ = f €⟨ suc n , γ ⟩ (Löb f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (Löb f) {n = zero} z≤n γ = {!!}
-naturality (Löb f) {n = suc n} z≤n γ = {!!}
-naturality (Löb f) (s≤s m≤n) γ = {!!}
+naturality (Löb f) {n = zero} z≤n γ = €-natural f z≤n γ (lift tt)
+naturality (Löb {Γ = Γ} f) {n = suc n} z≤n γ = €-natural f z≤n γ (Löb f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+naturality (Löb {Γ = Γ}{T} f) (s≤s m≤n) γ =
+  T ⟪ s≤s m≤n , γ ⟫ f €⟨ _ , γ ⟩ (Löb f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩')
+      ≡⟨ €-natural f (s≤s m≤n) γ (Löb f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩') ⟩
+  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩ (▻ T ⟪ s≤s m≤n , γ ⟫ (Löb f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
+      ≡⟨⟩
+  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
+    (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n-app Γ m≤n γ)
+    (T ⟪ m≤n , Γ ⟪ n≤1+n _ ⟫ γ ⟫ Löb f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
+      ≡⟨ cong (λ z → f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
+                      (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n-app Γ m≤n γ) z))
+              (naturality (Löb f) m≤n (Γ ⟪ n≤1+n _ ⟫ γ)) ⟩
+  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
+    (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n-app Γ m≤n γ)
+    (Löb f ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n _ ⟫ γ) ⟩'))
+      ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb f ⟨ _ , x ⟩') (ctx-m≤1+n-app Γ m≤n γ)) ⟩
+  Löb f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎
+  where open ≡-Reasoning
 
 ▻' : {Γ : Ctx ℓ} → Ty (◄ Γ) → Ty Γ
 type (▻' {Γ = Γ} T) zero _ = Lift _ ⊤
