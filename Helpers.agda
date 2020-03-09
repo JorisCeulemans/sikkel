@@ -25,6 +25,11 @@ uip refl refl = refl
 to-⊤-hset : {A : Set ℓ'} {f g : A → Lift ℓ ⊤} (e1 e2 : f ≡ g) → e1 ≡ e2
 to-⊤-hset refl refl = refl
 
+subst-const : ∀ {a b} {A : Set a} {B : Set b}
+              {x x' : A} (e : x ≡ x') (y : B) →
+              subst (λ _ → B) e y ≡ y
+subst-const refl y = refl
+
 weak-subst-application : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
                          (f : (x : A) → B x → C x)
                          {x x' : A} {y : B x}
