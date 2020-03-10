@@ -22,8 +22,8 @@ _×'_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 _×'_ {Γ = Γ} T S = MkTy (λ n γ → T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩)
                    (λ { ineq γ [ t , s ] → [ T ⟪ ineq , γ ⟫ t , S ⟪ ineq , γ ⟫ s ] })
                    (λ γ → funext λ { [ t , s ] → trans (subst-× (rel-id Γ) _)
-                                                            (cong₂ [_,_] (cong-app (morph-id T γ) t)
-                                                                         (cong-app (morph-id S γ) s)) })
+                                                         (cong₂ [_,_] (cong-app (morph-id T γ) t)
+                                                                      (cong-app (morph-id S γ) s)) })
                    (λ k≤m m≤n γ → funext λ { [ t , s ] → trans (subst-× (rel-comp Γ k≤m m≤n) _)
                                                                  (cong₂ [_,_] (cong-app (morph-comp T k≤m m≤n γ) t)
                                                                               (cong-app (morph-comp S k≤m m≤n γ) s)) })
@@ -35,10 +35,7 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
 
   fst : Tm Γ (T ×' S) → Tm Γ T
   term (fst p) = λ n γ → proj₁ (p ⟨ n , γ ⟩')
-  naturality (fst p) = λ ineq γ →
-    T ⟪ ineq , γ ⟫ ((fst p) ⟨ _ , γ ⟩') ≡⟨ cong proj₁ (p ⟪ _ , γ ⟫') ⟩
-    fst p ⟨ _ , Γ ⟪ ineq ⟫ γ ⟩' ∎
-    where open ≡-Reasoning
+  naturality (fst p) = λ ineq γ → cong proj₁ (p ⟪ _ , γ ⟫')
 
   snd : Tm Γ (T ×' S) → Tm Γ S
   term (snd p) = λ n γ → proj₂ (p ⟨ n , γ ⟩')

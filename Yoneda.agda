@@ -55,6 +55,10 @@ from-𝕪⇒𝕪 = lower ∘ from-𝕪⇒*
 𝕪-to-∘-from' : (σ : 𝕪[ ℓ ] m ⇒ 𝕪 n) → to-𝕪⇒𝕪 (from-𝕪⇒𝕪 σ) ≡ σ
 𝕪-to-∘-from' σ = 𝕪-to-∘-from σ
 
+𝕪-refl : to-𝕪⇒𝕪 (≤-refl {m}) ≡ id-subst (𝕪[ ℓ ] m)
+𝕪-refl = cong₂-d MkSubst (funextI (funext λ { (lift k≤m) → cong lift (≤-irrelevant (≤-trans k≤m ≤-refl) k≤m) }))
+                          (funextI (funextI (funextI (uip _ _))))
+
 𝕪-comp : {Γ : Ctx ℓ} (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → to-𝕪⇒* {Γ = Γ} γ ⊚ to-𝕪⇒𝕪 ineq ≡ to-𝕪⇒* (Γ ⟪ ineq ⟫ γ)
 𝕪-comp {Γ = Γ} ineq γ = cong₂-d MkSubst
                           (funextI (funext λ { (lift ineq') → cong-app (rel-comp Γ ineq' ineq) γ }))
