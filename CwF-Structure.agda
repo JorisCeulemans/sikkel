@@ -21,6 +21,7 @@ infixl 20 _⊚_
 --------------------------------------------------
 
 record Ctx ℓ : Set (lsuc ℓ) where
+  constructor MkCtx
   field
     set : ℕ → Set ℓ
     rel : ∀ {m n} → m ≤ n → set n → set m
