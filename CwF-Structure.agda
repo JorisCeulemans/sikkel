@@ -226,24 +226,21 @@ ctx-≤-trans-sym-right-id Γ {m≤n} A {γ} {a} =
       ≡⟨ sym (subst-∘ (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n))) ⟩
   subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans m≤n ≤-refl) m≤n)) a ∎
   where open ≡-Reasoning
-{-
+
 ctx-≤-trans-left-id : (Γ : Ctx ℓ) {m≤n : m ≤ n}
                       (A : Γ ⟨ m ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ ≤-trans ≤-refl m≤n ⟫ γ)} →
-                      subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (rel-id Γ)
-                        (subst (λ x → A (x γ)) (rel-comp Γ ≤-refl m≤n) a) ≡
+                      subst (λ x → A x) (rel-id Γ (Γ ⟪ m≤n ⟫ γ))
+                        (subst (λ x → A x) (rel-comp Γ ≤-refl m≤n γ) a) ≡
                       subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n) a
 ctx-≤-trans-left-id Γ {m≤n} A {γ} {a} =
-  subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (rel-id Γ)
-    (subst (λ x → A (x γ)) (rel-comp Γ ≤-refl m≤n) a)
-      ≡⟨ subst-∘ (rel-id Γ) ⟩
-  subst (λ x → A (x γ)) (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ))
-    (subst (λ x → A (x γ)) (rel-comp Γ ≤-refl m≤n) a)
-      ≡⟨ subst-subst (rel-comp Γ ≤-refl m≤n) ⟩
-  subst (λ x → A (x γ)) (trans (rel-comp Γ ≤-refl m≤n)
-                                (cong (_∘ Γ ⟪ m≤n ⟫) (rel-id Γ)))
+  subst (λ x → A x) (rel-id Γ (Γ ⟪ m≤n ⟫ γ))
+    (subst (λ x → A x) (rel-comp Γ ≤-refl m≤n γ) a)
+      ≡⟨ subst-subst (rel-comp Γ ≤-refl m≤n γ) ⟩
+  subst (λ x → A x) (trans (rel-comp Γ ≤-refl m≤n γ)
+                            (rel-id Γ (Γ ⟪ m≤n ⟫ γ)))
     a
-      ≡⟨ cong (λ z → subst (λ x → A (x γ)) z a) (uip _ (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
-  subst (λ x → A (x γ)) (cong (Γ ⟪_⟫) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a
+      ≡⟨ cong (λ z → subst (λ x → A x) z a) (uip _ (cong (Γ ⟪_⟫ γ) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
+  subst (λ x → A x) (cong (Γ ⟪_⟫ γ) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a
       ≡⟨ sym (subst-∘ (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) ⟩
   subst (λ x → A (Γ ⟪ x ⟫ γ)) (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n) a ∎
   where open ≡-Reasoning
@@ -251,25 +248,22 @@ ctx-≤-trans-left-id Γ {m≤n} A {γ} {a} =
 -- Again, we can prove this using ctx-≤-trans-left-id, but the resulting proof would be equally long.
 ctx-≤-trans-sym-left-id : (Γ : Ctx ℓ) {m≤n : m ≤ n}
                           (A : Γ ⟨ m ⟩ → Set ℓ') {γ : Γ ⟨ n ⟩} {a : A (Γ ⟪ m≤n ⟫ γ)} →
-                          subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))
-                            (subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (sym (rel-id Γ)) a) ≡
+                          subst (λ x → A x) (sym (rel-comp Γ ≤-refl m≤n γ))
+                            (subst (λ x → A x) (sym (rel-id Γ (Γ ⟪ m≤n ⟫ γ))) a) ≡
                           subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a
 ctx-≤-trans-sym-left-id Γ {m≤n} A {γ} {a} =
-  subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))
-    (subst (λ x → A (x (Γ ⟪ m≤n ⟫ γ))) (sym (rel-id Γ)) a)
-      ≡⟨ cong (subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))) (subst-∘ (sym (rel-id Γ))) ⟩
-  subst (λ x → A (x γ)) (sym (rel-comp Γ ≤-refl m≤n))
-    (subst (λ x → A (x γ)) (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ))) a)
-      ≡⟨ subst-subst (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ))) ⟩
-  subst (λ x → A (x γ)) (trans (cong (_∘ Γ ⟪ m≤n ⟫) (sym (rel-id Γ)))
-                                (sym (rel-comp Γ ≤-refl m≤n)))
+  subst (λ x → A x) (sym (rel-comp Γ ≤-refl m≤n γ))
+    (subst (λ x → A x) (sym (rel-id Γ (Γ ⟪ m≤n ⟫ γ))) a)
+      ≡⟨ subst-subst (sym (rel-id Γ (Γ ⟪ m≤n ⟫ γ))) ⟩
+  subst (λ x → A x) (trans (sym (rel-id Γ (Γ ⟪ m≤n ⟫ γ)))
+                            (sym (rel-comp Γ ≤-refl m≤n γ)))
     a
-      ≡⟨ cong (λ z → subst (λ x → A (x γ)) z a) (uip _ (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)))) ⟩
-  subst (λ x → A (x γ)) (cong (Γ ⟪_⟫) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) a
+      ≡⟨ cong (λ z → subst (λ x → A x) z a) (uip _ (cong (Γ ⟪_⟫ γ) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)))) ⟩
+  subst (λ x → A x) (cong (Γ ⟪_⟫ γ) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) a
       ≡⟨ sym (subst-∘ (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
   subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a ∎
   where open ≡-Reasoning
--}
+
 
 --------------------------------------------------
 -- Types
