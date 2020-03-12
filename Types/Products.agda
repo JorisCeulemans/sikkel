@@ -21,12 +21,12 @@ subst-× refl p = refl
 _×'_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 _×'_ {Γ = Γ} T S = MkTy (λ n γ → T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩)
                    (λ { ineq γ [ t , s ] → [ T ⟪ ineq , γ ⟫ t , S ⟪ ineq , γ ⟫ s ] })
-                   (λ γ → funext λ { [ t , s ] → trans (subst-× (rel-id Γ) _)
-                                                         (cong₂ [_,_] (cong-app (morph-id T γ) t)
-                                                                      (cong-app (morph-id S γ) s)) })
-                   (λ k≤m m≤n γ → funext λ { [ t , s ] → trans (subst-× (rel-comp Γ k≤m m≤n) _)
-                                                                 (cong₂ [_,_] (cong-app (morph-comp T k≤m m≤n γ) t)
-                                                                              (cong-app (morph-comp S k≤m m≤n γ) s)) })
+                   (λ { [ t , s ] → trans (subst-× (rel-id Γ _) _)
+                                                         (cong₂ [_,_] (morph-id T t)
+                                                                      (morph-id S s)) })
+                   (λ k≤m m≤n → λ { [ t , s ] → trans (subst-× (rel-comp Γ k≤m m≤n _) _)
+                                                                 (cong₂ [_,_] (morph-comp T k≤m m≤n t)
+                                                                              (morph-comp S k≤m m≤n s)) })
 
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ×' S)
@@ -46,9 +46,9 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
     ×'-natural : (T ×' S) [ σ ] ≡ (T [ σ ]) ×' (S [ σ ])
     ×'-natural = cong₃-d (MkTy _)
                          (funextI (funextI (funext λ ineq → funext λ δ → funext λ { [ t , s ] →
-                           subst-× (naturality σ) [ T ⟪ ineq , func σ δ ⟫ t , S ⟪ ineq , func σ δ ⟫ s ] })))
-                         (funextI (funext (λ _ → uip _ _)))
-                         (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+                           subst-× (naturality σ δ) [ T ⟪ ineq , func σ δ ⟫ t , S ⟪ ineq , func σ δ ⟫ s ] })))
+                         (funextI (funextI (funext λ _ → uip _ _)))
+                         (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
 
   pair-natural : (t : Tm Γ T) (s : Tm Γ S) → subst (Tm Δ) ×'-natural ((pair t s) [ σ ]') ≡ pair (t [ σ ]') (s [ σ ]')
   pair-natural t s = cong₂-d MkTm

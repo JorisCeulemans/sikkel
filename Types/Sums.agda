@@ -25,10 +25,10 @@ subst-⊎ʳ e = weak-subst-application (λ _ w → inr w) e
 _⊎'_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 _⊎'_ {Γ = Γ} T S = MkTy (λ n γ → T ⟨ n , γ ⟩ ⊎ S ⟨ n , γ ⟩)
                          (λ { ineq γ (inl t) → inl (T ⟪ ineq , γ ⟫ t) ; ineq γ (inr s) → inr (S ⟪ ineq , γ ⟫ s) })
-                         (λ γ → funext λ { (inl t) → trans (subst-⊎ˡ _) (cong inl (cong-app (morph-id T γ) t))
-                                          ; (inr s) → trans (subst-⊎ʳ _) (cong inr (cong-app (morph-id S γ) s)) })
-                         (λ k≤m m≤n γ → funext λ { (inl t) → trans (subst-⊎ˡ _) (cong inl (cong-app (morph-comp T k≤m m≤n γ) t))
-                                                  ; (inr s) → trans (subst-⊎ʳ _) (cong inr (cong-app (morph-comp S k≤m m≤n γ) s)) })
+                         (λ { (inl t) → trans (subst-⊎ˡ _) (cong inl (morph-id T t))
+                            ; (inr s) → trans (subst-⊎ʳ _) (cong inr (morph-id S s)) })
+                         (λ k≤m m≤n → λ { (inl t) → trans (subst-⊎ˡ _) (cong inl (morph-comp T k≤m m≤n t))
+                                         ; (inr s) → trans (subst-⊎ʳ _) (cong inr (morph-comp S k≤m m≤n s)) })
 {-
 type (T ⊎' S) = λ n γ → T ⟨ n , γ ⟩ ⊎ S ⟨ n , γ ⟩
 morph (T ⊎' S) = λ { ineq γ (inl t) → inl (T ⟪ ineq , γ ⟫ t) ; ineq γ (inr s) → inr (S ⟪ ineq , γ ⟫ s) }
@@ -56,10 +56,10 @@ module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
     ⊎'-natural : (T ⊎' S) [ σ ] ≡ (T [ σ ]) ⊎' (S [ σ ])
     ⊎'-natural = cong₃-d (MkTy _)
                           (funextI (funextI (funext λ ineq → funext λ δ → funext λ {
-                            (inl t) → subst-⊎ˡ (naturality σ) ;
-                            (inr s) → subst-⊎ʳ (naturality σ) })))
-                          (funextI (funext (λ _ → uip _ _)))
-                          (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+                            (inl t) → subst-⊎ˡ (naturality σ δ) ;
+                            (inr s) → subst-⊎ʳ (naturality σ δ) })))
+                          (funextI (funextI (funext λ _ → uip _ _)))
+                          (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
 
   inl'-natural : (t : Tm Γ T) → subst (Tm Δ) ⊎'-natural ((inl' t) [ σ ]') ≡ inl' (t [ σ ]')
   inl'-natural t = cong₂-d MkTm
