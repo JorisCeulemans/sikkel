@@ -77,30 +77,39 @@ next-prev : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} (t : Tm Γ (▻ T)) → next (prev 
 next-prev t = cong₂-d MkTm (funext λ { zero → refl ; (suc n) → refl })
                            (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
 
--- Agda can infer the implicit arguments Γ and T in the recursive calls itself, but giving them explicitly
+-- We could make the argument T implicit, but giving it explicitly
 -- drastically reduces typechecking time.
-Löb : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ (▻' T ⇛ T) → Tm Γ T
-term (Löb f) zero γ = f €⟨ zero , γ ⟩ lift tt
-term (Löb {Γ = Γ}{T} f) (suc n) γ = f €⟨ suc n , γ ⟩ (Löb {Γ = Γ} {T = T} f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (Löb f) {n = zero} z≤n γ = €-natural f z≤n γ (lift tt)
-naturality (Löb {Γ = Γ}{T} f) {n = suc n} z≤n γ = €-natural f z≤n γ ((Löb {Γ = Γ}{T = T} f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (Löb {Γ = Γ}{T} f) {suc m} {suc n} (s≤s m≤n) γ =
-  T ⟪ s≤s m≤n , γ ⟫ f €⟨ _ , γ ⟩ (Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩')
-      ≡⟨ €-natural f (s≤s m≤n) γ (Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩') ⟩
-  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩ (▻' T ⟪ s≤s m≤n , γ ⟫ (Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
+Löb : {Γ : Ctx ℓ} (T : Ty Γ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
+term (Löb T f) zero γ = f €⟨ zero , γ ⟩ lift tt
+term (Löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (Löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+naturality (Löb T f) {n = zero} z≤n γ = €-natural f z≤n γ (lift tt)
+naturality (Löb {Γ = Γ} T f) {n = suc n} z≤n γ = €-natural f z≤n γ ((Löb T f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) γ =
+  T ⟪ s≤s m≤n , γ ⟫ f €⟨ _ , γ ⟩ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩')
+      ≡⟨ €-natural f (s≤s m≤n) γ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩') ⟩
+  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩ (▻' T ⟪ s≤s m≤n , γ ⟫ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
       ≡⟨⟩
   f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
     (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
-    (T ⟪ m≤n , Γ ⟪ n≤1+n _ ⟫ γ ⟫ Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
+    (T ⟪ m≤n , Γ ⟪ n≤1+n _ ⟫ γ ⟫ Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
       ≡⟨ cong (λ z → f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
                       (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ) z))
-              (naturality (Löb {Γ = Γ}{T} f) m≤n (Γ ⟪ n≤1+n _ ⟫ γ)) ⟩
+              (naturality (Löb T f) m≤n (Γ ⟪ n≤1+n _ ⟫ γ)) ⟩
   (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
     (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
-    (Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n _ ⟫ γ) ⟩')))
-      ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb {Γ = Γ}{T} f ⟨ _ , x ⟩') (ctx-m≤1+n Γ m≤n γ)) ⟩
-  Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎
+    (Löb T f ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n _ ⟫ γ) ⟩')))
+      ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb T f ⟨ _ , x ⟩') (ctx-m≤1+n Γ m≤n γ)) ⟩
+  Löb T f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎
   where open ≡-Reasoning
+
+Löb-is-fixpoint : {Γ : Ctx ℓ} {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
+                  Löb T f ≡ app f (next (Löb T f [ ◄Γ⇒Γ Γ ]'))
+Löb-is-fixpoint {Γ = Γ}{T} f = cong₂-d MkTm (funext λ n → funext λ γ → proof n γ)
+                                            (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+  where
+    proof : (n : ℕ) (γ : Γ ⟨ n ⟩) → term (Löb T f) n γ ≡ term (app f (next (Löb T f [ ◄Γ⇒Γ Γ ]'))) n γ
+    proof zero γ = refl
+    proof (suc n) γ = refl
 
 _⊛_ : {Γ : Ctx ℓ} {T S : Ty (◄ Γ)} → Tm Γ (▻ (T ⇛ S)) → Tm Γ (▻ T) → Tm Γ (▻ S)
 f ⊛ t = next (app (prev f) (prev t))
