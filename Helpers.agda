@@ -77,6 +77,13 @@ cong₃-d : ∀ {a b c d} {A : Set a} {B : A → Set b} {C : (x : A) → B x →
           f x y z ≡ f x' y' z'
 cong₃-d f refl refl refl = refl
 
+cong₄-d : ∀ {a b c d e} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c} {D : (x : A) → B x → Set d} {E : Set e}
+          (f : (x : A) (y : B x) → C x y → D x y → E)
+          {x x' : A} {y : B x} {y' : B x'} {z : C x y} {z' : C x' y'} {w : D x y} {w' : D x' y'}
+          (ex : x ≡ x') (ey : subst B ex y ≡ y') (ez : subst₂ C ex ey z ≡ z') (ew : subst₂ D ex ey w ≡ w') →
+          f x y z w ≡ f x' y' z' w'
+cong₄-d f refl refl refl refl = refl
+
 cong-sym : ∀ {a b} {A : Set a} {B : Set b}
            (f : A → B)
            {a a' : A} (e : a ≡ a') →

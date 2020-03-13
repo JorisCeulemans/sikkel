@@ -45,6 +45,13 @@ record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
     naturality : ∀ {m n} {m≤n : m ≤ n} (δ : Δ ⟨ n ⟩) → Γ ⟪ m≤n ⟫ (func δ) ≡ func (Δ ⟪ m≤n ⟫ δ)
 open _⇒_ public
 
+to-subst-eq : {Δ Γ : Ctx ℓ} {σ τ : Δ ⇒ Γ} →
+              ({n : ℕ} (δ : Δ ⟨ n ⟩) → func σ δ ≡ func τ δ) →
+              σ ≡ τ
+to-subst-eq e = cong₂-d MkSubst
+                        (funextI (funext λ δ → e δ))
+                        (funextI (funextI (funextI (funext λ _ → uip _ _))))
+
 id-subst : (Γ : Ctx ℓ) → Γ ⇒ Γ
 func (id-subst Γ) = id
 naturality (id-subst Γ) = λ _ → refl
@@ -58,41 +65,13 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {m≤n = m≤n} δ =
   where open ≡-Reasoning
 
 ⊚-id-substʳ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≡ σ
-⊚-id-substʳ σ = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → trans-reflʳ _))))
+⊚-id-substʳ σ = to-subst-eq (λ δ → refl)
 
 ⊚-id-substˡ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≡ σ
-⊚-id-substˡ σ = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → trans (trans-reflʳ _) (cong-id _)))))
+⊚-id-substˡ σ = to-subst-eq (λ δ → refl)
 
 ⊚-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : Ctx ℓ} (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) → (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≡ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
-⊚-assoc σ₃₄ σ₂₃ σ₁₂ = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
-{-
-  naturality (σ₃₄ ⊚ σ₂₃ ⊚ σ₁₂)
-    ≡⟨⟩
-  trans (cong (_∘ func σ₁₂) (trans (cong (_∘ func σ₂₃) (naturality σ₃₄))
-                                   (trans (cong (func σ₃₄ ∘_) (naturality σ₂₃)) refl)))
-        (trans (cong ((func σ₃₄ ∘ func σ₂₃) ∘_) (naturality σ₁₂)) refl)
-    ≡⟨ cong (λ x → trans (cong (_∘ func σ₁₂) (trans (cong (_∘ func σ₂₃) (naturality σ₃₄))
-                                              (trans (cong (func σ₃₄ ∘_) (naturality σ₂₃)) refl)))
-                          (trans x refl)) (cong-∘ _) ⟩
-  trans (cong (_∘ func σ₁₂) (trans (cong (_∘ func σ₂₃) (naturality σ₃₄))
-                                   (trans (cong (func σ₃₄ ∘_) (naturality σ₂₃)) refl)))
-        (trans (cong (func σ₃₄ ∘_) (cong (func σ₂₃ ∘_) (naturality σ₁₂))) refl)
-    ≡⟨ {!!} ⟩
-  trans (cong (_∘ func σ₁₂) (cong (_∘ func σ₂₃) (naturality σ₃₄)))
-        (trans (cong (func σ₃₄ ∘_) (trans (cong (_∘ func σ₁₂) (naturality σ₂₃))
-                                          (trans (cong (func σ₂₃ ∘_) (naturality σ₁₂)) refl)))
-               refl)
-    ≡⟨ cong (λ x → trans x (trans (cong (func σ₃₄ ∘_) (trans (cong (_∘ func σ₁₂) (naturality σ₂₃))
-                                                           (trans (cong (func σ₂₃ ∘_) (naturality σ₁₂)) refl)))
-                                   refl)) (sym (cong-∘ (naturality σ₃₄))) ⟩
-  trans (cong (_∘ (func σ₂₃ ∘ func σ₁₂)) (naturality σ₃₄))
-        (trans (cong (func σ₃₄ ∘_) (trans (cong (_∘ func σ₁₂) (naturality σ₂₃))
-                                          (trans (cong (func σ₂₃ ∘_) (naturality σ₁₂)) refl)))
-               refl)
-    ≡⟨⟩
-  naturality (σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)) ∎))))
-  where open ≡-Reasoning
--}
+⊚-assoc σ₃₄ σ₂₃ σ₁₂ = to-subst-eq (λ δ → refl)
 
 -- The following proofs are needed to define function types in Hofmann style
 -- In each of the proofs, the idea is to rewrite the different substitutions as one subst with a more complex equality proof
@@ -274,15 +253,22 @@ T ⟪ ineq , γ ⟫ = morph T ineq γ
 
 _⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
 T ⟪ ineq , γ ⟫ t = (T ⟪ ineq , γ ⟫) t
-{-
-morph-id-app : {Γ : Ctx ℓ} (T : Ty Γ) (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
-               subst (λ x → T ⟨ n , x ⟩) (cong-app (rel-id Γ) γ) (T ⟪ ≤-refl , γ ⟫ t) ≡ t
-morph-id-app {Γ = Γ} T γ t = trans (subst-cong-app (rel-id Γ) (T ⟪ ≤-refl , γ ⟫ t)) (cong-app (morph-id T γ) t)
 
-morph-comp-app : {Γ : Ctx ℓ} (T : Ty Γ) {k≤m : k ≤ m} {m≤n : m ≤ n} (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
-                 subst (λ x → T ⟨ k , x ⟩) (cong-app (rel-comp Γ k≤m m≤n) γ) (T ⟪ ≤-trans k≤m m≤n , γ ⟫ t) ≡ T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ (T ⟪ m≤n , γ ⟫ t)
-morph-comp-app {Γ = Γ} T {k≤m}{m≤n} γ t = trans (subst-cong-app (rel-comp Γ k≤m m≤n) _) (cong-app (morph-comp T k≤m m≤n γ) t)
+{- TODO: see if it is a good idea using the following way to prove equality of types
+   + uniform way to prove type equality
+   - using funext to show that type T ≡ type S where refl can be used most of the time
+to-ty-eq : {Γ : Ctx ℓ} {T S : Ty Γ} →
+           (et : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ ≡ S ⟨ n , γ ⟩) →
+           ({m n : ℕ} (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
+               subst id (et m (Γ ⟪ m≤n ⟫ γ)) (T ⟪ m≤n , γ ⟫ t) ≡ S ⟪ m≤n , γ ⟫ subst id (et n γ) t) →
+           T ≡ S
+to-ty-eq et em = cong₄-d MkTy
+                         (funext λ n → funext λ γ → et n γ)
+                         {!!}
+                         {!!}
+                         {!!}
 -}
+
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
 morph (T [ σ ]) m≤n δ t = subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) (T ⟪ m≤n , func σ δ ⟫ t)
@@ -464,7 +450,7 @@ func (empty-subst Γ) = λ _ → lift tt
 naturality (empty-subst Γ) = λ _ → refl
 
 empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
-empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
+empty-subst-terminal Γ σ = to-subst-eq (λ δ → refl)
 
 
 --------------------------------------------------
@@ -505,12 +491,12 @@ to-ext-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → Tm Δ (T [ σ 
 to-ext-subst σ t = to-ext-subst-Σ [ σ , t ]
 
 ctx-ext-left-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (p : Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))) → from-ext-subst (to-ext-subst-Σ p) ≡ p
-ctx-ext-left-inverse {Δ = Δ} {T = T} [ σ , t ] = to-Σ-eq (cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _)))))
+ctx-ext-left-inverse {Δ = Δ} {T = T} [ σ , t ] = to-Σ-eq (to-subst-eq (λ δ → refl))
                                                          (cong₂-d MkTm proof
                                                                        (funextI (funextI (funext λ _ → funext λ _ → uip _ _))))
   where
     open ≡-Reasoning
-    α = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
+    α = to-subst-eq (λ δ → refl)
     β = subst (Tm Δ) (ty-subst-comp T π (to-ext-subst-Σ [ σ , t ])) (ξ [ to-ext-subst-Σ [ σ , t ] ]')
     proof = term (subst (λ x → Tm Δ (T [ x ])) α β)
                 ≡⟨ cong term {y = subst (Tm Δ) (cong (T [_]) α)
@@ -536,28 +522,26 @@ ctx-ext-left-inverse {Δ = Δ} {T = T} [ σ , t ] = to-Σ-eq (cong (MkSubst _) (
               term t ∎
 
 ctx-ext-right-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (τ : Δ ⇒ Γ ,, T) → to-ext-subst-Σ (from-ext-subst τ) ≡ τ
-ctx-ext-right-inverse {Δ = Δ} {T = T} τ = cong₂-d MkSubst proof
-                                                          (funextI (funextI (funextI (funext λ _ → uip _ _))))
+ctx-ext-right-inverse {Δ = Δ} {T = T} τ = to-subst-eq (λ δ →
+  cong [ proj₁ (func τ δ) ,_] (term (proj₂ (from-ext-subst τ)) _ δ
+    ≡⟨⟩
+  term (subst (Tm Δ) (ty-subst-comp T π τ) (ξ [ τ ]')) _ δ
+    ≡⟨ cong (λ z → z _ δ) (sym (weak-subst-application {B = Tm Δ} (λ x y → term y) (ty-subst-comp T π τ))) ⟩
+  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) (ty-subst-comp T π τ) (term (ξ [ τ ]')) _ δ
+    ≡⟨ cong (λ z → z _ δ) {x = subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) (ty-subst-comp T π τ) (term (ξ [ τ ]'))}
+            (subst-∘ (ty-subst-comp T π τ)) ⟩
+  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') (cong type (ty-subst-comp T π τ)) (term (ξ [ τ ]')) _ δ
+    ≡⟨ cong (λ z → subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') z (term (ξ [ τ ]')) _ δ)
+            {x = cong type (ty-subst-comp T π τ)}
+            {y = refl}
+            (uip _ _) ⟩
+  proj₂ (func τ δ) ∎))
   where
     open ≡-Reasoning
-    proof = funextI (funext λ δ →
-            cong [ proj₁ (func τ δ) ,_] (term (proj₂ (from-ext-subst τ)) _ δ
-              ≡⟨⟩
-            term (subst (Tm Δ) (ty-subst-comp T π τ) (ξ [ τ ]')) _ δ
-              ≡⟨ cong (λ z → z _ δ) (sym (weak-subst-application {B = Tm Δ} (λ x y → term y) (ty-subst-comp T π τ))) ⟩
-            subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) (ty-subst-comp T π τ) (term (ξ [ τ ]')) _ δ
-              ≡⟨ cong (λ z → z _ δ) {x = subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) (ty-subst-comp T π τ) (term (ξ [ τ ]'))}
-                      (subst-∘ (ty-subst-comp T π τ)) ⟩
-            subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') (cong type (ty-subst-comp T π τ)) (term (ξ [ τ ]')) _ δ
-              ≡⟨ cong (λ z → subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') z (term (ξ [ τ ]')) _ δ)
-                      {x = cong type (ty-subst-comp T π τ)}
-                      {y = refl}
-                      (uip _ _) ⟩
-            proj₂ (func τ δ) ∎))
 
 π-ext-comp : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) →
              π ⊚ to-ext-subst σ t ≡ σ
-π-ext-comp σ t = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
+π-ext-comp σ t = to-subst-eq (λ δ → refl)
 
 π-ext-comp-ty-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ to-ext-subst σ t ] ≡ S [ σ ]
@@ -586,7 +570,7 @@ _⊹ {Δ = Δ} {T = T} σ = to-ext-subst (σ ⊚ π) (subst (Tm (Δ ,, T [ σ ])
 
 module _ {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊹-π-comm : π {T = T} ⊚ (σ ⊹) ≡ σ ⊚ π
-  ⊹-π-comm = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
+  ⊹-π-comm = to-subst-eq (λ δ → refl)
 {-
 ⊹-tm-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (S : Ty (Θ ,, T)) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
             Tm (Δ ,, T [ τ ] [ σ ]) (S [ τ ⊹ ] [ σ ⊹ ]) → Tm (Δ ,, T [ τ ⊚ σ ]) (S [ (τ ⊚ σ) ⊹ ])
