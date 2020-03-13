@@ -15,12 +15,11 @@ open import Types.Functions
 -- Later and earlier modalities for types
 --------------------------------------------------
 
-ctx-m≤1+n : (Γ : Ctx ℓ) (m≤n : m ≤ n) →
-            Γ ⟪ m≤n ⟫ ∘ Γ ⟪ n≤1+n n ⟫ ≡ Γ ⟪ n≤1+n m ⟫ ∘ Γ ⟪ s≤s m≤n ⟫
-ctx-m≤1+n Γ m≤n = funext λ γ →
-  trans (cong-app (sym (rel-comp Γ m≤n (n≤1+n _))) γ)
-        (trans (cong (Γ ⟪_⟫ γ) (≤-irrelevant _ _))
-               (cong-app (rel-comp Γ (n≤1+n _) (s≤s m≤n)) γ))
+ctx-m≤1+n : (Γ : Ctx ℓ) (m≤n : m ≤ n) (γ : Γ ⟨ suc n ⟩) →
+            Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ) ≡ Γ ⟪ n≤1+n m ⟫ (Γ ⟪ s≤s m≤n ⟫ γ)
+ctx-m≤1+n Γ m≤n γ = trans (sym (rel-comp Γ m≤n (n≤1+n _) γ))
+                          (trans (cong (Γ ⟪_⟫ γ) (≤-irrelevant _ _))
+                                 (rel-comp Γ (n≤1+n _) (s≤s m≤n) γ))
 
 -- We could define ◄ as LiftedFunctor.ctx-lift (MkFunctor suc s≤s), but then some equalities
 -- only hold propositionally, which makes working with them harder.
@@ -32,7 +31,7 @@ rel-comp (◄ Γ) k≤m m≤n = rel-comp Γ (s≤s k≤m) (s≤s m≤n)
 
 ◄-subst : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → ◄ Δ ⇒ ◄ Γ
 func (◄-subst σ) {n} = func σ {suc n}
-naturality (◄-subst σ) {ineq = m≤n} = naturality σ {ineq = s≤s m≤n}
+naturality (◄-subst σ) {m≤n = m≤n} = naturality σ {m≤n = s≤s m≤n}
 
 ◅-ty : {Γ : Ctx ℓ} → Ty Γ → Ty (◄ Γ)
 type (◅-ty T) n γ = T ⟨ suc n , γ ⟩
@@ -46,7 +45,7 @@ naturality (◅-tm t) m≤n γ = t ⟪ s≤s m≤n , γ ⟫'
 
 ◄Γ⇒Γ : (Γ : Ctx ℓ) → ◄ Γ ⇒ Γ
 func (◄Γ⇒Γ Γ) = Γ ⟪ n≤1+n _ ⟫
-naturality (◄Γ⇒Γ Γ) = ctx-m≤1+n Γ _
+naturality (◄Γ⇒Γ Γ) γ = ctx-m≤1+n Γ _ γ
 
 ▻ : {Γ : Ctx ℓ} → Ty (◄ Γ) → Ty Γ
 type (▻ {Γ = Γ} T) zero _ = Lift _ ⊤
@@ -91,15 +90,15 @@ naturality (Löb {Γ = Γ}{T} f) {suc m} {suc n} (s≤s m≤n) γ =
   f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩ (▻' T ⟪ s≤s m≤n , γ ⟫ (Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
       ≡⟨⟩
   f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
-    (subst (λ x → T ⟨ _ , x γ ⟩) (ctx-m≤1+n Γ m≤n)
+    (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
     (T ⟪ m≤n , Γ ⟪ n≤1+n _ ⟫ γ ⟫ Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
       ≡⟨ cong (λ z → f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
-                      (subst (λ x → T ⟨ _ , x γ ⟩) (ctx-m≤1+n Γ m≤n) z))
+                      (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ) z))
               (naturality (Löb {Γ = Γ}{T} f) m≤n (Γ ⟪ n≤1+n _ ⟫ γ)) ⟩
   (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
-    (subst (λ x → T ⟨ _ , x γ ⟩) (ctx-m≤1+n Γ m≤n)
+    (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
     (Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n _ ⟫ γ) ⟩')))
-      ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb {Γ = Γ}{T} f ⟨ _ , x γ ⟩') (ctx-m≤1+n Γ m≤n)) ⟩
+      ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb {Γ = Γ}{T} f ⟨ _ , x ⟩') (ctx-m≤1+n Γ m≤n γ)) ⟩
   Löb {Γ = Γ}{T} f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎
   where open ≡-Reasoning
 

@@ -434,7 +434,7 @@ naturality (app {Γ = Γ}{T}{S} f t) {m} {n} m≤n γ =
   S ⟪ m≤n , γ ⟫ (f €⟨ n , γ ⟩ (t ⟨ n , γ ⟩'))
     ≡⟨ €-natural f m≤n γ (t ⟨ n , γ ⟩') ⟩
   f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩ (T ⟪ m≤n , γ ⟫ (t ⟨ n , γ ⟩'))
-    ≡⟨ cong (f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩_) (t ⟪ m≤n , γ ⟫') ⟩
+    ≡⟨ cong (f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩_) (naturality t m≤n γ) ⟩
   f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩ (t ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩') ∎
   where open ≡-Reasoning
 

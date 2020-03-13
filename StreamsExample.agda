@@ -39,8 +39,8 @@ first-≤-tail m≤n (a ∷ as) = refl
 Stream : Ty {0ℓ} ◇
 type Stream = λ n _ → Vec ℕ (suc n)
 morph Stream = λ m≤n _ → first-≤ (s≤s m≤n)
-morph-id Stream = λ _ → funext λ xs → first-≤-refl
-morph-comp Stream = λ k≤m m≤n _ → funext λ xs → first-≤-trans (s≤s k≤m) (s≤s m≤n) xs
+morph-id Stream = λ xs → first-≤-refl
+morph-comp Stream = λ k≤m m≤n xs → first-≤-trans (s≤s k≤m) (s≤s m≤n) xs
 
 str-head : {Γ : Ctx 0ℓ} → Tm Γ (Stream [ empty-subst Γ ]) → Tm Γ (Nat' [ empty-subst Γ ])
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
@@ -57,8 +57,8 @@ term (str-tail s) zero _ = lift tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
 naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) γ =
-  subst (λ _ → Vec ℕ (suc m)) (ctx-m≤1+n Γ m≤n) (first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩')))
-    ≡⟨ subst-const (ctx-m≤1+n Γ m≤n) _ ⟩
+  subst (λ _ → Vec ℕ (suc m)) (ctx-m≤1+n Γ m≤n γ) (first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩')))
+    ≡⟨ subst-const (ctx-m≤1+n Γ m≤n γ) _ ⟩
   first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩'))
     ≡⟨ first-≤-tail (s≤s m≤n) (s ⟨ suc n , γ ⟩') ⟩
   tail (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γ ⟩'))
@@ -73,8 +73,8 @@ naturality (str-cons t) {zero} {zero} z≤n γ = cong (λ x → proj₁ x ∷ []
 naturality (str-cons t) {zero} {suc n} z≤n γ = cong (λ x → proj₁ x ∷ []) (t ⟪ z≤n , γ ⟫')
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) γ = cong₂ _∷_ (cong proj₁ (t ⟪ s≤s m≤n , γ ⟫'))
   (first-≤ (s≤s m≤n) (snd t ⟨ suc n , γ ⟩')
-    ≡⟨ sym (subst-const (ctx-m≤1+n ◇ m≤n) _) ⟩
-  subst (λ x → Vec ℕ (suc m)) (ctx-m≤1+n ◇ m≤n) (first-≤ (s≤s m≤n) (snd t ⟨ suc n , γ ⟩'))
+    ≡⟨ sym (subst-const (ctx-m≤1+n ◇ m≤n _) _) ⟩
+  subst (λ x → Vec ℕ (suc m)) (ctx-m≤1+n ◇ m≤n _) (first-≤ (s≤s m≤n) (snd t ⟨ suc n , γ ⟩'))
     ≡⟨ refl ⟩
   ▻' Stream ⟪ s≤s m≤n , _ ⟫ (snd t ⟨ suc n , γ ⟩')
     ≡⟨ snd t ⟪ s≤s m≤n , _ ⟫' ⟩
