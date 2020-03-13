@@ -38,13 +38,6 @@ _⟪_⟫ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 _⟪_⟫_ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 Γ ⟪ ineq ⟫ γ = (Γ ⟪ ineq ⟫) γ
 
--- The empty context
-◇ : Ctx ℓ
-set ◇ = λ _ → Lift _ ⊤
-rel ◇ = λ _ _ → lift tt
-rel-id ◇ = λ _ → refl
-rel-comp ◇ = λ _ _ _ → refl
-
 record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
   constructor MkSubst
   field
@@ -100,13 +93,6 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {m≤n = m≤n} δ =
   naturality (σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)) ∎))))
   where open ≡-Reasoning
 -}
-
-empty-subst : (Γ : Ctx ℓ) → Γ ⇒ ◇
-func (empty-subst Γ) = λ _ → lift tt
-naturality (empty-subst Γ) = λ _ → refl
-
-empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
-empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
 
 -- The following proofs are needed to define function types in Hofmann style
 -- In each of the proofs, the idea is to rewrite the different substitutions as one subst with a more complex equality proof
@@ -461,6 +447,24 @@ tm-subst-comp {Δ = Δ}{Γ}{T = T} t τ σ = cong₂-d MkTm
     term (t [ τ ⊚ σ ]') ∎)
   (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
   where open ≡-Reasoning
+
+
+--------------------------------------------------
+-- The empty context
+--------------------------------------------------
+
+◇ : Ctx ℓ
+set ◇ = λ _ → Lift _ ⊤
+rel ◇ = λ _ _ → lift tt
+rel-id ◇ = λ _ → refl
+rel-comp ◇ = λ _ _ _ → refl
+
+empty-subst : (Γ : Ctx ℓ) → Γ ⇒ ◇
+func (empty-subst Γ) = λ _ → lift tt
+naturality (empty-subst Γ) = λ _ → refl
+
+empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
+empty-subst-terminal Γ σ = cong (MkSubst _) (funextI (funextI (funextI (funext λ _ → uip _ _))))
 
 
 --------------------------------------------------
