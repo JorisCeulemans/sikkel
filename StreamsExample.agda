@@ -81,14 +81,17 @@ naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) γ = cong₂ _∷
   snd t ⟨ suc m , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎)
   where open ≡-Reasoning
 
+str-snd : Tm ◇ Stream → Tm ◇ (▻' Nat')
+str-snd s = next {!str-head ?!}
+
 zeros : Tm ◇ Stream
-zeros = Löb (lam (▻' Stream) (str-cons (pair (zero' [ empty-subst _ ]') ξ)))
+zeros = Löb Stream (lam (▻' Stream) (str-cons (pair (zero' [ empty-subst _ ]') ξ)))
 
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
-str-map f = Löb (lam (▻' (Stream ⇛ Stream)) {!lam ? ?!})
+str-map f = Löb (Stream ⇛ Stream) (lam (▻' (Stream ⇛ Stream)) {!lam Stream ?!})
 
 generate : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 generate f = {!!}
 
 nats : Tm ◇ Stream
-nats = app (generate (lam Nat' {!!})) zero'
+nats = app (generate (lam Nat' {!suc' ?!})) zero'
