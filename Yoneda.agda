@@ -11,17 +11,10 @@ open import CwF-Structure
 
 -- Yoneda embedding
 𝕪 : ℕ → Ctx ℓ
-𝕪 n = record { set = λ m → Lift _ (m ≤ n)
-             ; rel = λ { k≤m (lift m≤n) → lift (≤-trans k≤m m≤n) }
-             ; rel-id = λ { (lift _) → cong lift (≤-irrelevant _ _) }
-             ; rel-comp = λ _ _ → λ { (lift _) → cong lift (≤-irrelevant _ _) }
-             }
-{-
-set (𝕪 n) = λ m → Lift _ (m ≤ n)
-rel (𝕪 n) = λ { k≤m (lift m≤n) → lift (≤-trans k≤m m≤n) }
-rel-id (𝕪 n) = funext λ { (lift _) → cong lift (≤-irrelevant _ _) }
-rel-comp (𝕪 n) = λ _ _ → funext λ { (lift _) → cong lift (≤-irrelevant _ _) }
--}
+set (𝕪 n) m = Lift _ (m ≤ n)
+rel (𝕪 n) k≤m (lift m≤n) = lift (≤-trans k≤m m≤n)
+rel-id (𝕪 n) (lift _) = cong lift (≤-irrelevant _ _)
+rel-comp (𝕪 n) _ _ (lift _) = cong lift (≤-irrelevant _ _)
 
 𝕪[_]_ : ∀ ℓ → ℕ → Ctx ℓ
 𝕪[ ℓ ] n = 𝕪 {ℓ} n

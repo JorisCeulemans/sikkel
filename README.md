@@ -1,0 +1,1 @@
+We use Agda 2.6.1 and the Agda standard library (version 1.3).

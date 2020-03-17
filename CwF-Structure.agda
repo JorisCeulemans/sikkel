@@ -458,19 +458,11 @@ empty-subst-terminal Γ σ = to-subst-eq (λ δ → refl)
 --------------------------------------------------
 
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
-Γ ,, T = record { set = λ n → Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
-                ; rel = λ { ineq [ γ , t ] → [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ] }
-                ; rel-id = λ { [ γ , t ] → to-Σ-eq (rel-id Γ γ) (morph-id T t) }
-                ; rel-comp = λ { k≤m m≤n [ γ , t ] → to-Σ-eq (rel-comp Γ k≤m m≤n γ) (morph-comp T k≤m m≤n t) }
-                }
-{- Same definition using copattern matching (currently fails, but will probably work in Agda 2.6.1).
 set (Γ ,, T) n = Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
 rel (Γ ,, T) ineq [ γ , t ] = [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , γ ⟫ t ]
-rel-id (Γ ,, T) = funext λ { [ γ , t ] → to-Σ-eq (cong-app (rel-id Γ) γ) (trans {!!} (cong-app (morph-id T γ) t)) }
-rel-comp (Γ ,, T) = λ k≤m m≤n → funext λ { [ γ , t ] → {!to-Σ-eq ? ?!} }
-  -- Strange behaviour here (termination checking seems to fail).
-  -- It is possible that this will be solved by https://github.com/agda/agda/pull/4424 in Agda 2.6.1.
--}
+rel-id (Γ ,, T) [ γ , t ] = to-Σ-eq (rel-id Γ γ) (morph-id T t)
+rel-comp (Γ ,, T) k≤m m≤n [ γ , t ] = to-Σ-eq (rel-comp Γ k≤m m≤n γ) (morph-comp T k≤m m≤n t)
+
 π : {Γ : Ctx ℓ} {T : Ty Γ} → Γ ,, T ⇒ Γ
 func π = proj₁
 naturality π = λ _ → refl
