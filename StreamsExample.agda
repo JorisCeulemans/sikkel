@@ -39,23 +39,25 @@ first-≤-tail : ∀ {m n} {A : Set ℓ} (m≤n : m ≤ n) (as : Vec A (suc n)) 
                first-≤ m≤n (tail as) ≡ tail (first-≤ (s≤s m≤n) as)
 first-≤-tail m≤n (a ∷ as) = refl
 
-Stream : Ty {0ℓ} ◇
-type Stream = λ n _ → Vec ℕ (suc n)
-morph Stream = λ m≤n _ → first-≤ (s≤s m≤n)
-morph-id Stream = λ xs → first-≤-refl
-morph-comp Stream = λ k≤m m≤n xs → first-≤-trans (s≤s k≤m) (s≤s m≤n) xs
+Stream : {Γ : Ctx 0ℓ} → Ty Γ
+type Stream n _ = Vec ℕ (suc n)
+morph Stream m≤n _ = first-≤ (s≤s m≤n)
+morph-id (Stream {Γ = Γ}) xs = trans (subst-const (rel-id Γ _) _)
+                                     first-≤-refl
+morph-comp (Stream {Γ = Γ}) k≤m m≤n xs = trans (subst-const (rel-comp Γ k≤m m≤n _) _)
+                                               (first-≤-trans (s≤s k≤m) (s≤s m≤n) xs)
 
-str-head : {Γ : Ctx 0ℓ} → Tm Γ (Stream [ empty-subst Γ ]) → Tm Γ (Nat' [ empty-subst Γ ])
+str-head : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
 naturality (str-head {Γ = Γ} s) {m}{n} m≤n γ =
   head (s ⟨ n , γ ⟩')
     ≡⟨ first-≤-head m≤n (s ⟨ n , γ ⟩') ⟩
-  head (Stream ⟪ m≤n , _ ⟫ (s ⟨ n , γ ⟩'))
+  head (Stream {Γ = Γ} ⟪ m≤n , γ ⟫ (s ⟨ n , γ ⟩'))
     ≡⟨ cong head (s ⟪ m≤n , γ ⟫') ⟩
   head (s ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩') ∎
   where open ≡-Reasoning
 
-str-tail : {Γ : Ctx 0ℓ} → Tm Γ (Stream [ empty-subst Γ ]) → Tm Γ (▻' (Stream [ empty-subst Γ ]))
+str-tail : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻' Stream)
 term (str-tail s) zero _ = lift tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
@@ -69,18 +71,18 @@ naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) γ =
   tail (s ⟨ suc m , Γ ⟪ s≤s m≤n ⟫ γ ⟩') ∎
   where open ≡-Reasoning
 
-str-cons : {Γ : Ctx 0ℓ} → Tm Γ ((Nat' [ empty-subst Γ ]) ×' (▻' Stream [ empty-subst Γ ])) → Tm Γ (Stream [ empty-subst Γ ])
+str-cons : {Γ : Ctx 0ℓ} → Tm Γ (Nat' ×' (▻' Stream)) → Tm Γ Stream
 term (str-cons t) zero γ = fst t ⟨ zero , γ ⟩' ∷ []
 term (str-cons t) (suc n) γ = (fst t ⟨ suc n , _ ⟩') ∷ (snd t ⟨ suc n , γ ⟩')
 naturality (str-cons t) {zero} {zero} z≤n γ = cong (λ x → proj₁ x ∷ []) (t ⟪ z≤n , γ ⟫')
 naturality (str-cons t) {zero} {suc n} z≤n γ = cong (λ x → proj₁ x ∷ []) (t ⟪ z≤n , γ ⟫')
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) γ = cong₂ _∷_ (cong proj₁ (t ⟪ s≤s m≤n , γ ⟫'))
   (first-≤ (s≤s m≤n) (snd t ⟨ suc n , γ ⟩')
-    ≡⟨ sym (subst-const (ctx-m≤1+n ◇ m≤n _) _) ⟩
-  subst (λ x → Vec ℕ (suc m)) (ctx-m≤1+n ◇ m≤n _) (first-≤ (s≤s m≤n) (snd t ⟨ suc n , γ ⟩'))
-    ≡⟨ refl ⟩
-  ▻' Stream ⟪ s≤s m≤n , _ ⟫ (snd t ⟨ suc n , γ ⟩')
-    ≡⟨ snd t ⟪ s≤s m≤n , _ ⟫' ⟩
+    ≡⟨ sym (subst-const (ctx-m≤1+n Γ m≤n γ) _) ⟩
+  subst (λ x → Vec ℕ (suc m)) (ctx-m≤1+n Γ m≤n γ) (first-≤ (s≤s m≤n) (snd t ⟨ suc n , γ ⟩'))
+    ≡⟨⟩
+  ▻' (Stream {Γ = Γ}) ⟪ s≤s m≤n , γ ⟫ (snd t ⟨ suc n , γ ⟩')
+    ≡⟨ snd t ⟪ s≤s m≤n , γ ⟫' ⟩
   snd t ⟨ suc m , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎)
   where open ≡-Reasoning
 
@@ -88,7 +90,7 @@ str-snd : Tm ◇ Stream → Tm ◇ (▻' Nat')
 str-snd s = next {!str-head ?!}
 
 zeros : Tm ◇ Stream
-zeros = Löb Stream (lam (▻' Stream) (str-cons (pair (zero' [ empty-subst _ ]') ξ)))
+zeros = Löb Stream (lam (▻' Stream) {!str-cons ?!})
 
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = Löb (Stream ⇛ Stream) (lam (▻' (Stream ⇛ Stream)) {!lam Stream ?!})
