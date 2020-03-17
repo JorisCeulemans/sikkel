@@ -7,7 +7,10 @@ open import Function hiding (_⟨_⟩_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
-open import CwF-Structure
+open import CwF-Structure.Contexts
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
+open import CwF-Structure.ContextExtension
 
 -- TODO: show that everything is natural with respect to the context (so e.g. that
 -- (T ⇛ S) [ σ ] ≡ T [ σ ] ⇛ S [ σ ])

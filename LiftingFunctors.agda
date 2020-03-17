@@ -5,7 +5,10 @@ open import Data.Nat.Properties
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure
+open import CwF-Structure.Contexts
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
+open import CwF-Structure.ContextExtension
 
 record ω-Functor : Set where
   constructor MkωFunctor

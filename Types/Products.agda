@@ -6,7 +6,9 @@ open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming 
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
-open import CwF-Structure
+open import CwF-Structure.Contexts
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
 
 --------------------------------------------------
 -- (Non-dependent) product types

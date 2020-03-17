@@ -7,7 +7,7 @@ open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure
+open import CwF-Structure.Contexts
 
 -- Yoneda embedding
 𝕪 : ℕ → Ctx ℓ

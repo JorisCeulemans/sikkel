@@ -9,7 +9,10 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 open import Level renaming (zero to lzero; suc to lsuc)
 
 open import Helpers
-open import CwF-Structure
+open import CwF-Structure.Contexts
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
+open import CwF-Structure.ContextExtension
 open import Types.Discrete
 open import Types.Functions
 open import Types.Products
@@ -94,4 +97,4 @@ generate : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 generate f = {!!}
 
 nats : Tm ◇ Stream
-nats = app (generate (lam Nat' {!suc' ?!})) zero'
+nats = app (generate (lam Nat' (suc' ξ))) zero'

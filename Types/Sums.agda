@@ -6,7 +6,9 @@ open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
-open import CwF-Structure
+open import CwF-Structure.Contexts
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
 
 --------------------------------------------------
 -- Sum types
