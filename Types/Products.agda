@@ -44,13 +44,13 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   naturality (snd p) = λ ineq γ → cong proj₂ (p ⟪ _ , γ ⟫')
 
 module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
-  abstract
-    ×'-natural : (T ×' S) [ σ ] ≡ (T [ σ ]) ×' (S [ σ ])
-    ×'-natural = cong₃-d (MkTy _)
-                         (funextI (funextI (funext λ ineq → funext λ δ → funext λ { [ t , s ] →
-                           subst-× (naturality σ δ) [ T ⟪ ineq , func σ δ ⟫ t , S ⟪ ineq , func σ δ ⟫ s ] })))
-                         (funextI (funextI (funext λ _ → uip _ _)))
-                         (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
+--  abstract
+  ×'-natural : (T ×' S) [ σ ] ≡ (T [ σ ]) ×' (S [ σ ])
+  ×'-natural = cong₃-d (MkTy _)
+                       (funextI (funextI (funext λ ineq → funext λ δ → funext λ { [ t , s ] →
+                         subst-× (naturality σ δ) [ T ⟪ ineq , func σ δ ⟫ t , S ⟪ ineq , func σ δ ⟫ s ] })))
+                       (funextI (funextI (funext λ _ → uip _ _)))
+                       (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
 
   pair-natural : (t : Tm Γ T) (s : Tm Γ S) → subst (Tm Δ) ×'-natural ((pair t s) [ σ ]') ≡ pair (t [ σ ]') (s [ σ ]')
   pair-natural t s = cong₂-d MkTm

@@ -51,47 +51,44 @@ ctx-ext-left-inverse {Δ = Δ} {T = T} [ σ , t ] = to-Σ-eq (to-subst-eq (λ δ
   where
     open ≡-Reasoning
     α = to-subst-eq (λ δ → refl)
-    β = subst (Tm Δ) (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (ξ [ to-ext-subst-Σ T [ σ , t ] ]')
+    ζ = ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])
+    β = subst (Tm Δ) ζ (ξ [ to-ext-subst-Σ T [ σ , t ] ]')
     proof = term (subst (λ x → Tm Δ (T [ x ])) α β)
-                ≡⟨ cong term {y = subst (Tm Δ) (cong (T [_]) α)
-                                        (subst (Tm Δ) (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ]))
-                                               (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))}
-                        (subst-∘ {f = λ x → T [ x ]} α {p = β}) ⟩
-              term (subst (Tm Δ) (cong (T [_]) α) (subst (Tm Δ) (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (ξ [ to-ext-subst-Σ T [ σ , t ] ]')))
-                ≡⟨ cong term {x = subst (Tm Δ) (cong (T [_]) α)
-                                        (subst (Tm Δ) (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ]))
-                                               (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))}
-                             {y = subst (Tm Δ) (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α))
-                                        (ξ [ to-ext-subst-Σ T [ σ , t ] ]')}
-                             (subst-subst (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ]))) ⟩
-              term (subst (Tm Δ) (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α)) (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
-                ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α))) ⟩
-              subst (λ z → (n : ℕ) (γ : Δ ⟨ n ⟩) → z ⟨ n , γ ⟩) (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α)) (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
-                ≡⟨ subst-∘ (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α)) ⟩
-              subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α))) (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
-                ≡⟨ cong (λ x → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) x (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]')))
-                        {x = cong type (trans (ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])) (cong (T [_]) α))}
-                        {y = refl}
-                        (uip _ _) ⟩
-              term t ∎
+              ≡⟨ cong term {y = subst (Tm Δ) (cong (T [_]) α) β}
+                      (subst-∘ {f = λ x → T [ x ]} α {p = β}) ⟩
+            term (subst (Tm Δ) (cong (T [_]) α) β)
+              ≡⟨ cong term {x = subst (Tm Δ) (cong (T [_]) α) β}
+                           {y = subst (Tm Δ) (trans ζ (cong (T [_]) α))
+                                      (ξ [ to-ext-subst-Σ T [ σ , t ] ]')}
+                           (subst-subst ζ) ⟩
+            term (subst (Tm Δ) (trans ζ (cong (T [_]) α)) (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
+              ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) (trans ζ (cong (T [_]) α))) ⟩
+            subst (λ z → (n : ℕ) (γ : Δ ⟨ n ⟩) → z ⟨ n , γ ⟩) (trans ζ (cong (T [_]) α)) (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
+              ≡⟨ subst-∘ (trans ζ (cong (T [_]) α)) ⟩
+            subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type (trans ζ (cong (T [_]) α))) (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
+              ≡⟨ cong (λ x → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) x (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]')))
+                      {x = cong type (trans ζ (cong (T [_]) α))}
+                      {y = refl}
+                      (uip _ _) ⟩
+            term t ∎
 
 ctx-ext-right-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (τ : Δ ⇒ Γ ,, T) → to-ext-subst-Σ T (from-ext-subst τ) ≡ τ
-ctx-ext-right-inverse {Δ = Δ} {T = T} τ = to-subst-eq (λ δ →
-  cong [ proj₁ (func τ δ) ,_] (term (proj₂ (from-ext-subst τ)) _ δ
-    ≡⟨⟩
-  term (subst (Tm Δ) (ty-subst-comp T π τ) (ξ [ τ ]')) _ δ
-    ≡⟨ cong (λ z → z _ δ) (sym (weak-subst-application {B = Tm Δ} (λ x y → term y) (ty-subst-comp T π τ))) ⟩
-  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) (ty-subst-comp T π τ) (term (ξ [ τ ]')) _ δ
-    ≡⟨ cong (λ z → z _ δ) {x = subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) (ty-subst-comp T π τ) (term (ξ [ τ ]'))}
-            (subst-∘ (ty-subst-comp T π τ)) ⟩
-  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') (cong type (ty-subst-comp T π τ)) (term (ξ [ τ ]')) _ δ
-    ≡⟨ cong (λ z → subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') z (term (ξ [ τ ]')) _ δ)
-            {x = cong type (ty-subst-comp T π τ)}
+ctx-ext-right-inverse {Δ = Δ} {T = T} τ = to-subst-eq (λ δ → cong [ proj₁ (func τ δ) ,_]
+  (term (subst (Tm Δ) ζ η) _ δ
+    ≡⟨ cong (λ z → z _ δ) (sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ζ)) ⟩
+  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) ζ (term η) _ δ
+    ≡⟨ cong (λ z → z _ δ) {x = subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) ζ (term η)}
+            (subst-∘ ζ) ⟩
+  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') (cong type ζ) (term η) _ δ
+    ≡⟨ cong (λ z → subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') z (term η) _ δ)
+            {x = cong type ζ}
             {y = refl}
-            (uip _ _) ⟩
+            (uip (cong type ζ) refl) ⟩
   proj₂ (func τ δ) ∎))
   where
     open ≡-Reasoning
+    ζ = ty-subst-comp T π τ
+    η = ξ {T = T} [ τ ]'
 
 π-ext-comp : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) →
              π ⊚ to-ext-subst T σ t ≡ σ

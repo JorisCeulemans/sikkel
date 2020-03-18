@@ -115,37 +115,37 @@ morph-comp (_[_] {Δ = Δ}{Γ} T σ) k≤m m≤n {δ} t = proof
          (T ⟪ k≤m , func σ (Δ ⟪ m≤n ⟫ δ) ⟫
            (subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) (T ⟪ m≤n , func σ δ ⟫ t))) ∎
 
-abstract
-  ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
-  ty-subst-id T = cong₂-d (MkTy _ _)
-                          (funextI (funextI (funext (λ _ → uip _ _))))
-                          (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
+-- abstract
+ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
+ty-subst-id T = cong₂-d (MkTy _ _)
+                        (funextI (funextI (funext (λ _ → uip _ _))))
+                        (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
 
-  ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-  ty-subst-comp T τ σ = cong₃-d (MkTy _)
-    (funextI (funextI (funext λ ineq → funext λ δ → funext λ t →
-        subst (λ x → T ⟨ _ , func τ x ⟩) (naturality σ δ)
-        (subst (λ x → T ⟨ _ , x ⟩) (naturality τ (func σ δ))
-         (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-         ≡⟨ subst-∘ (naturality σ δ)  ⟩
-        subst (λ x → T ⟨ _ , x ⟩) (cong (func τ) (naturality σ δ))
-        (subst (λ x → T ⟨ _ , x ⟩) (naturality τ (func σ δ))
-         (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-         ≡⟨ subst-subst (naturality τ (func σ δ))  ⟩
-        subst (λ x → T ⟨ _ , x ⟩)
-          (trans (naturality τ (func σ δ)) (cong (func τ) (naturality σ δ)))
-          (T ⟪ ineq , func τ (func σ δ) ⟫ t)
-         ≡⟨ cong
-              (λ p →
-                 subst (λ x → T ⟨ _ , x ⟩) p
-                 (T ⟪ ineq , func τ (func σ δ) ⟫ t))
-              (cong (trans (naturality τ (func σ δ))) (sym (trans-reflʳ _))) ⟩
-         subst (λ x → T ⟨ _ , x ⟩)
-           (trans (naturality τ (func σ δ))
-             (trans (cong (func τ) (naturality σ δ))
-           refl))
-         (T ⟪ ineq , func τ (func σ δ) ⟫ t) ∎
-        )))
-    (funextI (funextI (funext (λ _ → uip _ _))))
-    (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
-    where open ≡-Reasoning
+ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
+ty-subst-comp T τ σ = cong₃-d (MkTy _)
+  (funextI (funextI (funext λ ineq → funext λ δ → funext λ t →
+      subst (λ x → T ⟨ _ , func τ x ⟩) (naturality σ δ)
+      (subst (λ x → T ⟨ _ , x ⟩) (naturality τ (func σ δ))
+       (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+       ≡⟨ subst-∘ (naturality σ δ)  ⟩
+      subst (λ x → T ⟨ _ , x ⟩) (cong (func τ) (naturality σ δ))
+      (subst (λ x → T ⟨ _ , x ⟩) (naturality τ (func σ δ))
+       (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+       ≡⟨ subst-subst (naturality τ (func σ δ))  ⟩
+      subst (λ x → T ⟨ _ , x ⟩)
+        (trans (naturality τ (func σ δ)) (cong (func τ) (naturality σ δ)))
+        (T ⟪ ineq , func τ (func σ δ) ⟫ t)
+       ≡⟨ cong
+            (λ p →
+               subst (λ x → T ⟨ _ , x ⟩) p
+               (T ⟪ ineq , func τ (func σ δ) ⟫ t))
+            (cong (trans (naturality τ (func σ δ))) (sym (trans-reflʳ _))) ⟩
+       subst (λ x → T ⟨ _ , x ⟩)
+         (trans (naturality τ (func σ δ))
+           (trans (cong (func τ) (naturality σ δ))
+         refl))
+       (T ⟪ ineq , func τ (func σ δ) ⟫ t) ∎
+      )))
+  (funextI (funextI (funext (λ _ → uip _ _))))
+  (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
+  where open ≡-Reasoning

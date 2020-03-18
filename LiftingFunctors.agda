@@ -104,15 +104,14 @@ module LiftedFunctor (F : ω-Functor) where
     (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
     where
       open ≡-Reasoning
-      abstract
-        proof = term (subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')))
-                  ≡⟨ sym (weak-subst-application (λ x y → term y) (ty-lift-natural σ T)) ⟩
-                subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x ⟨ n , δ ⟩) (ty-lift-natural σ T) (term (tm-lift (t [ σ ]')))
-                  ≡⟨ subst-∘ (ty-lift-natural σ T) ⟩
-                subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x n δ) (cong type (ty-lift-natural σ T)) (term (tm-lift (t [ σ ]')))
-                  ≡⟨ cong (λ z → subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x n δ) z (term (tm-lift (t [ σ ]'))))
-                          (uip (cong type (ty-lift-natural σ T)) refl) ⟩
-                term (tm-lift t [ subst-lift σ ]') ∎
+      proof = term (subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')))
+                ≡⟨ sym (weak-subst-application (λ x y → term y) (ty-lift-natural σ T)) ⟩
+              subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x ⟨ n , δ ⟩) (ty-lift-natural σ T) (term (tm-lift (t [ σ ]')))
+                ≡⟨ subst-∘ (ty-lift-natural σ T) ⟩
+              subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x n δ) (cong type (ty-lift-natural σ T)) (term (tm-lift (t [ σ ]')))
+                ≡⟨ cong (λ z → subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x n δ) z (term (tm-lift (t [ σ ]'))))
+                        (uip (cong type (ty-lift-natural σ T)) refl) ⟩
+              term (tm-lift t [ subst-lift σ ]') ∎
 
   lift-◇ : ctx-lift {ℓ} ◇ ≡ ◇
   lift-◇ = cong₂-d (MkCtx _ _)

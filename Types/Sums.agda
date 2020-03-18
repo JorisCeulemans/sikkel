@@ -54,14 +54,14 @@ inr'⟨_⟩_ : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} (s : Tm Γ S) → Tm Γ (T
 inr'⟨ T ⟩ s = inr' {T = T} s
 
 module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
-  abstract
-    ⊎'-natural : (T ⊎' S) [ σ ] ≡ (T [ σ ]) ⊎' (S [ σ ])
-    ⊎'-natural = cong₃-d (MkTy _)
-                          (funextI (funextI (funext λ ineq → funext λ δ → funext λ {
-                            (inl t) → subst-⊎ˡ (naturality σ δ) ;
-                            (inr s) → subst-⊎ʳ (naturality σ δ) })))
-                          (funextI (funextI (funext λ _ → uip _ _)))
-                          (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
+--  abstract
+  ⊎'-natural : (T ⊎' S) [ σ ] ≡ (T [ σ ]) ⊎' (S [ σ ])
+  ⊎'-natural = cong₃-d (MkTy _)
+                        (funextI (funextI (funext λ ineq → funext λ δ → funext λ {
+                          (inl t) → subst-⊎ˡ (naturality σ δ) ;
+                          (inr s) → subst-⊎ʳ (naturality σ δ) })))
+                        (funextI (funextI (funext λ _ → uip _ _)))
+                        (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
 
   inl'-natural : (t : Tm Γ T) → subst (Tm Δ) ⊎'-natural ((inl' t) [ σ ]') ≡ inl' (t [ σ ]')
   inl'-natural t = cong₂-d MkTm

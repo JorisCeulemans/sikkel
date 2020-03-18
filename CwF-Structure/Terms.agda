@@ -71,3 +71,24 @@ tm-subst-comp {Δ = Δ}{Γ}{T = T} t τ σ = cong₂-d MkTm
     term (t [ τ ⊚ σ ]') ∎)
   (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
   where open ≡-Reasoning
+
+{- This does not lead to reduced type-checking time.
+  (term (subst (Tm Δ) ζ η)
+      ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ζ) ⟩
+    subst (λ x → (n : ℕ) (δ : Δ ⟨ n ⟩) → x ⟨ n , δ ⟩) ζ (term η)
+      ≡⟨ subst-∘ ζ ⟩
+    subst (λ x → (n : ℕ) (δ : Δ ⟨ n ⟩) → x n δ) (cong type ζ) (term η)
+      ≡⟨ cong {A = (λ n δ → type T n (func τ (func σ δ))) ≡ (λ n δ → type T n (func τ (func σ δ)))}
+              (λ y → subst (λ x → (n : ℕ) (δ : Δ ⟨ n ⟩) → x n δ) y (term η))
+              {x = cong type ζ}
+              {y = refl}
+              (uip _ _) ⟩
+    subst (λ x → (n : ℕ) (δ : Δ ⟨ n ⟩) → x n δ) {x = type (T [ τ ⊚ σ ])} refl (term (t [ τ ⊚ σ ]'))
+      ≡⟨⟩
+    term (t [ τ ⊚ σ ]') ∎)
+  (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+  where
+    open ≡-Reasoning
+    ζ = ty-subst-comp T τ σ
+    η = t [ τ ]' [ σ ]'
+-}
