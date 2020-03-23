@@ -76,3 +76,8 @@ zero' = discr zero
 suc' : {Γ : Ctx 0ℓ} → Tm Γ Nat' → Tm Γ Nat'
 term (suc' t) = λ n γ → suc (t ⟨ n , γ ⟩')
 naturality (suc' t) = λ m≤n γ → cong suc (naturality t m≤n γ)
+
+to-Nat[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Nat' → Tm Δ (Nat' [ σ ])
+term (to-Nat[ σ ] t) n δ = t ⟨ n , δ ⟩'
+naturality (to-Nat[ σ ] t) m≤n δ = trans (subst-const _ _)
+                                         (t ⟪ m≤n , δ ⟫')
