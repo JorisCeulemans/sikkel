@@ -76,6 +76,11 @@ naturality (str-cons t) {zero} {zero} z≤n γ = cong (λ x → proj₁ x ∷ []
 naturality (str-cons t) {zero} {suc n} z≤n γ = cong (λ x → proj₁ x ∷ []) (t ⟪ z≤n , γ ⟫')
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) γ = cong₂ _∷_ (cong proj₁ (t ⟪ s≤s m≤n , γ ⟫')) (snd t ⟪ s≤s m≤n , γ ⟫')
 
+to-str[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Stream → Tm Δ (Stream [ σ ])
+term (to-str[ σ ] s) n δ = s ⟨ n , δ ⟩'
+naturality (to-str[ σ ] s) m≤n δ = trans (subst-const (naturality σ δ) _)
+                                         (s ⟪ m≤n , δ ⟫')
+
 str-snd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ Nat')
 str-snd s = next (str-head (prev (str-tail s)))
 
@@ -83,7 +88,7 @@ str-thrd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream
-zeros = Löb Stream (lam (▻' Stream) {!str-cons ?!})
+zeros = Löb Stream (lam (▻' Stream) (to-str[ π {T = ▻' Stream} ] str-cons (pair zero' {!ξ [ ? ]'!})))
 
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = Löb (Stream ⇛ Stream) (lam (▻' (Stream ⇛ Stream)) {!lam Stream ?!})
