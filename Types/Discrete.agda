@@ -17,15 +17,18 @@ open import CwF-Structure.Terms
 -- Discrete types
 --------------------------------------------------
 
+Discr-prim : (A : Set 0ℓ) → Ty (◇ {0ℓ})
+type (Discr-prim A) _ _ = A
+morph (Discr-prim A) _ _ = id
+morph-id (Discr-prim A) _ = refl
+morph-comp (Discr-prim A) _ _ _ = refl
+
 Discr : (A : Set 0ℓ) {Γ : Ctx 0ℓ} → Ty Γ
-type (Discr A) = λ _ _ → A
-morph (Discr A) = λ _ _ → id
-morph-id (Discr A) = λ _ → subst-const _ _
-morph-comp (Discr A) = λ _ _ _ → subst-const _ _
+Discr A {Γ} = Discr-prim A [ !◇ Γ ]
 
 discr : {A : Set 0ℓ} {Γ : Ctx 0ℓ} → A → Tm Γ (Discr A)
-term (discr a) = λ _ _ → a
-naturality (discr a) = λ _ _ → refl
+term (discr a) _ _ = a
+naturality (discr a) _ _ = refl
 
 undiscr : {A : Set 0ℓ} → Tm ◇ (Discr A) → A
 undiscr t = t ⟨ 0 , lift tt ⟩'
@@ -77,7 +80,7 @@ suc' : {Γ : Ctx 0ℓ} → Tm Γ Nat' → Tm Γ Nat'
 term (suc' t) = λ n γ → suc (t ⟨ n , γ ⟩')
 naturality (suc' t) = λ m≤n γ → cong suc (naturality t m≤n γ)
 
+open import CwF-Structure.SubstitutionSequence
+
 to-Nat[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Nat' → Tm Δ (Nat' [ σ ])
-term (to-Nat[ σ ] t) n δ = t ⟨ n , δ ⟩'
-naturality (to-Nat[ σ ] t) m≤n δ = trans (subst-const _ _)
-                                         (t ⟪ m≤n , δ ⟫')
+to-Nat[ σ ] t = convert-subst (!◇ _ ∷ _⇒*_.id) (!◇ _ ∷ (σ ∷ _⇒*_.id)) (sym (!◇-terminal _ _)) t

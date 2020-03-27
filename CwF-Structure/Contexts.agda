@@ -236,9 +236,9 @@ rel ◇ = λ _ _ → lift tt
 rel-id ◇ = λ _ → refl
 rel-comp ◇ = λ _ _ _ → refl
 
-empty-subst : (Γ : Ctx ℓ) → Γ ⇒ ◇
-func (empty-subst Γ) = λ _ → lift tt
-naturality (empty-subst Γ) = λ _ → refl
+!◇ : (Γ : Ctx ℓ) → Γ ⇒ ◇
+func (!◇ Γ) = λ _ → lift tt
+naturality (!◇ Γ) = λ _ → refl
 
-empty-subst-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ empty-subst Γ
-empty-subst-terminal Γ σ = to-subst-eq (λ δ → refl)
+!◇-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ !◇ Γ
+!◇-terminal Γ σ = to-subst-eq (λ δ → refl)

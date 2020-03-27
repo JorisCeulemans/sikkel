@@ -45,6 +45,11 @@ ty-subst-seq-cong σs τs T e = trans (ty-subst-seq-fold σs T)
                                     (trans (cong (T [_]) e)
                                            (sym (ty-subst-seq-fold τs T)))
 
+convert-subst : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒* Γ) {T : Ty Γ} →
+                fold σs ≡ fold τs →
+                Tm Δ (T ⟦ σs ⟧) → Tm Δ (T ⟦ τs ⟧)
+convert-subst {Δ = Δ} σs τs {T} e t = subst (Tm Δ) (ty-subst-seq-cong σs τs T e) t
+
 tm-subst-seq-cong : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒* Γ) {T : Ty Γ} (t : Tm Γ T) →
                     (e : fold σs ≡ fold τs) →
                     subst (Tm Δ) (ty-subst-seq-cong σs τs T e) (t ⟦ σs ⟧') ≡ t ⟦ τs ⟧'
