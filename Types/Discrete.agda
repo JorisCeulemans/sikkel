@@ -83,4 +83,4 @@ naturality (suc' t) = λ m≤n γ → cong suc (naturality t m≤n γ)
 open import CwF-Structure.SubstitutionSequence
 
 to-Nat[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Nat' → Tm Δ (Nat' [ σ ])
-to-Nat[ σ ] t = convert-subst (!◇ _ ∷ _⇒*_.id) (!◇ _ ∷ (σ ∷ _⇒*_.id)) (sym (!◇-terminal _ _)) t
+to-Nat[_]_ {Δ = Δ}{Γ} σ t = convert-subst (!◇ Δ ◼) (!◇ Γ ∷ σ ◼) (◇-terminal _ _ _) t

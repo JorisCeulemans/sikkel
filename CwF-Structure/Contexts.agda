@@ -240,5 +240,5 @@ rel-comp ◇ = λ _ _ _ → refl
 func (!◇ Γ) = λ _ → lift tt
 naturality (!◇ Γ) = λ _ → refl
 
-!◇-terminal : (Γ : Ctx ℓ) (σ : Γ ⇒ ◇) → σ ≡ !◇ Γ
-!◇-terminal Γ σ = to-subst-eq (λ δ → refl)
+◇-terminal : (Γ : Ctx ℓ) (σ τ : Γ ⇒ ◇) → σ ≡ τ
+◇-terminal Γ σ τ = to-subst-eq (λ δ → refl)
