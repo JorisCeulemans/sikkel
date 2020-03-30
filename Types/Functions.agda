@@ -439,7 +439,14 @@ naturality (app {Γ = Γ}{T}{S} f t) {m} {n} m≤n γ =
     ≡⟨ cong (f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩_) (naturality t m≤n γ) ⟩
   f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩ (t ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩') ∎
   where open ≡-Reasoning
-
+{-
+to-⇛[_]_ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → Tm Δ ((T [ σ ]) ⇛ (S [ σ ])) → Tm Δ ((T ⇛ S) [ σ ])
+term (to-⇛[_]_ σ {T}{S} f) n δ = MkFunc (λ m≤n t → subst (λ x → S ⟨ _ , x ⟩) (sym (naturality σ δ))
+                                                       (f ⟨ _ , δ ⟩' $⟨ m≤n ⟩
+                                                       subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) t))
+                                         {!!}
+naturality (to-⇛[ σ ] f) = {!!}
+-}
 {-
 -- Another approach to the introduction of function types (based on https://arxiv.org/pdf/1805.08684.pdf).
 {-

@@ -58,7 +58,16 @@ morph-id (▻ {Γ = Γ} T) {zero} _ = refl
 morph-id (▻ {Γ = Γ} T) {suc n} = morph-id T
 morph-comp (▻ {Γ = Γ} T) z≤n m≤n γ = refl
 morph-comp (▻ {Γ = Γ} T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m≤n
-
+{-
+▻-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T : Ty (◄ Γ)) →
+             (▻ T) [ σ ] ≡ ▻ (T [ ◄-subst σ ])
+▻-natural {Δ = Δ} σ T = cong₄-d MkTy type-proof
+                              (funextI (funextI (funext (λ { z≤n → refl ; (s≤s m≤n) → {!trans (function-subst {C = λ z → {m' n' : ℕ} (m'≤n' : m' ≤ n') (δ : Δ ⟨ n' ⟩) → z n' δ → z m' (Δ ⟪ m'≤n' ⟫ δ)} type-proof {!λ m'≤n' δ t → subst (type (▻ T) _) (naturality σ δ) (morph (▻ T) m'≤n' (func σ δ) t)!}) {!!} !}}))))
+                              {!!}
+                              {!!}
+  where
+    type-proof = funext (λ { zero → refl ; (suc n) → refl })
+-}
 ▻' : {Γ : Ctx ℓ} → Ty Γ → Ty Γ
 ▻' {Γ = Γ} T = ▻ (T [ ◄Γ⇒Γ Γ ])
 
