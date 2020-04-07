@@ -54,11 +54,12 @@ naturality (id-subst Γ) = λ _ → refl
 
 _⊚_ : {Δ Γ Θ : Ctx ℓ} → Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
 func (τ ⊚ σ) = func τ ∘ func σ
-naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {m≤n = m≤n} δ =
-  Θ ⟪ m≤n ⟫ (func τ (func σ δ)) ≡⟨ naturality τ (func σ δ) ⟩
-  func τ (Γ ⟪ m≤n ⟫ func σ δ)   ≡⟨ cong (func τ) (naturality σ δ) ⟩
-  func τ (func σ (Δ ⟪ m≤n ⟫ δ)) ∎
-  where open ≡-Reasoning
+naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {m≤n = m≤n} δ = trans (naturality τ (func σ δ))
+                                                          (cong (func τ) (naturality σ δ))
+{-  Θ ⟪ m≤n ⟫ (func τ (func σ δ)) ≡⟨ naturality τ (func σ δ) ⟩
+    func τ (Γ ⟪ m≤n ⟫ func σ δ)   ≡⟨ cong (func τ) (naturality σ δ) ⟩
+    func τ (func σ (Δ ⟪ m≤n ⟫ δ)) ∎
+    where open ≡-Reasoning -}
 
 ⊚-id-substʳ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≡ σ
 ⊚-id-substʳ σ = to-subst-eq (λ δ → refl)

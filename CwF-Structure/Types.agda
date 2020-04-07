@@ -15,25 +15,32 @@ infixr 11 _⟪_,_⟫_
 -- Types
 --------------------------------------------------
 
+strong-rel-comp : (Γ : Ctx ℓ) (k≤m : k ≤ m) (m≤n : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
+                  (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) →
+                  Γ ⟪ ≤-trans k≤m m≤n ⟫ γn ≡ γk
+strong-rel-comp Γ k≤m m≤n {γn} eq-nm eq-mk = trans (rel-comp Γ k≤m m≤n γn)
+                                                   (trans (cong (Γ ⟪ k≤m ⟫) eq-nm)
+                                                          eq-mk)
+
 record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
   constructor MkTy
   field
     type : (n : ℕ) (γ : Γ ⟨ n ⟩) → Set ℓ
-    morph : ∀ {m n} (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) → type n γ → type m (Γ ⟪ m≤n ⟫ γ)
-    morph-id : ∀ {n} {γ : Γ ⟨ n ⟩} (t : type n γ) →
-               subst (λ x → type n x) (rel-id Γ γ) (morph ≤-refl γ t) ≡ t
-    morph-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) {γ : Γ ⟨ n ⟩} (t : type n γ) →
-                 subst (λ x → type k x) (rel-comp Γ k≤m m≤n γ) (morph (≤-trans k≤m m≤n) γ t) ≡ morph k≤m (Γ ⟪ m≤n ⟫ γ) (morph m≤n γ t)
+    morph : ∀ {m n} (m≤n : m ≤ n) {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} → Γ ⟪ m≤n ⟫ γ ≡ γ' → type n γ → type m γ'
+    morph-id : ∀ {n} {γ : Γ ⟨ n ⟩} (t : type n γ) → morph ≤-refl (rel-id Γ γ) t ≡ t
+    morph-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
+                 (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) (t : type n γn) →
+                 morph (≤-trans k≤m m≤n) (strong-rel-comp Γ k≤m m≤n eq-nm eq-mk) t ≡ morph k≤m eq-mk (morph m≤n eq-nm t)
 open Ty public
 
 _⟨_,_⟩ : {Γ : Ctx ℓ} → Ty Γ → (n : ℕ) → Γ ⟨ n ⟩ → Set ℓ
 T ⟨ n , γ ⟩ = type T n γ
 
-_⟪_,_⟫ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
-T ⟪ ineq , γ ⟫ = morph T ineq γ
+_⟪_,_⟫ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} → Γ ⟪ ineq ⟫ γ ≡ γ' → T ⟨ n , γ ⟩ → T ⟨ m , γ' ⟩
+T ⟪ ineq , eq ⟫ = morph T ineq eq
 
-_⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
-T ⟪ ineq , γ ⟫ t = (T ⟪ ineq , γ ⟫) t
+_⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} → Γ ⟪ ineq ⟫ γ ≡ γ' → T ⟨ n , γ ⟩ → T ⟨ m , γ' ⟩
+T ⟪ ineq , eq ⟫ t = (T ⟪ ineq , eq ⟫) t
 
 {- TODO: see if it is a good idea using the following way to prove equality of types
    + uniform way to prove type equality
@@ -50,6 +57,17 @@ to-ty-eq et em = cong₄-d MkTy
                          {!!}
 -}
 
+_[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
+type (T [ σ ]) n δ = T ⟨ n , func σ δ ⟩
+morph (_[_] {Γ = Γ} T σ) m≤n {δ}{δ'} eq t = T ⟪ m≤n , proof ⟫ t
+  where
+    proof : Γ ⟪ m≤n ⟫ func σ δ ≡ func σ δ'
+    proof = trans (naturality σ δ) (cong (func σ) eq)
+morph-id (T [ σ ]) t = trans (cong (λ x → T ⟪ ≤-refl , x ⟫ t) (uip _ _))
+                             (morph-id T t)
+morph-comp (T [ σ ]) k≤m m≤n eq-nm eq-mk t = trans (cong (λ x → T ⟪ ≤-trans k≤m m≤n , x ⟫ t) (uip _ _))
+                                                   (morph-comp T k≤m m≤n _ _ t)
+{-
 _[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
 type (T [ σ ]) = λ n δ → T ⟨ n , func σ δ ⟩
 morph (T [ σ ]) m≤n δ t = subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) (T ⟪ m≤n , func σ δ ⟫ t)
@@ -114,13 +132,54 @@ morph-comp (_[_] {Δ = Δ}{Γ} T σ) k≤m m≤n {δ} t = proof
        subst (λ x → T ⟨ _ , x ⟩) (naturality σ (Δ ⟪ m≤n ⟫ δ))
          (T ⟪ k≤m , func σ (Δ ⟪ m≤n ⟫ δ) ⟫
            (subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) (T ⟪ m≤n , func σ δ ⟫ t))) ∎
+-}
 
+ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
+ty-subst-id T = cong₃-d (MkTy _)
+                        (funextI (funextI (funext λ m≤n → funextI (funextI (funext λ eq → funext λ t →
+                          cong (λ x → T ⟪ m≤n , x ⟫ t) (cong-id eq))))))
+                        (funextI (funextI (funext (λ _ → uip _ _))))
+                        (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
+
+{-
 -- abstract
 ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
 ty-subst-id T = cong₂-d (MkTy _ _)
                         (funextI (funextI (funext (λ _ → uip _ _))))
                         (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
+-}
 
+cong-trans : ∀ {a b} {A : Set a} {B : Set b} (f : A → B) →
+             {x y z : A} (x≡y : x ≡ y) {y≡z : y ≡ z} →
+             cong f (trans x≡y y≡z) ≡ trans (cong f x≡y) (cong f y≡z)
+cong-trans f refl = refl
+
+ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
+ty-subst-comp T τ σ = cong₃-d (MkTy _)
+                              (funextI (funextI (funext λ m≤n → funextI (funextI (funext λ eq → funext λ t →
+                                cong (λ x → T ⟪ m≤n , x ⟫ t)
+  (trans (naturality τ (func σ _))
+         (cong (func τ) (trans (naturality σ _)
+                               (cong (func σ) eq)))
+     ≡⟨ cong (trans (naturality τ (func σ _))) (cong-trans (func τ) (naturality σ _)) ⟩
+   trans (naturality τ (func σ _))
+         (trans (cong (func τ) (naturality σ _))
+                (cong (func τ) (cong (func σ) eq)))
+     ≡⟨ sym (trans-assoc (naturality τ (func σ _))) ⟩
+   trans (trans (naturality τ (func σ _))
+                (cong (func τ) (naturality σ _)))
+         (cong (func τ) (cong (func σ) eq))
+     ≡⟨ cong (trans (trans (naturality τ (func σ _))
+                           (cong (func τ) (naturality σ _))))
+             (sym (cong-∘ eq)) ⟩
+   trans (trans (naturality τ (func σ _))
+                (cong (func τ) (naturality σ _)))
+         (cong (λ x → func τ (func σ x)) eq) ∎))))))
+                              (funextI (funextI (funext (λ _ → uip _ _))))
+                              (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
+  where open ≡-Reasoning
+
+{-
 ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
 ty-subst-comp T τ σ = cong₃-d (MkTy _)
   (funextI (funextI (funext λ ineq → funext λ δ → funext λ t →
@@ -149,3 +208,4 @@ ty-subst-comp T τ σ = cong₃-d (MkTy _)
   (funextI (funextI (funext (λ _ → uip _ _))))
   (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
   where open ≡-Reasoning
+-}
