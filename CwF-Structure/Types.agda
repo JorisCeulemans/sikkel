@@ -30,7 +30,7 @@ record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
     morph-id : ∀ {n} {γ : Γ ⟨ n ⟩} (t : type n γ) → morph ≤-refl (rel-id Γ γ) t ≡ t
     morph-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
                  (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) (t : type n γn) →
-                 morph (≤-trans k≤m m≤n) (strong-rel-comp Γ k≤m m≤n eq-nm eq-mk) t ≡ morph k≤m eq-mk (morph m≤n eq-nm t)
+                 morph (≤-trans k≤m  m≤n) (strong-rel-comp Γ k≤m m≤n eq-nm eq-mk) t ≡ morph k≤m eq-mk (morph m≤n eq-nm t)
 open Ty public
 
 _⟨_,_⟩ : {Γ : Ctx ℓ} → Ty Γ → (n : ℕ) → Γ ⟨ n ⟩ → Set ℓ
@@ -41,6 +41,13 @@ T ⟪ ineq , eq ⟫ = morph T ineq eq
 
 _⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} → Γ ⟪ ineq ⟫ γ ≡ γ' → T ⟨ n , γ ⟩ → T ⟨ m , γ' ⟩
 T ⟪ ineq , eq ⟫ t = (T ⟪ ineq , eq ⟫) t
+
+morph-subst : {Γ : Ctx ℓ} (T : Ty Γ) (m≤n : m ≤ n)
+              {γ1 : Γ ⟨ n ⟩} {γ2 γ3 : Γ ⟨ m ⟩}
+              (eq12 : Γ ⟪ m≤n ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
+              (t : T ⟨ n , γ1 ⟩) →
+              subst (λ x → T ⟨ m , x ⟩) eq23 (T ⟪ m≤n , eq12 ⟫ t) ≡ T ⟪ m≤n , trans eq12 eq23 ⟫ t
+morph-subst T m≤n refl refl t = refl
 
 {- TODO: see if it is a good idea using the following way to prove equality of types
    + uniform way to prove type equality

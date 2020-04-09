@@ -108,3 +108,14 @@ to-Σ-eq : {A : Set ℓ} {B : A → Set ℓ'}
           (e1 : a ≡ a') (e2 : subst B e1 b ≡ b') →
           [ a , b ] ≡ [ a' , b' ]
 to-Σ-eq e1 e2 = cong₂-d [_,_] e1 e2
+
+from-Σ-eq1 : {A : Set ℓ} {B : A → Set ℓ'}
+             {p q : Σ A B} →
+             p ≡ q → proj₁ p ≡ proj₁ q
+from-Σ-eq1 e = cong proj₁ e
+
+from-Σ-eq2 : {A : Set ℓ} {B : A → Set ℓ'}
+             {p q : Σ A B} →
+             (e : p ≡ q) →
+             subst B (from-Σ-eq1 e) (proj₂ p) ≡ proj₂ q
+from-Σ-eq2 refl = refl
