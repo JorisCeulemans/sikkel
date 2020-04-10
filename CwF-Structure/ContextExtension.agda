@@ -21,14 +21,10 @@ infixl 15 _,,_
 
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
 set (Γ ,, T) n = Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
-rel (Γ ,, T) ineq [ γ , t ] = [ Γ ⟪ ineq ⟫ γ , T ⟪ ineq , refl ⟫ t ]
-rel-id (Γ ,, T) [ γ , t ] = to-Σ-eq (rel-id Γ γ)
-                                    (trans (morph-subst T ≤-refl refl (rel-id Γ γ) t)
-                                           (morph-id T t))
+rel (Γ ,, T) ineq [ γ , t ] = [ Γ ⟪ ineq ⟫ γ , strict-morph T ineq γ t ]
+rel-id (Γ ,, T) [ γ , t ] = to-Σ-eq (rel-id Γ γ) (strict-morph-id T t)
 rel-comp (Γ ,, T) k≤m m≤n [ γ , t ] = to-Σ-eq (rel-comp Γ k≤m m≤n γ)
-                                              (trans (morph-subst T (≤-trans k≤m m≤n) refl (rel-comp Γ k≤m m≤n γ) t)
-                                                     (trans (cong (λ x → T ⟪ _ , x ⟫ t) (sym (trans-reflʳ _)))
-                                                            (morph-comp T k≤m m≤n refl refl t)))
+                                              (strict-morph-comp T k≤m m≤n t)
 
 π : {Γ : Ctx ℓ} {T : Ty Γ} → Γ ,, T ⇒ Γ
 func π = proj₁
@@ -36,21 +32,21 @@ naturality π _ = refl
 
 ξ : {Γ : Ctx ℓ} {T : Ty Γ} → Tm (Γ ,, T) (T [ π {T = T} ])
 term ξ = λ _ → proj₂
-naturality (ξ {T = T}) m≤n eq = trans (sym (morph-subst T m≤n refl (cong proj₁ eq) _))
+naturality (ξ {T = T}) m≤n eq = trans (sym (morph-subst T refl (cong proj₁ eq) _))
                                       (from-Σ-eq2 eq) -- can be simpler by pattern matching on eq
 
 from-ext-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))
 from-ext-subst {Δ = Δ}{Γ}{T} τ = [ π ⊚ τ , subst (Tm Δ) (ty-subst-comp T π τ) (ξ [ τ ]') ]
 
-to-ext-subst-Σ : {Δ Γ : Ctx ℓ} (T : Ty Γ) → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
-to-ext-subst-Σ T [ σ , t ] = MkSubst (λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ])
-                                     (λ δ → to-Σ-eq (naturality σ δ)
-                                                     (trans (morph-subst T _ refl (naturality σ δ) (term t _ δ))
-                                                            (trans (cong (λ x → T ⟪ _ , x ⟫ _) (sym (trans-reflʳ (naturality σ δ))))
-                                                                   (naturality t _ refl))))
-
 to-ext-subst : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
-to-ext-subst T σ t = to-ext-subst-Σ T [ σ , t ]
+to-ext-subst T σ t = MkSubst (λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ])
+                             (λ δ → to-Σ-eq (naturality σ δ)
+                                             (trans (morph-subst T refl (naturality σ δ) (term t _ δ))
+                                                    (trans (cong (λ x → T ⟪ _ , x ⟫ _) (sym (trans-reflʳ (naturality σ δ))))
+                                                           (naturality t _ refl))))
+
+to-ext-subst-Σ : {Δ Γ : Ctx ℓ} (T : Ty Γ) → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
+to-ext-subst-Σ T [ σ , t ] = to-ext-subst T σ t
 
 ctx-ext-left-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (p : Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))) → from-ext-subst (to-ext-subst-Σ T p) ≡ p
 ctx-ext-left-inverse {Δ = Δ} {T = T} [ σ , t ] = to-Σ-eq (to-subst-eq (λ δ → refl))

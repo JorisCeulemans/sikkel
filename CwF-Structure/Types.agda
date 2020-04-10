@@ -42,12 +42,28 @@ T ⟪ ineq , eq ⟫ = morph T ineq eq
 _⟪_,_⟫_ : {Γ : Ctx ℓ} (T : Ty Γ) (ineq : m ≤ n) {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} → Γ ⟪ ineq ⟫ γ ≡ γ' → T ⟨ n , γ ⟩ → T ⟨ m , γ' ⟩
 T ⟪ ineq , eq ⟫ t = (T ⟪ ineq , eq ⟫) t
 
-morph-subst : {Γ : Ctx ℓ} (T : Ty Γ) (m≤n : m ≤ n)
+morph-subst : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n : m ≤ n}
               {γ1 : Γ ⟨ n ⟩} {γ2 γ3 : Γ ⟨ m ⟩}
               (eq12 : Γ ⟪ m≤n ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
               (t : T ⟨ n , γ1 ⟩) →
               subst (λ x → T ⟨ m , x ⟩) eq23 (T ⟪ m≤n , eq12 ⟫ t) ≡ T ⟪ m≤n , trans eq12 eq23 ⟫ t
-morph-subst T m≤n refl refl t = refl
+morph-subst T refl refl t = refl
+
+module _ {Γ : Ctx ℓ} (T : Ty Γ) where
+  strict-morph : (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩
+  strict-morph m≤n γ t = T ⟪ m≤n , refl ⟫ t
+
+  strict-morph-id : {γ : Γ ⟨ n ⟩} (t : T ⟨ n , γ ⟩) →
+                    subst (λ x → T ⟨ n , x ⟩) (rel-id Γ γ) (strict-morph ≤-refl γ t) ≡ t
+  strict-morph-id t = trans (morph-subst T refl (rel-id Γ _) t)
+                            (morph-id T t)
+
+  strict-morph-comp : (k≤m : k ≤ m) (m≤n : m ≤ n) {γ : Γ ⟨ n ⟩} (t : T ⟨ n , γ ⟩) →
+                      subst (λ x → T ⟨ k , x ⟩) (rel-comp Γ k≤m m≤n γ) (strict-morph (≤-trans k≤m m≤n) γ t) ≡
+                        strict-morph k≤m (Γ ⟪ m≤n ⟫ γ) (strict-morph m≤n γ t)
+  strict-morph-comp k≤m m≤n t = trans (morph-subst T refl (rel-comp Γ k≤m m≤n _) t)
+                                      (trans (cong (λ x → T ⟪ _ , x ⟫ t) (sym (trans-reflʳ _)))
+                                             (morph-comp T k≤m m≤n refl refl t))
 
 {- TODO: see if it is a good idea using the following way to prove equality of types
    + uniform way to prove type equality
@@ -55,7 +71,7 @@ morph-subst T m≤n refl refl t = refl
 to-ty-eq : {Γ : Ctx ℓ} {T S : Ty Γ} →
            (et : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ ≡ S ⟨ n , γ ⟩) →
            ({m n : ℕ} (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
-               subst id (et m (Γ ⟪ m≤n ⟫ γ)) (T ⟪ m≤n , γ ⟫ t) ≡ S ⟪ m≤n , γ ⟫ subst id (et n γ) t) →
+               subst (λ x → x) (et m (Γ ⟪ m≤n ⟫ γ)) (T ⟪ m≤n , γ ⟫ t) ≡ S ⟪ m≤n , γ ⟫ subst (λ x → x) (et n γ) t) →
            T ≡ S
 to-ty-eq et em = cong₄-d MkTy
                          (funext λ n → funext λ γ → et n γ)
