@@ -21,7 +21,7 @@ Discr-prim : (A : Set 0ℓ) → Ty (◇ {0ℓ})
 type (Discr-prim A) _ _ = A
 morph (Discr-prim A) _ _ = id
 morph-id (Discr-prim A) _ = refl
-morph-comp (Discr-prim A) _ _ _ = refl
+morph-comp (Discr-prim A) _ _ _ _ _ = refl
 
 Discr : (A : Set 0ℓ) {Γ : Ctx 0ℓ} → Ty Γ
 Discr A {Γ} = Discr-prim A [ !◇ Γ ]
@@ -38,8 +38,8 @@ undiscr-discr a = refl
 
 discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≡ t
 discr-undiscr t = cong₂-d MkTm
-                          (sym (funext λ n → funext λ γ → t ⟪ z≤n , lift tt ⟫'))
-                          (funextI (funextI (funext λ ineq → funext λ _ → uip _ _)))
+                          (sym (funext λ n → funext λ γ → t ⟪ z≤n , refl ⟫'))
+                          (funextI (funextI (funext λ ineq → funextI (funextI (funext λ _ → uip _ _)))))
 
 Unit' : {Γ : Ctx 0ℓ} → Ty Γ
 Unit' = Discr ⊤
@@ -58,9 +58,9 @@ false' = discr false
 
 if'_then'_else'_ : {Γ : Ctx 0ℓ} {T : Ty Γ} → Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
 term (if' c then' t else' f) = λ n γ → if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
-naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq γ with c ⟨ m , Γ ⟪ ineq ⟫ γ ⟩' | c ⟨ n , γ ⟩' | c ⟪ ineq , γ ⟫'
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq γ | false | .false | refl = f ⟪ ineq , γ ⟫'
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq γ | true  | .true  | refl = t ⟪ ineq , γ ⟫'
+naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq {γ} {γ'} eq with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | c ⟪ ineq , eq ⟫'
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | false | .false | refl = f ⟪ ineq , eq ⟫'
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | true  | .true  | refl = t ⟪ ineq , eq ⟫'
 
 β-Bool'-true : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
                if' true' then' t else' t' ≡ t
