@@ -15,12 +15,12 @@ infixr 11 _⟪_,_⟫_
 -- Types
 --------------------------------------------------
 
-strong-rel-comp : (Γ : Ctx ℓ) (k≤m : k ≤ m) (m≤n : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
+strong-rel-comp : (Γ : Ctx ℓ) {k≤m : k ≤ m} {m≤n : m ≤ n} {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
                   (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) →
                   Γ ⟪ ≤-trans k≤m m≤n ⟫ γn ≡ γk
-strong-rel-comp Γ k≤m m≤n {γn} eq-nm eq-mk = trans (rel-comp Γ k≤m m≤n γn)
-                                                   (trans (cong (Γ ⟪ k≤m ⟫) eq-nm)
-                                                          eq-mk)
+strong-rel-comp Γ {k≤m}{m≤n} {γn} eq-nm eq-mk = trans (rel-comp Γ k≤m m≤n γn)
+                                                      (trans (cong (Γ ⟪ k≤m ⟫) eq-nm)
+                                                             eq-mk)
 
 record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
   constructor MkTy
@@ -30,7 +30,7 @@ record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
     morph-id : ∀ {n} {γ : Γ ⟨ n ⟩} (t : type n γ) → morph ≤-refl (rel-id Γ γ) t ≡ t
     morph-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
                  (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) (t : type n γn) →
-                 morph (≤-trans k≤m  m≤n) (strong-rel-comp Γ k≤m m≤n eq-nm eq-mk) t ≡ morph k≤m eq-mk (morph m≤n eq-nm t)
+                 morph (≤-trans k≤m  m≤n) (strong-rel-comp Γ eq-nm eq-mk) t ≡ morph k≤m eq-mk (morph m≤n eq-nm t)
 open Ty public
 
 _⟨_,_⟩ : {Γ : Ctx ℓ} → Ty Γ → (n : ℕ) → Γ ⟨ n ⟩ → Set ℓ

@@ -22,31 +22,36 @@ open import CwF-Structure.ContextExtension
 record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
   constructor MkFunc
   field
-    _$⟨_⟩_ : ∀ {m} (ineq : m ≤ n) → T ⟨ m , Γ ⟪ ineq ⟫ γ ⟩ → S ⟨ m , Γ ⟪ ineq ⟫ γ ⟩
-    naturality : ∀ {k m} (k≤m : k ≤ m) (m≤n : m ≤ n) (t : T ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩)→
-                 _$⟨_⟩_ (≤-trans k≤m m≤n) (subst (λ x → T ⟨ k , x ⟩) (sym (rel-comp Γ k≤m m≤n γ)) (T ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ t)) ≡
-                   subst (λ x → S ⟨ k , x ⟩) (sym (rel-comp Γ k≤m m≤n γ)) (S ⟪ k≤m , Γ ⟪ m≤n ⟫ γ ⟫ (_$⟨_⟩_ m≤n t))
-  infix 13 _$⟨_⟩_
+    _$⟨_,_⟩_ : ∀ {m} (m≤n : m ≤ n) {γ' : Γ ⟨ m ⟩} (eq : Γ ⟪ m≤n ⟫ γ ≡ γ') →
+               T ⟨ m , γ' ⟩ → S ⟨ m , γ' ⟩
+    naturality : ∀ {k m} {k≤m : k ≤ m} {m≤n : m ≤ n} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
+                 (eq-nm : Γ ⟪ m≤n ⟫ γ ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) (t : T ⟨ m , γm ⟩)→
+                 _$⟨_,_⟩_ (≤-trans k≤m m≤n) (strong-rel-comp Γ eq-nm eq-mk) (T ⟪ k≤m , eq-mk ⟫ t) ≡
+                   S ⟪ k≤m , eq-mk ⟫ (_$⟨_,_⟩_ m≤n eq-nm t)
+  infix 13 _$⟨_,_⟩_
 open PresheafFunc public
 
 to-pshfun-eq : {Γ : Ctx ℓ} {T S : Ty Γ} {n : ℕ} {γ : Γ ⟨ n ⟩} {f g : PresheafFunc T S n γ} →
-               (∀ {m} (ineq : m ≤ n) t → f $⟨ ineq ⟩ t ≡ g $⟨ ineq ⟩ t) →
+               (∀ {m} (m≤n : m ≤ n) {γ'} (eq : Γ ⟪ m≤n ⟫ γ ≡ γ') t →
+                   f $⟨ m≤n , eq ⟩ t ≡ g $⟨ m≤n , eq ⟩ t) →
                f ≡ g
 to-pshfun-eq e = cong₂-d MkFunc
-  (funextI (funext (λ ineq → funext λ t → e ineq t)))
-  (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))
+  (funextI (funext (λ m≤n → funextI (funext λ eq → funext λ t → e m≤n eq t))))
+  (funextI (funextI (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
 
-lower-presheaffunc : ∀ {m n} {Γ : Ctx ℓ} {T S : Ty Γ} (ineq : m ≤ n) (γ : Γ ⟨ n ⟩) → PresheafFunc T S n γ → PresheafFunc T S m (Γ ⟪ ineq ⟫ γ)
-lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n γ f = MkFunc g g-nat
+lower-presheaffunc : ∀ {m n} {Γ : Ctx ℓ} {T S : Ty Γ} (m≤n : m ≤ n)
+                     {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eq : Γ ⟪ m≤n ⟫ γn ≡ γm) →
+                     PresheafFunc T S n γn → PresheafFunc T S m γm
+lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n {γn}{γm} eq-nm f = MkFunc g g-nat
   where
-    g : ∀ {k} (k≤m : k ≤ m) → T ⟨ k , Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟩ → S ⟨ k , Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟩
-    g k≤m = subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ k≤m m≤n γ)
-            ∘ f $⟨ ≤-trans k≤m m≤n ⟩_
-            ∘ subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ k≤m m≤n γ))
+    g : ∀ {k} (k≤m : k ≤ m) {γk} (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) →
+        T ⟨ k , γk ⟩ → S ⟨ k , γk ⟩
+    g k≤m eq-mk = f $⟨ ≤-trans k≤m m≤n , strong-rel-comp Γ eq-nm eq-mk ⟩_
     open ≡-Reasoning
-    g-nat : ∀ {k l} (k≤l : k ≤ l) (l≤m : l ≤ m) → _
-    g-nat k≤l l≤m t =
-      subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n γ)
+    g-nat : ∀ {k l} {k≤l : k ≤ l} {l≤m : l ≤ m} {γl : Γ ⟨ l ⟩} {γk : Γ ⟨ k ⟩}
+            (eq-ml : Γ ⟪ l≤m ⟫ γm ≡ γl) (eq-lk : Γ ⟪ k≤l ⟫ γl ≡ γk) → _
+    g-nat eq-ml eq-lk t =
+      {!subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n γ)
         (f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n ⟩
         subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ (≤-trans k≤l l≤m) m≤n γ))
         (subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ k≤l l≤m (Γ ⟪ m≤n ⟫ γ)))
@@ -149,8 +154,8 @@ lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n γ f = MkFunc g g-nat
         (S ⟪ k≤l , Γ ⟪ l≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟫
         subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ l≤m m≤n γ)
         (f $⟨ ≤-trans l≤m m≤n ⟩
-        subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ l≤m m≤n γ)) t)) ∎
-
+        subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ l≤m m≤n γ)) t)) ∎!}
+{-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (_⇛_ {Γ = Γ} T S) = λ n γ → PresheafFunc T S n γ
 morph (_⇛_ {Γ = Γ} T S) = lower-presheaffunc
@@ -439,6 +444,8 @@ naturality (app {Γ = Γ}{T}{S} f t) {m} {n} m≤n γ =
     ≡⟨ cong (f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩_) (naturality t m≤n γ) ⟩
   f €⟨ m , Γ ⟪ m≤n ⟫ γ ⟩ (t ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩') ∎
   where open ≡-Reasoning
+-}
+
 {-
 to-⇛[_]_ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → Tm Δ ((T [ σ ]) ⇛ (S [ σ ])) → Tm Δ ((T ⇛ S) [ σ ])
 term (to-⇛[_]_ σ {T}{S} f) n δ = MkFunc (λ m≤n t → subst (λ x → S ⟨ _ , x ⟩) (sym (naturality σ δ))
