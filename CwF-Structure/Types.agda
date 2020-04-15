@@ -49,6 +49,14 @@ morph-subst : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n : m ≤ n}
               subst (λ x → T ⟨ m , x ⟩) eq23 (T ⟪ m≤n , eq12 ⟫ t) ≡ T ⟪ m≤n , trans eq12 eq23 ⟫ t
 morph-subst T refl refl t = refl
 
+morph-ineq-eq : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n m≤n' : m ≤ n} (e-ineq : m≤n ≡ m≤n')
+                {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eγ : Γ ⟪ m≤n' ⟫ γn ≡ γm)
+                {t : T ⟨ n , γn ⟩} →
+                T ⟪ m≤n , trans (cong (Γ ⟪_⟫ γn) e-ineq) eγ ⟫ t ≡ T ⟪ m≤n' , eγ ⟫ t
+morph-ineq-eq {Γ = Γ} T refl {γn} eγ {t} = refl
+-- Instead of pattern matching on e-ineq, we could prove this as cong₂-d (λ x y → T ⟪ x , y ⟫ t) e-ineq (...),
+-- but cong₂-d would then pattern match on this equality anyway.
+
 module _ {Γ : Ctx ℓ} (T : Ty Γ) where
   strict-morph : (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩
   strict-morph m≤n γ t = T ⟪ m≤n , refl ⟫ t
@@ -172,6 +180,7 @@ ty-subst-id T = cong₂-d (MkTy _ _)
                         (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
 -}
 
+-- Currently in development version of agda stdlib as trans-cong
 cong-trans : ∀ {a b} {A : Set a} {B : Set b} (f : A → B) →
              {x y z : A} (x≡y : x ≡ y) {y≡z : y ≡ z} →
              cong f (trans x≡y y≡z) ≡ trans (cong f x≡y) (cong f y≡z)

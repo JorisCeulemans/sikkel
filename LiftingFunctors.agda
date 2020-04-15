@@ -46,6 +46,16 @@ module LiftedFunctor (F : ω-Functor) where
 
   ty-lift : {Γ : Ctx ℓ} → Ty Γ → Ty (ctx-lift Γ)
   type (ty-lift T) n γ = T ⟨ F ∙ n , γ ⟩
+  morph (ty-lift T) m≤n eq t = T ⟪ monotone F m≤n , eq ⟫ t
+  morph-id (ty-lift T) t = trans (morph-ineq-eq T (monotone-id F) _)
+                                 (morph-id T t)
+  morph-comp (ty-lift {Γ = Γ} T) k≤m m≤n eq-nm eq-mk t =
+    trans (cong (λ x → T ⟪ _ , x ⟫ t) (trans-assoc (cong (λ x → Γ ⟪ x ⟫  _) (monotone-comp F _ _))))
+          (trans (morph-ineq-eq T (monotone-comp F k≤m m≤n) _)
+                 (morph-comp T (monotone F k≤m) (monotone F m≤n) eq-nm eq-mk t))
+{-
+  ty-lift : {Γ : Ctx ℓ} → Ty Γ → Ty (ctx-lift Γ)
+  type (ty-lift T) n γ = T ⟨ F ∙ n , γ ⟩
   morph (ty-lift T) m≤n γ = T ⟪ monotone F m≤n , γ ⟫
   morph-id (ty-lift {Γ = Γ} T) {γ = γ} t =
     subst (λ x → T ⟨ F ∙ _ , x ⟩) (trans (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-id F)) (rel-id Γ γ))
@@ -86,22 +96,22 @@ module LiftedFunctor (F : ω-Functor) where
     T ⟪ monotone F k≤m , Γ ⟪ monotone F m≤n ⟫ γ ⟫
       T ⟪ monotone F m≤n , γ ⟫ t ∎
     where open ≡-Reasoning
-
+-}
   ty-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) →
                     ty-lift (T [ σ ]) ≡ ty-lift T [ subst-lift σ ]
   ty-lift-natural σ T = cong₂-d (MkTy _ _)
-                                (funextI (funextI (funext λ _ → uip _ _)))
-                                (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funext λ _ → uip _ _)))))
+                                (funextI (funextI (funext (λ _ → uip _ _))))
+                                (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
 
   tm-lift : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm (ctx-lift Γ) (ty-lift T)
   term (tm-lift t) n γ = t ⟨ F ∙ n , γ ⟩'
-  naturality (tm-lift t) m≤n γ = t ⟪ monotone F m≤n , γ ⟫'
+  naturality (tm-lift t) m≤n eq = t ⟪ monotone F m≤n , eq ⟫'
 
   tm-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm Γ T) →
                     subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')) ≡ tm-lift t [ subst-lift σ ]'
   tm-lift-natural {Δ = Δ} σ {T} t = cong₂-d MkTm
     proof
-    (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+    (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
     where
       open ≡-Reasoning
       proof = term (subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')))
