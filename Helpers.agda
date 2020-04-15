@@ -119,3 +119,9 @@ from-Σ-eq2 : {A : Set ℓ} {B : A → Set ℓ'}
              (e : p ≡ q) →
              subst B (from-Σ-eq1 e) (proj₂ p) ≡ proj₂ q
 from-Σ-eq2 refl = refl
+
+from-to-Σ-eq1 : ∀ {a b} {A : Set a} {B : A → Set b}
+                {x x' : A} {y : B x} {y' : B x'}
+                {ex : x ≡ x'} (ey : subst B ex y ≡ y') →
+                from-Σ-eq1 (to-Σ-eq ex ey) ≡ ex
+from-to-Σ-eq1 {ex = refl} refl = refl

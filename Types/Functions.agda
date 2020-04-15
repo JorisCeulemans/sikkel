@@ -31,6 +31,13 @@ record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n 
   infix 13 _$⟨_,_⟩_
 open PresheafFunc public
 
+$-ineq-eq : {Γ : Ctx ℓ} {T S : Ty Γ} {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (f : PresheafFunc T S n γn)
+            {m≤n m≤n' : m ≤ n} (e-ineq : m≤n ≡ m≤n')
+            (eγ : Γ ⟪ m≤n' ⟫ γn ≡ γm)
+            {t : T ⟨ m , γm ⟩} →
+            f $⟨ m≤n , trans (cong (Γ ⟪_⟫ γn) e-ineq) eγ ⟩ t ≡ f $⟨ m≤n' , eγ ⟩ t
+$-ineq-eq f refl eγ = refl
+
 to-pshfun-eq : {Γ : Ctx ℓ} {T S : Ty Γ} {n : ℕ} {γ : Γ ⟨ n ⟩} {f g : PresheafFunc T S n γ} →
                (∀ {m} (m≤n : m ≤ n) {γ'} (eq : Γ ⟪ m≤n ⟫ γ ≡ γ') t →
                    f $⟨ m≤n , eq ⟩ t ≡ g $⟨ m≤n , eq ⟩ t) →
@@ -50,8 +57,18 @@ lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n {γn}{γm} eq-nm f = MkFunc g g-na
     open ≡-Reasoning
     g-nat : ∀ {k l} {k≤l : k ≤ l} {l≤m : l ≤ m} {γl : Γ ⟨ l ⟩} {γk : Γ ⟨ k ⟩}
             (eq-ml : Γ ⟪ l≤m ⟫ γm ≡ γl) (eq-lk : Γ ⟪ k≤l ⟫ γl ≡ γk) → _
-    g-nat eq-ml eq-lk t =
-      {!subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n γ)
+    g-nat {k≤l = k≤l}{l≤m} eq-ml eq-lk t =
+      f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n , strong-rel-comp Γ eq-nm (strong-rel-comp Γ eq-ml eq-lk) ⟩ (T ⟪ k≤l , eq-lk ⟫ t)
+        ≡⟨ cong (λ x → f $⟨ _ , x ⟩ _) (uip _ _) ⟩
+      f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n , trans (cong (Γ ⟪_⟫ γn) (≤-irrelevant _ _))
+                                                 (strong-rel-comp Γ (strong-rel-comp Γ eq-nm eq-ml) eq-lk) ⟩
+           (T ⟪ k≤l , eq-lk ⟫ t)
+        ≡⟨ $-ineq-eq f (≤-irrelevant _ _) _ ⟩
+      f $⟨ ≤-trans k≤l (≤-trans l≤m m≤n) , strong-rel-comp Γ (strong-rel-comp Γ eq-nm eq-ml) eq-lk ⟩ (T ⟪ k≤l , eq-lk ⟫ t)
+        ≡⟨ naturality f (strong-rel-comp Γ eq-nm eq-ml) eq-lk t ⟩
+      S ⟪ k≤l , eq-lk ⟫ (f $⟨ ≤-trans l≤m m≤n , strong-rel-comp Γ eq-nm eq-ml ⟩ t) ∎
+
+{-      {!subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ (≤-trans k≤l l≤m) m≤n γ)
         (f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n ⟩
         subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ (≤-trans k≤l l≤m) m≤n γ))
         (subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ k≤l l≤m (Γ ⟪ m≤n ⟫ γ)))
@@ -154,7 +171,25 @@ lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n {γn}{γm} eq-nm f = MkFunc g g-na
         (S ⟪ k≤l , Γ ⟪ l≤m ⟫ (Γ ⟪ m≤n ⟫ γ) ⟫
         subst (λ x → S ⟨ _ , x ⟩) (rel-comp Γ l≤m m≤n γ)
         (f $⟨ ≤-trans l≤m m≤n ⟩
-        subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ l≤m m≤n γ)) t)) ∎!}
+        subst (λ x → T ⟨ _ , x ⟩) (sym (rel-comp Γ l≤m m≤n γ)) t)) ∎!}-}
+
+_⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
+type (_⇛_ {Γ = Γ} T S) n γ = PresheafFunc T S n γ
+morph (T ⇛ S) = lower-presheaffunc
+morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq λ m≤n eγ t →
+  f $⟨ ≤-trans m≤n ≤-refl , strong-rel-comp Γ (rel-id Γ _) eγ ⟩ t
+    ≡⟨ cong (λ x → f $⟨ _ , x ⟩ _) (uip _ _) ⟩
+  f $⟨ ≤-trans m≤n ≤-refl , trans (cong (Γ ⟪_⟫ _) (≤-irrelevant _ _)) eγ ⟩ t
+    ≡⟨ $-ineq-eq f (≤-irrelevant _ _) eγ ⟩
+  f $⟨ m≤n , eγ ⟩ t ∎
+  where open ≡-Reasoning
+morph-comp (_⇛_ {Γ = Γ} T S) l≤m m≤n eq-nm eq-ml f = to-pshfun-eq λ k≤l eq-lk t →
+  f $⟨ ≤-trans k≤l (≤-trans l≤m m≤n) , strong-rel-comp Γ (strong-rel-comp Γ eq-nm eq-ml) eq-lk ⟩ t
+    ≡⟨ cong (λ x → f $⟨ _ , x ⟩ _) (uip _ _) ⟩
+  f $⟨ ≤-trans k≤l (≤-trans l≤m m≤n) , trans (cong (Γ ⟪_⟫ _) (≤-irrelevant _ _)) (strong-rel-comp Γ eq-nm (strong-rel-comp Γ eq-ml eq-lk)) ⟩ t
+    ≡⟨ $-ineq-eq f (≤-irrelevant _ _) (strong-rel-comp Γ eq-nm (strong-rel-comp Γ eq-ml eq-lk)) ⟩
+  f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n , strong-rel-comp Γ eq-nm (strong-rel-comp Γ eq-ml eq-lk) ⟩ t ∎
+  where open ≡-Reasoning
 {-
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (_⇛_ {Γ = Γ} T S) = λ n γ → PresheafFunc T S n γ
@@ -252,7 +287,15 @@ morph-comp (_⇛_ {Γ = Γ} T S) l≤m m≤n {γ} f = to-pshfun-eq λ k≤l t �
               (subst-subst-sym (≤-irrelevant (≤-trans k≤l (≤-trans l≤m m≤n)) (≤-trans (≤-trans k≤l l≤m) m≤n))) ⟩
   ((T ⇛ S) ⟪ l≤m , Γ ⟪ m≤n ⟫ γ ⟫) ((T ⇛ S) ⟪ m≤n , γ ⟫ f) $⟨ k≤l ⟩ t ∎
   where open ≡-Reasoning
+-}
 
+lam : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
+term (lam T {S} b) n γ = MkFunc (λ m≤n {γ'} eγ t → b ⟨ _ , [ γ' , t ] ⟩')
+                                (λ {k}{m}{k≤m} eq-nm eq-mk t → trans (sym (naturality b k≤m (to-Σ-eq eq-mk (morph-subst T refl eq-mk t))))
+                                                                      (cong (λ x → S ⟪ k≤m , x ⟫ _) (from-to-Σ-eq1 (morph-subst T refl eq-mk t))))
+naturality (lam T b) m≤n eq-nm = to-pshfun-eq λ k≤m eq-mk t → refl
+
+{-
 lam : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam {Γ = Γ} T {S} b) = λ n γ → MkFunc (λ m≤n t → b ⟨ _ , [ Γ ⟪ m≤n ⟫ γ , t ] ⟩')
                                              (λ k≤m m≤n t →
@@ -269,6 +312,7 @@ naturality (lam {Γ = Γ} T {S} b) = λ m≤n γ → to-pshfun-eq (λ k≤m t �
     ≡⟨ cong (λ z → b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , z ] ⟩') (subst-subst-sym (rel-comp Γ k≤m m≤n γ)) ⟩
   b ⟨ _ , [ Γ ⟪ k≤m ⟫ (Γ ⟪ m≤n ⟫ γ) , t ] ⟩' ∎)
   where open ≡-Reasoning
+-}
 {-
 func-term-natural : {Γ : Ctx ℓ} {T S : Ty Γ} (f : Tm Γ (T ⇛ S))
                     (m≤n : m ≤ n) {γ : Γ ⟨ n ⟩} (t : T ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩) →
@@ -312,6 +356,28 @@ func-term-natural {Γ = Γ}{T}{S} f m≤n {γ} t =
   where open ≡-Reasoning
 -}
 
+_€⟨_,_⟩_ : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → S ⟨ n , γ ⟩
+_€⟨_,_⟩_ {Γ = Γ} f n γ t = f ⟨ n , γ ⟩' $⟨ ≤-refl , rel-id Γ γ ⟩ t
+
+€-natural : {Γ : Ctx ℓ} {T S : Ty Γ} (f : Tm Γ (T ⇛ S)) (m≤n : m ≤ n)
+            {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eγ : Γ ⟪ m≤n ⟫ γn ≡ γm)
+            (t : T ⟨ n , γn ⟩) →
+            S ⟪ m≤n , eγ ⟫ (f €⟨ n , γn ⟩ t) ≡ f €⟨ m , γm ⟩ (T ⟪ m≤n , eγ ⟫ t)
+€-natural {Γ = Γ}{T}{S} f m≤n {γn}{γm} eγ t =
+  S ⟪ m≤n , eγ ⟫ (f ⟨ _ , γn ⟩' $⟨ ≤-refl , rel-id Γ γn ⟩ t)
+    ≡⟨ sym (naturality (f ⟨ _ , γn ⟩') (rel-id Γ γn) eγ t) ⟩
+  f ⟨ _ , γn ⟩' $⟨ ≤-trans m≤n ≤-refl , strong-rel-comp Γ (rel-id Γ γn) eγ ⟩ (T ⟪ m≤n , eγ ⟫ t)
+    ≡⟨ cong (λ x → f ⟨ _ , γn ⟩' $⟨ _ , x ⟩ _) (uip _ _) ⟩
+  f ⟨ _ , γn ⟩' $⟨ ≤-trans m≤n ≤-refl , trans (cong (Γ ⟪_⟫ γn) (≤-irrelevant _ _))
+                                             (strong-rel-comp Γ eγ (rel-id Γ γm)) ⟩
+      (T ⟪ m≤n , eγ ⟫ t)
+    ≡⟨ $-ineq-eq (f ⟨ _ , γn ⟩') (≤-irrelevant _ _) (strong-rel-comp Γ eγ (rel-id Γ γm)) ⟩
+  f ⟨ _ , γn ⟩' $⟨ ≤-trans ≤-refl m≤n , strong-rel-comp Γ eγ (rel-id Γ γm) ⟩ (T ⟪ m≤n , eγ ⟫ t)
+    ≡⟨ cong (λ x → x $⟨ _ , _ ⟩ _) (naturality f m≤n eγ) ⟩
+  f ⟨ _ , γm ⟩' $⟨ ≤-refl , rel-id Γ γm ⟩ (T ⟪ m≤n , eγ ⟫ t) ∎
+  where open ≡-Reasoning
+
+{-
 _€⟨_,_⟩_ : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → S ⟨ n , γ ⟩
 _€⟨_,_⟩_ {Γ = Γ}{T}{S} f n γ t = subst (λ x → S ⟨ _ , x ⟩) (rel-id Γ γ)
                                   (f ⟨ n , γ ⟩' $⟨ ≤-refl ⟩
@@ -434,7 +500,19 @@ _€⟨_,_⟩_ {Γ = Γ}{T}{S} f n γ t = subst (λ x → S ⟨ _ , x ⟩) (rel-
       ≡⟨⟩
   f €⟨ _ , Γ ⟪ m≤n ⟫ γ ⟩ (T ⟪ m≤n , γ ⟫ t) ∎
   where open ≡-Reasoning
+-}
 
+app : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
+term (app f t) n γ = f €⟨ n , γ ⟩ (t ⟨ n , γ ⟩')
+naturality (app {Γ = Γ}{T}{S} f t) m≤n {γn}{γm} eq =
+  S ⟪ m≤n , eq ⟫ (f €⟨ _ , γn ⟩ (t ⟨ _ , γn ⟩'))
+    ≡⟨ €-natural f m≤n eq (t ⟨ _ , γn ⟩') ⟩
+  f €⟨ _ , γm ⟩ (T ⟪ m≤n , eq ⟫ (t ⟨ _ , γn ⟩'))
+    ≡⟨ cong (f €⟨ _ , γm ⟩_) (naturality t m≤n eq) ⟩
+  f €⟨ _ , γm ⟩ (t ⟨ _ , γm ⟩') ∎
+  where open ≡-Reasoning
+
+{-
 app : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
 term (app {Γ = Γ}{T}{S} f t) = λ n γ → f €⟨ n , γ ⟩ (t ⟨ n , γ ⟩')
 naturality (app {Γ = Γ}{T}{S} f t) {m} {n} m≤n γ =
