@@ -37,13 +37,13 @@ naturality (◄-subst σ) {m≤n = m≤n} = naturality σ {m≤n = s≤s m≤n}
 
 ◅-ty : {Γ : Ctx ℓ} → Ty Γ → Ty (◄ Γ)
 type (◅-ty T) n γ = T ⟨ suc n , γ ⟩
-morph (◅-ty T) m≤n γ = T ⟪ s≤s m≤n , γ ⟫
-morph-id (◅-ty T) γ = morph-id T γ
-morph-comp (◅-ty T) k≤m m≤n γ = morph-comp T (s≤s k≤m) (s≤s m≤n) γ
+morph (◅-ty T) m≤n eq = T ⟪ s≤s m≤n , eq ⟫
+morph-id (◅-ty T) t = morph-id T t
+morph-comp (◅-ty T) k≤m m≤n = morph-comp T (s≤s k≤m) (s≤s m≤n)
 
 ◅-tm : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm (◄ Γ) (◅-ty T)
 term (◅-tm t) n γ = t ⟨ suc n , γ ⟩'
-naturality (◅-tm t) m≤n γ = t ⟪ s≤s m≤n , γ ⟫'
+naturality (◅-tm t) m≤n eq = t ⟪ s≤s m≤n , eq ⟫'
 
 ◄Γ⇒Γ : (Γ : Ctx ℓ) → ◄ Γ ⇒ Γ
 func (◄Γ⇒Γ Γ) = Γ ⟪ n≤1+n _ ⟫
@@ -52,11 +52,11 @@ naturality (◄Γ⇒Γ Γ) γ = ctx-m≤1+n Γ _ γ
 ▻ : {Γ : Ctx ℓ} → Ty (◄ Γ) → Ty Γ
 type (▻ {Γ = Γ} T) zero _ = Lift _ ⊤
 type (▻ {Γ = Γ} T) (suc n) γ = T ⟨ n , γ ⟩
-morph (▻ {Γ = Γ} T) z≤n γ _ = lift tt
-morph (▻ {Γ = Γ} T) (s≤s m≤n) γ = T ⟪ m≤n , γ ⟫
+morph (▻ {Γ = Γ} T) z≤n _ _ = lift tt
+morph (▻ {Γ = Γ} T) (s≤s m≤n) eq = T ⟪ m≤n , eq ⟫
 morph-id (▻ {Γ = Γ} T) {zero} _ = refl
 morph-id (▻ {Γ = Γ} T) {suc n} = morph-id T
-morph-comp (▻ {Γ = Γ} T) z≤n m≤n γ = refl
+morph-comp (▻ {Γ = Γ} T) z≤n m≤n _ _ _ = refl
 morph-comp (▻ {Γ = Γ} T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m≤n
 {-
 ▻-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T : Ty (◄ Γ)) →
@@ -72,31 +72,39 @@ morph-comp (▻ {Γ = Γ} T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m�
 ▻' {Γ = Γ} T = ▻ (T [ ◄Γ⇒Γ Γ ])
 
 next : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} → Tm (◄ Γ) T → Tm Γ (▻ T)
-term (next t) zero γ = lift tt
+term (next t) zero _ = lift tt
 term (next t) (suc n) γ = t ⟨ n , γ ⟩'
 naturality (next t) z≤n γ = refl
-naturality (next t) (s≤s m≤n) γ = t ⟪ m≤n , γ ⟫'
+naturality (next t) (s≤s m≤n) eq = t ⟪ m≤n , eq ⟫'
 
 prev : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} → Tm Γ (▻ T) → Tm (◄ Γ) T
 term (prev t) n γ = t ⟨ suc n , γ ⟩'
-naturality (prev t) m≤n γ = t ⟪ s≤s m≤n , γ ⟫'
+naturality (prev t) m≤n eq = t ⟪ s≤s m≤n , eq ⟫'
 
 prev-next : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} (t : Tm (◄ Γ) T) → prev {Γ = Γ} (next t) ≡ t
 prev-next t = refl
 
 next-prev : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} (t : Tm Γ (▻ T)) → next (prev t) ≡ t
 next-prev t = cong₂-d MkTm (funext λ { zero → refl ; (suc n) → refl })
-                           (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+                           (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
 
 -- We could make the argument T implicit, but giving it explicitly
 -- drastically reduces typechecking time.
 Löb : {Γ : Ctx ℓ} (T : Ty Γ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 term (Löb T f) zero γ = f €⟨ zero , γ ⟩ lift tt
 term (Löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (Löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (Löb T f) {n = zero} z≤n γ = €-natural f z≤n γ (lift tt)
-naturality (Löb {Γ = Γ} T f) {n = suc n} z≤n γ = €-natural f z≤n γ ((Löb T f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) γ =
-  T ⟪ s≤s m≤n , γ ⟫ f €⟨ _ , γ ⟩ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩')
+naturality (Löb T f) {n = zero} z≤n eq = €-natural f z≤n eq (lift tt)
+naturality (Löb {Γ = Γ} T f) {n = suc n} z≤n {γ} eq = €-natural f z≤n eq ((Löb T f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) {γ} {γ'} eq =
+  T ⟪ s≤s m≤n , eq ⟫ f €⟨ suc n , γ ⟩ (Löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+    ≡⟨ €-natural f (s≤s m≤n) eq (Löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩') ⟩
+  f €⟨ suc m , γ' ⟩ (T ⟪ m≤n , _ ⟫ (Löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩'))
+    ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (Löb T f) m≤n _) ⟩
+  f €⟨ suc m , γ' ⟩ (Löb T f ⟨ m , Γ ⟪ n≤1+n m ⟫ γ' ⟩') ∎
+  where open ≡-Reasoning
+
+{-naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) γ =
+  T ⟪ s≤s m≤n , eq ⟫ f €⟨ _ , γ ⟩ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩')
       ≡⟨ €-natural f (s≤s m≤n) γ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩') ⟩
   f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩ (▻' T ⟪ s≤s m≤n , γ ⟫ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
       ≡⟨⟩
@@ -110,13 +118,12 @@ naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) γ =
     (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
     (Löb T f ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n _ ⟫ γ) ⟩')))
       ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb T f ⟨ _ , x ⟩') (ctx-m≤1+n Γ m≤n γ)) ⟩
-  Löb T f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎
-  where open ≡-Reasoning
+  Löb T f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎-}
 
 Löb-is-fixpoint : {Γ : Ctx ℓ} {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
                   Löb T f ≡ app f (next (Löb T f [ ◄Γ⇒Γ Γ ]'))
 Löb-is-fixpoint {Γ = Γ}{T} f = cong₂-d MkTm (funext λ n → funext λ γ → proof n γ)
-                                            (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))
+                                            (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
   where
     proof : (n : ℕ) (γ : Γ ⟨ n ⟩) → term (Löb T f) n γ ≡ term (app f (next (Löb T f [ ◄Γ⇒Γ Γ ]'))) n γ
     proof zero γ = refl
