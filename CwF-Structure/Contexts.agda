@@ -70,6 +70,7 @@ naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {m≤n = m≤n} δ = trans (naturalit
 ⊚-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : Ctx ℓ} (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) → (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≡ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
 ⊚-assoc σ₃₄ σ₂₃ σ₁₂ = to-subst-eq (λ δ → refl)
 
+{-
 -- The following proofs are needed to define function types in Hofmann style
 -- In each of the proofs, the idea is to rewrite the different substitutions as one subst with a more complex equality proof
 -- and then apply uip.
@@ -225,6 +226,7 @@ ctx-≤-trans-sym-left-id Γ {m≤n} A {γ} {a} =
       ≡⟨ sym (subst-∘ (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n))) ⟩
   subst (λ x → A (Γ ⟪ x ⟫ γ)) (sym (≤-irrelevant (≤-trans ≤-refl m≤n) m≤n)) a ∎
   where open ≡-Reasoning
+-}
 
 
 --------------------------------------------------
