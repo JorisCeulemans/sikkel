@@ -82,6 +82,9 @@ tm-subst-seq-cong {Δ = Δ} σs τs {T} t e =
   where open ≡-Reasoning
 
 {-
+-- Alternative version (reflexive-transitive closure of _⇒_ instead of transitive closure, which
+-- is the same because _⇒_ is already reflexive). Benefit of current version: no id-subst in ⟦_⟧
+-- and hence less use of ty-subst-comp and tm-subst-comp.
 data _⇒*_ {ℓ : Level} : Ctx ℓ → Ctx ℓ → Set (lsuc ℓ) where
   id : {Γ : Ctx ℓ} → Γ ⇒* Γ
   _∷_ : {Δ Γ Θ : Ctx ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒* Γ) → Δ ⇒* Θ

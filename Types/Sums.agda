@@ -13,17 +13,6 @@ open import CwF-Structure.Terms
 --------------------------------------------------
 -- Sum types
 --------------------------------------------------
-{-
-subst-⊎ˡ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
-           {x x' : A} (e : x ≡ x') {y : B x} →
-           subst (λ x → B x ⊎ C x) e (inl y) ≡ inl (subst B e y)
-subst-⊎ˡ e = weak-subst-application (λ _ w → inl w) e
-
-subst-⊎ʳ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
-           {x x' : A} (e : x ≡ x') {z : C x} →
-           subst (λ x → B x ⊎ C x) e (inr z) ≡ inr (subst C e z)
-subst-⊎ʳ e = weak-subst-application (λ _ w → inr w) e
--}
 
 _⊞_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⊞ S) n γ = T ⟨ n , γ ⟩ ⊎ S ⟨ n , γ ⟩
@@ -50,7 +39,6 @@ inr'⟨_⟩_ : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} (s : Tm Γ S) → Tm Γ (T
 inr'⟨ T ⟩ s = inr' {T = T} s
 
 module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
---  abstract
   ⊞-natural : (T ⊞ S) [ σ ] ≡ (T [ σ ]) ⊞ (S [ σ ])
   ⊞-natural = cong₃-d (MkTy _)
                         (funextI (funextI (funext λ m≤n → funextI (funextI (funext λ eq → funext λ {

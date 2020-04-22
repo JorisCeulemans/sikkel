@@ -103,23 +103,6 @@ naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) {γ} {γ'} eq =
   f €⟨ suc m , γ' ⟩ (Löb T f ⟨ m , Γ ⟪ n≤1+n m ⟫ γ' ⟩') ∎
   where open ≡-Reasoning
 
-{-naturality (Löb {Γ = Γ} T f) {suc m} {suc n} (s≤s m≤n) γ =
-  T ⟪ s≤s m≤n , eq ⟫ f €⟨ _ , γ ⟩ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩')
-      ≡⟨ €-natural f (s≤s m≤n) γ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩') ⟩
-  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩ (▻' T ⟪ s≤s m≤n , γ ⟫ (Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
-      ≡⟨⟩
-  f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
-    (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
-    (T ⟪ m≤n , Γ ⟪ n≤1+n _ ⟫ γ ⟫ Löb T f ⟨ _ , Γ ⟪ n≤1+n _ ⟫ γ ⟩'))
-      ≡⟨ cong (λ z → f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
-                      (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ) z))
-              (naturality (Löb T f) m≤n (Γ ⟪ n≤1+n _ ⟫ γ)) ⟩
-  (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩
-    (subst (λ x → T ⟨ _ , x ⟩) (ctx-m≤1+n Γ m≤n γ)
-    (Löb T f ⟨ _ , Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n _ ⟫ γ) ⟩')))
-      ≡⟨ cong (f €⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩_) (cong-d (λ x → Löb T f ⟨ _ , x ⟩') (ctx-m≤1+n Γ m≤n γ)) ⟩
-  Löb T f ⟨ _ , Γ ⟪ s≤s m≤n ⟫ γ ⟩' ∎-}
-
 Löb-is-fixpoint : {Γ : Ctx ℓ} {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
                   Löb T f ≡ app f (next (Löb T f [ ◄Γ⇒Γ Γ ]'))
 Löb-is-fixpoint {Γ = Γ}{T} f = cong₂-d MkTm (funext λ n → funext λ γ → proof n γ)

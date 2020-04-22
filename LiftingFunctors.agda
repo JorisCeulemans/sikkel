@@ -47,56 +47,13 @@ module LiftedFunctor (F : ω-Functor) where
   ty-lift : {Γ : Ctx ℓ} → Ty Γ → Ty (ctx-lift Γ)
   type (ty-lift T) n γ = T ⟨ F ∙ n , γ ⟩
   morph (ty-lift T) m≤n eq t = T ⟪ monotone F m≤n , eq ⟫ t
-  morph-id (ty-lift T) t = trans (morph-ineq-eq T (monotone-id F) _)
+  morph-id (ty-lift T) t = trans (morph-ineq-cong T (monotone-id F) _)
                                  (morph-id T t)
   morph-comp (ty-lift {Γ = Γ} T) k≤m m≤n eq-nm eq-mk t =
     trans (cong (λ x → T ⟪ _ , x ⟫ t) (trans-assoc (cong (λ x → Γ ⟪ x ⟫  _) (monotone-comp F _ _))))
-          (trans (morph-ineq-eq T (monotone-comp F k≤m m≤n) _)
+          (trans (morph-ineq-cong T (monotone-comp F k≤m m≤n) _)
                  (morph-comp T (monotone F k≤m) (monotone F m≤n) eq-nm eq-mk t))
-{-
-  ty-lift : {Γ : Ctx ℓ} → Ty Γ → Ty (ctx-lift Γ)
-  type (ty-lift T) n γ = T ⟨ F ∙ n , γ ⟩
-  morph (ty-lift T) m≤n γ = T ⟪ monotone F m≤n , γ ⟫
-  morph-id (ty-lift {Γ = Γ} T) {γ = γ} t =
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (trans (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-id F)) (rel-id Γ γ))
-      (T ⟪ monotone F  ≤-refl , γ ⟫ t)
-        ≡⟨ sym (subst-subst (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-id F))) ⟩
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-id Γ γ)
-      (subst (λ x → T ⟨ F ∙ _ , x ⟩) (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-id F))
-      (T ⟪ monotone F ≤-refl , γ ⟫ t))
-        ≡⟨ cong (subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-id Γ γ))
-                (sym (subst-∘ (monotone-id F))) ⟩
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-id Γ γ)
-      (subst (λ x → T ⟨ F ∙ _ , Γ ⟪ x ⟫ γ ⟩) (monotone-id F)
-      (T ⟪ monotone F ≤-refl , γ ⟫ t))
-        ≡⟨ cong (subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-id Γ γ))
-                (cong-d (λ x → T ⟪ x , γ ⟫ t) (monotone-id F)) ⟩
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-id Γ γ)
-      (T ⟪ ≤-refl , γ ⟫ t)
-        ≡⟨ morph-id T t ⟩
-    t ∎
-    where open ≡-Reasoning
-  morph-comp (ty-lift {Γ = Γ} T) k≤m m≤n {γ} t = 
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (trans (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-comp F k≤m m≤n)) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ))
-      (T ⟪ monotone F (≤-trans k≤m m≤n) , γ ⟫ t)
-        ≡⟨ sym (subst-subst (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-comp F k≤m m≤n))) ⟩
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ)
-      (subst (λ x → T ⟨ F ∙ _ , x ⟩) (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-comp F k≤m m≤n))
-      (T ⟪ monotone F (≤-trans k≤m m≤n) , γ ⟫ t))
-        ≡⟨ cong (subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ))
-                (sym (subst-∘ (monotone-comp F k≤m m≤n))) ⟩
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ)
-      (subst (λ x → T ⟨ F ∙ _ , Γ ⟪ x ⟫ γ ⟩) (monotone-comp F k≤m m≤n)
-      (T ⟪ monotone F (≤-trans k≤m m≤n) , γ ⟫ t))
-        ≡⟨ cong (subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ))
-                (cong-d (λ x → T ⟪ x , γ ⟫ t) (monotone-comp F k≤m m≤n)) ⟩
-    subst (λ x → T ⟨ F ∙ _ , x ⟩) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ)
-      (T ⟪ ≤-trans (monotone F k≤m) (monotone F m≤n) , γ ⟫ t)
-        ≡⟨ morph-comp T (monotone F k≤m) (monotone F m≤n) t ⟩
-    T ⟪ monotone F k≤m , Γ ⟪ monotone F m≤n ⟫ γ ⟫
-      T ⟪ monotone F m≤n , γ ⟫ t ∎
-    where open ≡-Reasoning
--}
+
   ty-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) →
                     ty-lift (T [ σ ]) ≡ ty-lift T [ subst-lift σ ]
   ty-lift-natural σ T = cong₂-d (MkTy _ _)

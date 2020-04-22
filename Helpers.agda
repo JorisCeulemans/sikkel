@@ -19,24 +19,18 @@ postulate
 uip : ∀ {a} {A : Set a} → UIP A
 uip refl refl = refl
 
-{-
--- Currently implemented by pattern matching on both e1 and e2. Can also be implemented
--- with option --without-K enabled since A → Lift ℓ ⊤ has decidable equality and is
--- therefore an hset (Hedberg's theorem).
-to-⊤-hset : {A : Set ℓ'} {f g : A → Lift ℓ ⊤} (e1 e2 : f ≡ g) → e1 ≡ e2
-to-⊤-hset refl refl = refl
--}
-
 subst-const : ∀ {a b} {A : Set a} {B : Set b}
               {x x' : A} (e : x ≡ x') (y : B) →
               subst (λ _ → B) e y ≡ y
 subst-const refl y = refl
 
+{-
 subst-application' : ∀ {a₁ a₂ b₁ b₂} {A₁ : Set a₁} {A₂ : Set a₂}
                      (B₁ : A₁ → Set b₁) {B₂ : A₂ → Set b₂} {f : A₁ → A₂} {x₁ x₂ : A₁}
                      {y : B₁ x₁} (g : (x : A₁) → B₁ x → B₂ (f x)) (eq : x₁ ≡ x₂) →
                      subst B₂ (cong f eq) (g x₁ y) ≡ g x₂ (subst B₁ eq y)
 subst-application' B₁ g refl = refl
+-}
 
 weak-subst-application : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
                          (f : (x : A) → B x → C x)
@@ -84,19 +78,20 @@ cong₄-d : ∀ {a b c d e} {A : Set a} {B : A → Set b} {C : (x : A) → B x �
           f x y z w ≡ f x' y' z' w'
 cong₄-d f refl refl refl refl = refl
 
+{-
 cong-sym : ∀ {a b} {A : Set a} {B : Set b}
            (f : A → B)
            {a a' : A} (e : a ≡ a') →
            cong f (sym e) ≡ sym (cong f e)
 cong-sym f refl = refl
-{-
-test : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : A → B → C → Set d}
-       (f : (x : A) (y : B) (z : C) → D x y z)
-       {x x' : A} {y : B} {z : C}
-       (e : x ≡ x') →
-       subst (λ u → (v : B) (w : C) → D u v w) e (f x) y z ≡ subst (λ u → D u y z) e (f x y z)
-test f refl = refl
 -}
+
+-- Currently in development version of agda stdlib as trans-cong
+cong-trans : ∀ {a b} {A : Set a} {B : Set b} (f : A → B) →
+             {x y z : A} (x≡y : x ≡ y) {y≡z : y ≡ z} →
+             cong f (trans x≡y y≡z) ≡ trans (cong f x≡y) (cong f y≡z)
+cong-trans f refl = refl
+
 subst-cong-app : ∀ {a b c} {A : Set a} {B : Set b} {C : B → Set c}
                  {f g : A → B} (e : f ≡ g)
                  {x : A} (z : C (f x)) →

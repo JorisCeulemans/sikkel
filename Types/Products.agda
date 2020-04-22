@@ -13,13 +13,7 @@ open import CwF-Structure.Terms
 --------------------------------------------------
 -- (Non-dependent) product types
 --------------------------------------------------
-{-
-subst-× : ∀ {a b c} {A : Set a} {B : A → Set b} {C : A → Set c}
-          {x x' : A} (e : x ≡ x')
-          (p : B x × C x) →
-          subst (λ x → B x × C x) e p ≡ [ subst B e (proj₁ p) , subst C e (proj₂ p) ]
-subst-× refl p = refl
--}
+
 _⊠_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⊠ S) n γ = T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩
 morph (T ⊠ S) m≤n eq [ t , s ] = [ T ⟪ m≤n , eq ⟫ t , S ⟪ m≤n , eq ⟫ s ]
@@ -41,7 +35,6 @@ module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   naturality (snd p) m≤n eq = cong proj₂ (p ⟪ m≤n , eq ⟫')
 
 module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
---  abstract
   ⊠-natural : (T ⊠ S) [ σ ] ≡ (T [ σ ]) ⊠ (S [ σ ])
   ⊠-natural = cong₂-d (MkTy _ _)
                        (funextI (funextI (funext λ _ → uip _ _)))

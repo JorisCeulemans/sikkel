@@ -16,37 +16,21 @@ record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set ℓ where
   constructor MkTm
   field
     term : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
-    naturality : ∀ {m n} (ineq : m ≤ n) {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γ ≡ γ') →
-                 T ⟪ ineq , eq ⟫ (term n γ) ≡ term m γ'
+    naturality : ∀ {m n} (ineq : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γn ≡ γm) →
+                 T ⟪ ineq , eq ⟫ (term n γn) ≡ term m γm
 open Tm public
 
 _⟨_,_⟩' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (n : ℕ) → (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
 t ⟨ n , γ ⟩' = term t n γ
 
 _⟪_,_⟫' : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (ineq : m ≤ n) →
-          {γ : Γ ⟨ n ⟩} {γ' : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γ ≡ γ') →
-          T ⟪ ineq , eq ⟫ (t ⟨ n , γ ⟩') ≡ t ⟨ m , γ' ⟩'
-t ⟪ ineq , γ ⟫' = naturality t ineq γ
+          {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γn ≡ γm) →
+          T ⟪ ineq , eq ⟫ (t ⟨ n , γn ⟩') ≡ t ⟨ m , γm ⟩'
+t ⟪ ineq , eq ⟫' = naturality t ineq eq
 
 _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
 term (t [ σ ]') n δ = t ⟨ n , func σ δ ⟩'
 naturality (t [ σ ]') m≤n eq = t ⟪ m≤n , _ ⟫'
-
-{-
-_[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
-term (t [ σ ]') = λ n δ → t ⟨ n , func σ δ ⟩'
-naturality (_[_]'  {Δ = Δ}{Γ}{T} t σ) ineq δ = 
-  (T [ σ ]) ⟪ ineq , δ ⟫ (t [ σ ]' ⟨ _ , δ ⟩')
-    ≡⟨⟩
-  subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) (T ⟪ ineq , func σ δ ⟫ (t ⟨ _ , func σ δ ⟩'))
-    ≡⟨ cong (subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ)) (t ⟪ ineq , func σ δ ⟫') ⟩
-  subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) (t ⟨ _ , Γ ⟪ ineq ⟫ (func σ δ) ⟩')
-    ≡⟨ cong-d (λ x → t ⟨ _ , x ⟩') (naturality σ δ) ⟩
-  t ⟨ _ , func σ (Δ ⟪ ineq ⟫ δ) ⟩'
-    ≡⟨⟩
-  t [ σ ]' ⟨ _ , Δ ⟪ ineq ⟫ δ ⟩' ∎
-  where open ≡-Reasoning
--}
 
 tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → subst (Tm Γ) (ty-subst-id T) (t [ id-subst Γ ]') ≡ t
 tm-subst-id {Γ = Γ}{T} t = cong₂-d MkTm term-proof naturality-proof
