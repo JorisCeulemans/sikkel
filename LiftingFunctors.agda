@@ -62,7 +62,7 @@ module LiftedFunctor (F : ω-Functor) where
 
   tm-lift : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm (ctx-lift Γ) (ty-lift T)
   term (tm-lift t) n γ = t ⟨ F ∙ n , γ ⟩'
-  naturality (tm-lift t) m≤n eq = t ⟪ monotone F m≤n , eq ⟫'
+  naturality (tm-lift t) m≤n eq = naturality t (monotone F m≤n) eq
 
   tm-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm Γ T) →
                     subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')) ≡ tm-lift t [ subst-lift σ ]'

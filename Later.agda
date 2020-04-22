@@ -43,7 +43,7 @@ morph-comp (◅-ty T) k≤m m≤n = morph-comp T (s≤s k≤m) (s≤s m≤n)
 
 ◅-tm : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm (◄ Γ) (◅-ty T)
 term (◅-tm t) n γ = t ⟨ suc n , γ ⟩'
-naturality (◅-tm t) m≤n eq = t ⟪ s≤s m≤n , eq ⟫'
+naturality (◅-tm t) m≤n eq = naturality t (s≤s m≤n) eq
 
 ◄Γ⇒Γ : (Γ : Ctx ℓ) → ◄ Γ ⇒ Γ
 func (◄Γ⇒Γ Γ) = Γ ⟪ n≤1+n _ ⟫
@@ -75,11 +75,11 @@ next : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} → Tm (◄ Γ) T → Tm Γ (▻ T)
 term (next t) zero _ = lift tt
 term (next t) (suc n) γ = t ⟨ n , γ ⟩'
 naturality (next t) z≤n γ = refl
-naturality (next t) (s≤s m≤n) eq = t ⟪ m≤n , eq ⟫'
+naturality (next t) (s≤s m≤n) eq = naturality t m≤n eq
 
 prev : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} → Tm Γ (▻ T) → Tm (◄ Γ) T
 term (prev t) n γ = t ⟨ suc n , γ ⟩'
-naturality (prev t) m≤n eq = t ⟪ s≤s m≤n , eq ⟫'
+naturality (prev t) m≤n eq = naturality t (s≤s m≤n) eq
 
 prev-next : {Γ : Ctx ℓ} {T : Ty (◄ Γ)} (t : Tm (◄ Γ) T) → prev {Γ = Γ} (next t) ≡ t
 prev-next t = refl

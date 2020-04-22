@@ -38,7 +38,7 @@ undiscr-discr a = refl
 
 discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≡ t
 discr-undiscr t = cong₂-d MkTm
-                          (sym (funext λ n → funext λ γ → t ⟪ z≤n , refl ⟫'))
+                          (sym (funext λ n → funext λ γ → naturality t z≤n refl))
                           (funextI (funextI (funext λ ineq → funextI (funextI (funext λ _ → uip _ _)))))
 
 Unit' : {Γ : Ctx 0ℓ} → Ty Γ
@@ -58,9 +58,9 @@ false' = discr false
 
 if'_then'_else'_ : {Γ : Ctx 0ℓ} {T : Ty Γ} → Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
 term (if' c then' t else' f) = λ n γ → if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
-naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq {γ} {γ'} eq with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | c ⟪ ineq , eq ⟫'
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | false | .false | refl = f ⟪ ineq , eq ⟫'
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | true  | .true  | refl = t ⟪ ineq , eq ⟫'
+naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq {γ} {γ'} eq with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | naturality c ineq eq
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | false | .false | refl = naturality f ineq eq
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | true  | .true  | refl = naturality t ineq eq
 
 β-Bool'-true : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
                if' true' then' t else' t' ≡ t

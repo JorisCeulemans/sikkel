@@ -63,7 +63,7 @@ naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eq =
   head (s ⟨ n , γ ⟩')
     ≡⟨ first-≤-head m≤n (s ⟨ n , γ ⟩') ⟩
   head (Stream {Γ = Γ} ⟪ m≤n , eq ⟫ (s ⟨ n , γ ⟩'))
-    ≡⟨ cong head (s ⟪ m≤n , eq ⟫') ⟩
+    ≡⟨ cong head (naturality s m≤n eq) ⟩
   head (s ⟨ m , γ' ⟩') ∎
   where open ≡-Reasoning
 
@@ -75,16 +75,17 @@ naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eq =
   first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩'))
     ≡⟨ first-≤-tail (s≤s m≤n) (s ⟨ suc n , γ ⟩') ⟩
   tail (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γ ⟩'))
-    ≡⟨ cong tail (s ⟪ s≤s m≤n , eq ⟫') ⟩
+    ≡⟨ cong tail (naturality s (s≤s m≤n) eq) ⟩
   tail (s ⟨ suc m , γ' ⟩') ∎
   where open ≡-Reasoning
 
 str-cons : {Γ : Ctx 0ℓ} → Tm Γ (Nat' ⊠ (▻ Stream)) → Tm Γ Stream
 term (str-cons t) zero γ = fst t ⟨ zero , γ ⟩' ∷ []
 term (str-cons t) (suc n) γ = (fst t ⟨ suc n , _ ⟩') ∷ (snd t ⟨ suc n , γ ⟩')
-naturality (str-cons t) {zero} {zero} z≤n eq = cong (λ x → proj₁ x ∷ []) (t ⟪ z≤n , eq ⟫')
-naturality (str-cons t) {zero} {suc n} z≤n eq = cong (λ x → proj₁ x ∷ []) (t ⟪ z≤n , eq ⟫')
-naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eq = cong₂ _∷_ (cong proj₁ (t ⟪ s≤s m≤n , eq ⟫')) (snd t ⟪ s≤s m≤n , eq ⟫')
+naturality (str-cons t) {zero} {zero} z≤n eq = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eq)
+naturality (str-cons t) {zero} {suc n} z≤n eq = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eq)
+naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eq =
+  cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eq)) (naturality (snd t) (s≤s m≤n) eq)
 
 to-str[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Stream → Tm Δ (Stream [ σ ])
 to-str[_]_ {Δ = Δ}{Γ} σ s = convert-subst (!◇ Δ ◼) (!◇ Γ ∷ σ ◼) (◇-terminal Δ _ _) s

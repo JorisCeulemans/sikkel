@@ -26,11 +26,11 @@ morph-comp (T ⊞ S) k≤m m≤n eq-nm eq-mk (inr s) = cong inr (morph-comp S k�
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   inl' : Tm Γ T → Tm Γ (T ⊞ S)
   term (inl' t) n γ = inl (t ⟨ n , γ ⟩')
-  naturality (inl' t) m≤n eq = cong inl (t ⟪ m≤n , eq ⟫')
+  naturality (inl' t) m≤n eq = cong inl (naturality t m≤n eq)
 
   inr' : Tm Γ S → Tm Γ (T ⊞ S)
   term (inr' s) n γ = inr (s ⟨ n , γ ⟩')
-  naturality (inr' s) m≤n eq = cong inr (s ⟪ m≤n , eq ⟫')
+  naturality (inr' s) m≤n eq = cong inr (naturality s m≤n eq)
 
 inl'⟨_⟩_ : {Γ : Ctx ℓ} {T : Ty Γ} (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
 inl'⟨ S ⟩ t = inl' {S = S} t

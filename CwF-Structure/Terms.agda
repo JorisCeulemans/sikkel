@@ -23,14 +23,16 @@ open Tm public
 _⟨_,_⟩' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (n : ℕ) → (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
 t ⟨ n , γ ⟩' = term t n γ
 
+{-
 _⟪_,_⟫' : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (ineq : m ≤ n) →
           {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γn ≡ γm) →
           T ⟪ ineq , eq ⟫ (t ⟨ n , γn ⟩') ≡ t ⟨ m , γm ⟩'
 t ⟪ ineq , eq ⟫' = naturality t ineq eq
+-}
 
 _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
 term (t [ σ ]') n δ = t ⟨ n , func σ δ ⟩'
-naturality (t [ σ ]') m≤n eq = t ⟪ m≤n , _ ⟫'
+naturality (t [ σ ]') m≤n eq = naturality t m≤n _
 
 tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → subst (Tm Γ) (ty-subst-id T) (t [ id-subst Γ ]') ≡ t
 tm-subst-id {Γ = Γ}{T} t = cong₂-d MkTm term-proof naturality-proof

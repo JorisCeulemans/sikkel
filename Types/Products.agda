@@ -24,15 +24,15 @@ morph-comp (T ⊠ S) k≤m m≤n eq-nm eq-mk [ t , s ] = cong₂ [_,_] (morph-co
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   term (pair t s) n γ = [ t ⟨ n , γ ⟩' , s ⟨ n , γ ⟩' ]
-  naturality (pair t s) m≤n eq = cong₂ [_,_] (t ⟪ m≤n , eq ⟫') (s ⟪ m≤n , eq ⟫')
+  naturality (pair t s) m≤n eq = cong₂ [_,_] (naturality t m≤n eq) (naturality s m≤n eq)
 
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   term (fst p) n γ = proj₁ (p ⟨ n , γ ⟩')
-  naturality (fst p) m≤n eq = cong proj₁ (p ⟪ m≤n , eq ⟫')
+  naturality (fst p) m≤n eq = cong proj₁ (naturality p m≤n eq)
 
   snd : Tm Γ (T ⊠ S) → Tm Γ S
   term (snd p) n γ = proj₂ (p ⟨ n , γ ⟩')
-  naturality (snd p) m≤n eq = cong proj₂ (p ⟪ m≤n , eq ⟫')
+  naturality (snd p) m≤n eq = cong proj₂ (naturality p m≤n eq)
 
 module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊠-natural : (T ⊠ S) [ σ ] ≡ (T [ σ ]) ⊠ (S [ σ ])
