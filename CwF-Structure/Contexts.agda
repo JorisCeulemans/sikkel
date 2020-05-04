@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Exten
 open import Helpers
 
 infix 10 _⇒_
-infix 1 _≅ˢ_
+infix 1 _≅ˢ_ _≅ᶜ_
 infixl 20 _⊚_
 
 --------------------------------------------------
@@ -48,7 +48,7 @@ record _≅ˢ_ {ℓ} {Δ Γ : Ctx ℓ} (σ τ : Δ ⇒ Γ) : Set ℓ where
 open _≅ˢ_ public
 
 ≅ˢ-refl : {Δ Γ : Ctx ℓ} {σ : Δ ⇒ Γ} → σ ≅ˢ σ
-eq (≅ˢ-refl {σ = σ}) δ = refl
+eq (≅ˢ-refl {σ = σ}) _ = refl
 
 ≅ˢ-sym : {Δ Γ : Ctx ℓ} {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ σ
 eq (≅ˢ-sym σ=τ) δ = sym (eq σ=τ δ)
@@ -97,8 +97,8 @@ naturality (id-subst Γ) = λ _ → refl
 
 _⊚_ : {Δ Γ Θ : Ctx ℓ} → Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
 func (τ ⊚ σ) = func τ ∘ func σ
-naturality (_⊚_ {Δ = Δ}{Γ}{Θ} τ σ) {m≤n = m≤n} δ = trans (naturality τ (func σ δ))
-                                                          (cong (func τ) (naturality σ δ))
+naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
+                                (cong (func τ) (naturality σ δ))
 {-
 More detailed version of the above naturality proof. We do not use this as it inserts
 refl at the end (and trans eq refl is not definitionally equal to eq).
@@ -160,7 +160,7 @@ isoˡ (≅ᶜ-trans Δ=Γ Γ=Θ) =
     (to Δ=Γ ⊚ to Γ=Θ) ⊚ (from Γ=Θ ⊚ from Δ=Γ)
   ≅⟨ ⊚-assoc (to Δ=Γ) (to Γ=Θ) _ ⟩
     to Δ=Γ ⊚ (to Γ=Θ ⊚ (from Γ=Θ ⊚ from Δ=Γ))
-  ≅⟨ ⊚-congˡ (to Δ=Γ) (≅ˢ-sym (⊚-assoc (to Γ=Θ) (from Γ=Θ) (from Δ=Γ))) ⟩
+  ≅˘⟨ ⊚-congˡ (to Δ=Γ) (⊚-assoc (to Γ=Θ) (from Γ=Θ) (from Δ=Γ)) ⟩
     to Δ=Γ ⊚ ((to Γ=Θ ⊚ from Γ=Θ) ⊚ from Δ=Γ)
   ≅⟨ ⊚-congˡ (to Δ=Γ) (⊚-congʳ (from Δ=Γ) (isoˡ Γ=Θ)) ⟩
     to Δ=Γ ⊚ (id-subst _ ⊚ from Δ=Γ)
@@ -174,7 +174,7 @@ isoʳ (≅ᶜ-trans Δ=Γ Γ=Θ) =
     (from Γ=Θ ⊚ from Δ=Γ) ⊚ (to Δ=Γ ⊚ to Γ=Θ)
   ≅⟨ ⊚-assoc (from Γ=Θ) (from Δ=Γ) _ ⟩
     from Γ=Θ ⊚ (from Δ=Γ ⊚ (to Δ=Γ ⊚ to Γ=Θ))
-  ≅⟨ ⊚-congˡ (from Γ=Θ) (≅ˢ-sym (⊚-assoc (from Δ=Γ) (to Δ=Γ) (to Γ=Θ))) ⟩
+  ≅˘⟨ ⊚-congˡ (from Γ=Θ) (⊚-assoc (from Δ=Γ) (to Δ=Γ) (to Γ=Θ)) ⟩
     from Γ=Θ ⊚ ((from Δ=Γ ⊚ to Δ=Γ) ⊚ to Γ=Θ)
   ≅⟨ ⊚-congˡ (from Γ=Θ) (⊚-congʳ (to Γ=Θ) (isoʳ Δ=Γ)) ⟩
     from Γ=Θ ⊚ (id-subst _ ⊚ to Γ=Θ)
