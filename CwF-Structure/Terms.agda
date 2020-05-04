@@ -8,6 +8,8 @@ open import Helpers
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 
+infix 1 _≅ᵗᵐ_
+
 --------------------------------------------------
 -- Terms
 --------------------------------------------------
@@ -30,10 +32,62 @@ _⟪_,_⟫' : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (ineq : m ≤ n) →
 t ⟪ ineq , eq ⟫' = naturality t ineq eq
 -}
 
+record _≅ᵗᵐ_ {Γ : Ctx ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set ℓ where
+  field
+    eq : ∀ {n} γ → t ⟨ n , γ ⟩' ≡ s ⟨ n , γ ⟩'
+open _≅ᵗᵐ_ public
+
+≅ᵗᵐ-refl : {Γ : Ctx ℓ} {T : Ty Γ} {t : Tm Γ T} → t ≅ᵗᵐ t
+eq (≅ᵗᵐ-refl {t = t}) _ = refl
+
+≅ᵗᵐ-sym : {Γ : Ctx ℓ} {T : Ty Γ} {t s : Tm Γ T} → t ≅ᵗᵐ s → s ≅ᵗᵐ t
+eq (≅ᵗᵐ-sym t=s) γ = sym (eq t=s γ)
+
+≅ᵗᵐ-trans : {Γ : Ctx ℓ} {T : Ty Γ} {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
+eq (≅ᵗᵐ-trans t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
+
+module ≅ᵗᵐ-Reasoning {Γ : Ctx ℓ} {T : Ty Γ} where
+  infix  3 _∎
+  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
+  infix  1 begin_
+
+  begin_ : ∀ {t s : Tm Γ T} → t ≅ᵗᵐ s → t ≅ᵗᵐ s
+  begin_ t=s = t=s
+
+  _≅⟨⟩_ : ∀ (t {s} : Tm Γ T) → t ≅ᵗᵐ s → t ≅ᵗᵐ s
+  _ ≅⟨⟩ t=s = t=s
+
+  step-≅ : ∀ (t1 {t2 t3} : Tm Γ T) → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
+  step-≅ _ t1≅t2 t2≅t3 = ≅ᵗᵐ-trans t1≅t2 t2≅t3
+
+  step-≅˘ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t2 ≅ᵗᵐ t1 → t1 ≅ᵗᵐ t3
+  step-≅˘ _ t2≅t3 t2≅t1 = ≅ᵗᵐ-trans (≅ᵗᵐ-sym t2≅t1) t2≅t3
+
+  _∎ : ∀ (t : Tm Γ T) → t ≅ᵗᵐ t
+  _∎ _ = ≅ᵗᵐ-refl
+
+  syntax step-≅  t1 t2≅t3 t1≅t2 = t1 ≅⟨  t1≅t2 ⟩ t2≅t3
+  syntax step-≅˘ t1 t2≅t3 t2≅t1 = t1 ≅˘⟨ t2≅t1 ⟩ t2≅t3
+
+convert-term : {Γ : Ctx ℓ} {T S : Ty Γ} → (T ↣ S) → Tm Γ T → Tm Γ S
+term (convert-term η t) n γ = func η (t ⟨ n , γ ⟩')
+naturality (convert-term {T = T}{S} η t) m≤n eγ =
+  begin
+    S ⟪ m≤n , eγ ⟫ func η (t ⟨ _ , _ ⟩')
+  ≡⟨ naturality η _ ⟩
+    func η (T ⟪ m≤n , eγ ⟫ (t ⟨ _ , _ ⟩'))
+  ≡⟨ cong (func η) (naturality t _ _) ⟩
+    func η (t ⟨ _ , _ ⟩') ∎
+  where open ≡-Reasoning
+
 _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
 term (t [ σ ]') n δ = t ⟨ n , func σ δ ⟩'
-naturality (t [ σ ]') m≤n eq = naturality t m≤n _
+naturality (t [ σ ]') m≤n eγ = naturality t m≤n _
 
+tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → convert-term (from (ty-subst-id T)) (t [ id-subst Γ ]') ≅ᵗᵐ t
+eq (tm-subst-id t) _ = refl
+
+{-
 tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → subst (Tm Γ) (ty-subst-id T) (t [ id-subst Γ ]') ≡ t
 tm-subst-id {Γ = Γ}{T} t = cong₂-d MkTm term-proof naturality-proof
   where
@@ -52,7 +106,13 @@ tm-subst-id {Γ = Γ}{T} t = cong₂-d MkTm term-proof naturality-proof
     naturality-proof = subst _ term-proof (λ {m}{n} → naturality (subst (Tm Γ) (ty-subst-id T) (t [ id-subst Γ ]')) {m} {n})
         ≡⟨ funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))) ⟩
       (λ {m}{n} → naturality t {m} {n}) ∎
+-}
 
+tm-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
+                convert-term (from (ty-subst-comp T τ σ)) (t [ τ ]' [ σ ]') ≅ᵗᵐ t [ τ ⊚ σ ]'
+eq (tm-subst-comp t τ σ) _ = refl
+
+{-
 tm-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 subst (Tm Δ) (ty-subst-comp T τ σ) (t [ τ ]' [ σ ]') ≡ t [ τ ⊚ σ ]'
 tm-subst-comp {Δ = Δ}{Γ}{T = T} t τ σ = cong₂-d MkTm term-proof naturality-proof
@@ -95,3 +155,7 @@ tm-subst-comp {Δ = Δ}{Γ}{T = T} t τ σ = cong₂-d MkTm term-proof naturalit
     ζ = ty-subst-comp T τ σ
     η = t [ τ ]' [ σ ]'
 -}
+-}
+
+tm-subst-cong-tm : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} {t s : Tm Γ T} → t ≅ᵗᵐ s → t [ σ ]' ≅ᵗᵐ s [ σ ]'
+eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
