@@ -159,3 +159,6 @@ tm-subst-comp {Δ = Δ}{Γ}{T = T} t τ σ = cong₂-d MkTm term-proof naturalit
 
 tm-subst-cong-tm : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} {t s : Tm Γ T} → t ≅ᵗᵐ s → t [ σ ]' ≅ᵗᵐ s [ σ ]'
 eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
+
+convert-subst-commute : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} (η : T ↣ S) (t : Tm Γ T) → convert-term (ty-subst-map σ η) (t [ σ ]') ≅ᵗᵐ (convert-term η t) [ σ ]'
+eq (convert-subst-commute σ η t) δ = refl
