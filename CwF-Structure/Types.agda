@@ -52,13 +52,15 @@ morph-subst : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n : m ≤ n}
               subst (λ x → T ⟨ m , x ⟩) eq23 (T ⟪ m≤n , eq12 ⟫ t) ≡ T ⟪ m≤n , trans eq12 eq23 ⟫ t
 morph-subst T refl refl t = refl
 
-morph-ineq-cong : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n m≤n' : m ≤ n} (e-ineq : m≤n ≡ m≤n')
-                  {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eγ : Γ ⟪ m≤n' ⟫ γn ≡ γm)
-                  {t : T ⟨ n , γn ⟩} →
-                  T ⟪ m≤n , trans (cong (Γ ⟪_⟫ γn) e-ineq) eγ ⟫ t ≡ T ⟪ m≤n' , eγ ⟫ t
-morph-ineq-cong {Γ = Γ} T refl {γn} eγ {t} = refl
--- Instead of pattern matching on e-ineq, we could prove this as cong₂-d (λ x y → T ⟪ x , y ⟫ t) e-ineq (...),
+-- Instead of pattern matching on e-ineq, we could prove the following as cong₂-d (λ x y → T ⟪ x , y ⟫ t) e-ineq (...),
 -- but cong₂-d would then pattern match on this equality anyway.
+-- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
+-- by requiring morph T to "not depend on eγ" (propositionally).
+morph-cong : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n m≤n' : m ≤ n} (e-ineq : m≤n ≡ m≤n')
+             {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eγ : Γ ⟪ m≤n ⟫ γn ≡ γm) (eγ' : Γ ⟪ m≤n' ⟫ γn ≡ γm)
+             {t : T ⟨ n , γn ⟩} →
+             T ⟪ m≤n , eγ ⟫ t ≡ T ⟪ m≤n' , eγ' ⟫ t
+morph-cong {Γ = Γ} T refl {γn} refl refl {t} = refl
 
 module _ {Γ : Ctx ℓ} (T : Ty Γ) where
   strict-morph : (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ → T ⟨ m , Γ ⟪ m≤n ⟫ γ ⟩
@@ -284,11 +286,52 @@ from (ty-subst-cong-ty σ T=S) = ty-subst-map σ (from T=S)
 to (ty-subst-cong-ty σ T=S) = ty-subst-map σ (to T=S)
 eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
-{-
+
+ctx-element-subst : {Γ : Ctx ℓ} (T : Ty Γ) {γ γ' : Γ ⟨ n ⟩} → γ ≡ γ' → T ⟨ n , γ ⟩ → T ⟨ n , γ' ⟩
+ctx-element-subst {Γ = Γ} T eγ = T ⟪ ≤-refl , trans (rel-id Γ _) eγ ⟫
+
 ty-subst-cong-subst : {Δ Γ : Ctx ℓ} {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
-from (ty-subst-cong-subst σ=τ T) = record { func = λ t → subst (λ x → T ⟨ _ , x ⟩) (eq σ=τ _) t
-                                          ; naturality = λ t → {!!} }
-to (ty-subst-cong-subst σ=τ T) = {!!}
-isoˡ (ty-subst-cong-subst σ=τ T) = {!!}
-isoʳ (ty-subst-cong-subst σ=τ T) = {!!}
--}
+from (ty-subst-cong-subst σ=τ T) = record { func = λ {n δ} t → ctx-element-subst T (eq σ=τ δ) t
+                                          ; naturality = λ {_ _ m≤n} t →
+  begin
+    T ⟪ m≤n , _ ⟫ T ⟪ ≤-refl , _ ⟫ t
+  ≡˘⟨ morph-comp T m≤n ≤-refl _ _ t ⟩
+    T ⟪ ≤-trans m≤n ≤-refl , _ ⟫ t
+  ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩
+    T ⟪ ≤-trans ≤-refl m≤n , _ ⟫ t
+  ≡⟨ morph-comp T ≤-refl m≤n _ _ t ⟩
+    T ⟪ ≤-refl , _ ⟫ T ⟪ m≤n , _ ⟫ t ∎ }
+  where open ≡-Reasoning
+to (ty-subst-cong-subst σ=τ T) = record { func = λ {n δ} t → ctx-element-subst T (sym (eq σ=τ δ)) t
+                                        ; naturality = λ {_ _ m≤n} t →
+  begin
+    T ⟪ m≤n , _ ⟫ T ⟪ ≤-refl , _ ⟫ t
+  ≡˘⟨ morph-comp T m≤n ≤-refl _ _ t ⟩
+    T ⟪ ≤-trans m≤n ≤-refl , _ ⟫ t
+  ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩
+    T ⟪ ≤-trans ≤-refl m≤n , _ ⟫ t
+  ≡⟨ morph-comp T ≤-refl m≤n _ _ t ⟩
+    T ⟪ ≤-refl , _ ⟫ T ⟪ m≤n , _ ⟫ t ∎ }
+  where open ≡-Reasoning
+eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
+  -- Here we cannot use morph-id T twice because the omitted equality proofs are not rel-id Γ _
+  -- (i.e. T ⟪_⟫ t is not applied to the identity morphism in the category of elements of Γ).
+  begin
+    T ⟪ ≤-refl , _ ⟫ T ⟪ ≤-refl , _ ⟫ t
+  ≡˘⟨ morph-comp T ≤-refl ≤-refl _ _ t ⟩
+    T ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ t
+  ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩
+    T ⟪ ≤-refl , rel-id Γ _ ⟫ t
+  ≡⟨ morph-id T t ⟩
+    t ∎
+  where open ≡-Reasoning
+eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
+  begin
+    T ⟪ ≤-refl , _ ⟫ T ⟪ ≤-refl , _ ⟫ t
+  ≡˘⟨ morph-comp T ≤-refl ≤-refl _ _ t ⟩
+    T ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ t
+  ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩
+    T ⟪ ≤-refl , _ ⟫ t
+  ≡⟨ morph-id T t ⟩
+    t ∎
+  where open ≡-Reasoning
