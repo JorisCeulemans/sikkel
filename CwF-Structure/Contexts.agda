@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Contexts and substitutions + category structure
+--------------------------------------------------
+
 module CwF-Structure.Contexts where
 
 open import Data.Nat hiding (_⊔_)
@@ -13,9 +17,9 @@ infix 10 _⇒_
 infix 1 _≅ˢ_ _≅ᶜ_
 infixl 20 _⊚_
 
+
 --------------------------------------------------
--- Contexts and substitutions + category structure
---------------------------------------------------
+-- Definition of contexts and substitutions
 
 record Ctx ℓ : Set (lsuc ℓ) where
   constructor MkCtx
@@ -35,12 +39,42 @@ _⟪_⟫ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 _⟪_⟫_ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
 Γ ⟪ ineq ⟫ γ = (Γ ⟪ ineq ⟫) γ
 
+-- The following proof is needed to define composition of morphisms in the category of elements
+-- of Γ and is used e.g. in the definition of types (in general) and function types.
+strong-rel-comp : (Γ : Ctx ℓ) {k≤m : k ≤ m} {m≤n : m ≤ n} {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
+                  (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) →
+                  Γ ⟪ ≤-trans k≤m m≤n ⟫ γn ≡ γk
+strong-rel-comp Γ {k≤m}{m≤n}{γn} eq-nm eq-mk = trans (rel-comp Γ k≤m m≤n γn)
+                                                     (trans (cong (Γ ⟪ k≤m ⟫) eq-nm)
+                                                            eq-mk)
+
 record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
   constructor MkSubst
   field
     func : ∀ {n} → Δ ⟨ n ⟩ → Γ ⟨ n ⟩
     naturality : ∀ {m n} {m≤n : m ≤ n} (δ : Δ ⟨ n ⟩) → Γ ⟪ m≤n ⟫ (func δ) ≡ func (Δ ⟪ m≤n ⟫ δ)
 open _⇒_ public
+
+id-subst : (Γ : Ctx ℓ) → Γ ⇒ Γ
+func (id-subst Γ) = id
+naturality (id-subst Γ) = λ _ → refl
+
+_⊚_ : {Δ Γ Θ : Ctx ℓ} → Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
+func (τ ⊚ σ) = func τ ∘ func σ
+naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
+                                (cong (func τ) (naturality σ δ))
+{-
+More detailed version of the above naturality proof. We do not use this as it inserts
+refl at the end (and trans eq refl is not definitionally equal to eq).
+  Θ ⟪ m≤n ⟫ (func τ (func σ δ)) ≡⟨ naturality τ (func σ δ) ⟩
+  func τ (Γ ⟪ m≤n ⟫ func σ δ)   ≡⟨ cong (func τ) (naturality σ δ) ⟩
+  func τ (func σ (Δ ⟪ m≤n ⟫ δ)) ∎
+  where open ≡-Reasoning
+-}
+
+
+--------------------------------------------------
+-- Equivalence of substitutions
 
 record _≅ˢ_ {ℓ} {Δ Γ : Ctx ℓ} (σ τ : Δ ⇒ Γ) : Set ℓ where
   field
@@ -79,34 +113,9 @@ module ≅ˢ-Reasoning {Δ Γ : Ctx ℓ} where
   syntax step-≅  σ τ≅ψ σ≅τ = σ ≅⟨  σ≅τ ⟩ τ≅ψ
   syntax step-≅˘ σ τ≅ψ τ≅σ = σ ≅˘⟨ τ≅σ ⟩ τ≅ψ
 
-{-
--- TODO: currently to-subst-eq is implemented using funext for the func-part, although this
--- equality holds definitionally (so refl could be used instead of funext refl). Check whether
--- this has an impact on computational behaviour.
-to-subst-eq : {Δ Γ : Ctx ℓ} {σ τ : Δ ⇒ Γ} →
-              ({n : ℕ} (δ : Δ ⟨ n ⟩) → func σ δ ≡ func τ δ) →
-              σ ≡ τ
-to-subst-eq e = cong₂-d MkSubst
-                        (funextI (funext λ δ → e δ))
-                        (funextI (funextI (funextI (funext λ _ → uip _ _))))
--}
 
-id-subst : (Γ : Ctx ℓ) → Γ ⇒ Γ
-func (id-subst Γ) = id
-naturality (id-subst Γ) = λ _ → refl
-
-_⊚_ : {Δ Γ Θ : Ctx ℓ} → Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
-func (τ ⊚ σ) = func τ ∘ func σ
-naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
-                                (cong (func τ) (naturality σ δ))
-{-
-More detailed version of the above naturality proof. We do not use this as it inserts
-refl at the end (and trans eq refl is not definitionally equal to eq).
-  Θ ⟪ m≤n ⟫ (func τ (func σ δ)) ≡⟨ naturality τ (func σ δ) ⟩
-  func τ (Γ ⟪ m≤n ⟫ func σ δ)   ≡⟨ cong (func τ) (naturality σ δ) ⟩
-  func τ (func σ (Δ ⟪ m≤n ⟫ δ)) ∎
-  where open ≡-Reasoning
--}
+--------------------------------------------------
+-- Laws for the category of contexts
 
 ⊚-id-substʳ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≅ˢ σ
 eq (⊚-id-substʳ σ) _ = refl
@@ -123,14 +132,9 @@ eq (⊚-congˡ τ σ=σ') δ = cong (func τ) (eq σ=σ' δ)
 ⊚-congʳ : {Δ Γ Θ : Ctx ℓ} {τ τ' : Γ ⇒ Θ} (σ : Δ ⇒ Γ) → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
 eq (⊚-congʳ σ τ=τ') δ = eq τ=τ' (func σ δ)
 
--- The following proof is needed to define composition of morphisms in the category of elements
--- of Γ and is used e.g. in the definition of types (in general) and function types.
-strong-rel-comp : (Γ : Ctx ℓ) {k≤m : k ≤ m} {m≤n : m ≤ n} {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
-                  (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) →
-                  Γ ⟪ ≤-trans k≤m m≤n ⟫ γn ≡ γk
-strong-rel-comp Γ {k≤m}{m≤n}{γn} eq-nm eq-mk = trans (rel-comp Γ k≤m m≤n γn)
-                                                     (trans (cong (Γ ⟪ k≤m ⟫) eq-nm)
-                                                            eq-mk)
+
+--------------------------------------------------
+-- Equivalence of contexts
 
 record _≅ᶜ_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
   field
@@ -186,18 +190,17 @@ isoʳ (≅ᶜ-trans Δ=Γ Γ=Θ) =
 
 
 --------------------------------------------------
--- The empty context
---------------------------------------------------
+-- The empty context (i.e. terminal object)
 
 ◇ : Ctx ℓ
-set ◇ = λ _ → Lift _ ⊤
-rel ◇ = λ _ _ → lift tt
-rel-id ◇ = λ _ → refl
-rel-comp ◇ = λ _ _ _ → refl
+set ◇ _ = Lift _ ⊤
+rel ◇ _ _ = lift tt
+rel-id ◇ _ = refl
+rel-comp ◇ _ _ _ = refl
 
 !◇ : (Γ : Ctx ℓ) → Γ ⇒ ◇
-func (!◇ Γ) = λ _ → lift tt
-naturality (!◇ Γ) = λ _ → refl
+func (!◇ Γ) _ = lift tt
+naturality (!◇ Γ) _ = refl
 
 ◇-terminal : (Γ : Ctx ℓ) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ
 eq (◇-terminal Γ σ τ) _ = refl

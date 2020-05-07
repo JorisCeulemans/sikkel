@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Types
+--------------------------------------------------
+
 module CwF-Structure.Types where
 
 open import Data.Nat hiding (_⊔_)
@@ -15,9 +19,9 @@ infix 10 _↣_
 infix 1 _≅ⁿ_ _≅ᵗʸ_
 infixl 20 _⊙_
 
+
 --------------------------------------------------
--- Types
---------------------------------------------------
+-- Definition of types in a context
 
 record Ty {ℓ} (Γ : Ctx ℓ) : Set (lsuc ℓ) where
   constructor MkTy
@@ -72,31 +76,9 @@ module _ {Γ : Ctx ℓ} (T : Ty Γ) where
                                       (trans (cong (λ x → T ⟪ _ , x ⟫ t) (sym (trans-reflʳ _)))
                                              (morph-comp T k≤m m≤n refl refl t))
 
-{- TODO: see if it is a good idea using the following way to prove equality of types
-   + uniform way to prove type equality
-   - using funext to show that type T ≡ type S where refl can be used most of the time
-to-ty-eq : {Γ : Ctx ℓ} {T S : Ty Γ} →
-           (et : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩ ≡ S ⟨ n , γ ⟩) →
-           ({m n : ℕ} (m≤n : m ≤ n) (γ : Γ ⟨ n ⟩) (t : T ⟨ n , γ ⟩) →
-               subst (λ x → x) (et m (Γ ⟪ m≤n ⟫ γ)) (T ⟪ m≤n , γ ⟫ t) ≡ S ⟪ m≤n , γ ⟫ subst (λ x → x) (et n γ) t) →
-           T ≡ S
-to-ty-eq et em = cong₄-d MkTy
-                         (funext λ n → funext λ γ → et n γ)
-                         {!!}
-                         {!!}
-                         {!!}
--}
 
-_[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
-type (T [ σ ]) n δ = T ⟨ n , func σ δ ⟩
-morph (_[_] {Γ = Γ} T σ) m≤n {δn}{δm} eq-nm t = T ⟪ m≤n , proof ⟫ t
-  where
-    proof : Γ ⟪ m≤n ⟫ func σ δn ≡ func σ δm
-    proof = trans (naturality σ δn) (cong (func σ) eq-nm)
-morph-id (T [ σ ]) t = trans (cong (λ x → T ⟪ ≤-refl , x ⟫ t) (uip _ _))
-                             (morph-id T t)
-morph-comp (T [ σ ]) k≤m m≤n eq-nm eq-mk t = trans (cong (λ x → T ⟪ ≤-trans k≤m m≤n , x ⟫ t) (uip _ _))
-                                                   (morph-comp T k≤m m≤n _ _ t)
+--------------------------------------------------
+-- Natural transformations between types
 
 record _↣_ {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) : Set ℓ where
   field
@@ -166,6 +148,10 @@ eq (⊙-congˡ φ η=η') δ = cong (func φ) (eq η=η' δ)
 ⊙-congʳ : {Γ : Ctx ℓ} {R S T : Ty Γ} {φ φ' : S ↣ T} (η : R ↣ S) → φ ≅ⁿ φ' → φ ⊙ η ≅ⁿ φ' ⊙ η
 eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
 
+
+--------------------------------------------------
+-- Equivalence of types
+
 record _≅ᵗʸ_ {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) : Set ℓ where
   field
     from : T ↣ S
@@ -217,6 +203,21 @@ isoʳ (≅ᵗʸ-trans S=T T=R) =
   ≅⟨ isoʳ T=R ⟩
     id-trans _ ∎
   where open ≅ⁿ-Reasoning
+
+
+--------------------------------------------------
+-- Substitution of types
+
+_[_] : {Δ Γ : Ctx ℓ} → Ty Γ → Δ ⇒ Γ → Ty Δ
+type (T [ σ ]) n δ = T ⟨ n , func σ δ ⟩
+morph (_[_] {Γ = Γ} T σ) m≤n {δn}{δm} eq-nm t = T ⟪ m≤n , proof ⟫ t
+  where
+    proof : Γ ⟪ m≤n ⟫ func σ δn ≡ func σ δm
+    proof = trans (naturality σ δn) (cong (func σ) eq-nm)
+morph-id (T [ σ ]) t = trans (cong (λ x → T ⟪ ≤-refl , x ⟫ t) (uip _ _))
+                             (morph-id T t)
+morph-comp (T [ σ ]) k≤m m≤n eq-nm eq-mk t = trans (cong (λ x → T ⟪ ≤-trans k≤m m≤n , x ⟫ t) (uip _ _))
+                                                   (morph-comp T k≤m m≤n _ _ t)
 
 ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≅ᵗʸ T
 from (ty-subst-id T) = record { func = id ; naturality = λ t → cong (λ x → T ⟪ _ , x ⟫ t) (sym (cong-id _)) }

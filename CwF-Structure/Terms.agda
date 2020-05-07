@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Terms
+--------------------------------------------------
+
 module CwF-Structure.Terms where
 
 open import Data.Nat hiding (_⊔_)
@@ -10,9 +14,9 @@ open import CwF-Structure.Types
 
 infix 1 _≅ᵗᵐ_
 
+
 --------------------------------------------------
--- Terms
---------------------------------------------------
+-- Definition of terms
 
 record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set ℓ where
   constructor MkTm
@@ -25,12 +29,9 @@ open Tm public
 _⟨_,_⟩' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (n : ℕ) → (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
 t ⟨ n , γ ⟩' = term t n γ
 
-{-
-_⟪_,_⟫' : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (ineq : m ≤ n) →
-          {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γn ≡ γm) →
-          T ⟪ ineq , eq ⟫ (t ⟨ n , γn ⟩') ≡ t ⟨ m , γm ⟩'
-t ⟪ ineq , eq ⟫' = naturality t ineq eq
--}
+
+--------------------------------------------------
+-- Equivalence of terms
 
 record _≅ᵗᵐ_ {Γ : Ctx ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set ℓ where
   field
@@ -79,6 +80,10 @@ naturality (convert-term {T = T}{S} η t) m≤n eγ =
   ≡⟨ cong (func η) (naturality t _ _) ⟩
     func η (t ⟨ _ , _ ⟩') ∎
   where open ≡-Reasoning
+
+
+--------------------------------------------------
+-- Substitution of terms
 
 _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
 term (t [ σ ]') n δ = t ⟨ n , func σ δ ⟩'
