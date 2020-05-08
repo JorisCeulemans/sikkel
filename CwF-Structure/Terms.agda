@@ -58,11 +58,11 @@ module ≅ᵗᵐ-Reasoning {Γ : Ctx ℓ} {T : Ty Γ} where
   _≅⟨⟩_ : ∀ (t {s} : Tm Γ T) → t ≅ᵗᵐ s → t ≅ᵗᵐ s
   _ ≅⟨⟩ t=s = t=s
 
-  step-≅ : ∀ (t1 {t2 t3} : Tm Γ T) → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
-  step-≅ _ t1≅t2 t2≅t3 = ≅ᵗᵐ-trans t1≅t2 t2≅t3
+  step-≅ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t2 → t1 ≅ᵗᵐ t3
+  step-≅ _ t2=t3 t1=t2 = ≅ᵗᵐ-trans t1=t2 t2=t3
 
   step-≅˘ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t2 ≅ᵗᵐ t1 → t1 ≅ᵗᵐ t3
-  step-≅˘ _ t2≅t3 t2≅t1 = ≅ᵗᵐ-trans (≅ᵗᵐ-sym t2≅t1) t2≅t3
+  step-≅˘ _ t2=t3 t2=t1 = ≅ᵗᵐ-trans (≅ᵗᵐ-sym t2=t1) t2=t3
 
   _∎ : ∀ (t : Tm Γ T) → t ≅ᵗᵐ t
   _∎ _ = ≅ᵗᵐ-refl
