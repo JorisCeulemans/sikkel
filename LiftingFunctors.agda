@@ -2,6 +2,7 @@ module LiftingFunctors where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
+open import Function
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
@@ -37,58 +38,48 @@ module LiftedFunctor (F : ω-Functor) where
   func (subst-lift σ) {n} = func σ {F ∙ n}
   naturality (subst-lift σ) {m≤n = m≤n} δ = naturality σ {m≤n = monotone F m≤n} δ
 
-  subst-lift-id : {Γ : Ctx ℓ} → subst-lift (id-subst Γ) ≡ id-subst (ctx-lift Γ)
-  subst-lift-id = refl
+  subst-lift-id : {Γ : Ctx ℓ} → subst-lift (id-subst Γ) ≅ˢ id-subst (ctx-lift Γ)
+  subst-lift-id = ≅ˢ-refl
 
   subst-lift-comp : {Δ Γ Θ : Ctx ℓ} (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
-                    subst-lift (τ ⊚ σ) ≡ subst-lift τ ⊚ subst-lift σ
-  subst-lift-comp τ σ = refl
+                    subst-lift (τ ⊚ σ) ≅ˢ subst-lift τ ⊚ subst-lift σ
+  subst-lift-comp τ σ = ≅ˢ-refl
 
   ty-lift : {Γ : Ctx ℓ} → Ty Γ → Ty (ctx-lift Γ)
   type (ty-lift T) n γ = T ⟨ F ∙ n , γ ⟩
-  morph (ty-lift T) m≤n eq t = T ⟪ monotone F m≤n , eq ⟫ t
-  morph-id (ty-lift T) t = trans (morph-ineq-cong T (monotone-id F) _)
+  morph (ty-lift T) m≤n eγ t = T ⟪ monotone F m≤n , eγ ⟫ t
+  morph-id (ty-lift T) t = trans (morph-cong T (monotone-id F) _ _)
                                  (morph-id T t)
   morph-comp (ty-lift {Γ = Γ} T) k≤m m≤n eq-nm eq-mk t =
-    trans (cong (λ x → T ⟪ _ , x ⟫ t) (trans-assoc (cong (λ x → Γ ⟪ x ⟫  _) (monotone-comp F _ _))))
-          (trans (morph-ineq-cong T (monotone-comp F k≤m m≤n) _)
-                 (morph-comp T (monotone F k≤m) (monotone F m≤n) eq-nm eq-mk t))
+    trans (morph-cong T (monotone-comp F k≤m m≤n) _ _)
+          (morph-comp T (monotone F k≤m) (monotone F m≤n) eq-nm eq-mk t)
 
   ty-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) →
-                    ty-lift (T [ σ ]) ≡ ty-lift T [ subst-lift σ ]
-  ty-lift-natural σ T = cong₂-d (MkTy _ _)
-                                (funextI (funextI (funext (λ _ → uip _ _))))
-                                (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
+                    ty-lift (T [ σ ]) ≅ᵗʸ ty-lift T [ subst-lift σ ]
+  from (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
+  to (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
+  eq (isoˡ (ty-lift-natural σ T)) _ = refl
+  eq (isoʳ (ty-lift-natural σ T)) _ = refl
 
   tm-lift : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm (ctx-lift Γ) (ty-lift T)
   term (tm-lift t) n γ = t ⟨ F ∙ n , γ ⟩'
-  naturality (tm-lift t) m≤n eq = naturality t (monotone F m≤n) eq
+  naturality (tm-lift t) m≤n eγ = naturality t (monotone F m≤n) eγ
 
   tm-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm Γ T) →
-                    subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')) ≡ tm-lift t [ subst-lift σ ]'
-  tm-lift-natural {Δ = Δ} σ {T} t = cong₂-d MkTm
-    proof
-    (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
-    where
-      open ≡-Reasoning
-      proof = term (subst (Tm (ctx-lift Δ)) (ty-lift-natural σ T) (tm-lift (t [ σ ]')))
-                ≡⟨ sym (weak-subst-application (λ x y → term y) (ty-lift-natural σ T)) ⟩
-              subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x ⟨ n , δ ⟩) (ty-lift-natural σ T) (term (tm-lift (t [ σ ]')))
-                ≡⟨ subst-∘ (ty-lift-natural σ T) ⟩
-              subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x n δ) (cong type (ty-lift-natural σ T)) (term (tm-lift (t [ σ ]')))
-                ≡⟨ cong (λ z → subst (λ x → (n : ℕ) (δ : Δ ⟨ F ∙ n ⟩) → x n δ) z (term (tm-lift (t [ σ ]'))))
-                        (uip (cong type (ty-lift-natural σ T)) refl) ⟩
-              term (tm-lift t [ subst-lift σ ]') ∎
+                    tm-lift (t [ σ ]') ≅ᵗᵐ ι[ ty-lift-natural σ T ] ((tm-lift t) [ subst-lift σ ]')
+  eq (tm-lift-natural σ t) δ = refl
 
-  lift-◇ : ctx-lift {ℓ} ◇ ≡ ◇
-  lift-◇ = cong₂-d (MkCtx _ _)
-                    (funextI (funext λ _ → uip _ _))
-                    (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+  lift-◇ : ctx-lift {ℓ} ◇ ≅ᶜ ◇
+  from lift-◇ = MkSubst id (λ _ → refl)
+  to lift-◇ = MkSubst id (λ _ → refl)
+  eq (isoˡ lift-◇) _ = refl
+  eq (isoʳ lift-◇) _ = refl
 
-  lift-ctx-ext : (Γ : Ctx ℓ) (T : Ty Γ) → ctx-lift (Γ ,, T) ≡ ctx-lift Γ ,, ty-lift T
-  lift-ctx-ext Γ T = cong₂-d (MkCtx _ _)
-                             (funextI (funext λ _ → uip _ _))
-                             (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _))))
+  lift-ctx-ext : (Γ : Ctx ℓ) (T : Ty Γ) → ctx-lift (Γ ,, T) ≅ᶜ ctx-lift Γ ,, ty-lift T
+  from (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
+  to (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
+  eq (isoˡ (lift-ctx-ext Γ T)) _ = refl
+  eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
 
   -- TODO: look at the following (there is some trouble using implicit functions)
   {-
