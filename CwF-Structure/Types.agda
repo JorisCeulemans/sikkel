@@ -206,6 +206,29 @@ isoʳ (≅ᵗʸ-trans S=T T=R) =
     id-trans _ ∎
   where open ≅ⁿ-Reasoning
 
+module ≅ᵗʸ-Reasoning {Γ : Ctx ℓ} where
+  infix  3 _∎
+  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
+  infix  1 begin_
+
+  begin_ : ∀ {T S : Ty Γ} → T ≅ᵗʸ S → T ≅ᵗʸ S
+  begin_ T=S = T=S
+
+  _≅⟨⟩_ : ∀ (T {S} : Ty Γ) → T ≅ᵗʸ S → T ≅ᵗʸ S
+  _ ≅⟨⟩ T=S = T=S
+
+  step-≅ : ∀ (T {S R} : Ty Γ) → S ≅ᵗʸ R → T ≅ᵗʸ S → T ≅ᵗʸ R
+  step-≅ _ S≅R T≅S = ≅ᵗʸ-trans T≅S S≅R
+
+  step-≅˘ : ∀ (T {S R} : Ty Γ) → S ≅ᵗʸ R → S ≅ᵗʸ T → T ≅ᵗʸ R
+  step-≅˘ _ S≅R S≅T = ≅ᵗʸ-trans (≅ᵗʸ-sym S≅T) S≅R
+
+  _∎ : ∀ (T : Ty Γ) → T ≅ᵗʸ T
+  _∎ _ = ≅ᵗʸ-refl
+
+  syntax step-≅  T S≅R T≅S = T ≅⟨  T≅S ⟩ S≅R
+  syntax step-≅˘ T S≅R S≅T = T ≅˘⟨ S≅T ⟩ S≅R
+
 
 --------------------------------------------------
 -- Substitution of types

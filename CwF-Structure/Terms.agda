@@ -107,6 +107,9 @@ eq (ι-symˡ T=S s) γ = eq (isoʳ T=S) (s ⟨ _ , γ ⟩')
          ι[ T=S ] (ι[ ≅ᵗʸ-sym T=S ] t) ≅ᵗᵐ t
 eq (ι-symʳ T=S t) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
 
+ι⁻¹[_]_ : {Γ : Ctx ℓ} {T S : Ty Γ} → T ≅ᵗʸ S → Tm Γ T → Tm Γ S
+ι⁻¹[ T=S ] t = ι[ ≅ᵗʸ-sym T=S ] t
+
 ι-trans : {Γ : Ctx ℓ} {T S R : Ty Γ} (T=S : T ≅ᵗʸ S) (S=R : S ≅ᵗʸ R) (r : Tm Γ R) →
           ι[ ≅ᵗʸ-trans T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
 eq (ι-trans T=S S=R r) γ = refl

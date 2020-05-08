@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Context extension
+--------------------------------------------------
+
 module CwF-Structure.ContextExtension where
 
 open import Data.Nat hiding (_⊔_)
@@ -15,9 +19,6 @@ open import CwF-Structure.Terms
 
 infixl 15 _,,_
 
---------------------------------------------------
--- Context extension
---------------------------------------------------
 
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
 set (Γ ,, T) n = Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
@@ -30,14 +31,36 @@ rel-comp (Γ ,, T) k≤m m≤n [ γ , t ] = to-Σ-eq (rel-comp Γ k≤m m≤n γ
 func π = proj₁
 naturality π _ = refl
 
-ξ : {Γ : Ctx ℓ} {T : Ty Γ} → Tm (Γ ,, T) (T [ π {T = T} ])
-term ξ = λ _ → proj₂
-naturality (ξ {T = T}) m≤n eγ = trans (sym (morph-subst T refl (cong proj₁ eγ) _))
-                                      (from-Σ-eq2 eγ) -- can be simpler by pattern matching on eq
+ξ : {Γ : Ctx ℓ} {T : Ty Γ} → Tm (Γ ,, T) (T [ π ])
+term ξ _ = proj₂
+naturality (ξ {T = T}) m≤n refl = refl
+-- alternative for naturality without pattern matching on equality proof:
+-- trans (sym (morph-subst T refl (cong proj₁ eγ) _))
+--       (from-Σ-eq2 eγ)
 
-from-ext-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))
-from-ext-subst {Δ = Δ}{Γ}{T} τ = [ π ⊚ τ , convert-term (from (ty-subst-comp T π τ)) (ξ [ τ ]') ]
+ext-subst-to-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Δ ⇒ Γ
+ext-subst-to-subst τ = π ⊚ τ
 
+ext-subst-to-term : {Δ Γ : Ctx ℓ} {T : Ty Γ} (τ : Δ ⇒ Γ ,, T) → Tm Δ (T [ π ⊚ τ ])
+ext-subst-to-term {T = T} τ = ι⁻¹[ ty-subst-comp T π τ ] (ξ [ τ ]')
+
+to-ext-subst : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
+func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
+naturality (to-ext-subst {Δ = Δ}{Γ} T σ t) δ = to-Σ-eq (naturality σ δ)
+  (begin
+    subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ)
+          (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
+  ≡⟨ morph-subst T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
+    T ⟪ _ , trans refl (naturality σ δ) ⟫ t ⟨ _ , δ ⟩'
+  ≡⟨ morph-cong T refl _ _ ⟩
+    T ⟪ _ , _ ⟫ (t ⟨ _ , δ ⟩')
+  ≡⟨ naturality t _ refl ⟩
+    t ⟨ _ , Δ ⟪ _ ⟫ δ ⟩' ∎)
+  where open ≡-Reasoning
+
+syntax to-ext-subst T σ t = ⟨ σ , t ∈ T ⟩
+
+{-
 to-ext-subst : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
 to-ext-subst T σ t = MkSubst (λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ])
                              (λ δ → to-Σ-eq (naturality σ δ)
@@ -47,80 +70,43 @@ to-ext-subst T σ t = MkSubst (λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ])
 
 to-ext-subst-Σ : {Δ Γ : Ctx ℓ} (T : Ty Γ) → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
 to-ext-subst-Σ T [ σ , t ] = to-ext-subst T σ t
-
-ctx-ext-left-inverse1 : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → proj₁ (from-ext-subst (to-ext-subst T σ t)) ≅ˢ σ
-eq (ctx-ext-left-inverse1 σ t) δ = refl
-{- TODO
-ctx-ext-left-inverse2 : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → proj₂ (from-ext-subst (to-ext-subst T σ t)) ≅ᵗᵐ {!t!}
-ctx-ext-left-inverse2 σ t = {!!}
--}
-{-
-ctx-ext-left-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (p : Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ]))) → from-ext-subst (to-ext-subst-Σ T p) ≡ p
-ctx-ext-left-inverse {Δ = Δ} {T = T} [ σ , t ] = to-Σ-eq (to-subst-eq (λ δ → refl))
-                                                         (cong₂-d MkTm proof
-                                                                       (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _))))))
-  where
-    open ≡-Reasoning
-    α = to-subst-eq (λ δ → refl)
-    ζ = ty-subst-comp T π (to-ext-subst-Σ T [ σ , t ])
-    β = subst (Tm Δ) ζ (ξ [ to-ext-subst-Σ T [ σ , t ] ]')
-    proof = term (subst (λ x → Tm Δ (T [ x ])) α β)
-              ≡⟨ cong term {y = subst (Tm Δ) (cong (T [_]) α) β}
-                      (subst-∘ {f = λ x → T [ x ]} α {p = β}) ⟩
-            term (subst (Tm Δ) (cong (T [_]) α) β)
-              ≡⟨ cong term {x = subst (Tm Δ) (cong (T [_]) α) β}
-                           {y = subst (Tm Δ) (trans ζ (cong (T [_]) α))
-                                      (ξ [ to-ext-subst-Σ T [ σ , t ] ]')}
-                           (subst-subst ζ) ⟩
-            term (subst (Tm Δ) (trans ζ (cong (T [_]) α)) (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
-              ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) (trans ζ (cong (T [_]) α))) ⟩
-            subst (λ z → (n : ℕ) (γ : Δ ⟨ n ⟩) → z ⟨ n , γ ⟩) (trans ζ (cong (T [_]) α)) (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
-              ≡⟨ subst-∘ (trans ζ (cong (T [_]) α)) ⟩
-            subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type (trans ζ (cong (T [_]) α))) (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]'))
-              ≡⟨ cong (λ x → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) x (term (ξ [ to-ext-subst-Σ T [ σ , t ] ]')))
-                      {x = cong type (trans ζ (cong (T [_]) α))}
-                      {y = refl}
-                      (uip _ _) ⟩
-            term t ∎
 -}
 
-ctx-ext-right-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (τ : Δ ⇒ Γ ,, T) → to-ext-subst-Σ T (from-ext-subst τ) ≅ˢ τ
-eq (ctx-ext-right-inverse τ) δ = refl
+ctx-ext-subst-proj₁ : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ , t ∈ T ⟩ ≅ˢ σ
+eq (ctx-ext-subst-proj₁ σ t) δ = refl
 
-{-
-ctx-ext-right-inverse : {Δ Γ : Ctx ℓ} {T : Ty Γ} (τ : Δ ⇒ Γ ,, T) → to-ext-subst-Σ T (from-ext-subst τ) ≡ τ
-ctx-ext-right-inverse {Δ = Δ} {T = T} τ = to-subst-eq (λ δ → cong [ proj₁ (func τ δ) ,_]
-  (term (subst (Tm Δ) ζ η) _ δ
-    ≡⟨ cong (λ z → z _ δ) (sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ζ)) ⟩
-  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) ζ (term η) _ δ
-    ≡⟨ cong (λ z → z _ δ) {x = subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x ⟨ m , δ' ⟩) ζ (term η)}
-            (subst-∘ ζ) ⟩
-  subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') (cong type ζ) (term η) _ δ
-    ≡⟨ cong (λ z → subst (λ x → (m : ℕ) (δ' : Δ ⟨ m ⟩) → x m δ') z (term η) _ δ)
-            {x = cong type ζ}
-            {y = refl}
-            (uip (cong type ζ) refl) ⟩
-  proj₂ (func τ δ) ∎))
-  where
-    open ≡-Reasoning
-    ζ = ty-subst-comp T π τ
-    η = ξ {T = T} [ τ ]'
--}
-π-ext-comp : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) →
-             π ⊚ to-ext-subst T σ t ≅ˢ σ
-eq (π-ext-comp T σ t) δ = refl
-
-{- TODO
-π-ext-comp-ty-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
-                      S [ π ] [ to-ext-subst T σ t ] ≡ S [ σ ]
-π-ext-comp-ty-subst {T = T} σ t S =
-  S [ π ] [ to-ext-subst T σ t ]
-    ≡⟨ ty-subst-comp S π (to-ext-subst T σ t) ⟩
-  S [ π ⊚ to-ext-subst T σ t ]
-    ≡⟨ cong (S [_]) (π-ext-comp T σ t) ⟩
-  S [ σ ] ∎
+ctx-ext-subst-proj₂ : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
+                      ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
+eq (ctx-ext-subst-proj₂ {Γ = Γ}{T} σ t) δ = sym (
+  begin
+    T ⟪ ≤-refl , trans (rel-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
+  ≡⟨ morph-cong T refl _ _ ⟩
+    T ⟪ ≤-refl , _ ⟫ (t ⟨ _ , δ ⟩')
+  ≡⟨ morph-id T _ ⟩
+    t ⟨ _ , δ ⟩' ∎)
   where open ≡-Reasoning
 
+ctx-ext-subst-η : {Δ Γ : Ctx ℓ} {T : Ty Γ} (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≅ˢ τ
+eq (ctx-ext-subst-η τ) δ = refl
+
+ctx-ext-subst-comp : {Δ Γ Θ : Ctx ℓ} {T : Ty Θ} (σ : Γ ⇒ Θ) (t : Tm Γ (T [ σ ])) (τ : Δ ⇒ Γ) →
+                     ⟨ σ , t ∈ T ⟩ ⊚ τ ≅ˢ ⟨ σ ⊚ τ , ι⁻¹[ ty-subst-comp T σ τ ] (t [ τ ]') ∈ T ⟩
+eq (ctx-ext-subst-comp σ t τ) δ = refl
+
+term-to-subst : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Γ ⇒ Γ ,, T
+term-to-subst {Γ = Γ}{T} t = ⟨ id-subst Γ , ι[ ty-subst-id T ] t ∈ T ⟩
+
+π-ext-comp-ty-subst : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
+                      S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
+π-ext-comp-ty-subst {T = T} σ t S =
+  S [ π ] [ ⟨ σ , t ∈ T ⟩ ]
+    ≅⟨ ty-subst-comp S π ⟨ σ , t ∈ T ⟩ ⟩
+  S [ π ⊚ ⟨ σ , t ∈ T ⟩ ]
+    ≅⟨ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) S ⟩
+  S [ σ ] ∎
+  where open ≅ᵗʸ-Reasoning
+
+{- TODO: check whether this is useful anywhere.
 _⌈_⌋ : {Γ : Ctx ℓ} {T S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ T → Tm Γ S
 _⌈_⌋ {Γ = Γ}{T}{S} s t = subst (Tm Γ) proof (s [ to-ext-subst T (id-subst Γ) (t [ id-subst Γ ]') ]')
   where
@@ -135,14 +121,7 @@ _⌈_⌋ {Γ = Γ}{T}{S} s t = subst (Tm Γ) proof (s [ to-ext-subst T (id-subst
 -}
 
 _⊹ : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → Δ ,, T [ σ ] ⇒ Γ ,, T
-_⊹ {Δ = Δ} {T = T} σ = to-ext-subst T (σ ⊚ π) (convert-term (from (ty-subst-comp T σ π)) ξ)
+_⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ ∈ T ⟩
 
-module _ {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) where
-  ⊹-π-comm : π {T = T} ⊚ (σ ⊹) ≅ˢ σ ⊚ π
-  eq ⊹-π-comm δ = refl
-{-
-⊹-tm-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (S : Ty (Θ ,, T)) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
-            Tm (Δ ,, T [ τ ] [ σ ]) (S [ τ ⊹ ] [ σ ⊹ ]) → Tm (Δ ,, T [ τ ⊚ σ ]) (S [ (τ ⊚ σ) ⊹ ])
-term (⊹-tm-comp T S τ σ s) n [ δ , t ] = {!s ⟨ n , ? ⟩'!}
-naturality (⊹-tm-comp T S τ σ s) = {!!}
--}
+⊹-π-comm : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → π {T = T} ⊚ (σ ⊹) ≅ˢ σ ⊚ π
+eq (⊹-π-comm σ) δ = refl
