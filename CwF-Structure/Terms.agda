@@ -2,15 +2,20 @@
 -- Terms
 --------------------------------------------------
 
-module CwF-Structure.Terms where
+open import Categories
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+module CwF-Structure.Terms {o h} (C : Category {o}{h})  where
+
+-- open import Data.Nat hiding (_⊔_)
+-- open import Data.Nat.Properties
+open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
+open import CwF-Structure.Contexts C
+open import CwF-Structure.Types C
+
+open Category C
 
 infix 1 _≅ᵗᵐ_
 
@@ -18,24 +23,24 @@ infix 1 _≅ᵗᵐ_
 --------------------------------------------------
 -- Definition of terms
 
-record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set ℓ where
+record Tm {ℓ} (Γ : Ctx ℓ) (T : Ty Γ) : Set (o ⊔ h ⊔ ℓ) where
   constructor MkTm
   field
-    term : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
-    naturality : ∀ {m n} (ineq : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eq : Γ ⟪ ineq ⟫ γn ≡ γm) →
-                 T ⟪ ineq , eq ⟫ (term n γn) ≡ term m γm
+    term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
+    naturality : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) →
+                 T ⟪ f , eγ ⟫ (term y γy) ≡ term x γx
 open Tm public
 
-_⟨_,_⟩' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (n : ℕ) → (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
-t ⟨ n , γ ⟩' = term t n γ
+_⟨_,_⟩' : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (x : Ob) → (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
+t ⟨ x , γ ⟩' = term t x γ
 
 
 --------------------------------------------------
 -- Equivalence of terms
 
-record _≅ᵗᵐ_ {Γ : Ctx ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set ℓ where
+record _≅ᵗᵐ_ {Γ : Ctx ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set (o ⊔ ℓ) where
   field
-    eq : ∀ {n} γ → t ⟨ n , γ ⟩' ≡ s ⟨ n , γ ⟩'
+    eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'
 open _≅ᵗᵐ_ public
 
 ≅ᵗᵐ-refl : {Γ : Ctx ℓ} {T : Ty Γ} {t : Tm Γ T} → t ≅ᵗᵐ t
@@ -75,12 +80,12 @@ module ≅ᵗᵐ-Reasoning {Γ : Ctx ℓ} {T : Ty Γ} where
 -- Reindexing maps (cf. Dybjer's internal type theory)
 
 convert-term : {Γ : Ctx ℓ} {T S : Ty Γ} → (T ↣ S) → Tm Γ T → Tm Γ S
-term (convert-term η t) n γ = func η (t ⟨ n , γ ⟩')
-naturality (convert-term {T = T}{S} η t) m≤n eγ =
+term (convert-term η t) x γ = func η (t ⟨ x , γ ⟩')
+naturality (convert-term {T = T}{S} η t) f eγ =
   begin
-    S ⟪ m≤n , eγ ⟫ func η (t ⟨ _ , _ ⟩')
+    S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
   ≡⟨ naturality η _ ⟩
-    func η (T ⟪ m≤n , eγ ⟫ (t ⟨ _ , _ ⟩'))
+    func η (T ⟪ f , eγ ⟫ (t ⟨ _ , _ ⟩'))
   ≡⟨ cong (func η) (naturality t _ _) ⟩
     func η (t ⟨ _ , _ ⟩') ∎
   where open ≡-Reasoning
@@ -119,8 +124,8 @@ eq (ι-trans T=S S=R r) γ = refl
 -- Substitution of terms
 
 _[_]' : {Δ Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
-term (t [ σ ]') n δ = t ⟨ n , func σ δ ⟩'
-naturality (t [ σ ]') m≤n eγ = naturality t m≤n _
+term (t [ σ ]') x δ = t ⟨ x , func σ δ ⟩'
+naturality (t [ σ ]') f eγ = naturality t f _
 
 tm-subst-cong-tm : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} {t s : Tm Γ T} → t ≅ᵗᵐ s → t [ σ ]' ≅ᵗᵐ s [ σ ]'
 eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
@@ -135,7 +140,7 @@ eq (convert-subst-commute σ η t) δ = refl
 
 tm-subst-cong-subst : {Δ Γ : Ctx ℓ} {σ τ : Δ ⇒ Γ} {T : Ty Γ} (t : Tm Γ T) →
                       (σ=τ : σ ≅ˢ τ) → t [ σ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst σ=τ T ] (t [ τ ]')
-eq (tm-subst-cong-subst {σ = σ}{τ}{T} t σ=τ) δ = sym (naturality t ≤-refl _)
+eq (tm-subst-cong-subst {σ = σ}{τ}{T} t σ=τ) δ = sym (naturality t hom-id _)
 
 tm-subst-id : {Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) → t [ id-subst Γ ]' ≅ᵗᵐ ι[ ty-subst-id T ] t
 eq (tm-subst-id t) _ = refl

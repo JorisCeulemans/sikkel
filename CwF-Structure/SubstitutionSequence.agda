@@ -1,16 +1,18 @@
-module CwF-Structure.SubstitutionSequence where
+open import Categories
+
+module CwF-Structure.SubstitutionSequence {o h} (C : Category {o}{h}) where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
+open import CwF-Structure.Contexts C
+open import CwF-Structure.Types C
+open import CwF-Structure.Terms C
 
 infixr 5 _∷_
 
-data _⇒⁺_ {ℓ : Level} : Ctx ℓ → Ctx ℓ → Set (lsuc ℓ) where
+data _⇒⁺_ {ℓ : Level} : Ctx ℓ → Ctx ℓ → Set (o ⊔ h ⊔ lsuc ℓ) where
   _◼ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
   _∷_ : {Δ Γ Θ : Ctx ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
 

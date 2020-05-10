@@ -2,10 +2,12 @@
 -- Context extension
 --------------------------------------------------
 
-module CwF-Structure.ContextExtension where
+open import Categories
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+module CwF-Structure.ContextExtension {o h} (C : Category {o}{h}) where
+
+-- open import Data.Nat hiding (_⊔_)
+-- open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
@@ -13,19 +15,21 @@ open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
+open import CwF-Structure.Contexts C
+open import CwF-Structure.Types C
+open import CwF-Structure.Terms C
+
+open Category C
 
 infixl 15 _,,_
 
 
 _,,_ : (Γ : Ctx ℓ) (T : Ty Γ) → Ctx ℓ
-set (Γ ,, T) n = Σ[ γ ∈ Γ ⟨ n ⟩ ] (T ⟨ n , γ ⟩)
-rel (Γ ,, T) ineq [ γ , t ] = [ Γ ⟪ ineq ⟫ γ , strict-morph T ineq γ t ]
+set (Γ ,, T) x = Σ[ γ ∈ Γ ⟨ x ⟩ ] (T ⟨ x , γ ⟩)
+rel (Γ ,, T) f [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
 rel-id (Γ ,, T) [ γ , t ] = to-Σ-eq (rel-id Γ γ) (strict-morph-id T t)
-rel-comp (Γ ,, T) k≤m m≤n [ γ , t ] = to-Σ-eq (rel-comp Γ k≤m m≤n γ)
-                                              (strict-morph-comp T k≤m m≤n t)
+rel-comp (Γ ,, T) f g [ γ , t ] = to-Σ-eq (rel-comp Γ f g γ)
+                                          (strict-morph-comp T f g t)
 
 π : {Γ : Ctx ℓ} {T : Ty Γ} → Γ ,, T ⇒ Γ
 func π = proj₁
@@ -33,7 +37,7 @@ naturality π _ = refl
 
 ξ : {Γ : Ctx ℓ} {T : Ty Γ} → Tm (Γ ,, T) (T [ π ])
 term ξ _ = proj₂
-naturality (ξ {T = T}) m≤n refl = refl
+naturality (ξ {T = T}) f refl = refl
 -- alternative for naturality without pattern matching on equality proof:
 -- trans (sym (morph-subst T refl (cong proj₁ eγ) _))
 --       (from-Σ-eq2 eγ)
@@ -46,8 +50,8 @@ ext-subst-to-term {T = T} τ = ι⁻¹[ ty-subst-comp T π τ ] (ξ [ τ ]')
 
 to-ext-subst : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
 func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
-naturality (to-ext-subst {Δ = Δ}{Γ} T σ t) δ = to-Σ-eq (naturality σ δ)
-  (begin
+naturality (to-ext-subst {Δ = Δ}{Γ} T σ t) δ = to-Σ-eq (naturality σ δ) (
+  begin
     subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ)
           (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
   ≡⟨ morph-subst T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
@@ -79,9 +83,9 @@ ctx-ext-subst-proj₂ : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) (t : Tm �
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T} σ t) δ = sym (
   begin
-    T ⟪ ≤-refl , trans (rel-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
+    T ⟪ hom-id , trans (rel-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ morph-cong T refl _ _ ⟩
-    T ⟪ ≤-refl , _ ⟫ (t ⟨ _ , δ ⟩')
+    T ⟪ hom-id , _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ morph-id T _ ⟩
     t ⟨ _ , δ ⟩' ∎)
   where open ≡-Reasoning

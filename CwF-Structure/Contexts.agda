@@ -2,10 +2,14 @@
 -- Contexts and substitutions + category structure
 --------------------------------------------------
 
-module CwF-Structure.Contexts where
+open import Categories
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+module CwF-Structure.Contexts {o h} (C : Category {o} {h}) where
+
+open Category C
+
+-- open import Data.Nat hiding (_⊔_)
+-- open import Data.Nat.Properties
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
 open import Level renaming (zero to lzero; suc to lsuc)
@@ -21,38 +25,41 @@ infixl 20 _⊚_
 --------------------------------------------------
 -- Definition of contexts and substitutions
 
-record Ctx ℓ : Set (lsuc ℓ) where
+record Ctx ℓ : Set (o ⊔ h ⊔ lsuc ℓ) where
   constructor MkCtx
   field
-    set : ℕ → Set ℓ
-    rel : ∀ {m n} → m ≤ n → set n → set m
-    rel-id : ∀ {n} (γ : set n) → rel (≤-refl) γ ≡ γ
-    rel-comp : ∀ {k m n} (k≤m : k ≤ m) (m≤n : m ≤ n) (γ : set n) → rel (≤-trans k≤m m≤n) γ ≡ rel k≤m (rel m≤n γ)
+    set : Ob → Set ℓ
+    rel : ∀ {x y} → Hom x y → set y → set x
+    rel-id : ∀ {x} (γ : set x) → rel hom-id γ ≡ γ
+    rel-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) → rel (g ∙ f) γ ≡ rel f (rel g γ)
 open Ctx public
 
-_⟨_⟩ : Ctx ℓ → ℕ → Set ℓ
-Γ ⟨ n ⟩ = set Γ n
+variable
+  x y z : Ob
 
-_⟪_⟫ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
-Γ ⟪ ineq ⟫ = rel Γ ineq
+_⟨_⟩ : Ctx ℓ → Ob → Set ℓ
+Γ ⟨ x ⟩ = set Γ x
 
-_⟪_⟫_ : (Γ : Ctx ℓ) (ineq : m ≤ n) → Γ ⟨ n ⟩ → Γ ⟨ m ⟩
-Γ ⟪ ineq ⟫ γ = (Γ ⟪ ineq ⟫) γ
+_⟪_⟫ : (Γ : Ctx ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
+Γ ⟪ f ⟫ = rel Γ f
+
+_⟪_⟫_ : (Γ : Ctx ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
+Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
 
 -- The following proof is needed to define composition of morphisms in the category of elements
 -- of Γ and is used e.g. in the definition of types (in general) and function types.
-strong-rel-comp : (Γ : Ctx ℓ) {k≤m : k ≤ m} {m≤n : m ≤ n} {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} {γk : Γ ⟨ k ⟩} →
-                  (eq-nm : Γ ⟪ m≤n ⟫ γn ≡ γm) (eq-mk : Γ ⟪ k≤m ⟫ γm ≡ γk) →
-                  Γ ⟪ ≤-trans k≤m m≤n ⟫ γn ≡ γk
-strong-rel-comp Γ {k≤m}{m≤n}{γn} eq-nm eq-mk = trans (rel-comp Γ k≤m m≤n γn)
-                                                     (trans (cong (Γ ⟪ k≤m ⟫) eq-nm)
-                                                            eq-mk)
+strong-rel-comp : (Γ : Ctx ℓ) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
+                  (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) →
+                  Γ ⟪ g ∙ f ⟫ γz ≡ γx
+strong-rel-comp Γ {f}{g}{γz} eq-zy eq-yx = trans (rel-comp Γ f g γz)
+                                                 (trans (cong (Γ ⟪ f ⟫) eq-zy)
+                                                        eq-yx)
 
-record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
+record _⇒_ {ℓ} (Δ Γ : Ctx ℓ) : Set (o ⊔ h ⊔ ℓ) where
   constructor MkSubst
   field
-    func : ∀ {n} → Δ ⟨ n ⟩ → Γ ⟨ n ⟩
-    naturality : ∀ {m n} {m≤n : m ≤ n} (δ : Δ ⟨ n ⟩) → Γ ⟪ m≤n ⟫ (func δ) ≡ func (Δ ⟪ m≤n ⟫ δ)
+    func : ∀ {x} → Δ ⟨ x ⟩ → Γ ⟨ x ⟩
+    naturality : ∀ {x y} {f : Hom x y} (δ : Δ ⟨ y ⟩) → Γ ⟪ f ⟫ (func δ) ≡ func (Δ ⟪ f ⟫ δ)
 open _⇒_ public
 
 id-subst : (Γ : Ctx ℓ) → Γ ⇒ Γ
@@ -76,9 +83,9 @@ refl at the end (and trans eq refl is not definitionally equal to eq).
 --------------------------------------------------
 -- Equivalence of substitutions
 
-record _≅ˢ_ {ℓ} {Δ Γ : Ctx ℓ} (σ τ : Δ ⇒ Γ) : Set ℓ where
+record _≅ˢ_ {ℓ} {Δ Γ : Ctx ℓ} (σ τ : Δ ⇒ Γ) : Set (o ⊔ ℓ) where
   field
-    eq : ∀ {n} δ → func σ {n} δ ≡ func τ δ
+    eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
 open _≅ˢ_ public
 
 ≅ˢ-refl : {Δ Γ : Ctx ℓ} {σ : Δ ⇒ Γ} → σ ≅ˢ σ
@@ -136,7 +143,7 @@ eq (⊚-congʳ σ τ=τ') δ = eq τ=τ' (func σ δ)
 --------------------------------------------------
 -- Equivalence of contexts
 
-record _≅ᶜ_ {ℓ} (Δ Γ : Ctx ℓ) : Set ℓ where
+record _≅ᶜ_ {ℓ} (Δ Γ : Ctx ℓ) : Set (o ⊔ h ⊔ ℓ) where
   field
     from : Δ ⇒ Γ
     to : Γ ⇒ Δ
