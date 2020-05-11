@@ -3,6 +3,7 @@ module Types.Products where
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
@@ -16,76 +17,77 @@ open import CwF-Structure.Terms
 
 _⊠_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⊠ S) n γ = T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩
-morph (T ⊠ S) m≤n eq [ t , s ] = [ T ⟪ m≤n , eq ⟫ t , S ⟪ m≤n , eq ⟫ s ]
+morph (T ⊠ S) m≤n eγ [ t , s ] = [ T ⟪ m≤n , eγ ⟫ t , S ⟪ m≤n , eγ ⟫ s ]
 morph-id (T ⊠ S) [ t , s ] = cong₂ [_,_] (morph-id T t) (morph-id S s)
 morph-comp (T ⊠ S) k≤m m≤n eq-nm eq-mk [ t , s ] = cong₂ [_,_] (morph-comp T k≤m m≤n eq-nm eq-mk t)
                                                                 (morph-comp S k≤m m≤n eq-nm eq-mk s)
 
+⊠-bimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T ↣ T') → (S ↣ S') → (T ⊠ S ↣ T' ⊠ S')
+func (⊠-bimap η φ) [ t , s ] = [ func η t , func φ s ]
+naturality (⊠-bimap η φ) [ t , s ] = cong₂ [_,_] (naturality η t) (naturality φ s)
+
+⊠-cong : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⊠ S ≅ᵗʸ T' ⊠ S'
+from (⊠-cong T=T' S=S') = ⊠-bimap (from T=T') (from S=S')
+to (⊠-cong T=T' S=S') = ⊠-bimap (to T=T') (to S=S')
+eq (isoˡ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoˡ T=T') t) (eq (isoˡ S=S') s)
+eq (isoʳ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoʳ T=T') t) (eq (isoʳ S=S') s)
+
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   term (pair t s) n γ = [ t ⟨ n , γ ⟩' , s ⟨ n , γ ⟩' ]
-  naturality (pair t s) m≤n eq = cong₂ [_,_] (naturality t m≤n eq) (naturality s m≤n eq)
+  naturality (pair t s) m≤n eγ = cong₂ [_,_] (naturality t m≤n eγ) (naturality s m≤n eγ)
 
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   term (fst p) n γ = proj₁ (p ⟨ n , γ ⟩')
-  naturality (fst p) m≤n eq = cong proj₁ (naturality p m≤n eq)
+  naturality (fst p) m≤n eγ = cong proj₁ (naturality p m≤n eγ)
 
   snd : Tm Γ (T ⊠ S) → Tm Γ S
   term (snd p) n γ = proj₂ (p ⟨ n , γ ⟩')
-  naturality (snd p) m≤n eq = cong proj₂ (naturality p m≤n eq)
+  naturality (snd p) m≤n eγ = cong proj₂ (naturality p m≤n eγ)
+
+  pair-cong : {t t' : Tm Γ T} {s s' : Tm Γ S} → t ≅ᵗᵐ t' → s ≅ᵗᵐ s' → pair t s ≅ᵗᵐ pair t' s'
+  eq (pair-cong t=t' s=s') γ = cong₂ [_,_] (eq t=t' γ) (eq s=s' γ)
+
+  fst-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → fst p ≅ᵗᵐ fst p'
+  eq (fst-cong p=p') γ = cong proj₁ (eq p=p' γ)
+
+  snd-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → snd p ≅ᵗᵐ snd p'
+  eq (snd-cong p=p') γ = cong proj₂ (eq p=p' γ)
+
+module _ {Γ : Ctx ℓ} {T T' S S' : Ty Γ} (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S') where
+  pair-ι : (t : Tm Γ T') (s : Tm Γ S') → ι[ ⊠-cong T=T' S=S' ] pair t s ≅ᵗᵐ pair (ι[ T=T' ] t) (ι[ S=S' ] s)
+  eq (pair-ι t s) _ = refl
+
+  fst-ι : (p : Tm Γ (T' ⊠ S')) → ι[ T=T' ] fst p ≅ᵗᵐ fst (ι[ ⊠-cong T=T' S=S' ] p)
+  eq (fst-ι p) _ = refl
+
+  snd-ι : (p : Tm Γ (T' ⊠ S')) → ι[ S=S' ] snd p ≅ᵗᵐ snd (ι[ ⊠-cong T=T' S=S' ] p)
+  eq (snd-ι p) _ = refl
 
 module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
-  ⊠-natural : (T ⊠ S) [ σ ] ≡ (T [ σ ]) ⊠ (S [ σ ])
-  ⊠-natural = cong₂-d (MkTy _ _)
-                       (funextI (funextI (funext λ _ → uip _ _)))
-                       (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
+  ⊠-natural : (T ⊠ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊠ (S [ σ ])
+  from ⊠-natural = record { func = id ; naturality = λ _ → refl }
+  to ⊠-natural = record { func = id ; naturality = λ _ → refl }
+  eq (isoˡ ⊠-natural) _ = refl
+  eq (isoʳ ⊠-natural) _ = refl
 
-  pair-natural : (t : Tm Γ T) (s : Tm Γ S) → subst (Tm Δ) ⊠-natural ((pair t s) [ σ ]') ≡ pair (t [ σ ]') (s [ σ ]')
-  pair-natural t s = cong₂-d MkTm
-    (term (subst (Tm Δ) ⊠-natural (pair t s [ σ ]'))
-        ≡⟨ sym (weak-subst-application {B = Tm Δ} (λ x y → term y) ⊠-natural) ⟩
-      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z ⟨ n , δ ⟩) ⊠-natural (term (pair t s [ σ ]'))
-        ≡⟨ subst-∘ ⊠-natural ⟩
-      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) (cong type ⊠-natural) (term (pair t s [ σ ]'))
-        ≡⟨ cong (λ y → subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) y (term (pair t s [ σ ]'))) {x = cong type ⊠-natural} {y = refl} (uip _ _) ⟩
-      subst (λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ) {x = type ((T ⊠ S) [ σ ])} refl (term (pair (t [ σ ]') (s [ σ ]')))
-        ≡⟨⟩
-      term (pair (t [ σ ]') (s [ σ ]')) ∎)
-    (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
-    where open ≡-Reasoning
+  pair-natural : (t : Tm Γ T) (s : Tm Γ S) → (pair t s) [ σ ]' ≅ᵗᵐ ι[ ⊠-natural ] (pair (t [ σ ]') (s [ σ ]'))
+  eq (pair-natural t s) _ = refl
 
-  fst-natural : (p : Tm Γ (T ⊠ S)) → (fst p) [ σ ]' ≡ fst (subst (Tm Δ) ⊠-natural (p [ σ ]'))
-  fst-natural p = cong₂-d MkTm
-    (term (fst p [ σ ]')
-        ≡⟨ cong (λ z → λ n δ → proj₁ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) z (term (p [ σ ]')) n δ)) {x = refl} {y = cong type ⊠-natural} (uip _ _) ⟩
-      (λ n δ → proj₁ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) (cong type ⊠-natural) (term (p [ σ ]')) n δ))
-        ≡⟨ cong (λ z n δ → proj₁ (z n δ)) (sym (subst-∘ {P = λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ} {f = type} ⊠-natural)) ⟩
-      (λ n δ → proj₁ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z ⟨ n₁ , γ ⟩) ⊠-natural (term (p [ σ ]')) n δ))
-        ≡⟨ cong (λ z n δ → proj₁ (z n δ)) (weak-subst-application {B = Tm Δ} (λ x y → term y) ⊠-natural) ⟩
-      term (fst (subst (Tm Δ) ⊠-natural (p [ σ ]'))) ∎)
-    (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
-    where open ≡-Reasoning
+  fst-natural : (p : Tm Γ (T ⊠ S)) → (fst p) [ σ ]' ≅ᵗᵐ fst (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
+  eq (fst-natural p) _ = refl
 
-  snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≡ snd (subst (Tm Δ) ⊠-natural (p [ σ ]'))
-  snd-natural p = cong₂-d MkTm
-    (term (snd p [ σ ]')
-        ≡⟨ cong (λ z → λ n δ → proj₂ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) z (term (p [ σ ]')) n δ)) {x = refl} {y = cong type ⊠-natural} (uip _ _) ⟩
-      (λ n δ → proj₂ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z n₁ γ) (cong type ⊠-natural) (term (p [ σ ]')) n δ))
-        ≡⟨ cong (λ z n δ → proj₂ (z n δ)) (sym (subst-∘ {P = λ z → (n : ℕ) (δ : Δ ⟨ n ⟩) → z n δ} {f = type} ⊠-natural)) ⟩
-      (λ n δ → proj₂ (subst (λ z → (n₁ : ℕ) (γ : Δ ⟨ n₁ ⟩) → z ⟨ n₁ , γ ⟩) ⊠-natural (term (p [ σ ]')) n δ))
-        ≡⟨ cong (λ z n δ → proj₂ (z n δ)) (weak-subst-application {B = Tm Δ} (λ x y → term y) ⊠-natural) ⟩
-      term (snd (subst (Tm Δ) ⊠-natural (p [ σ ]'))) ∎)
-    (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
-    where open ≡-Reasoning
+  snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≅ᵗᵐ snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
+  eq (snd-natural p) _ = refl
 
-β-×-fst : {Γ : Ctx ℓ} {T S : Ty Γ} (t : Tm Γ T) (s : Tm Γ S) →
-          fst (pair t s) ≡ t
-β-×-fst t s = cong₂-d MkTm refl (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
+β-⊠-fst : {Γ : Ctx ℓ} {T S : Ty Γ} (t : Tm Γ T) (s : Tm Γ S) →
+          fst (pair t s) ≅ᵗᵐ t
+eq (β-⊠-fst t s) _ = refl
 
-β-×-snd : {Γ : Ctx ℓ} {T S : Ty Γ} (t : Tm Γ T) (s : Tm Γ S) →
-          snd (pair t s) ≡ s
-β-×-snd t s = cong₂-d MkTm refl (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
+β-⊠-snd : {Γ : Ctx ℓ} {T S : Ty Γ} (t : Tm Γ T) (s : Tm Γ S) →
+          snd (pair t s) ≅ᵗᵐ s
+eq (β-⊠-snd t s) _ = refl
 
-η-× : {Γ : Ctx ℓ} {T S : Ty Γ} (p : Tm Γ (T ⊠ S)) →
-      p ≡ pair (fst p) (snd p)
-η-× p = cong₂-d MkTm refl (funextI (funextI (funext λ _ → funextI (funextI (funext λ _ → uip _ _)))))
+η-⊠ : {Γ : Ctx ℓ} {T S : Ty Γ} (p : Tm Γ (T ⊠ S)) →
+      p ≅ᵗᵐ pair (fst p) (snd p)
+eq (η-⊠ p) _ = refl
