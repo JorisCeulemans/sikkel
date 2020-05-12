@@ -12,8 +12,6 @@ open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
 
--- TODO: show that everything is natural with respect to the context (so e.g. that
--- (T ⇛ S) [ σ ] ≡ T [ σ ] ⇛ S [ σ ])
 
 --------------------------------------------------
 -- (Non-dependent) function types
@@ -83,16 +81,8 @@ lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n {γn}{γm} eq-nm f = MkFunc g g-na
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (_⇛_ {Γ = Γ} T S) n γ = PresheafFunc T S n γ
 morph (T ⇛ S) = lower-presheaffunc
-morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq λ m≤n eγ t →
-  f $⟨ ≤-trans m≤n ≤-refl , strong-rel-comp Γ (rel-id Γ _) eγ ⟩ t
-    ≡⟨ $-cong f (≤-irrelevant _ _) _ eγ ⟩
-  f $⟨ m≤n , eγ ⟩ t ∎
-  where open ≡-Reasoning
-morph-comp (_⇛_ {Γ = Γ} T S) l≤m m≤n eq-nm eq-ml f = to-pshfun-eq λ k≤l eq-lk t →
-  f $⟨ ≤-trans k≤l (≤-trans l≤m m≤n) , strong-rel-comp Γ (strong-rel-comp Γ eq-nm eq-ml) eq-lk ⟩ t
-    ≡⟨ $-cong f (≤-irrelevant _ _) _ _ ⟩
-  f $⟨ ≤-trans (≤-trans k≤l l≤m) m≤n , strong-rel-comp Γ eq-nm (strong-rel-comp Γ eq-ml eq-lk) ⟩ t ∎
-  where open ≡-Reasoning
+morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ m≤n eγ t → $-cong f (≤-irrelevant _ _) _ eγ)
+morph-comp (_⇛_ {Γ = Γ} T S) l≤m m≤n eq-nm eq-ml f = to-pshfun-eq (λ k≤l eq-lk t → $-cong f (≤-irrelevant _ _) _ _)
 
 ⇛-dimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') → (T ⇛ S ↣ T' ⇛ S')
 func (⇛-dimap η φ) = pshfun-dimap η φ _ _
@@ -156,8 +146,62 @@ naturality (app {Γ = Γ}{T}{S} f t) m≤n {γn}{γm} eγ =
   f €⟨ _ , γm ⟩ (t ⟨ _ , γm ⟩') ∎
   where open ≡-Reasoning
 
+module _ {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) {n : ℕ} {δ : Δ ⟨ n ⟩} where
+  pshfun-subst-from : PresheafFunc T S n (func σ δ) → PresheafFunc (T [ σ ]) (S [ σ ]) n δ
+  _$⟨_,_⟩_ (pshfun-subst-from f) m≤n eδ t = f $⟨ m≤n , trans (naturality σ δ) (cong (func σ) eδ) ⟩ t
+  naturality (pshfun-subst-from f) eq-nm eq-mk t = trans ($-cong f refl _ _) (naturality f _ _ t)
+
+  pshfun-subst-to : PresheafFunc (T [ σ ]) (S [ σ ]) n δ → PresheafFunc T S n (func σ δ)
+  _$⟨_,_⟩_ (pshfun-subst-to f) m≤n {γ'} eδ t = ctx-element-subst S proof (
+                                                f $⟨ m≤n , refl ⟩
+                                                ctx-element-subst T (sym proof) t)
+    where
+      proof : func σ (Δ ⟪ m≤n ⟫ δ) ≡ γ'
+      proof = trans (sym (naturality σ δ)) eδ
+  naturality (pshfun-subst-to f) {k≤m = k≤m}{m≤n} eq-nm eq-mk t =
+    begin
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , refl ⟩ (T ⟪ ≤-refl , _ ⟫ T ⟪ k≤m , eq-mk ⟫ t)
+    ≡˘⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , refl ⟩_) (morph-comp T ≤-refl k≤m _ _ t) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , refl ⟩ (T ⟪ ≤-trans ≤-refl k≤m , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , refl ⟩_) (morph-cong T (≤-irrelevant _ _) _ _) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , refl ⟩ (T ⟪ ≤-trans k≤m ≤-refl , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , refl ⟩_) (morph-comp T k≤m ≤-refl _ _ t) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , refl ⟩ (T ⟪ k≤m , _ ⟫ (T ⟪ ≤-refl , β ⟫ t))
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫) ($-cong f refl refl _) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , _ ⟩ (T ⟪ k≤m , _ ⟫ (T ⟪ ≤-refl , β ⟫ t))
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫) (naturality f refl (sym (rel-comp Δ k≤m m≤n δ)) _) ⟩
+      S ⟪ ≤-refl , α ⟫ S ⟪ k≤m , _ ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , β ⟫ t)
+    ≡˘⟨ morph-comp S ≤-refl k≤m _ α _ ⟩
+      S ⟪ ≤-trans ≤-refl k≤m , _ ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , β ⟫ t)
+    ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+      S ⟪ ≤-trans k≤m ≤-refl , _ ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , β ⟫ t)
+    ≡⟨ morph-comp S k≤m ≤-refl _ eq-mk _ ⟩
+      S ⟪ k≤m , eq-mk ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , β ⟫ t) ∎
+    where
+      open ≡-Reasoning
+      α = _
+      β = _
+
 ⇛-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) → (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
-⇛-natural σ T S = {!!}
+from (⇛-natural σ T S) = record { func = pshfun-subst-from σ T S
+                                 ; naturality = λ f → to-pshfun-eq (λ k≤m _ _ → $-cong f refl _ _) }
+to (⇛-natural σ T S) = record { func = pshfun-subst-to σ T S
+                               ; naturality = λ {_ _ m≤n} f → to-pshfun-eq (λ k≤m eγ t →
+  let α = _
+      β = _
+      ζ = _
+      α' = _
+      β' = _
+      ζ' = _
+  in begin
+    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , ζ ⟫ t)
+  ≡⟨ morph-cong S refl α {!!} ⟩
+    {!S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , ζ ⟫ t)!}
+  ≡⟨ {!!} ⟩
+    S ⟪ ≤-refl , α' ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t) ∎) }
+  where open ≡-Reasoning
+isoˡ (⇛-natural σ T S) = {!!}
+isoʳ (⇛-natural σ T S) = {!!}
 
 {-
 to-⇛[_]_ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → Tm Δ ((T [ σ ]) ⇛ (S [ σ ])) → Tm Δ ((T ⇛ S) [ σ ])
