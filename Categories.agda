@@ -23,6 +23,12 @@ record Category {o h} : Set (lsuc (o ⊔ h)) where
     hom-idʳ : ∀ {x y} {f : Hom x y} → f ∙ hom-id ≡ f
     hom-idˡ : ∀ {x y} {f : Hom x y} → hom-id ∙ f ≡ f
 
+category-composition : ∀ {o h} (C : Category {o}{h}) {x y z : Category.Ob C} →
+                       Category.Hom C y z → Category.Hom C x y → Category.Hom C x z
+category-composition = Category._∙_
+
+syntax category-composition C g f = g ∙[ C ] f
+
 ℕ-poset : Category
 ℕ-poset = record
              { Ob = ℕ
@@ -55,3 +61,12 @@ Type-groupoid X = record
                     ; hom-idʳ = refl
                     ; hom-idˡ = trans-reflʳ _
                     }
+
+record Functor {o o' h h'} (C : Category {o}{h}) (D : Category {o'}{h'}) : Set (o ⊔ o' ⊔ h ⊔ h') where
+  open Category
+  field
+    ob : Ob C → Ob D
+    hom : ∀ {x y} → Hom C x y → Hom D (ob x) (ob y)
+    id-law : ∀ {x} → hom (hom-id C {x}) ≡ hom-id D {ob x}
+    comp-law : ∀ {x y z} {f : Hom C x y} {g : Hom C y z} →
+               hom (g ∙[ C ] f) ≡ (hom g) ∙[ D ] (hom f)
