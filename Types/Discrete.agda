@@ -12,6 +12,7 @@ open import Helpers
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
+open import CwF-Structure.SubstitutionSequence
 
 --------------------------------------------------
 -- Discrete types
@@ -36,10 +37,17 @@ undiscr t = t ⟨ 0 , lift tt ⟩'
 undiscr-discr : {A : Set 0ℓ} (a : A) → undiscr (discr a) ≡ a
 undiscr-discr a = refl
 
-discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≡ t
-discr-undiscr t = cong₂-d MkTm
-                          (sym (funext λ n → funext λ γ → naturality t z≤n refl))
-                          (funextI (funextI (funext λ ineq → funextI (funextI (funext λ _ → uip _ _)))))
+discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≅ᵗᵐ t
+eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
+
+Discr-subst : (A : Set 0ℓ) {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
+from (Discr-subst A σ) = record { func = id ; naturality = λ _ → refl }
+to (Discr-subst A σ) = record { func = id ; naturality = λ _ → refl }
+eq (isoˡ (Discr-subst A σ)) _ = refl
+eq (isoʳ (Discr-subst A σ)) _ = refl
+
+discr-subst : {A : Set 0ℓ} (a : A) {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-subst A σ ] (discr a)
+eq (discr-subst a σ) _ = refl
 
 Unit' : {Γ : Ctx 0ℓ} → Ty Γ
 Unit' = Discr ⊤
@@ -58,17 +66,17 @@ false' = discr false
 
 if'_then'_else'_ : {Γ : Ctx 0ℓ} {T : Ty Γ} → Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
 term (if' c then' t else' f) = λ n γ → if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
-naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq {γ} {γ'} eq with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | naturality c ineq eq
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | false | .false | refl = naturality f ineq eq
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eq | true  | .true  | refl = naturality t ineq eq
+naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq {γ} {γ'} eγ with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | naturality c ineq eγ
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eγ | false | .false | refl = naturality f ineq eγ
+naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eγ | true  | .true  | refl = naturality t ineq eγ
 
 β-Bool'-true : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
-               if' true' then' t else' t' ≡ t
-β-Bool'-true t t' = refl
+               if' true' then' t else' t' ≅ᵗᵐ t
+β-Bool'-true t t' = ≅ᵗᵐ-refl
 
 β-Bool'-false : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
-               if' false' then' t else' t' ≡ t'
-β-Bool'-false t t' = refl
+               if' false' then' t else' t' ≅ᵗᵐ t'
+β-Bool'-false t t' = ≅ᵗᵐ-refl
 
 Nat' : {Γ : Ctx 0ℓ} → Ty Γ
 Nat' = Discr ℕ
@@ -79,8 +87,3 @@ zero' = discr zero
 suc' : {Γ : Ctx 0ℓ} → Tm Γ Nat' → Tm Γ Nat'
 term (suc' t) = λ n γ → suc (t ⟨ n , γ ⟩')
 naturality (suc' t) = λ m≤n γ → cong suc (naturality t m≤n γ)
-
-open import CwF-Structure.SubstitutionSequence
-
-to-Nat[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Nat' → Tm Δ (Nat' [ σ ])
-to-Nat[_]_ {Δ = Δ}{Γ} σ t = convert-subst (!◇ Δ ◼) (!◇ Γ ∷ σ ◼) (◇-terminal _ _ _) t

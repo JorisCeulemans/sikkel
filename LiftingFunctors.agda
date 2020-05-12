@@ -2,6 +2,7 @@ module LiftingFunctors where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
+open import Data.Product renaming (_,_ to [_,_])
 open import Function
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
@@ -81,15 +82,18 @@ module LiftedFunctor (F : ω-Functor) where
   eq (isoˡ (lift-ctx-ext Γ T)) _ = refl
   eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
 
-  -- TODO: look at the following (there is some trouble using implicit functions)
-  {-
-  lift-π : (Γ : Ctx ℓ) (T : Ty Γ) → subst (λ x → x ⇒ ctx-lift Γ) (lift-ctx-ext Γ T) (subst-lift (π {T = T})) ≡ π {T = ty-lift T}
-  lift-π Γ T = cong₂-d MkSubst
-    ((λ {n} → func (subst (λ x → x ⇒ ctx-lift Γ) (lift-ctx-ext Γ T) (subst-lift (π {T = T}))) {n})
-        ≡⟨ {!!} ⟩
-      subst (λ x → {n : ℕ} → x ⟨ n ⟩ → ctx-lift Γ ⟨ n ⟩) (lift-ctx-ext Γ T) (λ {n} → func (subst-lift (π {T = T})) {n})
-        ≡⟨ {!!} ⟩
-      (λ {n} → func (π {T = ty-lift T}) {n}) ∎)
-    {!!}
+  lift-π : (Γ : Ctx ℓ) (T : Ty Γ) → subst-lift (π {T = T}) ⊚ to (lift-ctx-ext Γ T) ≅ˢ π
+  eq (lift-π Γ T) _ = refl
+
+  lift-ξ : (Γ : Ctx ℓ) (T : Ty Γ) → tm-lift (ξ {T = T}) [ to (lift-ctx-ext Γ T) ]' ≅ᵗᵐ
+                                     ι[ ty-subst-cong-ty (to (lift-ctx-ext Γ T)) (ty-lift-natural π T) ] (
+                                     ι[ ty-subst-comp (ty-lift T) (subst-lift (π {T = T})) (to (lift-ctx-ext Γ T)) ] (
+                                     ι[ ty-subst-cong-subst (lift-π Γ T) (ty-lift T) ] ξ))
+  eq (lift-ξ Γ T) [ γ , t ] = sym (
+    begin
+      T ⟪ monotone F ≤-refl , _ ⟫ t
+    ≡⟨ morph-cong T (monotone-id F) _ _ ⟩
+      T ⟪ ≤-refl , _ ⟫ t
+    ≡⟨ morph-id T t ⟩
+      t ∎)
     where open ≡-Reasoning
-  -}
