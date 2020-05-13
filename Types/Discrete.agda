@@ -1,18 +1,22 @@
-module Types.Discrete where
+open import Categories
+
+module Types.Discrete {o h} (C : Category {o}{h}) where
 
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+-- open import Data.Nat.Properties
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
-open import CwF-Structure.SubstitutionSequence
+open import CwF-Structure.Contexts C
+open import CwF-Structure.Types C
+open import CwF-Structure.Terms C
+-- open import CwF-Structure.SubstitutionSequence C
+
+open Category C
 
 --------------------------------------------------
 -- Discrete types
@@ -31,14 +35,16 @@ discr : {A : Set 0ℓ} {Γ : Ctx 0ℓ} → A → Tm Γ (Discr A)
 term (discr a) _ _ = a
 naturality (discr a) _ _ = refl
 
+{- TODO: This will probably behave well in the presence of an initial or terminal object of C.
 undiscr : {A : Set 0ℓ} → Tm ◇ (Discr A) → A
-undiscr t = t ⟨ 0 , lift tt ⟩'
+undiscr t = t ⟨ {!!} , lift tt ⟩'
 
 undiscr-discr : {A : Set 0ℓ} (a : A) → undiscr (discr a) ≡ a
 undiscr-discr a = refl
 
 discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≅ᵗᵐ t
 eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
+-}
 
 Discr-subst : (A : Set 0ℓ) {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
 from (Discr-subst A σ) = record { func = id ; naturality = λ _ → refl }
@@ -65,10 +71,10 @@ false' : {Γ : Ctx 0ℓ} → Tm Γ Bool'
 false' = discr false
 
 if'_then'_else'_ : {Γ : Ctx 0ℓ} {T : Ty Γ} → Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
-term (if' c then' t else' f) = λ n γ → if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
-naturality (if'_then'_else'_ {Γ = Γ} c t f) {m} {n} ineq {γ} {γ'} eγ with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | naturality c ineq eγ
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eγ | false | .false | refl = naturality f ineq eγ
-naturality (if'_then'_else'_ {Γ} c t f) {m} {n} ineq {γ} {γ'} eγ | true  | .true  | refl = naturality t ineq eγ
+term (if' c then' t else' f) = λ x γ → if c ⟨ x , γ ⟩' then t ⟨ x , γ ⟩' else f ⟨ x , γ ⟩'
+naturality (if'_then'_else'_ {Γ = Γ} c t f) {x} {y} φ {γ} {γ'} eγ with c ⟨ x , γ' ⟩' | c ⟨ y , γ ⟩' | naturality c φ eγ
+naturality (if'_then'_else'_ {Γ} c t f) {x} {y} φ {γ} {γ'} eγ | false | .false | refl = naturality f φ eγ
+naturality (if'_then'_else'_ {Γ} c t f) {x} {y} φ {γ} {γ'} eγ | true  | .true  | refl = naturality t φ eγ
 
 β-Bool'-true : {Γ : Ctx 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
                if' true' then' t else' t' ≅ᵗᵐ t
@@ -85,5 +91,5 @@ zero' : {Γ : Ctx 0ℓ} → Tm Γ Nat'
 zero' = discr zero
 
 suc' : {Γ : Ctx 0ℓ} → Tm Γ Nat' → Tm Γ Nat'
-term (suc' t) = λ n γ → suc (t ⟨ n , γ ⟩')
-naturality (suc' t) = λ m≤n γ → cong suc (naturality t m≤n γ)
+term (suc' t) x γ = suc (t ⟨ x , γ ⟩')
+naturality (suc' t) f γ = cong suc (naturality t f γ)

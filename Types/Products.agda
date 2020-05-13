@@ -1,26 +1,30 @@
-module Types.Products where
+open import Categories
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+module Types.Products {o h} (C : Category {o}{h}) where
+
+-- open import Data.Nat hiding (_⊔_)
+-- open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
+open import CwF-Structure.Contexts C
+open import CwF-Structure.Types C
+open import CwF-Structure.Terms C
+
+-- open Category C
 
 --------------------------------------------------
 -- (Non-dependent) product types
 --------------------------------------------------
 
 _⊠_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
-type (T ⊠ S) n γ = T ⟨ n , γ ⟩ × S ⟨ n , γ ⟩
-morph (T ⊠ S) m≤n eγ [ t , s ] = [ T ⟪ m≤n , eγ ⟫ t , S ⟪ m≤n , eγ ⟫ s ]
+type (T ⊠ S) x γ = T ⟨ x , γ ⟩ × S ⟨ x , γ ⟩
+morph (T ⊠ S) f eγ [ t , s ] = [ T ⟪ f , eγ ⟫ t , S ⟪ f , eγ ⟫ s ]
 morph-id (T ⊠ S) [ t , s ] = cong₂ [_,_] (morph-id T t) (morph-id S s)
-morph-comp (T ⊠ S) k≤m m≤n eq-nm eq-mk [ t , s ] = cong₂ [_,_] (morph-comp T k≤m m≤n eq-nm eq-mk t)
-                                                                (morph-comp S k≤m m≤n eq-nm eq-mk s)
+morph-comp (T ⊠ S) f g eq-nm eq-mk [ t , s ] = cong₂ [_,_] (morph-comp T f g eq-nm eq-mk t)
+                                                            (morph-comp S f g eq-nm eq-mk s)
 
 ⊠-bimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T ↣ T') → (S ↣ S') → (T ⊠ S ↣ T' ⊠ S')
 func (⊠-bimap η φ) [ t , s ] = [ func η t , func φ s ]
@@ -34,16 +38,16 @@ eq (isoʳ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoʳ T=T') t) (e
 
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
-  term (pair t s) n γ = [ t ⟨ n , γ ⟩' , s ⟨ n , γ ⟩' ]
-  naturality (pair t s) m≤n eγ = cong₂ [_,_] (naturality t m≤n eγ) (naturality s m≤n eγ)
+  term (pair t s) x γ = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
+  naturality (pair t s) f eγ = cong₂ [_,_] (naturality t f eγ) (naturality s f eγ)
 
   fst : Tm Γ (T ⊠ S) → Tm Γ T
-  term (fst p) n γ = proj₁ (p ⟨ n , γ ⟩')
-  naturality (fst p) m≤n eγ = cong proj₁ (naturality p m≤n eγ)
+  term (fst p) x γ = proj₁ (p ⟨ x , γ ⟩')
+  naturality (fst p) f eγ = cong proj₁ (naturality p f eγ)
 
   snd : Tm Γ (T ⊠ S) → Tm Γ S
-  term (snd p) n γ = proj₂ (p ⟨ n , γ ⟩')
-  naturality (snd p) m≤n eγ = cong proj₂ (naturality p m≤n eγ)
+  term (snd p) x γ = proj₂ (p ⟨ x , γ ⟩')
+  naturality (snd p) f eγ = cong proj₂ (naturality p f eγ)
 
   pair-cong : {t t' : Tm Γ T} {s s' : Tm Γ S} → t ≅ᵗᵐ t' → s ≅ᵗᵐ s' → pair t s ≅ᵗᵐ pair t' s'
   eq (pair-cong t=t' s=s') γ = cong₂ [_,_] (eq t=t' γ) (eq s=s' γ)

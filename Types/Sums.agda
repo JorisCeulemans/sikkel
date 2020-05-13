@@ -1,28 +1,30 @@
-module Types.Sums where
+open import Categories
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+module Types.Sums {o h} (C : Category {o}{h}) where
+
+-- open import Data.Nat hiding (_⊔_)
+-- open import Data.Nat.Properties
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
+open import CwF-Structure.Contexts C
+open import CwF-Structure.Types C
+open import CwF-Structure.Terms C
 
 --------------------------------------------------
 -- Sum types
 --------------------------------------------------
 
 _⊞_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
-type (T ⊞ S) n γ = T ⟨ n , γ ⟩ ⊎ S ⟨ n , γ ⟩
-morph (T ⊞ S) m≤n eγ (inl t) = inl (T ⟪ m≤n , eγ ⟫ t)
-morph (T ⊞ S) m≤n eγ (inr s) = inr (S ⟪ m≤n , eγ ⟫ s)
+type (T ⊞ S) x γ = T ⟨ x , γ ⟩ ⊎ S ⟨ x , γ ⟩
+morph (T ⊞ S) f eγ (inl t) = inl (T ⟪ f , eγ ⟫ t)
+morph (T ⊞ S) f eγ (inr s) = inr (S ⟪ f , eγ ⟫ s)
 morph-id (T ⊞ S) (inl t) = cong inl (morph-id T t)
 morph-id (T ⊞ S) (inr s) = cong inr (morph-id S s)
-morph-comp (T ⊞ S) k≤m m≤n eq-nm eq-mk (inl t) = cong inl (morph-comp T k≤m m≤n eq-nm eq-mk t)
-morph-comp (T ⊞ S) k≤m m≤n eq-nm eq-mk (inr s) = cong inr (morph-comp S k≤m m≤n eq-nm eq-mk s)
+morph-comp (T ⊞ S) f g eq-nm eq-mk (inl t) = cong inl (morph-comp T f g eq-nm eq-mk t)
+morph-comp (T ⊞ S) f g eq-nm eq-mk (inr s) = cong inr (morph-comp S f g eq-nm eq-mk s)
 
 ⊞-bimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T ↣ T') → (S ↣ S') → (T ⊞ S ↣ T' ⊞ S')
 func (⊞-bimap η φ) (inl t) = inl (func η t)
@@ -40,12 +42,12 @@ eq (isoʳ (⊞-cong T=T' S=S')) (inr s) = cong inr (eq (isoʳ S=S') s)
 
 module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
   inl' : Tm Γ T → Tm Γ (T ⊞ S)
-  term (inl' t) n γ = inl (t ⟨ n , γ ⟩')
-  naturality (inl' t) m≤n eγ = cong inl (naturality t m≤n eγ)
+  term (inl' t) x γ = inl (t ⟨ x , γ ⟩')
+  naturality (inl' t) f eγ = cong inl (naturality t f eγ)
 
   inr' : Tm Γ S → Tm Γ (T ⊞ S)
-  term (inr' s) n γ = inr (s ⟨ n , γ ⟩')
-  naturality (inr' s) m≤n eγ = cong inr (naturality s m≤n eγ)
+  term (inr' s) x γ = inr (s ⟨ x , γ ⟩')
+  naturality (inr' s) f eγ = cong inr (naturality s f eγ)
 
   inl'-cong : {t t' : Tm Γ T} → t ≅ᵗᵐ t' → inl' t ≅ᵗᵐ inl' t'
   eq (inl'-cong t=t') γ = cong inl (eq t=t' γ)
