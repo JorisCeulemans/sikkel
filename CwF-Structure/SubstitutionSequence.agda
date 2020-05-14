@@ -1,40 +1,40 @@
 open import Categories
 
-module CwF-Structure.SubstitutionSequence {o h} (C : Category {o}{h}) where
+module CwF-Structure.SubstitutionSequence {o h} {C : Category {o}{h}} where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure.Contexts C
-open import CwF-Structure.Types C
-open import CwF-Structure.Terms C
+open import CwF-Structure.Contexts
+open import CwF-Structure.Types {C = C}
+open import CwF-Structure.Terms {C = C}
 
 infixr 5 _∷_
 
-data _⇒⁺_ {ℓ : Level} : Ctx ℓ → Ctx ℓ → Set (o ⊔ h ⊔ lsuc ℓ) where
-  _◼ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
-  _∷_ : {Δ Γ Θ : Ctx ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
+data _⇒⁺_ {ℓ : Level} : Ctx C ℓ → Ctx C ℓ → Set (o ⊔ h ⊔ lsuc ℓ) where
+  _◼ : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
+  _∷_ : {Δ Γ Θ : Ctx C ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
 
-fold : {Δ Γ : Ctx ℓ} → Δ ⇒⁺ Γ → Δ ⇒ Γ
+fold : {Δ Γ : Ctx C ℓ} → Δ ⇒⁺ Γ → Δ ⇒ Γ
 fold (σ ◼) = σ
 fold (σ ∷ σs) = σ ⊚ fold σs
 
-_⟦_⟧ : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σs : Δ ⇒⁺ Γ) → Ty Δ
+_⟦_⟧ : {Δ Γ : Ctx C ℓ} (T : Ty Γ) (σs : Δ ⇒⁺ Γ) → Ty Δ
 T ⟦ σ ◼ ⟧ = T [ σ ]
 T ⟦ σ ∷ σs ⟧ = (T [ σ ]) ⟦ σs ⟧
 
-_⟦_⟧' : {Δ Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (σs : Δ ⇒⁺ Γ) → Tm Δ (T ⟦ σs ⟧)
+_⟦_⟧' : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (t : Tm Γ T) (σs : Δ ⇒⁺ Γ) → Tm Δ (T ⟦ σs ⟧)
 t ⟦ σ ◼ ⟧' = t [ σ ]'
 t ⟦ σ ∷ σs ⟧' = (t [ σ ]') ⟦ σs ⟧'
 
-ty-subst-seq-fold : {Δ Γ : Ctx ℓ} (σs : Δ ⇒⁺ Γ) (T : Ty Γ) →
+ty-subst-seq-fold : {Δ Γ : Ctx C ℓ} (σs : Δ ⇒⁺ Γ) (T : Ty Γ) →
                     T ⟦ σs ⟧ ≅ᵗʸ T [ fold σs ]
 ty-subst-seq-fold (σ ◼) T = ≅ᵗʸ-refl
 ty-subst-seq-fold (σ ∷ σs) T = ≅ᵗʸ-trans (ty-subst-seq-fold σs (T [ σ ]))
                                          (ty-subst-comp T σ (fold σs))
 
-tm-subst-seq-fold : {Δ Γ : Ctx ℓ} (σs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
+tm-subst-seq-fold : {Δ Γ : Ctx C ℓ} (σs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
                     t ⟦ σs ⟧' ≅ᵗᵐ ι[ ty-subst-seq-fold σs T ] (t [ fold σs ]')
 tm-subst-seq-fold (σ ◼) t = ≅ᵗᵐ-sym (ι-refl _)
 tm-subst-seq-fold {Δ = Δ}{Γ} (σ ∷ σs) {T} t =
@@ -48,7 +48,7 @@ tm-subst-seq-fold {Δ = Δ}{Γ} (σ ∷ σs) {T} t =
     ι[ ≅ᵗʸ-trans (ty-subst-seq-fold σs (T [ σ ])) (ty-subst-comp T σ (fold σs)) ] (t [ σ ⊚ fold σs ]') ∎
   where open ≅ᵗᵐ-Reasoning
 
-ty-subst-seq-cong : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒⁺ Γ) (T : Ty Γ) →
+ty-subst-seq-cong : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒⁺ Γ) (T : Ty Γ) →
                     fold σs ≅ˢ fold τs →
                     T ⟦ σs ⟧ ≅ᵗʸ T ⟦ τs ⟧
 ty-subst-seq-cong σs τs T e =
@@ -63,13 +63,13 @@ ty-subst-seq-cong σs τs T e =
   where open ≅ᵗʸ-Reasoning
 
 {- Probably not necessary anymore since the introduction of ι[_]_
-convert-subst : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} →
+convert-subst : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} →
                 fold σs ≡ fold τs →
                 Tm Δ (T ⟦ σs ⟧) → Tm Δ (T ⟦ τs ⟧)
 convert-subst {Δ = Δ} σs τs {T} e t = subst (Tm Δ) (ty-subst-seq-cong σs τs T e) t
 -}
 
-tm-subst-seq-cong : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
+tm-subst-seq-cong : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
                     (e : fold σs ≅ˢ fold τs) →
                     t ⟦ σs ⟧' ≅ᵗᵐ ι[ ty-subst-seq-cong σs τs T e ] (t ⟦ τs ⟧')
 tm-subst-seq-cong {Δ = Δ} σs τs {T} t e =
@@ -124,29 +124,29 @@ tm-subst-seq-cong {Δ = Δ} σs τs {T} t e =
 -- Alternative version (reflexive-transitive closure of _⇒_ instead of transitive closure, which
 -- is the same because _⇒_ is already reflexive). Benefit of current version: no id-subst in ⟦_⟧
 -- and hence less use of ty-subst-comp and tm-subst-comp.
-data _⇒*_ {ℓ : Level} : Ctx ℓ → Ctx ℓ → Set (lsuc ℓ) where
-  id : {Γ : Ctx ℓ} → Γ ⇒* Γ
-  _∷_ : {Δ Γ Θ : Ctx ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒* Γ) → Δ ⇒* Θ
+data _⇒*_ {ℓ : Level} : Ctx C ℓ → Ctx C ℓ → Set (lsuc ℓ) where
+  id : {Γ : Ctx C ℓ} → Γ ⇒* Γ
+  _∷_ : {Δ Γ Θ : Ctx C ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒* Γ) → Δ ⇒* Θ
 
-fold : {Δ Γ : Ctx ℓ} → Δ ⇒* Γ → Δ ⇒ Γ
+fold : {Δ Γ : Ctx C ℓ} → Δ ⇒* Γ → Δ ⇒ Γ
 fold id = id-subst _
 fold (σ ∷ σs) = σ ⊚ fold σs
 
-_⟦_⟧ : {Δ Γ : Ctx ℓ} (T : Ty Γ) (σs : Δ ⇒* Γ) → Ty Δ
+_⟦_⟧ : {Δ Γ : Ctx C ℓ} (T : Ty Γ) (σs : Δ ⇒* Γ) → Ty Δ
 T ⟦ id ⟧ = T
 T ⟦ σ ∷ σs ⟧ = (T [ σ ]) ⟦ σs ⟧
 
-_⟦_⟧' : {Δ Γ : Ctx ℓ} {T : Ty Γ} (t : Tm Γ T) (σs : Δ ⇒* Γ) → Tm Δ (T ⟦ σs ⟧)
+_⟦_⟧' : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (t : Tm Γ T) (σs : Δ ⇒* Γ) → Tm Δ (T ⟦ σs ⟧)
 t ⟦ id ⟧' = t
 t ⟦ σ ∷ σs ⟧' = (t [ σ ]') ⟦ σs ⟧'
 
-ty-subst-seq-fold : {Δ Γ : Ctx ℓ} (σs : Δ ⇒* Γ) (T : Ty Γ) →
+ty-subst-seq-fold : {Δ Γ : Ctx C ℓ} (σs : Δ ⇒* Γ) (T : Ty Γ) →
                     T ⟦ σs ⟧ ≡ T [ fold σs ]
 ty-subst-seq-fold id T = sym (ty-subst-id T)
 ty-subst-seq-fold (σ ∷ σs) T = trans (ty-subst-seq-fold σs (T [ σ ]))
                                      (ty-subst-comp T σ (fold σs))
 
-tm-subst-seq-fold : {Δ Γ : Ctx ℓ} (σs : Δ ⇒* Γ) {T : Ty Γ} (t : Tm Γ T) →
+tm-subst-seq-fold : {Δ Γ : Ctx C ℓ} (σs : Δ ⇒* Γ) {T : Ty Γ} (t : Tm Γ T) →
                     subst (Tm Δ) (ty-subst-seq-fold σs T) (t ⟦ σs ⟧') ≡ (t [ fold σs ]')
 tm-subst-seq-fold {Δ = Δ} id {T} t = trans (cong (subst (Tm Δ) (sym (ty-subst-id T))) (sym (tm-subst-id t)))
                                            (subst-sym-subst (ty-subst-id T))
@@ -154,19 +154,19 @@ tm-subst-seq-fold {Δ = Δ} (σ ∷ σs) {T} t = trans (sym (subst-subst (ty-sub
                                                  (trans (cong (subst (Tm Δ) (ty-subst-comp T σ (fold σs))) (tm-subst-seq-fold σs (t [ σ ]')))
                                                         (tm-subst-comp t σ (fold σs)))
 
-ty-subst-seq-cong : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒* Γ) (T : Ty Γ) →
+ty-subst-seq-cong : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒* Γ) (T : Ty Γ) →
                     fold σs ≡ fold τs →
                     T ⟦ σs ⟧ ≡ T ⟦ τs ⟧
 ty-subst-seq-cong σs τs T e = trans (ty-subst-seq-fold σs T)
                                     (trans (cong (T [_]) e)
                                            (sym (ty-subst-seq-fold τs T)))
 
-convert-subst : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒* Γ) {T : Ty Γ} →
+convert-subst : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒* Γ) {T : Ty Γ} →
                 fold σs ≡ fold τs →
                 Tm Δ (T ⟦ σs ⟧) → Tm Δ (T ⟦ τs ⟧)
 convert-subst {Δ = Δ} σs τs {T} e t = subst (Tm Δ) (ty-subst-seq-cong σs τs T e) t
 
-tm-subst-seq-cong : {Δ Γ : Ctx ℓ} (σs τs : Δ ⇒* Γ) {T : Ty Γ} (t : Tm Γ T) →
+tm-subst-seq-cong : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒* Γ) {T : Ty Γ} (t : Tm Γ T) →
                     (e : fold σs ≡ fold τs) →
                     subst (Tm Δ) (ty-subst-seq-cong σs τs T e) (t ⟦ σs ⟧') ≡ t ⟦ τs ⟧'
 tm-subst-seq-cong {Δ = Δ} σs τs {T} t e =

@@ -1,17 +1,20 @@
-module LiftingFunctors where
+open import Categories
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+module LiftingFunctors {o o' h h'} {C : Category {o}{h}} {D : Category {o'}{h'}} (F : Functor C D) where
+
+-- open import Data.Nat hiding (_⊔_)
+-- open import Data.Nat.Properties
 open import Data.Product renaming (_,_ to [_,_])
 open import Function
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
-open import CwF-Structure.ContextExtension
+open import CwF-Structure.Everything
 
+open Category
+open Functor
+
+{-
 record ω-Functor : Set where
   constructor MkωFunctor
   field
@@ -25,75 +28,76 @@ record ω-Functor : Set where
                   monotone (≤-trans k≤m m≤n) ≡ ≤-trans (monotone k≤m) (monotone m≤n)
   monotone-comp k≤m m≤n = ≤-irrelevant _ _
 open ω-Functor
+-}
+-- We now show that a functor from C to D can be lifted to a
+-- strict CwF endomorphism from Psh(D) to Psh(C).
+-- module LiftedFunctor (F : ω-Functor) where
 
--- We now show that an endofunctor on ω can be lifted to a
--- strict CwF endomorphism on Psh(ω).
-module LiftedFunctor (F : ω-Functor) where
-  ctx-lift : Ctx ℓ → Ctx ℓ
-  set (ctx-lift Γ) n = Γ ⟨ F ∙ n ⟩
-  rel (ctx-lift Γ) m≤n = Γ ⟪ monotone F m≤n ⟫
-  rel-id (ctx-lift Γ) γ = trans (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-id F)) (rel-id Γ γ)
-  rel-comp (ctx-lift Γ) k≤m m≤n γ = trans (cong (λ x → Γ ⟪ x ⟫ γ) (monotone-comp F k≤m m≤n)) (rel-comp Γ (monotone F k≤m) (monotone F m≤n) γ)
+ctx-lift : Ctx D ℓ → Ctx C ℓ
+set (ctx-lift Γ) c = Γ ⟨ ob F c ⟩
+rel (ctx-lift Γ) f = Γ ⟪ hom F f ⟫
+rel-id (ctx-lift Γ) γ = trans (cong (λ - → Γ ⟪ - ⟫ γ) (id-law F)) (rel-id Γ γ)
+rel-comp (ctx-lift Γ) f g γ = trans (cong (λ - → Γ ⟪ - ⟫ γ) (comp-law F)) (rel-comp Γ (hom F f) (hom F g) γ)
 
-  subst-lift : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) → ctx-lift Δ ⇒ ctx-lift Γ
-  func (subst-lift σ) {n} = func σ {F ∙ n}
-  naturality (subst-lift σ) {m≤n = m≤n} δ = naturality σ {m≤n = monotone F m≤n} δ
+subst-lift : {Δ Γ : Ctx D ℓ} (σ : Δ ⇒ Γ) → ctx-lift Δ ⇒ ctx-lift Γ
+func (subst-lift σ) {c} = func σ {ob F c}
+naturality (subst-lift σ) {f = f} δ = naturality σ {f = hom F f} δ
 
-  subst-lift-id : {Γ : Ctx ℓ} → subst-lift (id-subst Γ) ≅ˢ id-subst (ctx-lift Γ)
-  subst-lift-id = ≅ˢ-refl
+subst-lift-id : {Γ : Ctx D ℓ} → subst-lift (id-subst Γ) ≅ˢ id-subst (ctx-lift Γ)
+subst-lift-id = ≅ˢ-refl
 
-  subst-lift-comp : {Δ Γ Θ : Ctx ℓ} (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
-                    subst-lift (τ ⊚ σ) ≅ˢ subst-lift τ ⊚ subst-lift σ
-  subst-lift-comp τ σ = ≅ˢ-refl
+subst-lift-comp : {Δ Γ Θ : Ctx D ℓ} (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
+                  subst-lift (τ ⊚ σ) ≅ˢ subst-lift τ ⊚ subst-lift σ
+subst-lift-comp τ σ = ≅ˢ-refl
 
-  ty-lift : {Γ : Ctx ℓ} → Ty Γ → Ty (ctx-lift Γ)
-  type (ty-lift T) n γ = T ⟨ F ∙ n , γ ⟩
-  morph (ty-lift T) m≤n eγ t = T ⟪ monotone F m≤n , eγ ⟫ t
-  morph-id (ty-lift T) t = trans (morph-cong T (monotone-id F) _ _)
-                                 (morph-id T t)
-  morph-comp (ty-lift {Γ = Γ} T) k≤m m≤n eq-nm eq-mk t =
-    trans (morph-cong T (monotone-comp F k≤m m≤n) _ _)
-          (morph-comp T (monotone F k≤m) (monotone F m≤n) eq-nm eq-mk t)
+ty-lift : {Γ : Ctx D ℓ} → Ty Γ → Ty (ctx-lift Γ)
+type (ty-lift T) c γ = T ⟨ ob F c , γ ⟩
+morph (ty-lift T) f eγ t = T ⟪ hom F f , eγ ⟫ t
+morph-id (ty-lift T) t = trans (morph-cong T (id-law F) _ _)
+                               (morph-id T t)
+morph-comp (ty-lift {Γ = Γ} T) f g eq-zy eq-yx t =
+  trans (morph-cong T (comp-law F) _ _)
+        (morph-comp T (hom F f) (hom F g) eq-zy eq-yx t)
 
-  ty-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) →
-                    ty-lift (T [ σ ]) ≅ᵗʸ ty-lift T [ subst-lift σ ]
-  from (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
-  to (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
-  eq (isoˡ (ty-lift-natural σ T)) _ = refl
-  eq (isoʳ (ty-lift-natural σ T)) _ = refl
+ty-lift-natural : {Δ Γ : Ctx D ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) →
+                  ty-lift (T [ σ ]) ≅ᵗʸ ty-lift T [ subst-lift σ ]
+from (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
+to (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
+eq (isoˡ (ty-lift-natural σ T)) _ = refl
+eq (isoʳ (ty-lift-natural σ T)) _ = refl
 
-  tm-lift : {Γ : Ctx ℓ} {T : Ty Γ} → Tm Γ T → Tm (ctx-lift Γ) (ty-lift T)
-  term (tm-lift t) n γ = t ⟨ F ∙ n , γ ⟩'
-  naturality (tm-lift t) m≤n eγ = naturality t (monotone F m≤n) eγ
+tm-lift : {Γ : Ctx D ℓ} {T : Ty Γ} → Tm Γ T → Tm (ctx-lift Γ) (ty-lift T)
+term (tm-lift t) c γ = t ⟨ ob F c , γ ⟩'
+naturality (tm-lift t) f eγ = naturality t (hom F f) eγ
 
-  tm-lift-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm Γ T) →
-                    tm-lift (t [ σ ]') ≅ᵗᵐ ι[ ty-lift-natural σ T ] ((tm-lift t) [ subst-lift σ ]')
-  eq (tm-lift-natural σ t) δ = refl
+tm-lift-natural : {Δ Γ : Ctx D ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm Γ T) →
+                  tm-lift (t [ σ ]') ≅ᵗᵐ ι[ ty-lift-natural σ T ] ((tm-lift t) [ subst-lift σ ]')
+eq (tm-lift-natural σ t) δ = refl
 
-  lift-◇ : ctx-lift {ℓ} ◇ ≅ᶜ ◇
-  from lift-◇ = MkSubst id (λ _ → refl)
-  to lift-◇ = MkSubst id (λ _ → refl)
-  eq (isoˡ lift-◇) _ = refl
-  eq (isoʳ lift-◇) _ = refl
+lift-◇ : ctx-lift {ℓ} ◇ ≅ᶜ ◇
+from lift-◇ = MkSubst id (λ _ → refl)
+to lift-◇ = MkSubst id (λ _ → refl)
+eq (isoˡ lift-◇) _ = refl
+eq (isoʳ lift-◇) _ = refl
 
-  lift-ctx-ext : (Γ : Ctx ℓ) (T : Ty Γ) → ctx-lift (Γ ,, T) ≅ᶜ ctx-lift Γ ,, ty-lift T
-  from (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
-  to (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
-  eq (isoˡ (lift-ctx-ext Γ T)) _ = refl
-  eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
+lift-ctx-ext : (Γ : Ctx D ℓ) (T : Ty Γ) → ctx-lift (Γ ,, T) ≅ᶜ ctx-lift Γ ,, ty-lift T
+from (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
+to (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
+eq (isoˡ (lift-ctx-ext Γ T)) _ = refl
+eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
 
-  lift-π : (Γ : Ctx ℓ) (T : Ty Γ) → subst-lift (π {T = T}) ⊚ to (lift-ctx-ext Γ T) ≅ˢ π
-  eq (lift-π Γ T) _ = refl
+lift-π : (Γ : Ctx D ℓ) (T : Ty Γ) → subst-lift (π {T = T}) ⊚ to (lift-ctx-ext Γ T) ≅ˢ π
+eq (lift-π Γ T) _ = refl
 
-  lift-ξ : (Γ : Ctx ℓ) (T : Ty Γ) → tm-lift (ξ {T = T}) [ to (lift-ctx-ext Γ T) ]' ≅ᵗᵐ
+lift-ξ : (Γ : Ctx D ℓ) (T : Ty Γ) → tm-lift (ξ {T = T}) [ to (lift-ctx-ext Γ T) ]' ≅ᵗᵐ
                                      ι[ ty-subst-cong-ty (to (lift-ctx-ext Γ T)) (ty-lift-natural π T) ] (
                                      ι[ ty-subst-comp (ty-lift T) (subst-lift (π {T = T})) (to (lift-ctx-ext Γ T)) ] (
                                      ι[ ty-subst-cong-subst (lift-π Γ T) (ty-lift T) ] ξ))
-  eq (lift-ξ Γ T) [ γ , t ] = sym (
-    begin
-      T ⟪ monotone F ≤-refl , _ ⟫ t
-    ≡⟨ morph-cong T (monotone-id F) _ _ ⟩
-      T ⟪ ≤-refl , _ ⟫ t
-    ≡⟨ morph-id T t ⟩
-      t ∎)
-    where open ≡-Reasoning
+eq (lift-ξ Γ T) [ γ , t ] = sym (
+  begin
+    T ⟪ hom F (hom-id C) , _ ⟫ t
+  ≡⟨ morph-cong T (id-law F) _ _ ⟩
+    T ⟪ hom-id D , _ ⟫ t
+  ≡⟨ morph-id T t ⟩
+    t ∎)
+  where open ≡-Reasoning
