@@ -185,23 +185,60 @@ module _ {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) {n : ℕ} {δ : Δ ⟨
 ⇛-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) → (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
 from (⇛-natural σ T S) = record { func = pshfun-subst-from σ T S
                                  ; naturality = λ f → to-pshfun-eq (λ k≤m _ _ → $-cong f refl _ _) }
-to (⇛-natural σ T S) = record { func = pshfun-subst-to σ T S
-                               ; naturality = λ {_ _ m≤n} f → to-pshfun-eq (λ k≤m eγ t →
+to (⇛-natural {Δ = Δ} σ T S) = record { func = pshfun-subst-to σ T S
+                                       ; naturality = λ {_ _ m≤n} f → to-pshfun-eq λ k≤m eγ t →
   let α = _
       β = _
       ζ = _
       α' = _
       β' = _
       ζ' = _
+      ρ = trans (rel-id Δ _) (sym β')
   in begin
     S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , ζ ⟫ t)
-  ≡⟨ morph-cong S refl α {!!} ⟩
-    {!S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , ζ ⟫ t)!}
-  ≡⟨ {!!} ⟩
-    S ⟪ ≤-refl , α' ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t) ∎) }
+  ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , β ⟩_) (morph-cong T (≤-irrelevant _ _) _ _) ⟩
+    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ t)
+  ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , β ⟩_) (morph-comp T _ _ ζ' _ t) ⟩
+    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , _ ⟫ (T ⟪ ≤-refl , ζ' ⟫ t))
+  ≡⟨ cong (S ⟪ ≤-refl , α ⟫) ($-cong f (≤-irrelevant _ _) refl _) ⟩
+    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans ≤-refl (≤-trans k≤m m≤n) , _ ⟩ (T ⟪ ≤-refl , _ ⟫ (T ⟪ ≤-refl , ζ' ⟫ t))
+  ≡⟨ cong (S ⟪ ≤-refl , α ⟫) (naturality f _ ρ _) ⟩
+    S ⟪ ≤-refl , α ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t)
+  ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+    S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t)
+  ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+    S ⟪ ≤-refl , α' ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t) ∎ }
   where open ≡-Reasoning
-isoˡ (⇛-natural σ T S) = {!!}
-isoʳ (⇛-natural σ T S) = {!!}
+eq (isoˡ (⇛-natural σ T S)) f = to-pshfun-eq (λ m≤n eγ t →
+  begin
+    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+  ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) ($-cong f (≤-irrelevant _ _) _ _) ⟩
+    S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+  ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) (naturality f eγ _ t) ⟩
+    S ⟪ ≤-refl , _ ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+  ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+    S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+  ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+  ≡⟨ morph-id S _ ⟩
+    f $⟨ m≤n , eγ ⟩ t ∎)
+  where open ≡-Reasoning
+eq (isoʳ (⇛-natural {Δ = Δ} σ T S)) f = to-pshfun-eq (λ m≤n eγ t →
+  begin
+    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+  ≡⟨ cong (S ⟪ ≤-refl , {!!} ⟫) {!$-cong f (≤-irrelevant _ _) refl {!!}!} ⟩
+    S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , {!!} ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+  ≡⟨ cong (S ⟪ ≤-refl , {!!} ⟫ ∘ f $⟨ ≤-trans ≤-refl m≤n , {!!} ⟩_) {!morph-cong T refl {!!} {!!}!} ⟩
+    S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , {!!} ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+  ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) (naturality f eγ {!!} t) ⟩
+    S ⟪ ≤-refl , _ ⟫ S ⟪ ≤-refl , {!!} ⟫ f $⟨ m≤n , eγ ⟩ t
+  ≡˘⟨ morph-comp S _ _ {!!} {!!} {!!} ⟩
+    S ⟪ ≤-trans ≤-refl ≤-refl , {!!} ⟫ f $⟨ m≤n , eγ ⟩ t
+  ≡⟨ morph-cong S (≤-irrelevant _ _) {!!} _ ⟩
+    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+  ≡⟨ morph-id S _ ⟩
+    f $⟨ m≤n , eγ ⟩ t ∎)
+  where open ≡-Reasoning
 
 {-
 to-⇛[_]_ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → Tm Δ ((T [ σ ]) ⇛ (S [ σ ])) → Tm Δ ((T ⇛ S) [ σ ])
