@@ -125,3 +125,6 @@ _⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ 
 
 ⊹-π-comm : {Δ Γ : Ctx ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → π {T = T} ⊚ (σ ⊹) ≅ˢ σ ⊚ π
 eq (⊹-π-comm σ) δ = refl
+
+ty-eq-to-ext-subst : (Γ : Ctx ℓ) {T T' : Ty Γ} → T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
+ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ ∈ T' ⟩

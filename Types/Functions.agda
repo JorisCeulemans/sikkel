@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- (Non-dependent) function types
+--------------------------------------------------
+
 module Types.Functions where
 
 open import Data.Nat hiding (_⊔_)
@@ -11,11 +15,11 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
+open import CwF-Structure.SubstitutionSequence
 
 
 --------------------------------------------------
--- (Non-dependent) function types
---------------------------------------------------
+-- Description of a function type at a specific stage (object of the base category)
 
 record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n ⟩) : Set ℓ where
   constructor MkFunc
@@ -28,21 +32,6 @@ record PresheafFunc {ℓ} {Γ : Ctx ℓ} (T S : Ty Γ) (n : ℕ) (γ : Γ ⟨ n 
                    S ⟪ k≤m , eq-mk ⟫ (_$⟨_,_⟩_ m≤n eq-nm t)
   infix 13 _$⟨_,_⟩_
 open PresheafFunc public
-
-pshfun-dimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') →
-               (n : ℕ) (γ : Γ ⟨ n ⟩) →
-               PresheafFunc T S n γ → PresheafFunc T' S' n γ
-_$⟨_,_⟩_ (pshfun-dimap η φ n γ f) m≤n eγ t' = func φ (f $⟨ m≤n , eγ ⟩ func η t')
-naturality (pshfun-dimap {T = T}{T'}{S}{S'} η φ n γ f) eq-nm eq-mk t' =
-  begin
-    func φ (f $⟨ ≤-trans _ _ , _ ⟩ func η (T' ⟪ _ , eq-mk ⟫ t'))
-  ≡˘⟨ cong (func φ ∘ f $⟨ ≤-trans _ _ , _ ⟩_) (naturality η t') ⟩
-    func φ (f $⟨ ≤-trans _ _ , _ ⟩ (T ⟪ _ , eq-mk ⟫ func η t'))
-  ≡⟨ cong (func φ) (naturality f eq-nm eq-mk (func η t')) ⟩
-    func φ (S ⟪ _ , eq-mk ⟫ (f $⟨ _ , eq-nm ⟩ func η t'))
-  ≡˘⟨ naturality φ _ ⟩
-    S' ⟪ _ , eq-mk ⟫ func φ (f $⟨ _ , eq-nm ⟩ func η t') ∎
-  where open ≡-Reasoning
 
 -- Here we make again use of uip by pattern matching on both equality proofs.
 $-cong : {Γ : Ctx ℓ} {T S : Ty Γ} {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (f : PresheafFunc T S n γn)
@@ -78,35 +67,15 @@ lower-presheaffunc {m = m}{n}{Γ}{T}{S} m≤n {γn}{γm} eq-nm f = MkFunc g g-na
         ≡⟨ naturality f (strong-rel-comp Γ eq-nm eq-ml) eq-lk t ⟩
       S ⟪ k≤l , eq-lk ⟫ (f $⟨ ≤-trans l≤m m≤n , strong-rel-comp Γ eq-nm eq-ml ⟩ t) ∎
 
+
+--------------------------------------------------
+-- Definition of the function type + term constructors
+
 _⇛_ : {Γ : Ctx ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (_⇛_ {Γ = Γ} T S) n γ = PresheafFunc T S n γ
 morph (T ⇛ S) = lower-presheaffunc
 morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ m≤n eγ t → $-cong f (≤-irrelevant _ _) _ eγ)
 morph-comp (_⇛_ {Γ = Γ} T S) l≤m m≤n eq-nm eq-ml f = to-pshfun-eq (λ k≤l eq-lk t → $-cong f (≤-irrelevant _ _) _ _)
-
-⇛-dimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') → (T ⇛ S ↣ T' ⇛ S')
-func (⇛-dimap η φ) = pshfun-dimap η φ _ _
-naturality (⇛-dimap η φ) f = to-pshfun-eq λ _ _ _ → refl
-
-⇛-cong : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⇛ S ≅ᵗʸ T' ⇛ S'
-from (⇛-cong T=T' S=S') = ⇛-dimap (to T=T') (from S=S')
-to (⇛-cong T=T' S=S') = ⇛-dimap (from T=T') (to S=S')
-eq (isoˡ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ m≤n eγ t →
-  begin
-    func (to S=S') (func (from S=S') (f $⟨ m≤n , eγ ⟩ func (to T=T') (func (from T=T') t)))
-  ≡⟨ eq (isoˡ S=S') _ ⟩
-    f $⟨ m≤n , eγ ⟩ func (to T=T') (func (from T=T') t)
-  ≡⟨ cong (f $⟨ m≤n , eγ ⟩_) (eq (isoˡ T=T') t) ⟩
-    f $⟨ m≤n , eγ ⟩ t ∎)
-  where open ≡-Reasoning
-eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ m≤n eγ t' →
-  begin
-    func (from S=S') (func (to S=S') (f $⟨ m≤n , eγ ⟩ func (from T=T') (func (to T=T') t')))
-  ≡⟨ eq (isoʳ S=S') _ ⟩
-    f $⟨ m≤n , eγ ⟩ func (from T=T') (func (to T=T') t')
-  ≡⟨ cong (f $⟨ m≤n , eγ ⟩_) (eq (isoʳ T=T') t') ⟩
-    f $⟨ m≤n , eγ ⟩ t' ∎)
-  where open ≡-Reasoning
 
 lam : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam T {S} b) n γ = MkFunc (λ m≤n {γ'} eγ t → b ⟨ _ , [ γ' , t ] ⟩')
@@ -146,6 +115,87 @@ naturality (app {Γ = Γ}{T}{S} f t) m≤n {γn}{γm} eγ =
   f €⟨ _ , γm ⟩ (t ⟨ _ , γm ⟩') ∎
   where open ≡-Reasoning
 
+
+--------------------------------------------------
+-- Congruence proofs
+
+pshfun-dimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') →
+               (n : ℕ) (γ : Γ ⟨ n ⟩) →
+               PresheafFunc T S n γ → PresheafFunc T' S' n γ
+_$⟨_,_⟩_ (pshfun-dimap η φ n γ f) m≤n eγ t' = func φ (f $⟨ m≤n , eγ ⟩ func η t')
+naturality (pshfun-dimap {T = T}{T'}{S}{S'} η φ n γ f) eq-nm eq-mk t' =
+  begin
+    func φ (f $⟨ ≤-trans _ _ , _ ⟩ func η (T' ⟪ _ , eq-mk ⟫ t'))
+  ≡˘⟨ cong (func φ ∘ f $⟨ ≤-trans _ _ , _ ⟩_) (naturality η t') ⟩
+    func φ (f $⟨ ≤-trans _ _ , _ ⟩ (T ⟪ _ , eq-mk ⟫ func η t'))
+  ≡⟨ cong (func φ) (naturality f eq-nm eq-mk (func η t')) ⟩
+    func φ (S ⟪ _ , eq-mk ⟫ (f $⟨ _ , eq-nm ⟩ func η t'))
+  ≡˘⟨ naturality φ _ ⟩
+    S' ⟪ _ , eq-mk ⟫ func φ (f $⟨ _ , eq-nm ⟩ func η t') ∎
+  where open ≡-Reasoning
+
+⇛-dimap : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') → (T ⇛ S ↣ T' ⇛ S')
+func (⇛-dimap η φ) = pshfun-dimap η φ _ _
+naturality (⇛-dimap η φ) f = to-pshfun-eq λ _ _ _ → refl
+
+⇛-cong : {Γ : Ctx ℓ} {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⇛ S ≅ᵗʸ T' ⇛ S'
+from (⇛-cong T=T' S=S') = ⇛-dimap (to T=T') (from S=S')
+to (⇛-cong T=T' S=S') = ⇛-dimap (from T=T') (to S=S')
+eq (isoˡ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ m≤n eγ t →
+  begin
+    func (to S=S') (func (from S=S') (f $⟨ m≤n , eγ ⟩ func (to T=T') (func (from T=T') t)))
+  ≡⟨ eq (isoˡ S=S') _ ⟩
+    f $⟨ m≤n , eγ ⟩ func (to T=T') (func (from T=T') t)
+  ≡⟨ cong (f $⟨ m≤n , eγ ⟩_) (eq (isoˡ T=T') t) ⟩
+    f $⟨ m≤n , eγ ⟩ t ∎)
+  where open ≡-Reasoning
+eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ m≤n eγ t' →
+  begin
+    func (from S=S') (func (to S=S') (f $⟨ m≤n , eγ ⟩ func (from T=T') (func (to T=T') t')))
+  ≡⟨ eq (isoʳ S=S') _ ⟩
+    f $⟨ m≤n , eγ ⟩ func (from T=T') (func (to T=T') t')
+  ≡⟨ cong (f $⟨ m≤n , eγ ⟩_) (eq (isoʳ T=T') t') ⟩
+    f $⟨ m≤n , eγ ⟩ t' ∎)
+  where open ≡-Reasoning
+
+lam-cong : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} {b b' : Tm (Γ ,, T) (S [ π ])} →
+           b ≅ᵗᵐ b' → lam T {S = S} b ≅ᵗᵐ lam T b'
+eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'}  _ t → eq b=b' [ γ' , t ])
+
+app-cong : {Γ : Ctx ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
+           f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
+eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ =
+  begin
+    f ⟨ _ , γ ⟩' $⟨ ≤-refl , _ ⟩ t ⟨ _ , γ ⟩'
+  ≡⟨ cong (_$⟨ ≤-refl , _ ⟩ t ⟨ _ , γ ⟩') (eq f=f' γ) ⟩
+    f' ⟨ _ , γ ⟩' $⟨ ≤-refl , _ ⟩ t ⟨ _ , γ ⟩'
+  ≡⟨ cong (f' ⟨ _ , γ ⟩' $⟨ ≤-refl , _ ⟩_) (eq t=t' γ) ⟩
+    f' ⟨ _ , γ ⟩' $⟨ ≤-refl , _ ⟩ t' ⟨ _ , γ ⟩' ∎
+  where open ≡-Reasoning
+
+module _ {Γ : Ctx ℓ} {T T' S S' : Ty Γ} (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S') where
+  lam-ι : (b : Tm (Γ ,, T') (S' [ π ])) →
+          ι[ ⇛-cong T=T' S=S' ] (lam T' {S = S'} b) ≅ᵗᵐ
+            lam T (ι[ ty-subst-cong-ty π S=S' ] (
+                   ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-proj₁ {T = T'} (π {T = T}) (ι⁻¹[ ty-subst-cong-ty (π {T = T}) T=T' ] (ξ {T = T}))) S' ] (
+                   ι⁻¹[ ty-subst-comp S' π (ty-eq-to-ext-subst Γ T=T') ] (
+                   b [ ty-eq-to-ext-subst Γ T=T' ]'))))
+  eq (lam-ι b) γ = to-pshfun-eq (λ m≤n eγ t → sym(
+    begin
+      func (to S=S') (S' ⟪ ≤-refl , _ ⟫ b ⟨ _ , _ ⟩')
+    ≡⟨ cong (func (to S=S')) (morph-cong S' refl _ _) ⟩
+      func (to S=S') (S' ⟪ ≤-refl , _ ⟫ b ⟨ _ , _ ⟩')
+    ≡⟨ cong (func (to S=S')) (morph-id S' _) ⟩
+      func (to S=S') (b ⟨ _ , _ ⟩') ∎))
+    where open ≡-Reasoning
+
+  app-ι : (f : Tm Γ (T' ⇛ S')) (t : Tm Γ T') → app (ι[ ⇛-cong T=T' S=S' ] f) (ι[ T=T' ] t) ≅ᵗᵐ ι[ S=S' ] (app f t)
+  eq (app-ι f t) γ = cong (func (to S=S') ∘ f ⟨ _ , γ ⟩' $⟨ ≤-refl , _ ⟩_) (eq (isoʳ T=T') (t ⟨ _ , γ ⟩'))
+
+
+--------------------------------------------------
+-- Naturality proofs
+
 module _ {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) {n : ℕ} {δ : Δ ⟨ n ⟩} where
   pshfun-subst-from : PresheafFunc T S n (func σ δ) → PresheafFunc (T [ σ ]) (S [ σ ]) n δ
   _$⟨_,_⟩_ (pshfun-subst-from f) m≤n eδ t = f $⟨ m≤n , trans (naturality σ δ) (cong (func σ) eδ) ⟩ t
@@ -182,72 +232,96 @@ module _ {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) {n : ℕ} {δ : Δ ⟨
       α = _
       β = _
 
-⇛-natural : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) (T S : Ty Γ) → (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
-from (⇛-natural σ T S) = record { func = pshfun-subst-from σ T S
-                                 ; naturality = λ f → to-pshfun-eq (λ k≤m _ _ → $-cong f refl _ _) }
-to (⇛-natural {Δ = Δ} σ T S) = record { func = pshfun-subst-to σ T S
-                                       ; naturality = λ {_ _ m≤n} f → to-pshfun-eq λ k≤m eγ t →
-  let α = _
-      β = _
-      ζ = _
-      α' = _
-      β' = _
-      ζ' = _
-      ρ = trans (rel-id Δ _) (sym β')
-  in begin
-    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , ζ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , β ⟩_) (morph-cong T (≤-irrelevant _ _) _ _) ⟩
-    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , β ⟩_) (morph-comp T _ _ ζ' _ t) ⟩
-    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , _ ⟫ (T ⟪ ≤-refl , ζ' ⟫ t))
-  ≡⟨ cong (S ⟪ ≤-refl , α ⟫) ($-cong f (≤-irrelevant _ _) refl _) ⟩
-    S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans ≤-refl (≤-trans k≤m m≤n) , _ ⟩ (T ⟪ ≤-refl , _ ⟫ (T ⟪ ≤-refl , ζ' ⟫ t))
-  ≡⟨ cong (S ⟪ ≤-refl , α ⟫) (naturality f _ ρ _) ⟩
-    S ⟪ ≤-refl , α ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t)
-  ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
-    S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t)
-  ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
-    S ⟪ ≤-refl , α' ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t) ∎ }
-  where open ≡-Reasoning
-eq (isoˡ (⇛-natural σ T S)) f = to-pshfun-eq (λ m≤n eγ t →
-  begin
-    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) ($-cong f (≤-irrelevant _ _) _ _) ⟩
-    S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) (naturality f eγ _ t) ⟩
-    S ⟪ ≤-refl , _ ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
-  ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
-    S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
-  ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
-    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
-  ≡⟨ morph-id S _ ⟩
-    f $⟨ m≤n , eγ ⟩ t ∎)
-  where open ≡-Reasoning
-eq (isoʳ (⇛-natural {Δ = Δ} σ T S)) f = to-pshfun-eq (λ m≤n eγ t →
-  begin
-    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , _ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , {!!} ⟫) {!$-cong f (≤-irrelevant _ _) refl {!!}!} ⟩
-    S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , {!!} ⟩ (T ⟪ ≤-refl , _ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , {!!} ⟫ ∘ f $⟨ ≤-trans ≤-refl m≤n , {!!} ⟩_) {!morph-cong T refl {!!} {!!}!} ⟩
-    S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , {!!} ⟩ (T ⟪ ≤-refl , _ ⟫ t)
-  ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) (naturality f eγ {!!} t) ⟩
-    S ⟪ ≤-refl , _ ⟫ S ⟪ ≤-refl , {!!} ⟫ f $⟨ m≤n , eγ ⟩ t
-  ≡˘⟨ morph-comp S _ _ {!!} {!!} {!!} ⟩
-    S ⟪ ≤-trans ≤-refl ≤-refl , {!!} ⟫ f $⟨ m≤n , eγ ⟩ t
-  ≡⟨ morph-cong S (≤-irrelevant _ _) {!!} _ ⟩
-    S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
-  ≡⟨ morph-id S _ ⟩
-    f $⟨ m≤n , eγ ⟩ t ∎)
-  where open ≡-Reasoning
+module _ {Δ Γ : Ctx ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
+  ⇛-natural : (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
+  from ⇛-natural = record { func = pshfun-subst-from σ T S
+                           ; naturality = λ f → to-pshfun-eq (λ k≤m _ _ → $-cong f refl _ _) }
+  to ⇛-natural = record { func = pshfun-subst-to σ T S
+                         ; naturality = λ {_ _ m≤n} f → to-pshfun-eq λ k≤m eγ t →
+    let α = _
+        β = _
+        ζ = _
+        α' = _
+        β' = _
+        ζ' = _
+        ρ = trans (rel-id Δ _) (sym β')
+    in begin
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , ζ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , β ⟩_) (morph-cong T (≤-irrelevant _ _) _ _) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫ ∘ f $⟨ ≤-trans k≤m m≤n , β ⟩_) (morph-comp T _ _ ζ' _ t) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans k≤m m≤n , β ⟩ (T ⟪ ≤-refl , _ ⟫ (T ⟪ ≤-refl , ζ' ⟫ t))
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫) ($-cong f (≤-irrelevant _ _) refl _) ⟩
+      S ⟪ ≤-refl , α ⟫ f $⟨ ≤-trans ≤-refl (≤-trans k≤m m≤n) , _ ⟩ (T ⟪ ≤-refl , _ ⟫ (T ⟪ ≤-refl , ζ' ⟫ t))
+    ≡⟨ cong (S ⟪ ≤-refl , α ⟫) (naturality f _ ρ _) ⟩
+      S ⟪ ≤-refl , α ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t)
+    ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+      S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t)
+    ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+      S ⟪ ≤-refl , α' ⟫ f $⟨ ≤-trans k≤m m≤n , β' ⟩ (T ⟪ ≤-refl , ζ' ⟫ t) ∎ }
+    where open ≡-Reasoning
+  eq (isoˡ ⇛-natural) f = to-pshfun-eq (λ m≤n eγ t →
+    begin
+      S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) ($-cong f (≤-irrelevant _ _) _ _) ⟩
+      S ⟪ ≤-refl , _ ⟫ f $⟨ ≤-trans ≤-refl m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) (naturality f eγ _ t) ⟩
+      S ⟪ ≤-refl , _ ⟫ S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+    ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+      S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+    ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+      S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eγ ⟩ t
+    ≡⟨ morph-id S _ ⟩
+      f $⟨ m≤n , eγ ⟩ t ∎)
+    where open ≡-Reasoning
+  eq (isoʳ ⇛-natural) f = to-pshfun-eq (λ m≤n eδ t →
+    let α = trans (rel-id Δ _) (sym eδ)
+        β = _
+    in begin
+      S ⟪ ≤-refl , β ⟫ f $⟨ m≤n , refl ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , β ⟫) ($-cong f (≤-irrelevant _ _) refl _) ⟩
+      S ⟪ ≤-refl , β ⟫ f $⟨ ≤-trans ≤-refl m≤n , _ ⟩ (T ⟪ ≤-refl , _ ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , β ⟫ ∘ f $⟨ ≤-trans ≤-refl m≤n , _ ⟩_) (morph-cong T refl _ _) ⟩
+      S ⟪ ≤-refl , β ⟫ f $⟨ ≤-trans ≤-refl m≤n , _ ⟩ (T [ σ ] ⟪ ≤-refl , α ⟫ t)
+    ≡⟨ cong (S ⟪ ≤-refl , _ ⟫) (naturality f eδ _ t) ⟩
+      S ⟪ ≤-refl , β ⟫ S [ σ ] ⟪ ≤-refl , α ⟫ f $⟨ m≤n , eδ ⟩ t
+    ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+      S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ f $⟨ m≤n , eδ ⟩ t
+    ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+      S ⟪ ≤-refl , _ ⟫ f $⟨ m≤n , eδ ⟩ t
+    ≡⟨ morph-id S _ ⟩
+      f $⟨ m≤n , eδ ⟩ t ∎)
+    where open ≡-Reasoning
 
-{-
-to-⇛[_]_ : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → Tm Δ ((T [ σ ]) ⇛ (S [ σ ])) → Tm Δ ((T ⇛ S) [ σ ])
-term (to-⇛[_]_ σ {T}{S} f) n δ = MkFunc (λ m≤n t → subst (λ x → S ⟨ _ , x ⟩) (sym (naturality σ δ))
-                                                       (f ⟨ _ , δ ⟩' $⟨ m≤n ⟩
-                                                       subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ) t))
-                                         {!!}
-naturality (to-⇛[ σ ] f) = {!!}
--}
+  lam-natural : (b : Tm (Γ ,, T) (S [ π ])) →
+                (lam T {S = S} b) [ σ ]' ≅ᵗᵐ
+                  ι[ ⇛-natural ] (
+                  lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π {T = T} ∷ σ ⊹ ◼) (σ ∷ π {T = T [ σ ]} ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
+  eq (lam-natural b) δ = to-pshfun-eq (λ m≤n {γ'} eγ t → sym (
+    let α = begin
+              subst (λ - → T ⟨ _ , - ⟩) _ (T ⟪ ≤-refl , _ ⟫ T ⟪ ≤-refl , _ ⟫ t)
+            ≡⟨ morph-subst T refl _ _ ⟩
+              T ⟪ ≤-refl , _ ⟫ T ⟪ ≤-refl , _ ⟫ t
+            ≡˘⟨ morph-comp T ≤-refl ≤-refl _ _ t ⟩
+              T ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ t
+            ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩
+              T ⟪ ≤-refl , _ ⟫ t
+            ≡⟨ morph-id T t ⟩
+              t ∎
+    in begin
+      S ⟪ ≤-refl , _ ⟫ S ⟪ ≤-refl , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ m≤n ⟫ δ) , T ⟪ ≤-refl , _ ⟫ t ] ⟩'
+    ≡˘⟨ morph-comp S ≤-refl ≤-refl _ _ _ ⟩
+      S ⟪ ≤-trans ≤-refl ≤-refl , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ m≤n ⟫ δ) , T ⟪ ≤-refl , _ ⟫ t ] ⟩'
+    ≡⟨ morph-cong S (≤-irrelevant _ _) _ _ ⟩
+      S ⟪ ≤-refl , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ m≤n ⟫ δ) , T ⟪ ≤-refl , _ ⟫ t ] ⟩'
+    ≡⟨ naturality b ≤-refl (to-Σ-eq (trans (rel-id Γ _) (trans (sym (naturality σ δ)) eγ)) α) ⟩
+      b ⟨ _ , [ γ' , t ] ⟩' ∎))
+    where open ≡-Reasoning
+
+  app-natural : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) →
+                (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
+  eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl _ _
+
 {-
 -- Another approach to the introduction of function types (based on https://arxiv.org/pdf/1805.08684.pdf).
 {-
