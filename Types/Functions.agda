@@ -162,6 +162,17 @@ lam-cong : {Γ : Ctx ℓ} (T : Ty Γ) {S : Ty Γ} {b b' : Tm (Γ ,, T) (S [ π ]
            b ≅ᵗᵐ b' → lam T {S = S} b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'}  _ t → eq b=b' [ γ' , t ])
 
+€-cong : {Γ : Ctx ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {n : ℕ} {γ : Γ ⟨ n ⟩} {t t' : T ⟨ n , γ ⟩} →
+         f ≅ᵗᵐ f' → t ≡ t' → f €⟨ n , γ ⟩ t ≡ f' €⟨ n , γ ⟩ t'
+€-cong {f = f}{f'}{n}{γ}{t}{t'} f=f' t=t' =
+  begin
+    f ⟨ n , γ ⟩' $⟨ ≤-refl , _ ⟩ t
+  ≡⟨ cong (f ⟨ n , γ ⟩' $⟨ ≤-refl , _ ⟩_) t=t' ⟩
+    f ⟨ n , γ ⟩' $⟨ ≤-refl , _ ⟩ t'
+  ≡⟨ cong (_$⟨ ≤-refl , _ ⟩ t') (eq f=f' γ) ⟩
+    f' ⟨ n , γ ⟩' $⟨ ≤-refl , _ ⟩ t' ∎
+  where open ≡-Reasoning
+
 app-cong : {Γ : Ctx ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
 eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ =
