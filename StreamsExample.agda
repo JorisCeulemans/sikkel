@@ -5,6 +5,7 @@ open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
 open import Data.Vec.Base hiding ([_]; _⊛_)
+open import Function
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 open import Level renaming (zero to lzero; suc to lsuc)
 
@@ -24,8 +25,8 @@ first-≤ z≤n as = []
 first-≤ (s≤s ineq) (a ∷ as) = a ∷ first-≤ ineq as
 
 first-≤-refl : ∀ {n} {A : Set ℓ} {as : Vec A n} → first-≤ (≤-refl) as ≡ as
-first-≤-refl {n = zero} {as = []} = refl
-first-≤-refl {n = suc n} {as = a ∷ as} = cong (a ∷_) first-≤-refl
+first-≤-refl {as = []} = refl
+first-≤-refl {as = a ∷ as} = cong (a ∷_) first-≤-refl
 
 first-≤-trans : ∀ {k m n} {A : Set ℓ} (k≤m : k ≤ m) (m≤n : m ≤ n) (as : Vec A n) →
                 first-≤ (≤-trans k≤m m≤n) as ≡ first-≤ k≤m (first-≤ m≤n as)
@@ -59,11 +60,11 @@ morph-comp (Stream {Γ = Γ}) k≤m m≤n xs = trans (subst-const (rel-comp Γ k
 -}
 str-head : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
-naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eq =
+naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   head (s ⟨ n , γ ⟩')
     ≡⟨ first-≤-head m≤n (s ⟨ n , γ ⟩') ⟩
-  head (Stream {Γ = Γ} ⟪ m≤n , eq ⟫ (s ⟨ n , γ ⟩'))
-    ≡⟨ cong head (naturality s m≤n eq) ⟩
+  head (Stream {Γ = Γ} ⟪ m≤n , eγ ⟫ (s ⟨ n , γ ⟩'))
+    ≡⟨ cong head (naturality s m≤n eγ) ⟩
   head (s ⟨ m , γ' ⟩') ∎
   where open ≡-Reasoning
 
@@ -71,25 +72,31 @@ str-tail : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ Stream)
 term (str-tail s) zero _ = lift tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
-naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eq =
+naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eγ =
   first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩'))
     ≡⟨ first-≤-tail (s≤s m≤n) (s ⟨ suc n , γ ⟩') ⟩
   tail (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γ ⟩'))
-    ≡⟨ cong tail (naturality s (s≤s m≤n) eq) ⟩
+    ≡⟨ cong tail (naturality s (s≤s m≤n) eγ) ⟩
   tail (s ⟨ suc m , γ' ⟩') ∎
   where open ≡-Reasoning
 
 str-cons : {Γ : Ctx 0ℓ} → Tm Γ (Nat' ⊠ (▻ Stream)) → Tm Γ Stream
 term (str-cons t) zero γ = fst t ⟨ zero , γ ⟩' ∷ []
 term (str-cons t) (suc n) γ = (fst t ⟨ suc n , _ ⟩') ∷ (snd t ⟨ suc n , γ ⟩')
-naturality (str-cons t) {zero} {zero} z≤n eq = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eq)
-naturality (str-cons t) {zero} {suc n} z≤n eq = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eq)
-naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eq =
-  cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eq)) (naturality (snd t) (s≤s m≤n) eq)
+naturality (str-cons t) {zero} {zero} z≤n eγ = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eγ)
+naturality (str-cons t) {zero} {suc n} z≤n eγ = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eγ)
+naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eγ =
+  cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eγ)) (naturality (snd t) (s≤s m≤n) eγ)
 
+stream-subst : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
+from (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
+to (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
+eq (isoˡ (stream-subst σ)) _ = refl
+eq (isoʳ (stream-subst σ)) _ = refl
+{-
 to-str[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Stream → Tm Δ (Stream [ σ ])
 to-str[_]_ {Δ = Δ}{Γ} σ s = convert-subst (!◇ Δ ◼) (!◇ Γ ∷ σ ◼) (◇-terminal Δ _ _) s
-
+-}
 str-snd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ Nat')
 str-snd s = next (str-head (prev (str-tail s)))
 
@@ -97,11 +104,27 @@ str-thrd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream
-zeros = {!Löb Stream (lam (▻' Stream) (to-str[ π ] str-cons (pair zero' (α ξ))))!}
+zeros = löb Stream (lam (▻' {Γ = ◇} Stream) (ι[ stream-subst {Γ = ◇} (π {T = ▻' Stream}) ] str-cons (pair {T = Nat'} {S = ▻ Stream} zero' (α (ξ {Γ = ◇} {T = ▻' Stream})))))
   where
-    α : Tm (◇ ,, ▻' Stream) (▻' Stream [ π {T = ▻' Stream} ]) → Tm (◇ ,, ▻' Stream) (▻ Stream)
-    α t = {!!}
+    Γ = ◇ ,, ▻' Stream
+    open ≅ᵗʸ-Reasoning
+    β : ▻ {Γ = Γ} Stream ≅ᵗʸ (▻' {Γ = ◇} Stream [ π {Γ = ◇} {T = ▻' Stream} ])
+    β = begin
+          ▻ {Γ = Γ} Stream
+        ≅˘⟨ ▻-cong {Γ = Γ} (stream-subst {Δ = ◄ Γ} {Γ = ◇} (from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
+          ▻ {Γ = Γ} (Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
+        ≅˘⟨ ▻-cong {Γ = Γ} {T = Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]} {T' = Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]} (ty-subst-comp (Stream {Γ = ◇}) (from-earlier ◇) (◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
+          ▻ {Γ = Γ} (Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
+        ≅˘⟨ ▻-natural (π {Γ = ◇} {T = ▻' Stream}) {T = Stream [ from-earlier ◇ ]} ⟩
+          (▻ {Γ = ◇} (Stream [ from-earlier ◇ ])) [ π {Γ = ◇} {T = ▻' Stream} ]
+        ≅⟨⟩
+          (▻' {Γ = ◇} Stream) [ π {Γ = ◇} {T = ▻' Stream} ] ∎
+    α : Tm Γ ((▻' {Γ = ◇} Stream) [ π {T = ▻' Stream} ]) → Tm Γ (▻ Stream)
+    α t = ι[ β ] t
 
+test : Set
+test = {!str-snd zeros ⟨ 5 , lift tt ⟩'!}
+{-
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = Löb (Stream ⇛ Stream) (lam (▻' (Stream ⇛ Stream)) {!lam Stream ?!})
 
@@ -110,3 +133,4 @@ generate f = {!!}
 
 nats : Tm ◇ Stream
 nats = app (generate (lam Nat' {!suc' ξ!})) zero'
+-}
