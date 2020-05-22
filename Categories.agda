@@ -29,16 +29,16 @@ category-composition = Category._∙_
 
 syntax category-composition C g f = g ∙[ C ] f
 
-ℕ-poset : Category
-ℕ-poset = record
-             { Ob = ℕ
-             ; Hom = λ m n → m ≤ n
-             ; hom-id = ≤-refl
-             ; _∙_ = λ m≤n k≤m → ≤-trans k≤m m≤n
-             ; ∙assoc = ≤-irrelevant _ _
-             ; hom-idʳ = ≤-irrelevant _ _
-             ; hom-idˡ = ≤-irrelevant _ _
-             }
+ω : Category
+ω = record
+       { Ob = ℕ
+       ; Hom = λ m n → m ≤ n
+       ; hom-id = ≤-refl
+       ; _∙_ = λ m≤n k≤m → ≤-trans k≤m m≤n
+       ; ∙assoc = ≤-irrelevant _ _
+       ; hom-idʳ = ≤-irrelevant _ _
+       ; hom-idˡ = ≤-irrelevant _ _
+       }
 
 Type-groupoid : (X : Set) → Category
 Type-groupoid X = record

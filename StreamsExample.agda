@@ -9,6 +9,7 @@ open import Function
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
 open import Level renaming (zero to lzero; suc to lsuc)
 
+open import Categories
 open import Helpers
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
@@ -41,16 +42,16 @@ first-≤-tail : ∀ {m n} {A : Set ℓ} (m≤n : m ≤ n) (as : Vec A (suc n)) 
                first-≤ m≤n (tail as) ≡ tail (first-≤ (s≤s m≤n) as)
 first-≤-tail m≤n (a ∷ as) = refl
 
-Stream-prim : Ty (◇ {0ℓ})
+Stream-prim : Ty (◇ {ω} {0ℓ})
 type Stream-prim n _ = Vec ℕ (suc n)
 morph Stream-prim m≤n _ = first-≤ (s≤s m≤n)
 morph-id Stream-prim _ = first-≤-refl
 morph-comp Stream-prim k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
 
-Stream : {Γ : Ctx 0ℓ} → Ty Γ
+Stream : {Γ : Ctx ω 0ℓ} → Ty Γ
 Stream {Γ = Γ} = Stream-prim [ !◇ Γ ]
 
-str-head : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ Nat'
+str-head : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
 naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   head (s ⟨ n , γ ⟩')
@@ -60,7 +61,7 @@ naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   head (s ⟨ m , γ' ⟩') ∎
   where open ≡-Reasoning
 
-str-tail : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ Stream)
+str-tail : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ Stream)
 term (str-tail s) zero _ = lift tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
@@ -72,7 +73,7 @@ naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eγ =
   tail (s ⟨ suc m , γ' ⟩') ∎
   where open ≡-Reasoning
 
-str-cons : {Γ : Ctx 0ℓ} → Tm Γ (Nat' ⊠ (▻ Stream)) → Tm Γ Stream
+str-cons : {Γ : Ctx ω 0ℓ} → Tm Γ (Nat' ⊠ (▻ Stream)) → Tm Γ Stream
 term (str-cons t) zero γ = fst t ⟨ zero , γ ⟩' ∷ []
 term (str-cons t) (suc n) γ = (fst t ⟨ suc n , _ ⟩') ∷ (snd t ⟨ suc n , γ ⟩')
 naturality (str-cons t) {zero} {zero} z≤n eγ = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eγ)
@@ -80,16 +81,16 @@ naturality (str-cons t) {zero} {suc n} z≤n eγ = cong (λ x → proj₁ x ∷ 
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eγ =
   cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eγ)) (naturality (snd t) (s≤s m≤n) eγ)
 
-stream-subst : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
+stream-subst : {Δ Γ : Ctx ω 0ℓ} (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
 from (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
 to (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
 eq (isoˡ (stream-subst σ)) _ = refl
 eq (isoʳ (stream-subst σ)) _ = refl
 
-str-snd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ Nat')
+str-snd : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ Nat')
 str-snd s = next (str-head (prev (str-tail s)))
 
-str-thrd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
+str-thrd : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream
@@ -102,7 +103,9 @@ zeros = löb Stream (lam (▻' {Γ = ◇} Stream) (ι[ stream-subst {Γ = ◇} (
           ▻ {Γ = Γ} Stream
         ≅˘⟨ ▻-cong {Γ = Γ} (stream-subst {Δ = ◄ Γ} {Γ = ◇} (from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
           ▻ {Γ = Γ} (Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
-        ≅˘⟨ ▻-cong {Γ = Γ} {T = Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]} {T' = Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]} (ty-subst-comp (Stream {Γ = ◇}) (from-earlier ◇) (◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
+        ≅˘⟨ ▻-cong {Γ = Γ} {T = Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]}
+                    {T' = Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]}
+                    (ty-subst-comp (Stream {Γ = ◇}) (from-earlier ◇) (◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
           ▻ {Γ = Γ} (Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
         ≅˘⟨ ▻-natural (π {Γ = ◇} {T = ▻' Stream}) {T = Stream [ from-earlier ◇ ]} ⟩
           (▻ {Γ = ◇} (Stream [ from-earlier ◇ ])) [ π {Γ = ◇} {T = ▻' Stream} ]
