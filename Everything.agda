@@ -11,3 +11,4 @@ import Types.Products
 import Types.Sums
 import LiftingFunctors
 import Later
+import StreamsExample

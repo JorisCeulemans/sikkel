@@ -122,8 +122,6 @@ zeros = löb Stream (lam (▻' {Γ = ◇} Stream) (ι[ stream-subst {Γ = ◇} (
     α : Tm Γ ((▻' {Γ = ◇} Stream) [ π {T = ▻' Stream} ]) → Tm Γ (▻ Stream)
     α t = ι[ β ] t
 
-test : Set
-test = {!str-snd zeros ⟨ 5 , lift tt ⟩'!}
 {-
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = Löb (Stream ⇛ Stream) (lam (▻' (Stream ⇛ Stream)) {!lam Stream ?!})
