@@ -52,8 +52,6 @@ morph-subst : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n : m ≤ n}
               subst (λ x → T ⟨ m , x ⟩) eq23 (T ⟪ m≤n , eq12 ⟫ t) ≡ T ⟪ m≤n , trans eq12 eq23 ⟫ t
 morph-subst T refl refl t = refl
 
--- Instead of pattern matching on e-ineq, we could prove the following as cong₂-d (λ x y → T ⟪ x , y ⟫ t) e-ineq (...),
--- but cong₂-d would then pattern match on this equality anyway.
 -- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
 -- by requiring morph T to "not depend on eγ" (propositionally).
 morph-cong : {Γ : Ctx ℓ} (T : Ty Γ) {m≤n m≤n' : m ≤ n} (e-ineq : m≤n ≡ m≤n')
@@ -245,54 +243,16 @@ morph-comp (T [ σ ]) k≤m m≤n eq-nm eq-mk t = trans (cong (λ x → T ⟪ �
                                                    (morph-comp T k≤m m≤n _ _ t)
 
 ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≅ᵗʸ T
-from (ty-subst-id T) = record { func = id ; naturality = λ t → cong (λ x → T ⟪ _ , x ⟫ t) (sym (cong-id _)) }
-to (ty-subst-id T) = record { func = id ; naturality = λ t → cong (λ x → T ⟪ _ , x ⟫ t) (cong-id _) }
+from (ty-subst-id T) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
+to (ty-subst-id T) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
 isoˡ (ty-subst-id T) = record { eq = λ t → refl }
 isoʳ (ty-subst-id T) = record { eq = λ t → refl }
 
-{-
-ty-subst-id : {Γ : Ctx ℓ} (T : Ty Γ) → T [ id-subst Γ ] ≡ T
-ty-subst-id T = cong₃-d (MkTy _)
-                        (funextI (funextI (funext λ m≤n → funextI (funextI (funext λ eq → funext λ t →
-                          cong (λ x → T ⟪ m≤n , x ⟫ t) (cong-id eq))))))
-                        (funextI (funextI (funext (λ _ → uip _ _))))
-                        (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
--}
-
 ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
-from (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → cong (λ x → T ⟪ _ , x ⟫ t) (uip _ _) }
-to (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → cong (λ x → T ⟪ _ , x ⟫ t) (uip _ _) }
+from (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
+to (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
 isoˡ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
 isoʳ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
-
-{-
--- TODO: Maybe it would be better to just use uip (since equality proofs will probably not be expanded
--- as much as they are now).
-ty-subst-comp : {Δ Γ Θ : Ctx ℓ} (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
-ty-subst-comp T τ σ = cong₃-d (MkTy _)
-                              (funextI (funextI (funext λ m≤n → funextI (funextI (funext λ eq → funext λ t →
-                                cong (λ x → T ⟪ m≤n , x ⟫ t)
-  (trans (naturality τ (func σ _))
-         (cong (func τ) (trans (naturality σ _)
-                               (cong (func σ) eq)))
-     ≡⟨ cong (trans (naturality τ (func σ _))) (cong-trans (func τ) (naturality σ _)) ⟩
-   trans (naturality τ (func σ _))
-         (trans (cong (func τ) (naturality σ _))
-                (cong (func τ) (cong (func σ) eq)))
-     ≡⟨ sym (trans-assoc (naturality τ (func σ _))) ⟩
-   trans (trans (naturality τ (func σ _))
-                (cong (func τ) (naturality σ _)))
-         (cong (func τ) (cong (func σ) eq))
-     ≡⟨ cong (trans (trans (naturality τ (func σ _))
-                           (cong (func τ) (naturality σ _))))
-             (sym (cong-∘ eq)) ⟩
-   trans (trans (naturality τ (func σ _))
-                (cong (func τ) (naturality σ _)))
-         (cong (λ x → func τ (func σ x)) eq) ∎))))))
-                              (funextI (funextI (funext (λ _ → uip _ _))))
-                              (funextI (funextI (funextI (funext λ _ → funext λ _ → funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
-  where open ≡-Reasoning
--}
 
 ty-subst-map : {Δ Γ : Ctx ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → (T ↣ S) → T [ σ ] ↣ S [ σ ]
 func (ty-subst-map σ η) t = func η t
