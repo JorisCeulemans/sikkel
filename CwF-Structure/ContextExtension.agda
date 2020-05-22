@@ -4,7 +4,7 @@
 
 open import Categories
 
-module CwF-Structure.ContextExtension {o h} {C : Category {o}{h}} where
+module CwF-Structure.ContextExtension {C : Category} where
 
 -- open import Data.Nat hiding (_⊔_)
 -- open import Data.Nat.Properties

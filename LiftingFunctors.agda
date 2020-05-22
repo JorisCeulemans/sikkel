@@ -1,6 +1,6 @@
 open import Categories
 
-module LiftingFunctors {o o' h h'} {C : Category {o}{h}} {D : Category {o'}{h'}} (F : Functor C D) where
+module LiftingFunctors {C D : Category} (F : Functor C D) where
 
 -- open import Data.Nat hiding (_⊔_)
 -- open import Data.Nat.Properties

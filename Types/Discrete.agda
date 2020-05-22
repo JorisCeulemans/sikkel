@@ -1,6 +1,6 @@
 open import Categories
 
-module Types.Discrete {o h} {C : Category {o}{h}} where
+module Types.Discrete {C : Category} where
 
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat hiding (_⊔_)

@@ -1,6 +1,6 @@
 open import Categories
 
-module Types.Sums {o h} {C : Category {o}{h}} where
+module Types.Sums {C : Category} where
 
 -- open import Data.Nat hiding (_⊔_)
 -- open import Data.Nat.Properties

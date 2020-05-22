@@ -18,7 +18,7 @@ open import Helpers
 --------------------------------------------------
 -- Definition of contexts and substitutions
 
-record Ctx {o h} (C : Category {o}{h}) ℓ : Set (o ⊔ h ⊔ lsuc ℓ) where
+record Ctx (C : Category) ℓ : Set (lsuc ℓ) where
   constructor MkCtx
 
   open Category C
@@ -30,7 +30,7 @@ record Ctx {o h} (C : Category {o}{h}) ℓ : Set (o ⊔ h ⊔ lsuc ℓ) where
     rel-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) → rel (g ∙ f) γ ≡ rel f (rel g γ)
 open Ctx public
 
-module _ {o h} {C : Category {o}{h}} where
+module _ {C : Category} where
   infix 10 _⇒_
   infix 1 _≅ˢ_ _≅ᶜ_
   infixl 20 _⊚_
@@ -59,7 +59,7 @@ module _ {o h} {C : Category {o}{h}} where
                                                    (trans (cong (Γ ⟪ f ⟫) eq-zy)
                                                           eq-yx)
 
-  record _⇒_ {ℓ} (Δ Γ : Ctx C ℓ) : Set (o ⊔ h ⊔ ℓ) where
+  record _⇒_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
     constructor MkSubst
     field
       func : ∀ {x} → Δ ⟨ x ⟩ → Γ ⟨ x ⟩
@@ -87,7 +87,7 @@ module _ {o h} {C : Category {o}{h}} where
   --------------------------------------------------
   -- Equivalence of substitutions
 
-  record _≅ˢ_ {ℓ} {Δ Γ : Ctx C ℓ} (σ τ : Δ ⇒ Γ) : Set (o ⊔ ℓ) where
+  record _≅ˢ_ {ℓ} {Δ Γ : Ctx C ℓ} (σ τ : Δ ⇒ Γ) : Set ℓ where
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
   open _≅ˢ_ public
@@ -147,7 +147,7 @@ module _ {o h} {C : Category {o}{h}} where
   --------------------------------------------------
   -- Equivalence of contexts
 
-  record _≅ᶜ_ {ℓ} (Δ Γ : Ctx C ℓ) : Set (o ⊔ h ⊔ ℓ) where
+  record _≅ᶜ_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
     field
       from : Δ ⇒ Γ
       to : Γ ⇒ Δ

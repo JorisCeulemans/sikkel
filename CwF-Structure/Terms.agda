@@ -4,7 +4,7 @@
 
 open import Categories
 
-module CwF-Structure.Terms {o h} {C : Category {o}{h}}  where
+module CwF-Structure.Terms {C : Category}  where
 
 -- open import Data.Nat hiding (_⊔_)
 -- open import Data.Nat.Properties
@@ -27,7 +27,7 @@ private
 --------------------------------------------------
 -- Definition of terms
 
-record Tm {ℓ} (Γ : Ctx C ℓ) (T : Ty Γ) : Set (o ⊔ h ⊔ ℓ) where
+record Tm {ℓ} (Γ : Ctx C ℓ) (T : Ty Γ) : Set ℓ where
   constructor MkTm
   field
     term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
@@ -42,7 +42,7 @@ t ⟨ x , γ ⟩' = term t x γ
 --------------------------------------------------
 -- Equivalence of terms
 
-record _≅ᵗᵐ_ {Γ : Ctx C ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set (o ⊔ ℓ) where
+record _≅ᵗᵐ_ {Γ : Ctx C ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set ℓ where
   field
     eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'
 open _≅ᵗᵐ_ public

@@ -4,7 +4,7 @@
 
 open import Categories
 
-module CwF-Structure.Types {o h} {C : Category {o}{h}} where
+module CwF-Structure.Types {C : Category} where
 
 -- open import Data.Nat hiding (_⊔_)
 -- open import Data.Nat.Properties
@@ -31,7 +31,7 @@ private
 --------------------------------------------------
 -- Definition of types in a context
 
-record Ty {ℓ} (Γ : Ctx C ℓ) : Set (o ⊔ h ⊔ lsuc ℓ) where
+record Ty {ℓ} (Γ : Ctx C ℓ) : Set (lsuc ℓ) where
   constructor MkTy
   field
     type : (x : Ob) (γ : Γ ⟨ x ⟩) → Set ℓ
@@ -88,14 +88,14 @@ module _ {Γ : Ctx C ℓ} (T : Ty Γ) where
 --------------------------------------------------
 -- Natural transformations between types
 
-record _↣_ {ℓ} {Γ : Ctx C ℓ} (T S : Ty Γ) : Set (o ⊔ h ⊔ ℓ) where
+record _↣_ {ℓ} {Γ : Ctx C ℓ} (T S : Ty Γ) : Set ℓ where
   field
     func : ∀ {x} {γ} → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
     naturality : ∀ {x y} {f : Hom x y} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} (t : T ⟨ y , γy ⟩) →
                  S ⟪ f , eγ ⟫ (func t) ≡ func (T ⟪ f , eγ ⟫ t)
 open _↣_ public
 
-record _≅ⁿ_ {ℓ} {Γ : Ctx C ℓ} {T S : Ty Γ} (η φ : T ↣ S) : Set (o ⊔ ℓ) where
+record _≅ⁿ_ {ℓ} {Γ : Ctx C ℓ} {T S : Ty Γ} (η φ : T ↣ S) : Set ℓ where
   field
     eq : ∀ {x γ} (t : T ⟨ x , γ ⟩) → func η t ≡ func φ t
 open _≅ⁿ_ public
@@ -160,7 +160,7 @@ eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
 --------------------------------------------------
 -- Equivalence of types
 
-record _≅ᵗʸ_ {ℓ} {Γ : Ctx C ℓ} (T S : Ty Γ) : Set (o ⊔ h ⊔ ℓ) where
+record _≅ᵗʸ_ {ℓ} {Γ : Ctx C ℓ} (T S : Ty Γ) : Set ℓ where
   field
     from : T ↣ S
     to : S ↣ T
