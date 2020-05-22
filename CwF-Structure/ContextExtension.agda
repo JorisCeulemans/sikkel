@@ -64,18 +64,6 @@ naturality (to-ext-subst {Δ = Δ}{Γ} T σ t) δ = to-Σ-eq (naturality σ δ) 
 
 syntax to-ext-subst T σ t = ⟨ σ , t ∈ T ⟩
 
-{-
-to-ext-subst : {Δ Γ : Ctx C ℓ} (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
-to-ext-subst T σ t = MkSubst (λ δ → [ func σ δ , t ⟨ _ , δ ⟩' ])
-                             (λ δ → to-Σ-eq (naturality σ δ)
-                                             (trans (morph-subst T refl (naturality σ δ) (term t _ δ))
-                                                    (trans (cong (λ x → T ⟪ _ , x ⟫ _) (sym (trans-reflʳ (naturality σ δ))))
-                                                           (naturality t _ refl))))
-
-to-ext-subst-Σ : {Δ Γ : Ctx C ℓ} (T : Ty Γ) → Σ[ σ ∈ Δ ⇒ Γ ] (Tm Δ (T [ σ ])) → Δ ⇒ Γ ,, T
-to-ext-subst-Σ T [ σ , t ] = to-ext-subst T σ t
--}
-
 ctx-ext-subst-proj₁ : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ , t ∈ T ⟩ ≅ˢ σ
 eq (ctx-ext-subst-proj₁ σ t) δ = refl
 
@@ -130,5 +118,5 @@ _⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ 
 ⊹-π-comm : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → π {T = T} ⊚ (σ ⊹) ≅ˢ σ ⊚ π
 eq (⊹-π-comm σ) δ = refl
 
-ty-eq-to-ext-subst : (Γ : Ctx ℓ) {T T' : Ty Γ} → T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
+ty-eq-to-ext-subst : (Γ : Ctx C ℓ) {T T' : Ty Γ} → T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
 ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ ∈ T' ⟩

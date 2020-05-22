@@ -49,15 +49,7 @@ morph-comp Stream-prim k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m�
 
 Stream : {Γ : Ctx 0ℓ} → Ty Γ
 Stream {Γ = Γ} = Stream-prim [ !◇ Γ ]
-{-
-Stream : {Γ : Ctx 0ℓ} → Ty Γ
-type Stream n _ = Vec ℕ (suc n)
-morph Stream m≤n _ = first-≤ (s≤s m≤n)
-morph-id (Stream {Γ = Γ}) xs = trans (subst-const (rel-id Γ _) _)
-                                     first-≤-refl
-morph-comp (Stream {Γ = Γ}) k≤m m≤n xs = trans (subst-const (rel-comp Γ k≤m m≤n _) _)
-                                               (first-≤-trans (s≤s k≤m) (s≤s m≤n) xs)
--}
+
 str-head : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
 naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
@@ -93,10 +85,7 @@ from (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
 to (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
 eq (isoˡ (stream-subst σ)) _ = refl
 eq (isoʳ (stream-subst σ)) _ = refl
-{-
-to-str[_]_ : {Δ Γ : Ctx 0ℓ} (σ : Δ ⇒ Γ) → Tm Δ Stream → Tm Δ (Stream [ σ ])
-to-str[_]_ {Δ = Δ}{Γ} σ s = convert-subst (!◇ Δ ◼) (!◇ Γ ∷ σ ◼) (◇-terminal Δ _ _) s
--}
+
 str-snd : {Γ : Ctx 0ℓ} → Tm Γ Stream → Tm Γ (▻ Nat')
 str-snd s = next (str-head (prev (str-tail s)))
 
@@ -122,8 +111,6 @@ zeros = löb Stream (lam (▻' {Γ = ◇} Stream) (ι[ stream-subst {Γ = ◇} (
     α : Tm Γ ((▻' {Γ = ◇} Stream) [ π {T = ▻' Stream} ]) → Tm Γ (▻ Stream)
     α t = ι[ β ] t
 
-test : Set
-test = {!str-snd zeros ⟨ 5 , lift tt ⟩'!}
 {-
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = Löb (Stream ⇛ Stream) (lam (▻' (Stream ⇛ Stream)) {!lam Stream ?!})
