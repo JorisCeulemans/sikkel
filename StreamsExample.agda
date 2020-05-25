@@ -94,25 +94,23 @@ str-thrd : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream
-zeros = löb Stream (lam (▻' {Γ = ◇} Stream) (ι[ stream-subst {Γ = ◇} (π {T = ▻' Stream}) ] str-cons (pair {T = Nat'} {S = ▻ Stream} zero' (α (ξ {Γ = ◇} {T = ▻' Stream})))))
+zeros = löb Stream (lam (▻' Stream) (
+  ι[ stream-subst {Γ = ◇} (π {T = ▻' Stream}) ] (str-cons (pair zero' (ι[ β ] (ξ {Γ = ◇} {T = ▻' Stream}))))))
   where
     Γ = ◇ ,, ▻' Stream
     open ≅ᵗʸ-Reasoning
-    β : ▻ {Γ = Γ} Stream ≅ᵗʸ (▻' {Γ = ◇} Stream [ π {Γ = ◇} {T = ▻' Stream} ])
+    β : ▻ Stream ≅ᵗʸ ▻' Stream [ π {Γ = ◇} {T = ▻' Stream} ]
     β = begin
-          ▻ {Γ = Γ} Stream
-        ≅˘⟨ ▻-cong {Γ = Γ} (stream-subst {Δ = ◄ Γ} {Γ = ◇} (from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
-          ▻ {Γ = Γ} (Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
-        ≅˘⟨ ▻-cong {Γ = Γ} {T = Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]}
-                    {T' = Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ]}
-                    (ty-subst-comp (Stream {Γ = ◇}) (from-earlier ◇) (◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
-          ▻ {Γ = Γ} (Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
-        ≅˘⟨ ▻-natural (π {Γ = ◇} {T = ▻' Stream}) {T = Stream [ from-earlier ◇ ]} ⟩
-          (▻ {Γ = ◇} (Stream [ from-earlier ◇ ])) [ π {Γ = ◇} {T = ▻' Stream} ]
+          ▻ Stream
+        ≅˘⟨ ▻-cong (stream-subst (from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
+          ▻ (Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
+        ≅˘⟨ ▻-cong {Γ = Γ}
+                    (ty-subst-comp Stream (from-earlier ◇) (◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
+          ▻ (Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
+        ≅˘⟨ ▻-natural (π {Γ = ◇} {T = ▻' Stream}) ⟩
+          (▻ (Stream [ from-earlier ◇ ])) [ π {Γ = ◇} {T = ▻' Stream} ]
         ≅⟨⟩
-          (▻' {Γ = ◇} Stream) [ π {Γ = ◇} {T = ▻' Stream} ] ∎
-    α : Tm Γ ((▻' {Γ = ◇} Stream) [ π {T = ▻' Stream} ]) → Tm Γ (▻ Stream)
-    α t = ι[ β ] t
+          (▻' Stream) [ π {Γ = ◇} {T = ▻' Stream} ] ∎
 
 {-
 str-map : Tm ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
