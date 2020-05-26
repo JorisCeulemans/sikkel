@@ -1,9 +1,18 @@
+--------------------------------------------------
+-- Substitution Sequences
+--
+-- This module contains some results on applying a sequence of
+-- substitutions to a type or a term. The main results are
+-- ty-subst-seq-cong and tm-subst-seq-cong (although the latter
+-- isn't really used anywhere).
+--------------------------------------------------
+
 open import Categories
 
 module CwF-Structure.SubstitutionSequence {C : Category} where
 
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -12,6 +21,7 @@ open import CwF-Structure.Terms {C = C}
 
 infixr 5 _∷_
 
+-- Type of a sequence of substitutions. The order is as if you would compose them.
 data _⇒⁺_ {ℓ : Level} : Ctx C ℓ → Ctx C ℓ → Set (lsuc ℓ) where
   _◼ : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
   _∷_ : {Δ Γ Θ : Ctx C ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
@@ -20,10 +30,12 @@ fold : {Δ Γ : Ctx C ℓ} → Δ ⇒⁺ Γ → Δ ⇒ Γ
 fold (σ ◼) = σ
 fold (σ ∷ σs) = σ ⊚ fold σs
 
+-- Applying a sequence of substitutions to a type.
 _⟦_⟧ : {Δ Γ : Ctx C ℓ} (T : Ty Γ) (σs : Δ ⇒⁺ Γ) → Ty Δ
 T ⟦ σ ◼ ⟧ = T [ σ ]
 T ⟦ σ ∷ σs ⟧ = (T [ σ ]) ⟦ σs ⟧
 
+-- Applying a sequence of substitutions to a term.
 _⟦_⟧' : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (t : Tm Γ T) (σs : Δ ⇒⁺ Γ) → Tm Δ (T ⟦ σs ⟧)
 t ⟦ σ ◼ ⟧' = t [ σ ]'
 t ⟦ σ ∷ σs ⟧' = (t [ σ ]') ⟦ σs ⟧'
@@ -61,13 +73,6 @@ ty-subst-seq-cong σs τs T e =
   ≅˘⟨ ty-subst-seq-fold τs T ⟩
     T ⟦ τs ⟧ ∎
   where open ≅ᵗʸ-Reasoning
-
-{- Probably not necessary anymore since the introduction of ι[_]_
-convert-subst : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} →
-                fold σs ≡ fold τs →
-                Tm Δ (T ⟦ σs ⟧) → Tm Δ (T ⟦ τs ⟧)
-convert-subst {Δ = Δ} σs τs {T} e t = subst (Tm Δ) (ty-subst-seq-cong σs τs T e) t
--}
 
 tm-subst-seq-cong : {Δ Γ : Ctx C ℓ} (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
                     (e : fold σs ≅ˢ fold τs) →

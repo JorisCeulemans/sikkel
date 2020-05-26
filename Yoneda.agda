@@ -1,12 +1,14 @@
+--------------------------------------------------
+-- The yoneda embedding and yoneda lemma
+--------------------------------------------------
+
 open import Categories
 
 module Yoneda {C : Category} where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
-open import Function hiding (_⟨_⟩_)
+open import Function using (_∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -28,18 +30,18 @@ rel-comp (𝕪 x) _ _ (lift _) = cong lift (sym ∙assoc)
 𝕪[ ℓ ] x = 𝕪 {ℓ} x
 
 -- The Yoneda lemma
-to-𝕪⇒* : {Γ : Ctx C ℓ} {x : Ob} → Γ ⟨ x ⟩ → 𝕪[ ℓ ] x ⇒ Γ
+to-𝕪⇒* : {Γ : Ctx C ℓ} → Γ ⟨ x ⟩ → 𝕪[ ℓ ] x ⇒ Γ
 func (to-𝕪⇒* {Γ = Γ} γ) (lift f) = Γ ⟪ f ⟫ γ
 naturality (to-𝕪⇒* {Γ = Γ} γ) (lift f) = sym (rel-comp Γ _ f γ)
 
-from-𝕪⇒* : {Γ : Ctx C ℓ} {x : Ob} → 𝕪[ ℓ ] x ⇒ Γ → Γ ⟨ x ⟩
+from-𝕪⇒* : {Γ : Ctx C ℓ} → 𝕪[ ℓ ] x ⇒ Γ → Γ ⟨ x ⟩
 from-𝕪⇒* σ = func σ (lift hom-id)
 
-𝕪-to-∘-from : {Γ : Ctx C ℓ} {x : Ob} (σ : 𝕪[ ℓ ] x ⇒ Γ) → to-𝕪⇒* (from-𝕪⇒* σ) ≅ˢ σ
+𝕪-to-∘-from : {Γ : Ctx C ℓ} (σ : 𝕪[ ℓ ] x ⇒ Γ) → to-𝕪⇒* (from-𝕪⇒* σ) ≅ˢ σ
 eq (𝕪-to-∘-from σ) (lift f) = trans (naturality σ (lift hom-id))
                                     (cong (func σ ∘ lift) hom-idˡ)
 
-𝕪-from-∘-to : {Γ : Ctx C ℓ} {x : Ob} (γ : Γ ⟨ x ⟩) → from-𝕪⇒* {ℓ = ℓ} {Γ = Γ} (to-𝕪⇒* γ) ≡ γ
+𝕪-from-∘-to : {Γ : Ctx C ℓ} (γ : Γ ⟨ x ⟩) → from-𝕪⇒* {ℓ = ℓ} {Γ = Γ} (to-𝕪⇒* γ) ≡ γ
 𝕪-from-∘-to {Γ = Γ} γ = rel-id Γ γ
 
 -- Proving that the Yoneda embedding is fully faithful
@@ -55,6 +57,7 @@ from-𝕪⇒𝕪 = lower ∘ from-𝕪⇒*
 𝕪-to-∘-from' : (σ : 𝕪[ ℓ ] x ⇒ 𝕪 y) → to-𝕪⇒𝕪 (from-𝕪⇒𝕪 σ) ≅ˢ σ
 𝕪-to-∘-from' σ = 𝕪-to-∘-from σ
 
+-- Functoriality of the Yoneda embedding
 𝕪-refl : to-𝕪⇒𝕪 hom-id ≅ˢ id-subst (𝕪[ ℓ ] x)
 eq 𝕪-refl (lift _) = cong lift hom-idˡ
 

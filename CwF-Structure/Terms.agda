@@ -6,10 +6,8 @@ open import Categories
 
 module CwF-Structure.Terms {C : Category}  where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Level
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -21,7 +19,7 @@ infix 1 _≅ᵗᵐ_
 
 private
   variable
-    x y z : Ob
+    x : Ob
 
 
 --------------------------------------------------
@@ -42,6 +40,8 @@ t ⟨ x , γ ⟩' = term t x γ
 --------------------------------------------------
 -- Equivalence of terms
 
+-- Assuming function extensionality and uip (which we do), the following definition is equivalent
+-- to propositional equality. However, our definition is easier to work with.
 record _≅ᵗᵐ_ {Γ : Ctx C ℓ} {T : Ty Γ} (t s : Tm Γ T) : Set ℓ where
   field
     eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'

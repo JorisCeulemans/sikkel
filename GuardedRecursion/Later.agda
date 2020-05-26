@@ -2,22 +2,23 @@
 -- Later and earlier modalities for types
 --------------------------------------------------
 
-module Later where
+module GuardedRecursion.Later where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Unit using (⊤; tt)
-open import Function hiding (_⟨_⟩_; _↣_)
+open import Function using (id; _∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Categories
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
-open import CwF-Structure.SubstitutionSequence
+open import CwF-Structure
 open import Types.Functions
+
+private
+  variable
+    m n : ℕ
 
 
 --------------------------------------------------
@@ -124,7 +125,7 @@ eq (next-prev t) {zero} γ = refl
 eq (next-prev t) {suc n} γ = refl
 
 -- We could make the argument T implicit, but giving it explicitly
--- drastically reduces typechecking time.
+-- drastically improves performance.
 löb : {Γ : Ctx ω ℓ} (T : Ty Γ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 term (löb T f) zero γ = f €⟨ zero , γ ⟩ lift tt
 term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
@@ -143,6 +144,7 @@ löb-is-fixpoint : {Γ : Ctx ω ℓ} {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
 eq (löb-is-fixpoint f) {zero} γ = refl
 eq (löb-is-fixpoint f) {suc n} γ = refl
 
+-- ▻ is an applicative functor
 _⊛_ : {Γ : Ctx ω ℓ} {T S : Ty (◄ Γ)} → Tm Γ (▻ (T ⇛ S)) → Tm Γ (▻ T) → Tm Γ (▻ S)
 f ⊛ t = next (app (prev f) (prev t))
 

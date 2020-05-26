@@ -6,11 +6,9 @@ open import Categories
 
 module CwF-Structure.Types {C : Category} where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Function hiding (_⟨_⟩_; _↣_)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -31,6 +29,10 @@ private
 --------------------------------------------------
 -- Definition of types in a context
 
+-- A type in context Γ is defined as a presheaf over the category of elements of Γ.
+-- A morphism in the category of elements of Γ from (x, γx) to (y, γy) consists of
+--   a morphism f : Hom x y together with a proof that Γ ⟪ f ⟫ γy ≡ γx. This explains
+--   the type of the field morph (representing the action of the presheaf on morphisms).
 record Ty {ℓ} (Γ : Ctx C ℓ) : Set (lsuc ℓ) where
   constructor MkTy
   field
@@ -53,20 +55,24 @@ _⟪_,_⟫_ : {Γ : Ctx C ℓ} (T : Ty Γ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {�
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 T ⟪ f , eγ ⟫ t = (T ⟪ f , eγ ⟫) t
 
+-- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
+-- by adding a field to a type T requiring morph T to "not depend on eγ" (propositionally).
+morph-cong : {Γ : Ctx C ℓ} (T : Ty Γ) {f f' : Hom x y} (e-hom : f ≡ f')
+             {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) (eγ' : Γ ⟪ f' ⟫ γy ≡ γx)
+             {t : T ⟨ y , γy ⟩} →
+             T ⟪ f , eγ ⟫ t ≡ T ⟪ f' , eγ' ⟫ t
+morph-cong T refl refl refl = refl
+
+ctx-element-subst : {Γ : Ctx C ℓ} (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
+ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
+
+-- The following definitions are needed when defining context extension.
 morph-subst : {Γ : Ctx C ℓ} (T : Ty Γ) {f : Hom x y}
               {γ1 : Γ ⟨ y ⟩} {γ2 γ3 : Γ ⟨ x ⟩}
               (eq12 : Γ ⟪ f ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
               (t : T ⟨ y , γ1 ⟩) →
               subst (λ - → T ⟨ x , - ⟩) eq23 (T ⟪ f , eq12 ⟫ t) ≡ T ⟪ f , trans eq12 eq23 ⟫ t
 morph-subst T refl refl t = refl
-
--- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
--- by requiring morph T to "not depend on eγ" (propositionally).
-morph-cong : {Γ : Ctx C ℓ} (T : Ty Γ) {f f' : Hom x y} (e-hom : f ≡ f')
-             {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) (eγ' : Γ ⟪ f' ⟫ γy ≡ γx)
-             {t : T ⟨ y , γy ⟩} →
-             T ⟪ f , eγ ⟫ t ≡ T ⟪ f' , eγ' ⟫ t
-morph-cong T refl refl refl = refl
 
 module _ {Γ : Ctx C ℓ} (T : Ty Γ) where
   strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
@@ -160,6 +166,9 @@ eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
 --------------------------------------------------
 -- Equivalence of types
 
+-- Two types are said to be equivalent if they are naturally isomorphic as presheaves.
+-- This turns out to be easier to work with than normal propositional equality. In particular,
+-- it lets us easily convert a term of type T to a term of type S when T ≅ᵗʸ S.
 record _≅ᵗʸ_ {ℓ} {Γ : Ctx C ℓ} (T S : Ty Γ) : Set ℓ where
   field
     from : T ↣ S
@@ -277,9 +286,6 @@ from (ty-subst-cong-ty σ T=S) = ty-subst-map σ (from T=S)
 to (ty-subst-cong-ty σ T=S) = ty-subst-map σ (to T=S)
 eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
-
-ctx-element-subst : {Γ : Ctx C ℓ} (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
-ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
 
 ty-subst-cong-subst : {Δ Γ : Ctx C ℓ} {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
 from (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-subst T (eq σ=τ δ) t

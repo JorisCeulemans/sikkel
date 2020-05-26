@@ -1,21 +1,20 @@
+--------------------------------------------------
+-- Sum types
+--------------------------------------------------
+
 open import Categories
 
 module Types.Sums {C : Category} where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Function using (id)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types {C = C}
 open import CwF-Structure.Terms {C = C}
 
---------------------------------------------------
--- Sum types
---------------------------------------------------
 
 _⊞_ : {Γ : Ctx C ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⊞ S) x γ = T ⟨ x , γ ⟩ ⊎ S ⟨ x , γ ⟩

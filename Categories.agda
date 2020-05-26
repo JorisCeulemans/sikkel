@@ -1,13 +1,18 @@
+--------------------------------------------------
+-- Definition of categories, functors + some examples
+--------------------------------------------------
+
 module Categories where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
-open import Function
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality
 
 open import Helpers
 
+-- Currently, we only have categories with object and morphism types in Set₀.
+-- This is sufficient for e.g. guarded recursion, but we will generalize this
+-- in the future (it requires some reworking of contexts and types).
 record Category : Set₁ where
   field
     Ob : Set
@@ -61,9 +66,10 @@ record Functor (C D : Category) : Set where
                hom (g ∙[ C ] f) ≡ (hom g) ∙[ D ] (hom f)
 
 {-
--- The following definitions are more general (the types of objects and morphisms
--- to live in any universe), but need some reworking of levels in contexts and
--- types to work. We postpone this until a later time.
+-- The following definitions are more general (the types of objects and morphisms are allowed
+-- to live in any universe), but need some reworking of levels in contexts and types to work.
+-- Examples like guarded recursion can be worked out using the definitions above, so we postpone
+-- this until some later time.
 record Category {o h} : Set (lsuc (o ⊔ h)) where
   field
     Ob : Set o

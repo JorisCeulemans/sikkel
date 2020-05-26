@@ -1,23 +1,20 @@
+--------------------------------------------------
+-- (Non-dependent) product types
+--------------------------------------------------
+
 open import Categories
 
 module Types.Products {C : Category} where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types {C = C}
 open import CwF-Structure.Terms {C = C}
 
--- open Category C
-
---------------------------------------------------
--- (Non-dependent) product types
---------------------------------------------------
 
 _⊠_ : {Γ : Ctx C ℓ} → Ty Γ → Ty Γ → Ty Γ
 type (T ⊠ S) x γ = T ⟨ x , γ ⟩ × S ⟨ x , γ ⟩

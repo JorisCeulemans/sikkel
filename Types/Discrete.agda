@@ -1,27 +1,35 @@
+--------------------------------------------------
+-- Discrete types
+--
+-- Every Agda type can be turned into a type in any context.
+-- This lets us define the types of booleans, natural numbers, ...
+--------------------------------------------------
+
 open import Categories
 
 module Types.Discrete {C : Category} where
 
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Unit using (⊤; tt)
-open import Function hiding (_⟨_⟩_)
+open import Function using (id)
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types {C = C}
 open import CwF-Structure.Terms {C = C}
--- open import CwF-Structure.SubstitutionSequence C
 
 open Category C
 
---------------------------------------------------
--- Discrete types
---------------------------------------------------
 
+--------------------------------------------------
+-- General description of discrete types
+
+-- A discrete type is first defined in the empty context as Discr-prim.
+-- It can then be defined in any context using the terminal substitution to
+-- the empty context.
 Discr-prim : (A : Set 0ℓ) → Ty (◇ {ℓ = 0ℓ})
 type (Discr-prim A) _ _ = A
 morph (Discr-prim A) _ _ = id
@@ -35,7 +43,10 @@ discr : {A : Set 0ℓ} {Γ : Ctx C 0ℓ} → A → Tm Γ (Discr A)
 term (discr a) _ _ = a
 naturality (discr a) _ _ = refl
 
-{- TODO: This will probably behave well in the presence of an initial or terminal object of C.
+{-
+-- The following works if C = ω. In general, it will work if C has a
+-- terminal or initial object. These results are however never used,
+-- and therefore not yet generalized.
 undiscr : {A : Set 0ℓ} → Tm ◇ (Discr A) → A
 undiscr t = t ⟨ {!!} , lift tt ⟩'
 
@@ -55,11 +66,19 @@ eq (isoʳ (Discr-subst A σ)) _ = refl
 discr-subst : {A : Set 0ℓ} (a : A) {Δ Γ : Ctx C 0ℓ} (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-subst A σ ] (discr a)
 eq (discr-subst a σ) _ = refl
 
+
+--------------------------------------------------
+-- The unit type
+
 Unit' : {Γ : Ctx C 0ℓ} → Ty Γ
 Unit' = Discr ⊤
 
 tt' : {Γ : Ctx C 0ℓ} → Tm Γ Unit'
 tt' = discr tt
+
+
+--------------------------------------------------
+-- Booleans
 
 Bool' : {Γ : Ctx C 0ℓ} → Ty Γ
 Bool' = Discr Bool
@@ -83,6 +102,10 @@ naturality (if'_then'_else'_ {Γ} c t f) {x} {y} φ {γ} {γ'} eγ | true  | .tr
 β-Bool'-false : {Γ : Ctx C 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
                if' false' then' t else' t' ≅ᵗᵐ t'
 β-Bool'-false t t' = ≅ᵗᵐ-refl
+
+
+--------------------------------------------------
+-- Natural numbers
 
 Nat' : {Γ : Ctx C 0ℓ} → Ty Γ
 Nat' = Discr ℕ

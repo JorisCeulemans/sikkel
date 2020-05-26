@@ -2,15 +2,12 @@ module Helpers where
 
 open import Axiom.Extensionality.Propositional
 open import Axiom.UniquenessOfIdentityProofs
-open import Data.Nat hiding (_⊔_)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Data.Unit using (⊤; tt)
-open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Level
+open import Relation.Binary.PropositionalEquality hiding (Extensionality)
 
 variable
   ℓ ℓ' : Level
-  k l m n : ℕ
 
 postulate
   funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'

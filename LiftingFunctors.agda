@@ -1,37 +1,24 @@
+--------------------------------------------------
+-- Lifting Functors
+--
+-- In this file we show that a functor from C to D can be lifted to a
+-- "strict" CwF endomorphism from Psh(D) to Psh(C).
+--------------------------------------------------
+
+
 open import Categories
 
 module LiftingFunctors {C D : Category} (F : Functor C D) where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Product renaming (_,_ to [_,_])
 open import Function
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
-open import CwF-Structure.Everything
+open import CwF-Structure
 
 open Category
 open Functor
-
-{-
-record ω-Functor : Set where
-  constructor MkωFunctor
-  field
-    _∙_ : ℕ → ℕ
-    monotone : {m n : ℕ} → m ≤ n → _∙_ m ≤ _∙_ n
-
-  monotone-id : monotone (≤-refl {n}) ≡ ≤-refl {_∙_ n}
-  monotone-id = ≤-irrelevant (monotone ≤-refl) ≤-refl
-
-  monotone-comp : (k≤m : k ≤ m) (m≤n : m ≤ n) →
-                  monotone (≤-trans k≤m m≤n) ≡ ≤-trans (monotone k≤m) (monotone m≤n)
-  monotone-comp k≤m m≤n = ≤-irrelevant _ _
-open ω-Functor
--}
--- We now show that a functor from C to D can be lifted to a
--- strict CwF endomorphism from Psh(D) to Psh(C).
--- module LiftedFunctor (F : ω-Functor) where
 
 ctx-lift : Ctx D ℓ → Ctx C ℓ
 set (ctx-lift Γ) c = Γ ⟨ ob F c ⟩

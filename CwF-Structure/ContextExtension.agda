@@ -6,13 +6,8 @@ open import Categories
 
 module CwF-Structure.ContextExtension {C : Category} where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Data.Unit using (⊤; tt)
-open import Function hiding (_⟨_⟩_)
-open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -24,6 +19,8 @@ open Category C
 infixl 15 _,,_
 
 
+-- Definition of the extension of a context Γ with a type T.
+-- In MLTT, this would be written as Γ, x : T.
 _,,_ : (Γ : Ctx C ℓ) (T : Ty Γ) → Ctx C ℓ
 set (Γ ,, T) x = Σ[ γ ∈ Γ ⟨ x ⟩ ] (T ⟨ x , γ ⟩)
 rel (Γ ,, T) f [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
@@ -35,13 +32,16 @@ rel-comp (Γ ,, T) f g [ γ , t ] = to-Σ-eq (rel-comp Γ f g γ)
 func π = proj₁
 naturality π _ = refl
 
+-- A term corresponding to the last variable in the context. In MLTT, this would be
+-- written as Γ, x : T ⊢ x : T. Note that the type of the term is T [ π ] instead of
+-- T because the latter is not a type in context Γ ,, T.
 ξ : {Γ : Ctx C ℓ} {T : Ty Γ} → Tm (Γ ,, T) (T [ π ])
 term ξ _ = proj₂
 naturality (ξ {T = T}) f refl = refl
--- alternative for naturality without pattern matching on equality proof:
--- trans (sym (morph-subst T refl (cong proj₁ eγ) _))
---       (from-Σ-eq2 eγ)
 
+-- In any cwf, there is by definition a one-to-one correspondence between substitutions
+-- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
+-- in the following functions.
 ext-subst-to-subst : {Δ Γ : Ctx C ℓ} {T : Ty Γ} → Δ ⇒ Γ ,, T → Δ ⇒ Γ
 ext-subst-to-subst τ = π ⊚ τ
 
@@ -85,9 +85,22 @@ ctx-ext-subst-comp : {Δ Γ Θ : Ctx C ℓ} {T : Ty Θ} (σ : Γ ⇒ Θ) (t : Tm
                      ⟨ σ , t ∈ T ⟩ ⊚ τ ≅ˢ ⟨ σ ⊚ τ , ι⁻¹[ ty-subst-comp T σ τ ] (t [ τ ]') ∈ T ⟩
 eq (ctx-ext-subst-comp σ t τ) δ = refl
 
+-- Substitution of the last variable in context Γ ,, T with a term in Tm Γ T.
 term-to-subst : {Γ : Ctx C ℓ} {T : Ty Γ} → Tm Γ T → Γ ⇒ Γ ,, T
 term-to-subst {Γ = Γ}{T} t = ⟨ id-subst Γ , ι[ ty-subst-id T ] t ∈ T ⟩
 
+_⊹ : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → Δ ,, T [ σ ] ⇒ Γ ,, T
+_⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ ∈ T ⟩
+
+⊹-π-comm : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → π {T = T} ⊚ (σ ⊹) ≅ˢ σ ⊚ π
+eq (⊹-π-comm σ) δ = refl
+
+ty-eq-to-ext-subst : (Γ : Ctx C ℓ) {T T' : Ty Γ} → T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
+ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ ∈ T' ⟩
+
+{-
+-- These functions are currently not used anywhere. We keep them in case we need them
+-- in the future.
 π-ext-comp-ty-subst : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
 π-ext-comp-ty-subst {T = T} σ t S =
@@ -98,25 +111,15 @@ term-to-subst {Γ = Γ}{T} t = ⟨ id-subst Γ , ι[ ty-subst-id T ] t ∈ T ⟩
   S [ σ ] ∎
   where open ≅ᵗʸ-Reasoning
 
-{- TODO: check whether this is useful anywhere.
 _⌈_⌋ : {Γ : Ctx C ℓ} {T S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ T → Tm Γ S
-_⌈_⌋ {Γ = Γ}{T}{S} s t = subst (Tm Γ) proof (s [ to-ext-subst T (id-subst Γ) (t [ id-subst Γ ]') ]')
+_⌈_⌋ {Γ = Γ}{T}{S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
   where
-    open ≡-Reasoning
-    proof : S [ π ] [ to-ext-subst T (id-subst Γ) (t [ id-subst Γ ]') ] ≡ S
+    open ≅ᵗʸ-Reasoning
+    proof : S [ π ] [ term-to-subst t ] ≅ᵗʸ S
     proof =
-      S [ π ] [ to-ext-subst T (id-subst Γ) (t [ id-subst Γ ]') ]
-        ≡⟨ π-ext-comp-ty-subst {T = T} (id-subst Γ) (t [ id-subst Γ ]') S ⟩
+      S [ π ] [ term-to-subst t ]
+        ≅⟨ π-ext-comp-ty-subst {T = T} (id-subst Γ) (ι[ ty-subst-id T ] t) S ⟩
       S [ id-subst Γ ]
-        ≡⟨ ty-subst-id S ⟩
+        ≅⟨ ty-subst-id S ⟩
       S ∎
 -}
-
-_⊹ : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → Δ ,, T [ σ ] ⇒ Γ ,, T
-_⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ ∈ T ⟩
-
-⊹-π-comm : {Δ Γ : Ctx C ℓ} {T : Ty Γ} (σ : Δ ⇒ Γ) → π {T = T} ⊚ (σ ⊹) ≅ˢ σ ⊚ π
-eq (⊹-π-comm σ) δ = refl
-
-ty-eq-to-ext-subst : (Γ : Ctx C ℓ) {T T' : Ty Γ} → T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
-ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ ∈ T' ⟩

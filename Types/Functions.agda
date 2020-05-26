@@ -6,12 +6,9 @@ open import Categories
 
 module Types.Functions {C : Category} where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Function hiding (_⟨_⟩_; _↣_)
-open import Level
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality)
+open import Function using (_∘_)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -50,6 +47,7 @@ $-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩
          f $⟨ ρ , eγ ⟩ t ≡ f $⟨ ρ' , eγ' ⟩ t
 $-cong f refl refl refl = refl
 
+-- This is one of the few places where we use function extensionality.
 to-pshfun-eq : {Γ : Ctx C ℓ} {T S : Ty Γ} {γ : Γ ⟨ y ⟩} {f g : PresheafFunc T S y γ} →
                (∀ {x} (ρ : Hom x y) {γ'} (eq : Γ ⟪ ρ ⟫ γ ≡ γ') t →
                    f $⟨ ρ , eq ⟩ t ≡ g $⟨ ρ , eq ⟩ t) →
@@ -58,6 +56,7 @@ to-pshfun-eq e = cong₂-d MkFunc
   (funextI (funext (λ ρ → funextI (funext λ eq → funext λ t → e ρ eq t))))
   (funextI (funextI (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
 
+-- This will be used to define the action of a function type on morphisms.
 lower-presheaffunc : {Γ : Ctx C ℓ} {T S : Ty Γ} (ρ-yz : Hom y z)
                      {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eq : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
                      PresheafFunc T S z γz → PresheafFunc T S y γy
@@ -81,10 +80,10 @@ lower-presheaffunc {y = y}{z = z}{Γ = Γ}{T}{S} ρ-yz {γz}{γy} eq-zy f = MkFu
 -- Definition of the function type + term constructors
 
 _⇛_ : {Γ : Ctx C ℓ} → Ty Γ → Ty Γ → Ty Γ
-type (_⇛_ {Γ = Γ} T S) n γ = PresheafFunc T S n γ
+type (_⇛_ {Γ = Γ} T S) z γ = PresheafFunc T S z γ
 morph (T ⇛ S) = lower-presheaffunc
-morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ m≤n eγ t → $-cong f hom-idˡ _ eγ)
-morph-comp (_⇛_ {Γ = Γ} T S) l≤m m≤n eq-nm eq-ml f = to-pshfun-eq (λ k≤l eq-lk t → $-cong f ∙assoc _ _)
+morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
+morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ t → $-cong f ∙assoc _ _)
 
 lam : {Γ : Ctx C ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam T {S} b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
@@ -97,6 +96,7 @@ term (lam T {S} b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t 
   where open ≡-Reasoning
 naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
 
+-- An operator used to define function application.
 _€⟨_,_⟩_ : {Γ : Ctx C ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
 _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ ⟩ t
 
@@ -169,7 +169,7 @@ eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
 
 lam-cong : {Γ : Ctx C ℓ} (T : Ty Γ) {S : Ty Γ} {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T {S = S} b ≅ᵗᵐ lam T b'
-eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'}  _ t → eq b=b' [ γ' , t ])
+eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
 
 €-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
          f ≅ᵗᵐ f' → t ≡ t' → f €⟨ z , γ ⟩ t ≡ f' €⟨ z , γ ⟩ t'
@@ -184,14 +184,7 @@ eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'}  _ t → eq b=b' [ γ' , t ])
 
 app-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
-eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ =
-  begin
-    f ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩ t ⟨ _ , γ ⟩'
-  ≡⟨ cong (_$⟨ hom-id , _ ⟩ t ⟨ _ , γ ⟩') (eq f=f' γ) ⟩
-    f' ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩ t ⟨ _ , γ ⟩'
-  ≡⟨ cong (f' ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩_) (eq t=t' γ) ⟩
-    f' ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩ t' ⟨ _ , γ ⟩' ∎
-  where open ≡-Reasoning
+eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 
 module _ {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S') where
   lam-ι : (b : Tm (Γ ,, T') (S' [ π ])) →
@@ -340,57 +333,3 @@ module _ {Δ Γ : Ctx C ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
   app-natural : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) →
                 (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
   eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl _ _
-
-{-
--- Another approach to the introduction of function types (based on https://arxiv.org/pdf/1805.08684.pdf).
-{-
-_⇛_ : {Γ : Ctx  ℓ} → Ty Γ → Ty Γ → Ty Γ
-type (T ⇛ S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊚ π ])
-morph (_⇛_ {Γ = Γ} T S) = λ m≤n γ s → helper (s [ (to-𝕪⇒𝕪 m≤n) ⊹ ]')
-  where
-    helper : ∀ {m n} {m≤n : m ≤ n} {γ : Γ ⟨ n ⟩} →
-             Tm (𝕪 m ,, (T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ])) (S [ to-𝕪⇒* γ ⊚ π ] [ (to-𝕪⇒𝕪 m≤n) ⊹ ]) →
-             Tm (𝕪 m ,, (T [ to-𝕪⇒* (Γ ⟪ m≤n ⟫ γ) ])) (S [ to-𝕪⇒* (Γ ⟪ m≤n ⟫ γ) ⊚ π ])
-    helper {m} {n} {m≤n} {γ} = subst (λ x → Tm (𝕪 m ,, T [ x ]) (S [ x ⊚ π ])) (𝕪-comp m≤n γ) ∘
-                               subst (λ x → Tm (𝕪 m ,, x) (S [ to-𝕪⇒* γ ⊚ to-𝕪⇒𝕪 m≤n ⊚ π {T = x}])) (ty-subst-comp T (to-𝕪⇒* γ) (to-𝕪⇒𝕪 m≤n)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) (sym (⊚-assoc (to-𝕪⇒* γ) (to-𝕪⇒𝕪 m≤n) π)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ to-𝕪⇒* γ ⊚ x ])) (⊹-π-comm (to-𝕪⇒𝕪 m≤n)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) (⊚-assoc (to-𝕪⇒* γ) π ((to-𝕪⇒𝕪 m≤n) ⊹)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) x) (ty-subst-comp S (to-𝕪⇒* γ ⊚ π) ((to-𝕪⇒𝕪 m≤n) ⊹))
-morph-id (T ⇛ S) = {!!}
-morph-comp (T ⇛ S) = {!!}
--}
-{-
-Π : {Γ : Ctx ℓ} (T : Ty Γ) (S : Ty (Γ ,, T)) → Ty Γ
-type (Π T S) = λ n γ → Tm (𝕪 n ,, (T [ to-𝕪⇒* γ ])) (S [ to-𝕪⇒* γ ⊹ ])
-morph (Π {Γ = Γ} T S) {m = m} m≤n γ s = subst (λ x → Tm (𝕪 m ,, T [ x ]) (S [ x ⊹ ])) (𝕪-comp m≤n γ)
-                                        (subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ⊚ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) {!!} {!s [ (to-𝕪⇒𝕪 m≤n) ⊹ ]'!})
-{-  where
-    helper : ∀ {m n} {m≤n : m ≤ n} {γ : Γ ⟨ n ⟩} →
-             Tm (𝕪 m ,, (T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ])) (S [ to-𝕪⇒* γ ⊹ ] [ to-𝕪⇒𝕪 m≤n ⊹ ]) →
-             Tm (𝕪 m ,, (T [ to-𝕪⇒* (Γ ⟪ m≤n ⟫ γ) ])) (S [ to-𝕪⇒* (Γ ⟪ m≤n ⟫ γ) ⊹ ])
-    helper {m} {n} {m≤n} {γ} = {!subst (λ x → Tm (𝕪 m ,, T [ x ]) (S [ x ⊚ π ])) (𝕪-comp m≤n γ) ∘
-                               subst (λ x → Tm (𝕪 m ,, x) (S [ to-𝕪⇒* γ ⊚ to-𝕪⇒𝕪 m≤n ⊚ π {T = x}])) (ty-subst-comp T (to-𝕪⇒* γ) (to-𝕪⇒𝕪 m≤n)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) (sym (⊚-assoc (to-𝕪⇒* γ) (to-𝕪⇒𝕪 m≤n) π)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ to-𝕪⇒* γ ⊚ x ])) (⊹-π-comm (to-𝕪⇒𝕪 m≤n)) ∘
-                               subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) (S [ x ])) (⊚-assoc (to-𝕪⇒* γ) π ((to-𝕪⇒𝕪 m≤n) ⊹))!} ∘
-                               {!subst (λ x → Tm (𝕪 m ,, T [ to-𝕪⇒* γ ] [ to-𝕪⇒𝕪 m≤n ]) x) (ty-subst-comp S (to-𝕪⇒* γ ⊹) (to-𝕪⇒𝕪 m≤n ⊹))!}-}
-morph-id (Π T S) = {!!}
-morph-comp (Π T S) = {!!}
--}
-{-
-module _ {Γ : Ctx ℓ} {T S : Ty Γ} where
-  lam : Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
-  term (lam b) = λ n γ → subst (λ x → Tm (𝕪 n ,, T [ to-𝕪⇒* γ ]) (S [ x ])) (⊹-π-comm (to-𝕪⇒* γ))
-                                (subst (λ x → Tm (𝕪 n ,, T [ to-𝕪⇒* γ ]) x) (ty-subst-comp S π (to-𝕪⇒* γ ⊹))
-                                       (b [ to-𝕪⇒* γ ⊹ ]'))
-  naturality (lam b) = {!!}
-
-  ap : Tm Γ (T ⇛ S) → Tm (Γ ,, T) (S [ π ])
-  term (ap f) = λ n γ → {!term f!}
-  naturality (ap f) = {!!}
-
-  app : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
-  app f t = {!ap f [ ? ]'!}
--}
--}

@@ -13,6 +13,14 @@ open import CwF-Structure.Terms
 open import CwF-Structure.SubstitutionSequence
 open import Yoneda
 
+-- This was an attempt to define a universe type using ω as base category.
+-- Note that it will not typechek anymore (not even with base category ω) because
+-- ty-subst-id and ty-subst-cong do not have the right types (they used to be types
+-- expressing propositional equality, but now they only express _≅ᵗʸ_).
+-- We leave the development of a universe type for future work, and will first focus
+-- on shallowly embedding non-dependent type theories.
+
+{-
 𝓤 : ∀ {ℓ} → Ty (◇ {lsuc ℓ})
 type 𝓤 n _ = Ty (𝕪 n)
 morph 𝓤 m≤n _ T = T [ to-𝕪⇒𝕪 m≤n ]
@@ -30,3 +38,4 @@ morph (El T) {m = m}{n} m≤n _ t = subst (λ x → x ⟨ _ , _ ⟩) (naturality
                                   (T ⟨ n , lift tt ⟩' ⟪ m≤n , cong lift (≤-irrelevant _ _) ⟫ t)
 morph-id (El T) {n = n} t = {!!}
 morph-comp (El T) k≤m m≤n _ _ t = {!!}
+-}

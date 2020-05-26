@@ -4,19 +4,17 @@
 
 module CwF-Structure.Contexts where
 
--- open import Data.Nat hiding (_⊔_)
--- open import Data.Nat.Properties
 open import Data.Unit using (⊤; tt)
 open import Function hiding (_⟨_⟩_)
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; Extensionality; subst₂)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Categories
 open import Helpers
 
 
 --------------------------------------------------
--- Definition of contexts and substitutions
+-- Definition of contexts and substitutions as presheaves over C
 
 record Ctx (C : Category) ℓ : Set (lsuc ℓ) where
   constructor MkCtx
@@ -51,7 +49,7 @@ module _ {C : Category} where
   Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
-  -- of Γ and is used e.g. in the definition of types (in general) and function types.
+  -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and function types.
   strong-rel-comp : (Γ : Ctx C ℓ) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                     (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) →
                     Γ ⟪ g ∙ f ⟫ γz ≡ γx
@@ -59,6 +57,7 @@ module _ {C : Category} where
                                                    (trans (cong (Γ ⟪ f ⟫) eq-zy)
                                                           eq-yx)
 
+  -- The type of substitutions from context Δ to context Γ
   record _⇒_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
     constructor MkSubst
     field
@@ -70,6 +69,7 @@ module _ {C : Category} where
   func (id-subst Γ) = id
   naturality (id-subst Γ) = λ _ → refl
 
+  -- Composition of substitutions
   _⊚_ : {Δ Γ Θ : Ctx C ℓ} → Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
   func (τ ⊚ σ) = func τ ∘ func σ
   naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
@@ -87,6 +87,8 @@ module _ {C : Category} where
   --------------------------------------------------
   -- Equivalence of substitutions
 
+  -- Assuming function extensionality and uip (which we do) the following definition is
+  -- equivalent to propositional equality. However, this one is easier to use.
   record _≅ˢ_ {ℓ} {Δ Γ : Ctx C ℓ} (σ τ : Δ ⇒ Γ) : Set ℓ where
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
@@ -147,6 +149,8 @@ module _ {C : Category} where
   --------------------------------------------------
   -- Equivalence of contexts
 
+  -- Two contexts are equivalent if they are naturally equivalent as presheaves.
+  -- We actually do not use this notion.
   record _≅ᶜ_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
     field
       from : Δ ⇒ Γ
@@ -201,7 +205,7 @@ module _ {C : Category} where
 
 
   --------------------------------------------------
-  -- The empty context (i.e. terminal object)
+  -- The empty context (i.e. terminal object in the category of contexts)
 
   ◇ : Ctx C ℓ
   set ◇ _ = Lift _ ⊤
