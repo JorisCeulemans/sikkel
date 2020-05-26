@@ -47,7 +47,7 @@ from-to-Σ-eq1 : ∀ {a b} {A : Set a} {B : A → Set b}
 from-to-Σ-eq1 {ex = refl} refl = refl
 
 {-
--- The following proofs were necassary in previous versions of the code.
+-- The following proofs were necessary in previous versions of the code.
 -- We keep them here in case we need them again.
 subst-const : ∀ {a b} {A : Set a} {B : Set b}
               {x x' : A} (e : x ≡ x') (y : B) →
