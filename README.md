@@ -20,4 +20,4 @@ We assume uniqueness of identity proofs and function extensionality (although th
 
 If you want to experiment with presheaves over a new small base category, you should first construct a term `my-category : Category` to represent this base category.
 A context should then have type `Ctx my-category ℓ` for an appropriate level `ℓ`.
-In the Agda types for types (`Ty`) and terms (`Tm`), the base category is an implicit parameter and hence needs not to be mentioned.
+In most of the other constructs (e.g. in the Agda types for types (`Ty`) and terms (`Tm`)), the base category is an implicit parameter and hence needs not to be mentioned.
