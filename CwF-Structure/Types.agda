@@ -35,6 +35,8 @@ private
 --   the type of the field morph (representing the action of the presheaf on morphisms).
 record Ty {ℓ} (Γ : Ctx C ℓ) : Set (lsuc ℓ) where
   constructor MkTy
+  no-eta-equality
+
   field
     type : (x : Ob) (γ : Γ ⟨ x ⟩) → Set ℓ
     morph : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx → type y γy → type x γx
@@ -278,7 +280,8 @@ naturality (ty-subst-map σ η) t = naturality η t
 ty-subst-map-id : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) {T : Ty Γ} → ty-subst-map σ (id-trans T) ≅ⁿ id-trans (T [ σ ])
 eq (ty-subst-map-id σ) t = refl
 
-ty-subst-map-comp : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) {R S T : Ty Γ} (φ : S ↣ T) (η : R ↣ S) → ty-subst-map σ (φ ⊙ η) ≅ⁿ ty-subst-map σ φ ⊙ ty-subst-map σ η
+ty-subst-map-comp : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) {R S T : Ty Γ} (φ : S ↣ T) (η : R ↣ S) →
+                    ty-subst-map σ (φ ⊙ η) ≅ⁿ ty-subst-map σ φ ⊙ ty-subst-map σ η
 eq (ty-subst-map-comp σ φ η) t = refl
 
 ty-subst-cong-ty : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) {T S : Ty Γ} → T ≅ᵗʸ S → T [ σ ] ≅ᵗʸ S [ σ ]

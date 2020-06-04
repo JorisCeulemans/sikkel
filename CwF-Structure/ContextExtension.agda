@@ -37,7 +37,7 @@ naturality π _ = refl
 -- T because the latter is not a type in context Γ ,, T.
 ξ : {Γ : Ctx C ℓ} {T : Ty Γ} → Tm (Γ ,, T) (T [ π ])
 term ξ _ = proj₂
-naturality (ξ {T = T}) f refl = refl
+naturality ξ f refl = refl
 
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
 -- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
@@ -118,7 +118,7 @@ _⌈_⌋ {Γ = Γ}{T}{S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
     proof : S [ π ] [ term-to-subst t ] ≅ᵗʸ S
     proof =
       S [ π ] [ term-to-subst t ]
-        ≅⟨ π-ext-comp-ty-subst {T = T} (id-subst Γ) (ι[ ty-subst-id T ] t) S ⟩
+        ≅⟨ π-ext-comp-ty-subst (id-subst Γ) (ι[ ty-subst-id T ] t) S ⟩
       S [ id-subst Γ ]
         ≅⟨ ty-subst-id S ⟩
       S ∎

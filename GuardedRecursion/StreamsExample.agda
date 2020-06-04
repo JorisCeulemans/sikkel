@@ -108,22 +108,20 @@ str-thrd : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream
-zeros = löb Stream (lam (▻' Stream) (
-  ι[ stream-subst {Γ = ◇} (π {T = ▻' Stream}) ] (str-cons (pair zero' (ι[ β ] (ξ {Γ = ◇} {T = ▻' Stream}))))))
+zeros = löb Stream (lam (▻' Stream) (ι[ stream-subst π ] (str-cons (pair zero' (ι[ β ] ξ)))))
   where
     open ≅ᵗʸ-Reasoning
-    β : ▻ Stream ≅ᵗʸ ▻' Stream [ π {Γ = ◇} {T = ▻' Stream} ]
+    β : ▻ Stream ≅ᵗʸ ▻' Stream [ π ]
     β = begin
           ▻ Stream
-        ≅˘⟨ ▻-cong (stream-subst (from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
-          ▻ (Stream [ from-earlier ◇ ⊚ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
-        ≅˘⟨ ▻-cong {Γ = ◇ ,, ▻' Stream}
-                    (ty-subst-comp Stream (from-earlier ◇) (◄-subst (π {Γ = ◇} {T = ▻' Stream}))) ⟩
-          ▻ (Stream [ from-earlier ◇ ] [ ◄-subst (π {Γ = ◇} {T = ▻' Stream}) ])
-        ≅˘⟨ ▻-natural (π {Γ = ◇} {T = ▻' Stream}) ⟩
-          (▻ (Stream [ from-earlier ◇ ])) [ π {Γ = ◇} {T = ▻' Stream} ]
+        ≅˘⟨ ▻-cong (stream-subst (from-earlier ◇ ⊚ ◄-subst π)) ⟩
+          ▻ (Stream [ from-earlier ◇ ⊚ ◄-subst π ])
+        ≅˘⟨ ▻-cong (ty-subst-comp Stream (from-earlier ◇) (◄-subst π)) ⟩
+          ▻ (Stream [ from-earlier ◇ ] [ ◄-subst π ])
+        ≅˘⟨ ▻-natural π ⟩
+          (▻ (Stream [ from-earlier ◇ ])) [ π ]
         ≅⟨⟩
-          (▻' Stream) [ π {Γ = ◇} {T = ▻' Stream} ] ∎
+          (▻' Stream) [ π ] ∎
 
 {-
 -- We should be able to write the following functions using Löb induction (and we probably can do so).

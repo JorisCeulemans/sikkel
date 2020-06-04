@@ -5,7 +5,7 @@
 module CwF-Structure.Contexts where
 
 open import Data.Unit using (⊤; tt)
-open import Function hiding (_⟨_⟩_)
+open import Function using (id; _∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
@@ -18,6 +18,7 @@ open import Helpers
 
 record Ctx (C : Category) ℓ : Set (lsuc ℓ) where
   constructor MkCtx
+  no-eta-equality
 
   open Category C
 
@@ -60,6 +61,7 @@ module _ {C : Category} where
   -- The type of substitutions from context Δ to context Γ
   record _⇒_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
     constructor MkSubst
+    no-eta-equality
     field
       func : ∀ {x} → Δ ⟨ x ⟩ → Γ ⟨ x ⟩
       naturality : ∀ {x y} {f : Hom x y} (δ : Δ ⟨ y ⟩) → Γ ⟪ f ⟫ (func δ) ≡ func (Δ ⟪ f ⟫ δ)
@@ -162,8 +164,8 @@ module _ {C : Category} where
   ≅ᶜ-refl : {Γ : Ctx C ℓ} → Γ ≅ᶜ Γ
   from (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
   to (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-  isoˡ (≅ᶜ-refl {Γ = Γ}) = ≅ˢ-refl
-  isoʳ (≅ᶜ-refl {Γ = Γ}) = ≅ˢ-refl
+  eq (isoˡ (≅ᶜ-refl {Γ = Γ})) _ = refl
+  eq (isoʳ (≅ᶜ-refl {Γ = Γ})) _ = refl
 
   ≅ᶜ-sym : {Δ Γ : Ctx C ℓ} → Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
   from (≅ᶜ-sym Δ=Γ) = to Δ=Γ

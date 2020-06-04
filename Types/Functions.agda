@@ -168,7 +168,7 @@ eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
   where open ≡-Reasoning
 
 lam-cong : {Γ : Ctx C ℓ} (T : Ty Γ) {S : Ty Γ} {b b' : Tm (Γ ,, T) (S [ π ])} →
-           b ≅ᵗᵐ b' → lam T {S = S} b ≅ᵗᵐ lam T b'
+           b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
 
 €-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
@@ -188,9 +188,9 @@ eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 
 module _ {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S') where
   lam-ι : (b : Tm (Γ ,, T') (S' [ π ])) →
-          ι[ ⇛-cong T=T' S=S' ] (lam T' {S = S'} b) ≅ᵗᵐ
+          ι[ ⇛-cong T=T' S=S' ] (lam T' b) ≅ᵗᵐ
             lam T (ι[ ty-subst-cong-ty π S=S' ] (
-                   ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-proj₁ {T = T'} (π {T = T}) (ι⁻¹[ ty-subst-cong-ty (π {T = T}) T=T' ] (ξ {T = T}))) S' ] (
+                   ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-proj₁ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ)) S' ] (
                    ι⁻¹[ ty-subst-comp S' π (ty-eq-to-ext-subst Γ T=T') ] (
                    b [ ty-eq-to-ext-subst Γ T=T' ]'))))
   eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym(
@@ -306,9 +306,9 @@ module _ {Δ Γ : Ctx C ℓ} {T S : Ty Γ} (σ : Δ ⇒ Γ) where
     where open ≡-Reasoning
 
   lam-natural : (b : Tm (Γ ,, T) (S [ π ])) →
-                (lam T {S = S} b) [ σ ]' ≅ᵗᵐ
+                (lam T b) [ σ ]' ≅ᵗᵐ
                   ι[ ⇛-natural ] (
-                  lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π {T = T} ∷ σ ⊹ ◼) (σ ∷ π {T = T [ σ ]} ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
+                  lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π ∷ σ ⊹ ◼) (σ ∷ π ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
   eq (lam-natural b) δ = to-pshfun-eq (λ ρ {γ'} eγ t → sym (
     let α = begin
               subst (λ - → T ⟨ _ , - ⟩) _ (T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t)

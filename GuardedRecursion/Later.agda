@@ -117,7 +117,7 @@ prev : {Γ : Ctx ω ℓ} {T : Ty (◄ Γ)} → Tm Γ (▻ T) → Tm (◄ Γ) T
 term (prev t) n γ = t ⟨ suc n , γ ⟩'
 naturality (prev t) m≤n eγ = naturality t (s≤s m≤n) eγ
 
-prev-next : {Γ : Ctx ω ℓ} {T : Ty (◄ Γ)} (t : Tm (◄ Γ) T) → prev {Γ = Γ} (next t) ≅ᵗᵐ t
+prev-next : {Γ : Ctx ω ℓ} {T : Ty (◄ Γ)} (t : Tm (◄ Γ) T) → prev (next t) ≅ᵗᵐ t
 eq (prev-next t) _ = refl
 
 next-prev : {Γ : Ctx ω ℓ} {T : Ty (◄ Γ)} (t : Tm Γ (▻ T)) → next (prev t) ≅ᵗᵐ t
@@ -126,6 +126,8 @@ eq (next-prev t) {suc n} γ = refl
 
 -- We could make the argument T implicit, but giving it explicitly
 -- drastically improves performance.
+-- TODO: Update : The remark above does not hold anymore. See if T can
+-- be made implicit again.
 löb : {Γ : Ctx ω ℓ} (T : Ty Γ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 term (löb T f) zero γ = f €⟨ zero , γ ⟩ lift tt
 term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
@@ -152,13 +154,13 @@ f ⊛ t = next (app (prev f) (prev t))
 --------------------------------------------------
 -- Congruence and naturality for the later modality
 
-▻-map : {Γ : Ctx ω ℓ} {T T' : Ty (◄ Γ)} → (T ↣ T') → (▻ {Γ = Γ} T ↣ ▻ T')
+▻-map : {Γ : Ctx ω ℓ} {T T' : Ty (◄ Γ)} → (T ↣ T') → (▻ T ↣ ▻ T')
 func (▻-map η) {zero} _ = lift tt
 func (▻-map η) {suc n} t = func η t
 naturality (▻-map η) {f = z≤n} _ = refl
 naturality (▻-map η) {f = s≤s m≤n} t = naturality η t
 
-▻-cong : {Γ : Ctx ω ℓ} {T T' : Ty (◄ Γ)} → T ≅ᵗʸ T' → ▻ {Γ = Γ} T ≅ᵗʸ ▻ T'
+▻-cong : {Γ : Ctx ω ℓ} {T T' : Ty (◄ Γ)} → T ≅ᵗʸ T' → ▻ T ≅ᵗʸ ▻ T'
 from (▻-cong T=T') = ▻-map (from T=T')
 to (▻-cong T=T') = ▻-map (to T=T')
 eq (isoˡ (▻-cong T=T')) {zero} _ = refl
@@ -169,7 +171,7 @@ eq (isoʳ (▻-cong T=T')) {suc n} t = eq (isoʳ T=T') t
 ▻'-cong : {Γ : Ctx ω ℓ} {T T' : Ty Γ} → T ≅ᵗʸ T' → ▻' T ≅ᵗʸ ▻' T'
 ▻'-cong {Γ = Γ} T=T' = ▻-cong (ty-subst-cong-ty (from-earlier Γ) T=T')
 
-next-cong : {Γ : Ctx ω ℓ} {T : Ty (◄ Γ)} {t t' : Tm (◄ Γ) T} → t ≅ᵗᵐ t' → next {Γ = Γ} t ≅ᵗᵐ next t'
+next-cong : {Γ : Ctx ω ℓ} {T : Ty (◄ Γ)} {t t' : Tm (◄ Γ) T} → t ≅ᵗᵐ t' → next t ≅ᵗᵐ next t'
 eq (next-cong t=t') {zero} _ = refl
 eq (next-cong t=t') {suc n} γ = eq t=t' γ
 
@@ -181,7 +183,7 @@ eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ lift tt) (eq f=f' γ
 eq (löb-cong T f=f') {suc n} γ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
 
 module _ {Γ : Ctx ω ℓ} {T T' : Ty (◄ Γ)} (T=T' : T ≅ᵗʸ T') where
-  next-ι : (t : Tm (◄ Γ) T') → ι[ ▻-cong T=T' ] next {Γ = Γ} t ≅ᵗᵐ next (ι[ T=T' ] t)
+  next-ι : (t : Tm (◄ Γ) T') → ι[ ▻-cong T=T' ] next t ≅ᵗᵐ next (ι[ T=T' ] t)
   eq (next-ι t) {zero} _ = refl
   eq (next-ι t) {suc n} _ = refl
 
@@ -243,7 +245,7 @@ module _ {Δ Γ : Ctx ω ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) where
     where open ≅ᵗʸ-Reasoning
 
   löb-natural : (f : Tm Γ (▻' T ⇛ T)) →
-                (löb T f) [ σ ]' ≅ᵗᵐ löb (T [ σ ]) (ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural {T = ▻' T} {T} σ ] (f [ σ ]')))
+                (löb T f) [ σ ]' ≅ᵗᵐ löb (T [ σ ]) (ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]')))
   eq (löb-natural f) {zero} δ = $-cong (f ⟨ 0 , func σ δ ⟩') refl _ _
   eq (löb-natural f) {suc n} δ =
     begin
@@ -259,4 +261,4 @@ module _ {Δ Γ : Ctx ω ℓ} (σ : Δ ⇒ Γ) (T : Ty Γ) where
       α = _
       β = _
       g : Tm Δ (▻' (T [ σ ]) ⇛ (T [ σ ]))
-      g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural {T = ▻' T} {T} σ ] (f [ σ ]'))
+      g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))

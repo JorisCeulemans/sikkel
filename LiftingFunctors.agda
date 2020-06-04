@@ -31,11 +31,11 @@ func (subst-lift σ) {c} = func σ {ob F c}
 naturality (subst-lift σ) {f = f} δ = naturality σ {f = hom F f} δ
 
 subst-lift-id : {Γ : Ctx D ℓ} → subst-lift (id-subst Γ) ≅ˢ id-subst (ctx-lift Γ)
-subst-lift-id = ≅ˢ-refl
+eq subst-lift-id _ = refl
 
 subst-lift-comp : {Δ Γ Θ : Ctx D ℓ} (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                   subst-lift (τ ⊚ σ) ≅ˢ subst-lift τ ⊚ subst-lift σ
-subst-lift-comp τ σ = ≅ˢ-refl
+eq (subst-lift-comp τ σ) _ = refl
 
 ty-lift : {Γ : Ctx D ℓ} → Ty Γ → Ty (ctx-lift Γ)
 type (ty-lift T) c γ = T ⟨ ob F c , γ ⟩
@@ -76,9 +76,9 @@ eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
 lift-π : (Γ : Ctx D ℓ) (T : Ty Γ) → subst-lift (π {T = T}) ⊚ to (lift-ctx-ext Γ T) ≅ˢ π
 eq (lift-π Γ T) _ = refl
 
-lift-ξ : (Γ : Ctx D ℓ) (T : Ty Γ) → tm-lift (ξ {T = T}) [ to (lift-ctx-ext Γ T) ]' ≅ᵗᵐ
+lift-ξ : (Γ : Ctx D ℓ) (T : Ty Γ) → tm-lift ξ [ to (lift-ctx-ext Γ T) ]' ≅ᵗᵐ
                                      ι[ ty-subst-cong-ty (to (lift-ctx-ext Γ T)) (ty-lift-natural π T) ] (
-                                     ι[ ty-subst-comp (ty-lift T) (subst-lift (π {T = T})) (to (lift-ctx-ext Γ T)) ] (
+                                     ι[ ty-subst-comp (ty-lift T) (subst-lift π) (to (lift-ctx-ext Γ T)) ] (
                                      ι[ ty-subst-cong-subst (lift-π Γ T) (ty-lift T) ] ξ))
 eq (lift-ξ Γ T) [ γ , t ] = sym (
   begin

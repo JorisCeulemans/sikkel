@@ -91,17 +91,17 @@ false' = discr false
 
 if'_then'_else'_ : {Γ : Ctx C 0ℓ} {T : Ty Γ} → Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
 term (if' c then' t else' f) = λ x γ → if c ⟨ x , γ ⟩' then t ⟨ x , γ ⟩' else f ⟨ x , γ ⟩'
-naturality (if'_then'_else'_ {Γ = Γ} c t f) {x} {y} φ {γ} {γ'} eγ with c ⟨ x , γ' ⟩' | c ⟨ y , γ ⟩' | naturality c φ eγ
-naturality (if'_then'_else'_ {Γ} c t f) {x} {y} φ {γ} {γ'} eγ | false | .false | refl = naturality f φ eγ
-naturality (if'_then'_else'_ {Γ} c t f) {x} {y} φ {γ} {γ'} eγ | true  | .true  | refl = naturality t φ eγ
+naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ with c ⟨ x , γ' ⟩' | c ⟨ y , γ ⟩' | naturality c φ eγ
+naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | false | .false | refl = naturality f φ eγ
+naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | true  | .true  | refl = naturality t φ eγ
 
 β-Bool'-true : {Γ : Ctx C 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
                if' true' then' t else' t' ≅ᵗᵐ t
-β-Bool'-true t t' = ≅ᵗᵐ-refl
+eq (β-Bool'-true t t') _ = refl
 
 β-Bool'-false : {Γ : Ctx C 0ℓ} {T : Ty Γ} (t t' : Tm Γ T) →
                if' false' then' t else' t' ≅ᵗᵐ t'
-β-Bool'-false t t' = ≅ᵗᵐ-refl
+eq (β-Bool'-false t t') _ = refl
 
 
 --------------------------------------------------

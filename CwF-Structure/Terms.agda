@@ -27,6 +27,8 @@ private
 
 record Tm {ℓ} (Γ : Ctx C ℓ) (T : Ty Γ) : Set ℓ where
   constructor MkTm
+  no-eta-equality
+
   field
     term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
     naturality : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) →
@@ -144,7 +146,7 @@ eq (convert-subst-commute σ η t) δ = refl
 
 tm-subst-cong-subst : {Δ Γ : Ctx C ℓ} {σ τ : Δ ⇒ Γ} {T : Ty Γ} (t : Tm Γ T) →
                       (σ=τ : σ ≅ˢ τ) → t [ σ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst σ=τ T ] (t [ τ ]')
-eq (tm-subst-cong-subst {σ = σ}{τ}{T} t σ=τ) δ = sym (naturality t hom-id _)
+eq (tm-subst-cong-subst t σ=τ) δ = sym (naturality t hom-id _)
 
 tm-subst-id : {Γ : Ctx C ℓ} {T : Ty Γ} (t : Tm Γ T) → t [ id-subst Γ ]' ≅ᵗᵐ ι[ ty-subst-id T ] t
 eq (tm-subst-id t) _ = refl
