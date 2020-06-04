@@ -23,7 +23,7 @@ open import GuardedRecursion.Later
 
 
 --------------------------------------------------
--- Some basic operations and proves regarding vectors
+-- Some basic operations and proofs regarding vectors
 
 first-≤ : ∀ {m n} {A : Set ℓ} → m ≤ n → Vec A n → Vec A m
 first-≤ z≤n as = []
