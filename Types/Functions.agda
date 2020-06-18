@@ -19,6 +19,11 @@ open import CwF-Structure.SubstitutionSequence {C = C}
 
 open Category C
 
+private
+  variable
+    x y z : Ob
+    Γ Δ : Ctx C ℓ
+
 
 --------------------------------------------------
 -- Description of a function type at a specific stage (object of the base category)
@@ -35,12 +40,8 @@ record PresheafFunc {ℓ} {Γ : Ctx C ℓ} (T S : Ty Γ) (z : Ob) (γ : Γ ⟨ z
   infix 13 _$⟨_,_⟩_
 open PresheafFunc public
 
-private
-  variable
-    x y z : Ob
-
 -- Here we make again use of uip by pattern matching on both equality proofs.
-$-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} (f : PresheafFunc T S y γy)
+$-cong : {T S : Ty Γ} {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} (f : PresheafFunc T S y γy)
          {ρ ρ' : Hom x y} (eρ : ρ ≡ ρ')
          (eγ : Γ ⟪ ρ ⟫ γy ≡ γx) (eγ' : Γ ⟪ ρ' ⟫ γy ≡ γx)
          {t : T ⟨ x , γx ⟩} →
@@ -48,7 +49,7 @@ $-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩
 $-cong f refl refl refl = refl
 
 -- This is one of the few places where we use function extensionality.
-to-pshfun-eq : {Γ : Ctx C ℓ} {T S : Ty Γ} {γ : Γ ⟨ y ⟩} {f g : PresheafFunc T S y γ} →
+to-pshfun-eq : {T S : Ty Γ} {γ : Γ ⟨ y ⟩} {f g : PresheafFunc T S y γ} →
                (∀ {x} (ρ : Hom x y) {γ'} (eq : Γ ⟪ ρ ⟫ γ ≡ γ') t →
                    f $⟨ ρ , eq ⟩ t ≡ g $⟨ ρ , eq ⟩ t) →
                f ≡ g
@@ -57,10 +58,10 @@ to-pshfun-eq e = cong₂-d MkFunc
   (funextI (funextI (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
 
 -- This will be used to define the action of a function type on morphisms.
-lower-presheaffunc : {Γ : Ctx C ℓ} {T S : Ty Γ} (ρ-yz : Hom y z)
+lower-presheaffunc : {T S : Ty Γ} (ρ-yz : Hom y z)
                      {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eq : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
                      PresheafFunc T S z γz → PresheafFunc T S y γy
-lower-presheaffunc {y = y}{z = z}{Γ = Γ}{T}{S} ρ-yz {γz}{γy} eq-zy f = MkFunc g g-nat
+lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eq-zy f = MkFunc g g-nat
   where
     g : ∀ {x} (ρ-xy : Hom x y) {γx} (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) →
         T ⟨ x , γx ⟩ → S ⟨ x , γx ⟩
@@ -79,13 +80,13 @@ lower-presheaffunc {y = y}{z = z}{Γ = Γ}{T}{S} ρ-yz {γz}{γy} eq-zy f = MkFu
 --------------------------------------------------
 -- Definition of the function type + term constructors
 
-_⇛_ : {Γ : Ctx C ℓ} → Ty Γ → Ty Γ → Ty Γ
+_⇛_ : Ty Γ → Ty Γ → Ty Γ
 type (_⇛_ {Γ = Γ} T S) z γ = PresheafFunc T S z γ
 morph (T ⇛ S) = lower-presheaffunc
 morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
 morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ t → $-cong f ∙assoc _ _)
 
-lam : {Γ : Ctx C ℓ} (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
+lam : (T : Ty Γ) {S : Ty Γ} → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam T {S} b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
                                  (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eq-zy eq-yx t →
   b ⟨ x , [ γx , T ⟪ ρ-xy , eq-yx ⟫ t ] ⟩'
@@ -97,14 +98,14 @@ term (lam T {S} b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t 
 naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
 
 -- An operator used to define function application.
-_€⟨_,_⟩_ : {Γ : Ctx C ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
+_€⟨_,_⟩_ : {T S : Ty Γ} → Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
 _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ ⟩ t
 
-€-natural : {Γ : Ctx C ℓ} {T S : Ty Γ} (f : Tm Γ (T ⇛ S)) (ρ : Hom x y)
+€-natural : {T S : Ty Γ} (f : Tm Γ (T ⇛ S)) (ρ : Hom x y)
             {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ ρ ⟫ γy ≡ γx)
             (t : T ⟨ y , γy ⟩) →
             S ⟪ ρ , eγ ⟫ (f €⟨ y , γy ⟩ t) ≡ f €⟨ x , γx ⟩ (T ⟪ ρ , eγ ⟫ t)
-€-natural {Γ = Γ}{T}{S} f ρ {γy}{γx} eγ t =
+€-natural {Γ = Γ}{T = T}{S} f ρ {γy}{γx} eγ t =
   S ⟪ ρ , eγ ⟫ (f ⟨ _ , γy ⟩' $⟨ hom-id , rel-id Γ γy ⟩ t)
     ≡⟨ sym (naturality (f ⟨ _ , γy ⟩') (rel-id Γ γy) eγ t) ⟩
   f ⟨ _ , γy ⟩' $⟨ hom-id ∙ ρ , strong-rel-comp Γ (rel-id Γ γy) eγ ⟩ (T ⟪ ρ , eγ ⟫ t)
@@ -114,7 +115,7 @@ _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ
   f ⟨ _ , γx ⟩' $⟨ hom-id , rel-id Γ γx ⟩ (T ⟪ ρ , eγ ⟫ t) ∎
   where open ≡-Reasoning
 
-app : {Γ : Ctx C ℓ} {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
+app : {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
 term (app f t) y γ = f €⟨ y , γ ⟩ (t ⟨ y , γ ⟩')
 naturality (app {Γ = Γ}{T}{S} f t) ρ {γy}{γx} eγ =
   S ⟪ ρ , eγ ⟫ (f €⟨ _ , γy ⟩ (t ⟨ _ , γy ⟩'))
@@ -128,7 +129,7 @@ naturality (app {Γ = Γ}{T}{S} f t) ρ {γy}{γx} eγ =
 --------------------------------------------------
 -- Congruence proofs
 
-pshfun-dimap : {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') →
+pshfun-dimap : {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') →
                (z : Ob) (γ : Γ ⟨ z ⟩) →
                PresheafFunc T S z γ → PresheafFunc T' S' z γ
 _$⟨_,_⟩_ (pshfun-dimap η φ _ γ f) ρ eγ t' = func φ (f $⟨ ρ , eγ ⟩ func η t')
@@ -143,11 +144,11 @@ naturality (pshfun-dimap {T = T}{T'}{S}{S'} η φ z γ f) eq-zy eq-yx t' =
     S' ⟪ _ , eq-yx ⟫ func φ (f $⟨ _ , eq-zy ⟩ func η t') ∎
   where open ≡-Reasoning
 
-⇛-dimap : {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') → (T ⇛ S ↣ T' ⇛ S')
+⇛-dimap : {T T' S S' : Ty Γ} → (T' ↣ T) → (S ↣ S') → (T ⇛ S ↣ T' ⇛ S')
 func (⇛-dimap η φ) = pshfun-dimap η φ _ _
 naturality (⇛-dimap η φ) f = to-pshfun-eq λ _ _ _ → refl
 
-⇛-cong : {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⇛ S ≅ᵗʸ T' ⇛ S'
+⇛-cong : {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⇛ S ≅ᵗʸ T' ⇛ S'
 from (⇛-cong T=T' S=S') = ⇛-dimap (to T=T') (from S=S')
 to (⇛-cong T=T' S=S') = ⇛-dimap (from T=T') (to S=S')
 eq (isoˡ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t →
@@ -167,11 +168,11 @@ eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
     f $⟨ ρ , eγ ⟩ t' ∎)
   where open ≡-Reasoning
 
-lam-cong : {Γ : Ctx C ℓ} (T : Ty Γ) {S : Ty Γ} {b b' : Tm (Γ ,, T) (S [ π ])} →
+lam-cong : (T : Ty Γ) {S : Ty Γ} {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
 
-€-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
+€-cong : {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
          f ≅ᵗᵐ f' → t ≡ t' → f €⟨ z , γ ⟩ t ≡ f' €⟨ z , γ ⟩ t'
 €-cong {z = z}{f = f}{f'}{γ}{t}{t'} f=f' t=t' =
   begin
@@ -182,7 +183,7 @@ eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
     f' ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t' ∎
   where open ≡-Reasoning
 
-app-cong : {Γ : Ctx C ℓ} {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
+app-cong : {T S : Ty Γ} {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
 eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 

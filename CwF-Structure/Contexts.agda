@@ -39,6 +39,7 @@ module _ {C : Category} where
   private
     variable
       x y z : Ob
+      Δ Γ Θ : Ctx C ℓ
 
   _⟨_⟩ : Ctx C ℓ → Ob → Set ℓ
   Γ ⟨ x ⟩ = set Γ x
@@ -72,7 +73,7 @@ module _ {C : Category} where
   naturality (id-subst Γ) = λ _ → refl
 
   -- Composition of substitutions
-  _⊚_ : {Δ Γ Θ : Ctx C ℓ} → Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
+  _⊚_ : Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
   func (τ ⊚ σ) = func τ ∘ func σ
   naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
                                   (cong (func τ) (naturality σ δ))
@@ -96,13 +97,13 @@ module _ {C : Category} where
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
   open _≅ˢ_ public
 
-  ≅ˢ-refl : {Δ Γ : Ctx C ℓ} {σ : Δ ⇒ Γ} → σ ≅ˢ σ
-  eq (≅ˢ-refl {σ = σ}) _ = refl
+  ≅ˢ-refl : {σ : Δ ⇒ Γ} → σ ≅ˢ σ
+  eq ≅ˢ-refl _ = refl
 
-  ≅ˢ-sym : {Δ Γ : Ctx C ℓ} {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ σ
+  ≅ˢ-sym : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ σ
   eq (≅ˢ-sym σ=τ) δ = sym (eq σ=τ δ)
 
-  ≅ˢ-trans : {Δ Γ : Ctx C ℓ} {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
+  ≅ˢ-trans : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
   eq (≅ˢ-trans σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
   module ≅ˢ-Reasoning {Δ Γ : Ctx C ℓ} where
@@ -132,19 +133,19 @@ module _ {C : Category} where
   --------------------------------------------------
   -- Laws for the category of contexts
 
-  ⊚-id-substʳ : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≅ˢ σ
+  ⊚-id-substʳ : (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≅ˢ σ
   eq (⊚-id-substʳ σ) _ = refl
 
-  ⊚-id-substˡ : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
+  ⊚-id-substˡ : (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
   eq (⊚-id-substˡ σ) _ = refl
 
   ⊚-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : Ctx C ℓ} (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) → (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≅ˢ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
   eq (⊚-assoc σ₃₄ σ₂₃ σ₁₂) _ = refl
 
-  ⊚-congˡ : {Δ Γ Θ : Ctx C ℓ} (τ : Γ ⇒ Θ) {σ σ' : Δ ⇒ Γ} → σ ≅ˢ σ' → τ ⊚ σ ≅ˢ τ ⊚ σ'
+  ⊚-congˡ : (τ : Γ ⇒ Θ) {σ σ' : Δ ⇒ Γ} → σ ≅ˢ σ' → τ ⊚ σ ≅ˢ τ ⊚ σ'
   eq (⊚-congˡ τ σ=σ') δ = cong (func τ) (eq σ=σ' δ)
 
-  ⊚-congʳ : {Δ Γ Θ : Ctx C ℓ} {τ τ' : Γ ⇒ Θ} (σ : Δ ⇒ Γ) → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
+  ⊚-congʳ : {τ τ' : Γ ⇒ Θ} (σ : Δ ⇒ Γ) → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
   eq (⊚-congʳ σ τ=τ') δ = eq τ=τ' (func σ δ)
 
 
@@ -161,19 +162,19 @@ module _ {C : Category} where
       isoʳ : from ⊚ to ≅ˢ id-subst Γ
   open _≅ᶜ_ public
 
-  ≅ᶜ-refl : {Γ : Ctx C ℓ} → Γ ≅ᶜ Γ
+  ≅ᶜ-refl : Γ ≅ᶜ Γ
   from (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
   to (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-  eq (isoˡ (≅ᶜ-refl {Γ = Γ})) _ = refl
-  eq (isoʳ (≅ᶜ-refl {Γ = Γ})) _ = refl
+  eq (isoˡ ≅ᶜ-refl) _ = refl
+  eq (isoʳ ≅ᶜ-refl) _ = refl
 
-  ≅ᶜ-sym : {Δ Γ : Ctx C ℓ} → Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
+  ≅ᶜ-sym : Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
   from (≅ᶜ-sym Δ=Γ) = to Δ=Γ
   to (≅ᶜ-sym Δ=Γ) = from Δ=Γ
   isoˡ (≅ᶜ-sym Δ=Γ) = isoʳ Δ=Γ
   isoʳ (≅ᶜ-sym Δ=Γ) = isoˡ Δ=Γ
 
-  ≅ᶜ-trans : {Δ Γ Θ : Ctx C ℓ} → Δ ≅ᶜ Γ → Γ ≅ᶜ Θ → Δ ≅ᶜ Θ
+  ≅ᶜ-trans : Δ ≅ᶜ Γ → Γ ≅ᶜ Θ → Δ ≅ᶜ Θ
   from (≅ᶜ-trans Δ=Γ Γ=Θ) = from Γ=Θ ⊚ from Δ=Γ
   to (≅ᶜ-trans Δ=Γ Γ=Θ) = to Δ=Γ ⊚ to Γ=Θ
   isoˡ (≅ᶜ-trans Δ=Γ Γ=Θ) =

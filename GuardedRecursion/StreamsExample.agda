@@ -21,6 +21,10 @@ open import Types.Functions
 open import Types.Products
 open import GuardedRecursion.Later
 
+private
+  variable
+    Γ Δ : Ctx ω 0ℓ
+
 
 --------------------------------------------------
 -- Some basic operations and proofs regarding vectors
@@ -58,10 +62,10 @@ morph Stream-prim m≤n _ = first-≤ (s≤s m≤n)
 morph-id Stream-prim _ = first-≤-refl
 morph-comp Stream-prim k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
 
-Stream : {Γ : Ctx ω 0ℓ} → Ty Γ
+Stream : Ty Γ
 Stream {Γ = Γ} = Stream-prim [ !◇ Γ ]
 
-str-head : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ Nat'
+str-head : Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
 naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   head (s ⟨ n , γ ⟩')
@@ -71,7 +75,7 @@ naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   head (s ⟨ m , γ' ⟩') ∎
   where open ≡-Reasoning
 
-str-tail : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ Stream)
+str-tail : Tm Γ Stream → Tm Γ (▻ Stream)
 term (str-tail s) zero _ = lift tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
@@ -83,7 +87,7 @@ naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eγ =
   tail (s ⟨ suc m , γ' ⟩') ∎
   where open ≡-Reasoning
 
-str-cons : {Γ : Ctx ω 0ℓ} → Tm Γ (Nat' ⊠ (▻ Stream)) → Tm Γ Stream
+str-cons : Tm Γ (Nat' ⊠ (▻ Stream)) → Tm Γ Stream
 term (str-cons t) zero γ = fst t ⟨ zero , γ ⟩' ∷ []
 term (str-cons t) (suc n) γ = (fst t ⟨ suc n , _ ⟩') ∷ (snd t ⟨ suc n , γ ⟩')
 naturality (str-cons t) {zero} {zero} z≤n eγ = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eγ)
@@ -91,7 +95,7 @@ naturality (str-cons t) {zero} {suc n} z≤n eγ = cong (λ x → proj₁ x ∷ 
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eγ =
   cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eγ)) (naturality (snd t) (s≤s m≤n) eγ)
 
-stream-subst : {Δ Γ : Ctx ω 0ℓ} (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
+stream-subst : (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
 from (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
 to (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
 eq (isoˡ (stream-subst σ)) _ = refl
@@ -101,10 +105,10 @@ eq (isoʳ (stream-subst σ)) _ = refl
 --------------------------------------------------
 -- Some operations on guarded streams
 
-str-snd : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ Nat')
+str-snd : Tm Γ Stream → Tm Γ (▻ Nat')
 str-snd s = next (str-head (prev (str-tail s)))
 
-str-thrd : {Γ : Ctx ω 0ℓ} → Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
+str-thrd : Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream

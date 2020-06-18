@@ -15,8 +15,12 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types {C = C}
 open import CwF-Structure.Terms {C = C}
 
+private
+  variable
+    Γ Δ : Ctx C ℓ
 
-_⊞_ : {Γ : Ctx C ℓ} → Ty Γ → Ty Γ → Ty Γ
+
+_⊞_ : Ty Γ → Ty Γ → Ty Γ
 type (T ⊞ S) x γ = T ⟨ x , γ ⟩ ⊎ S ⟨ x , γ ⟩
 morph (T ⊞ S) f eγ (inl t) = inl (T ⟪ f , eγ ⟫ t)
 morph (T ⊞ S) f eγ (inr s) = inr (S ⟪ f , eγ ⟫ s)
@@ -25,13 +29,13 @@ morph-id (T ⊞ S) (inr s) = cong inr (morph-id S s)
 morph-comp (T ⊞ S) f g eq-nm eq-mk (inl t) = cong inl (morph-comp T f g eq-nm eq-mk t)
 morph-comp (T ⊞ S) f g eq-nm eq-mk (inr s) = cong inr (morph-comp S f g eq-nm eq-mk s)
 
-⊞-bimap : {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} → (T ↣ T') → (S ↣ S') → (T ⊞ S ↣ T' ⊞ S')
+⊞-bimap : {T T' S S' : Ty Γ} → (T ↣ T') → (S ↣ S') → (T ⊞ S ↣ T' ⊞ S')
 func (⊞-bimap η φ) (inl t) = inl (func η t)
 func (⊞-bimap η φ) (inr s) = inr (func φ s)
 naturality (⊞-bimap η φ) (inl t) = cong inl (naturality η t)
 naturality (⊞-bimap η φ) (inr s) = cong inr (naturality φ s)
 
-⊞-cong : {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⊞ S ≅ᵗʸ T' ⊞ S'
+⊞-cong : {T T' S S' : Ty Γ} → T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⊞ S ≅ᵗʸ T' ⊞ S'
 from (⊞-cong T=T' S=S') = ⊞-bimap (from T=T') (from S=S')
 to (⊞-cong T=T' S=S') = ⊞-bimap (to T=T') (to S=S')
 eq (isoˡ (⊞-cong T=T' S=S')) (inl t) = cong inl (eq (isoˡ T=T') t)
@@ -54,10 +58,10 @@ module _ {Γ : Ctx C ℓ} {T S : Ty Γ} where
   inr'-cong : {s s' : Tm Γ S} → s ≅ᵗᵐ s' → inr' s ≅ᵗᵐ inr' s'
   eq (inr'-cong s=s') γ = cong inr (eq s=s' γ)
 
-inl'⟨_⟩_ : {Γ : Ctx C ℓ} {T : Ty Γ} (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
+inl'⟨_⟩_ : {T : Ty Γ} (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
 inl'⟨ S ⟩ t = inl' {S = S} t
 
-inr'⟨_⟩_ : {Γ : Ctx C ℓ} (T : Ty Γ) {S : Ty Γ} (s : Tm Γ S) → Tm Γ (T ⊞ S)
+inr'⟨_⟩_ : (T : Ty Γ) {S : Ty Γ} (s : Tm Γ S) → Tm Γ (T ⊞ S)
 inr'⟨ T ⟩ s = inr' {T = T} s
 
 module _ {Γ : Ctx C ℓ} {T T' S S' : Ty Γ} (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S') where

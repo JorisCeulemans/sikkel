@@ -73,7 +73,7 @@ to (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
 eq (isoˡ (lift-ctx-ext Γ T)) _ = refl
 eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
 
-lift-π : (Γ : Ctx D ℓ) (T : Ty Γ) → subst-lift (π {T = T}) ⊚ to (lift-ctx-ext Γ T) ≅ˢ π
+lift-π : (Γ : Ctx D ℓ) (T : Ty Γ) → subst-lift π ⊚ to (lift-ctx-ext Γ T) ≅ˢ π
 eq (lift-π Γ T) _ = refl
 
 lift-ξ : (Γ : Ctx D ℓ) (T : Ty Γ) → tm-lift ξ [ to (lift-ctx-ext Γ T) ]' ≅ᵗᵐ
