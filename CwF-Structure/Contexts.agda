@@ -60,7 +60,7 @@ module _ {C : Category} where
                                                           eq-yx)
 
   -- The type of substitutions from context Δ to context Γ
-  record _⇒_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
+  record _⇒_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
     constructor MkSubst
     no-eta-equality
     field
@@ -92,7 +92,7 @@ module _ {C : Category} where
 
   -- Assuming function extensionality and uip (which we do) the following definition is
   -- equivalent to propositional equality. However, this one is easier to use.
-  record _≅ˢ_ {ℓ} {Δ Γ : Ctx C ℓ} (σ τ : Δ ⇒ Γ) : Set ℓ where
+  record _≅ˢ_ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ τ : Δ ⇒ Γ) : Set (ℓ ⊔ ℓ') where
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
   open _≅ˢ_ public
@@ -106,7 +106,7 @@ module _ {C : Category} where
   ≅ˢ-trans : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
   eq (≅ˢ-trans σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
-  module ≅ˢ-Reasoning {Δ Γ : Ctx C ℓ} where
+  module ≅ˢ-Reasoning {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} where
     infix  3 _∎
     infixr 2 _≅⟨⟩_ step-≅ step-≅˘
     infix  1 begin_
@@ -139,7 +139,10 @@ module _ {C : Category} where
   ⊚-id-substˡ : (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
   eq (⊚-id-substˡ σ) _ = refl
 
-  ⊚-assoc : {Γ₁ Γ₂ Γ₃ Γ₄ : Ctx C ℓ} (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) → (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≅ˢ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
+  ⊚-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+             {Γ₁ : Ctx C ℓ₁} {Γ₂ : Ctx C ℓ₂} {Γ₃ : Ctx C ℓ₃} {Γ₄ : Ctx C ℓ₄}
+             (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) →
+             (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≅ˢ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
   eq (⊚-assoc σ₃₄ σ₂₃ σ₁₂) _ = refl
 
   ⊚-congˡ : (τ : Γ ⇒ Θ) {σ σ' : Δ ⇒ Γ} → σ ≅ˢ σ' → τ ⊚ σ ≅ˢ τ ⊚ σ'
@@ -154,7 +157,7 @@ module _ {C : Category} where
 
   -- Two contexts are equivalent if they are naturally equivalent as presheaves.
   -- We actually do not use this notion.
-  record _≅ᶜ_ {ℓ} (Δ Γ : Ctx C ℓ) : Set ℓ where
+  record _≅ᶜ_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
     field
       from : Δ ⇒ Γ
       to : Γ ⇒ Δ
@@ -210,14 +213,14 @@ module _ {C : Category} where
   --------------------------------------------------
   -- The empty context (i.e. terminal object in the category of contexts)
 
-  ◇ : Ctx C ℓ
-  set ◇ _ = Lift _ ⊤
-  rel ◇ _ _ = lift tt
+  ◇ : Ctx C 0ℓ
+  set ◇ _ = ⊤
+  rel ◇ _ _ = tt
   rel-id ◇ _ = refl
   rel-comp ◇ _ _ _ = refl
 
   !◇ : (Γ : Ctx C ℓ) → Γ ⇒ ◇
-  func (!◇ Γ) _ = lift tt
+  func (!◇ Γ) _ = tt
   naturality (!◇ Γ) _ = refl
 
   ◇-terminal : (Γ : Ctx C ℓ) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ

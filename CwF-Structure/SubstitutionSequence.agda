@@ -24,34 +24,35 @@ infixr 5 _∷_
 private
   variable
     Δ Γ : Ctx C ℓ
+    T : Ty Γ ℓ
 
 
 -- Type of a sequence of substitutions. The order is as if you would compose them.
-data _⇒⁺_ {ℓ : Level} : Ctx C ℓ → Ctx C ℓ → Set (lsuc ℓ) where
-  _◼ : {Δ Γ : Ctx C ℓ} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
-  _∷_ : {Δ Γ Θ : Ctx C ℓ} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
+data _⇒⁺_ : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Set {!lsuc ℓ!} where
+  _◼ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
+  _∷_ : ∀ {ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
 
 fold : Δ ⇒⁺ Γ → Δ ⇒ Γ
 fold (σ ◼) = σ
 fold (σ ∷ σs) = σ ⊚ fold σs
 
 -- Applying a sequence of substitutions to a type.
-_⟦_⟧ : (T : Ty Γ) (σs : Δ ⇒⁺ Γ) → Ty Δ
+_⟦_⟧ : (T : Ty Γ ℓ) (σs : Δ ⇒⁺ Γ) → Ty Δ ℓ
 T ⟦ σ ◼ ⟧ = T [ σ ]
 T ⟦ σ ∷ σs ⟧ = (T [ σ ]) ⟦ σs ⟧
 
 -- Applying a sequence of substitutions to a term.
-_⟦_⟧' : {T : Ty Γ} (t : Tm Γ T) (σs : Δ ⇒⁺ Γ) → Tm Δ (T ⟦ σs ⟧)
+_⟦_⟧' : (t : Tm Γ T) (σs : Δ ⇒⁺ Γ) → Tm Δ (T ⟦ σs ⟧)
 t ⟦ σ ◼ ⟧' = t [ σ ]'
 t ⟦ σ ∷ σs ⟧' = (t [ σ ]') ⟦ σs ⟧'
 
-ty-subst-seq-fold : (σs : Δ ⇒⁺ Γ) (T : Ty Γ) →
+ty-subst-seq-fold : (σs : Δ ⇒⁺ Γ) (T : Ty Γ ℓ) →
                     T ⟦ σs ⟧ ≅ᵗʸ T [ fold σs ]
 ty-subst-seq-fold (σ ◼) T = ≅ᵗʸ-refl
 ty-subst-seq-fold (σ ∷ σs) T = ≅ᵗʸ-trans (ty-subst-seq-fold σs (T [ σ ]))
                                          (ty-subst-comp T σ (fold σs))
 
-tm-subst-seq-fold : (σs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
+tm-subst-seq-fold : (σs : Δ ⇒⁺ Γ) {T : Ty Γ ℓ} (t : Tm Γ T) →
                     t ⟦ σs ⟧' ≅ᵗᵐ ι[ ty-subst-seq-fold σs T ] (t [ fold σs ]')
 tm-subst-seq-fold (σ ◼) t = ≅ᵗᵐ-sym (ι-refl _)
 tm-subst-seq-fold {Δ = Δ}{Γ} (σ ∷ σs) {T} t =
@@ -65,7 +66,7 @@ tm-subst-seq-fold {Δ = Δ}{Γ} (σ ∷ σs) {T} t =
     ι[ ≅ᵗʸ-trans (ty-subst-seq-fold σs (T [ σ ])) (ty-subst-comp T σ (fold σs)) ] (t [ σ ⊚ fold σs ]') ∎
   where open ≅ᵗᵐ-Reasoning
 
-ty-subst-seq-cong : (σs τs : Δ ⇒⁺ Γ) (T : Ty Γ) →
+ty-subst-seq-cong : (σs τs : Δ ⇒⁺ Γ) (T : Ty Γ ℓ) →
                     fold σs ≅ˢ fold τs →
                     T ⟦ σs ⟧ ≅ᵗʸ T ⟦ τs ⟧
 ty-subst-seq-cong σs τs T e =
@@ -79,10 +80,10 @@ ty-subst-seq-cong σs τs T e =
     T ⟦ τs ⟧ ∎
   where open ≅ᵗʸ-Reasoning
 
-tm-subst-seq-cong : (σs τs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
+tm-subst-seq-cong : (σs τs : Δ ⇒⁺ Γ) (t : Tm Γ T) →
                     (e : fold σs ≅ˢ fold τs) →
                     t ⟦ σs ⟧' ≅ᵗᵐ ι[ ty-subst-seq-cong σs τs T e ] (t ⟦ τs ⟧')
-tm-subst-seq-cong {Δ = Δ} σs τs {T} t e =
+tm-subst-seq-cong {Δ = Δ} {T = T} σs τs t e =
   begin
     t ⟦ σs ⟧'
   ≅⟨ tm-subst-seq-fold σs t ⟩
