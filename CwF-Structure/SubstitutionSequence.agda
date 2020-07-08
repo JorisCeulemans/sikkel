@@ -1,3 +1,5 @@
+{-# OPTIONS --omega-in-omega #-}
+
 --------------------------------------------------
 -- Substitution Sequences
 --
@@ -28,9 +30,14 @@ private
 
 
 -- Type of a sequence of substitutions. The order is as if you would compose them.
-data _⇒⁺_ : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Set {!lsuc ℓ!} where
+data _⇒⁺_ {ℓ ℓ' : Level} : Ctx C ℓ → Ctx C ℓ' → Setω where
   _◼ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
   _∷_ : ∀ {ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
+{-
+data _⇒⁺_ : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Set {!lsuc ℓ ⊔ lsuc ℓ'!} where
+--  _◼ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
+--  _∷_ : ∀ {ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
+-}
 
 fold : Δ ⇒⁺ Γ → Δ ⇒ Γ
 fold (σ ◼) = σ

@@ -56,13 +56,13 @@ first-≤-tail m≤n (a ∷ as) = refl
 
 -- Just as with discrete types, guarded streams are first defined in the
 -- empty context and then in any context using the terminal substitution.
-Stream-prim : Ty (◇ {ω} {0ℓ})
+Stream-prim : Ty (◇ {ω}) 0ℓ
 type Stream-prim n _ = Vec ℕ (suc n)
 morph Stream-prim m≤n _ = first-≤ (s≤s m≤n)
 morph-id Stream-prim _ = first-≤-refl
 morph-comp Stream-prim k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
 
-Stream : Ty Γ
+Stream : Ty Γ 0ℓ
 Stream {Γ = Γ} = Stream-prim [ !◇ Γ ]
 
 str-head : Tm Γ Stream → Tm Γ Nat'

@@ -320,7 +320,7 @@ module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
   lam-natural : (b : Tm (Γ ,, T) (S [ π ])) →
                 (lam T b) [ σ ]' ≅ᵗᵐ
                   ι[ ⇛-natural ] (
-                  lam (T [ σ ]) (ι⁻¹[ {!ty-subst-seq-cong (π ∷ σ ⊹ ◼) (σ ∷ π ◼) S (⊹-π-comm σ)!} ] (b [ σ ⊹ ]')))
+                  lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π ∷ σ ⊹ ◼) (σ ∷ π ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
   eq (lam-natural b) δ = to-pshfun-eq (λ ρ {γ'} eγ t → sym (
     let α = begin
               subst (λ - → T ⟨ _ , - ⟩) _ (T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t)
@@ -341,8 +341,7 @@ module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
     ≡⟨ naturality b hom-id (to-Σ-eq (trans (rel-id Γ _) (trans (sym (naturality σ δ)) eγ)) α) ⟩
       b ⟨ _ , [ γ' , t ] ⟩' ∎))
     where open ≡-Reasoning
-{-
+
   app-natural : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) →
                 (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
   eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl _ _
--}
