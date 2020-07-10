@@ -131,17 +131,24 @@ eq (next-prev t) {suc n} γ = refl
 -- TODO: Update : The remark above does not hold anymore. See if T can
 -- be made implicit again.
 löb : (T : Ty Γ ℓ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
-term (löb T f) zero γ = f €⟨ zero , γ ⟩ lift tt
-term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (löb T f) {y = zero} z≤n eγ = €-natural f z≤n eγ (lift tt)
-naturality (löb {Γ = Γ} T f) {y = suc n} z≤n {γ} eγ = €-natural f z≤n eγ ((löb T f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'} eγ =
-  T ⟪ s≤s m≤n , eγ ⟫ f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-    ≡⟨ €-natural f (s≤s m≤n) eγ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩') ⟩
-  f €⟨ suc m , γ' ⟩ (T ⟪ m≤n , _ ⟫ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩'))
-    ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (löb T f) m≤n _) ⟩
-  f €⟨ suc m , γ' ⟩ (löb T f ⟨ m , Γ ⟪ n≤1+n m ⟫ γ' ⟩') ∎
-  where open ≡-Reasoning
+löb {Γ = Γ} T f = MkTm tm nat
+  where
+    tm : (n : ℕ) (γ : Γ ⟨ n ⟩) → T ⟨ n , γ ⟩
+    tm zero    γ = f €⟨ zero , γ ⟩ lift tt
+    tm (suc n) γ = f €⟨ suc n , γ ⟩ tm n (Γ ⟪ n≤1+n n ⟫ γ)
+
+    open ≡-Reasoning
+    nat : ∀ {m n} (m≤n : m ≤ n) {γn : Γ ⟨ n ⟩} {γm : Γ ⟨ m ⟩} (eγ : Γ ⟪ m≤n ⟫ γn ≡ γm) →
+          T ⟪ m≤n , eγ ⟫ (tm n γn) ≡ tm m γm
+    nat {m = .zero} {n = zero}  z≤n eγ = €-natural f z≤n eγ (lift tt)
+    nat {m = .zero} {n = suc n} z≤n eγ = €-natural f z≤n eγ (tm n (Γ ⟪ n≤1+n n ⟫ _))
+    nat {m = suc m} {n = suc n} (s≤s m≤n) {γ}{γ'} eγ =
+      begin
+        T ⟪ s≤s m≤n , eγ ⟫ f €⟨ suc n , γ ⟩ tm n (Γ ⟪ n≤1+n n ⟫ γ)
+      ≡⟨ €-natural f (s≤s m≤n) eγ (tm n (Γ ⟪ n≤1+n n ⟫ γ)) ⟩
+        f €⟨ suc m , γ' ⟩ (T ⟪ m≤n , _ ⟫ tm n (Γ ⟪ n≤1+n n ⟫ γ))
+      ≡⟨ cong (f €⟨ _ , _ ⟩_) (nat m≤n _) ⟩
+        f €⟨ suc m , γ' ⟩ tm m (Γ ⟪ n≤1+n m ⟫ γ') ∎
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
                   löb T f ≅ᵗᵐ app f (next' (löb T f))

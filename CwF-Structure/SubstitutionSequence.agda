@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Substitution Sequences
 --
