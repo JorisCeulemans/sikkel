@@ -140,6 +140,6 @@ generate : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 generate f = {!!}
 
 nats : Tm ◇ Stream
-nats = app (generate (lam Nat' (ι[ Discr-subst ℕ (π {T = Nat'}) ] (suc' (ι⁻¹[ Discr-subst ℕ (π {T = Nat'}) ] (ξ {T = Nat'}))))))
+nats = app (generate (lam Nat' (ι[ Discr-subst ℕ π ] (suc' (ι⁻¹[ Discr-subst ℕ π ] ξ)))))
            zero'
 -}
