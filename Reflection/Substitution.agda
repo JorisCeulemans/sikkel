@@ -4,18 +4,16 @@ open import Categories
 module Reflection.Substitution {C : Category} where
 
 open import Level
-open import Relation.Binary.PropositionalEquality
+-- open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure.Contexts
+open import Reflection.Helpers
 
 private
   variable
     ℓ ℓ' ℓ'' : Level
     Δ Γ Θ Ξ : Ctx C ℓ
 
-
-data _≡ω_ {A : Setω} (x : A) : A → Setω where
-  instance refl : x ≡ω x
 
 data Val : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
   var : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Val Δ Γ
@@ -107,12 +105,13 @@ subst-reflect e1 e2 eq =
     ⟦ e2 ⟧e ∎
   where open ≅ˢ-Reasoning
 
-example : (ρ : Δ ⇒ Ξ) (σ : ◇ ⇒ Γ) (τ : Γ ⇒ Θ) → ((id-subst Θ ⊚ τ) ⊚ σ) ⊚ (!◇ Ξ ⊚ ρ) ≅ˢ τ ⊚ ((σ ⊚ id-subst ◇) ⊚ (!◇ Ξ ⊚ (id-subst Ξ ⊚ ρ)))
-example ρ σ τ = subst-reflect (((val id' ⊚' val (var τ)) ⊚' val (var σ)) ⊚' (val !◇' ⊚' val (var ρ)))
-                              (val (var τ) ⊚' ((val (var σ) ⊚' val id') ⊚' (val !◇' ⊚' (val id' ⊚' val (var ρ)))))
-                              refl
+private
+  example : (ρ : Δ ⇒ Ξ) (σ : ◇ ⇒ Γ) (τ : Γ ⇒ Θ) → ((id-subst Θ ⊚ τ) ⊚ σ) ⊚ (!◇ Ξ ⊚ ρ) ≅ˢ τ ⊚ ((σ ⊚ id-subst ◇) ⊚ (!◇ Ξ ⊚ (id-subst Ξ ⊚ ρ)))
+  example ρ σ τ = subst-reflect (((val id' ⊚' val (var τ)) ⊚' val (var σ)) ⊚' (val !◇' ⊚' val (var ρ)))
+                                (val (var τ) ⊚' ((val (var σ) ⊚' val id') ⊚' (val !◇' ⊚' (val id' ⊚' val (var ρ)))))
+                                refl
 
-example2 : (σ : Δ ⇒ Γ) → !◇ Γ ⊚ σ ≅ˢ id-subst ◇ ⊚ !◇ Δ
-example2 σ = subst-reflect (val !◇' ⊚' val (var σ))
-                           (val id' ⊚' val !◇')
-                           refl
+  example2 : (σ : Δ ⇒ Γ) → !◇ Γ ⊚ σ ≅ˢ id-subst ◇ ⊚ !◇ Δ
+  example2 σ = subst-reflect (val !◇' ⊚' val (var σ))
+                             (val id' ⊚' val !◇')
+                             refl
