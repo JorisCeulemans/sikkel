@@ -111,3 +111,8 @@ example : (ρ : Δ ⇒ Ξ) (σ : ◇ ⇒ Γ) (τ : Γ ⇒ Θ) → ((id-subst Θ 
 example ρ σ τ = subst-reflect (((val id' ⊚' val (var τ)) ⊚' val (var σ)) ⊚' (val !◇' ⊚' val (var ρ)))
                               (val (var τ) ⊚' ((val (var σ) ⊚' val id') ⊚' (val !◇' ⊚' (val id' ⊚' val (var ρ)))))
                               refl
+
+example2 : (σ : Δ ⇒ Γ) → !◇ Γ ⊚ σ ≅ˢ id-subst ◇ ⊚ !◇ Δ
+example2 σ = subst-reflect (val !◇' ⊚' val (var σ))
+                           (val id' ⊚' val !◇')
+                           refl
