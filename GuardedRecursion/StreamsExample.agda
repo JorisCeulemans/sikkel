@@ -10,7 +10,7 @@ open import Data.Product using (proj₁; proj₂) renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
 open import Data.Vec.Base hiding ([_]; _⊛_)
 open import Function using (id)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; subst)
 open import Level renaming (zero to lzero; suc to lsuc)
 
 open import Categories
@@ -20,6 +20,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import GuardedRecursion.Later
+open import Reflection.Types
 
 private
   variable
@@ -116,6 +117,10 @@ zeros = löb Stream (lam (▻' Stream) (ι[ stream-subst π ] (str-cons (pair ze
   where
     open ≅ᵗʸ-Reasoning
     β : ▻ Stream ≅ᵗʸ ▻' Stream [ π ]
+    β = type-reflect (subst (!◇ _) ∷ later ∷ [])
+                     (subst (!◇ _) ∷ subst (from-earlier _) ∷ later ∷ subst π ∷ [])
+                     (▻-cong (ty-subst-cong-subst (◇-terminal _ _ _) _))
+    {-
     β = begin
           ▻ Stream
         ≅˘⟨ ▻-cong (stream-subst (from-earlier ◇ ⊚ ◄-subst π)) ⟩
@@ -126,6 +131,16 @@ zeros = löb Stream (lam (▻' Stream) (ι[ stream-subst π ] (str-cons (pair ze
           (▻ (Stream [ from-earlier ◇ ])) [ π ]
         ≅⟨⟩
           (▻' Stream) [ π ] ∎
+    -}
+
+zeros-test : str-head zeros ≅ᵗᵐ zero'
+eq zeros-test {x = zero}  _ = refl
+eq zeros-test {x = suc n} _ = refl
+
+zeros-test2 : str-snd zeros ≅ᵗᵐ next zero'
+eq zeros-test2 {x = zero}  _ = refl
+eq zeros-test2 {x = suc zero}    _ = refl
+eq zeros-test2 {x = suc (suc n)} _ = refl
 
 {-
 -- We should be able to write the following functions using Löb induction (and we probably can do so).
