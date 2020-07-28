@@ -31,7 +31,7 @@ open Ctx public
 
 module _ {C : Category} where
   infix 10 _⇒_
-  infix 1 _≅ˢ_ _≅ᶜ_
+  infix 1 _≅ˢ_
   infixl 20 _⊚_
 
   open Category C
@@ -150,64 +150,6 @@ module _ {C : Category} where
 
   ⊚-congʳ : {τ τ' : Γ ⇒ Θ} (σ : Δ ⇒ Γ) → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
   eq (⊚-congʳ σ τ=τ') δ = eq τ=τ' (func σ δ)
-
-
-  --------------------------------------------------
-  -- Equivalence of contexts
-
-  -- Two contexts are equivalent if they are naturally equivalent as presheaves.
-  -- We actually do not use this notion.
-  record _≅ᶜ_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
-    field
-      from : Δ ⇒ Γ
-      to : Γ ⇒ Δ
-      isoˡ : to ⊚ from ≅ˢ id-subst Δ
-      isoʳ : from ⊚ to ≅ˢ id-subst Γ
-  open _≅ᶜ_ public
-
-  ≅ᶜ-refl : Γ ≅ᶜ Γ
-  from (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-  to (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-  eq (isoˡ ≅ᶜ-refl) _ = refl
-  eq (isoʳ ≅ᶜ-refl) _ = refl
-
-  ≅ᶜ-sym : Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
-  from (≅ᶜ-sym Δ=Γ) = to Δ=Γ
-  to (≅ᶜ-sym Δ=Γ) = from Δ=Γ
-  isoˡ (≅ᶜ-sym Δ=Γ) = isoʳ Δ=Γ
-  isoʳ (≅ᶜ-sym Δ=Γ) = isoˡ Δ=Γ
-
-  ≅ᶜ-trans : Δ ≅ᶜ Γ → Γ ≅ᶜ Θ → Δ ≅ᶜ Θ
-  from (≅ᶜ-trans Δ=Γ Γ=Θ) = from Γ=Θ ⊚ from Δ=Γ
-  to (≅ᶜ-trans Δ=Γ Γ=Θ) = to Δ=Γ ⊚ to Γ=Θ
-  isoˡ (≅ᶜ-trans Δ=Γ Γ=Θ) =
-    begin
-      (to Δ=Γ ⊚ to Γ=Θ) ⊚ (from Γ=Θ ⊚ from Δ=Γ)
-    ≅⟨ ⊚-assoc (to Δ=Γ) (to Γ=Θ) _ ⟩
-      to Δ=Γ ⊚ (to Γ=Θ ⊚ (from Γ=Θ ⊚ from Δ=Γ))
-    ≅˘⟨ ⊚-congˡ (to Δ=Γ) (⊚-assoc (to Γ=Θ) (from Γ=Θ) (from Δ=Γ)) ⟩
-      to Δ=Γ ⊚ ((to Γ=Θ ⊚ from Γ=Θ) ⊚ from Δ=Γ)
-    ≅⟨ ⊚-congˡ (to Δ=Γ) (⊚-congʳ (from Δ=Γ) (isoˡ Γ=Θ)) ⟩
-      to Δ=Γ ⊚ (id-subst _ ⊚ from Δ=Γ)
-    ≅⟨ ⊚-congˡ (to Δ=Γ) (⊚-id-substˡ (from Δ=Γ)) ⟩
-      to Δ=Γ ⊚ from Δ=Γ
-    ≅⟨ isoˡ Δ=Γ ⟩
-      id-subst _ ∎
-    where open ≅ˢ-Reasoning
-  isoʳ (≅ᶜ-trans Δ=Γ Γ=Θ) =
-    begin
-      (from Γ=Θ ⊚ from Δ=Γ) ⊚ (to Δ=Γ ⊚ to Γ=Θ)
-    ≅⟨ ⊚-assoc (from Γ=Θ) (from Δ=Γ) _ ⟩
-      from Γ=Θ ⊚ (from Δ=Γ ⊚ (to Δ=Γ ⊚ to Γ=Θ))
-    ≅˘⟨ ⊚-congˡ (from Γ=Θ) (⊚-assoc (from Δ=Γ) (to Δ=Γ) (to Γ=Θ)) ⟩
-      from Γ=Θ ⊚ ((from Δ=Γ ⊚ to Δ=Γ) ⊚ to Γ=Θ)
-    ≅⟨ ⊚-congˡ (from Γ=Θ) (⊚-congʳ (to Γ=Θ) (isoʳ Δ=Γ)) ⟩
-      from Γ=Θ ⊚ (id-subst _ ⊚ to Γ=Θ)
-    ≅⟨ ⊚-congˡ (from Γ=Θ) (⊚-id-substˡ (to Γ=Θ)) ⟩
-      from Γ=Θ ⊚ to Γ=Θ
-    ≅⟨ isoʳ Γ=Θ ⟩
-      id-subst _ ∎
-    where open ≅ˢ-Reasoning
 
 
   --------------------------------------------------
