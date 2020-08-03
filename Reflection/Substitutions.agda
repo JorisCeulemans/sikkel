@@ -1,7 +1,7 @@
 {-# OPTIONS --omega-in-omega #-}
 
 open import Categories
-module Reflection.Substitution {C : Category} where
+module Reflection.Substitutions {C : Category} where
 
 open import Level
 -- open import Relation.Binary.PropositionalEquality

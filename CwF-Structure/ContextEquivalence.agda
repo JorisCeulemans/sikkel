@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import CwF-Structure.Contexts
 open import Reflection.Helpers
-open import Reflection.Substitution
+open import Reflection.Substitutions
 
 infix 1 _≅ᶜ_
 
