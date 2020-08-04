@@ -96,11 +96,11 @@ naturality (str-cons t) {zero} {suc n} z≤n eγ = cong (λ x → proj₁ x ∷ 
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eγ =
   cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eγ)) (naturality (snd t) (s≤s m≤n) eγ)
 
-stream-subst : (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
-from (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
-to (stream-subst σ) = record { func = id ; naturality = λ _ → refl }
-eq (isoˡ (stream-subst σ)) _ = refl
-eq (isoʳ (stream-subst σ)) _ = refl
+stream-natural : (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
+from (stream-natural σ) = record { func = id ; naturality = λ _ → refl }
+to (stream-natural σ) = record { func = id ; naturality = λ _ → refl }
+eq (isoˡ (stream-natural σ)) _ = refl
+eq (isoʳ (stream-natural σ)) _ = refl
 
 
 --------------------------------------------------
@@ -113,7 +113,7 @@ str-thrd : Tm Γ Stream → Tm Γ (▻ (▻ Nat'))
 str-thrd s = next (next (str-head (prev (str-tail (prev (str-tail s))))))
 
 zeros : Tm ◇ Stream
-zeros = löb Stream (lam (▻' Stream) (ι[ stream-subst π ] (str-cons (pair zero' (ι[ β ] ξ)))))
+zeros = löb Stream (lam (▻' Stream) (ι[ stream-natural π ] (str-cons (pair zero' (ι[ β ] ξ)))))
   where
     open ≅ᵗʸ-Reasoning
     β : ▻ Stream ≅ᵗʸ ▻' Stream [ π ]
@@ -123,7 +123,7 @@ zeros = löb Stream (lam (▻' Stream) (ι[ stream-subst π ] (str-cons (pair ze
     {-
     β = begin
           ▻ Stream
-        ≅˘⟨ ▻-cong (stream-subst (from-earlier ◇ ⊚ ◄-subst π)) ⟩
+        ≅˘⟨ ▻-cong (stream-natural (from-earlier ◇ ⊚ ◄-subst π)) ⟩
           ▻ (Stream [ from-earlier ◇ ⊚ ◄-subst π ])
         ≅˘⟨ ▻-cong (ty-subst-comp Stream (from-earlier ◇) (◄-subst π)) ⟩
           ▻ (Stream [ from-earlier ◇ ] [ ◄-subst π ])
@@ -155,6 +155,6 @@ generate : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 generate f = {!!}
 
 nats : Tm ◇ Stream
-nats = app (generate (lam Nat' (ι[ Discr-subst ℕ π ] (suc' (ι⁻¹[ Discr-subst ℕ π ] ξ)))))
+nats = app (generate (lam Nat' (ι[ Discr-natural ℕ π ] (suc' (ι⁻¹[ Discr-natural ℕ π ] ξ)))))
            zero'
 -}

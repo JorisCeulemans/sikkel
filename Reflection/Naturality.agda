@@ -12,6 +12,12 @@ open import CwF-Structure.Types
 open import Reflection.Helpers
 
 
+-- TODO:
+--  *) Provide also unary type operations (first step towards support for ▻ modality).
+--  *) Make unay + binary operations more general in the type level (to support for instance _⇛_).
+--  *) Allow operations that can change the context the type lives in using a certain endofunctor
+--     on the category of contexts (needed for ▻). Later, more general functors might as well be interesting.
+
 record NullaryTypeOp (ℓ : Level) : Setω where
   field
     ⟦_⟧nop : ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
@@ -129,7 +135,7 @@ private
   open import Types.Products
 
   bool-nullary : NullaryTypeOp 0ℓ
-  bool-nullary = record { ⟦_⟧nop = Bool' ; naturality = Discr-subst _ }
+  bool-nullary = record { ⟦_⟧nop = Bool' ; naturality = Discr-natural _ }
 
   prod-binary : BinaryTypeOp
   prod-binary = record { ⟦_⟧bop_$_ = _⊠_ ; naturality = λ σ → ⊠-natural σ ; congruence = ⊠-cong }

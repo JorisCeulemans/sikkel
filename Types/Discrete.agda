@@ -62,14 +62,14 @@ discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≅�
 eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
 -}
 
-Discr-subst : (A : Set ℓ) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
-from (Discr-subst A σ) = record { func = id ; naturality = λ _ → refl }
-to (Discr-subst A σ) = record { func = id ; naturality = λ _ → refl }
-eq (isoˡ (Discr-subst A σ)) _ = refl
-eq (isoʳ (Discr-subst A σ)) _ = refl
+Discr-natural : (A : Set ℓ) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
+from (Discr-natural A σ) = record { func = id ; naturality = λ _ → refl }
+to (Discr-natural A σ) = record { func = id ; naturality = λ _ → refl }
+eq (isoˡ (Discr-natural A σ)) _ = refl
+eq (isoʳ (Discr-natural A σ)) _ = refl
 
-discr-subst : {A : Set ℓ} (a : A) (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-subst A σ ] (discr a)
-eq (discr-subst a σ) _ = refl
+discr-natural : {A : Set ℓ} (a : A) (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-natural A σ ] (discr a)
+eq (discr-natural a σ) _ = refl
 
 
 --------------------------------------------------
