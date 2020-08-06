@@ -9,7 +9,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
-open import Reflection.Helpers
+open import Reflection.Helpers public
 
 
 -- TODO:
@@ -169,24 +169,35 @@ type-naturality-reflect e e' p q =
     ⟦ e' ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
 
+module Operations where
+  open import Types.Discrete
+  open import Types.Functions
+  open import Types.Products
+  open import Types.Sums
+
+  discr-nul : ∀ {ℓ} {A : Set ℓ} → NullaryTypeOp ℓ
+  discr-nul {A = A} = record { ⟦_⟧nop = Discr A ; naturality = λ σ → Discr-natural A σ }
+
+  fun-bin : BinaryTypeOp (λ ℓc ℓ1 ℓ2 → ℓc ⊔ ℓ1 ⊔ ℓ2)
+  fun-bin = record { ⟦_⟧bop_$_ = _⇛_ ; naturality = λ σ → ⇛-natural σ ; congruence = ⇛-cong }
+
+  prod-bin : BinaryTypeOp (λ _ ℓ1 ℓ2 → ℓ1 ⊔ ℓ2)
+  prod-bin = record { ⟦_⟧bop_$_ = _⊠_ ; naturality = λ σ → ⊠-natural σ ; congruence = ⊠-cong }
+
+  sum-bin : BinaryTypeOp (λ _ ℓ1 ℓ2 → ℓ1 ⊔ ℓ2)
+  sum-bin = record { ⟦_⟧bop_$_ = _⊞_ ; naturality = λ σ → ⊞-natural σ ; congruence = ⊞-cong }
+
+open Operations public
+
 private
   open import Types.Discrete
-  open import Types.Products
   open import Types.Functions
-
-  bool-nullary : NullaryTypeOp 0ℓ
-  bool-nullary = record { ⟦_⟧nop = Bool' ; naturality = Discr-natural _ }
-
-  prod-binary : BinaryTypeOp (λ _ ℓ1 ℓ2 → ℓ1 ⊔ ℓ2)
-  prod-binary = record { ⟦_⟧bop_$_ = _⊠_ ; naturality = λ σ → ⊠-natural σ ; congruence = ⊠-cong }
-
-  fun-binary : BinaryTypeOp (λ ℓc ℓ1 ℓ2 → ℓc ⊔ ℓ1 ⊔ ℓ2)
-  fun-binary = record { ⟦_⟧bop_$_ = _⇛_ ; naturality = λ σ → ⇛-natural σ ; congruence = ⇛-cong }
+  open import Types.Products
 
   example : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
             (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
             ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
-  example σ τ = type-naturality-reflect (sub (bin prod-binary (bin fun-binary (nul bool-nullary) (nul bool-nullary)) (sub (nul bool-nullary) τ)) σ)
-                                        (bin prod-binary (sub (bin fun-binary (nul bool-nullary) (nul bool-nullary)) σ) (nul bool-nullary))
+  example σ τ = type-naturality-reflect (sub (bin prod-bin (bin fun-bin (nul discr-nul) (nul discr-nul)) (sub (nul discr-nul) τ)) σ)
+                                        (bin prod-bin (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) σ) (nul discr-nul))
                                         refl
                                         refl
