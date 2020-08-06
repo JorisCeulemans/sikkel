@@ -26,9 +26,9 @@ record NullaryTypeOp (ℓ : Level) : Setω where
 
 open NullaryTypeOp public
 
-record BinaryTypeOp : Setω where
+record BinaryTypeOp (f : Level → Level → Level → Level) : Setω where
   field
-    ⟦_⟧bop_$_ : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓt' → Ty Γ (ℓt ⊔ ℓt')
+    ⟦_⟧bop_$_ : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓt' → Ty Γ (f ℓc ℓt ℓt')
     naturality : ∀ {ℓc ℓc' ℓt ℓt'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
                  {T : Ty Γ ℓt} {S : Ty Γ ℓt'} →
                  (⟦_⟧bop_$_ T S) [ σ ] ≅ᵗʸ ⟦_⟧bop_$_ (T [ σ ]) (S [ σ ])
@@ -40,27 +40,43 @@ open BinaryTypeOp public
 
 
 data ExpSkeleton : Set where
-  svar : ExpSkeleton
-  snul : ExpSkeleton
-  sbin : ExpSkeleton → ExpSkeleton → ExpSkeleton
-  ssub : ExpSkeleton → ExpSkeleton
+  svar : Level → ExpSkeleton
+  snul : Level → ExpSkeleton
+  sbin : (f : Level → Level → Level → Level) (ℓc : Level) →
+         ExpSkeleton → ExpSkeleton → ExpSkeleton
+  ssub : (ℓc : Level) → ExpSkeleton → ExpSkeleton
 
-data Exp : {ℓc : Level} (Γ : Ctx C ℓc) (ℓ : Level) {_ : ExpSkeleton} → Setω where
+level : ExpSkeleton → Level
+level (svar ℓ) = ℓ
+level (snul ℓ) = ℓ
+level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
+level (ssub ℓc s) = level s
+
+data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
   var : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        (T : Ty Γ ℓ) → Exp Γ ℓ {svar}
+        (T : Ty Γ ℓ) → Exp Γ (svar ℓ)
   nul : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        NullaryTypeOp ℓ → Exp Γ ℓ {snul}
-  bin : ∀ {ℓc ℓt ℓt' s s'} {Γ : Ctx C ℓc} →
-        BinaryTypeOp → (e1 : Exp Γ ℓt {s}) (e2 : Exp Γ ℓt' {s'}) → Exp Γ (ℓt ⊔ ℓt') {sbin s s'}
-  sub : ∀ {ℓc ℓc' ℓt s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
-        Exp Γ ℓt {s} → (σ : Δ ⇒ Γ) → Exp Δ ℓt {ssub s}
+        NullaryTypeOp ℓ → Exp Γ (snul ℓ)
+  bin : ∀ {ℓc f s s'} {Γ : Ctx C ℓc} →
+        BinaryTypeOp f → (e1 : Exp Γ s) (e2 : Exp Γ s') → Exp Γ (sbin f ℓc s s')
+  sub : ∀ {ℓc ℓc' s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
+        Exp Γ s → (σ : Δ ⇒ Γ) → Exp Δ (ssub ℓc s)
 
-⟦_⟧exp : ∀ {ℓc ℓ s} {Γ : Ctx C ℓc} → Exp Γ ℓ {s} → Ty Γ ℓ
+⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Ty Γ (level s)
 ⟦ var T ⟧exp = T
 ⟦ nul x ⟧exp = ⟦ x ⟧nop
 ⟦ bin x e1 e2 ⟧exp = ⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp
 ⟦ sub e σ ⟧exp = ⟦ e ⟧exp [ σ ]
 
+reduce-skeleton : ExpSkeleton → ExpSkeleton
+reduce-skeleton (svar ℓ) = svar ℓ
+reduce-skeleton (snul ℓ) = snul ℓ
+reduce-skeleton (sbin f ℓc s1 s2) = sbin f ℓc (reduce-skeleton s1) (reduce-skeleton s2)
+reduce-skeleton (ssub ℓc (svar ℓ)) = ssub ℓc (svar ℓ)
+reduce-skeleton (ssub ℓc (snul ℓ)) = snul ℓ
+reduce-skeleton (ssub ℓc (sbin f ℓc' s1 s2)) = sbin f ℓc (reduce-skeleton (ssub ℓc s1)) (reduce-skeleton (ssub ℓc s2))
+reduce-skeleton (ssub ℓc (ssub ℓc' s)) = reduce-skeleton (ssub ℓc s)
+{-
 reduce-skeleton : ExpSkeleton → ExpSkeleton
 reduce-skeleton svar = svar
 reduce-skeleton snul = snul
@@ -70,7 +86,16 @@ reduce-skeleton (ssub snul) = snul
 reduce-skeleton (ssub (sbin s1 s2)) = sbin (reduce-skeleton (ssub s1)) (reduce-skeleton (ssub s2))
 reduce-skeleton (ssub (ssub s)) = reduce-skeleton (ssub s)
 
-reduce : ∀ {ℓc ℓ s} {Γ : Ctx C ℓc} → Exp Γ ℓ {s} → Exp Γ ℓ {reduce-skeleton s}
+reduce-level : ∀ {ℓc ℓ s} {Γ : Ctx C ℓc} (e : Exp Γ ℓ {s}) → Level
+reduce-level {ℓ = ℓ} (var T) = ℓ
+reduce-level {ℓ = ℓ} (nul x) = ℓ
+reduce-level {ℓc = ℓc} (bin {f = f} x e1 e2) = f ℓc (reduce-level e1) (reduce-level e2)
+reduce-level {ℓ = ℓ} (sub (var T) σ) = ℓ
+reduce-level {ℓ = ℓ} (sub (nul x) σ) = ℓ
+reduce-level (sub {ℓc = ℓc} (bin {f = f} x e1 e2) σ) = f ℓc (reduce-level (sub e1 σ)) (reduce-level (sub e2 σ))
+reduce-level {ℓ = ℓ} (sub (sub e τ) σ) = reduce-level (sub e (τ ⊚ σ))
+-}
+reduce : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Exp Γ (reduce-skeleton s)
 reduce (var T) = var T
 reduce (nul x) = nul x
 reduce (bin x e1 e2) = bin x (reduce e1) (reduce e2)
@@ -79,7 +104,7 @@ reduce (sub (nul x) σ) = nul x
 reduce (sub (bin x e1 e2) σ) = bin x (reduce (sub e1 σ)) (reduce (sub e2 σ))
 reduce (sub (sub e τ) σ) = reduce (sub e (τ ⊚ σ))
 
-reduce-sound : ∀ {ℓc ℓ s} {Γ : Ctx C ℓc} (e : Exp Γ ℓ {s}) →
+reduce-sound : ∀ {ℓc s} {Γ : Ctx C ℓc} (e : Exp Γ s) →
                ⟦ e ⟧exp ≅ᵗʸ ⟦ reduce e ⟧exp
 reduce-sound (var T) = ≅ᵗʸ-refl
 reduce-sound (nul x) = ≅ᵗʸ-refl
@@ -107,17 +132,17 @@ reduce-sound (sub (sub e τ) σ) =
     ⟦ reduce (sub e (τ ⊚ σ)) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
 
-⟦⟧exp-cong : ∀ {ℓc ℓ s s'} {Γ : Ctx C ℓc} →
-             {e : Exp Γ ℓ {s}} {e' : Exp Γ ℓ {s'}} →
+⟦⟧exp-cong : ∀ {ℓc s s'} {Γ : Ctx C ℓc} →
+             {e : Exp Γ s} {e' : Exp Γ s'} →
              (p : s ≡ s') →
-             ω-transp (λ z → Exp Γ ℓ {z}) p e ≡ω e' →
+             ω-transp (Exp Γ) p e ≡ω e' →
              ⟦ e ⟧exp ≅ᵗʸ ⟦ e' ⟧exp
 ⟦⟧exp-cong refl refl = ≅ᵗʸ-refl
 
-type-naturality-reflect : ∀ {ℓc ℓ s s'} {Γ : Ctx C ℓc} →
-                          (e : Exp Γ ℓ {s}) (e' : Exp Γ ℓ {s'}) →
+type-naturality-reflect : ∀ {ℓc s s'} {Γ : Ctx C ℓc} →
+                          (e : Exp Γ s) (e' : Exp Γ s') →
                           (p : reduce-skeleton s ≡ reduce-skeleton s') →
-                          ω-transp (λ z → Exp Γ ℓ {z}) p (reduce e) ≡ω reduce e' →
+                          ω-transp (Exp Γ) p (reduce e) ≡ω reduce e' →
                           ⟦ e ⟧exp ≅ᵗʸ ⟦ e' ⟧exp
 type-naturality-reflect e e' p q =
   begin
@@ -133,45 +158,21 @@ type-naturality-reflect e e' p q =
 private
   open import Types.Discrete
   open import Types.Products
+  open import Types.Functions
 
   bool-nullary : NullaryTypeOp 0ℓ
   bool-nullary = record { ⟦_⟧nop = Bool' ; naturality = Discr-natural _ }
 
-  prod-binary : BinaryTypeOp
+  prod-binary : BinaryTypeOp (λ _ ℓ1 ℓ2 → ℓ1 ⊔ ℓ2)
   prod-binary = record { ⟦_⟧bop_$_ = _⊠_ ; naturality = λ σ → ⊠-natural σ ; congruence = ⊠-cong }
+
+  fun-binary : BinaryTypeOp (λ ℓc ℓ1 ℓ2 → ℓc ⊔ ℓ1 ⊔ ℓ2)
+  fun-binary = record { ⟦_⟧bop_$_ = _⇛_ ; naturality = λ σ → ⇛-natural σ ; congruence = ⇛-cong }
 
   example : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
             (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
-            (Bool' ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ (Bool' [ σ ]) ⊠ Bool'
-  example σ τ = type-naturality-reflect (sub (bin prod-binary (nul bool-nullary) (sub (nul bool-nullary) τ)) σ)
-                                        (bin prod-binary (sub (nul bool-nullary) σ) (nul bool-nullary))
+            ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
+  example σ τ = type-naturality-reflect (sub (bin prod-binary (bin fun-binary (nul bool-nullary) (nul bool-nullary)) (sub (nul bool-nullary) τ)) σ)
+                                        (bin prod-binary (sub (bin fun-binary (nul bool-nullary) (nul bool-nullary)) σ) (nul bool-nullary))
                                         refl
                                         refl
-
-{-
--- Failed attempt to define reduce using sized types
-data Exp : {ℓc : Level} (Γ : Ctx C ℓc) (ℓ : Level) {_ : Size} → Setω where
-  var : ∀ {ℓc ℓ i} {Γ : Ctx C ℓc} →
-        Ty Γ ℓ → Exp Γ ℓ {↑ i}
-  nul : ∀ {ℓc ℓ i} {Γ : Ctx C ℓc} →
-        NullaryTypeOp ℓ → Exp Γ ℓ {↑ i}
-  bin : ∀ {ℓc ℓt ℓt' i} {Γ : Ctx C ℓc} →
-        BinaryTypeOp → Exp Γ ℓt {i} → Exp Γ ℓt' {i} → Exp Γ (ℓt ⊔ ℓt') {↑ i}
-  sub : ∀ {ℓc ℓc' ℓt i} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
-        Exp Γ ℓt {i} → (σ : Δ ⇒ Γ) → Exp Δ ℓt {↑ i}
-
-⟦_⟧exp : ∀ {ℓc ℓ i} {Γ : Ctx C ℓc} → Exp Γ ℓ {i} → Ty Γ ℓ
-⟦ var T ⟧exp = T
-⟦ nul x ⟧exp = ⟦ x ⟧nop
-⟦ bin x e1 e2 ⟧exp = ⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp
-⟦ sub e σ ⟧exp = ⟦ e ⟧exp [ σ ]
-
-reduce : ∀ {ℓc ℓ i} {Γ : Ctx C ℓc} → Exp Γ ℓ {i} → Exp Γ ℓ {i}
-reduce (var T) = var T
-reduce (nul x) = nul x
-reduce (bin x e1 e2) = bin x (reduce e1) (reduce e2)
-reduce (sub (var T) σ) = sub (var T) σ
-reduce (sub (nul x) σ) = nul x
-reduce (sub (bin x e1 e2) σ) = bin x (reduce (sub e1 σ)) (reduce (sub e2 σ))
-reduce .{i = ↑ (↑ _)} (sub (sub e τ) σ) = reduce {i = ↑ _} (sub {!e!} (τ ⊚ σ))
--}
