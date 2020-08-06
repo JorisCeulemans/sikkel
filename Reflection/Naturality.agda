@@ -26,6 +26,17 @@ record NullaryTypeOp (ℓ : Level) : Setω where
 
 open NullaryTypeOp public
 
+record UnaryTypeOp (f : Level → Level → Level) : Setω where
+  field
+    ⟦_⟧uop_ : ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ (f ℓc ℓt)
+    naturality : ∀ {ℓc ℓc' ℓt} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} →
+                 (⟦_⟧uop_ T) [ σ ] ≅ᵗʸ ⟦_⟧uop_ (T [ σ ])
+    congruence : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc}
+                 {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} →
+                 T ≅ᵗʸ T' → ⟦_⟧uop_ T ≅ᵗʸ ⟦_⟧uop_ T'
+
+open UnaryTypeOp public
+
 record BinaryTypeOp (f : Level → Level → Level → Level) : Setω where
   field
     ⟦_⟧bop_$_ : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓt' → Ty Γ (f ℓc ℓt ℓt')
@@ -42,6 +53,8 @@ open BinaryTypeOp public
 data ExpSkeleton : Set where
   svar : Level → ExpSkeleton
   snul : Level → ExpSkeleton
+  sun  : (f : Level → Level → Level) (ℓc : Level) →
+         ExpSkeleton → ExpSkeleton
   sbin : (f : Level → Level → Level → Level) (ℓc : Level) →
          ExpSkeleton → ExpSkeleton → ExpSkeleton
   ssub : (ℓc : Level) → ExpSkeleton → ExpSkeleton
@@ -49,6 +62,7 @@ data ExpSkeleton : Set where
 level : ExpSkeleton → Level
 level (svar ℓ) = ℓ
 level (snul ℓ) = ℓ
+level (sun f ℓc s) = f ℓc (level s)
 level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
 level (ssub ℓc s) = level s
 
@@ -57,6 +71,8 @@ data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
         (T : Ty Γ ℓ) → Exp Γ (svar ℓ)
   nul : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
         NullaryTypeOp ℓ → Exp Γ (snul ℓ)
+  un  : ∀ {ℓc f s} {Γ : Ctx C ℓc} →
+        UnaryTypeOp f → (e : Exp Γ s) → Exp Γ (sun f ℓc s)
   bin : ∀ {ℓc f s s'} {Γ : Ctx C ℓc} →
         BinaryTypeOp f → (e1 : Exp Γ s) (e2 : Exp Γ s') → Exp Γ (sbin f ℓc s s')
   sub : ∀ {ℓc ℓc' s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
@@ -65,42 +81,29 @@ data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
 ⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Ty Γ (level s)
 ⟦ var T ⟧exp = T
 ⟦ nul x ⟧exp = ⟦ x ⟧nop
+⟦ un x e ⟧exp = ⟦ x ⟧uop ⟦ e ⟧exp
 ⟦ bin x e1 e2 ⟧exp = ⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp
 ⟦ sub e σ ⟧exp = ⟦ e ⟧exp [ σ ]
 
 reduce-skeleton : ExpSkeleton → ExpSkeleton
 reduce-skeleton (svar ℓ) = svar ℓ
 reduce-skeleton (snul ℓ) = snul ℓ
+reduce-skeleton (sun f ℓc s) = sun f ℓc (reduce-skeleton s)
 reduce-skeleton (sbin f ℓc s1 s2) = sbin f ℓc (reduce-skeleton s1) (reduce-skeleton s2)
 reduce-skeleton (ssub ℓc (svar ℓ)) = ssub ℓc (svar ℓ)
 reduce-skeleton (ssub ℓc (snul ℓ)) = snul ℓ
+reduce-skeleton (ssub ℓc (sun f ℓc' s)) = sun f ℓc (reduce-skeleton (ssub ℓc s))
 reduce-skeleton (ssub ℓc (sbin f ℓc' s1 s2)) = sbin f ℓc (reduce-skeleton (ssub ℓc s1)) (reduce-skeleton (ssub ℓc s2))
 reduce-skeleton (ssub ℓc (ssub ℓc' s)) = reduce-skeleton (ssub ℓc s)
-{-
-reduce-skeleton : ExpSkeleton → ExpSkeleton
-reduce-skeleton svar = svar
-reduce-skeleton snul = snul
-reduce-skeleton (sbin s1 s2) = sbin (reduce-skeleton s1) (reduce-skeleton s2)
-reduce-skeleton (ssub svar) = ssub svar
-reduce-skeleton (ssub snul) = snul
-reduce-skeleton (ssub (sbin s1 s2)) = sbin (reduce-skeleton (ssub s1)) (reduce-skeleton (ssub s2))
-reduce-skeleton (ssub (ssub s)) = reduce-skeleton (ssub s)
 
-reduce-level : ∀ {ℓc ℓ s} {Γ : Ctx C ℓc} (e : Exp Γ ℓ {s}) → Level
-reduce-level {ℓ = ℓ} (var T) = ℓ
-reduce-level {ℓ = ℓ} (nul x) = ℓ
-reduce-level {ℓc = ℓc} (bin {f = f} x e1 e2) = f ℓc (reduce-level e1) (reduce-level e2)
-reduce-level {ℓ = ℓ} (sub (var T) σ) = ℓ
-reduce-level {ℓ = ℓ} (sub (nul x) σ) = ℓ
-reduce-level (sub {ℓc = ℓc} (bin {f = f} x e1 e2) σ) = f ℓc (reduce-level (sub e1 σ)) (reduce-level (sub e2 σ))
-reduce-level {ℓ = ℓ} (sub (sub e τ) σ) = reduce-level (sub e (τ ⊚ σ))
--}
 reduce : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Exp Γ (reduce-skeleton s)
 reduce (var T) = var T
 reduce (nul x) = nul x
+reduce (un x e) = un x (reduce e)
 reduce (bin x e1 e2) = bin x (reduce e1) (reduce e2)
 reduce (sub (var T) σ) = sub (var T) σ
 reduce (sub (nul x) σ) = nul x
+reduce (sub (un x e) σ) = un x (reduce (sub e σ))
 reduce (sub (bin x e1 e2) σ) = bin x (reduce (sub e1 σ)) (reduce (sub e2 σ))
 reduce (sub (sub e τ) σ) = reduce (sub e (τ ⊚ σ))
 
@@ -108,9 +111,20 @@ reduce-sound : ∀ {ℓc s} {Γ : Ctx C ℓc} (e : Exp Γ s) →
                ⟦ e ⟧exp ≅ᵗʸ ⟦ reduce e ⟧exp
 reduce-sound (var T) = ≅ᵗʸ-refl
 reduce-sound (nul x) = ≅ᵗʸ-refl
+reduce-sound (un x e) = congruence x (reduce-sound e)
 reduce-sound (bin x e1 e2) = congruence x (reduce-sound e1) (reduce-sound e2)
 reduce-sound (sub (var T) σ) = ≅ᵗʸ-refl
 reduce-sound (sub (nul x) σ) = naturality x σ
+reduce-sound (sub (un x e) σ) =
+  begin
+    (⟦ x ⟧uop ⟦ e ⟧exp) [ σ ]
+  ≅⟨ naturality x σ ⟩
+    ⟦ x ⟧uop (⟦ e ⟧exp [ σ ])
+  ≅⟨⟩
+    ⟦ x ⟧uop ⟦ sub e σ ⟧exp
+  ≅⟨ congruence x (reduce-sound (sub e σ)) ⟩
+    ⟦ x ⟧uop ⟦ reduce (sub e σ ) ⟧exp ∎
+  where open ≅ᵗʸ-Reasoning
 reduce-sound (sub (bin x e1 e2) σ) =
   begin
     (⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp) [ σ ]
