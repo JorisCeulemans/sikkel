@@ -6,7 +6,7 @@ module GuardedRecursion.Later where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
-open import Data.Unit using (⊤; tt)
+open import Data.Unit.Polymorphic using (⊤; tt)
 open import Function using (id; _∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -94,9 +94,9 @@ eq (from-earlier-natural σ) δ = naturality σ δ
 -- The later modality and corresponding term formers
 
 ▻ : Ty (◄ Γ) ℓ → Ty Γ ℓ
-type (▻ T) zero _ = Lift _ ⊤
+type (▻ T) zero _ = ⊤
 type (▻ T) (suc n) γ = T ⟨ n , γ ⟩
-morph (▻ T) z≤n _ _ = lift tt
+morph (▻ T) z≤n _ _ = tt
 morph (▻ T) (s≤s m≤n) eγ = T ⟪ m≤n , eγ ⟫
 morph-id (▻ T) {zero} _ = refl
 morph-id (▻ T) {suc n} = morph-id T
@@ -107,7 +107,7 @@ morph-comp (▻ T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m≤n
 ▻' {Γ = Γ} T = ▻ (T [ from-earlier Γ ])
 
 next : {T : Ty (◄ Γ) ℓ} → Tm (◄ Γ) T → Tm Γ (▻ T)
-term (next t) zero _ = lift tt
+term (next t) zero _ = tt
 term (next t) (suc n) γ = t ⟨ n , γ ⟩'
 naturality (next t) z≤n γ = refl
 naturality (next t) (s≤s m≤n) eγ = naturality t m≤n eγ
@@ -131,9 +131,9 @@ eq (next-prev t) {suc n} γ = refl
 -- TODO: Update : The remark above does not hold anymore. See if T can
 -- be made implicit again.
 löb : (T : Ty Γ ℓ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
-term (löb T f) zero γ = f €⟨ zero , γ ⟩ lift tt
+term (löb T f) zero γ = f €⟨ zero , γ ⟩ tt
 term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-naturality (löb T f) {y = zero} z≤n eγ = €-natural f z≤n eγ (lift tt)
+naturality (löb T f) {y = zero} z≤n eγ = €-natural f z≤n eγ tt
 naturality (löb {Γ = Γ} T f) {y = suc n} z≤n {γ} eγ = €-natural f z≤n eγ ((löb T f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
 naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'} eγ =
   T ⟪ s≤s m≤n , eγ ⟫ f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
@@ -157,7 +157,7 @@ f ⊛ t = next (app (prev f) (prev t))
 -- Congruence and naturality for the later modality
 
 ▻-map : {T : Ty (◄ Γ) ℓ} {T' : Ty (◄ Γ) ℓ'} → (T ↣ T') → (▻ T ↣ ▻ T')
-func (▻-map η) {zero} _ = lift tt
+func (▻-map η) {zero} _ = tt
 func (▻-map η) {suc n} t = func η t
 naturality (▻-map η) {f = z≤n} _ = refl
 naturality (▻-map η) {f = s≤s m≤n} t = naturality η t
@@ -181,7 +181,7 @@ prev-cong : {T : Ty (◄ Γ) ℓ} {t t' : Tm Γ (▻ T)} → t ≅ᵗᵐ t' → 
 eq (prev-cong t=t') γ = eq t=t' γ
 
 löb-cong : (T : Ty Γ ℓ) {f f' : Tm Γ (▻' T ⇛ T)} → f ≅ᵗᵐ f' → löb T f ≅ᵗᵐ löb T f'
-eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ lift tt) (eq f=f' γ)
+eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ tt) (eq f=f' γ)
 eq (löb-cong T f=f') {suc n} γ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
 
 module _ {Γ : Ctx ω ℓ} {T : Ty (◄ Γ) ℓt} {T' : Ty (◄ Γ) ℓt'} (T=T' : T ≅ᵗʸ T') where

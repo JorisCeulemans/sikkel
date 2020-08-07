@@ -9,7 +9,7 @@ module GuardedRecursion.StreamsExample where
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Product using (proj₁; proj₂) renaming (_,_ to [_,_])
-open import Data.Unit using (⊤; tt)
+open import Data.Unit.Polymorphic using (⊤; tt)
 open import Data.Vec.Base hiding ([_]; _⊛_)
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; subst)
@@ -80,7 +80,7 @@ naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   where open ≡-Reasoning
 
 str-tail : Tm Γ Stream → Tm Γ (▻' Stream)
-term (str-tail s) zero _ = lift tt
+term (str-tail s) zero _ = tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
 naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eγ =
