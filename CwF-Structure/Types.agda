@@ -103,6 +103,7 @@ module _ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) where
 -- Natural transformations between types
 
 record _↣_ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓt') : Set (ℓc ⊔ ℓt ⊔ ℓt') where
+  no-eta-equality
   field
     func : ∀ {x} {γ} → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
     naturality : ∀ {x y} {f : Hom x y} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} (t : T ⟨ y , γy ⟩) →
@@ -191,8 +192,8 @@ open _≅ᵗʸ_ public
 ≅ᵗʸ-refl : T ≅ᵗʸ T
 from (≅ᵗʸ-refl {T = T}) = id-trans T
 to (≅ᵗʸ-refl {T = T}) = id-trans T
-isoˡ ≅ᵗʸ-refl = ≅ⁿ-refl
-isoʳ ≅ᵗʸ-refl = ≅ⁿ-refl
+eq (isoˡ ≅ᵗʸ-refl) _ = refl
+eq (isoʳ ≅ᵗʸ-refl) _ = refl
 
 ≅ᵗʸ-sym : S ≅ᵗʸ T → T ≅ᵗʸ S
 from (≅ᵗʸ-sym S=T) = to S=T
@@ -285,6 +286,10 @@ isoʳ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
 ty-subst-map : (σ : Δ ⇒ Γ) → (T ↣ S) → T [ σ ] ↣ S [ σ ]
 func (ty-subst-map σ η) t = func η t
 naturality (ty-subst-map σ η) t = naturality η t
+
+ty-subst-map-cong : {σ : Δ ⇒ Γ} {η φ : T ↣ S} →
+                    η ≅ⁿ φ → ty-subst-map σ η ≅ⁿ ty-subst-map σ φ
+eq (ty-subst-map-cong e) t = eq e t
 
 ty-subst-map-id : (σ : Δ ⇒ Γ) → ty-subst-map σ (id-trans T) ≅ⁿ id-trans (T [ σ ])
 eq (ty-subst-map-id σ) t = refl

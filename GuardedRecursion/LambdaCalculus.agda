@@ -14,10 +14,42 @@ open import Relation.Binary.PropositionalEquality hiding ([_]) renaming
 open import Helpers
 open import Categories
 open import CwF-Structure
+open import Types.Discrete
 open import Types.Functions
 open import GuardedRecursion.Later
+open import Yoneda
+open import Reflection.Naturality
 
 
+◄𝕪-suc : {n : ℕ} → ◄ (𝕪 (suc n)) ≅ᶜ 𝕪 n
+func (from ◄𝕪-suc) (s≤s m≤n) = m≤n
+_⇒_.naturality (from ◄𝕪-suc) (s≤s m≤n) = refl
+func (to ◄𝕪-suc) m≤n = s≤s m≤n
+_⇒_.naturality (to ◄𝕪-suc) _ = refl
+eq (isoˡ ◄𝕪-suc) (s≤s m≤n) = refl
+eq (isoʳ ◄𝕪-suc) _ = refl
+
+𝐷 : (n : ℕ) → Ty {C = ω} (𝕪 n) 0ℓ
+𝐷 zero = Unit' ⇛ Unit'
+𝐷 (suc n) = ▻ (𝐷 n [ from ◄𝕪-suc ]) ⇛ ▻ (𝐷 n [ from ◄𝕪-suc ])
+
+𝐷-natural : {m n : ℕ} (m≤n : m ≤ n) → 𝐷 n [ to-𝕪⇒𝕪 m≤n ] ≅ᵗʸ 𝐷 m
+𝐷-natural {n = zero } z≤n = type-naturality-reflect (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) (to-𝕪⇒𝕪 z≤n))
+                                                     (bin fun-bin (nul discr-nul) (nul discr-nul))
+                                                     refl refl
+_$⟨_,_⟩_ (func (from (𝐷-natural {n = suc n} z≤n)) _) _ _ _ = tt
+PresheafFunc.naturality (func (from (𝐷-natural {n = suc n} z≤n)) _) _ _ _ = refl
+CwF-Structure.naturality (from (𝐷-natural {n = suc n} z≤n)) f = to-pshfun-eq λ _ _ _ → refl
+func (to (𝐷-natural {n = suc n} z≤n)) {γ = z≤n} _ $⟨ z≤n , _ ⟩ _ = {!tt!}
+PresheafFunc.naturality (func (to (𝐷-natural {n = suc n} z≤n)) _) = {!!}
+CwF-Structure.naturality (to (𝐷-natural {n = suc n} z≤n)) = {!!}
+isoˡ (𝐷-natural {n = suc n} z≤n) = {!!}
+isoʳ (𝐷-natural {n = suc n} z≤n) = {!!}
+𝐷-natural (s≤s m≤n) = {!!}
+
+
+
+{-
 𝐷 : ℕ → Set
 𝐷 = <-rec (λ _ → Set)
           (λ m IH → (k : ℕ) (k<m : k < m) → IH k k<m → IH k k<m)
@@ -43,10 +75,10 @@ open import GuardedRecursion.Later
 𝐷-unfold-fold : {n : ℕ} {f : (m : ℕ) (m<n : m < n) → 𝐷 m → 𝐷 m} → 𝐷-unfold (𝐷-fold f) ≡ f
 𝐷-unfold-fold = transp-transp-sym (𝐷-eq _)
 
-𝒟 : Ty (◇ {C = ω}) 0ℓ
-type 𝒟 n _ = 𝐷 n
-morph 𝒟 {x = m}{y = n} m≤n _ dn = 𝐷-fold (λ k k<m → 𝐷-unfold dn k (<-transˡ k<m m≤n))
-morph-id 𝒟 d =
+𝒟-prim : Ty (◇ {C = ω}) 0ℓ
+type 𝒟-prim n _ = 𝐷 n
+morph 𝒟-prim {x = m}{y = n} m≤n _ dn = 𝐷-fold (λ k k<m → 𝐷-unfold dn k (<-transˡ k<m m≤n))
+morph-id 𝒟-prim d =
   begin
     𝐷-fold (λ k k<m → 𝐷-unfold d k (<-transˡ k<m ≤-refl))
   ≡⟨ cong 𝐷-fold (funext λ k → funext λ k<m → cong (𝐷-unfold d k) (≤-irrelevant _ _)) ⟩
@@ -54,7 +86,7 @@ morph-id 𝒟 d =
   ≡⟨ 𝐷-fold-unfold ⟩
     d ∎
   where open ≡-Reasoning
-morph-comp 𝒟 l≤m m≤n eq-nm eq-ms d = cong 𝐷-fold (funext λ k → funext λ k<l → sym
+morph-comp 𝒟-prim l≤m m≤n eq-nm eq-ms d = cong 𝐷-fold (funext λ k → funext λ k<l → sym
   (begin
     𝐷-unfold (𝐷-fold (λ x x<k → 𝐷-unfold d x (<-transˡ x<k m≤n))) k (<-transˡ k<l l≤m)
   ≡⟨ cong (λ f → f k (<-transˡ k<l l≤m)) 𝐷-unfold-fold ⟩
@@ -63,7 +95,10 @@ morph-comp 𝒟 l≤m m≤n eq-nm eq-ms d = cong 𝐷-fold (funext λ k → fune
     𝐷-unfold d k (<-transˡ k<l (≤-trans l≤m m≤n)) ∎))
   where open ≡-Reasoning
 
-𝒟-fixpoint : 𝒟 ≅ᵗʸ (▻' 𝒟 ⇛ ▻' 𝒟)
+𝒟 : ∀ {ℓ} {Γ : Ctx ω ℓ} → Ty Γ 0ℓ
+𝒟 {Γ = Γ} = 𝒟-prim [ !◇ Γ ]
+
+𝒟-fixpoint : {Γ : Ctx ω ℓ} → 𝒟 {Γ = Γ} ≅ᵗʸ (▻' 𝒟 ⇛ ▻' 𝒟)
 _$⟨_,_⟩_ (func (from 𝒟-fixpoint) d) z≤n       _ = λ _ → lift tt
 _$⟨_,_⟩_ (func (from 𝒟-fixpoint) d) (s≤s m≤n) _ = 𝐷-unfold d _ (s≤s m≤n)
 PresheafFunc.naturality (func (from 𝒟-fixpoint) dn) {ρ-xy = z≤n}     {ρ-yz = m≤n}     _ _ dm = refl
@@ -91,7 +126,7 @@ CwF-Structure.naturality (to 𝒟-fixpoint) {f = m≤n} f = cong 𝐷-fold (fune
     𝐷-unfold (𝐷-fold (λ l l<n → f $⟨ l<n , refl ⟩_)) k (<-transˡ k<m m≤n) x
   ≡⟨ cong (λ g → g k (<-transˡ k<m m≤n) x) 𝐷-unfold-fold ⟩
     f $⟨ <-transˡ k<m m≤n , refl ⟩ x
-  ≡⟨ $-cong f (≤-irrelevant _ _) refl _ ⟩
+  ≡⟨ {!$-cong {!f!} {!!} {!!} {!!}!} ⟩ -- {!$-cong f (≤-irrelevant _ _) ? ?!} ⟩
     f $⟨ ≤-trans k<m m≤n , _ ⟩ x ∎)
   where open ≡-Reasoning
 eq (isoˡ 𝒟-fixpoint) d =
@@ -108,6 +143,7 @@ eq (isoʳ 𝒟-fixpoint) f = to-pshfun-eq λ { z≤n _ d → refl
     𝐷-unfold (𝐷-fold (λ k k<sn → f $⟨ k<sn , refl ⟩_)) _ (s≤s m≤n) dm
   ≡⟨ cong (λ g → g _ (s≤s m≤n) dm) 𝐷-unfold-fold ⟩
     f $⟨ s≤s m≤n , refl ⟩ dm
-  ≡⟨ $-cong f refl refl e ⟩
+  ≡⟨ {!$-cong f {!refl!} {!refl!} {!e!}!} ⟩
     f $⟨ s≤s m≤n , e ⟩ dm ∎ }
   where open ≡-Reasoning
+-}

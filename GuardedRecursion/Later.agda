@@ -18,7 +18,7 @@ open import Types.Functions
 
 private
   variable
-    ℓt ℓt' : Level
+    ℓ'' ℓt ℓt' : Level
     m n : ℕ
     Γ Δ : Ctx ω ℓ
 
@@ -162,6 +162,9 @@ func (▻-map η) {suc n} t = func η t
 naturality (▻-map η) {f = z≤n} _ = refl
 naturality (▻-map η) {f = s≤s m≤n} t = naturality η t
 
+▻'-map : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} → (T ↣ S) → (▻' T ↣ ▻' S)
+▻'-map η = ▻-map (ty-subst-map (from-earlier _) η)
+
 ▻-cong : {T : Ty (◄ Γ) ℓ} {T' : Ty (◄ Γ) ℓ'} → T ≅ᵗʸ T' → ▻ T ≅ᵗʸ ▻ T'
 from (▻-cong T=T') = ▻-map (from T=T')
 to (▻-cong T=T') = ▻-map (to T=T')
@@ -267,3 +270,50 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
 
 _⊛'_ : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} → Tm Γ (▻' (T ⇛ S)) → Tm Γ (▻' T) → Tm Γ (▻' S)
 f ⊛' t = (ι⁻¹[ ▻-cong (⇛-natural _) ] f) ⊛ t
+
+
+--------------------------------------------------
+-- Proofs that ▻ and ▻' act functorially on types
+
+▻-map-cong : {T : Ty (◄ Γ) ℓ} {T' : Ty (◄ Γ) ℓ'} {η φ : T ↣ T'} →
+              η ≅ⁿ φ → ▻-map η ≅ⁿ ▻-map φ
+eq (▻-map-cong e) {x = zero } _ = refl
+eq (▻-map-cong e) {x = suc x} t = eq e t
+
+▻'-map-cong : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} {η φ : T ↣ S} →
+               η ≅ⁿ φ → ▻'-map η ≅ⁿ ▻'-map φ
+▻'-map-cong e = ▻-map-cong (ty-subst-map-cong e)
+
+▻-map-id : {T : Ty (◄ Γ) ℓ} → ▻-map (id-trans T) ≅ⁿ id-trans (▻ T)
+eq ▻-map-id {x = zero } _ = refl
+eq ▻-map-id {x = suc x} _ = refl
+
+▻'-map-id : {T : Ty Γ ℓ} → ▻'-map (id-trans T) ≅ⁿ id-trans (▻' T)
+▻'-map-id {T = T} =
+  begin
+    ▻-map (ty-subst-map (from-earlier _) (id-trans T))
+  ≅⟨ ▻-map-cong (ty-subst-map-id (from-earlier _)) ⟩
+    ▻-map (id-trans (T [ from-earlier _ ]))
+  ≅⟨ ▻-map-id ⟩
+    id-trans (▻' T) ∎
+  where open ≅ⁿ-Reasoning
+
+▻-map-comp : {R : Ty (◄ Γ) ℓ} {S : Ty (◄ Γ) ℓ'} {T : Ty (◄ Γ) ℓ''}
+              (η : S ↣ T) (φ : R ↣ S) →
+              ▻-map (η ⊙ φ) ≅ⁿ ▻-map η ⊙ ▻-map φ
+eq (▻-map-comp η φ) {x = zero } _ = refl
+eq (▻-map-comp η φ) {x = suc x} _ = refl
+
+▻'-map-comp : {R : Ty Γ ℓ} {S : Ty Γ ℓ'} {T : Ty Γ ℓ''}
+               (η : S ↣ T) (φ : R ↣ S) →
+               ▻'-map (η ⊙ φ) ≅ⁿ ▻'-map η ⊙ ▻'-map φ
+▻'-map-comp η φ =
+  begin
+    ▻'-map (η ⊙ φ)
+  ≅⟨⟩
+    ▻-map (ty-subst-map (from-earlier _) (η ⊙ φ))
+  ≅⟨ ▻-map-cong (ty-subst-map-comp (from-earlier _) η φ) ⟩
+    ▻-map (ty-subst-map (from-earlier _) η ⊙ ty-subst-map (from-earlier _) φ)
+  ≅⟨ ▻-map-comp _ _ ⟩
+    ▻'-map η ⊙ ▻'-map φ ∎
+  where open ≅ⁿ-Reasoning

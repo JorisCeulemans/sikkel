@@ -81,6 +81,13 @@ Unit' = Discr ⊤
 tt' : Tm Γ Unit'
 tt' = discr tt
 
+!Unit : T ↣ Unit'
+func !Unit _ = tt
+naturality !Unit _ = refl
+
+Unit-terminal : (η : T ↣ Unit') → η ≅ⁿ !Unit
+eq (Unit-terminal η) _ = refl
+
 
 --------------------------------------------------
 -- Booleans
