@@ -210,6 +210,26 @@ generate f = löb (Nat' ⇛ Stream)
                                 (sub (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) π) π)
                                 refl refl
 
+generate' : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+generate' f = lam Nat' (ι[ stream-natural π ]
+                  löb Stream
+                      (lam (▻' Stream) (ι[ stream-natural π ]
+                           str-cons (pair (ι[ α ] (ξ [ π ]'))
+                                          (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] ξ))))))
+  where
+    α : Nat' ≅ᵗʸ (Nat' [ π ]) [ π ]
+    α = type-naturality-reflect (nul discr-nul)
+                                (sub (sub (nul discr-nul) π) π)
+                                refl refl
+    β : (Stream ⇛ Stream) ≅ᵗʸ ((Stream ⇛ Stream) [ π ]) [ π ]
+    β = type-naturality-reflect (bin fun-bin (nul stream-nul) (nul stream-nul))
+                                (sub (sub (bin fun-bin (nul stream-nul) (nul stream-nul)) π) π)
+                                refl refl
+    ζ : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
+    ζ = type-naturality-reflect (un ▻'-un (nul stream-nul))
+                                (sub (un ▻'-un (nul stream-nul)) π)
+                                refl refl
+
 suc-func : Tm {C = ω} ◇ (Nat' ⇛ Nat')
 suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] ξ))
 
