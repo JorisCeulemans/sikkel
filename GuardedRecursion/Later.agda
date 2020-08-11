@@ -144,9 +144,30 @@ naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'}
   where open ≡-Reasoning
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
-                  löb T f ≅ᵗᵐ app f (next' (löb T f))
+                  app f (next' (löb T f)) ≅ᵗᵐ löb T f
 eq (löb-is-fixpoint f) {zero} γ = refl
 eq (löb-is-fixpoint f) {suc n} γ = refl
+
+fixpoint-unique : {T : Ty Γ ℓ} (f  : Tm Γ (▻' T ⇛ T)) (t s : Tm Γ T) →
+                  app f (next' t) ≅ᵗᵐ t → app f (next' s) ≅ᵗᵐ s → t ≅ᵗᵐ s
+eq (fixpoint-unique f t s t-fix s-fix) {x = zero}  γ =
+  begin
+    t ⟨ zero , γ ⟩'
+  ≡˘⟨ eq t-fix γ ⟩
+    f €⟨ zero , γ ⟩ tt
+  ≡⟨ eq s-fix γ ⟩
+    s ⟨ zero , γ ⟩' ∎
+  where open ≡-Reasoning
+eq (fixpoint-unique f t s t-fix s-fix) {x = suc n} γ =
+  begin
+    t ⟨ suc n , γ ⟩'
+  ≡˘⟨ eq t-fix γ ⟩
+    f €⟨ suc n , γ ⟩ (t ⟨ n , _ ⟩')
+  ≡⟨ cong (f €⟨ suc n , γ ⟩_) (eq (fixpoint-unique f t s t-fix s-fix) {x = n}  _) ⟩
+    f €⟨ suc n , γ ⟩ (s ⟨ n , _ ⟩')
+  ≡⟨ eq s-fix γ ⟩
+    s ⟨ suc n , γ ⟩' ∎
+  where open ≡-Reasoning
 
 -- ▻ is an applicative functor
 _⊛_ : {T : Ty (◄ Γ) ℓ} {S : Ty (◄ Γ) ℓ'} → Tm Γ (▻ (T ⇛ S)) → Tm Γ (▻ T) → Tm Γ (▻ S)
