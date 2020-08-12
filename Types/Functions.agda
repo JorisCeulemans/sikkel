@@ -345,3 +345,29 @@ module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
   app-natural : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) →
                 (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
   eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl _ _
+
+
+--------------------------------------------------
+-- Relation between functions T ⇛ S and natural tranformations T ↣ S
+
+⇛-to-↣ : Tm Γ (T ⇛ S) → (T ↣ S)
+func (⇛-to-↣ f) = f €⟨ _ , _ ⟩_
+naturality (⇛-to-↣ f) t = €-natural f _ _ t
+
+↣-to-⇛ : (T ↣ S) → Tm Γ (T ⇛ S)
+(term (↣-to-⇛ η) _ _) $⟨ _ , _ ⟩ t = func η t
+naturality (term (↣-to-⇛ η) _ _) _ _ t = sym (naturality η t)
+naturality (↣-to-⇛ η) _ _ = to-pshfun-eq (λ _ _ _ → refl)
+
+↣-⇛-iso : (η : T ↣ S) → ⇛-to-↣ (↣-to-⇛ η) ≅ⁿ η
+eq (↣-⇛-iso η) _ = refl
+
+⇛-↣-iso : (f : Tm Γ (T ⇛ S)) → ↣-to-⇛ (⇛-to-↣ f) ≅ᵗᵐ f
+eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
+  begin
+    f ⟨ y , γ' ⟩' $⟨ hom-id , rel-id Γ γ' ⟩ t
+  ≡˘⟨ cong (_$⟨ hom-id , rel-id Γ γ' ⟩ t) (naturality f ρ eγ) ⟩
+    f ⟨ x , γ ⟩' $⟨ ρ ∙ hom-id , strong-rel-comp Γ eγ (rel-id Γ γ') ⟩ t
+  ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-rel-comp Γ eγ (rel-id Γ γ')) eγ ⟩
+    f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)
+  where open ≡-Reasoning
