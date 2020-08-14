@@ -35,6 +35,7 @@ private
 -- A morphism in the category of elements of Γ from (x, γx) to (y, γy) consists of
 --   a morphism f : Hom x y together with a proof that Γ ⟪ f ⟫ γy ≡ γx. This explains
 --   the type of the field morph (representing the action of the presheaf on morphisms).
+
 record Ty {ℓc} (Γ : Ctx C ℓc) (ℓt : Level) : Set (ℓc ⊔ lsuc ℓt) where
   constructor MkTy
   no-eta-equality
@@ -88,15 +89,28 @@ module _ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) where
 
   strict-morph-id : {γ : Γ ⟨ y ⟩} (t : T ⟨ y , γ ⟩) →
                     subst (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t) ≡ t
-  strict-morph-id t = trans (morph-subst T refl (rel-id Γ _) t)
-                            (morph-id T t)
+  strict-morph-id {y = y}{γ = γ} t =
+    begin
+      subst (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t)
+    ≡⟨ morph-subst T refl (rel-id Γ γ) t ⟩
+      T ⟪ hom-id , rel-id Γ γ ⟫ t
+    ≡⟨ morph-id T t ⟩
+      t ∎
+    where open ≡-Reasoning
 
   strict-morph-comp : (f : Hom x y) (g : Hom y z) {γ : Γ ⟨ z ⟩} (t : T ⟨ z , γ ⟩) →
                       subst (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
                         strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t)
-  strict-morph-comp f g t = trans (morph-subst T refl (rel-comp Γ f g _) t)
-                                  (trans (cong (λ - → T ⟪ _ , - ⟫ t) (sym (trans-reflʳ _)))
-                                         (morph-comp T f g refl refl t))
+  strict-morph-comp {x = x} f g {γ = γ} t =
+    begin
+      subst (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t)
+    ≡⟨ morph-subst T refl (rel-comp Γ f g γ) t ⟩
+      T ⟪ g ∙ f , rel-comp Γ f g γ ⟫ t
+    ≡˘⟨ cong (λ - → T ⟪ g ∙ f , - ⟫ t) (trans-reflʳ _) ⟩
+      T ⟪ g ∙ f , trans (rel-comp Γ f g γ) refl ⟫ t
+    ≡⟨ morph-comp T f g refl refl t ⟩
+      strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t) ∎
+    where open ≡-Reasoning
 
 
 --------------------------------------------------
@@ -153,8 +167,14 @@ naturality (id-trans T) _ = refl
 
 _⊙_ : S ↣ T → R ↣ S → R ↣ T
 func (φ ⊙ η) = func φ ∘ func η
-naturality (φ ⊙ η) r = trans (naturality φ (func η r))
-                              (cong (func φ) (naturality η r))
+naturality (_⊙_ {S = S}{T = T}{R = R} φ η) {f = f}{eγ = eγ} r =
+  begin
+    T ⟪ f , eγ ⟫ func φ (func η r)
+  ≡⟨ naturality φ (func η r) ⟩
+    func φ (S ⟪ f , eγ ⟫ func η r)
+  ≡⟨ cong (func φ) (naturality η r) ⟩
+    func φ (func η (R ⟪ f , eγ ⟫ r)) ∎
+  where open ≡-Reasoning
 
 ⊙-id-transʳ : (η : T ↣ S) → η ⊙ id-trans T ≅ⁿ η
 eq (⊙-id-transʳ η) _ = refl

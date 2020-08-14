@@ -22,7 +22,6 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import GuardedRecursion.Later
--- open import Reflection.Types
 open import Reflection.Naturality
 
 private
@@ -72,11 +71,12 @@ Stream {Γ = Γ} = Stream-prim [ !◇ Γ ]
 str-head : Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
 naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
-  head (s ⟨ n , γ ⟩')
-    ≡⟨ first-≤-head m≤n (s ⟨ n , γ ⟩') ⟩
-  head (Stream {Γ = Γ} ⟪ m≤n , eγ ⟫ (s ⟨ n , γ ⟩'))
-    ≡⟨ cong head (naturality s m≤n eγ) ⟩
-  head (s ⟨ m , γ' ⟩') ∎
+  begin
+    head (s ⟨ n , γ ⟩')
+  ≡⟨ first-≤-head m≤n (s ⟨ n , γ ⟩') ⟩
+    head (Stream {Γ = Γ} ⟪ m≤n , eγ ⟫ (s ⟨ n , γ ⟩'))
+  ≡⟨ cong head (naturality s m≤n eγ) ⟩
+    head (s ⟨ m , γ' ⟩') ∎
   where open ≡-Reasoning
 
 str-tail : Tm Γ Stream → Tm Γ (▻' Stream)
@@ -84,11 +84,12 @@ term (str-tail s) zero _ = tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
 naturality (str-tail s) z≤n _ = refl
 naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eγ =
-  first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩'))
-    ≡⟨ first-≤-tail (s≤s m≤n) (s ⟨ suc n , γ ⟩') ⟩
-  tail (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γ ⟩'))
-    ≡⟨ cong tail (naturality s (s≤s m≤n) eγ) ⟩
-  tail (s ⟨ suc m , γ' ⟩') ∎
+  begin
+    first-≤ (s≤s m≤n) (tail (s ⟨ suc n , γ ⟩'))
+  ≡⟨ first-≤-tail (s≤s m≤n) (s ⟨ suc n , γ ⟩') ⟩
+    tail (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γ ⟩'))
+  ≡⟨ cong tail (naturality s (s≤s m≤n) eγ) ⟩
+    tail (s ⟨ suc m , γ' ⟩') ∎
   where open ≡-Reasoning
 
 str-cons : Tm Γ (Nat' ⊠ (▻' Stream)) → Tm Γ Stream

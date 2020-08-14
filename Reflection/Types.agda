@@ -228,20 +228,21 @@ type-reflect {T = T} seq seq' eq =
     T ⟦ seq' ⟧ops ∎
   where open ≅ᵗʸ-Reasoning
 
-module Examples (σ : Δ ⇒ Γ) (τ : ◄ Γ ⇒ ◄ Θ) where
-  open import Types.Discrete
-  open import CwF-Structure.SubstitutionSequence
-  open import CwF-Structure.Terms
+private
+  module Examples (σ : Δ ⇒ Γ) (τ : ◄ Γ ⇒ ◄ Θ) where
+    open import Types.Discrete
+    open import CwF-Structure.SubstitutionSequence
+    open import CwF-Structure.Terms
 
-  example' : (▻ ((▻ Bool') [ τ ])) [ σ ] ≅ᵗʸ ▻ (▻ Bool')
-  example' = type-reflect' (subst (!◇ (◄ (◄ Θ))) ∷ later ∷ subst τ ∷ later ∷ subst σ ∷ [])
+    example' : (▻ ((▻ Bool') [ τ ])) [ σ ] ≅ᵗʸ ▻ (▻ Bool')
+    example' = type-reflect' (subst (!◇ (◄ (◄ Θ))) ∷ later ∷ subst τ ∷ later ∷ subst σ ∷ [])
+                             (subst (!◇ (◄ (◄ Δ))) ∷ later ∷ later ∷ [])
+                             (▻-cong (▻-cong (ty-subst-seq-cong (!◇ (◄ (◄ Θ)) ∷ ◄-subst τ ∷ ◄-subst (◄-subst σ) ◼)
+                                                                  (!◇ (◄ (◄ Δ)) ◼)
+                                                                  _
+                                                                  (◇-terminal _ _ _))))
+
+    example : (▻ ((▻ Bool') [ τ ])) [ σ ] ≅ᵗʸ ▻ (▻ Bool')
+    example = type-reflect (subst (!◇ (◄ (◄ Θ))) ∷ later ∷ subst τ ∷ later ∷ subst σ ∷ [])
                            (subst (!◇ (◄ (◄ Δ))) ∷ later ∷ later ∷ [])
-                           (▻-cong (▻-cong (ty-subst-seq-cong (!◇ (◄ (◄ Θ)) ∷ ◄-subst τ ∷ ◄-subst (◄-subst σ) ◼)
-                                                                (!◇ (◄ (◄ Δ)) ◼)
-                                                                _
-                                                                (◇-terminal _ _ _))))
-
-  example : (▻ ((▻ Bool') [ τ ])) [ σ ] ≅ᵗʸ ▻ (▻ Bool')
-  example = type-reflect (subst (!◇ (◄ (◄ Θ))) ∷ later ∷ subst τ ∷ later ∷ subst σ ∷ [])
-                         (subst (!◇ (◄ (◄ Δ))) ∷ later ∷ later ∷ [])
-                         (▻-cong (▻-cong (ty-subst-cong-subst (◇-terminal _ _ _) _)))
+                           (▻-cong (▻-cong (ty-subst-cong-subst (◇-terminal _ _ _) _)))

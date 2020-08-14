@@ -28,8 +28,22 @@ private
 ctx-lift : Ctx D ℓ → Ctx C ℓ
 set (ctx-lift Γ) c = Γ ⟨ ob F c ⟩
 rel (ctx-lift Γ) f = Γ ⟪ hom F f ⟫
-rel-id (ctx-lift Γ) γ = trans (cong (λ - → Γ ⟪ - ⟫ γ) (id-law F)) (rel-id Γ γ)
-rel-comp (ctx-lift Γ) f g γ = trans (cong (λ - → Γ ⟪ - ⟫ γ) (comp-law F)) (rel-comp Γ (hom F f) (hom F g) γ)
+rel-id (ctx-lift Γ) γ =
+  begin
+    Γ ⟪ hom F (hom-id C) ⟫ γ
+  ≡⟨ cong (Γ ⟪_⟫ γ) (id-law F) ⟩
+    Γ ⟪ hom-id D ⟫ γ
+  ≡⟨ rel-id Γ γ ⟩
+    γ ∎
+  where open ≡-Reasoning
+rel-comp (ctx-lift Γ) f g γ =
+  begin
+    Γ ⟪ hom F (g ∙[ C ] f) ⟫ γ
+  ≡⟨ cong (Γ ⟪_⟫ γ) (comp-law F) ⟩
+    Γ ⟪ hom F g ∙[ D ] hom F f ⟫ γ
+  ≡⟨ rel-comp Γ (hom F f) (hom F g) γ ⟩
+    Γ ⟪ hom F f ⟫ (Γ ⟪ hom F g ⟫ γ) ∎
+  where open ≡-Reasoning
 
 subst-lift : {Δ : Ctx D ℓ} {Γ : Ctx D ℓ'} (σ : Δ ⇒ Γ) → ctx-lift Δ ⇒ ctx-lift Γ
 func (subst-lift σ) {c} = func σ {ob F c}
@@ -45,11 +59,22 @@ eq (subst-lift-comp τ σ) _ = refl
 ty-lift : {Γ : Ctx D ℓ} → Ty Γ ℓt → Ty (ctx-lift Γ) ℓt
 type (ty-lift T) c γ = T ⟨ ob F c , γ ⟩
 morph (ty-lift T) f eγ t = T ⟪ hom F f , eγ ⟫ t
-morph-id (ty-lift T) t = trans (morph-cong T (id-law F) _ _)
-                               (morph-id T t)
+morph-id (ty-lift T) t =
+  begin
+    T ⟪ hom F (hom-id C) , _ ⟫ t
+  ≡⟨ morph-cong T (id-law F) _ _ ⟩
+    T ⟪ hom-id D , _ ⟫ t
+  ≡⟨ morph-id T t ⟩
+    t ∎
+ where open ≡-Reasoning
 morph-comp (ty-lift T) f g eq-zy eq-yx t =
-  trans (morph-cong T (comp-law F) _ _)
-        (morph-comp T (hom F f) (hom F g) eq-zy eq-yx t)
+  begin
+    T ⟪ hom F (g ∙[ C ] f) , _ ⟫ t
+  ≡⟨ morph-cong T (comp-law F) _ _ ⟩
+    T ⟪ hom F g ∙[ D ] hom F f , _ ⟫ t
+  ≡⟨ morph-comp T (hom F f) (hom F g) eq-zy eq-yx t ⟩
+    T ⟪ hom F f , eq-yx ⟫ (T ⟪ hom F g , eq-zy ⟫ t) ∎
+  where open ≡-Reasoning
 
 ty-lift-natural : {Δ : Ctx D ℓ} {Γ : Ctx D ℓ'} (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) →
                   ty-lift (T [ σ ]) ≅ᵗʸ ty-lift T [ subst-lift σ ]

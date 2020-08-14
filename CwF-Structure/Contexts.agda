@@ -51,13 +51,21 @@ module _ {C : Category} where
   Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
-  -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and function types.
+  -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
+  -- of function types.
   strong-rel-comp : (Γ : Ctx C ℓ) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                     (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) →
                     Γ ⟪ g ∙ f ⟫ γz ≡ γx
-  strong-rel-comp Γ {f}{g}{γz} eq-zy eq-yx = trans (rel-comp Γ f g γz)
-                                                   (trans (cong (Γ ⟪ f ⟫) eq-zy)
-                                                          eq-yx)
+  strong-rel-comp Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
+    begin
+      Γ ⟪ g ∙ f ⟫ γz
+    ≡⟨ rel-comp Γ f g γz ⟩
+      Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γz)
+    ≡⟨ cong (Γ ⟪ f ⟫) eq-zy ⟩
+      Γ ⟪ f ⟫ γy
+    ≡⟨ eq-yx ⟩
+      γx ∎
+    where open ≡-Reasoning
 
   -- The type of substitutions from context Δ to context Γ
   record _⇒_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
@@ -75,16 +83,14 @@ module _ {C : Category} where
   -- Composition of substitutions
   _⊚_ : Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
   func (τ ⊚ σ) = func τ ∘ func σ
-  naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
-                                  (cong (func τ) (naturality σ δ))
-  {-
-  More detailed version of the above naturality proof. We do not use this as it inserts
-  refl at the end (and trans eq refl is not definitionally equal to eq).
-    Θ ⟪ m≤n ⟫ (func τ (func σ δ)) ≡⟨ naturality τ (func σ δ) ⟩
-    func τ (Γ ⟪ m≤n ⟫ func σ δ)   ≡⟨ cong (func τ) (naturality σ δ) ⟩
-    func τ (func σ (Δ ⟪ m≤n ⟫ δ)) ∎
+  naturality (_⊚_ {Γ = Γ}{Θ = Θ}{Δ = Δ} τ σ) {f = f} δ =
+    begin
+      Θ ⟪ f ⟫ (func τ (func σ δ))
+    ≡⟨ naturality τ (func σ δ) ⟩
+      func τ (Γ ⟪ f ⟫ func σ δ)
+    ≡⟨ cong (func τ) (naturality σ δ) ⟩
+      func τ (func σ (Δ ⟪ f ⟫ δ)) ∎
     where open ≡-Reasoning
-  -}
 
 
   --------------------------------------------------

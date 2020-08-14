@@ -28,9 +28,16 @@ private
 
 ctx-m≤1+n : (Γ : Ctx ω ℓ) (m≤n : m ≤ n) (γ : Γ ⟨ suc n ⟩) →
             Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ) ≡ Γ ⟪ n≤1+n m ⟫ (Γ ⟪ s≤s m≤n ⟫ γ)
-ctx-m≤1+n Γ m≤n γ = trans (sym (rel-comp Γ m≤n (n≤1+n _) γ))
-                          (trans (cong (Γ ⟪_⟫ γ) (≤-irrelevant _ _))
-                                 (rel-comp Γ (n≤1+n _) (s≤s m≤n) γ))
+ctx-m≤1+n {m = m}{n = n} Γ m≤n γ =
+  begin
+    Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ)
+  ≡˘⟨ rel-comp Γ m≤n (n≤1+n n) γ ⟩
+    Γ ⟪ ≤-trans m≤n (n≤1+n n) ⟫ γ
+  ≡⟨ cong (Γ ⟪_⟫ γ) (≤-irrelevant _ _) ⟩
+    Γ ⟪ ≤-trans (n≤1+n m)(s≤s m≤n) ⟫ γ
+  ≡⟨ rel-comp Γ (n≤1+n m) (s≤s m≤n) γ ⟩
+    Γ ⟪ n≤1+n m ⟫ (Γ ⟪ s≤s m≤n ⟫ γ) ∎
+  where open ≡-Reasoning
 
 ◄ : Ctx ω ℓ → Ctx ω ℓ
 set (◄ Γ) n = Γ ⟨ suc n ⟩
@@ -136,11 +143,12 @@ term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n ,
 naturality (löb T f) {y = zero} z≤n eγ = €-natural f z≤n eγ tt
 naturality (löb {Γ = Γ} T f) {y = suc n} z≤n {γ} eγ = €-natural f z≤n eγ ((löb T f) ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
 naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'} eγ =
-  T ⟪ s≤s m≤n , eγ ⟫ f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
-    ≡⟨ €-natural f (s≤s m≤n) eγ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩') ⟩
-  f €⟨ suc m , γ' ⟩ (T ⟪ m≤n , _ ⟫ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩'))
-    ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (löb T f) m≤n _) ⟩
-  f €⟨ suc m , γ' ⟩ (löb T f ⟨ m , Γ ⟪ n≤1+n m ⟫ γ' ⟩') ∎
+  begin
+    T ⟪ s≤s m≤n , eγ ⟫ f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
+  ≡⟨ €-natural f (s≤s m≤n) eγ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩') ⟩
+    f €⟨ suc m , γ' ⟩ (T ⟪ m≤n , _ ⟫ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩'))
+  ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (löb T f) m≤n _) ⟩
+    f €⟨ suc m , γ' ⟩ (löb T f ⟨ m , Γ ⟪ n≤1+n m ⟫ γ' ⟩') ∎
   where open ≡-Reasoning
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
@@ -219,8 +227,8 @@ module _ {Γ : Ctx ω ℓ} {T : Ty (◄ Γ) ℓt} {T' : Ty (◄ Γ) ℓt'} (T=T'
 löb-ι : {T : Ty Γ ℓ} {T' : Ty Γ ℓ'} (T=T' : T ≅ᵗʸ T') (f : Tm Γ (▻' T' ⇛ T')) →
         ι[ T=T' ] (löb T' f) ≅ᵗᵐ löb T (ι[ ⇛-cong (▻'-cong T=T') T=T' ] f)
 eq (löb-ι T=T' f) {zero} γ = refl
-eq (löb-ι {Γ = Γ}{T = T}{T' = T'} T=T' f) {suc n} γ = cong (func (to T=T'))
-  (€-cong (≅ᵗᵐ-refl {t = f}) (begin
+eq (löb-ι {Γ = Γ}{T = T}{T' = T'} T=T' f) {suc n} γ = cong (func (to T=T')) (€-cong (≅ᵗᵐ-refl {t = f}) (
+  begin
     löb T' f ⟨ n , _ ⟩'
   ≡˘⟨ eq (isoʳ T=T') _ ⟩
     func (from T=T') (func (to T=T') (löb T' f ⟨ n , _ ⟩'))
