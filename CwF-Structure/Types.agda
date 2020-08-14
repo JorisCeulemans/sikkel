@@ -8,7 +8,7 @@ module CwF-Structure.Types {C : Category} where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Function hiding (_⟨_⟩_; _↣_)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -76,35 +76,35 @@ ctx-element-subst : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T
 ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
 
 -- The following definitions are needed when defining context extension.
-morph-subst : (T : Ty Γ ℓ) {f : Hom x y}
-              {γ1 : Γ ⟨ y ⟩} {γ2 γ3 : Γ ⟨ x ⟩}
-              (eq12 : Γ ⟪ f ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
-              (t : T ⟨ y , γ1 ⟩) →
-              subst (λ - → T ⟨ x , - ⟩) eq23 (T ⟪ f , eq12 ⟫ t) ≡ T ⟪ f , trans eq12 eq23 ⟫ t
-morph-subst T refl refl t = refl
+morph-transport : (T : Ty Γ ℓ) {f : Hom x y}
+                  {γ1 : Γ ⟨ y ⟩} {γ2 γ3 : Γ ⟨ x ⟩}
+                  (eq12 : Γ ⟪ f ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
+                  (t : T ⟨ y , γ1 ⟩) →
+                  transport (λ - → T ⟨ x , - ⟩) eq23 (T ⟪ f , eq12 ⟫ t) ≡ T ⟪ f , trans eq12 eq23 ⟫ t
+morph-transport T refl refl t = refl
 
 module _ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) where
   strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
   strict-morph f γ t = T ⟪ f , refl ⟫ t
 
   strict-morph-id : {γ : Γ ⟨ y ⟩} (t : T ⟨ y , γ ⟩) →
-                    subst (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t) ≡ t
+                    transport (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t) ≡ t
   strict-morph-id {y = y}{γ = γ} t =
     begin
-      subst (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t)
-    ≡⟨ morph-subst T refl (rel-id Γ γ) t ⟩
+      transport (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t)
+    ≡⟨ morph-transport T refl (rel-id Γ γ) t ⟩
       T ⟪ hom-id , rel-id Γ γ ⟫ t
     ≡⟨ morph-id T t ⟩
       t ∎
     where open ≡-Reasoning
 
   strict-morph-comp : (f : Hom x y) (g : Hom y z) {γ : Γ ⟨ z ⟩} (t : T ⟨ z , γ ⟩) →
-                      subst (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
+                      transport (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
                         strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t)
   strict-morph-comp {x = x} f g {γ = γ} t =
     begin
-      subst (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t)
-    ≡⟨ morph-subst T refl (rel-comp Γ f g γ) t ⟩
+      transport (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t)
+    ≡⟨ morph-transport T refl (rel-comp Γ f g γ) t ⟩
       T ⟪ g ∙ f , rel-comp Γ f g γ ⟫ t
     ≡˘⟨ cong (λ - → T ⟪ g ∙ f , - ⟫ t) (trans-reflʳ _) ⟩
       T ⟪ g ∙ f , trans (rel-comp Γ f g γ) refl ⟫ t

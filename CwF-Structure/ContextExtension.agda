@@ -8,7 +8,7 @@ module CwF-Structure.ContextExtension {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Level
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -59,9 +59,9 @@ to-ext-subst : (T : Ty Γ ℓ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ 
 func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
 naturality (to-ext-subst {Δ = Δ} T σ t) δ = to-Σ-eq (naturality σ δ) (
   begin
-    subst (λ x → T ⟨ _ , x ⟩) (naturality σ δ)
+    transport (λ x → T ⟨ _ , x ⟩) (naturality σ δ)
           (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
-  ≡⟨ morph-subst T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
+  ≡⟨ morph-transport T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
     T ⟪ _ , trans refl (naturality σ δ) ⟫ t ⟨ _ , δ ⟩'
   ≡⟨ morph-cong T refl _ _ ⟩
     T ⟪ _ , _ ⟫ (t ⟨ _ , δ ⟩')
