@@ -1,7 +1,7 @@
 {-# OPTIONS --omega-in-omega #-}
 
 --------------------------------------------------
--- Examples with guarded streams
+-- Examples with guarded streams of natural numbers
 --------------------------------------------------
 
 module GuardedRecursion.StreamsExample where
@@ -109,6 +109,9 @@ eq (isoʳ (stream-natural σ)) _ = refl
 
 --------------------------------------------------
 -- Declarations needed for the naturality solver
+-- This shows that it is easy to extend the solver to work with custom types
+-- and type operations (even the ones that are only definable in a particular
+-- base category).
 
 stream-nul : NullaryTypeOp 0ℓ
 stream-nul = record { ⟦_⟧nop = Stream ; naturality = stream-natural }
@@ -141,22 +144,6 @@ zeros = löb Stream
     β = type-naturality-reflect (un ▻'-un (nul stream-nul))
                                 (sub (un ▻'-un (nul stream-nul)) π)
                                 refl refl
-    {-
-    β = type-reflect (subst (!◇ _) ∷ later ∷ [])
-                     (subst (!◇ _) ∷ subst (from-earlier _) ∷ later ∷ subst π ∷ [])
-                     (▻-cong (ty-subst-cong-subst (◇-terminal _ _ _) _))
-
-    β = begin
-          ▻ Stream
-        ≅˘⟨ ▻-cong (stream-natural (from-earlier ◇ ⊚ ◄-subst π)) ⟩
-          ▻ (Stream [ from-earlier ◇ ⊚ ◄-subst π ])
-        ≅˘⟨ ▻-cong (ty-subst-comp Stream (from-earlier ◇) (◄-subst π)) ⟩
-          ▻ (Stream [ from-earlier ◇ ] [ ◄-subst π ])
-        ≅˘⟨ ▻-natural π ⟩
-          (▻ (Stream [ from-earlier ◇ ])) [ π ]
-        ≅⟨⟩
-          (▻' Stream) [ π ] ∎
-    -}
 
 zeros-test : str-head zeros ≅ᵗᵐ zero'
 eq zeros-test {x = zero}  _ = refl
@@ -171,7 +158,7 @@ eq zeros-test2 {x = suc (suc n)} _ = refl
 -- TODO: relieve the end-user from the burden of manually providing the arguments
 --       to type-naturality-reflect by using tactics.
 
-str-map : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
+str-map : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
                 (lam (▻' (Stream ⇛ Stream)) (ι[ α ]
                      lam Stream (ι[ stream-natural π ]
@@ -191,12 +178,12 @@ str-map f = löb (Stream ⇛ Stream)
                                 (sub (sub (un ▻'-un (bin fun-bin (nul stream-nul) (nul stream-nul))) π) π)
                                 refl refl
 
-generate : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
-generate f = löb (Nat' ⇛ Stream)
-                 (lam (▻' (Nat' ⇛ Stream)) (ι[ α ]
-                      lam Nat' (ι[ stream-natural π ]
-                          str-cons (pair (ι⁻¹[ Discr-natural _ π ] ξ)
-                                         ((ι[ β ] (ξ [ π ]')) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] ξ)))))))
+iterate : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+iterate f = löb (Nat' ⇛ Stream)
+                (lam (▻' (Nat' ⇛ Stream)) (ι[ α ]
+                     lam Nat' (ι[ stream-natural π ]
+                         str-cons (pair (ι⁻¹[ Discr-natural _ π ] ξ)
+                                        ((ι[ β ] (ξ [ π ]')) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] ξ)))))))
   where
     α : ((Nat' ⇛ Stream) [ π ]) ≅ᵗʸ (Nat' ⇛ Stream)
     α = type-naturality-reflect (sub (bin fun-bin (nul discr-nul) (nul stream-nul)) π)
@@ -211,12 +198,12 @@ generate f = löb (Nat' ⇛ Stream)
                                 (sub (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) π) π)
                                 refl refl
 
-generate' : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
-generate' f = lam Nat' (ι[ stream-natural π ]
-                  löb Stream
-                      (lam (▻' Stream) (ι[ stream-natural π ]
-                           str-cons (pair (ι[ α ] (ξ [ π ]'))
-                                          (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] ξ))))))
+iterate' : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+iterate' f = lam Nat' (ι[ stream-natural π ]
+                 löb Stream
+                     (lam (▻' Stream) (ι[ stream-natural π ]
+                          str-cons (pair (ι[ α ] (ξ [ π ]'))
+                                         (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] ξ))))))
   where
     α : Nat' ≅ᵗʸ (Nat' [ π ]) [ π ]
     α = type-naturality-reflect (nul discr-nul)
@@ -235,7 +222,7 @@ suc-func : Tm {C = ω} ◇ (Nat' ⇛ Nat')
 suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] ξ))
 
 nats : Tm ◇ Stream
-nats = app (generate suc-func) zero'
+nats = app (iterate suc-func) zero'
 
 nats-test : str-head nats ≅ᵗᵐ zero'
 eq nats-test {x = zero}  _ = refl

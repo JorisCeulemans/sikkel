@@ -1,5 +1,23 @@
 {-# OPTIONS --omega-in-omega #-}
 
+--------------------------------------------------
+-- Naturality solver
+--
+-- This module implements a solver for proofs of type equalities making use
+-- of naturality. A typical example for its applicability can be found at the
+-- bottom of the file.
+-- The solver works with arbitrary nullary, unary and binary type operations
+-- that are natural with respect to the context (and that also respect equivalence
+-- of types in case of unary and binary operations). When you implement a new
+-- operation in a specific base category, you can make the solver work with it
+-- by providing a value of the appropriate record type below (NullaryTypeOp,
+-- UnaryTypeOp or BinaryTypeOp).
+-- Note that we use the option omega-in-omega in order to define
+-- an inductive data type in Setω and to pattern match on it (which
+-- is not possible in Agda 2.6.1 without this option). This code should
+-- typecheck without this option in Agda 2.6.2 once released.
+--------------------------------------------------
+
 open import Categories
 
 module Reflection.Naturality {C : Category} where
@@ -12,11 +30,12 @@ open import CwF-Structure.Types
 open import Reflection.Helpers public
 
 
--- TODO:
---  *) Provide also unary type operations (first step towards support for ▻ modality).
---  *) Make unay + binary operations more general in the type level (to support for instance _⇛_).
---  *) Allow operations that can change the context the type lives in using a certain endofunctor
---     on the category of contexts (needed for ▻). Later, more general functors might as well be interesting.
+-- TODO: Allow operations that can change the context the type lives in using a certain endofunctor
+-- on the category of contexts (needed for ▻). Later, more general functors might as well be interesting.
+
+
+--------------------------------------------------
+-- Definition of record types of nullary, unary and binary type operations.
 
 record NullaryTypeOp (ℓ : Level) : Setω where
   field
@@ -50,6 +69,12 @@ record BinaryTypeOp (f : Level → Level → Level → Level) : Setω where
 open BinaryTypeOp public
 
 
+--------------------------------------------------
+-- Definition of expressions that represent the structure of a type.
+
+-- An expression is indexed by its skeleton, which drops the information
+-- about contexts but keeps track of universe levels. The skeleton is needed
+-- to convince Agda that the function reduce below terminates.
 data ExpSkeleton : Set where
   svar : Level → ExpSkeleton
   snul : Level → ExpSkeleton
@@ -84,6 +109,10 @@ data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
 ⟦ un x e ⟧exp = ⟦ x ⟧uop ⟦ e ⟧exp
 ⟦ bin x e1 e2 ⟧exp = ⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp
 ⟦ sub e σ ⟧exp = ⟦ e ⟧exp [ σ ]
+
+
+--------------------------------------------------
+-- Reduction of expressions + soundness
 
 reduce-skeleton : ExpSkeleton → ExpSkeleton
 reduce-skeleton (svar ℓ) = svar ℓ
@@ -153,6 +182,10 @@ reduce-sound (sub (sub e τ) σ) =
              ⟦ e ⟧exp ≅ᵗʸ ⟦ e' ⟧exp
 ⟦⟧exp-cong refl refl = ≅ᵗʸ-refl
 
+
+--------------------------------------------------
+-- End result
+
 type-naturality-reflect : ∀ {ℓc s s'} {Γ : Ctx C ℓc} →
                           (e : Exp Γ s) (e' : Exp Γ s') →
                           (p : reduce-skeleton s ≡ reduce-skeleton s') →
@@ -168,6 +201,10 @@ type-naturality-reflect e e' p q =
   ≅˘⟨ reduce-sound e' ⟩
     ⟦ e' ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
+
+
+--------------------------------------------------
+-- Definition of some operations that exist in any presheaf category
 
 module Operations where
   open import Types.Discrete

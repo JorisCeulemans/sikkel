@@ -26,10 +26,6 @@ set (𝕪 x) y = Hom y x
 rel (𝕪 x) f g = g ∙ f
 rel-id (𝕪 x) _ = hom-idʳ
 rel-comp (𝕪 x) _ _ _ = sym ∙assoc
-{-
-𝕪[_]_ : ∀ ℓ → Ob → Ctx C ℓ
-𝕪[ ℓ ] x = 𝕪 {ℓ} x
--}
 
 -- The Yoneda lemma
 to-𝕪⇒* : Γ ⟨ x ⟩ → 𝕪 x ⇒ Γ

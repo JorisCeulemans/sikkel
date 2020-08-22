@@ -1,3 +1,7 @@
+-- Work in progress on constructing fixpoints for locally contractive functors, following
+-- "First Steps in Synthetic Guarded Domain Theory: Step-indexing in the Topos of Trees" by
+-- Birkedal et al.
+
 module GuardedRecursion.Fixpoints where
 
 open import Data.Nat

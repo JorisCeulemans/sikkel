@@ -9,6 +9,13 @@
 -- context each type lives in. The reduction strategy is then to move "later" operations to the back
 -- of the sequence (which are applied last) and subsequently group all substitutions in front in one
 -- sequence of substitutions.
+-- This solver will be superseded by the naturality solver in Reflection.Naturality. The latter can already
+-- do more (e.g. moving substitions into the domain and codomain of a function type) but at the moment it
+-- cannot handle the ▻ operation because the argument and result type do not live in the same context.
+-- Note that we use the option omega-in-omega in order to define
+-- an inductive data type in Setω and to pattern match on it (which
+-- is not possible in Agda 2.6.1 without this option). This code should
+-- typecheck without this option in Agda 2.6.2 once released
 --------------------------------------------------
 
 open import Categories

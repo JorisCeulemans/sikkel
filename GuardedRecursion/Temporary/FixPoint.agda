@@ -1,6 +1,6 @@
 -- This file contains the contents of the module Induction.WellFounded.Fixpoint
 -- in the standard library (v1.3). The only difference is that _<_ is in Rel A r
--- instead of Rel A ℓ (same level as P). This should be fixed in the next release
+-- instead of Rel A ℓ (same level as P). This will be fixed in the next release
 -- of the std-lib.
 
 open import Relation.Binary

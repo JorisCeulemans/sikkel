@@ -297,6 +297,7 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
       g : Tm Δ (▻' (T [ σ ]) ⇛ (T [ σ ]))
       g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
+-- ▻' is an applicative functor as well (but this requires ▻-cong).
 _⊛'_ : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} → Tm Γ (▻' (T ⇛ S)) → Tm Γ (▻' T) → Tm Γ (▻' S)
 f ⊛' t = (ι⁻¹[ ▻-cong (⇛-natural _) ] f) ⊛ t
 

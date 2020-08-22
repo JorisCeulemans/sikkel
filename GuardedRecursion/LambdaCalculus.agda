@@ -1,3 +1,7 @@
+-- Work in progress on the construction of a type 𝓓 which satisfies
+-- 𝓓 ≅ᵗʸ ▻' 𝓓 ⇛ ▻' 𝓓 so that we can interpret the untyped lambda
+-- calculus in it. See also GuardedRecursion.Fixpoints
+
 module GuardedRecursion.LambdaCalculus where
 
 open import Data.Nat

@@ -199,8 +199,7 @@ eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
 -- Equivalence of types
 
 -- Two types are said to be equivalent if they are naturally isomorphic as presheaves.
--- This turns out to be easier to work with than normal propositional equality. In particular,
--- it lets us easily convert a term of type T to a term of type S when T ≅ᵗʸ S.
+-- This turns out to be easier to work with than standard propositional equality.
 record _≅ᵗʸ_ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓt') : Set (ℓc ⊔ ℓt ⊔ ℓt') where
   field
     from : T ↣ S

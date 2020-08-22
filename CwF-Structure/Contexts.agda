@@ -96,8 +96,8 @@ module _ {C : Category} where
   --------------------------------------------------
   -- Equivalence of substitutions
 
-  -- Assuming function extensionality and uip (which we do) the following definition is
-  -- equivalent to propositional equality. However, this one is easier to use.
+  -- Two substitutions σ, τ : Δ ⇒ Γ are equivalent if they map every value of
+  -- Δ ⟨ x ⟩ (for any object x) to propositionally equal values of Γ ⟨ x ⟩.
   record _≅ˢ_ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ τ : Δ ⇒ Γ) : Set (ℓ ⊔ ℓ') where
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
