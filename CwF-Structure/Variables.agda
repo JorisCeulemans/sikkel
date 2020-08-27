@@ -5,8 +5,8 @@ open import Categories
 module CwF-Structure.Variables {C : Category} where
 
 open import Data.Fin
-open import Data.Vec hiding ([_])
-open import Data.Nat hiding (_⊔_)
+open import Data.Vec using (Vec; []; _∷_; foldr; lookup)
+open import Data.Nat using (ℕ; zero; suc)
 open import Level renaming (suc to lsuc)
 
 open import CwF-Structure.Contexts
@@ -40,6 +40,57 @@ get-type : (Ts : TypeSequence Γ n ℓs) (x : Fin n) → Ty (Γ ,,, Ts) (lookup 
 get-type (Ts ∷ T) zero    = T [ π ]
 get-type (Ts ∷ T) (suc x) = (get-type Ts x) [ π ]
 
-var : (Ts : TypeSequence Γ n ℓs) (x : Fin n) → Tm (Γ ,,, Ts) (get-type Ts x)
-var (Ts ∷ T) zero    = ξ
-var (Ts ∷ T) (suc x) = var Ts x [ π ]'
+prim-var : (Ts : TypeSequence Γ n ℓs) (x : Fin n) → Tm (Γ ,,, Ts) (get-type Ts x)
+prim-var (Ts ∷ T) zero    = ξ
+prim-var (Ts ∷ T) (suc x) = prim-var Ts x [ π ]'
+
+
+open import Data.List hiding ([_])
+open import Data.Maybe hiding (_>>=_)
+open import Data.Unit
+open import Reflection hiding (var)
+open import Reflection.Argument
+open import Reflection.Term hiding (var)
+
+get-ctx : Type → Maybe Term
+get-ctx (def (quote Tm) args) = go args
+  where
+    go : List (Arg Term) → Maybe Term
+    go [] = nothing
+    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) = just ctx
+    go (_ ∷ xs) = go xs
+get-ctx _ = nothing
+
+ctx-to-tyseq : Term → Maybe Term
+ctx-to-tyseq (def (quote _,,_) xs) = go xs
+  where
+    go : List (Arg Term) → Maybe Term
+    go [] = nothing
+    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) with ctx-to-tyseq ctx
+    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) | nothing     = nothing
+    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) | just tyseq  = just (con (quote TypeSequence._∷_) (vArg tyseq ∷ vArg ty ∷ []))
+    go (_ ∷ xs) = go xs
+ctx-to-tyseq ctx = just (con (quote TypeSequence.[]) [])
+
+macro
+  var : Term → Term → TC ⊤
+  var x hole = do
+    agda-type ← inferType hole
+    just ctx ← return (get-ctx agda-type)
+      where nothing → typeError (strErr "no term requested" ∷ [])
+    just tyseq ← return (ctx-to-tyseq ctx)
+      where nothing → typeError (strErr "something went wrong" ∷ [])
+    let solution = def (quote prim-var) (vArg tyseq ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ [])
+    unify hole solution
+
+private
+  open import Types.Discrete
+
+  test : Tm {C = C} (◇ ,, Bool') (Bool' [ π ])
+  test = var 0
+
+  test2 : Tm {C = C} (◇ ,, Bool' ,, Nat') (Nat' [ π ])
+  test2 = var 0
+
+  test3 : Tm {C = C} (◇ ,, Bool' ,, Nat') ((Bool' [ π ]) [ π ])
+  test3 = var 1
