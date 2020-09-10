@@ -27,6 +27,8 @@ private
     Γ Δ : Ctx C ℓ
     T T' S S' : Ty Γ ℓ
 
+infixr 12 _⇛_
+
 
 --------------------------------------------------
 -- Description of a function type at a specific stage (object of the base category)

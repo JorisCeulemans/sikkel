@@ -22,6 +22,9 @@ private
     m n : ℕ
     Γ Δ : Ctx ω ℓ
 
+infixl 12 _⊛_
+infixl 12 _⊛'_
+
 
 --------------------------------------------------
 -- The "earlier" CwF-endomorphism
