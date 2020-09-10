@@ -248,3 +248,39 @@ eq map-test2 {x = zero} _ = refl
 eq map-test2 {x = suc zero} _ = refl
 eq map-test2 {x = suc (suc zero)} _ = refl
 eq map-test2 {x = suc (suc (suc n))} _ = refl
+
+mergef : Tm ◇ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm ◇ (Stream ⇛ Stream ⇛ Stream)
+mergef f = löb (Stream ⇛ Stream ⇛ Stream)
+               (lam (▻' (Stream ⇛ Stream ⇛ Stream)) (ι[ α ]
+                    lam Stream (ι[ β ]
+                        lam Stream (ι[ γ ]
+                            let xs = ι[ ζ ] (ξ [ π ]')
+                                ys = ι⁻¹[ γ ] ξ
+                            in
+                            app (app (app (ι[ δ ] (((f [ π ]') [ π ]') [ π ]'))
+                                          (str-head xs))
+                                     (str-head ys))
+                                ((ι[ θ ] ((ξ [ π ]') [ π ]')) ⊛' str-tail xs ⊛' str-tail ys)))))
+  where
+    α : (Stream ⇛ Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream ⇛ Stream
+    α = type-naturality-reflect (sub (bin fun-bin (nul stream-nul) (bin fun-bin (nul stream-nul) (nul stream-nul))) π)
+                                (bin fun-bin (nul stream-nul) (bin fun-bin (nul stream-nul) (nul stream-nul)))
+                                refl refl
+    β : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
+    β = type-naturality-reflect (sub (bin fun-bin (nul stream-nul) (nul stream-nul)) π)
+                                (bin fun-bin (nul stream-nul) (nul stream-nul))
+                                refl refl
+    γ : Stream [ π ] ≅ᵗʸ Stream
+    γ = type-naturality-reflect (sub (nul stream-nul) π) (nul stream-nul) refl refl
+    δ : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
+          (((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
+    δ = type-naturality-reflect (bin fun-bin (nul discr-nul) (bin fun-bin (nul discr-nul) (bin fun-bin (un ▻'-un (nul stream-nul)) (nul stream-nul))))
+                                (sub (sub (sub (bin fun-bin (nul discr-nul) (bin fun-bin (nul discr-nul) (bin fun-bin (un ▻'-un (nul stream-nul)) (nul stream-nul)))) π) π) π)
+                                refl refl
+    ζ : Stream ≅ᵗʸ (Stream [ π ]) [ π ]
+    ζ = type-naturality-reflect (nul stream-nul) (sub (sub (nul stream-nul) π) π) refl refl
+    θ : ▻' (Stream ⇛ Stream ⇛ Stream)
+          ≅ᵗʸ ((▻' (Stream ⇛ Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
+    θ = type-naturality-reflect (un ▻'-un (bin fun-bin (nul stream-nul) (bin fun-bin (nul stream-nul) (nul stream-nul))))
+                                (sub (sub (sub (un ▻'-un (bin fun-bin (nul stream-nul) (bin fun-bin (nul stream-nul) (nul stream-nul)))) π) π) π)
+                                refl refl
