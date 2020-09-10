@@ -45,12 +45,11 @@ prim-var (Ts ∷ T) zero    = ξ
 prim-var (Ts ∷ T) (suc x) = prim-var Ts x [ π ]'
 
 
-open import Data.List hiding ([_])
+open import Data.List hiding ([_]; map)
 open import Data.Maybe hiding (_>>=_)
 open import Data.Unit
-open import Reflection hiding (var)
-open import Reflection.Argument
-open import Reflection.Term hiding (var)
+open import Reflection hiding (var; lam)
+open import Reflection.Argument hiding (map)
 
 get-ctx : Type → Maybe Term
 get-ctx (def (quote Tm) args) = go args
@@ -66,9 +65,8 @@ ctx-to-tyseq (def (quote _,,_) xs) = go xs
   where
     go : List (Arg Term) → Maybe Term
     go [] = nothing
-    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) with ctx-to-tyseq ctx
-    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) | nothing     = nothing
-    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) | just tyseq  = just (con (quote TypeSequence._∷_) (vArg tyseq ∷ vArg ty ∷ []))
+    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) = map (λ tyseq → con (quote TypeSequence._∷_) (vArg tyseq ∷ vArg ty ∷ []))
+                                 (ctx-to-tyseq ctx)
     go (_ ∷ xs) = go xs
 ctx-to-tyseq ctx = just (con (quote TypeSequence.[]) [])
 
@@ -77,7 +75,7 @@ macro
   var x hole = do
     agda-type ← inferType hole
     just ctx ← return (get-ctx agda-type)
-      where nothing → typeError (strErr "no term requested" ∷ [])
+      where nothing → typeError (strErr "no term requested" ∷ termErr agda-type ∷ [])
     just tyseq ← return (ctx-to-tyseq ctx)
       where nothing → typeError (strErr "something went wrong" ∷ [])
     let solution = def (quote prim-var) (vArg tyseq ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ [])
@@ -85,6 +83,7 @@ macro
 
 private
   open import Types.Discrete
+  open import Types.Functions {C = C}
 
   test : Tm {C = C} (◇ ,, Bool') (Bool' [ π ])
   test = var 0
@@ -94,3 +93,6 @@ private
 
   test3 : Tm {C = C} (◇ ,, Bool' ,, Nat') ((Bool' [ π ]) [ π ])
   test3 = var 1
+
+  id : {Γ : Ctx C ℓ} {T : Ty Γ ℓ'} → Tm Γ (T ⇛ T)
+  id {Γ = Γ}{T = T} = lam T {!var 0!}
