@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.Types {C = C}
+open import CwF-Structure.Types
 
 open Category C
 

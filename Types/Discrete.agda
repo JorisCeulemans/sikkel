@@ -18,8 +18,8 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.Types {C = C}
-open import CwF-Structure.Terms {C = C}
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
 
 open Category C
 
@@ -35,7 +35,7 @@ private
 -- A discrete type is first defined in the empty context as Discr-prim.
 -- It can then be defined in any context using the terminal substitution to
 -- the empty context.
-Discr-prim : (A : Set ℓ) → Ty ◇ ℓ
+Discr-prim : (A : Set ℓ) → Ty {C = C} ◇ ℓ
 type (Discr-prim A) _ _ = A
 morph (Discr-prim A) _ _ = id
 morph-id (Discr-prim A) _ = refl

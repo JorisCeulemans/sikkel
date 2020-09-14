@@ -13,10 +13,10 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renam
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.Types {C = C}
-open import CwF-Structure.Terms {C = C}
-open import CwF-Structure.ContextExtension {C = C}
-open import CwF-Structure.SubstitutionSequence {C = C}
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
+open import CwF-Structure.ContextExtension
+open import CwF-Structure.SubstitutionSequence
 
 open Category C
 

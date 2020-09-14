@@ -22,7 +22,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import GuardedRecursion.Later
-open import Reflection.Naturality
+open import Reflection.Naturality hiding (var)
 
 private
   variable
@@ -124,10 +124,10 @@ stream-nul = record { ⟦_⟧nop = Stream ; naturality = stream-natural }
 -- Some operations on guarded streams
 
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
-str-snd s = next' (lam Stream (ι[ Discr-natural _ π ] str-head (ι⁻¹[ stream-natural π ] ξ))) ⊛' str-tail s
+str-snd s = next' (lam Stream (ι[ Discr-natural _ π ] str-head (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
 
 str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
-str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] ξ))) ⊛' str-tail s
+str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
   where
     β : (▻' Nat') [ π ] ≅ᵗʸ ▻' Nat'
     β = type-naturality-reflect (sub (un ▻'-un (nul discr-nul)) π)
@@ -137,7 +137,7 @@ str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] �
 zeros : Tm ◇ Stream
 zeros = löb Stream
             (lam (▻' Stream) (ι[ stream-natural π ]
-                 str-cons (pair zero' (ι[ β ] ξ))))
+                 str-cons (pair zero' (ι[ β ] var 0))))
   where
     open ≅ᵗʸ-Reasoning
     β : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
@@ -162,8 +162,8 @@ str-map : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
                 (lam (▻' (Stream ⇛ Stream)) (ι[ α ]
                      lam Stream (ι[ stream-natural π ]
-                         str-cons (pair (app (ι[ β ] ((f [ π ]') [ π ]')) (str-head (ι⁻¹[ stream-natural π ] ξ)))
-                                        ((ι[ ζ ] (ξ [ π ]')) ⊛' str-tail (ι⁻¹[ stream-natural π ] ξ))))))
+                         str-cons (pair (app (ι[ β ] ((f [ π ]') [ π ]')) (str-head (ι⁻¹[ stream-natural π ] var 0)))
+                                        ((ι[ ζ ] var 1) ⊛' str-tail (ι⁻¹[ stream-natural π ] var 0))))))
   where
     α : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
     α = type-naturality-reflect (sub (bin fun-bin (nul stream-nul) (nul stream-nul)) π)
@@ -178,12 +178,12 @@ str-map f = löb (Stream ⇛ Stream)
                                 (sub (sub (un ▻'-un (bin fun-bin (nul stream-nul) (nul stream-nul))) π) π)
                                 refl refl
 
-iterate : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+iterate : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 iterate f = löb (Nat' ⇛ Stream)
                 (lam (▻' (Nat' ⇛ Stream)) (ι[ α ]
                      lam Nat' (ι[ stream-natural π ]
-                         str-cons (pair (ι⁻¹[ Discr-natural _ π ] ξ)
-                                        ((ι[ β ] (ξ [ π ]')) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] ξ)))))))
+                         str-cons (pair (ι⁻¹[ Discr-natural _ π ] var 0)
+                                        ((ι[ β ] var 1) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] var 0)))))))
   where
     α : ((Nat' ⇛ Stream) [ π ]) ≅ᵗʸ (Nat' ⇛ Stream)
     α = type-naturality-reflect (sub (bin fun-bin (nul discr-nul) (nul stream-nul)) π)
@@ -198,12 +198,12 @@ iterate f = löb (Nat' ⇛ Stream)
                                 (sub (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) π) π)
                                 refl refl
 
-iterate' : Tm (◇ {C = ω}) (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+iterate' : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 iterate' f = lam Nat' (ι[ stream-natural π ]
                  löb Stream
                      (lam (▻' Stream) (ι[ stream-natural π ]
-                          str-cons (pair (ι[ α ] (ξ [ π ]'))
-                                         (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] ξ))))))
+                          str-cons (pair (ι[ α ] var 1)
+                                         (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] var 0))))))
   where
     α : Nat' ≅ᵗʸ (Nat' [ π ]) [ π ]
     α = type-naturality-reflect (nul discr-nul)
@@ -219,7 +219,7 @@ iterate' f = lam Nat' (ι[ stream-natural π ]
                                 refl refl
 
 suc-func : Tm {C = ω} ◇ (Nat' ⇛ Nat')
-suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] ξ))
+suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] var 0))
 
 nats : Tm ◇ Stream
 nats = app (iterate suc-func) zero'
@@ -254,13 +254,13 @@ mergef f = löb (Stream ⇛ Stream ⇛ Stream)
                (lam (▻' (Stream ⇛ Stream ⇛ Stream)) (ι[ α ]
                     lam Stream (ι[ β ]
                         lam Stream (ι[ γ ]
-                            let xs = ι[ ζ ] (ξ [ π ]')
-                                ys = ι⁻¹[ γ ] ξ
+                            let xs = ι[ ζ ] var 1
+                                ys = ι⁻¹[ γ ] var 0
                             in
                             app (app (app (ι[ δ ] (((f [ π ]') [ π ]') [ π ]'))
                                           (str-head xs))
                                      (str-head ys))
-                                ((ι[ θ ] ((ξ [ π ]') [ π ]')) ⊛' str-tail xs ⊛' str-tail ys)))))
+                                ((ι[ θ ] var 2) ⊛' str-tail xs ⊛' str-tail ys)))))
   where
     α : (Stream ⇛ Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream ⇛ Stream
     α = type-naturality-reflect (sub (bin fun-bin (nul stream-nul) (bin fun-bin (nul stream-nul) (nul stream-nul))) π)

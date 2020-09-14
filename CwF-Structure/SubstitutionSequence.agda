@@ -25,8 +25,8 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.Types {C = C}
-open import CwF-Structure.Terms {C = C}
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
 
 infixr 5 _∷_
 
