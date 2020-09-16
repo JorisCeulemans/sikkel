@@ -31,42 +31,48 @@ open import Reflection.Helpers public
 
 
 -- TODO: Allow operations that can change the context the type lives in using a certain endofunctor
--- on the category of contexts (needed for ▻). Later, more general functors might as well be interesting.
+-- on the category of contexts (needed for ▻). Later, functors between different categories might as well be interesting.
 
 
 --------------------------------------------------
 -- Definition of record types of nullary, unary and binary type operations.
 
-record NullaryTypeOp (ℓ : Level) : Setω where
+NullaryTypeOp : Level → Setω
+NullaryTypeOp ℓ = ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
+
+record IsNullaryNatural {ℓ} (U : NullaryTypeOp ℓ) : Setω where
   field
-    ⟦_⟧nop : ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
-    naturality : ∀ {ℓc ℓc'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
-                 ⟦_⟧nop [ σ ] ≅ᵗʸ ⟦_⟧nop
+    natural-nul : ∀ {ℓc ℓc'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
+                  U [ σ ] ≅ᵗʸ U
 
-open NullaryTypeOp public
+open IsNullaryNatural {{...}} public
 
-record UnaryTypeOp (f : Level → Level → Level) : Setω where
+UnaryTypeOp : (Level → Level → Level) → Setω
+UnaryTypeOp f = ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ (f ℓc ℓt)
+
+record IsUnaryNatural {f} (F : UnaryTypeOp f) : Setω where
   field
-    ⟦_⟧uop_ : ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ (f ℓc ℓt)
-    naturality : ∀ {ℓc ℓc' ℓt} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} →
-                 (⟦_⟧uop_ T) [ σ ] ≅ᵗʸ ⟦_⟧uop_ (T [ σ ])
-    congruence : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc}
-                 {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} →
-                 T ≅ᵗʸ T' → ⟦_⟧uop_ T ≅ᵗʸ ⟦_⟧uop_ T'
+    natural-un : ∀ {ℓc ℓc' ℓt} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} →
+                 (F T) [ σ ] ≅ᵗʸ F (T [ σ ])
+    cong-un : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc}
+              {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} →
+              T ≅ᵗʸ T' → F T ≅ᵗʸ F T'
 
-open UnaryTypeOp public
+open IsUnaryNatural {{...}} public
 
-record BinaryTypeOp (f : Level → Level → Level → Level) : Setω where
+BinaryTypeOp : (Level → Level → Level → Level) → Setω
+BinaryTypeOp f = ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓt' → Ty Γ (f ℓc ℓt ℓt')
+
+record IsBinaryNatural {f} (F : BinaryTypeOp f) : Setω where
   field
-    ⟦_⟧bop_$_ : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓt' → Ty Γ (f ℓc ℓt ℓt')
-    naturality : ∀ {ℓc ℓc' ℓt ℓt'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
-                 {T : Ty Γ ℓt} {S : Ty Γ ℓt'} →
-                 (⟦_⟧bop_$_ T S) [ σ ] ≅ᵗʸ ⟦_⟧bop_$_ (T [ σ ]) (S [ σ ])
-    congruence : ∀ {ℓc ℓt ℓt' ℓs ℓs'} {Γ : Ctx C ℓc}
-                 {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'} →
-                 T ≅ᵗʸ T' → S ≅ᵗʸ S' → ⟦_⟧bop_$_ T S ≅ᵗʸ ⟦_⟧bop_$_ T' S'
+    natural-bin : ∀ {ℓc ℓc' ℓt ℓt'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
+                  {T : Ty Γ ℓt} {S : Ty Γ ℓt'} →
+                  (F T S) [ σ ] ≅ᵗʸ F (T [ σ ]) (S [ σ ])
+    cong-bin : ∀ {ℓc ℓt ℓt' ℓs ℓs'} {Γ : Ctx C ℓc}
+               {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'} →
+               T ≅ᵗʸ T' → S ≅ᵗʸ S' → F T S ≅ᵗʸ F T' S'
 
-open BinaryTypeOp public
+open IsBinaryNatural {{...}} public
 
 
 --------------------------------------------------
@@ -76,7 +82,7 @@ open BinaryTypeOp public
 -- about contexts but keeps track of universe levels. The skeleton is needed
 -- to convince Agda that the function reduce below terminates.
 data ExpSkeleton : Set where
-  svar : Level → ExpSkeleton
+  -- svar : Level → ExpSkeleton
   snul : Level → ExpSkeleton
   sun  : (f : Level → Level → Level) (ℓc : Level) →
          ExpSkeleton → ExpSkeleton
@@ -85,29 +91,33 @@ data ExpSkeleton : Set where
   ssub : (ℓc : Level) → ExpSkeleton → ExpSkeleton
 
 level : ExpSkeleton → Level
-level (svar ℓ) = ℓ
+-- level (svar ℓ) = ℓ
 level (snul ℓ) = ℓ
 level (sun f ℓc s) = f ℓc (level s)
 level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
 level (ssub ℓc s) = level s
 
+-- NOTE: At the moment the introduction of an arbitrary type, without
+-- info on naturality, in an Exp using var is disabled because it simplifies
+-- the macro by-naturality. We will consider its reintroduction in the future.
+-- (var isn't a good name anyway because it is now the name of the macro for variables.)
 data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
-  var : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        (T : Ty Γ ℓ) → Exp Γ (svar ℓ)
+  -- var : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
+  --       (T : Ty Γ ℓ) → Exp Γ (svar ℓ)
   nul : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        NullaryTypeOp ℓ → Exp Γ (snul ℓ)
+        (U : NullaryTypeOp ℓ) → {{IsNullaryNatural U}} → Exp Γ (snul ℓ)
   un  : ∀ {ℓc f s} {Γ : Ctx C ℓc} →
-        UnaryTypeOp f → (e : Exp Γ s) → Exp Γ (sun f ℓc s)
+        (F : UnaryTypeOp f) → {{IsUnaryNatural F}} → (e : Exp Γ s) → Exp Γ (sun f ℓc s)
   bin : ∀ {ℓc f s s'} {Γ : Ctx C ℓc} →
-        BinaryTypeOp f → (e1 : Exp Γ s) (e2 : Exp Γ s') → Exp Γ (sbin f ℓc s s')
+        (F : BinaryTypeOp f) → {{IsBinaryNatural F}} → (e1 : Exp Γ s) (e2 : Exp Γ s') → Exp Γ (sbin f ℓc s s')
   sub : ∀ {ℓc ℓc' s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
         Exp Γ s → (σ : Δ ⇒ Γ) → Exp Δ (ssub ℓc s)
 
 ⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Ty Γ (level s)
-⟦ var T ⟧exp = T
-⟦ nul x ⟧exp = ⟦ x ⟧nop
-⟦ un x e ⟧exp = ⟦ x ⟧uop ⟦ e ⟧exp
-⟦ bin x e1 e2 ⟧exp = ⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp
+-- ⟦ var T ⟧exp = T
+⟦ nul U ⟧exp = U
+⟦ un F e ⟧exp = F ⟦ e ⟧exp
+⟦ bin F e1 e2 ⟧exp = F ⟦ e1 ⟧exp ⟦ e2 ⟧exp
 ⟦ sub e σ ⟧exp = ⟦ e ⟧exp [ σ ]
 
 
@@ -115,54 +125,54 @@ data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
 -- Reduction of expressions + soundness
 
 reduce-skeleton : ExpSkeleton → ExpSkeleton
-reduce-skeleton (svar ℓ) = svar ℓ
+-- reduce-skeleton (svar ℓ) = svar ℓ
 reduce-skeleton (snul ℓ) = snul ℓ
 reduce-skeleton (sun f ℓc s) = sun f ℓc (reduce-skeleton s)
 reduce-skeleton (sbin f ℓc s1 s2) = sbin f ℓc (reduce-skeleton s1) (reduce-skeleton s2)
-reduce-skeleton (ssub ℓc (svar ℓ)) = ssub ℓc (svar ℓ)
+-- reduce-skeleton (ssub ℓc (svar ℓ)) = ssub ℓc (svar ℓ)
 reduce-skeleton (ssub ℓc (snul ℓ)) = snul ℓ
 reduce-skeleton (ssub ℓc (sun f ℓc' s)) = sun f ℓc (reduce-skeleton (ssub ℓc s))
 reduce-skeleton (ssub ℓc (sbin f ℓc' s1 s2)) = sbin f ℓc (reduce-skeleton (ssub ℓc s1)) (reduce-skeleton (ssub ℓc s2))
 reduce-skeleton (ssub ℓc (ssub ℓc' s)) = reduce-skeleton (ssub ℓc s)
 
 reduce : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Exp Γ (reduce-skeleton s)
-reduce (var T) = var T
-reduce (nul x) = nul x
-reduce (un x e) = un x (reduce e)
-reduce (bin x e1 e2) = bin x (reduce e1) (reduce e2)
-reduce (sub (var T) σ) = sub (var T) σ
-reduce (sub (nul x) σ) = nul x
-reduce (sub (un x e) σ) = un x (reduce (sub e σ))
-reduce (sub (bin x e1 e2) σ) = bin x (reduce (sub e1 σ)) (reduce (sub e2 σ))
+-- reduce (var T) = var T
+reduce (nul U) = nul U
+reduce (un F e) = un F (reduce e)
+reduce (bin F e1 e2) = bin F (reduce e1) (reduce e2)
+-- reduce (sub (var T) σ) = sub (var T) σ
+reduce (sub (nul U) σ) = nul U
+reduce (sub (un F e) σ) = un F (reduce (sub e σ))
+reduce (sub (bin F e1 e2) σ) = bin F (reduce (sub e1 σ)) (reduce (sub e2 σ))
 reduce (sub (sub e τ) σ) = reduce (sub e (τ ⊚ σ))
 
 reduce-sound : ∀ {ℓc s} {Γ : Ctx C ℓc} (e : Exp Γ s) →
                ⟦ e ⟧exp ≅ᵗʸ ⟦ reduce e ⟧exp
-reduce-sound (var T) = ≅ᵗʸ-refl
-reduce-sound (nul x) = ≅ᵗʸ-refl
-reduce-sound (un x e) = congruence x (reduce-sound e)
-reduce-sound (bin x e1 e2) = congruence x (reduce-sound e1) (reduce-sound e2)
-reduce-sound (sub (var T) σ) = ≅ᵗʸ-refl
-reduce-sound (sub (nul x) σ) = naturality x σ
-reduce-sound (sub (un x e) σ) =
+-- reduce-sound (var T) = ≅ᵗʸ-refl
+reduce-sound (nul U) = ≅ᵗʸ-refl
+reduce-sound (un F e) = cong-un (reduce-sound e)
+reduce-sound (bin F e1 e2) = cong-bin (reduce-sound e1) (reduce-sound e2)
+-- reduce-sound (sub (var T) σ) = ≅ᵗʸ-refl
+reduce-sound (sub (nul U) σ) = natural-nul σ
+reduce-sound (sub (un F e) σ) =
   begin
-    (⟦ x ⟧uop ⟦ e ⟧exp) [ σ ]
-  ≅⟨ naturality x σ ⟩
-    ⟦ x ⟧uop (⟦ e ⟧exp [ σ ])
+    (F ⟦ e ⟧exp) [ σ ]
+  ≅⟨ natural-un σ ⟩
+    F (⟦ e ⟧exp [ σ ])
   ≅⟨⟩
-    ⟦ x ⟧uop ⟦ sub e σ ⟧exp
-  ≅⟨ congruence x (reduce-sound (sub e σ)) ⟩
-    ⟦ x ⟧uop ⟦ reduce (sub e σ ) ⟧exp ∎
+    F ⟦ sub e σ ⟧exp
+  ≅⟨ cong-un (reduce-sound (sub e σ)) ⟩
+    F ⟦ reduce (sub e σ ) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
-reduce-sound (sub (bin x e1 e2) σ) =
+reduce-sound (sub (bin F e1 e2) σ) =
   begin
-    (⟦ x ⟧bop ⟦ e1 ⟧exp $ ⟦ e2 ⟧exp) [ σ ]
-  ≅⟨ naturality x σ ⟩
-    ⟦ x ⟧bop (⟦ e1 ⟧exp [ σ ]) $ (⟦ e2 ⟧exp [ σ ])
+    (F ⟦ e1 ⟧exp ⟦ e2 ⟧exp) [ σ ]
+  ≅⟨ natural-bin σ ⟩
+    F (⟦ e1 ⟧exp [ σ ]) (⟦ e2 ⟧exp [ σ ])
   ≅⟨⟩
-    ⟦ x ⟧bop ⟦ sub e1 σ ⟧exp $ ⟦ sub e2 σ ⟧exp
-  ≅⟨ congruence x (reduce-sound (sub e1 σ)) (reduce-sound (sub e2 σ)) ⟩
-    ⟦ x ⟧bop ⟦ reduce (sub e1 σ) ⟧exp $ ⟦ reduce (sub e2 σ) ⟧exp ∎
+    F ⟦ sub e1 σ ⟧exp ⟦ sub e2 σ ⟧exp
+  ≅⟨ cong-bin (reduce-sound (sub e1 σ)) (reduce-sound (sub e2 σ)) ⟩
+    F ⟦ reduce (sub e1 σ) ⟧exp ⟦ reduce (sub e2 σ) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
 reduce-sound (sub (sub e τ) σ) =
   begin
@@ -212,17 +222,21 @@ module Operations where
   open import Types.Products
   open import Types.Sums
 
-  discr-nul : ∀ {ℓ} {A : Set ℓ} → NullaryTypeOp ℓ
-  discr-nul {A = A} = record { ⟦_⟧nop = Discr A ; naturality = λ σ → Discr-natural A σ }
+  instance
+    discr-nul : ∀ {ℓ} {A : Set ℓ} → IsNullaryNatural (Discr A)
+    natural-nul {{discr-nul {A = A}}} σ = Discr-natural A σ
 
-  fun-bin : BinaryTypeOp (λ ℓc ℓ1 ℓ2 → ℓc ⊔ ℓ1 ⊔ ℓ2)
-  fun-bin = record { ⟦_⟧bop_$_ = _⇛_ ; naturality = λ σ → ⇛-natural σ ; congruence = ⇛-cong }
+    fun-bin : IsBinaryNatural _⇛_
+    natural-bin {{fun-bin}} σ = ⇛-natural σ
+    cong-bin {{fun-bin}} = ⇛-cong
 
-  prod-bin : BinaryTypeOp (λ _ ℓ1 ℓ2 → ℓ1 ⊔ ℓ2)
-  prod-bin = record { ⟦_⟧bop_$_ = _⊠_ ; naturality = λ σ → ⊠-natural σ ; congruence = ⊠-cong }
+    prod-bin : IsBinaryNatural _⊠_
+    natural-bin {{prod-bin}} σ = ⊠-natural σ
+    cong-bin {{prod-bin}} = ⊠-cong
 
-  sum-bin : BinaryTypeOp (λ _ ℓ1 ℓ2 → ℓ1 ⊔ ℓ2)
-  sum-bin = record { ⟦_⟧bop_$_ = _⊞_ ; naturality = λ σ → ⊞-natural σ ; congruence = ⊞-cong }
+    sum-bin : IsBinaryNatural _⊞_
+    natural-bin {{sum-bin}} σ = ⊞-natural σ
+    cong-bin {{sum-bin}} = ⊞-cong
 
 open Operations public
 
@@ -234,7 +248,7 @@ private
   example : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
             (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
             ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
-  example σ τ = type-naturality-reflect (sub (bin prod-bin (bin fun-bin (nul discr-nul) (nul discr-nul)) (sub (nul discr-nul) τ)) σ)
-                                        (bin prod-bin (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) σ) (nul discr-nul))
+  example σ τ = type-naturality-reflect (sub (bin _⊠_ (bin _⇛_ (nul Bool') (nul Bool')) (sub (nul Bool') τ)) σ)
+                                        (bin _⊠_ (sub (bin _⇛_ (nul Bool') (nul Bool')) σ) (nul Bool'))
                                         refl
                                         refl
