@@ -2,9 +2,12 @@ module Helpers where
 
 open import Axiom.Extensionality.Propositional
 open import Axiom.UniquenessOfIdentityProofs
+open import Data.Bool using (Bool; true; false)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Level
 open import Relation.Binary.PropositionalEquality hiding (Extensionality)
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Unary using (Pred; Decidable)
 
 variable
   ℓ ℓ' : Level
@@ -45,6 +48,15 @@ from-to-Σ-eq1 : ∀ {a b} {A : Set a} {B : A → Set b}
                 {ex : x ≡ x'} (ey : subst B ex y ≡ y') →
                 from-Σ-eq1 (to-Σ-eq ex ey) ≡ ex
 from-to-Σ-eq1 {ex = refl} refl = refl
+
+-- TODO: Look for these in std-lib, I believe they should be somewhere.
+pred-from-bool : ∀ {a} {A : Set a} → (A → Bool) → Pred A 0ℓ
+pred-from-bool p x = p x ≡ true
+
+dec-from-bool : ∀ {a} {A : Set a} (p : A → Bool) → Decidable (pred-from-bool p)
+dec-from-bool p x with p x
+dec-from-bool p x | false = no (λ ())
+dec-from-bool p x | true = yes refl
 
 {-
 -- The following proofs were necessary in previous versions of the code.
