@@ -1,0 +1,92 @@
+module Reflection.NaturalityTactic where
+
+--------------------------------------------------
+-- Definition of tactic by-naturality
+
+open import Data.Bool using (Bool; true; false; _∧_)
+open import Data.List using (List; []; _∷_; filter)
+open import Data.Maybe using (Maybe; nothing; just)
+open import Data.Product using (_×_; _,_)
+open import Data.Unit using (⊤; tt)
+open import Reflection
+open import Reflection.Argument using (_⟨∷⟩_; unArg)
+open import Reflection.TypeChecking.MonadSyntax using (_<$>_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import Helpers
+open import CwF-Structure
+open import Reflection.Naturality
+
+get-args : Type → Maybe (Term × Term)
+get-args (def _ xs) = go xs
+  where
+  go : List (Arg Term) → Maybe (Term × Term)
+  go (vArg x ∷ vArg y ∷ []) = just (x , y)
+  go (x ∷ xs)               = go xs
+  go _                      = nothing
+get-args _ = nothing
+
+breakTC : ∀ {a} {A : Set a} → (A → TC Bool) → List A → TC (List A × List A)
+breakTC p []       = return ([] , [])
+breakTC p (x ∷ xs) = p x >>= λ
+  { false → (λ (ys , zs) → (x ∷ ys , zs)) <$> breakTC p xs
+  ; true  → return ([] , x ∷ xs)
+  }
+
+is-visible : ∀ {a} {A : Set a} → Arg A → Bool
+is-visible (arg (arg-info visible r) x) = true
+is-visible (arg (arg-info hidden r) x) = false
+is-visible (arg (arg-info instance′ r) x) = false
+
+is-arg-semtype : Arg Term → TC Bool
+is-arg-semtype a = inferType (unArg a) >>= λ
+  { (def (quote Ty) _) → return true
+  ; _ → return false
+  }
+
+construct-exp : Term → TC Term
+construct-exp (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
+  { (_ , (ty ⟨∷⟩ subst ⟨∷⟩ [])) → do
+      ty-exp ← construct-exp ty
+      return (con (quote sub) (vArg ty-exp ∷ vArg subst ∷ []))
+  ; _ → typeError (strErr "Illegal substitution." ∷ [])
+  }
+construct-exp (def op args) = breakTC is-arg-semtype (filter (dec-from-bool is-visible) args) >>= λ
+  { (others , []) → return (con (quote nul) (vArg (def op others) ∷ []))
+  ; (others , (ty1 ⟨∷⟩ [])) → do
+      ty1-exp ← construct-exp ty1
+      return (con (quote un) (vArg (def op others) ∷ vArg ty1-exp ∷ []))
+  ; (others , (ty1 ⟨∷⟩ ty2 ⟨∷⟩ [])) → do
+      ty1-exp ← construct-exp ty1
+      ty2-exp ← construct-exp ty2
+      return (con (quote bin) (vArg (def op others) ∷ vArg ty1-exp ∷ vArg ty2-exp ∷ []))
+  ; _ → typeError (strErr "No type operator recognized." ∷ [])
+  }
+construct-exp ty = typeError (strErr "The naturality tactic does not work for the type" ∷ termErr ty ∷ [])
+
+by-naturality-macro : Term → TC ⊤
+by-naturality-macro hole = do
+  goal ← inferType hole
+  just (lhs , rhs) ← return (get-args goal)
+    where nothing → typeError (termErr goal ∷ strErr "is not a type equality." ∷ [])
+  lhs-exp ← construct-exp lhs
+  rhs-exp ← construct-exp rhs
+  debugPrint "vtac" 5 (termErr lhs-exp ∷ termErr rhs-exp ∷ [])
+  let sol = def (quote type-naturality-reflect)
+                (vArg lhs-exp ∷ vArg rhs-exp ∷ vArg (con (quote _≡_.refl) []) ∷ vArg (con (quote _≡ω_.refl) []) ∷ [])
+  unify hole sol
+
+macro
+  by-naturality : Term → TC ⊤
+  by-naturality = by-naturality-macro
+
+
+private
+  open import Types.Discrete
+  open import Types.Functions
+  open import Types.Products
+
+  example' : ∀ {ℓ ℓ' ℓ'' C} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
+             (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
+             ((Bool' ⇛ Bool') ⊠ ((Discr Bool) [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
+  example' σ τ = by-naturality

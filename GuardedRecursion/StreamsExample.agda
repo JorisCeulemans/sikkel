@@ -23,6 +23,7 @@ open import Types.Functions
 open import Types.Products
 open import GuardedRecursion.Later
 open import Reflection.Naturality
+open import Reflection.NaturalityTactic
 
 private
   variable
@@ -132,20 +133,16 @@ str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
 str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
   where
     β : (▻' Nat') [ π ] ≅ᵗʸ ▻' Nat'
-    β = type-naturality-reflect (sub (un ▻' (nul Nat')) π)
-                                (un ▻' (nul Nat'))
-                                refl refl
+    β = by-naturality
+
 
 zeros : Tm ◇ Stream
 zeros = löb Stream
             (lam (▻' Stream) (ι[ stream-natural π ]
                  str-cons (pair zero' (ι[ β ] var 0))))
   where
-    open ≅ᵗʸ-Reasoning
     β : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
-    β = type-naturality-reflect (un ▻' (nul Stream))
-                                (sub (un ▻' (nul Stream)) π)
-                                refl refl
+    β = by-naturality
 
 zeros-test : str-head zeros ≅ᵗᵐ zero'
 eq zeros-test {x = zero}  _ = refl
@@ -156,10 +153,6 @@ eq zeros-test2 {x = zero}  _ = refl
 eq zeros-test2 {x = suc zero}    _ = refl
 eq zeros-test2 {x = suc (suc n)} _ = refl
 
-
--- TODO: relieve the end-user from the burden of manually providing the arguments
---       to type-naturality-reflect by using tactics.
-
 str-map : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
                 (lam (▻' (Stream ⇛ Stream)) (ι[ α ]
@@ -168,17 +161,11 @@ str-map f = löb (Stream ⇛ Stream)
                                         ((ι[ ζ ] var 1) ⊛' str-tail (ι⁻¹[ stream-natural π ] var 0))))))
   where
     α : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
-    α = type-naturality-reflect (sub (bin _⇛_ (nul Stream) (nul Stream)) π)
-                                (bin _⇛_ (nul Stream) (nul Stream))
-                                refl refl
+    α = by-naturality
     β : (Nat' ⇛ Nat') ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
-    β = type-naturality-reflect (bin _⇛_ (nul (Nat')) (nul (Nat')))
-                                (sub (sub (bin _⇛_ (nul (Nat')) (nul (Nat'))) π) π)
-                                refl refl
+    β = by-naturality
     ζ : ▻' (Stream ⇛ Stream) ≅ᵗʸ (▻' (Stream ⇛ Stream) [ π ]) [ π ]
-    ζ = type-naturality-reflect (un ▻' (bin _⇛_ (nul Stream) (nul Stream)))
-                                (sub (sub (un ▻' (bin _⇛_ (nul Stream) (nul Stream))) π) π)
-                                refl refl
+    ζ = by-naturality
 
 iterate : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 iterate f = löb (Nat' ⇛ Stream)
@@ -188,17 +175,11 @@ iterate f = löb (Nat' ⇛ Stream)
                                         ((ι[ β ] var 1) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] var 0)))))))
   where
     α : ((Nat' ⇛ Stream) [ π ]) ≅ᵗʸ (Nat' ⇛ Stream)
-    α = type-naturality-reflect (sub (bin _⇛_ (nul (Nat')) (nul Stream)) π)
-                                (bin _⇛_ (nul (Nat')) (nul Stream))
-                                refl refl
+    α = by-naturality
     β : ▻' (Nat' ⇛ Stream) ≅ᵗʸ ((▻' (Nat' ⇛ Stream) [ π ]) [ π ])
-    β = type-naturality-reflect (un ▻' (bin _⇛_ (nul (Nat')) (nul Stream)))
-                                (sub (sub (un ▻' (bin _⇛_ (nul (Nat')) (nul Stream))) π) π)
-                                refl refl
+    β = by-naturality
     ζ : (Nat' ⇛ Nat') ≅ᵗʸ (((Nat' ⇛ Nat') [ π ]) [ π ])
-    ζ = type-naturality-reflect (bin _⇛_ (nul (Nat')) (nul (Nat')))
-                                (sub (sub (bin _⇛_ (nul (Nat')) (nul (Nat'))) π) π)
-                                refl refl
+    ζ = by-naturality
 
 iterate' : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
 iterate' f = lam Nat' (ι[ stream-natural π ]
@@ -208,17 +189,11 @@ iterate' f = lam Nat' (ι[ stream-natural π ]
                                          (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] var 0))))))
   where
     α : Nat' ≅ᵗʸ (Nat' [ π ]) [ π ]
-    α = type-naturality-reflect (nul (Nat'))
-                                (sub (sub (nul (Nat')) π) π)
-                                refl refl
+    α = by-naturality
     β : (Stream ⇛ Stream) ≅ᵗʸ ((Stream ⇛ Stream) [ π ]) [ π ]
-    β = type-naturality-reflect (bin _⇛_ (nul Stream) (nul Stream))
-                                (sub (sub (bin _⇛_ (nul Stream) (nul Stream)) π) π)
-                                refl refl
+    β = by-naturality
     ζ : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
-    ζ = type-naturality-reflect (un ▻' (nul Stream))
-                                (sub (un ▻' (nul Stream)) π)
-                                refl refl
+    ζ = by-naturality
 
 suc-func : Tm {C = ω} ◇ (Nat' ⇛ Nat')
 suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] var 0))
@@ -265,24 +240,16 @@ mergef f = löb (Stream ⇛ Stream ⇛ Stream)
                                 ((ι[ θ ] var 2) ⊛' str-tail xs ⊛' str-tail ys)))))
   where
     α : (Stream ⇛ Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream ⇛ Stream
-    α = type-naturality-reflect (sub (bin _⇛_ (nul Stream) (bin _⇛_ (nul Stream) (nul Stream))) π)
-                                (bin _⇛_ (nul Stream) (bin _⇛_ (nul Stream) (nul Stream)))
-                                refl refl
+    α = by-naturality
     β : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
-    β = type-naturality-reflect (sub (bin _⇛_ (nul Stream) (nul Stream)) π)
-                                (bin _⇛_ (nul Stream) (nul Stream))
-                                refl refl
+    β = by-naturality
     γ : Stream [ π ] ≅ᵗʸ Stream
-    γ = type-naturality-reflect (sub (nul Stream) π) (nul Stream) refl refl
+    γ = by-naturality
     δ : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
           (((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
-    δ = type-naturality-reflect (bin _⇛_ (nul (Nat')) (bin _⇛_ (nul (Nat')) (bin _⇛_ (un ▻' (nul Stream)) (nul Stream))))
-                                (sub (sub (sub (bin _⇛_ (nul (Nat')) (bin _⇛_ (nul (Nat')) (bin _⇛_ (un ▻' (nul Stream)) (nul Stream)))) π) π) π)
-                                refl refl
+    δ = by-naturality
     ζ : Stream ≅ᵗʸ (Stream [ π ]) [ π ]
-    ζ = type-naturality-reflect (nul Stream) (sub (sub (nul Stream) π) π) refl refl
+    ζ = by-naturality
     θ : ▻' (Stream ⇛ Stream ⇛ Stream)
           ≅ᵗʸ ((▻' (Stream ⇛ Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
-    θ = type-naturality-reflect (un ▻' (bin _⇛_ (nul Stream) (bin _⇛_ (nul Stream) (nul Stream))))
-                                (sub (sub (sub (un ▻' (bin _⇛_ (nul Stream) (bin _⇛_ (nul Stream) (nul Stream)))) π) π) π)
-                                refl refl
+    θ = by-naturality
