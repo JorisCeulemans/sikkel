@@ -32,6 +32,7 @@ private
 --------------------------------------------------
 -- General description of discrete types
 
+{-
 -- A discrete type is first defined in the empty context as Discr-prim.
 -- It can then be defined in any context using the terminal substitution to
 -- the empty context.
@@ -43,6 +44,13 @@ morph-comp (Discr-prim A) _ _ _ _ _ = refl
 
 Discr : (A : Set ℓ) → Ty Γ ℓ
 Discr {Γ = Γ} A = Discr-prim A [ !◇ Γ ]
+-}
+
+Discr : (A : Set ℓ) → Ty Γ ℓ
+type (Discr A) _ _ = A
+morph (Discr A) _ _ = id
+morph-id (Discr A) _ = refl
+morph-comp (Discr A) _ _ _ _ _ = refl
 
 discr : {A : Set ℓ} → A → Tm Γ (Discr A)
 term (discr a) _ _ = a

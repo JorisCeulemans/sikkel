@@ -127,7 +127,7 @@ instance
 -- Some operations on guarded streams
 
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
-str-snd s = next' (lam Stream (ι[ Discr-natural _ π ] str-head (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
+str-snd s = next' (lam Stream (ι[ by-naturality ] str-head (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
 
 str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
 str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s

@@ -8,14 +8,14 @@ open import Data.List using (List; []; _∷_; filter)
 open import Data.Maybe using (Maybe; nothing; just)
 open import Data.Product using (_×_; _,_)
 open import Data.Unit using (⊤; tt)
-open import Reflection
+open import Reflection hiding (lam; var)
 open import Reflection.Argument using (_⟨∷⟩_; unArg)
 open import Reflection.TypeChecking.MonadSyntax using (_<$>_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Helpers
 open import CwF-Structure
-open import Reflection.Naturality
+open import Reflection.Naturality hiding (reduce)
 
 get-args : Type → Maybe (Term × Term)
 get-args (def _ xs) = go xs
@@ -44,6 +44,7 @@ is-arg-semtype a = inferType (unArg a) >>= λ
   ; _ → return false
   }
 
+{-# TERMINATING #-}
 construct-exp : Term → TC Term
 construct-exp (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
   { (_ , (ty ⟨∷⟩ subst ⟨∷⟩ [])) → do
@@ -62,16 +63,18 @@ construct-exp (def op args) = breakTC is-arg-semtype (filter (dec-from-bool is-v
       return (con (quote bin) (vArg (def op others) ∷ vArg ty1-exp ∷ vArg ty2-exp ∷ []))
   ; _ → typeError (strErr "No type operator recognized." ∷ [])
   }
+construct-exp (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in construct-exp." ∷ []) >> blockOnMeta m
 construct-exp ty = typeError (strErr "The naturality tactic does not work for the type" ∷ termErr ty ∷ [])
 
 by-naturality-macro : Term → TC ⊤
 by-naturality-macro hole = do
-  goal ← inferType hole
+  goal ← inferType hole >>= reduce
+  debugPrint "vtac" 5 (strErr "naturality solver called, goal:" ∷ termErr goal ∷ [])
   just (lhs , rhs) ← return (get-args goal)
     where nothing → typeError (termErr goal ∷ strErr "is not a type equality." ∷ [])
   lhs-exp ← construct-exp lhs
   rhs-exp ← construct-exp rhs
-  debugPrint "vtac" 5 (termErr lhs-exp ∷ termErr rhs-exp ∷ [])
+  debugPrint "vtac" 5 (strErr "naturality solver successfully constructed expressions:" ∷ termErr lhs-exp ∷ termErr rhs-exp ∷ [])
   let sol = def (quote type-naturality-reflect)
                 (vArg lhs-exp ∷ vArg rhs-exp ∷ vArg (con (quote _≡_.refl) []) ∷ vArg (con (quote _≡ω_.refl) []) ∷ [])
   unify hole sol
@@ -90,3 +93,21 @@ private
              (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
              ((Bool' ⇛ Bool') ⊠ ((Discr Bool) [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
   example' σ τ = by-naturality
+
+-- Experiments interaction var + by-naturality tactics
+
+open Data.Bool using (not)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Categories
+open import Types.Discrete
+open import Types.Functions
+open import Types.Products
+
+module _ {C : Category} where
+  not' : {Γ : Ctx C ℓ} → Tm Γ Bool' → Tm Γ Bool'
+  term (not' b) x _ = not (b ⟨ x , _ ⟩')
+  naturality (not' b) f eγ = cong not (naturality b f eγ)
+{-
+  not-fun : Tm {C = C} ◇ (Bool' ⇛ Bool')
+  not-fun = lam Bool' (ι[ by-naturality ] not' (ι[ by-naturality ] var 0))
+-}

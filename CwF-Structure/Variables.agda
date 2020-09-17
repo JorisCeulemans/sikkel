@@ -19,7 +19,7 @@ module CwF-Structure.Variables where
 open import Data.Bool using (Bool; true; false)
 open import Data.Fin using (Fin; zero; suc; #_)
 open import Data.List using (List; _∷_; [])
-open import Data.Maybe hiding (_>>=_)
+open import Data.Maybe using (Maybe; nothing; just)
 open import Data.Nat using (ℕ; zero; suc; _<?_)
 open import Data.Product using (_×_; _,_)
 open import Data.Unit
@@ -27,6 +27,7 @@ open import Data.Vec using (Vec; []; _∷_; foldr; lookup)
 open import Level renaming (suc to lsuc)
 open import Reflection hiding (var; lam)
 open import Reflection.Argument using (_⟨∷⟩_; _⟅∷⟆_)
+open import Reflection.TypeChecking.MonadSyntax using (_<$>_)
 open import Relation.Nullary.Decidable using (⌊_⌋)
 
 open import CwF-Structure.Contexts
@@ -91,15 +92,16 @@ get-ctx _ = nothing
 -- sequence. If a context is of the form Γ ,, T then T is added to the type
 -- sequence and ctx-to-tyseq is called recursively on Γ. Otherwise the process
 -- stops and ctx-to-tyseq returns an empty sequence.
-ctx-to-tyseq : Term → Maybe Term
+ctx-to-tyseq : Term → TC Term
 ctx-to-tyseq (def (quote _,,_) xs) = go xs
   where
-    go : List (Arg Term) → Maybe Term
-    go [] = nothing
-    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) = map (λ tyseq → con (quote TypeSequence._∷_) (vArg tyseq ∷ vArg ty ∷ []))
-                                 (ctx-to-tyseq ctx)
+    go : List (Arg Term) → TC Term
+    go [] = typeError (strErr "Invalid use of context extension." ∷ [])
+    go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) = (λ tyseq → con (quote TypeSequence._∷_) (vArg tyseq ∷ vArg ty ∷ [])) <$>
+                             (ctx-to-tyseq ctx)
     go (_ ∷ xs) = go xs
-ctx-to-tyseq ctx = just (con (quote TypeSequence.[]) [])
+ctx-to-tyseq (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-tyseq." ∷ []) >> blockOnMeta m
+ctx-to-tyseq ctx = return (con (quote TypeSequence.[]) [])
 
 -- Check whether the provided de Bruijn index is within bounds.
 check-within-bounds : Term → Term → TC ⊤
@@ -123,13 +125,14 @@ check-within-bounds t-x t-tyseq = do
 
 var-macro : Term → Term → TC ⊤
 var-macro x hole = do
-  agda-type ← inferType hole
-  just ctx ← return (get-ctx agda-type)
-    where nothing → typeError (strErr "The var macro can only be used to produce a term." ∷ termErr agda-type ∷ [])
-  just tyseq ← return (ctx-to-tyseq ctx)
-    where nothing → typeError (strErr "An error occurred, this point should not be reached." ∷ [])
+  goal ← inferType hole
+  debugPrint "vtac" 5 (strErr "var macro called, goal:" ∷ termErr goal ∷ [])
+  just ctx ← return (get-ctx goal)
+    where nothing → typeError (strErr "The var macro can only be used to produce a term." ∷ termErr goal ∷ [])
+  tyseq ← ctx-to-tyseq ctx
   check-within-bounds x tyseq
   let solution = def (quote prim-var) (vArg tyseq ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ [])
+  debugPrint "vtac" 5 (strErr "var macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro
