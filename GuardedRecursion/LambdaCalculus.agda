@@ -9,8 +9,7 @@ open import Data.Nat.Induction using (<-rec; <-wellFounded)
 open import Data.Nat.Properties
 open import Data.Unit using (⊤; tt)
 open import Function using (id)
--- open import Induction.WellFounded
-import GuardedRecursion.Temporary.FixPoint
+open import Induction.WellFounded
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]) renaming
   (subst to transp; subst-subst-sym to transp-transp-sym; subst-sym-subst to transp-sym-transp)
@@ -38,9 +37,9 @@ eq (isoʳ ◄𝕪-suc) _ = refl
 𝐷 (suc n) = ▻ (𝐷 n [ from ◄𝕪-suc ]) ⇛ ▻ (𝐷 n [ from ◄𝕪-suc ])
 
 𝐷-natural : {m n : ℕ} (m≤n : m ≤ n) → 𝐷 n [ to-𝕪⇒𝕪 m≤n ] ≅ᵗʸ 𝐷 m
-𝐷-natural {n = zero } z≤n = type-naturality-reflect (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) (to-𝕪⇒𝕪 z≤n))
+𝐷-natural {n = zero } z≤n = {!type-naturality-reflect (sub (bin fun-bin (nul discr-nul) (nul discr-nul)) (to-𝕪⇒𝕪 z≤n))
                                                      (bin fun-bin (nul discr-nul) (nul discr-nul))
-                                                     refl refl
+                                                     refl refl!}
 _$⟨_,_⟩_ (func (from (𝐷-natural {n = suc n} z≤n)) _) _ _ _ = tt
 PresheafFunc.naturality (func (from (𝐷-natural {n = suc n} z≤n)) _) _ _ _ = refl
 CwF-Structure.naturality (from (𝐷-natural {n = suc n} z≤n)) f = to-pshfun-eq λ _ _ _ → refl
@@ -52,14 +51,13 @@ isoʳ (𝐷-natural {n = suc n} z≤n) = {!!}
 𝐷-natural (s≤s m≤n) = {!!}
 
 
-
 {-
 𝐷 : ℕ → Set
 𝐷 = <-rec (λ _ → Set)
           (λ m IH → (k : ℕ) (k<m : k < m) → IH k k<m → IH k k<m)
 
 𝐷-eq : (n : ℕ) → 𝐷 n ≡ ((m : ℕ) (m<n : m < n) → 𝐷 m → 𝐷 m)
-𝐷-eq n = GuardedRecursion.Temporary.FixPoint.unfold-wfRec
+𝐷-eq n = FixPoint.unfold-wfRec
            <-wellFounded
            (λ _ → Set)
            (λ m IH → (k : ℕ) (k<m : k < m) → IH k k<m → IH k k<m)

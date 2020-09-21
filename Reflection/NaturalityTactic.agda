@@ -10,7 +10,7 @@ open import Data.Product using (_×_; _,_)
 open import Data.Unit using (⊤; tt)
 open import Reflection hiding (lam; var)
 open import Reflection.Argument using (_⟨∷⟩_; unArg)
-open import Reflection.TypeChecking.MonadSyntax using (_<$>_)
+open import Reflection.TypeChecking.Monad.Syntax using (_<$>_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Helpers

@@ -7,7 +7,7 @@ module GuardedRecursion.Fixpoints where
 open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Unit using (tt)
-open import Data.Unit.Polymorphic
+-- open import Data.Unit.Polymorphic
 open import Function using (_∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding (naturality)

@@ -27,7 +27,7 @@ open import Data.Vec using (Vec; []; _∷_; foldr; lookup)
 open import Level renaming (suc to lsuc)
 open import Reflection hiding (var; lam)
 open import Reflection.Argument using (_⟨∷⟩_; _⟅∷⟆_)
-open import Reflection.TypeChecking.MonadSyntax using (_<$>_)
+open import Reflection.TypeChecking.Monad.Syntax using (_<$>_)
 open import Relation.Nullary.Decidable using (⌊_⌋)
 
 open import CwF-Structure.Contexts

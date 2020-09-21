@@ -13,3 +13,4 @@ import Reflection.Helpers
 import Reflection.Substitutions
 import Reflection.Types
 import Reflection.Naturality
+import Reflection.NaturalityTactic
