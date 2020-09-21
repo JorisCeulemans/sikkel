@@ -135,8 +135,7 @@ str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] v
     β : (▻' Nat') [ π ] ≅ᵗʸ ▻' Nat'
     β = by-naturality
 
-
-zeros : Tm ◇ Stream
+zeros : Tm Γ Stream
 zeros = löb Stream
             (lam (▻' Stream) (ι[ stream-natural π ]
                  str-cons (pair zero' (ι[ β ] var 0))))
@@ -144,16 +143,18 @@ zeros = löb Stream
     β : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
     β = by-naturality
 
-zeros-test : str-head zeros ≅ᵗᵐ zero'
-eq zeros-test {x = zero}  _ = refl
-eq zeros-test {x = suc n} _ = refl
+private
+  module _ {Γ : Ctx ω ℓ} where
+    zeros-test : str-head {Γ = Γ} zeros ≅ᵗᵐ zero'
+    eq zeros-test {x = zero}  _ = refl
+    eq zeros-test {x = suc n} _ = refl
 
-zeros-test2 : str-snd zeros ≅ᵗᵐ next' zero'
-eq zeros-test2 {x = zero}  _ = refl
-eq zeros-test2 {x = suc zero}    _ = refl
-eq zeros-test2 {x = suc (suc n)} _ = refl
+    zeros-test2 : str-snd {Γ = Γ} zeros ≅ᵗᵐ next' zero'
+    eq zeros-test2 {x = zero}  _ = refl
+    eq zeros-test2 {x = suc zero}    _ = refl
+    eq zeros-test2 {x = suc (suc n)} _ = refl
 
-str-map : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Stream ⇛ Stream)
+str-map : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
                 (lam (▻' (Stream ⇛ Stream)) (ι[ α ]
                      lam Stream (ι[ stream-natural π ]
@@ -162,26 +163,26 @@ str-map f = löb (Stream ⇛ Stream)
   where
     α : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
     α = by-naturality
-    β : (Nat' ⇛ Nat') ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
+    β : Nat' ⇛ Nat' ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
     β = by-naturality
     ζ : ▻' (Stream ⇛ Stream) ≅ᵗʸ (▻' (Stream ⇛ Stream) [ π ]) [ π ]
     ζ = by-naturality
 
-iterate : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate f = löb (Nat' ⇛ Stream)
                 (lam (▻' (Nat' ⇛ Stream)) (ι[ α ]
                      lam Nat' (ι[ stream-natural π ]
                          str-cons (pair (ι⁻¹[ Discr-natural _ π ] var 0)
                                         ((ι[ β ] var 1) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] var 0)))))))
   where
-    α : ((Nat' ⇛ Stream) [ π ]) ≅ᵗʸ (Nat' ⇛ Stream)
+    α : (Nat' ⇛ Stream) [ π ] ≅ᵗʸ Nat' ⇛ Stream
     α = by-naturality
-    β : ▻' (Nat' ⇛ Stream) ≅ᵗʸ ((▻' (Nat' ⇛ Stream) [ π ]) [ π ])
+    β : ▻' (Nat' ⇛ Stream) ≅ᵗʸ (▻' (Nat' ⇛ Stream) [ π ]) [ π ]
     β = by-naturality
-    ζ : (Nat' ⇛ Nat') ≅ᵗʸ (((Nat' ⇛ Nat') [ π ]) [ π ])
+    ζ : Nat' ⇛ Nat' ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
     ζ = by-naturality
 
-iterate' : Tm {C = ω} ◇ (Nat' ⇛ Nat') → Tm ◇ (Nat' ⇛ Stream)
+iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate' f = lam Nat' (ι[ stream-natural π ]
                  löb Stream
                      (lam (▻' Stream) (ι[ stream-natural π ]
@@ -190,51 +191,53 @@ iterate' f = lam Nat' (ι[ stream-natural π ]
   where
     α : Nat' ≅ᵗʸ (Nat' [ π ]) [ π ]
     α = by-naturality
-    β : (Stream ⇛ Stream) ≅ᵗʸ ((Stream ⇛ Stream) [ π ]) [ π ]
+    β : Stream ⇛ Stream ≅ᵗʸ ((Stream ⇛ Stream) [ π ]) [ π ]
     β = by-naturality
     ζ : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
     ζ = by-naturality
 
-suc-func : Tm {C = ω} ◇ (Nat' ⇛ Nat')
+suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] var 0))
 
-nats : Tm ◇ Stream
+nats : Tm Γ Stream
 nats = app (iterate suc-func) zero'
 
-nats-test : str-head nats ≅ᵗᵐ zero'
-eq nats-test {x = zero}  _ = refl
-eq nats-test {x = suc n} _ = refl
+private
+  module _ {Γ : Ctx ω ℓ} where
+    nats-test : str-head {Γ = Γ} nats ≅ᵗᵐ zero'
+    eq nats-test {x = zero}  _ = refl
+    eq nats-test {x = suc n} _ = refl
 
-nats-test2 : str-snd nats ≅ᵗᵐ next' (suc' zero')
-eq nats-test2 {x = zero}  _ = refl
-eq nats-test2 {x = suc zero}    _ = refl
-eq nats-test2 {x = suc (suc n)} _ = refl
+    nats-test2 : str-snd {Γ = Γ} nats ≅ᵗᵐ next' (suc' zero')
+    eq nats-test2 {x = zero}  _ = refl
+    eq nats-test2 {x = suc zero}    _ = refl
+    eq nats-test2 {x = suc (suc n)} _ = refl
 
-nats-test3 : str-thrd nats ≅ᵗᵐ next' (next' (suc' (suc' zero')))
-eq nats-test3 {x = zero} _ = refl
-eq nats-test3 {x = suc zero} _ = refl
-eq nats-test3 {x = suc (suc zero)} _ = refl
-eq nats-test3 {x = suc (suc (suc n))} _ = refl
+    nats-test3 : str-thrd {Γ = Γ} nats ≅ᵗᵐ next' (next' (suc' (suc' zero')))
+    eq nats-test3 {x = zero} _ = refl
+    eq nats-test3 {x = suc zero} _ = refl
+    eq nats-test3 {x = suc (suc zero)} _ = refl
+    eq nats-test3 {x = suc (suc (suc n))} _ = refl
 
-map-test : str-head (app (str-map suc-func) zeros) ≅ᵗᵐ discr 1
-eq map-test {x = zero} _  = refl
-eq map-test {x = suc x} _ = refl
+    map-test : str-head {Γ = Γ} (app (str-map suc-func) zeros) ≅ᵗᵐ discr 1
+    eq map-test {x = zero} _  = refl
+    eq map-test {x = suc x} _ = refl
 
-map-test2 : str-thrd (app (str-map suc-func) (app (str-map suc-func) nats)) ≅ᵗᵐ next' (next' (discr 4))
-eq map-test2 {x = zero} _ = refl
-eq map-test2 {x = suc zero} _ = refl
-eq map-test2 {x = suc (suc zero)} _ = refl
-eq map-test2 {x = suc (suc (suc n))} _ = refl
+    map-test2 : str-thrd {Γ = Γ} (app (str-map suc-func) (app (str-map suc-func) nats)) ≅ᵗᵐ next' (next' (discr 4))
+    eq map-test2 {x = zero} _ = refl
+    eq map-test2 {x = suc zero} _ = refl
+    eq map-test2 {x = suc (suc zero)} _ = refl
+    eq map-test2 {x = suc (suc (suc n))} _ = refl
 
-mergef : Tm ◇ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm ◇ (Stream ⇛ Stream ⇛ Stream)
+mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm Γ (Stream ⇛ Stream ⇛ Stream)
 mergef f = löb (Stream ⇛ Stream ⇛ Stream)
                (lam (▻' (Stream ⇛ Stream ⇛ Stream)) (ι[ α ]
                     lam Stream (ι[ β ]
                         lam Stream (ι[ γ ]
-                            let xs = ι[ ζ ] var 1
+                            let xs = ι[ δ ] var 1
                                 ys = ι⁻¹[ γ ] var 0
                             in
-                            app (app (app (ι[ δ ] (((f [ π ]') [ π ]') [ π ]'))
+                            app (app (app (ι[ ζ ] (((f [ π ]') [ π ]') [ π ]'))
                                           (str-head xs))
                                      (str-head ys))
                                 ((ι[ θ ] var 2) ⊛' str-tail xs ⊛' str-tail ys)))))
@@ -245,10 +248,10 @@ mergef f = löb (Stream ⇛ Stream ⇛ Stream)
     β = by-naturality
     γ : Stream [ π ] ≅ᵗʸ Stream
     γ = by-naturality
-    δ : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
-          (((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
+    δ : Stream ≅ᵗʸ (Stream [ π ]) [ π ]
     δ = by-naturality
-    ζ : Stream ≅ᵗʸ (Stream [ π ]) [ π ]
+    ζ : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
+          (((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
     ζ = by-naturality
     θ : ▻' (Stream ⇛ Stream ⇛ Stream)
           ≅ᵗʸ ((▻' (Stream ⇛ Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
