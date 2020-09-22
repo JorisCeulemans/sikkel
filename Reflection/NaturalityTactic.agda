@@ -68,7 +68,7 @@ construct-exp ty = typeError (strErr "The naturality tactic does not work for th
 
 by-naturality-macro : Term → TC ⊤
 by-naturality-macro hole = do
-  goal ← inferType hole >>= reduce -- normalise
+  goal ← inferType hole >>= normalise
   debugPrint "vtac" 5 (strErr "naturality solver called, goal:" ∷ termErr goal ∷ [])
   just (lhs , rhs) ← return (get-args goal)
     where nothing → typeError (termErr goal ∷ strErr "is not a type equality." ∷ [])
@@ -107,7 +107,6 @@ module _ {C : Category} where
   not' : {Γ : Ctx C ℓ} → Tm Γ Bool' → Tm Γ Bool'
   term (not' b) x _ = not (b ⟨ x , _ ⟩')
   naturality (not' b) f eγ = cong not (naturality b f eγ)
-{-
+
   not-fun : Tm {C = C} ◇ (Bool' ⇛ Bool')
   not-fun = lam Bool' (ι[ by-naturality ] not' (ι[ by-naturality ] var 0))
--}

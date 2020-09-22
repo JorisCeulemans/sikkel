@@ -140,21 +140,15 @@ instance
 -- Some operations on guarded streams
 
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
-str-snd s = next' (lam Stream (ι[ by-naturality ] str-head (ι⁻¹[ {-by-naturality-} stream-natural π ] var 0))) ⊛' str-tail s
+str-snd s = next' (lam Stream (ι[ by-naturality ] str-head (ι[ by-naturality ] var 0))) ⊛' str-tail s
 
 str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
-str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
-  where
-    β : (▻' Nat') [ π ] ≅ᵗʸ ▻' Nat'
-    β = by-naturality
+str-thrd s = next' (lam Stream (ι[ by-naturality ] str-snd (ι[ by-naturality ] var 0))) ⊛' str-tail s
 
 zeros : Tm Γ Stream
 zeros = löb Stream
-            (lam (▻' Stream) (ι[ stream-natural π ]
-                 str-cons (pair zero' (ι[ β ] var 0))))
-  where
-    β : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
-    β = by-naturality
+            (lam (▻' Stream) (ι[ by-naturality ]
+                 str-cons (pair zero' (ι[ by-naturality ] var 0))))
 
 private
   module _ {Γ : Ctx ω ℓ} where
@@ -169,48 +163,38 @@ private
 
 str-map : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
-                (lam (▻' (Stream ⇛ Stream)) (ι[ α ]
-                     lam Stream (ι[ stream-natural π ]
-                         str-cons (pair (app (ι[ β ] ((f [ π ]') [ π ]')) (str-head (ι⁻¹[ stream-natural π ] var 0)))
-                                        ((ι[ ζ ] var 1) ⊛' str-tail (ι⁻¹[ stream-natural π ] var 0))))))
+                (lam (▻' (Stream ⇛ Stream)) (ι[ by-naturality ]
+                     lam Stream (ι[ α ]
+                         str-cons (pair (app (ι[ by-naturality ] ((f [ π ]') [ π ]')) (str-head (ι⁻¹[ by-naturality ] var 0)))
+                                        ((ι[ by-naturality ] var 1) ⊛' str-tail (ι⁻¹[ by-naturality ] var 0))))))
   where
-    α : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
+    α : Stream [ π ] ≅ᵗʸ Stream
     α = by-naturality
-    β : Nat' ⇛ Nat' ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
-    β = by-naturality
-    ζ : ▻' (Stream ⇛ Stream) ≅ᵗʸ (▻' (Stream ⇛ Stream) [ π ]) [ π ]
-    ζ = by-naturality
 
 iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate f = löb (Nat' ⇛ Stream)
-                (lam (▻' (Nat' ⇛ Stream)) (ι[ α ]
-                     lam Nat' (ι[ stream-natural π ]
-                         str-cons (pair (ι⁻¹[ Discr-natural _ π ] var 0)
-                                        ((ι[ β ] var 1) ⊛' next' (app (ι[ ζ ] ((f [ π ]') [ π ]')) (ι⁻¹[ Discr-natural _ π ] var 0)))))))
+                (lam (▻' (Nat' ⇛ Stream)) (ι[ by-naturality ]
+                     lam Nat' (ι[ α ]
+                         str-cons (pair (ι⁻¹[ by-naturality ] var 0)
+                                        ((ι[ by-naturality ] var 1) ⊛' next' (app (ι[ β ] ((f [ π ]') [ π ]')) (ι⁻¹[ by-naturality ] var 0)))))))
   where
-    α : (Nat' ⇛ Stream) [ π ] ≅ᵗʸ Nat' ⇛ Stream
+    α : Stream [ π ] ≅ᵗʸ Stream
     α = by-naturality
-    β : ▻' (Nat' ⇛ Stream) ≅ᵗʸ (▻' (Nat' ⇛ Stream) [ π ]) [ π ]
+    β : Nat' ⇛ Nat' ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
     β = by-naturality
-    ζ : Nat' ⇛ Nat' ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
-    ζ = by-naturality
 
 iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
-iterate' f = lam Nat' (ι[ stream-natural π ]
+iterate' f = lam Nat' (ι[ by-naturality ]
                  löb Stream
-                     (lam (▻' Stream) (ι[ stream-natural π ]
-                          str-cons (pair (ι[ α ] var 1)
-                                         (next' (ι[ β ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ ζ ] var 0))))))
+                     (lam (▻' Stream) (ι[ by-naturality ]
+                          str-cons (pair (ι[ by-naturality ] var 1)
+                                         (next' (ι[ by-naturality ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ α ] var 0))))))
   where
-    α : Nat' ≅ᵗʸ (Nat' [ π ]) [ π ]
+    α : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
     α = by-naturality
-    β : Stream ⇛ Stream ≅ᵗʸ ((Stream ⇛ Stream) [ π ]) [ π ]
-    β = by-naturality
-    ζ : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
-    ζ = by-naturality
 
 suc-func : Tm Γ (Nat' ⇛ Nat')
-suc-func = lam Nat' (ι[ Discr-natural _ π ] suc' (ι⁻¹[ Discr-natural _ π ] var 0))
+suc-func = lam Nat' (ι[ by-naturality ] suc' (ι⁻¹[ by-naturality ] var 0))
 
 nats : Tm Γ Stream
 nats = app (iterate suc-func) zero'
@@ -244,28 +228,19 @@ private
 
 mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm Γ (Stream ⇛ Stream ⇛ Stream)
 mergef f = löb (Stream ⇛ Stream ⇛ Stream)
-               (lam (▻' (Stream ⇛ Stream ⇛ Stream)) (ι[ α ]
-                    lam Stream (ι[ β ]
-                        lam Stream (ι[ γ ]
-                            let xs = ι[ δ ] var 1
-                                ys = ι⁻¹[ γ ] var 0
+               (lam (▻' (Stream ⇛ Stream ⇛ Stream)) (ι[ by-naturality ]
+                    lam Stream (ι[ α ]
+                        lam Stream (ι[ by-naturality ]
+                            let xs = ι[ by-naturality ] var 1
+                                ys = ι⁻¹[ by-naturality ] var 0
                             in
-                            app (app (app (ι[ ζ ] (((f [ π ]') [ π ]') [ π ]'))
+                            app (app (app (ι[ β ] (((f [ π ]') [ π ]') [ π ]'))
                                           (str-head xs))
                                      (str-head ys))
-                                ((ι[ θ ] var 2) ⊛' str-tail xs ⊛' str-tail ys)))))
+                                ((ι[ by-naturality ] var 2) ⊛' str-tail xs ⊛' str-tail ys)))))
   where
-    α : (Stream ⇛ Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream ⇛ Stream
+    α : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
     α = by-naturality
-    β : (Stream ⇛ Stream) [ π ] ≅ᵗʸ Stream ⇛ Stream
-    β = by-naturality
-    γ : Stream [ π ] ≅ᵗʸ Stream
-    γ = by-naturality
-    δ : Stream ≅ᵗʸ (Stream [ π ]) [ π ]
-    δ = by-naturality
-    ζ : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
+    β : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
           (((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
-    ζ = by-naturality
-    θ : ▻' (Stream ⇛ Stream ⇛ Stream)
-          ≅ᵗʸ ((▻' (Stream ⇛ Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
-    θ = by-naturality
+    β = by-naturality
