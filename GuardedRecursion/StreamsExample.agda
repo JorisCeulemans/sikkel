@@ -58,6 +58,7 @@ first-≤-tail m≤n (a ∷ as) = refl
 --------------------------------------------------
 -- Definition of guarded streams.
 
+{-
 -- Just as with discrete types, guarded streams are first defined in the
 -- empty context and then in any context using the terminal substitution.
 Stream-prim : Ty (◇ {ω}) 0ℓ
@@ -65,9 +66,12 @@ type Stream-prim n _ = Vec ℕ (suc n)
 morph Stream-prim m≤n _ = first-≤ (s≤s m≤n)
 morph-id Stream-prim _ = first-≤-refl
 morph-comp Stream-prim k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
-
+-}
 Stream : Ty Γ 0ℓ
-Stream {Γ = Γ} = Stream-prim [ !◇ Γ ]
+type Stream n _ = Vec ℕ (suc n)
+morph Stream m≤n _ = first-≤ (s≤s m≤n)
+morph-id Stream _ = first-≤-refl
+morph-comp Stream k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
 
 str-head : Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
@@ -122,12 +126,21 @@ instance
   natural-un {{▻'-un}} = ▻'-natural
   cong-un {{▻'-un}} = ▻'-cong
 
+  ◄-functor : IsCtxFunctor ◄
+  ctx-map {{◄-functor}} = ◄-subst
+  ctx-map-id {{◄-functor}} = ◄-subst-id
+  ctx-map-⊚ {{◄-functor}} = ◄-subst-⊚
+
+  ▻-un : IsUnaryNatural ▻
+  natural-un {{▻-un}} = ▻-natural
+  cong-un {{▻-un}} = ▻-cong
+
 
 --------------------------------------------------
 -- Some operations on guarded streams
 
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
-str-snd s = next' (lam Stream (ι[ by-naturality ] str-head (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s
+str-snd s = next' (lam Stream (ι[ by-naturality ] str-head (ι⁻¹[ {-by-naturality-} stream-natural π ] var 0))) ⊛' str-tail s
 
 str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
 str-thrd s = next' (lam Stream (ι[ β ] str-snd (ι⁻¹[ stream-natural π ] var 0))) ⊛' str-tail s

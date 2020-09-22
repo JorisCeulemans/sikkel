@@ -33,6 +33,25 @@ open import Reflection.Helpers public
 -- TODO: Allow operations that can change the context the type lives in using a certain endofunctor
 -- on the category of contexts (needed for ▻). Later, functors between different categories might as well be interesting.
 
+CtxOp : Setω
+CtxOp = ∀ {ℓ} → Ctx C ℓ → Ctx C ℓ
+
+record IsCtxFunctor (Φ : CtxOp) : Setω where
+  field
+    ctx-map : ∀ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} → Δ ⇒ Γ → Φ Δ ⇒ Φ Γ
+    ctx-map-id : ∀ {ℓ} {Γ : Ctx C ℓ} → ctx-map (id-subst Γ) ≅ˢ id-subst (Φ Γ)
+    ctx-map-⊚ : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'}  {Θ : Ctx C ℓ''} →
+                 (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
+                 ctx-map (τ ⊚ σ) ≅ˢ ctx-map τ ⊚ ctx-map σ
+
+open IsCtxFunctor {{...}} public
+
+instance
+  id-ctx-functor : IsCtxFunctor (λ Γ → Γ)
+  ctx-map {{id-ctx-functor}} σ = σ
+  ctx-map-id {{id-ctx-functor}} = ≅ˢ-refl
+  ctx-map-⊚ {{id-ctx-functor}} _ _ = ≅ˢ-refl
+
 
 --------------------------------------------------
 -- Definition of record types of nullary, unary and binary type operations.
@@ -47,29 +66,29 @@ record IsNullaryNatural {ℓ} (U : NullaryTypeOp ℓ) : Setω where
 
 open IsNullaryNatural {{...}} public
 
-UnaryTypeOp : (Level → Level → Level) → Setω
-UnaryTypeOp f = ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ (f ℓc ℓt)
+UnaryTypeOp : CtxOp → (Level → Level → Level) → Setω
+UnaryTypeOp Φ f = ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty (Φ Γ) ℓt → Ty Γ (f ℓc ℓt)
 
-record IsUnaryNatural {f} (F : UnaryTypeOp f) : Setω where
+record IsUnaryNatural {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} {f} (F : UnaryTypeOp Φ f) : Setω where
   field
-    natural-un : ∀ {ℓc ℓc' ℓt} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} →
-                 (F T) [ σ ] ≅ᵗʸ F (T [ σ ])
+    natural-un : ∀ {ℓc ℓc' ℓt} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) {T : Ty (Φ Γ) ℓt} →
+                 (F T) [ σ ] ≅ᵗʸ F (T [ ctx-map σ ])
     cong-un : ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc}
-              {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} →
+              {T : Ty (Φ Γ) ℓt} {T' : Ty (Φ Γ) ℓt'} →
               T ≅ᵗʸ T' → F T ≅ᵗʸ F T'
 
 open IsUnaryNatural {{...}} public
 
-BinaryTypeOp : (Level → Level → Level → Level) → Setω
-BinaryTypeOp f = ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓt' → Ty Γ (f ℓc ℓt ℓt')
+BinaryTypeOp : CtxOp → CtxOp → (Level → Level → Level → Level) → Setω
+BinaryTypeOp Φ Ψ f = ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty (Φ Γ) ℓt → Ty (Ψ Γ) ℓt' → Ty Γ (f ℓc ℓt ℓt')
 
-record IsBinaryNatural {f} (F : BinaryTypeOp f) : Setω where
+record IsBinaryNatural {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} {f} (F : BinaryTypeOp Φ Ψ f) : Setω where
   field
     natural-bin : ∀ {ℓc ℓc' ℓt ℓt'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
-                  {T : Ty Γ ℓt} {S : Ty Γ ℓt'} →
-                  (F T S) [ σ ] ≅ᵗʸ F (T [ σ ]) (S [ σ ])
+                  {T : Ty (Φ Γ) ℓt} {S : Ty (Ψ Γ) ℓt'} →
+                  (F T S) [ σ ] ≅ᵗʸ F (T [ ctx-map σ ]) (S [ ctx-map σ ])
     cong-bin : ∀ {ℓc ℓt ℓt' ℓs ℓs'} {Γ : Ctx C ℓc}
-               {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'} →
+               {T : Ty (Φ Γ) ℓt} {T' : Ty (Φ Γ) ℓt'} {S : Ty (Ψ Γ) ℓs} {S' : Ty (Ψ Γ) ℓs'} →
                T ≅ᵗʸ T' → S ≅ᵗʸ S' → F T S ≅ᵗʸ F T' S'
 
 open IsBinaryNatural {{...}} public
@@ -82,7 +101,7 @@ open IsBinaryNatural {{...}} public
 -- about contexts but keeps track of universe levels. The skeleton is needed
 -- to convince Agda that the function reduce below terminates.
 data ExpSkeleton : Set where
-  -- svar : Level → ExpSkeleton
+  scon : Level → ExpSkeleton
   snul : Level → ExpSkeleton
   sun  : (f : Level → Level → Level) (ℓc : Level) →
          ExpSkeleton → ExpSkeleton
@@ -91,30 +110,26 @@ data ExpSkeleton : Set where
   ssub : (ℓc : Level) → ExpSkeleton → ExpSkeleton
 
 level : ExpSkeleton → Level
--- level (svar ℓ) = ℓ
+level (scon ℓ) = ℓ
 level (snul ℓ) = ℓ
 level (sun f ℓc s) = f ℓc (level s)
 level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
 level (ssub ℓc s) = level s
 
--- NOTE: At the moment the introduction of an arbitrary type, without
--- info on naturality, in an Exp using var is disabled because it simplifies
--- the macro by-naturality. We will consider its reintroduction in the future.
--- (var isn't a good name anyway because it is now the name of the macro for variables.)
 data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
-  -- var : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-  --       (T : Ty Γ ℓ) → Exp Γ (svar ℓ)
+  con : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
+        (T : Ty Γ ℓ) → Exp Γ (scon ℓ)
   nul : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
         (U : NullaryTypeOp ℓ) → {{IsNullaryNatural U}} → Exp Γ (snul ℓ)
-  un  : ∀ {ℓc f s} {Γ : Ctx C ℓc} →
-        (F : UnaryTypeOp f) → {{IsUnaryNatural F}} → (e : Exp Γ s) → Exp Γ (sun f ℓc s)
-  bin : ∀ {ℓc f s s'} {Γ : Ctx C ℓc} →
-        (F : BinaryTypeOp f) → {{IsBinaryNatural F}} → (e1 : Exp Γ s) (e2 : Exp Γ s') → Exp Γ (sbin f ℓc s s')
+  un  : ∀ {ℓc f s} {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} {Γ : Ctx C ℓc} →
+        (F : UnaryTypeOp Φ f) → {{IsUnaryNatural F}} → (e : Exp (Φ Γ) s) → Exp Γ (sun f ℓc s)
+  bin : ∀ {ℓc f s s'} {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} {Γ : Ctx C ℓc} →
+        (F : BinaryTypeOp Φ Ψ f) → {{IsBinaryNatural F}} → (e1 : Exp (Φ Γ) s) (e2 : Exp (Ψ Γ) s') → Exp Γ (sbin f ℓc s s')
   sub : ∀ {ℓc ℓc' s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
         Exp Γ s → (σ : Δ ⇒ Γ) → Exp Δ (ssub ℓc s)
 
 ⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Ty Γ (level s)
--- ⟦ var T ⟧exp = T
+⟦ con T ⟧exp = T
 ⟦ nul U ⟧exp = U
 ⟦ un F e ⟧exp = F ⟦ e ⟧exp
 ⟦ bin F e1 e2 ⟧exp = F ⟦ e1 ⟧exp ⟦ e2 ⟧exp
@@ -125,54 +140,54 @@ data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
 -- Reduction of expressions + soundness
 
 reduce-skeleton : ExpSkeleton → ExpSkeleton
--- reduce-skeleton (svar ℓ) = svar ℓ
+reduce-skeleton (scon ℓ) = scon ℓ
 reduce-skeleton (snul ℓ) = snul ℓ
 reduce-skeleton (sun f ℓc s) = sun f ℓc (reduce-skeleton s)
 reduce-skeleton (sbin f ℓc s1 s2) = sbin f ℓc (reduce-skeleton s1) (reduce-skeleton s2)
--- reduce-skeleton (ssub ℓc (svar ℓ)) = ssub ℓc (svar ℓ)
+reduce-skeleton (ssub ℓc (scon ℓ)) = ssub ℓc (scon ℓ)
 reduce-skeleton (ssub ℓc (snul ℓ)) = snul ℓ
 reduce-skeleton (ssub ℓc (sun f ℓc' s)) = sun f ℓc (reduce-skeleton (ssub ℓc s))
 reduce-skeleton (ssub ℓc (sbin f ℓc' s1 s2)) = sbin f ℓc (reduce-skeleton (ssub ℓc s1)) (reduce-skeleton (ssub ℓc s2))
 reduce-skeleton (ssub ℓc (ssub ℓc' s)) = reduce-skeleton (ssub ℓc s)
 
 reduce : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Exp Γ (reduce-skeleton s)
--- reduce (var T) = var T
+reduce (con T) = con T
 reduce (nul U) = nul U
 reduce (un F e) = un F (reduce e)
 reduce (bin F e1 e2) = bin F (reduce e1) (reduce e2)
--- reduce (sub (var T) σ) = sub (var T) σ
+reduce (sub (con T) σ) = sub (con T) σ
 reduce (sub (nul U) σ) = nul U
-reduce (sub (un F e) σ) = un F (reduce (sub e σ))
-reduce (sub (bin F e1 e2) σ) = bin F (reduce (sub e1 σ)) (reduce (sub e2 σ))
+reduce (sub (un F e) σ) = un F (reduce (sub e (ctx-map σ)))
+reduce (sub (bin F e1 e2) σ) = bin F (reduce (sub e1 (ctx-map σ))) (reduce (sub e2 (ctx-map σ)))
 reduce (sub (sub e τ) σ) = reduce (sub e (τ ⊚ σ))
 
 reduce-sound : ∀ {ℓc s} {Γ : Ctx C ℓc} (e : Exp Γ s) →
                ⟦ e ⟧exp ≅ᵗʸ ⟦ reduce e ⟧exp
--- reduce-sound (var T) = ≅ᵗʸ-refl
+reduce-sound (con T) = ≅ᵗʸ-refl
 reduce-sound (nul U) = ≅ᵗʸ-refl
 reduce-sound (un F e) = cong-un (reduce-sound e)
 reduce-sound (bin F e1 e2) = cong-bin (reduce-sound e1) (reduce-sound e2)
--- reduce-sound (sub (var T) σ) = ≅ᵗʸ-refl
+reduce-sound (sub (con T) σ) = ≅ᵗʸ-refl
 reduce-sound (sub (nul U) σ) = natural-nul σ
 reduce-sound (sub (un F e) σ) =
   begin
     (F ⟦ e ⟧exp) [ σ ]
   ≅⟨ natural-un σ ⟩
-    F (⟦ e ⟧exp [ σ ])
+    F (⟦ e ⟧exp [ ctx-map σ ])
   ≅⟨⟩
-    F ⟦ sub e σ ⟧exp
-  ≅⟨ cong-un (reduce-sound (sub e σ)) ⟩
-    F ⟦ reduce (sub e σ ) ⟧exp ∎
+    F ⟦ sub e (ctx-map σ) ⟧exp
+  ≅⟨ cong-un (reduce-sound (sub e (ctx-map σ))) ⟩
+    F ⟦ reduce (sub e (ctx-map σ)) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
 reduce-sound (sub (bin F e1 e2) σ) =
   begin
     (F ⟦ e1 ⟧exp ⟦ e2 ⟧exp) [ σ ]
   ≅⟨ natural-bin σ ⟩
-    F (⟦ e1 ⟧exp [ σ ]) (⟦ e2 ⟧exp [ σ ])
+    F (⟦ e1 ⟧exp [ ctx-map σ ]) (⟦ e2 ⟧exp [ ctx-map σ ])
   ≅⟨⟩
-    F ⟦ sub e1 σ ⟧exp ⟦ sub e2 σ ⟧exp
-  ≅⟨ cong-bin (reduce-sound (sub e1 σ)) (reduce-sound (sub e2 σ)) ⟩
-    F ⟦ reduce (sub e1 σ) ⟧exp ⟦ reduce (sub e2 σ) ⟧exp ∎
+    F ⟦ sub e1 (ctx-map σ) ⟧exp ⟦ sub e2 (ctx-map σ) ⟧exp
+  ≅⟨ cong-bin (reduce-sound (sub e1 (ctx-map σ))) (reduce-sound (sub e2 (ctx-map σ))) ⟩
+    F ⟦ reduce (sub e1 (ctx-map σ)) ⟧exp ⟦ reduce (sub e2 (ctx-map σ)) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
 reduce-sound (sub (sub e τ) σ) =
   begin

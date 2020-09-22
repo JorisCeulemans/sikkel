@@ -68,7 +68,7 @@ construct-exp ty = typeError (strErr "The naturality tactic does not work for th
 
 by-naturality-macro : Term → TC ⊤
 by-naturality-macro hole = do
-  goal ← inferType hole >>= reduce
+  goal ← inferType hole >>= reduce -- normalise
   debugPrint "vtac" 5 (strErr "naturality solver called, goal:" ∷ termErr goal ∷ [])
   just (lhs , rhs) ← return (get-args goal)
     where nothing → typeError (termErr goal ∷ strErr "is not a type equality." ∷ [])

@@ -20,7 +20,7 @@ private
   variable
     ℓ'' ℓt ℓt' : Level
     m n : ℕ
-    Γ Δ : Ctx ω ℓ
+    Γ Δ Θ : Ctx ω ℓ
 
 infixl 12 _⊛_
 infixl 12 _⊛'_
@@ -68,7 +68,7 @@ naturality (from-earlier Γ) γ = ctx-m≤1+n Γ _ γ
 
 
 --------------------------------------------------
--- Congruence and naturality for earlier
+-- Congruence, naturality and functoriality for earlier
 
 ◄-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → ◄-subst σ ≅ˢ ◄-subst τ
 eq (◄-subst-cong σ=τ) δ = eq σ=τ δ
@@ -98,6 +98,12 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
 
 from-earlier-natural : (σ : Δ ⇒ Γ) → from-earlier Γ ⊚ ◄-subst σ ≅ˢ σ ⊚ from-earlier Δ
 eq (from-earlier-natural σ) δ = naturality σ δ
+
+◄-subst-id : ◄-subst (id-subst Γ) ≅ˢ id-subst (◄ Γ)
+eq ◄-subst-id _ = refl
+
+◄-subst-⊚ : (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → ◄-subst (τ ⊚ σ) ≅ˢ ◄-subst τ ⊚ ◄-subst σ
+eq (◄-subst-⊚ τ σ) _ = refl
 
 
 --------------------------------------------------
