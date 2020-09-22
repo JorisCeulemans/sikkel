@@ -12,12 +12,12 @@ open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
+open import CwF-Structure
+open import Types.Functions
 
 private
   variable
+    ℓ'' : Level
     Γ Δ : Ctx C ℓ
     T T' S S' : Ty Γ ℓ
 
@@ -89,3 +89,32 @@ module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (σ : Δ ⇒ Γ) where
 
   inr'-natural : (s : Tm Γ S) → (inr' s) [ σ ]' ≅ᵗᵐ ι[ ⊞-natural ] (inr' (s [ σ ]'))
   eq (inr'-natural s) _ = refl
+
+inl'-func : Tm Γ (T ⇛ T ⊞ S)
+inl'-func {T = T} = lam T (ι[ ⊞-natural π ] inl' (var 0))
+
+inr'-func : Tm Γ (S ⇛ T ⊞ S)
+inr'-func {S = S} = lam S (ι[ ⊞-natural π ] inr' (var 0))
+
+⊞-elim : {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (C : Ty Γ ℓ'') →
+         Tm Γ (A ⇛ C) → Tm Γ (B ⇛ C) → Tm Γ (A ⊞ B ⇛ C)
+term (⊞-elim C f g) _ _ $⟨ _ , _ ⟩ inl a = f €⟨ _ , _ ⟩ a
+term (⊞-elim C f g) _ _ $⟨ _ , _ ⟩ inr b = g €⟨ _ , _ ⟩ b
+naturality (term (⊞-elim C f g) _ _) _ _ (inl a) = sym (€-natural f _ _ a)
+naturality (term (⊞-elim C f g) _ _) _ _ (inr b) = sym (€-natural g _ _ b)
+naturality (⊞-elim C f g) _ _ = to-pshfun-eq λ { _ _ (inl a) → refl ; _ _ (inr b) → refl }
+
+module _ {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (C : Ty Γ ℓ'') where
+  β-⊞-inl : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (a : Tm Γ A) →
+            app (⊞-elim C f g) (inl' a) ≅ᵗᵐ app f a
+  eq (β-⊞-inl f g a) _ = refl
+
+  β-⊞-inr : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (b : Tm Γ B) →
+            app (⊞-elim C f g) (inr' b) ≅ᵗᵐ app g b
+  eq (β-⊞-inr f g b) _ = refl
+
+η-⊞ : {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (t : Tm Γ (A ⊞ B)) →
+      t ≅ᵗᵐ app (⊞-elim (A ⊞ B) inl'-func inr'-func) t
+eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
+eq (η-⊞ t) γ | inl a = refl
+eq (η-⊞ t) γ | inr b = refl
