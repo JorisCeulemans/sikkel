@@ -137,7 +137,8 @@ lamι T {body-type = S' , S=S'} b = lam T (ι[ S=S' ] b)
 module _ {C ℓc} {Γ : Ctx C ℓc} where
   test-lam : Tm Γ (Bool' ⇛ Bool' ⇛ Bool')
   test-lam = lamι Bool' (lamι Bool' (ι[ by-naturality ] var 1))
-
+{-
 open import GuardedRecursion.Later
 other-test : Tm {C = ω} ◇ (▻' Bool' ⇛ ▻' Bool')
 other-test = (lamι (▻' Bool') ?)
+-}

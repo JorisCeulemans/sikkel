@@ -58,15 +58,6 @@ first-≤-tail m≤n (a ∷ as) = refl
 --------------------------------------------------
 -- Definition of guarded streams.
 
-{-
--- Just as with discrete types, guarded streams are first defined in the
--- empty context and then in any context using the terminal substitution.
-Stream-prim : Ty (◇ {ω}) 0ℓ
-type Stream-prim n _ = Vec ℕ (suc n)
-morph Stream-prim m≤n _ = first-≤ (s≤s m≤n)
-morph-id Stream-prim _ = first-≤-refl
-morph-comp Stream-prim k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
--}
 Stream : Ty Γ 0ℓ
 type Stream n _ = Vec ℕ (suc n)
 morph Stream m≤n _ = first-≤ (s≤s m≤n)
@@ -157,7 +148,7 @@ private
     eq zeros-test {x = suc n} _ = refl
 
     zeros-test2 : str-snd {Γ = Γ} zeros ≅ᵗᵐ next' zero'
-    eq zeros-test2 {x = zero}  _ = refl
+    eq zeros-test2 {x = zero}        _ = refl
     eq zeros-test2 {x = suc zero}    _ = refl
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
@@ -194,7 +185,7 @@ iterate' f = lam Nat' (ι[ by-naturality ]
     α = by-naturality
 
 suc-func : Tm Γ (Nat' ⇛ Nat')
-suc-func = lam Nat' (ι[ by-naturality ] suc' (ι⁻¹[ by-naturality ] var 0))
+suc-func = discr-func suc
 
 nats : Tm Γ Stream
 nats = app (iterate suc-func) zero'
@@ -206,24 +197,24 @@ private
     eq nats-test {x = suc n} _ = refl
 
     nats-test2 : str-snd {Γ = Γ} nats ≅ᵗᵐ next' (suc' zero')
-    eq nats-test2 {x = zero}  _ = refl
+    eq nats-test2 {x = zero}        _ = refl
     eq nats-test2 {x = suc zero}    _ = refl
     eq nats-test2 {x = suc (suc n)} _ = refl
 
     nats-test3 : str-thrd {Γ = Γ} nats ≅ᵗᵐ next' (next' (suc' (suc' zero')))
-    eq nats-test3 {x = zero} _ = refl
-    eq nats-test3 {x = suc zero} _ = refl
-    eq nats-test3 {x = suc (suc zero)} _ = refl
+    eq nats-test3 {x = zero}              _ = refl
+    eq nats-test3 {x = suc zero}          _ = refl
+    eq nats-test3 {x = suc (suc zero)}    _ = refl
     eq nats-test3 {x = suc (suc (suc n))} _ = refl
 
     map-test : str-head {Γ = Γ} (app (str-map suc-func) zeros) ≅ᵗᵐ discr 1
-    eq map-test {x = zero} _  = refl
+    eq map-test {x = zero}  _ = refl
     eq map-test {x = suc x} _ = refl
 
     map-test2 : str-thrd {Γ = Γ} (app (str-map suc-func) (app (str-map suc-func) nats)) ≅ᵗᵐ next' (next' (discr 4))
-    eq map-test2 {x = zero} _ = refl
-    eq map-test2 {x = suc zero} _ = refl
-    eq map-test2 {x = suc (suc zero)} _ = refl
+    eq map-test2 {x = zero}              _ = refl
+    eq map-test2 {x = suc zero}          _ = refl
+    eq map-test2 {x = suc (suc zero)}    _ = refl
     eq map-test2 {x = suc (suc (suc n))} _ = refl
 
 mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm Γ (Stream ⇛ Stream ⇛ Stream)
