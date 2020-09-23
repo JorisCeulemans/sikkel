@@ -94,14 +94,17 @@ private
              ((Bool' ⇛ Bool') ⊠ ((Discr Bool) [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
   example' σ τ = by-naturality
 
+
 -- Experiments interaction var + by-naturality tactics
 
 open Data.Bool using (not)
+open Data.Product using (Σ; Σ-syntax; proj₁)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import Categories
 open import Types.Discrete
 open import Types.Functions
 open import Types.Products
+open import Types.Sums
 
 module _ {C : Category} where
   not' : {Γ : Ctx C ℓ} → Tm Γ Bool' → Tm Γ Bool'
@@ -110,3 +113,31 @@ module _ {C : Category} where
 
   not-fun : Tm {C = C} ◇ (Bool' ⇛ Bool')
   not-fun = lam Bool' (ι[ by-naturality ] not' (ι[ by-naturality ] var 0))
+
+lam-tactic : ∀ {C ℓc ℓs} {Γ : Ctx C ℓc} → Ty Γ ℓs → Term → TC ⊤
+lam-tactic S hole = do
+  t-S ← quoteTC S >>= reduce
+  debugPrint "vtac" 5 (strErr "lam-tactic called with type" ∷ termErr t-S ∷ [])
+  expr-S ← construct-exp t-S
+  let S'-t = def (quote ⟦_⟧exp) (vArg expr-S ∷ [])
+  debugPrint "vtac" 5 (strErr "lam-tactic constructed expression" ∷ termErr S'-t ∷ [])
+  let proof = def (quote type-naturality-reflect)
+                  (vArg (con (quote sub) (vArg expr-S ∷ vArg (def (quote π) []) ∷ []))
+                    ∷ vArg expr-S
+                    ∷ vArg (con (quote _≡_.refl) [])
+                    ∷ vArg (con (quote _≡ω_.refl) [])
+                    ∷ [])
+  unify hole (con (quote _,_) (vArg S'-t ∷ vArg proof ∷ []))
+
+lamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (T : Ty Γ ℓt) {S : Ty Γ ℓs}
+       {@(tactic lam-tactic S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
+       Tm (Γ ,, T) (proj₁ body-type) → Tm Γ (T ⇛ S)
+lamι T {body-type = S' , S=S'} b = lam T (ι[ S=S' ] b)
+
+module _ {C ℓc} {Γ : Ctx C ℓc} where
+  test-lam : Tm Γ (Bool' ⇛ Bool' ⇛ Bool')
+  test-lam = lamι Bool' (lamι Bool' (ι[ by-naturality ] var 1))
+
+open import GuardedRecursion.Later
+other-test : Tm {C = ω} ◇ (▻' Bool' ⇛ ▻' Bool')
+other-test = (lamι (▻' Bool') ?)
