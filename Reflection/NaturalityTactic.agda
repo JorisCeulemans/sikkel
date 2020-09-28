@@ -15,7 +15,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Helpers
 open import CwF-Structure
-open import Reflection.Naturality hiding (reduce)
+open import Reflection.Naturality renaming (reduce to nat-reduce)
 
 get-args : Type → Maybe (Term × Term)
 get-args (def _ xs) = go xs
@@ -46,6 +46,12 @@ is-arg-semtype a = inferType (unArg a) >>= λ
 
 {-# TERMINATING #-}
 construct-exp : Term → TC Term
+construct-exp (def (quote ⟦_⟧exp) args) = getVisibleArg args
+  where
+    getVisibleArg : List (Arg Term) → TC Term
+    getVisibleArg [] = typeError (strErr "Impossible" ∷ [])
+    getVisibleArg (vArg e ∷ _) = return e
+    getVisibleArg (x ∷ args) = getVisibleArg args
 construct-exp (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
   { (_ , (ty ⟨∷⟩ subst ⟨∷⟩ [])) → do
       ty-exp ← construct-exp ty
@@ -114,31 +120,22 @@ module _ {C : Category} where
   not-fun : Tm {C = C} ◇ (Bool' ⇛ Bool')
   not-fun = lam Bool' (ι[ by-naturality ] not' (ι[ by-naturality ] var 0))
 
-lam-tactic : ∀ {C ℓc ℓs} {Γ : Ctx C ℓc} → Ty Γ ℓs → Term → TC ⊤
-lam-tactic S hole = do
-  t-S ← quoteTC S >>= reduce
-  debugPrint "vtac" 5 (strErr "lam-tactic called with type" ∷ termErr t-S ∷ [])
-  expr-S ← construct-exp t-S
-  let S'-t = def (quote ⟦_⟧exp) (vArg expr-S ∷ [])
-  debugPrint "vtac" 5 (strErr "lam-tactic constructed expression" ∷ termErr S'-t ∷ [])
-  let proof = def (quote type-naturality-reflect)
-                  (vArg (con (quote sub) (vArg expr-S ∷ vArg (def (quote π) []) ∷ []))
-                    ∷ vArg expr-S
-                    ∷ vArg (con (quote _≡_.refl) [])
-                    ∷ vArg (con (quote _≡ω_.refl) [])
-                    ∷ [])
-  unify hole (con (quote _,_) (vArg S'-t ∷ vArg proof ∷ []))
+
+--------------------------------------------------
+-- Lambda that automatically performs naturality reduction on its body type
+
+lam-tactic : ∀ {C ℓc ℓt ℓs} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓs → Term → TC ⊤
+lam-tactic T S hole = do
+  t-wantedBodyType ← quoteTC (S [ π {T = T} ])
+  debugPrint "vtac" 5 (strErr "lam-tactic called with type" ∷ termErr t-wantedBodyType ∷ [])
+  expr-wantedBodyType ← construct-exp t-wantedBodyType
+  let expr-reducedBodyType = def (quote nat-reduce) (vArg expr-wantedBodyType ∷ [])
+  debugPrint "vtac" 5 (strErr "lam-tactic constructed expression" ∷ termErr expr-reducedBodyType ∷ [])
+  let t-reducedBodyType = def (quote ⟦_⟧exp) (vArg expr-reducedBodyType ∷ [])
+  let proof = def (quote reduce-sound) (vArg expr-wantedBodyType ∷ [])
+  unify hole (con (quote _,_) (vArg t-reducedBodyType ∷ vArg proof ∷ []))
 
 lamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (T : Ty Γ ℓt) {S : Ty Γ ℓs}
-       {@(tactic lam-tactic S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
+       {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
        Tm (Γ ,, T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 lamι T {body-type = S' , S=S'} b = lam T (ι[ S=S' ] b)
-
-module _ {C ℓc} {Γ : Ctx C ℓc} where
-  test-lam : Tm Γ (Bool' ⇛ Bool' ⇛ Bool')
-  test-lam = lamι Bool' (lamι Bool' (ι[ by-naturality ] var 1))
-{-
-open import GuardedRecursion.Later
-other-test : Tm {C = ω} ◇ (▻' Bool' ⇛ ▻' Bool')
-other-test = (lamι (▻' Bool') ?)
--}
