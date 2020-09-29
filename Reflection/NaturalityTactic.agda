@@ -178,3 +178,20 @@ varι-macro x hole = do
 macro
   varι : Term → Term → TC ⊤
   varι = varι-macro
+
+
+--------------------------------------------------
+-- Weakening macro that automatically performs naturality reduction on its type
+
+weakenι-macro : ℕ → Term → Term → TC ⊤
+weakenι-macro n term hole = do
+  extended-ctx ← inferType hole >>= get-ctx
+  ty-seq ← bounded-ctx-to-tyseq n extended-ctx
+  let partial-solution = def (quote weaken-term) (ty-seq ⟨∷⟩ term ⟨∷⟩ [])
+  expr-resultType ← inferType partial-solution >>= getTermType >>= construct-exp
+  let solution = def (quote ι⁻¹[_]_) (def (quote reduce-sound) (expr-resultType ⟨∷⟩ []) ⟨∷⟩ partial-solution ⟨∷⟩ [])
+  unify hole solution
+
+macro
+  ↑ι⟨_⟩_ : ℕ → Term → Term → TC ⊤
+  ↑ι⟨ n ⟩ term = weakenι-macro n term

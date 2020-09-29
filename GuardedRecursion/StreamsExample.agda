@@ -156,7 +156,7 @@ str-map : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
                 (lamι (▻' (Stream ⇛ Stream)) (
                       lamι Stream (
-                           str-cons (pair (app (ι[ by-naturality ] (↑⟨ 2 ⟩ f)) (str-head (varι 0)))
+                           str-cons (pair (app (↑ι⟨ 2 ⟩ f) (str-head (varι 0)))
                                           (varι 1 ⊛' str-tail (varι 0))))))
 
 iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
@@ -164,14 +164,14 @@ iterate f = löb (Nat' ⇛ Stream)
                 (lamι (▻' (Nat' ⇛ Stream)) (
                       lamι Nat' (
                            str-cons (pair (varι 0)
-                                          (varι 1 ⊛' next' (app (ι[ by-naturality ] (↑⟨ 2 ⟩ f)) (varι 0)))))))
+                                          (varι 1 ⊛' next' (app (↑ι⟨ 2 ⟩ f) (varι 0)))))))
 
 iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate' f = lamι Nat' (
                   löb Stream
                       (lamι (▻' Stream) (
                             str-cons (pair (varι 1)
-                                           (next' (ι[ by-naturality ] (↑⟨ 2 ⟩ str-map f)) ⊛' varι 0)))))
+                                           (next' (↑ι⟨ 2 ⟩ str-map f) ⊛' varι 0)))))
 
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
@@ -214,7 +214,7 @@ mergef f = löb (Stream ⇛ Stream ⇛ Stream)
                                let xs = varι 1
                                    ys = varι 0
                                in
-                               app (app (app (ι[ by-naturality ] (↑⟨ 3 ⟩ f))
+                               app (app (app (↑ι⟨ 3 ⟩ f)
                                              (str-head xs))
                                         (str-head ys))
                                    (varι 2 ⊛' str-tail xs ⊛' str-tail ys)))))
