@@ -41,9 +41,13 @@ tyseqLookup (con (quote TypeSequence._∷_) args) zero = getVisibleArg 1 args
 tyseqLookup (con (quote TypeSequence._∷_) args) (suc i) = getVisibleArg 0 args >>= λ tyseq → tyseqLookup tyseq i
 tyseqLookup tyseq i = typeError (strErr "tyseqLookup is not called with a type sequence." ∷ [])
 
-weakenTyseqType : Term → {n : ℕ} → Fin n → Term
-weakenTyseqType expr zero = con (quote sub) (expr ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
-weakenTyseqType expr (suc i) = con (quote sub) (weakenTyseqType expr i ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
+weakenVarExpr : Term → {n : ℕ} → Fin n → Term
+weakenVarExpr expr zero    = con (quote sub) (expr ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
+weakenVarExpr expr (suc i) = con (quote sub) (weakenVarExpr expr i ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
+
+weakenExpr : Term → ℕ → Term
+weakenExpr expr zero    = expr
+weakenExpr expr (suc n) = con (quote sub) (weakenExpr expr n ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
 
 {-# TERMINATING #-}
 construct-exp : Term → TC Term
@@ -54,7 +58,11 @@ construct-exp (def (quote var-type) args) = do
   var-num ← getVisibleArg 1 args >>= unquoteTC
   t-type ← tyseqLookup t-tyseq {len-tyseq} var-num
   expr-type ← construct-exp t-type
-  return (weakenTyseqType expr-type var-num)
+  return (weakenVarExpr expr-type var-num)
+construct-exp (def (quote weaken-type) args) = do
+  expr-not-weakened-type ← getVisibleArg 1 args >>= construct-exp
+  weaken-nr ← getArg 4 args >>= unquoteTC
+  return (weakenExpr expr-not-weakened-type weaken-nr)
 construct-exp (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
   { (_ , (ty ⟨∷⟩ subst ⟨∷⟩ [])) → do
       ty-exp ← construct-exp ty
@@ -72,7 +80,8 @@ construct-exp (def op args) = breakTC is-arg-semtype (filter (dec-from-bool is-v
       return (con (quote bin) (vArg (def op others) ∷ vArg ty1-exp ∷ vArg ty2-exp ∷ []))
   ; _ → typeError (strErr "No type operator recognized." ∷ [])
   }
-construct-exp (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in construct-exp." ∷ []) >> blockOnMeta m
+construct-exp (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in construct-exp." ∷ []) >>
+                              blockOnMeta m
 construct-exp ty = typeError (strErr "The naturality tactic does not work for the type" ∷ termErr ty ∷ [])
 
 by-naturality-macro : Term → TC ⊤
@@ -149,7 +158,8 @@ lamι T {body-type = S' , S=S'} b = lam T (ι[ S=S' ] b)
 
 getTermType : Type → TC Term
 getTermType (def (quote Tm) args) = getVisibleArg 1 args
-getTermType (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in getTermType." ∷ []) >> blockOnMeta m
+getTermType (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in getTermType." ∷ []) >>
+                            blockOnMeta m
 getTermType _ = typeError (strErr "The varι macro can only construct a term." ∷ [])
 
 varι-macro : Term → Term → TC ⊤

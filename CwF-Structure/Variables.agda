@@ -12,8 +12,6 @@
 -- typecheck without this option in Agda 2.6.2 once released.
 --------------------------------------------------
 
-open import Categories
-
 module CwF-Structure.Variables where
 
 open import Data.Bool using (Bool; true; false)
@@ -30,6 +28,7 @@ open import Reflection.Argument using (_⟨∷⟩_)
 open import Reflection.TypeChecking.Monad.Syntax using (_<$>_)
 open import Relation.Nullary.Decidable using (⌊_⌋)
 
+open import Categories
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
@@ -82,7 +81,8 @@ module _ {C : Category} where
 -- the context Γ is returned.
 get-ctx : Type → TC Term
 get-ctx (def (quote Tm) args) = getVisibleArg 0 args
-get-ctx (meta m args) = debugPrint "vtac" 5 (strErr "Blocing on meta" ∷ termErr (meta m args) ∷ strErr "in get-ctx." ∷ []) >> blockOnMeta m
+get-ctx (meta m args) = debugPrint "vtac" 5 (strErr "Blocing on meta" ∷ termErr (meta m args) ∷ strErr "in get-ctx." ∷ []) >>
+                        blockOnMeta m
 get-ctx _ = typeError (strErr "get-ctx can only get the context of a term." ∷ [])
 
 -- ctx-to-tyseq takes a value of type Ctx C ℓ and transforms it into a type
@@ -97,7 +97,8 @@ ctx-to-tyseq (def (quote _,,_) xs) = go xs
     go (ctx ⟨∷⟩ ty ⟨∷⟩ xs) = (λ tyseq → con (quote TypeSequence._∷_) (vArg tyseq ∷ vArg ty ∷ [])) <$>
                              (ctx-to-tyseq ctx)
     go (_ ∷ xs) = go xs
-ctx-to-tyseq (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-tyseq." ∷ []) >> blockOnMeta m
+ctx-to-tyseq (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-tyseq." ∷ []) >>
+                             blockOnMeta m
 ctx-to-tyseq _ = return (con (quote TypeSequence.[]) [])
 
 -- Check whether the provided de Bruijn index is within bounds.
