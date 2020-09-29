@@ -3,9 +3,11 @@ module Reflection.NaturalityTactic where
 --------------------------------------------------
 -- Definition of tactic by-naturality
 
-open import Data.Bool using (Bool; true; false; _∧_)
+open import Data.Bool using (Bool; true; false)
+open import Data.Fin using (Fin; zero; suc; #_)
 open import Data.List using (List; []; _∷_; filter)
 open import Data.Maybe using (Maybe; nothing; just)
+open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_)
 open import Data.Unit using (⊤; tt)
 open import Reflection hiding (lam; var)
@@ -16,9 +18,10 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Helpers
 open import CwF-Structure
 open import Reflection.Naturality renaming (reduce to nat-reduce)
+open import Reflection.Util
 
 get-args : Type → Maybe (Term × Term)
-get-args (def _ xs) = go xs
+get-args (def (quote _≅ᵗʸ_) xs) = go xs
   where
   go : List (Arg Term) → Maybe (Term × Term)
   go (vArg x ∷ vArg y ∷ []) = just (x , y)
@@ -26,32 +29,32 @@ get-args (def _ xs) = go xs
   go _                      = nothing
 get-args _ = nothing
 
-breakTC : ∀ {a} {A : Set a} → (A → TC Bool) → List A → TC (List A × List A)
-breakTC p []       = return ([] , [])
-breakTC p (x ∷ xs) = p x >>= λ
-  { false → (λ (ys , zs) → (x ∷ ys , zs)) <$> breakTC p xs
-  ; true  → return ([] , x ∷ xs)
-  }
-
-is-visible : ∀ {a} {A : Set a} → Arg A → Bool
-is-visible (arg (arg-info visible r) x) = true
-is-visible (arg (arg-info hidden r) x) = false
-is-visible (arg (arg-info instance′ r) x) = false
-
 is-arg-semtype : Arg Term → TC Bool
 is-arg-semtype a = inferType (unArg a) >>= λ
   { (def (quote Ty) _) → return true
   ; _ → return false
   }
 
+tyseqLookup : Term → {n : ℕ} → Fin n → TC Term
+tyseqLookup (con (quote TypeSequence.[]) args) i = typeError (strErr "The requested variable does not exist." ∷ [])
+tyseqLookup (con (quote TypeSequence._∷_) args) zero = getVisibleArg 1 args
+tyseqLookup (con (quote TypeSequence._∷_) args) (suc i) = getVisibleArg 0 args >>= λ tyseq → tyseqLookup tyseq i
+tyseqLookup tyseq i = typeError (strErr "tyseqLookup is not called with a type sequence." ∷ [])
+
+weakenTyseqType : Term → {n : ℕ} → Fin n → Term
+weakenTyseqType expr zero = con (quote sub) (expr ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
+weakenTyseqType expr (suc i) = con (quote sub) (weakenTyseqType expr i ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
+
 {-# TERMINATING #-}
 construct-exp : Term → TC Term
-construct-exp (def (quote ⟦_⟧exp) args) = getVisibleArg args
-  where
-    getVisibleArg : List (Arg Term) → TC Term
-    getVisibleArg [] = typeError (strErr "Impossible" ∷ [])
-    getVisibleArg (vArg e ∷ _) = return e
-    getVisibleArg (x ∷ args) = getVisibleArg args
+construct-exp (def (quote ⟦_⟧exp) args) = getVisibleArg 0 args
+construct-exp (def (quote var-type) args) = do
+  t-tyseq ← getVisibleArg 0 args
+  len-tyseq ← getArg 3 args >>= unquoteTC
+  var-num ← getVisibleArg 1 args >>= unquoteTC
+  t-type ← tyseqLookup t-tyseq {len-tyseq} var-num
+  expr-type ← construct-exp t-type
+  return (weakenTyseqType expr-type var-num)
 construct-exp (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
   { (_ , (ty ⟨∷⟩ subst ⟨∷⟩ [])) → do
       ty-exp ← construct-exp ty
@@ -74,7 +77,7 @@ construct-exp ty = typeError (strErr "The naturality tactic does not work for th
 
 by-naturality-macro : Term → TC ⊤
 by-naturality-macro hole = do
-  goal ← inferType hole >>= normalise
+  goal ← inferType hole
   debugPrint "vtac" 5 (strErr "naturality solver called, goal:" ∷ termErr goal ∷ [])
   just (lhs , rhs) ← return (get-args goal)
     where nothing → typeError (termErr goal ∷ strErr "is not a type equality." ∷ [])
@@ -139,3 +142,29 @@ lamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (T : Ty Γ ℓt) {S : Ty 
        {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
        Tm (Γ ,, T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 lamι T {body-type = S' , S=S'} b = lam T (ι[ S=S' ] b)
+
+
+--------------------------------------------------
+-- Variable macro that automatically performs naturality reduction on its type
+
+getTermType : Type → TC Term
+getTermType (def (quote Tm) args) = getVisibleArg 1 args
+getTermType (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in getTermType." ∷ []) >> blockOnMeta m
+getTermType _ = typeError (strErr "The varι macro can only construct a term." ∷ [])
+
+varι-macro : Term → Term → TC ⊤
+varι-macro x hole = do
+  goal ← inferType hole
+  debugPrint "vtac" 5 (strErr "varι macro called, goal:" ∷ termErr goal ∷ [])
+  ctx ← get-ctx goal
+  tyseq ← ctx-to-tyseq ctx
+  check-within-bounds x tyseq
+  let partialSolution = def (quote prim-var) (vArg tyseq ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ [])
+  expr-resultType ← inferType partialSolution >>= getTermType >>= construct-exp
+  let solution = def (quote ι⁻¹[_]_) (def (quote reduce-sound) (expr-resultType ⟨∷⟩ []) ⟨∷⟩ partialSolution ⟨∷⟩ [])
+  debugPrint "vtac" 5 (strErr "varι macro successfully constructed solution:" ∷ termErr solution ∷ [])
+  unify hole solution
+
+macro
+  varι : Term → Term → TC ⊤
+  varι = varι-macro

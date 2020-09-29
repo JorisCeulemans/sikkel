@@ -26,7 +26,7 @@ open import Data.Unit
 open import Data.Vec using (Vec; []; _∷_; foldr; lookup)
 open import Level renaming (suc to lsuc)
 open import Reflection hiding (var; lam)
-open import Reflection.Argument using (_⟨∷⟩_; _⟅∷⟆_)
+open import Reflection.Argument using (_⟨∷⟩_)
 open import Reflection.TypeChecking.Monad.Syntax using (_<$>_)
 open import Relation.Nullary.Decidable using (⌊_⌋)
 
@@ -34,6 +34,7 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
+open import Reflection.Util
 
 
 --------------------------------------------------
@@ -79,14 +80,10 @@ module _ {C : Category} where
 
 -- If get-ctx is applied to an Agda type of the form Tm Γ T, then
 -- the context Γ is returned.
-get-ctx : Type → Maybe Term
-get-ctx (def (quote Tm) args) = go args
-  where
-    go : List (Arg Term) → Maybe Term
-    go [] = nothing
-    go (ctx ⟨∷⟩ xs) = just ctx
-    go (_ ∷ xs) = go xs
-get-ctx _ = nothing
+get-ctx : Type → TC Term
+get-ctx (def (quote Tm) args) = getVisibleArg 0 args
+get-ctx (meta m args) = debugPrint "vtac" 5 (strErr "Blocing on meta" ∷ termErr (meta m args) ∷ strErr "in get-ctx." ∷ []) >> blockOnMeta m
+get-ctx _ = typeError (strErr "get-ctx can only get the context of a term." ∷ [])
 
 -- ctx-to-tyseq takes a value of type Ctx C ℓ and transforms it into a type
 -- sequence. If a context is of the form Γ ,, T then T is added to the type
@@ -101,7 +98,7 @@ ctx-to-tyseq (def (quote _,,_) xs) = go xs
                              (ctx-to-tyseq ctx)
     go (_ ∷ xs) = go xs
 ctx-to-tyseq (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-tyseq." ∷ []) >> blockOnMeta m
-ctx-to-tyseq ctx = return (con (quote TypeSequence.[]) [])
+ctx-to-tyseq _ = return (con (quote TypeSequence.[]) [])
 
 -- Check whether the provided de Bruijn index is within bounds.
 check-within-bounds : Term → Term → TC ⊤
@@ -109,15 +106,10 @@ check-within-bounds t-x t-tyseq = do
   x ← unquoteTC t-x
   def (quote TypeSequence) args ← inferType t-tyseq
     where _ → typeError (strErr "An error occurred, this point should not be reached." ∷ [])
-  t-n ← get-tyseq-length args
+  t-n ← getVisibleArg 1 args
   n ← unquoteTC t-n
   go ⌊ x <? n ⌋ t-n
   where
-    get-tyseq-length : List (Arg Term) → TC Term
-    get-tyseq-length [] = typeError (strErr "An error occurred, this point should not be reached." ∷ [])
-    get-tyseq-length (_ ⟨∷⟩ t-n ⟨∷⟩ _) = return t-n
-    get-tyseq-length (_ ∷ args)       = get-tyseq-length args
-
     go : Bool → Term → TC ⊤
     go false t-n = typeError (strErr "The provided de Bruijn index" ∷ termErr t-x ∷
                               strErr " is too high. Number of available variables:" ∷ termErr t-n ∷ [])
@@ -127,8 +119,7 @@ var-macro : Term → Term → TC ⊤
 var-macro x hole = do
   goal ← inferType hole
   debugPrint "vtac" 5 (strErr "var macro called, goal:" ∷ termErr goal ∷ [])
-  just ctx ← return (get-ctx goal)
-    where nothing → typeError (strErr "The var macro can only be used to produce a term." ∷ termErr goal ∷ [])
+  ctx ← get-ctx goal
   tyseq ← ctx-to-tyseq ctx
   check-within-bounds x tyseq
   let solution = def (quote prim-var) (vArg tyseq ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ [])

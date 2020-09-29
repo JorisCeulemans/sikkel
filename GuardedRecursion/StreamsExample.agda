@@ -131,15 +131,15 @@ instance
 -- Some operations on guarded streams
 
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
-str-snd s = next' (lamι Stream (str-head (ι[ by-naturality ] var 0))) ⊛' str-tail s
+str-snd s = next' (lamι Stream (str-head (varι 0))) ⊛' str-tail s
 
 str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
-str-thrd s = next' (lamι Stream (str-snd (ι[ by-naturality ] var 0))) ⊛' str-tail s
+str-thrd s = next' (lamι Stream (str-snd (varι 0))) ⊛' str-tail s
 
 zeros : Tm Γ Stream
 zeros = löb Stream
             (lamι (▻' Stream) (
-                  str-cons (pair zero' (ι[ by-naturality ] var 0))))
+                  str-cons (pair zero' (varι 0))))
 
 private
   module _ {Γ : Ctx ω ℓ} where
@@ -156,28 +156,22 @@ str-map : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
 str-map f = löb (Stream ⇛ Stream)
                 (lamι (▻' (Stream ⇛ Stream)) (
                       lamι Stream (
-                           str-cons (pair (app (ι[ by-naturality ] ((f [ π ]') [ π ]')) (str-head (ι⁻¹[ by-naturality ] var 0)))
-                                          ((ι[ by-naturality ] var 1) ⊛' str-tail (ι⁻¹[ by-naturality ] var 0))))))
+                           str-cons (pair (app (ι[ by-naturality ] ((f [ π ]') [ π ]')) (str-head (varι 0)))
+                                          (varι 1 ⊛' str-tail (varι 0))))))
 
 iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate f = löb (Nat' ⇛ Stream)
                 (lamι (▻' (Nat' ⇛ Stream)) (
                       lamι Nat' (
-                           str-cons (pair (ι⁻¹[ by-naturality ] var 0)
-                                          ((ι[ by-naturality ] var 1) ⊛' next' (app (ι[ α ] ((f [ π ]') [ π ]')) (ι⁻¹[ by-naturality ] var 0)))))))
-  where
-    α : Nat' ⇛ Nat' ≅ᵗʸ ((Nat' ⇛ Nat') [ π ]) [ π ]
-    α = by-naturality
+                           str-cons (pair (varι 0)
+                                          (varι 1 ⊛' next' (app (ι[ by-naturality ] ((f [ π ]') [ π ]')) (varι 0)))))))
 
 iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate' f = lamι Nat' (
                   löb Stream
                       (lamι (▻' Stream) (
-                            str-cons (pair (ι[ by-naturality ] var 1)
-                                           (next' (ι[ by-naturality ] ((str-map f [ π ]') [ π ]')) ⊛' (ι[ α ] var 0))))))
-  where
-    α : ▻' Stream ≅ᵗʸ (▻' Stream) [ π ]
-    α = by-naturality
+                            str-cons (pair (varι 1)
+                                           (next' (ι[ by-naturality ] ((str-map f [ π ]') [ π ]')) ⊛' varι 0)))))
 
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
@@ -217,14 +211,10 @@ mergef f = löb (Stream ⇛ Stream ⇛ Stream)
                (lamι (▻' (Stream ⇛ Stream ⇛ Stream)) (
                      lamι Stream (
                           lamι Stream (
-                               let xs = ι[ by-naturality ] var 1
-                                   ys = ι⁻¹[ by-naturality ] var 0
+                               let xs = varι 1
+                                   ys = varι 0
                                in
-                               app (app (app (ι[ α ] (((f [ π ]') [ π ]') [ π ]'))
+                               app (app (app (ι[ by-naturality ] (((f [ π ]') [ π ]') [ π ]'))
                                              (str-head xs))
                                         (str-head ys))
-                                   ((ι[ by-naturality ] var 2) ⊛' str-tail xs ⊛' str-tail ys)))))
-  where
-    α : Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream ≅ᵗʸ
-          (((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) [ π ]) [ π ]) [ π ]
-    α = by-naturality
+                                   (varι 2 ⊛' str-tail xs ⊛' str-tail ys)))))
