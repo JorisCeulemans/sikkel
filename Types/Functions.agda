@@ -265,10 +265,10 @@ module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) (S : Ty Γ ℓs) {δ : Δ ⟨ z ⟩} 
 
 module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
   ⇛-natural : (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
-  from ⇛-natural = record { func = pshfun-subst-from σ T S
-                           ; naturality = λ f → to-pshfun-eq (λ _ _ _ → $-cong f refl _ _) }
-  to ⇛-natural = record { func = pshfun-subst-to σ T S
-                         ; naturality = λ {_ _ ρ-yz} f → to-pshfun-eq λ ρ-xy eγ t →
+  func (from ⇛-natural) = pshfun-subst-from σ T S
+  naturality (from ⇛-natural) f = to-pshfun-eq (λ _ _ _ → $-cong f refl _ _)
+  func (to ⇛-natural) = pshfun-subst-to σ T S
+  naturality (to ⇛-natural) {_} {_} {ρ-yz} f = to-pshfun-eq λ ρ-xy eγ t →
     let α = _
         β = _
         ζ = _
@@ -288,7 +288,7 @@ module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
     ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
       S ⟪ hom-id ∙ hom-id , _ ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t)
     ≡⟨ morph-cong S hom-idʳ _ _ ⟩
-      S ⟪ hom-id , α' ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t) ∎ }
+      S ⟪ hom-id , α' ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t) ∎
     where open ≡-Reasoning
   eq (isoˡ ⇛-natural) f = to-pshfun-eq (λ ρ-yz eγ t →
     begin

@@ -291,16 +291,20 @@ morph-comp (T [ σ ]) f g eq-zy eq-yx t = trans (cong (λ - → T ⟪ g ∙ f , 
                                                (morph-comp T f g _ _ t)
 
 ty-subst-id : (T : Ty Γ ℓ) → T [ id-subst Γ ] ≅ᵗʸ T
-from (ty-subst-id T) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-to (ty-subst-id T) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-isoˡ (ty-subst-id T) = record { eq = λ t → refl }
-isoʳ (ty-subst-id T) = record { eq = λ t → refl }
+func (from (ty-subst-id T)) = id
+naturality (from (ty-subst-id T)) _ = morph-cong T refl _ _
+func (to (ty-subst-id T)) = id
+naturality (to (ty-subst-id T)) _ = morph-cong T refl _ _
+eq (isoˡ (ty-subst-id T)) _ = refl
+eq (isoʳ (ty-subst-id T)) _ = refl
 
 ty-subst-comp : (T : Ty Θ ℓ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
-from (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-to (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-isoˡ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
-isoʳ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
+func (from (ty-subst-comp T τ σ)) = id
+naturality (from (ty-subst-comp T τ σ)) _ = morph-cong T refl _ _
+func (to (ty-subst-comp T τ σ)) = id
+naturality (to (ty-subst-comp T τ σ)) _ = morph-cong T refl _ _
+eq (isoˡ (ty-subst-comp T τ σ)) _ = refl
+eq (isoʳ (ty-subst-comp T τ σ)) _ = refl
 
 ty-subst-map : (σ : Δ ⇒ Γ) → (T ↣ S) → T [ σ ] ↣ S [ σ ]
 func (ty-subst-map σ η) t = func η t
@@ -324,8 +328,8 @@ eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ ℓ) → T [ σ ] ≅ᵗʸ T [ τ ]
-from (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-subst T (eq σ=τ δ) t
-                                          ; naturality = λ {_ _ f} t →
+func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
+naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
   begin
     T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
@@ -333,10 +337,10 @@ from (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element
   ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
     T ⟪ f ∙ hom-id , _ ⟫ t
   ≡⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎ }
+    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
   where open ≡-Reasoning
-to (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-subst T (sym (eq σ=τ δ)) t
-                                        ; naturality = λ {_ _ f} t →
+func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (sym (eq σ=τ δ)) t
+naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
   begin
     T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
@@ -344,7 +348,7 @@ to (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-s
   ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
     T ⟪ f ∙ hom-id , _ ⟫ t
   ≡⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎ }
+    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
   where open ≡-Reasoning
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   -- Here we cannot use morph-id T twice because the omitted equality proofs are not rel-id Γ _

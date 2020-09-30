@@ -78,8 +78,10 @@ morph-comp (ty-lift T) f g eq-zy eq-yx t =
 
 ty-lift-natural : {Δ : Ctx D ℓ} {Γ : Ctx D ℓ'} (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) →
                   ty-lift (T [ σ ]) ≅ᵗʸ ty-lift T [ subst-lift σ ]
-from (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
-to (ty-lift-natural σ T) = record { func = id ; naturality = λ _ → refl }
+func (from (ty-lift-natural σ T)) = id
+naturality (from (ty-lift-natural σ T)) _ = refl
+func (to (ty-lift-natural σ T)) = id
+naturality (to (ty-lift-natural σ T)) _ = refl
 eq (isoˡ (ty-lift-natural σ T)) _ = refl
 eq (isoʳ (ty-lift-natural σ T)) _ = refl
 

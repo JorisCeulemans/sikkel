@@ -74,8 +74,10 @@ naturality (from-earlier Γ) γ = ctx-m≤1+n Γ _ γ
 eq (◄-subst-cong σ=τ) δ = eq σ=τ δ
 
 ◅-ty-cong : {T : Ty Γ ℓ} {T' : Ty Γ ℓ'} → T ≅ᵗʸ T' → ◅-ty T ≅ᵗʸ ◅-ty T'
-from (◅-ty-cong T=T') = record { func = func (from T=T') ; naturality = naturality (from T=T') }
-to (◅-ty-cong T=T') = record { func = func (to T=T') ; naturality = naturality (to T=T') }
+func (from (◅-ty-cong T=T')) = func (from T=T')
+naturality (from (◅-ty-cong T=T')) = naturality (from T=T')
+func (to (◅-ty-cong T=T')) = func (to T=T')
+naturality (to (◅-ty-cong T=T')) = naturality (to T=T')
 eq (isoˡ (◅-ty-cong T=T')) t = eq (isoˡ T=T') t
 eq (isoʳ (◅-ty-cong T=T')) t = eq (isoʳ T=T') t
 
@@ -88,8 +90,10 @@ eq (◅-tm-ι T=T' t) γ = refl
 
 module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} where
   ◅-ty-natural : (◅-ty T) [ ◄-subst σ ] ≅ᵗʸ ◅-ty (T [ σ ])
-  from ◅-ty-natural = record { func = id ; naturality = λ _ → refl }
-  to ◅-ty-natural = record { func = id ; naturality = λ _ → refl }
+  func (from ◅-ty-natural) = id
+  naturality (from ◅-ty-natural) _ = refl
+  func (to ◅-ty-natural) = id
+  naturality (to ◅-ty-natural) _ = refl
   eq (isoˡ ◅-ty-natural) _ = refl
   eq (isoʳ ◅-ty-natural) _ = refl
 

@@ -171,7 +171,8 @@ varι-macro x hole = do
   check-within-bounds x tyseq
   let partialSolution = def (quote prim-var) (vArg tyseq ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ [])
   expr-resultType ← inferType partialSolution >>= getTermType >>= construct-exp
-  let solution = def (quote ι⁻¹[_]_) (def (quote reduce-sound) (expr-resultType ⟨∷⟩ []) ⟨∷⟩ partialSolution ⟨∷⟩ [])
+  let proof = def (quote reduce-sound) (expr-resultType ⟨∷⟩ [])
+  let solution = def (quote ι⁻¹[_]_) (proof ⟨∷⟩ partialSolution ⟨∷⟩ [])
   debugPrint "vtac" 5 (strErr "varι macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
@@ -189,7 +190,8 @@ weakenι-macro n term hole = do
   ty-seq ← bounded-ctx-to-tyseq n extended-ctx
   let partial-solution = def (quote weaken-term) (ty-seq ⟨∷⟩ term ⟨∷⟩ [])
   expr-resultType ← inferType partial-solution >>= getTermType >>= construct-exp
-  let solution = def (quote ι⁻¹[_]_) (def (quote reduce-sound) (expr-resultType ⟨∷⟩ []) ⟨∷⟩ partial-solution ⟨∷⟩ [])
+  let proof = def (quote reduce-sound) (expr-resultType ⟨∷⟩ [])
+  let solution = def (quote ι⁻¹[_]_) (proof ⟨∷⟩ partial-solution ⟨∷⟩ [])
   unify hole solution
 
 macro

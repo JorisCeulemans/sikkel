@@ -79,8 +79,12 @@ module _ {ℓt ℓt' ℓs ℓs'}
 
 module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (σ : Δ ⇒ Γ) where
   ⊞-natural : (T ⊞ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊞ (S [ σ ])
-  from ⊞-natural = record { func = id ; naturality = λ { (inl t) → refl ; (inr s) → refl } }
-  to ⊞-natural = record { func = id ; naturality = λ { (inl t) → refl ; (inr s) → refl } }
+  func (from ⊞-natural) = id
+  naturality (from ⊞-natural) (inl t) = refl
+  naturality (from ⊞-natural) (inr s) = refl
+  func (to ⊞-natural) = id
+  naturality (to ⊞-natural) (inl t) = refl
+  naturality (to ⊞-natural) (inr s) = refl
   eq (isoˡ ⊞-natural) _ = refl
   eq (isoʳ ⊞-natural) _ = refl
 

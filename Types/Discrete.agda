@@ -63,8 +63,10 @@ eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
 -}
 
 Discr-natural : (A : Set ℓ) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
-from (Discr-natural A σ) = record { func = id ; naturality = λ _ → refl }
-to (Discr-natural A σ) = record { func = id ; naturality = λ _ → refl }
+func (from (Discr-natural A σ)) = id
+naturality (from (Discr-natural A σ)) _ = refl
+func (to (Discr-natural A σ)) = id
+naturality (to (Discr-natural A σ)) _ = refl
 eq (isoˡ (Discr-natural A σ)) _ = refl
 eq (isoʳ (Discr-natural A σ)) _ = refl
 

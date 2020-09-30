@@ -97,8 +97,10 @@ naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eγ =
   cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eγ)) (naturality (snd t) (s≤s m≤n) eγ)
 
 stream-natural : (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
-from (stream-natural σ) = record { func = id ; naturality = λ _ → refl }
-to (stream-natural σ) = record { func = id ; naturality = λ _ → refl }
+func (from (stream-natural σ)) = id
+naturality (from (stream-natural σ)) _ = refl
+func (to (stream-natural σ)) = id
+naturality (to (stream-natural σ)) _ = refl
 eq (isoˡ (stream-natural σ)) _ = refl
 eq (isoʳ (stream-natural σ)) _ = refl
 
