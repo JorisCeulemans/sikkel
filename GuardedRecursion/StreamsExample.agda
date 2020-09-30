@@ -218,3 +218,40 @@ mergef f = löb (Stream ⇛ Stream ⇛ Stream)
                                              (str-head xs))
                                         (str-head ys))
                                    (varι 2 ⊛' str-tail xs ⊛' str-tail ys)))))
+
+interleave : Tm Γ (Stream ⇛ ▻' Stream ⇛ Stream)
+interleave = löb (Stream ⇛ ▻' Stream ⇛ Stream)
+                 (lamι (▻' (Stream ⇛ ▻' Stream ⇛ Stream))
+                       (lamι Stream
+                             (lamι (▻' Stream)
+                                   (str-cons (pair (str-head (varι 1))
+                                                   (varι 2 ⊛' varι 0 ⊛' next' (str-tail (varι 1))))))))
+
+toggle : Tm Γ Stream
+toggle = löb Stream
+             (lamι (▻' Stream)
+                   (str-cons (pair (suc' zero')
+                                   (next' (str-cons (pair zero' (varι 0)))))))
+
+paperfolds : Tm Γ Stream
+paperfolds = löb Stream (lamι (▻' Stream) (app (app interleave toggle) (varι 0)))
+
+module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
+  T : Ty Γ ℓ
+  T = ⟦ nul T-op ⟧exp
+
+  initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T)  ⇛ Stream ⇛ T)
+  initial = löb ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
+                (lamι (▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T))
+                      (lamι (Nat' ⊠ ▻' T ⇛ T)
+                            (lamι Stream
+                                  (app (varι 1) (pair (str-head (varι 0))
+                                                      (varι 2 ⊛' next' (varι 1) ⊛' str-tail (varι 0)))))))
+
+  final : Tm Γ ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
+  final = löb ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
+              (lamι (▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream))
+                    (lamι (T ⇛ Nat' ⊠ ▻' T)
+                          (lamι T let x = app (varι 1) (varι 0)
+                                  in str-cons (pair (fst x)
+                                                    (varι 2 ⊛' next' (varι 1) ⊛' snd x)))))
