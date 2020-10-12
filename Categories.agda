@@ -4,8 +4,9 @@
 
 module Categories where
 
-open import Data.Nat hiding (_⊔_)
-open import Data.Nat.Properties
+open import Data.Nat using (ℕ; _≤_)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
+open import Data.Unit using (⊤; tt)
 open import Relation.Binary.PropositionalEquality
 
 open import Helpers
@@ -27,34 +28,40 @@ record Category : Set₁ where
             (h ∙ g) ∙ f ≡ h ∙ (g ∙ f)
     hom-idʳ : ∀ {x y} {f : Hom x y} → f ∙ hom-id ≡ f
     hom-idˡ : ∀ {x y} {f : Hom x y} → hom-id ∙ f ≡ f
+open Category
 
-category-composition : (C : Category) {x y z : Category.Ob C} →
-                       Category.Hom C y z → Category.Hom C x y → Category.Hom C x z
-category-composition = Category._∙_
+category-composition : (C : Category) {x y z : Ob C} →
+                       Hom C y z → Hom C x y → Hom C x z
+category-composition = _∙_
 
 syntax category-composition C g f = g ∙[ C ] f
 
 ω : Category
-ω = record
-       { Ob = ℕ
-       ; Hom = λ m n → m ≤ n
-       ; hom-id = ≤-refl
-       ; _∙_ = λ m≤n k≤m → ≤-trans k≤m m≤n
-       ; ∙assoc = ≤-irrelevant _ _
-       ; hom-idʳ = ≤-irrelevant _ _
-       ; hom-idˡ = ≤-irrelevant _ _
-       }
+Ob ω = ℕ
+Hom ω m n = m ≤ n
+hom-id ω = ≤-refl
+_∙_ ω m≤n k≤m = ≤-trans k≤m m≤n
+∙assoc ω = ≤-irrelevant _ _
+hom-idʳ ω = ≤-irrelevant _ _
+hom-idˡ ω = ≤-irrelevant _ _
+
+★ : Category
+Ob ★ = ⊤
+Hom ★ _ _ = ⊤
+hom-id ★ = tt
+_∙_ ★ _ _ = tt
+∙assoc ★ = refl
+hom-idʳ ★ = refl
+hom-idˡ ★ = refl
 
 Type-groupoid : (X : Set) → Category
-Type-groupoid X = record
-                    { Ob = X
-                    ; Hom = _≡_
-                    ; hom-id = refl
-                    ; _∙_ = λ y=z x=y → trans x=y y=z
-                    ; ∙assoc = λ {_ _ _ _ x=y _ _} → sym (trans-assoc x=y)
-                    ; hom-idʳ = refl
-                    ; hom-idˡ = trans-reflʳ _
-                    }
+Ob (Type-groupoid X) = X
+Hom (Type-groupoid X) = _≡_
+hom-id (Type-groupoid X) = refl
+_∙_ (Type-groupoid X) y=z x=y = trans x=y y=z
+∙assoc (Type-groupoid X) {f = x=y} = sym (trans-assoc x=y)
+hom-idʳ (Type-groupoid X) = refl
+hom-idˡ (Type-groupoid X) = trans-reflʳ _
 
 record Functor (C D : Category) : Set where
   open Category
@@ -85,8 +92,8 @@ record Category {o h} : Set (lsuc (o ⊔ h)) where
     hom-idʳ : ∀ {x y} {f : Hom x y} → f ∙ hom-id ≡ f
     hom-idˡ : ∀ {x y} {f : Hom x y} → hom-id ∙ f ≡ f
 
-category-composition : ∀ {o h} (C : Category {o}{h}) {x y z : Category.Ob C} →
-                       Category.Hom C y z → Category.Hom C x y → Category.Hom C x z
+category-composition : ∀ {o h} (C : Category {o}{h}) {x y z : Ob C} →
+                       Hom C y z → Hom C x y → Hom C x z
 category-composition = Category._∙_
 
 syntax category-composition C g f = g ∙[ C ] f
