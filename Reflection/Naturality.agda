@@ -169,7 +169,8 @@ reduce-sound (un F e) = cong-un (reduce-sound e)
 reduce-sound (bin F e1 e2) = cong-bin (reduce-sound e1) (reduce-sound e2)
 reduce-sound (sub (con T) σ) = ≅ᵗʸ-refl
 reduce-sound (sub (nul U) σ) = natural-nul σ
-reduce-sound (sub (un F e) σ) =
+reduce-sound (sub (un F e) σ) = ≅ᵗʸ-trans (natural-un σ) (cong-un (reduce-sound (sub e (ctx-map σ))))
+{-
   begin
     (F ⟦ e ⟧exp) [ σ ]
   ≅⟨ natural-un σ ⟩
@@ -179,7 +180,10 @@ reduce-sound (sub (un F e) σ) =
   ≅⟨ cong-un (reduce-sound (sub e (ctx-map σ))) ⟩
     F ⟦ reduce (sub e (ctx-map σ)) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
-reduce-sound (sub (bin F e1 e2) σ) =
+-}
+reduce-sound (sub (bin F e1 e2) σ) = ≅ᵗʸ-trans (natural-bin σ) (cong-bin (reduce-sound (sub e1 (ctx-map σ)))
+                                                                         (reduce-sound (sub e2 (ctx-map σ))))
+{-
   begin
     (F ⟦ e1 ⟧exp ⟦ e2 ⟧exp) [ σ ]
   ≅⟨ natural-bin σ ⟩
@@ -189,7 +193,9 @@ reduce-sound (sub (bin F e1 e2) σ) =
   ≅⟨ cong-bin (reduce-sound (sub e1 (ctx-map σ))) (reduce-sound (sub e2 (ctx-map σ))) ⟩
     F ⟦ reduce (sub e1 (ctx-map σ)) ⟧exp ⟦ reduce (sub e2 (ctx-map σ)) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
-reduce-sound (sub (sub e τ) σ) =
+-}
+reduce-sound (sub (sub e τ) σ) = ≅ᵗʸ-trans (ty-subst-comp ⟦ e ⟧exp τ σ) (reduce-sound (sub e (τ ⊚ σ)))
+{-
   begin
     (⟦ e ⟧exp [ τ ]) [ σ ]
   ≅⟨ ty-subst-comp ⟦ e ⟧exp τ σ ⟩
@@ -199,6 +205,7 @@ reduce-sound (sub (sub e τ) σ) =
   ≅⟨ reduce-sound (sub e (τ ⊚ σ)) ⟩
     ⟦ reduce (sub e (τ ⊚ σ)) ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
+-}
 
 ⟦⟧exp-cong : ∀ {ℓc s s'} {Γ : Ctx C ℓc} →
              {e : Exp Γ s} {e' : Exp Γ s'} →
