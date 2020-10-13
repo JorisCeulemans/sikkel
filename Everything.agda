@@ -1,4 +1,5 @@
 import Helpers
+import Categories
 import CwF-Structure
 import Yoneda
 import Types.Discrete
@@ -8,3 +9,8 @@ import Types.Sums
 import LiftingFunctors
 import GuardedRecursion.Later
 import GuardedRecursion.StreamsExample
+import Reflection.Helpers
+import Reflection.Substitutions
+import Reflection.Types
+import Reflection.Naturality
+import Reflection.NaturalityTactic

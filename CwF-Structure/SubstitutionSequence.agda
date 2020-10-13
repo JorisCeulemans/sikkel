@@ -5,6 +5,13 @@
 -- substitutions to a type or a term. The main results are
 -- ty-subst-seq-cong and tm-subst-seq-cong (although the latter
 -- isn't really used anywhere).
+-- This file will probably move to the directory Reflection
+-- some time soon.
+-- Note that we use the option omega-in-omega in order to define
+-- an inductive data type in Setω and to pattern match on it (which
+-- is not possible in Agda 2.6.1 without this option). This code should
+-- typecheck without this option in Agda 2.6.2 once released (tested with
+-- the development version on July 10, 2020).
 --------------------------------------------------
 
 open import Categories
@@ -16,8 +23,8 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.Types {C = C}
-open import CwF-Structure.Terms {C = C}
+open import CwF-Structure.Types
+open import CwF-Structure.Terms
 
 infixr 5 _∷_
 

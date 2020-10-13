@@ -26,10 +26,7 @@ set (𝕪 x) y = Hom y x
 rel (𝕪 x) f g = g ∙ f
 rel-id (𝕪 x) _ = hom-idʳ
 rel-comp (𝕪 x) _ _ _ = sym ∙assoc
-{-
-𝕪[_]_ : ∀ ℓ → Ob → Ctx C ℓ
-𝕪[ ℓ ] x = 𝕪 {ℓ} x
--}
+
 -- The Yoneda lemma
 to-𝕪⇒* : Γ ⟨ x ⟩ → 𝕪 x ⇒ Γ
 func (to-𝕪⇒* {Γ = Γ} γ) f = Γ ⟪ f ⟫ γ
@@ -39,8 +36,14 @@ from-𝕪⇒* : 𝕪 x ⇒ Γ → Γ ⟨ x ⟩
 from-𝕪⇒* σ = func σ hom-id
 
 𝕪-to-∘-from : (σ : 𝕪 x ⇒ Γ) → to-𝕪⇒* (from-𝕪⇒* σ) ≅ˢ σ
-eq (𝕪-to-∘-from σ) f = trans (naturality σ hom-id)
-                             (cong (func σ) hom-idˡ)
+eq (𝕪-to-∘-from {Γ = Γ} σ) f =
+  begin
+    Γ ⟪ f ⟫ func σ hom-id
+  ≡⟨ naturality σ hom-id ⟩
+    func σ (hom-id ∙ f)
+  ≡⟨ cong (func σ) hom-idˡ ⟩
+    func σ f ∎
+  where open ≡-Reasoning
 
 𝕪-from-∘-to : (γ : Γ ⟨ x ⟩) → from-𝕪⇒* {Γ = Γ} (to-𝕪⇒* γ) ≡ γ
 𝕪-from-∘-to {Γ = Γ} γ = rel-id Γ γ

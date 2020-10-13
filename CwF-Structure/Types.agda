@@ -8,7 +8,7 @@ module CwF-Structure.Types {C : Category} where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Function hiding (_⟨_⟩_; _↣_)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -35,6 +35,7 @@ private
 -- A morphism in the category of elements of Γ from (x, γx) to (y, γy) consists of
 --   a morphism f : Hom x y together with a proof that Γ ⟪ f ⟫ γy ≡ γx. This explains
 --   the type of the field morph (representing the action of the presheaf on morphisms).
+
 record Ty {ℓc} (Γ : Ctx C ℓc) (ℓt : Level) : Set (ℓc ⊔ lsuc ℓt) where
   constructor MkTy
   no-eta-equality
@@ -75,34 +76,48 @@ ctx-element-subst : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T
 ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
 
 -- The following definitions are needed when defining context extension.
-morph-subst : (T : Ty Γ ℓ) {f : Hom x y}
-              {γ1 : Γ ⟨ y ⟩} {γ2 γ3 : Γ ⟨ x ⟩}
-              (eq12 : Γ ⟪ f ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
-              (t : T ⟨ y , γ1 ⟩) →
-              subst (λ - → T ⟨ x , - ⟩) eq23 (T ⟪ f , eq12 ⟫ t) ≡ T ⟪ f , trans eq12 eq23 ⟫ t
-morph-subst T refl refl t = refl
+morph-transport : (T : Ty Γ ℓ) {f : Hom x y}
+                  {γ1 : Γ ⟨ y ⟩} {γ2 γ3 : Γ ⟨ x ⟩}
+                  (eq12 : Γ ⟪ f ⟫ γ1 ≡ γ2) (eq23 : γ2 ≡ γ3)
+                  (t : T ⟨ y , γ1 ⟩) →
+                  transport (λ - → T ⟨ x , - ⟩) eq23 (T ⟪ f , eq12 ⟫ t) ≡ T ⟪ f , trans eq12 eq23 ⟫ t
+morph-transport T refl refl t = refl
 
 module _ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) where
   strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
   strict-morph f γ t = T ⟪ f , refl ⟫ t
 
   strict-morph-id : {γ : Γ ⟨ y ⟩} (t : T ⟨ y , γ ⟩) →
-                    subst (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t) ≡ t
-  strict-morph-id t = trans (morph-subst T refl (rel-id Γ _) t)
-                            (morph-id T t)
+                    transport (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t) ≡ t
+  strict-morph-id {y = y}{γ = γ} t =
+    begin
+      transport (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t)
+    ≡⟨ morph-transport T refl (rel-id Γ γ) t ⟩
+      T ⟪ hom-id , rel-id Γ γ ⟫ t
+    ≡⟨ morph-id T t ⟩
+      t ∎
+    where open ≡-Reasoning
 
   strict-morph-comp : (f : Hom x y) (g : Hom y z) {γ : Γ ⟨ z ⟩} (t : T ⟨ z , γ ⟩) →
-                      subst (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
+                      transport (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
                         strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t)
-  strict-morph-comp f g t = trans (morph-subst T refl (rel-comp Γ f g _) t)
-                                  (trans (cong (λ - → T ⟪ _ , - ⟫ t) (sym (trans-reflʳ _)))
-                                         (morph-comp T f g refl refl t))
+  strict-morph-comp {x = x} f g {γ = γ} t =
+    begin
+      transport (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t)
+    ≡⟨ morph-transport T refl (rel-comp Γ f g γ) t ⟩
+      T ⟪ g ∙ f , rel-comp Γ f g γ ⟫ t
+    ≡˘⟨ cong (λ - → T ⟪ g ∙ f , - ⟫ t) (trans-reflʳ _) ⟩
+      T ⟪ g ∙ f , trans (rel-comp Γ f g γ) refl ⟫ t
+    ≡⟨ morph-comp T f g refl refl t ⟩
+      strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t) ∎
+    where open ≡-Reasoning
 
 
 --------------------------------------------------
 -- Natural transformations between types
 
 record _↣_ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓt') : Set (ℓc ⊔ ℓt ⊔ ℓt') where
+  no-eta-equality
   field
     func : ∀ {x} {γ} → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
     naturality : ∀ {x y} {f : Hom x y} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} (t : T ⟨ y , γy ⟩) →
@@ -152,8 +167,14 @@ naturality (id-trans T) _ = refl
 
 _⊙_ : S ↣ T → R ↣ S → R ↣ T
 func (φ ⊙ η) = func φ ∘ func η
-naturality (φ ⊙ η) r = trans (naturality φ (func η r))
-                              (cong (func φ) (naturality η r))
+naturality (_⊙_ {S = S}{T = T}{R = R} φ η) {f = f}{eγ = eγ} r =
+  begin
+    T ⟪ f , eγ ⟫ func φ (func η r)
+  ≡⟨ naturality φ (func η r) ⟩
+    func φ (S ⟪ f , eγ ⟫ func η r)
+  ≡⟨ cong (func φ) (naturality η r) ⟩
+    func φ (func η (R ⟪ f , eγ ⟫ r)) ∎
+  where open ≡-Reasoning
 
 ⊙-id-transʳ : (η : T ↣ S) → η ⊙ id-trans T ≅ⁿ η
 eq (⊙-id-transʳ η) _ = refl
@@ -178,8 +199,7 @@ eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
 -- Equivalence of types
 
 -- Two types are said to be equivalent if they are naturally isomorphic as presheaves.
--- This turns out to be easier to work with than normal propositional equality. In particular,
--- it lets us easily convert a term of type T to a term of type S when T ≅ᵗʸ S.
+-- This turns out to be easier to work with than standard propositional equality.
 record _≅ᵗʸ_ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓt') : Set (ℓc ⊔ ℓt ⊔ ℓt') where
   field
     from : T ↣ S
@@ -191,8 +211,8 @@ open _≅ᵗʸ_ public
 ≅ᵗʸ-refl : T ≅ᵗʸ T
 from (≅ᵗʸ-refl {T = T}) = id-trans T
 to (≅ᵗʸ-refl {T = T}) = id-trans T
-isoˡ ≅ᵗʸ-refl = ≅ⁿ-refl
-isoʳ ≅ᵗʸ-refl = ≅ⁿ-refl
+eq (isoˡ ≅ᵗʸ-refl) _ = refl
+eq (isoʳ ≅ᵗʸ-refl) _ = refl
 
 ≅ᵗʸ-sym : S ≅ᵗʸ T → T ≅ᵗʸ S
 from (≅ᵗʸ-sym S=T) = to S=T
@@ -271,20 +291,28 @@ morph-comp (T [ σ ]) f g eq-zy eq-yx t = trans (cong (λ - → T ⟪ g ∙ f , 
                                                (morph-comp T f g _ _ t)
 
 ty-subst-id : (T : Ty Γ ℓ) → T [ id-subst Γ ] ≅ᵗʸ T
-from (ty-subst-id T) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-to (ty-subst-id T) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-isoˡ (ty-subst-id T) = record { eq = λ t → refl }
-isoʳ (ty-subst-id T) = record { eq = λ t → refl }
+func (from (ty-subst-id T)) = id
+naturality (from (ty-subst-id T)) _ = morph-cong T refl _ _
+func (to (ty-subst-id T)) = id
+naturality (to (ty-subst-id T)) _ = morph-cong T refl _ _
+eq (isoˡ (ty-subst-id T)) _ = refl
+eq (isoʳ (ty-subst-id T)) _ = refl
 
 ty-subst-comp : (T : Ty Θ ℓ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
-from (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-to (ty-subst-comp T τ σ) = record { func = id ; naturality = λ t → morph-cong T refl _ _ }
-isoˡ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
-isoʳ (ty-subst-comp T τ σ) = record { eq = λ t → refl }
+func (from (ty-subst-comp T τ σ)) = id
+naturality (from (ty-subst-comp T τ σ)) _ = morph-cong T refl _ _
+func (to (ty-subst-comp T τ σ)) = id
+naturality (to (ty-subst-comp T τ σ)) _ = morph-cong T refl _ _
+eq (isoˡ (ty-subst-comp T τ σ)) _ = refl
+eq (isoʳ (ty-subst-comp T τ σ)) _ = refl
 
 ty-subst-map : (σ : Δ ⇒ Γ) → (T ↣ S) → T [ σ ] ↣ S [ σ ]
 func (ty-subst-map σ η) t = func η t
 naturality (ty-subst-map σ η) t = naturality η t
+
+ty-subst-map-cong : {σ : Δ ⇒ Γ} {η φ : T ↣ S} →
+                    η ≅ⁿ φ → ty-subst-map σ η ≅ⁿ ty-subst-map σ φ
+eq (ty-subst-map-cong e) t = eq e t
 
 ty-subst-map-id : (σ : Δ ⇒ Γ) → ty-subst-map σ (id-trans T) ≅ⁿ id-trans (T [ σ ])
 eq (ty-subst-map-id σ) t = refl
@@ -300,8 +328,8 @@ eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ ℓ) → T [ σ ] ≅ᵗʸ T [ τ ]
-from (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-subst T (eq σ=τ δ) t
-                                          ; naturality = λ {_ _ f} t →
+func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
+naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
   begin
     T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
@@ -309,10 +337,10 @@ from (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element
   ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
     T ⟪ f ∙ hom-id , _ ⟫ t
   ≡⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎ }
+    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
   where open ≡-Reasoning
-to (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-subst T (sym (eq σ=τ δ)) t
-                                        ; naturality = λ {_ _ f} t →
+func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (sym (eq σ=τ δ)) t
+naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
   begin
     T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
@@ -320,7 +348,7 @@ to (ty-subst-cong-subst σ=τ T) = record { func = λ {_ δ} t → ctx-element-s
   ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
     T ⟪ f ∙ hom-id , _ ⟫ t
   ≡⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎ }
+    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
   where open ≡-Reasoning
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   -- Here we cannot use morph-id T twice because the omitted equality proofs are not rel-id Γ _

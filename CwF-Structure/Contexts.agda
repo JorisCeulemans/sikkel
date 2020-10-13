@@ -31,7 +31,7 @@ open Ctx public
 
 module _ {C : Category} where
   infix 10 _⇒_
-  infix 1 _≅ˢ_ _≅ᶜ_
+  infix 1 _≅ˢ_
   infixl 20 _⊚_
 
   open Category C
@@ -51,13 +51,21 @@ module _ {C : Category} where
   Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
-  -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and function types.
+  -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
+  -- of function types.
   strong-rel-comp : (Γ : Ctx C ℓ) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                     (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) →
                     Γ ⟪ g ∙ f ⟫ γz ≡ γx
-  strong-rel-comp Γ {f}{g}{γz} eq-zy eq-yx = trans (rel-comp Γ f g γz)
-                                                   (trans (cong (Γ ⟪ f ⟫) eq-zy)
-                                                          eq-yx)
+  strong-rel-comp Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
+    begin
+      Γ ⟪ g ∙ f ⟫ γz
+    ≡⟨ rel-comp Γ f g γz ⟩
+      Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γz)
+    ≡⟨ cong (Γ ⟪ f ⟫) eq-zy ⟩
+      Γ ⟪ f ⟫ γy
+    ≡⟨ eq-yx ⟩
+      γx ∎
+    where open ≡-Reasoning
 
   -- The type of substitutions from context Δ to context Γ
   record _⇒_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
@@ -75,23 +83,21 @@ module _ {C : Category} where
   -- Composition of substitutions
   _⊚_ : Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
   func (τ ⊚ σ) = func τ ∘ func σ
-  naturality (_⊚_ τ σ) δ = trans (naturality τ (func σ δ))
-                                  (cong (func τ) (naturality σ δ))
-  {-
-  More detailed version of the above naturality proof. We do not use this as it inserts
-  refl at the end (and trans eq refl is not definitionally equal to eq).
-    Θ ⟪ m≤n ⟫ (func τ (func σ δ)) ≡⟨ naturality τ (func σ δ) ⟩
-    func τ (Γ ⟪ m≤n ⟫ func σ δ)   ≡⟨ cong (func τ) (naturality σ δ) ⟩
-    func τ (func σ (Δ ⟪ m≤n ⟫ δ)) ∎
+  naturality (_⊚_ {Γ = Γ}{Θ = Θ}{Δ = Δ} τ σ) {f = f} δ =
+    begin
+      Θ ⟪ f ⟫ (func τ (func σ δ))
+    ≡⟨ naturality τ (func σ δ) ⟩
+      func τ (Γ ⟪ f ⟫ func σ δ)
+    ≡⟨ cong (func τ) (naturality σ δ) ⟩
+      func τ (func σ (Δ ⟪ f ⟫ δ)) ∎
     where open ≡-Reasoning
-  -}
 
 
   --------------------------------------------------
   -- Equivalence of substitutions
 
-  -- Assuming function extensionality and uip (which we do) the following definition is
-  -- equivalent to propositional equality. However, this one is easier to use.
+  -- Two substitutions σ, τ : Δ ⇒ Γ are equivalent if they map every value of
+  -- Δ ⟨ x ⟩ (for any object x) to propositionally equal values of Γ ⟨ x ⟩.
   record _≅ˢ_ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ τ : Δ ⇒ Γ) : Set (ℓ ⊔ ℓ') where
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
@@ -150,64 +156,6 @@ module _ {C : Category} where
 
   ⊚-congʳ : {τ τ' : Γ ⇒ Θ} (σ : Δ ⇒ Γ) → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
   eq (⊚-congʳ σ τ=τ') δ = eq τ=τ' (func σ δ)
-
-
-  --------------------------------------------------
-  -- Equivalence of contexts
-
-  -- Two contexts are equivalent if they are naturally equivalent as presheaves.
-  -- We actually do not use this notion.
-  record _≅ᶜ_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
-    field
-      from : Δ ⇒ Γ
-      to : Γ ⇒ Δ
-      isoˡ : to ⊚ from ≅ˢ id-subst Δ
-      isoʳ : from ⊚ to ≅ˢ id-subst Γ
-  open _≅ᶜ_ public
-
-  ≅ᶜ-refl : Γ ≅ᶜ Γ
-  from (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-  to (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-  eq (isoˡ ≅ᶜ-refl) _ = refl
-  eq (isoʳ ≅ᶜ-refl) _ = refl
-
-  ≅ᶜ-sym : Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
-  from (≅ᶜ-sym Δ=Γ) = to Δ=Γ
-  to (≅ᶜ-sym Δ=Γ) = from Δ=Γ
-  isoˡ (≅ᶜ-sym Δ=Γ) = isoʳ Δ=Γ
-  isoʳ (≅ᶜ-sym Δ=Γ) = isoˡ Δ=Γ
-
-  ≅ᶜ-trans : Δ ≅ᶜ Γ → Γ ≅ᶜ Θ → Δ ≅ᶜ Θ
-  from (≅ᶜ-trans Δ=Γ Γ=Θ) = from Γ=Θ ⊚ from Δ=Γ
-  to (≅ᶜ-trans Δ=Γ Γ=Θ) = to Δ=Γ ⊚ to Γ=Θ
-  isoˡ (≅ᶜ-trans Δ=Γ Γ=Θ) =
-    begin
-      (to Δ=Γ ⊚ to Γ=Θ) ⊚ (from Γ=Θ ⊚ from Δ=Γ)
-    ≅⟨ ⊚-assoc (to Δ=Γ) (to Γ=Θ) _ ⟩
-      to Δ=Γ ⊚ (to Γ=Θ ⊚ (from Γ=Θ ⊚ from Δ=Γ))
-    ≅˘⟨ ⊚-congˡ (to Δ=Γ) (⊚-assoc (to Γ=Θ) (from Γ=Θ) (from Δ=Γ)) ⟩
-      to Δ=Γ ⊚ ((to Γ=Θ ⊚ from Γ=Θ) ⊚ from Δ=Γ)
-    ≅⟨ ⊚-congˡ (to Δ=Γ) (⊚-congʳ (from Δ=Γ) (isoˡ Γ=Θ)) ⟩
-      to Δ=Γ ⊚ (id-subst _ ⊚ from Δ=Γ)
-    ≅⟨ ⊚-congˡ (to Δ=Γ) (⊚-id-substˡ (from Δ=Γ)) ⟩
-      to Δ=Γ ⊚ from Δ=Γ
-    ≅⟨ isoˡ Δ=Γ ⟩
-      id-subst _ ∎
-    where open ≅ˢ-Reasoning
-  isoʳ (≅ᶜ-trans Δ=Γ Γ=Θ) =
-    begin
-      (from Γ=Θ ⊚ from Δ=Γ) ⊚ (to Δ=Γ ⊚ to Γ=Θ)
-    ≅⟨ ⊚-assoc (from Γ=Θ) (from Δ=Γ) _ ⟩
-      from Γ=Θ ⊚ (from Δ=Γ ⊚ (to Δ=Γ ⊚ to Γ=Θ))
-    ≅˘⟨ ⊚-congˡ (from Γ=Θ) (⊚-assoc (from Δ=Γ) (to Δ=Γ) (to Γ=Θ)) ⟩
-      from Γ=Θ ⊚ ((from Δ=Γ ⊚ to Δ=Γ) ⊚ to Γ=Θ)
-    ≅⟨ ⊚-congˡ (from Γ=Θ) (⊚-congʳ (to Γ=Θ) (isoʳ Δ=Γ)) ⟩
-      from Γ=Θ ⊚ (id-subst _ ⊚ to Γ=Θ)
-    ≅⟨ ⊚-congˡ (from Γ=Θ) (⊚-id-substˡ (to Γ=Θ)) ⟩
-      from Γ=Θ ⊚ to Γ=Θ
-    ≅⟨ isoʳ Γ=Θ ⟩
-      id-subst _ ∎
-    where open ≅ˢ-Reasoning
 
 
   --------------------------------------------------

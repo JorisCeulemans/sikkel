@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.Types {C = C}
+open import CwF-Structure.Types
 
 open Category C
 
@@ -49,8 +49,6 @@ t ⟨ x , γ ⟩' = term t x γ
 --------------------------------------------------
 -- Equivalence of terms
 
--- Assuming function extensionality and uip (which we do), the following definition is equivalent
--- to propositional equality. However, our definition is easier to work with.
 record _≅ᵗᵐ_ {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} (t s : Tm Γ T) : Set (ℓc ⊔ ℓt) where
   field
     eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'
