@@ -146,10 +146,7 @@ next-prev : {T : Ty (◄ Γ) ℓ} (t : Tm Γ (▻ T)) → next (prev t) ≅ᵗ�
 eq (next-prev t) {zero} γ = refl
 eq (next-prev t) {suc n} γ = refl
 
--- We could make the argument T implicit, but giving it explicitly
--- drastically improves performance.
--- TODO: Update : The remark above does not hold anymore. See if T can
--- be made implicit again.
+-- TODO: Update : See if T can be made implicit.
 löb : (T : Ty Γ ℓ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 term (löb T f) zero γ = f €⟨ zero , γ ⟩ tt
 term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
@@ -163,6 +160,9 @@ naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'}
   ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (löb T f) m≤n _) ⟩
     f €⟨ suc m , γ' ⟩ (löb T f ⟨ m , Γ ⟪ n≤1+n m ⟫ γ' ⟩') ∎
   where open ≡-Reasoning
+
+löb' : (T : Ty Γ ℓ) → Tm (Γ ,, ▻' T) (T [ π ]) → Tm Γ T
+löb' T f = löb T (lam (▻' T) f)
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
                   app f (next' (löb T f)) ≅ᵗᵐ löb T f

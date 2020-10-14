@@ -197,3 +197,22 @@ weakenι-macro n term hole = do
 macro
   ↑ι⟨_⟩_ : ℕ → Term → Term → TC ⊤
   ↑ι⟨ n ⟩ term = weakenι-macro n term
+
+
+--------------------------------------------------
+-- Löb induction with automatic reduction of type
+
+open import GuardedRecursion.Later
+löb'-tactic : ∀ {ℓc ℓt} {Γ : Ctx ω ℓc} → Ty Γ ℓt → Term → TC ⊤
+löb'-tactic T hole = do
+  t-wantedBodyType ← quoteTC (T [ π {T = ▻' T} ])
+  expr-wantedBodyType ← construct-exp t-wantedBodyType
+  let expr-reducedBodyType = def (quote nat-reduce) (vArg expr-wantedBodyType ∷ [])
+  let t-reducedBodyType = def (quote ⟦_⟧exp) (vArg expr-reducedBodyType ∷ [])
+  let proof = def (quote reduce-sound) (vArg expr-wantedBodyType ∷ [])
+  unify hole (con (quote _,_) (vArg t-reducedBodyType ∷ vArg proof ∷ []))
+
+löbι : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (T : Ty Γ ℓt)
+      {@(tactic löb'-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
+      Tm (Γ ,, ▻' T) (proj₁ body-type) → Tm Γ T
+löbι T {body-type = S , T=S} b = löb' T (ι[ T=S ] b)

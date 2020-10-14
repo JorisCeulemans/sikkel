@@ -9,7 +9,7 @@ open import Categories
 
 module Types.Discrete {C : Category} where
 
-open import Data.Bool using (Bool; true; false; if_then_else_)
+open import Data.Bool using (Bool; true; false; if_then_else_; _∧_; _∨_)
 open import Data.Nat hiding (_⊔_)
 open import Data.Unit using (⊤; tt)
 open import Function using (id)
@@ -132,6 +132,14 @@ eq (β-bool'-false t t') _ = refl
 eq (η-bool' t) γ with t ⟨ _ , γ ⟩'
 eq (η-bool' t) γ | false = refl
 eq (η-bool' t) γ | true  = refl
+
+_||_ : Tm Γ Bool' → Tm Γ Bool' → Tm Γ Bool'
+term (t || s) x γ = t ⟨ x , γ ⟩' ∨ s ⟨ x , γ ⟩'
+naturality (t || s) f eγ = cong₂ _∨_ (naturality t f eγ) (naturality s f eγ)
+
+_&&_ : Tm Γ Bool' → Tm Γ Bool' → Tm Γ Bool'
+term (t && s) x γ = t ⟨ x , γ ⟩' ∧ s ⟨ x , γ ⟩'
+naturality (t && s) f eγ = cong₂ _∧_ (naturality t f eγ) (naturality s f eγ)
 
 
 --------------------------------------------------

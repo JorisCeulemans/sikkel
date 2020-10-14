@@ -139,9 +139,8 @@ str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
 str-thrd s = next' (lamι Stream (str-snd (varι 0))) ⊛' str-tail s
 
 zeros : Tm Γ Stream
-zeros = löb Stream
-            (lamι (▻' Stream) (
-                  str-cons (pair zero' (varι 0))))
+zeros = löbι Stream
+             (str-cons (pair zero' (varι 0)))
 
 private
   module _ {Γ : Ctx ω ℓ} where
@@ -155,25 +154,22 @@ private
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
 str-map : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
-str-map f = löb (Stream ⇛ Stream)
-                (lamι (▻' (Stream ⇛ Stream)) (
-                      lamι Stream (
-                           str-cons (pair (app (↑ι⟨ 2 ⟩ f) (str-head (varι 0)))
-                                          (varι 1 ⊛' str-tail (varι 0))))))
+str-map f = löbι (Stream ⇛ Stream) (
+                 lamι Stream (
+                      str-cons (pair (app (↑ι⟨ 2 ⟩ f) (str-head (varι 0)))
+                                     (varι 1 ⊛' str-tail (varι 0)))))
 
 iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
-iterate f = löb (Nat' ⇛ Stream)
-                (lamι (▻' (Nat' ⇛ Stream)) (
-                      lamι Nat' (
-                           str-cons (pair (varι 0)
-                                          (varι 1 ⊛' next' (app (↑ι⟨ 2 ⟩ f) (varι 0)))))))
+iterate f = löbι (Nat' ⇛ Stream) (
+                 lamι Nat' (
+                      str-cons (pair (varι 0)
+                                     (varι 1 ⊛' next' (app (↑ι⟨ 2 ⟩ f) (varι 0))))))
 
 iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate' f = lamι Nat' (
-                  löb Stream
-                      (lamι (▻' Stream) (
-                            str-cons (pair (varι 1)
-                                           (next' (↑ι⟨ 2 ⟩ str-map f) ⊛' varι 0)))))
+                  löbι Stream (
+                       str-cons (pair (varι 1)
+                                      (next' (↑ι⟨ 2 ⟩ str-map f) ⊛' varι 0))))
 
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
@@ -209,54 +205,50 @@ private
     eq map-test2 {x = suc (suc (suc n))} _ = refl
 
 mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm Γ (Stream ⇛ Stream ⇛ Stream)
-mergef f = löb (Stream ⇛ Stream ⇛ Stream)
-               (lamι (▻' (Stream ⇛ Stream ⇛ Stream)) (
+mergef f = löbι (Stream ⇛ Stream ⇛ Stream) (
+                lamι Stream (
                      lamι Stream (
-                          lamι Stream (
-                               let xs = varι 1
-                                   ys = varι 0
-                               in
-                               app (app (app (↑ι⟨ 3 ⟩ f)
-                                             (str-head xs))
-                                        (str-head ys))
-                                   (varι 2 ⊛' str-tail xs ⊛' str-tail ys)))))
+                          let xs = varι 1
+                              ys = varι 0
+                          in
+                            app (app (app (↑ι⟨ 3 ⟩ f)
+                                          (str-head xs))
+                                     (str-head ys))
+                                (varι 2 ⊛' str-tail xs ⊛' str-tail ys))))
 
 interleave : Tm Γ (Stream ⇛ ▻' Stream ⇛ Stream)
-interleave = löb (Stream ⇛ ▻' Stream ⇛ Stream)
-                 (lamι (▻' (Stream ⇛ ▻' Stream ⇛ Stream))
-                       (lamι Stream
-                             (lamι (▻' Stream)
-                                   (str-cons (pair (str-head (varι 1))
-                                                   (varι 2 ⊛' varι 0 ⊛' next' (str-tail (varι 1))))))))
+interleave = löbι (Stream ⇛ ▻' Stream ⇛ Stream)
+                  (lamι Stream
+                        (lamι (▻' Stream)
+                              (str-cons (pair (str-head (varι 1))
+                                              (varι 2 ⊛' varι 0 ⊛' next' (str-tail (varι 1)))))))
 
 toggle : Tm Γ Stream
-toggle = löb Stream
-             (lamι (▻' Stream)
-                   (str-cons (pair (suc' zero')
-                                   (next' (str-cons (pair zero' (varι 0)))))))
+toggle = löbι Stream
+              (str-cons (pair (suc' zero')
+                              (next' (str-cons (pair zero' (varι 0))))))
 
 paperfolds : Tm Γ Stream
-paperfolds = löb Stream (lamι (▻' Stream) (app (app interleave toggle) (varι 0)))
+paperfolds = löbι Stream (app (app interleave toggle) (varι 0))
 
 module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
   T : Ty Γ ℓ
   T = ⟦ nul T-op ⟧exp
 
   initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
-  initial = löb ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
-                (lamι (▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T))
-                      (lamι (Nat' ⊠ ▻' T ⇛ T)
-                            (lamι Stream
-                                  (app (varι 1) (pair (str-head (varι 0))
-                                                      (varι 2 ⊛' next' (varι 1) ⊛' str-tail (varι 0)))))))
+  initial = löbι ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
+                 (lamι (Nat' ⊠ ▻' T ⇛ T)
+                       (lamι Stream
+                             (app (varι 1) (pair (str-head (varι 0))
+                                                 (varι 2 ⊛' next' (varι 1) ⊛' str-tail (varι 0))))))
 
   final : Tm Γ ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
-  final = löb ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
-              (lamι (▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream))
-                    (lamι (T ⇛ Nat' ⊠ ▻' T)
-                          (lamι T let x = app (varι 1) (varι 0)
-                                  in str-cons (pair (fst x)
-                                                    (varι 2 ⊛' next' (varι 1) ⊛' snd x)))))
+  final = löbι ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
+               (lamι (T ⇛ Nat' ⊠ ▻' T)
+                     (lamι T let x = app (varι 1) (varι 0)
+                             in str-cons (pair (fst x)
+                                               (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
+
 {-
 module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
   T : Ty Γ ℓ
