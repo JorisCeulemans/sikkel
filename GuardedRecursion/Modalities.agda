@@ -1,7 +1,7 @@
 module GuardedRecursion.Modalities where
 
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n)
-open import Data.Nat.Properties using (≤-refl; ≤-trans)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality renaming (subst to transp) hiding ([_])
@@ -17,6 +17,7 @@ module _ where
   private
     variable
       Δ Γ Θ : Ctx ω ℓ
+
   ⨅ : Ctx ω ℓ → Ctx ★ ℓ
   set (⨅ Γ) _ = Γ ⟨ 0 ⟩
   rel (⨅ Γ) _ γ = γ
@@ -58,52 +59,84 @@ module _ where
 
     ◬-elim : Tm Γ (◬ T) → Tm (⨅ Γ) T
     term (◬-elim t) _ γ = ctx-element-subst T (rel-id Γ γ) (t ⟨ 0 , γ ⟩')
-    Tm.naturality (◬-elim t) _ eγ =
-      begin
-        T ⟪ tt , eγ ⟫ ctx-element-subst T (rel-id Γ _) (term t 0 _)
-      ≡˘⟨ morph-comp T tt tt _ eγ (term t 0 _) ⟩
-        T ⟪ tt , strong-rel-comp (⨅ Γ) (rel-id Γ _) eγ ⟫ (term t 0 _)
-      ≡⟨ morph-cong T refl _ _ ⟩                                                        -- uip used here!
-        T ⟪ tt , _ ⟫ term t 0 _
-      ≡⟨ morph-comp T tt tt _ _ _ ⟩
-        ctx-element-subst T (rel-id Γ _) (T ⟪ tt , _ ⟫ (term t 0 _))
-      ≡⟨ cong (ctx-element-subst T (rel-id Γ _)) (Tm.naturality t ≤-refl (trans (rel-id Γ _) eγ)) ⟩
-        ctx-element-subst T (rel-id Γ _) (term t 0 _) ∎
-      where open ≡-Reasoning
+    Tm.naturality (◬-elim t) tt refl = morph-id T _
 
-    ◬-intro-elim : (t : Tm Γ (◬ T)) → ◬-intro (◬-elim t) ≅ᵗᵐ t
-    eq (◬-intro-elim t) γ =
+    ◬-η : (t : Tm Γ (◬ T)) → ◬-intro (◬-elim t) ≅ᵗᵐ t
+    eq (◬-η t) {n} γ =
       begin
         T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
       ≡˘⟨ cong (T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫_) (Tm.naturality t z≤n refl) ⟩
-        T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ T ⟪ tt , _ ⟫ (t ⟨ _ , γ ⟩')
-      ≡˘⟨ morph-comp T tt tt _ _ (term t _ γ) ⟩
-        T ⟪ tt , _ ⟫ term t _ γ
+        T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
+      ≡˘⟨ morph-comp T tt tt _ _ (t ⟨ n , γ ⟩') ⟩
+        T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
       ≡⟨ morph-cong T refl _ _ ⟩                                                        -- uip used here!
-        T ⟪ _ , _ ⟫ term t _ γ
+        T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
       ≡⟨ Tm.naturality t ≤-refl (rel-id Γ γ) ⟩
-        t ⟨ _ , γ ⟩' ∎
+        t ⟨ n , γ ⟩' ∎
       where open ≡-Reasoning
 
-    ◬-elim-intro : (t : Tm (⨅ Γ) T) → ◬-elim (◬-intro t) ≅ᵗᵐ t
-    eq (◬-elim-intro t) γ = Tm.naturality t tt _
-  {-
+    ◬-β : (t : Tm (⨅ Γ) T) → ◬-elim (◬-intro t) ≅ᵗᵐ t
+    eq (◬-β t) γ = Tm.naturality t tt _
+
   ◬-natural : (σ : Δ ⇒ Γ) (T : Ty (⨅ Γ) ℓ) → (◬ T) [ σ ] ≅ᵗʸ ◬ (T [ ⨅-subst σ ])
   func (from (◬-natural σ T)) = ctx-element-subst T (_⇒_.naturality σ _)
-  CwF-Structure.naturality (from (◬-natural σ T)) t = {!!}
+  CwF-Structure.naturality (from (◬-natural σ T)) t =
+    begin
+      T ⟪ tt , _ ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
+    ≡˘⟨ morph-comp T tt tt _ _ t ⟩
+      T ⟪ tt , _ ⟫ t
+    ≡⟨ morph-cong T refl _ _ ⟩ -- no refl here because proofs don't match                  uip used here!
+      T ⟪ tt , _ ⟫ t
+    ≡⟨ morph-comp T tt tt _ _ t ⟩
+      T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , _ ⟫ t) ∎
+    where open ≡-Reasoning
   func (to (◬-natural σ T)) = ctx-element-subst T (sym (_⇒_.naturality σ _))
-  CwF-Structure.naturality (to (◬-natural σ T)) = {!!}
-  eq (isoˡ (◬-natural σ T)) t = {!!}
-  eq (isoʳ (◬-natural σ T)) t = {!!}
+  CwF-Structure.naturality (to (◬-natural σ T)) t =
+    begin
+      T ⟪ tt , _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
+    ≡˘⟨ morph-comp T tt tt _ _ t ⟩
+      T ⟪ tt , _ ⟫ t
+    ≡⟨ morph-cong T refl _ _ ⟩ -- no refl here because proofs don't match                  uip used here!
+      T ⟪ tt , _ ⟫ t
+    ≡⟨ morph-comp T tt tt _ _ t ⟩
+      T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _ ⟫ t) ∎
+    where open ≡-Reasoning
+  eq (isoˡ (◬-natural σ T)) t =
+    begin
+      T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
+    ≡˘⟨ morph-comp T tt tt _ _ t ⟩
+      T ⟪ tt , _ ⟫ t
+    ≡⟨ morph-cong T refl _ _ ⟩                                                          -- uip used here!
+      T ⟪ tt , refl ⟫ t
+    ≡⟨ morph-id T t ⟩
+      t ∎
+    where open ≡-Reasoning
+  eq (isoʳ (◬-natural σ T)) t =
+    begin
+      T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
+    ≡˘⟨ morph-comp T tt tt _ _ t ⟩
+      T ⟪ tt , _ ⟫ t
+    ≡⟨ morph-cong T refl _ _ ⟩                                                          -- uip used here!
+      T ⟪ tt , refl ⟫ t
+    ≡⟨ morph-id T t ⟩
+      t ∎
+    where open ≡-Reasoning
 
   ◬-intro-natural : (σ : Δ ⇒ Γ) {T : Ty (⨅ Γ) ℓ} (t : Tm (⨅ Γ) T) →
                     (◬-intro t) [ σ ]' ≅ᵗᵐ ι[ ◬-natural σ T ] ◬-intro (t [ ⨅-subst σ ]')
-  eq (◬-intro-natural σ t) = {!!}
+  eq (◬-intro-natural σ t) δ = sym (Tm.naturality t tt _)
 
   ◬-elim-natural : (σ : Δ ⇒ Γ) {T : Ty (⨅ Γ) ℓ} (t : Tm Γ (◬ T)) →
                    (◬-elim t) [ ⨅-subst σ ]' ≅ᵗᵐ ◬-elim (ι⁻¹[ ◬-natural σ T ] (t [ σ ]'))
-  eq (◬-elim-natural σ t) = {!!}
-  -}
+  eq (◬-elim-natural {Δ = Δ}{Γ = Γ} σ {T = T} t) δ =
+    begin
+      T ⟪ tt , rel-id Γ (func σ δ) ⟫ (t ⟨ 0 , func σ δ ⟩')
+    ≡⟨ morph-cong T refl _ _ ⟩                                                          -- uip used here!
+      T ⟪ tt , _ ⟫ (t ⟨ 0 , func σ δ ⟩')
+    ≡⟨ morph-comp T tt tt _ _ _ ⟩
+      T ⟪ tt , cong (func σ) (rel-id Δ δ) ⟫ (T ⟪ tt , _⇒_.naturality σ δ ⟫ (t ⟨ 0 , func σ δ ⟩')) ∎
+    where open ≡-Reasoning
+
 
 module _ where
   private
@@ -126,8 +159,29 @@ module _ where
   ▲-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → ▲-subst (σ ⊚ τ) ≅ˢ ▲-subst σ ⊚ ▲-subst τ
   eq (▲-subst-⊚ σ τ) _ = refl
 
+  const-subst : Γ ⟨ tt ⟩ → ◇ ⇒ ▲ Γ
+  func (const-subst γ) _ = γ
+  _⇒_.naturality (const-subst γ) _ = refl
+
   ∇ : Ty (▲ Γ) ℓ → Ty Γ ℓ
-  type (∇ T) _ γ = ∀ {n} → T ⟨ n , γ ⟩ -- + naturality
-  morph (∇ {Γ = Γ} T) _ eγ t {n} = ctx-element-subst T (trans (sym (rel-id Γ _)) eγ) t
+  type (∇ T) _ γ = Tm ◇ (T [ const-subst γ ])
+  morph (∇ {Γ = Γ} T) tt {γm}{γk} eγ t = MkTm tm nat
+    where
+      open ≡-Reasoning
+      tm : (n : ℕ) → ⊤ → T ⟨ n , γk ⟩
+      tm n _ = ctx-element-subst T (trans (sym (rel-id Γ γm)) eγ) (t ⟨ n , tt ⟩')
+      nat : {m' n' : ℕ} (m≤n : m' ≤ n') {γn' : ⊤} {γm' : ⊤} (eγ' : γn' ≡ γm') →
+            (T [ const-subst γk ]) ⟪ m≤n , eγ' ⟫ tm n' γn' ≡ tm m' γm'
+      nat {m'}{n'} m≤n eγ' =
+        begin
+          T ⟪ m≤n , _ ⟫ (T ⟪ ≤-refl , _ ⟫ (t ⟨ n' , tt ⟩'))
+        ≡˘⟨ morph-comp T m≤n ≤-refl _ _ _ ⟩
+          T ⟪ ≤-trans m≤n ≤-refl , _ ⟫ (t ⟨ n' , tt ⟩')
+        ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩                                        -- uip used here!
+          T ⟪ ≤-trans ≤-refl m≤n , _ ⟫ (t ⟨ n' , tt ⟩')
+        ≡⟨ morph-comp T ≤-refl m≤n _ _ _ ⟩
+          T ⟪ ≤-refl , _ ⟫ (T ⟪ m≤n , _ ⟫  (t ⟨ n' , tt ⟩'))
+        ≡⟨ cong (T ⟪ ≤-refl , _ ⟫_) (Tm.naturality t m≤n refl) ⟩
+          T ⟪ ≤-refl , _ ⟫ (t ⟨ m' , tt ⟩') ∎
   morph-id (∇ T) = {!!}
   morph-comp (∇ T) = {!!}
