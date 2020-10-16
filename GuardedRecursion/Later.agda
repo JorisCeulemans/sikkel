@@ -55,6 +55,7 @@ naturality (◄-subst σ) {f = m≤n} = naturality σ {f = s≤s m≤n}
 ◅-ty : Ty Γ ℓ → Ty (◄ Γ) ℓ
 type (◅-ty T) n γ = T ⟨ suc n , γ ⟩
 morph (◅-ty T) m≤n eγ = T ⟪ s≤s m≤n , eγ ⟫
+morph-cong (◅-ty T) e = morph-cong T (cong s≤s e)
 morph-id (◅-ty T) t = morph-id T t
 morph-comp (◅-ty T) k≤m m≤n = morph-comp T (s≤s k≤m) (s≤s m≤n)
 
@@ -118,6 +119,8 @@ type (▻ T) zero _ = ⊤
 type (▻ T) (suc n) γ = T ⟨ n , γ ⟩
 morph (▻ T) z≤n _ _ = tt
 morph (▻ T) (s≤s m≤n) eγ = T ⟪ m≤n , eγ ⟫
+morph-cong (▻ T) {f = z≤n} {f' = z≤n} e = refl
+morph-cong (▻ T) {f = s≤s m≤n} {f' = s≤s .m≤n} refl = morph-cong T refl
 morph-id (▻ T) {zero} _ = refl
 morph-id (▻ T) {suc n} = morph-id T
 morph-comp (▻ T) z≤n m≤n _ _ _ = refl

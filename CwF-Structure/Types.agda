@@ -43,6 +43,10 @@ record Ty {ℓc} (Γ : Ctx C ℓc) (ℓt : Level) : Set (ℓc ⊔ lsuc ℓt) whe
   field
     type : (x : Ob) (γ : Γ ⟨ x ⟩) → Set ℓt
     morph : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx → type y γy → type x γx
+    morph-cong : {f f' : Hom x y} (e-hom : f ≡ f')
+                 {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} {eγ' : Γ ⟪ f' ⟫ γy ≡ γx}
+                 {t : type y γy} →
+                 morph f eγ t ≡ morph f' eγ' t
     morph-id : ∀ {x} {γ : Γ ⟨ x ⟩} (t : type x γ) → morph hom-id (rel-id Γ γ) t ≡ t
     morph-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                  (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) (t : type z γz) →
@@ -63,7 +67,7 @@ _⟪_,_⟫ T f eγ = morph T f eγ
 _⟪_,_⟫_ : (T : Ty Γ ℓ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx →
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 T ⟪ f , eγ ⟫ t = (T ⟪ f , eγ ⟫) t
-
+{-
 -- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
 -- by adding a field to a type T requiring morph T to "not depend on eγ" (propositionally).
 morph-cong : (T : Ty Γ ℓ) {f f' : Hom x y} (e-hom : f ≡ f')
@@ -71,7 +75,7 @@ morph-cong : (T : Ty Γ ℓ) {f f' : Hom x y} (e-hom : f ≡ f')
              {t : T ⟨ y , γy ⟩} →
              T ⟪ f , eγ ⟫ t ≡ T ⟪ f' , eγ' ⟫ t
 morph-cong T refl refl refl = refl
-
+-}
 ctx-element-subst : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
 ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
 
@@ -285,24 +289,25 @@ morph (_[_] {Γ = Γ} T σ) f {δy}{δx} eq-yx t = T ⟪ f , proof ⟫ t
   where
     proof : Γ ⟪ f ⟫ func σ δy ≡ func σ δx
     proof = trans (naturality σ δy) (cong (func σ) eq-yx)
-morph-id (T [ σ ]) t = trans (cong (λ - → T ⟪ hom-id , - ⟫ t) (uip _ _))
+morph-cong (T [ σ ]) f = morph-cong T f
+morph-id (T [ σ ]) t = trans (morph-cong T refl)
                              (morph-id T t)
-morph-comp (T [ σ ]) f g eq-zy eq-yx t = trans (cong (λ - → T ⟪ g ∙ f , - ⟫ t) (uip _ _))
+morph-comp (T [ σ ]) f g eq-zy eq-yx t = trans (morph-cong T refl)
                                                (morph-comp T f g _ _ t)
 
 ty-subst-id : (T : Ty Γ ℓ) → T [ id-subst Γ ] ≅ᵗʸ T
 func (from (ty-subst-id T)) = id
-naturality (from (ty-subst-id T)) _ = morph-cong T refl _ _
+naturality (from (ty-subst-id T)) _ = morph-cong T refl
 func (to (ty-subst-id T)) = id
-naturality (to (ty-subst-id T)) _ = morph-cong T refl _ _
+naturality (to (ty-subst-id T)) _ = morph-cong T refl
 eq (isoˡ (ty-subst-id T)) _ = refl
 eq (isoʳ (ty-subst-id T)) _ = refl
 
 ty-subst-comp : (T : Ty Θ ℓ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
 func (from (ty-subst-comp T τ σ)) = id
-naturality (from (ty-subst-comp T τ σ)) _ = morph-cong T refl _ _
+naturality (from (ty-subst-comp T τ σ)) _ = morph-cong T refl
 func (to (ty-subst-comp T τ σ)) = id
-naturality (to (ty-subst-comp T τ σ)) _ = morph-cong T refl _ _
+naturality (to (ty-subst-comp T τ σ)) _ = morph-cong T refl
 eq (isoˡ (ty-subst-comp T τ σ)) _ = refl
 eq (isoʳ (ty-subst-comp T τ σ)) _ = refl
 
@@ -334,7 +339,7 @@ naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
     T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
     T ⟪ hom-id ∙ f , _ ⟫ t
-  ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
+  ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) ⟩
     T ⟪ f ∙ hom-id , _ ⟫ t
   ≡⟨ morph-comp T hom-id f _ _ t ⟩
     T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
@@ -345,7 +350,7 @@ naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
     T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
     T ⟪ hom-id ∙ f , _ ⟫ t
-  ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
+  ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) ⟩
     T ⟪ f ∙ hom-id , _ ⟫ t
   ≡⟨ morph-comp T hom-id f _ _ t ⟩
     T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
@@ -357,7 +362,7 @@ eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
     T ⟪ hom-id ∙ hom-id , _ ⟫ t
-  ≡⟨ morph-cong T hom-idˡ _ _ ⟩
+  ≡⟨ morph-cong T hom-idˡ ⟩
     T ⟪ hom-id , rel-id Γ _ ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎
@@ -367,7 +372,7 @@ eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
     T ⟪ hom-id ∙ hom-id , _ ⟫ t
-  ≡⟨ morph-cong T hom-idˡ _ _ ⟩
+  ≡⟨ morph-cong T hom-idˡ ⟩
     T ⟪ hom-id , _ ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎

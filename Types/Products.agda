@@ -26,6 +26,7 @@ private
 _⊠_ : Ty Γ ℓ → Ty Γ ℓ' → Ty Γ (ℓ ⊔ ℓ')
 type (T ⊠ S) x γ = T ⟨ x , γ ⟩ × S ⟨ x , γ ⟩
 morph (T ⊠ S) f eγ [ t , s ] = [ T ⟪ f , eγ ⟫ t , S ⟪ f , eγ ⟫ s ]
+morph-cong (T ⊠ S) e = cong₂ [_,_] (morph-cong T e) (morph-cong S e)
 morph-id (T ⊠ S) [ t , s ] = cong₂ [_,_] (morph-id T t) (morph-id S s)
 morph-comp (T ⊠ S) f g eq-nm eq-mk [ t , s ] = cong₂ [_,_] (morph-comp T f g eq-nm eq-mk t)
                                                             (morph-comp S f g eq-nm eq-mk s)

@@ -63,7 +63,7 @@ naturality (to-ext-subst {Δ = Δ} T σ t) δ = to-Σ-eq (naturality σ δ) (
           (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
   ≡⟨ morph-transport T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
     T ⟪ _ , trans refl (naturality σ δ) ⟫ t ⟨ _ , δ ⟩'
-  ≡⟨ morph-cong T refl _ _ ⟩
+  ≡⟨ morph-cong T refl ⟩
     T ⟪ _ , _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ naturality t _ refl ⟩
     t ⟨ _ , Δ ⟪ _ ⟫ δ ⟩' ∎)
@@ -79,7 +79,7 @@ ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (
   begin
     T ⟪ hom-id , trans (rel-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ morph-cong T refl _ _ ⟩
+  ≡⟨ morph-cong T refl ⟩
     T ⟪ hom-id , _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ morph-id T _ ⟩
     t ⟨ _ , δ ⟩' ∎)

@@ -59,10 +59,11 @@ eq (subst-lift-comp τ σ) _ = refl
 ty-lift : {Γ : Ctx D ℓ} → Ty Γ ℓt → Ty (ctx-lift Γ) ℓt
 type (ty-lift T) c γ = T ⟨ ob F c , γ ⟩
 morph (ty-lift T) f eγ t = T ⟪ hom F f , eγ ⟫ t
+morph-cong (ty-lift T) e = morph-cong T (cong (hom F) e)
 morph-id (ty-lift T) t =
   begin
     T ⟪ hom F (hom-id C) , _ ⟫ t
-  ≡⟨ morph-cong T (id-law F) _ _ ⟩
+  ≡⟨ morph-cong T (id-law F) ⟩
     T ⟪ hom-id D , _ ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎
@@ -70,7 +71,7 @@ morph-id (ty-lift T) t =
 morph-comp (ty-lift T) f g eq-zy eq-yx t =
   begin
     T ⟪ hom F (g ∙[ C ] f) , _ ⟫ t
-  ≡⟨ morph-cong T (comp-law F) _ _ ⟩
+  ≡⟨ morph-cong T (comp-law F) ⟩
     T ⟪ hom F g ∙[ D ] hom F f , _ ⟫ t
   ≡⟨ morph-comp T (hom F f) (hom F g) eq-zy eq-yx t ⟩
     T ⟪ hom F f , eq-yx ⟫ (T ⟪ hom F g , eq-zy ⟫ t) ∎
@@ -115,7 +116,7 @@ lift-ξ : (Γ : Ctx D ℓ) (T : Ty Γ ℓt) → tm-lift ξ [ to (lift-ctx-ext Γ
 eq (lift-ξ Γ T) [ γ , t ] = sym (
   begin
     T ⟪ hom F (hom-id C) , _ ⟫ t
-  ≡⟨ morph-cong T (id-law F) _ _ ⟩
+  ≡⟨ morph-cong T (id-law F) ⟩
     T ⟪ hom-id D , _ ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎)

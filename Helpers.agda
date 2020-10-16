@@ -1,7 +1,7 @@
 module Helpers where
 
 open import Axiom.Extensionality.Propositional
-open import Axiom.UniquenessOfIdentityProofs
+-- open import Axiom.UniquenessOfIdentityProofs
 open import Data.Bool using (Bool; true; false)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Level
@@ -16,8 +16,11 @@ postulate
   funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'
   funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
 
+{-
+-- Shouldn't be used globally anymore, for the moment only in Types.Functions.
 uip : ∀ {a} {A : Set a} → UIP A
 uip refl refl = refl
+-}
 
 cong₂-d : ∀ {a b c} {A : Set a} {B : A → Set b} {C : Set c}
           (f : (x : A) → B x → C)

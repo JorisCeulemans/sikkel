@@ -46,7 +46,7 @@ module _
 
   𝑋-nattrans : {m n : ℕ} (m≤n : m ≤ n) → (𝑋-type n ↣ 𝑋-type m)
   𝑋-nattrans {n = zero } z≤n = id-trans (𝑋-type zero)
-  𝑋-nattrans {n = suc n} z≤n = map (▻'-map !Unit)
+  𝑋-nattrans {n = suc n} z≤n = map (▻'-map !unit)
   𝑋-nattrans (s≤s m≤n) = map (▻'-map (𝑋-nattrans m≤n))
 
   𝑋-nattrans-id : {n : ℕ} → 𝑋-nattrans (≤-refl {n}) ≅ⁿ id-trans (𝑋-type n)
@@ -67,13 +67,13 @@ module _
   𝑋-nattrans-comp z≤n z≤n = ≅ⁿ-sym (⊙-id-transˡ _)
   𝑋-nattrans-comp z≤n (s≤s m≤n) =
     begin
-      map (▻'-map !Unit)
-    ≅˘⟨ map-cong (▻'-map-cong (Unit-terminal _)) ⟩
-      map (▻'-map (!Unit ⊙ (𝑋-nattrans m≤n)))
+      map (▻'-map !unit)
+    ≅˘⟨ map-cong (▻'-map-cong (unit-terminal _)) ⟩
+      map (▻'-map (!unit ⊙ (𝑋-nattrans m≤n)))
     ≅⟨ map-cong (▻'-map-comp _ _) ⟩
-      map (▻'-map !Unit ⊙ ▻'-map (𝑋-nattrans m≤n))
+      map (▻'-map !unit ⊙ ▻'-map (𝑋-nattrans m≤n))
     ≅⟨ map-comp _ _ ⟩
-      map (▻'-map !Unit) ⊙ map (▻'-map (𝑋-nattrans m≤n)) ∎
+      map (▻'-map !unit) ⊙ map (▻'-map (𝑋-nattrans m≤n)) ∎
     where open ≅ⁿ-Reasoning
   𝑋-nattrans-comp (s≤s k≤m) (s≤s m≤n) =
     begin

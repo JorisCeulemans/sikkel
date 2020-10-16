@@ -26,6 +26,8 @@ _⊞_ : Ty Γ ℓ → Ty Γ ℓ' → Ty Γ (ℓ ⊔ ℓ')
 type (T ⊞ S) x γ = T ⟨ x , γ ⟩ ⊎ S ⟨ x , γ ⟩
 morph (T ⊞ S) f eγ (inl t) = inl (T ⟪ f , eγ ⟫ t)
 morph (T ⊞ S) f eγ (inr s) = inr (S ⟪ f , eγ ⟫ s)
+morph-cong (T ⊞ S) e {t = inl t} = cong inl (morph-cong T e)
+morph-cong (T ⊞ S) e {t = inr s} = cong inr (morph-cong S e)
 morph-id (T ⊞ S) (inl t) = cong inl (morph-id T t)
 morph-id (T ⊞ S) (inr s) = cong inr (morph-id S s)
 morph-comp (T ⊞ S) f g eq-nm eq-mk (inl t) = cong inl (morph-comp T f g eq-nm eq-mk t)

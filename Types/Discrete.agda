@@ -36,6 +36,7 @@ private
 Discr : (A : Set ℓ) → Ty Γ ℓ
 type (Discr A) _ _ = A
 morph (Discr A) _ _ = id
+morph-cong (Discr A) _ = refl
 morph-id (Discr A) _ = refl
 morph-comp (Discr A) _ _ _ _ _ = refl
 

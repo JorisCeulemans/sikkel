@@ -61,6 +61,7 @@ first-≤-tail m≤n (a ∷ as) = refl
 Stream : Ty Γ 0ℓ
 type Stream n _ = Vec ℕ (suc n)
 morph Stream m≤n _ = first-≤ (s≤s m≤n)
+morph-cong Stream refl = refl
 morph-id Stream _ = first-≤-refl
 morph-comp Stream k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
 

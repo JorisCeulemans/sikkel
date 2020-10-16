@@ -49,8 +49,9 @@ module _ where
           Γ ⟪ z≤n ⟫ (Γ ⟪ m≤n ⟫ γn)
         ≡⟨ cong (Γ ⟪ z≤n ⟫_) eγ ⟩
           Γ ⟪ z≤n ⟫ γm ∎
-  morph-id (◬ T) t = trans (morph-cong T refl _ _) (morph-id T t)                       -- uip used here!
-  morph-comp (◬ T) _ _ _ _ t = trans (morph-cong T refl _ _) (morph-comp T tt tt _ _ t) -- uip used here!
+  morph-cong (◬ T) e = morph-cong T refl
+  morph-id (◬ T) t = trans (morph-cong T refl) (morph-id T t)
+  morph-comp (◬ T) _ _ _ _ t = trans (morph-cong T refl) (morph-comp T tt tt _ _ t)
 
   module _ {T : Ty (⨅ Γ) ℓ} where
     ◬-intro : Tm (⨅ Γ) T → Tm Γ (◬ T)
@@ -69,7 +70,7 @@ module _ where
         T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
       ≡˘⟨ morph-comp T tt tt _ _ (t ⟨ n , γ ⟩') ⟩
         T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
-      ≡⟨ morph-cong T refl _ _ ⟩                                                        -- uip used here!
+      ≡⟨ morph-cong T refl ⟩
         T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
       ≡⟨ Tm.naturality t ≤-refl (rel-id Γ γ) ⟩
         t ⟨ n , γ ⟩' ∎
@@ -85,7 +86,7 @@ module _ where
       T ⟪ tt , _ ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
     ≡˘⟨ morph-comp T tt tt _ _ t ⟩
       T ⟪ tt , _ ⟫ t
-    ≡⟨ morph-cong T refl _ _ ⟩ -- no refl here because proofs don't match                  uip used here!
+    ≡⟨ morph-cong T refl ⟩ -- no refl here because proofs don't match
       T ⟪ tt , _ ⟫ t
     ≡⟨ morph-comp T tt tt _ _ t ⟩
       T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , _ ⟫ t) ∎
@@ -96,7 +97,7 @@ module _ where
       T ⟪ tt , _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
     ≡˘⟨ morph-comp T tt tt _ _ t ⟩
       T ⟪ tt , _ ⟫ t
-    ≡⟨ morph-cong T refl _ _ ⟩ -- no refl here because proofs don't match                  uip used here!
+    ≡⟨ morph-cong T refl ⟩ -- no refl here because proofs don't match
       T ⟪ tt , _ ⟫ t
     ≡⟨ morph-comp T tt tt _ _ t ⟩
       T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _ ⟫ t) ∎
@@ -106,7 +107,7 @@ module _ where
       T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
     ≡˘⟨ morph-comp T tt tt _ _ t ⟩
       T ⟪ tt , _ ⟫ t
-    ≡⟨ morph-cong T refl _ _ ⟩                                                          -- uip used here!
+    ≡⟨ morph-cong T refl ⟩
       T ⟪ tt , refl ⟫ t
     ≡⟨ morph-id T t ⟩
       t ∎
@@ -116,7 +117,7 @@ module _ where
       T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
     ≡˘⟨ morph-comp T tt tt _ _ t ⟩
       T ⟪ tt , _ ⟫ t
-    ≡⟨ morph-cong T refl _ _ ⟩                                                          -- uip used here!
+    ≡⟨ morph-cong T refl ⟩
       T ⟪ tt , refl ⟫ t
     ≡⟨ morph-id T t ⟩
       t ∎
@@ -131,7 +132,7 @@ module _ where
   eq (◬-elim-natural {Δ = Δ}{Γ = Γ} σ {T = T} t) δ =
     begin
       T ⟪ tt , rel-id Γ (func σ δ) ⟫ (t ⟨ 0 , func σ δ ⟩')
-    ≡⟨ morph-cong T refl _ _ ⟩                                                          -- uip used here!
+    ≡⟨ morph-cong T refl ⟩
       T ⟪ tt , _ ⟫ (t ⟨ 0 , func σ δ ⟩')
     ≡⟨ morph-comp T tt tt _ _ _ ⟩
       T ⟪ tt , cong (func σ) (rel-id Δ δ) ⟫ (T ⟪ tt , _⇒_.naturality σ δ ⟫ (t ⟨ 0 , func σ δ ⟩')) ∎
@@ -177,11 +178,12 @@ module _ where
           T ⟪ m≤n , _ ⟫ (T ⟪ ≤-refl , _ ⟫ (t ⟨ n' , tt ⟩'))
         ≡˘⟨ morph-comp T m≤n ≤-refl _ _ _ ⟩
           T ⟪ ≤-trans m≤n ≤-refl , _ ⟫ (t ⟨ n' , tt ⟩')
-        ≡⟨ morph-cong T (≤-irrelevant _ _) _ _ ⟩                                        -- uip used here!
+        ≡⟨ morph-cong T (≤-irrelevant _ _) ⟩
           T ⟪ ≤-trans ≤-refl m≤n , _ ⟫ (t ⟨ n' , tt ⟩')
         ≡⟨ morph-comp T ≤-refl m≤n _ _ _ ⟩
           T ⟪ ≤-refl , _ ⟫ (T ⟪ m≤n , _ ⟫  (t ⟨ n' , tt ⟩'))
         ≡⟨ cong (T ⟪ ≤-refl , _ ⟫_) (Tm.naturality t m≤n refl) ⟩
           T ⟪ ≤-refl , _ ⟫ (t ⟨ m' , tt ⟩') ∎
+  morph-cong (∇ T) e = {!!}
   morph-id (∇ T) = {!!}
   morph-comp (∇ T) = {!!}
