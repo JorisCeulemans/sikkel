@@ -69,7 +69,7 @@ construct-exp (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
       return (con (quote sub) (vArg ty-exp ∷ vArg subst ∷ []))
   ; _ → typeError (strErr "Illegal substitution." ∷ [])
   }
-construct-exp (def op args) = breakTC is-arg-semtype (filter (dec-from-bool is-visible) args) >>= λ
+construct-exp (def op args) = breakTC is-arg-semtype (filter visible-dec args) >>= λ
   { (others , []) → return (con (quote nul) (vArg (def op others) ∷ []))
   ; (others , (ty1 ⟨∷⟩ [])) → do
       ty1-exp ← construct-exp ty1

@@ -1,7 +1,6 @@
 import Helpers
 import Categories
 import CwF-Structure
-import Yoneda
 import Types.Discrete
 import Types.Functions
 import Types.Products

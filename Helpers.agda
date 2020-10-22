@@ -52,6 +52,7 @@ from-to-Σ-eq1 : ∀ {a b} {A : Set a} {B : A → Set b}
                 from-Σ-eq1 (to-Σ-eq ex ey) ≡ ex
 from-to-Σ-eq1 {ex = refl} refl = refl
 
+{-
 -- TODO: Look for these in std-lib, I believe they should be somewhere.
 pred-from-bool : ∀ {a} {A : Set a} → (A → Bool) → Pred A 0ℓ
 pred-from-bool p x = p x ≡ true
@@ -60,6 +61,7 @@ dec-from-bool : ∀ {a} {A : Set a} (p : A → Bool) → Decidable (pred-from-bo
 dec-from-bool p x with p x
 dec-from-bool p x | false = no (λ ())
 dec-from-bool p x | true = yes refl
+-}
 
 {-
 -- The following proofs were necessary in previous versions of the code.

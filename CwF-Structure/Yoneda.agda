@@ -4,7 +4,7 @@
 
 open import Categories
 
-module Yoneda {C : Category} where
+module CwF-Structure.Yoneda {C : Category} where
 
 open import Function using (_∘_)
 open import Level renaming (zero to lzero; suc to lsuc)

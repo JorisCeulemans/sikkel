@@ -20,7 +20,6 @@ open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
 open import GuardedRecursion.Later
-open import Yoneda
 open import Reflection.Naturality
 
 
