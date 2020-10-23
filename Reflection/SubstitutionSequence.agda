@@ -7,8 +7,6 @@
 -- substitutions to a type or a term. The main results are
 -- ty-subst-seq-cong and tm-subst-seq-cong (although the latter
 -- isn't really used anywhere).
--- This file will probably move to the directory Reflection
--- some time soon.
 -- Note that we use the option omega-in-omega in order to define
 -- an inductive data type in Setω and to pattern match on it (which
 -- is not possible in Agda 2.6.1 without this option). This code should
@@ -18,7 +16,7 @@
 
 open import Categories
 
-module CwF-Structure.SubstitutionSequence {C : Category} where
+module Reflection.SubstitutionSequence {C : Category} where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -40,11 +38,6 @@ private
 data _⇒⁺_ {ℓ ℓ' : Level} : Ctx C ℓ → Ctx C ℓ' → Setω where
   _◼ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
   _∷_ : ∀ {ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
-{-
-data _⇒⁺_ : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Set {!lsuc ℓ ⊔ lsuc ℓ'!} where
---  _◼ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Δ ⇒⁺ Γ
---  _∷_ : ∀ {ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Γ ⇒ Θ) (σs : Δ ⇒⁺ Γ) → Δ ⇒⁺ Θ
--}
 
 fold : Δ ⇒⁺ Γ → Δ ⇒ Γ
 fold (σ ◼) = σ

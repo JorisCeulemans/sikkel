@@ -15,6 +15,7 @@ open import Categories
 open import Helpers
 open import CwF-Structure
 open import Types.Functions
+open import Reflection.SubstitutionSequence
 
 private
   variable

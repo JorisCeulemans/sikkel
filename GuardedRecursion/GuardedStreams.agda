@@ -2,9 +2,14 @@
 
 --------------------------------------------------
 -- Examples with guarded streams of natural numbers
+--
+-- Note that the option omega-in-omega is used to
+-- make the type Stream an instance of IsNullaryNatural.
+-- This code should typecheck without this option in Agda
+-- 2.6.2 once released.
 --------------------------------------------------
 
-module GuardedRecursion.StreamsExample where
+module GuardedRecursion.GuardedStreams where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
@@ -23,7 +28,9 @@ open import Types.Functions
 open import Types.Products
 open import GuardedRecursion.Later
 open import Reflection.Naturality
-open import Reflection.NaturalityTactic
+open import Reflection.Naturality.Instances
+open import Reflection.Tactic.Lambda
+open import Reflection.Tactic.LobInduction
 
 private
   variable
@@ -249,117 +256,3 @@ module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
                      (lamι T let x = app (varι 1) (varι 0)
                              in str-cons (pair (fst x)
                                                (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
-
-{-
-module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
-  T : Ty Γ ℓ
-  T = ⟦ nul T-op ⟧exp
-
-  initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
-  initial = löb ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
-                (lam (▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)) (ι[ α ]
-                     lam (Nat' ⊠ ▻' T ⇛ T) (ι[ β ]
-                         lam Stream (ι[ γ ]
-                             app (ι[ δ ] var 1) (pair (str-head (ι[ ε ] var 0))
-                                                      ((ι[ ζ ] var 2) ⊛' next' (ι[ η ] var 1) ⊛' str-tail (ι[ θ ] var 0)))))))
-    where
-      α : ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T) [ π ] ≅ᵗʸ (Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T
-      α = by-naturality
-      β : (Stream ⇛ T) [ π ] ≅ᵗʸ Stream ⇛ T
-      β = by-naturality
-      γ : T [ π ] ≅ᵗʸ T
-      γ = by-naturality
-      δ : (Nat' ⊠ ▻' T) ⇛ T ≅ᵗʸ ((Nat' ⊠ ▻' T ⇛ T) [ π ]) [ π ]
-      δ = by-naturality
-      ε : Stream ≅ᵗʸ Stream [ π ]
-      ε = by-naturality
-      ζ : ▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T) ≅ᵗʸ ((▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T) [ π ]) [ π ]) [ π ]
-      ζ = by-naturality
-      η : Nat' ⊠ ▻' T ⇛ T ≅ᵗʸ ((Nat' ⊠ ▻' T ⇛ T) [ π ]) [ π ]
-      η = by-naturality
-      θ : Stream ≅ᵗʸ Stream [ π ]
-      θ = by-naturality
-
-  final : Tm Γ ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
-  final = löb ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
-              (lam (▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)) (ι[ α ]
-                   lam (T ⇛ Nat' ⊠ ▻' T) (ι[ β ]
-                       lam T (ι[ γ ] let x = app (ι[ δ ] var 1) (ι[ ε ] var 0) in
-                           str-cons (pair (fst x)
-                                          ((ι[ ζ ] var 2) ⊛' next' (ι[ η ] var 1) ⊛' snd x))))))
-    where
-      α : ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream) [ π ] ≅ᵗʸ (T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream
-      α = by-naturality
-      β : (T ⇛ Stream) [ π ] ≅ᵗʸ T ⇛ Stream
-      β = by-naturality
-      γ : Stream [ π ] ≅ᵗʸ Stream
-      γ = by-naturality
-      δ : T ⇛ Nat' ⊠ ▻' T ≅ᵗʸ ((T ⇛ Nat' ⊠ ▻' T) [ π ]) [ π ]
-      δ = by-naturality
-      ε : T ≅ᵗʸ T [ π ]
-      ε = by-naturality
-      ζ : ▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream) ≅ᵗʸ ((▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream) [ π ]) [ π ]) [ π ]
-      ζ = by-naturality
-      η : T ⇛ Nat' ⊠ ▻' T ≅ᵗʸ ((T ⇛ Nat' ⊠ ▻' T) [ π ]) [ π ]
-      η = by-naturality
-
-module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
-  T : Ty Γ ℓ
-  T = ⟦ nul T-op ⟧exp
-
-  initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
-  initial = löb ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
-                (lam (▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)) (ι[ α ]
-                     lam (Nat' ⊠ ▻' T ⇛ T) (ι[ β ]
-                         lam Stream (ι[ γ ]
-                             app (ι[ δ ] var 1) (pair (str-head (ι[ ε ] var 0))
-                                                      ((ι[ ζ ] var 2) ⊛' next' (ι[ η ] var 1) ⊛' str-tail (ι[ θ ] var 0)))))))
-    where
-      α : ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T) [ π ] ≅ᵗʸ (Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T
-      α = type-naturality-reflect (sub (bin _⇛_ (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) (bin _⇛_ (nul Stream) (nul T))) π)
-                                  (bin _⇛_ (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) (bin _⇛_ (nul Stream) (nul T)))
-                                  refl refl
-      β : (Stream ⇛ T) [ π ] ≅ᵗʸ Stream ⇛ T
-      β = type-naturality-reflect (sub (bin _⇛_ (nul Stream) (nul T)) π) (bin _⇛_ (nul Stream) (nul T)) refl refl
-      γ : T [ π ] ≅ᵗʸ T
-      γ = type-naturality-reflect (sub (nul T) π) (nul T) refl refl
-      δ : (Nat' ⊠ ▻' T) ⇛ T ≅ᵗʸ ((Nat' ⊠ ▻' T ⇛ T) [ π ]) [ π ]
-      δ = type-naturality-reflect (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) (sub (sub (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) π) π) refl refl
-      ε : Stream ≅ᵗʸ Stream [ π ]
-      ε = type-naturality-reflect (nul Stream) (sub (nul Stream) π) refl refl
-      ζ : ▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T) ≅ᵗʸ ((▻' ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T) [ π ]) [ π ]) [ π ]
-      ζ = type-naturality-reflect (un ▻' (bin _⇛_ (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) (bin _⇛_ (nul Stream) (nul T))))
-                                  (sub (sub (sub (un ▻' (bin _⇛_ (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) (bin _⇛_ (nul Stream) (nul T)))) π) π) π)
-                                  refl refl
-      η : Nat' ⊠ ▻' T ⇛ T ≅ᵗʸ ((Nat' ⊠ ▻' T ⇛ T) [ π ]) [ π ]
-      η = type-naturality-reflect (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) (sub (sub (bin _⇛_ (bin _⊠_ (nul Nat') (un ▻' (nul T))) (nul T)) π) π) refl refl
-      θ : Stream ≅ᵗʸ Stream [ π ]
-      θ = type-naturality-reflect (nul Stream) (sub (nul Stream) π) refl refl
-
-  final : Tm Γ ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
-  final = löb ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
-              (lam (▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)) (ι[ α ]
-                   lam (T ⇛ Nat' ⊠ ▻' T) (ι[ β ]
-                       lam T (ι[ γ ] let x = app (ι[ δ ] var 1) (ι[ ε ] var 0) in
-                           str-cons (pair (fst x)
-                                          ((ι[ ζ ] var 2) ⊛' next' (ι[ η ] var 1) ⊛' snd x))))))
-    where
-      α : ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream) [ π ] ≅ᵗʸ (T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream
-      α = type-naturality-reflect (sub (bin _⇛_ (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) (bin _⇛_ (nul T) (nul Stream))) π)
-                                  (bin _⇛_ (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) (bin _⇛_ (nul T) (nul Stream)))
-                                  refl refl
-      β : (T ⇛ Stream) [ π ] ≅ᵗʸ T ⇛ Stream
-      β = type-naturality-reflect (sub (bin _⇛_ (nul T) (nul Stream)) π) (bin _⇛_ (nul T) (nul Stream)) refl refl
-      γ : Stream [ π ] ≅ᵗʸ Stream
-      γ = type-naturality-reflect (sub (nul Stream) π) (nul Stream) refl refl
-      δ : T ⇛ Nat' ⊠ ▻' T ≅ᵗʸ ((T ⇛ Nat' ⊠ ▻' T) [ π ]) [ π ]
-      δ = type-naturality-reflect (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) (sub (sub (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) π) π) refl refl
-      ε : T ≅ᵗʸ T [ π ]
-      ε = type-naturality-reflect (nul T) (sub (nul T) π) refl refl
-      ζ : ▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream) ≅ᵗʸ ((▻' ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream) [ π ]) [ π ]) [ π ]
-      ζ = type-naturality-reflect (un ▻' (bin _⇛_ (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) (bin _⇛_ (nul T) (nul Stream))))
-                                  (sub (sub (sub (un ▻' (bin _⇛_ (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) (bin _⇛_ (nul T) (nul Stream)))) π) π) π)
-                                  refl refl
-      η : T ⇛ Nat' ⊠ ▻' T ≅ᵗʸ ((T ⇛ Nat' ⊠ ▻' T) [ π ]) [ π ]
-      η = type-naturality-reflect (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) (sub (sub (bin _⇛_ (nul T) (bin _⊠_ (nul Nat') (un ▻' (nul T)))) π) π) refl refl
--}

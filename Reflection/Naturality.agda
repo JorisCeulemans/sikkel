@@ -4,8 +4,8 @@
 -- Naturality solver
 --
 -- This module implements a solver for proofs of type equalities making use
--- of naturality. A typical example for its applicability can be found at the
--- bottom of the file.
+-- of naturality. A typical example for its applicability can be found in
+-- Reflection.Examples.Naturality.
 -- The solver works with arbitrary nullary, unary and binary type operations
 -- that are natural with respect to the context (and that also respect equivalence
 -- of types in case of unary and binary operations). When you implement a new
@@ -30,8 +30,8 @@ open import CwF-Structure.Types
 open import Reflection.Helpers public
 
 
--- TODO: Allow operations that can change the context the type lives in using a certain endofunctor
--- on the category of contexts (needed for ▻). Later, functors between different categories might as well be interesting.
+--------------------------------------------------
+-- Definition of endofunctors on a context category.
 
 CtxOp : Setω
 CtxOp = ∀ {ℓ} → Ctx C ℓ → Ctx C ℓ
@@ -54,7 +54,7 @@ instance
 
 
 --------------------------------------------------
--- Definition of record types of nullary, unary and binary type operations.
+-- Definition of (natural) nullary, unary and binary type operations.
 
 NullaryTypeOp : Level → Setω
 NullaryTypeOp ℓ = ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
@@ -100,35 +100,35 @@ open IsBinaryNatural {{...}} public
 -- An expression is indexed by its skeleton, which drops the information
 -- about contexts but keeps track of universe levels. The skeleton is needed
 -- to convince Agda that the function reduce below terminates.
-data ExpSkeleton : Set where
-  scon : Level → ExpSkeleton
-  snul : Level → ExpSkeleton
+data ExprSkeleton : Set where
+  scon : Level → ExprSkeleton
+  snul : Level → ExprSkeleton
   sun  : (f : Level → Level → Level) (ℓc : Level) →
-         ExpSkeleton → ExpSkeleton
+         ExprSkeleton → ExprSkeleton
   sbin : (f : Level → Level → Level → Level) (ℓc : Level) →
-         ExpSkeleton → ExpSkeleton → ExpSkeleton
-  ssub : (ℓc : Level) → ExpSkeleton → ExpSkeleton
+         ExprSkeleton → ExprSkeleton → ExprSkeleton
+  ssub : (ℓc : Level) → ExprSkeleton → ExprSkeleton
 
-level : ExpSkeleton → Level
+level : ExprSkeleton → Level
 level (scon ℓ) = ℓ
 level (snul ℓ) = ℓ
 level (sun f ℓc s) = f ℓc (level s)
 level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
 level (ssub ℓc s) = level s
 
-data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
+data Expr : {ℓc : Level} (Γ : Ctx C ℓc) → ExprSkeleton → Setω where
   con : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        (T : Ty Γ ℓ) → Exp Γ (scon ℓ)
+        (T : Ty Γ ℓ) → Expr Γ (scon ℓ)
   nul : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        (U : NullaryTypeOp ℓ) → {{IsNullaryNatural U}} → Exp Γ (snul ℓ)
+        (U : NullaryTypeOp ℓ) → {{IsNullaryNatural U}} → Expr Γ (snul ℓ)
   un  : ∀ {ℓc f s} {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} {Γ : Ctx C ℓc} →
-        (F : UnaryTypeOp Φ f) → {{IsUnaryNatural F}} → (e : Exp (Φ Γ) s) → Exp Γ (sun f ℓc s)
+        (F : UnaryTypeOp Φ f) → {{IsUnaryNatural F}} → (e : Expr (Φ Γ) s) → Expr Γ (sun f ℓc s)
   bin : ∀ {ℓc f s s'} {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} {Γ : Ctx C ℓc} →
-        (F : BinaryTypeOp Φ Ψ f) → {{IsBinaryNatural F}} → (e1 : Exp (Φ Γ) s) (e2 : Exp (Ψ Γ) s') → Exp Γ (sbin f ℓc s s')
+        (F : BinaryTypeOp Φ Ψ f) → {{IsBinaryNatural F}} → (e1 : Expr (Φ Γ) s) (e2 : Expr (Ψ Γ) s') → Expr Γ (sbin f ℓc s s')
   sub : ∀ {ℓc ℓc' s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
-        Exp Γ s → (σ : Δ ⇒ Γ) → Exp Δ (ssub ℓc s)
+        Expr Γ s → (σ : Δ ⇒ Γ) → Expr Δ (ssub ℓc s)
 
-⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Ty Γ (level s)
+⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Expr Γ s → Ty Γ (level s)
 ⟦ con T ⟧exp = T
 ⟦ nul U ⟧exp = U
 ⟦ un F e ⟧exp = F ⟦ e ⟧exp
@@ -139,7 +139,7 @@ data Exp : {ℓc : Level} (Γ : Ctx C ℓc) → ExpSkeleton → Setω where
 --------------------------------------------------
 -- Reduction of expressions + soundness
 
-reduce-skeleton : ExpSkeleton → ExpSkeleton
+reduce-skeleton : ExprSkeleton → ExprSkeleton
 reduce-skeleton (scon ℓ) = scon ℓ
 reduce-skeleton (snul ℓ) = snul ℓ
 reduce-skeleton (sun f ℓc s) = sun f ℓc (reduce-skeleton s)
@@ -150,7 +150,7 @@ reduce-skeleton (ssub ℓc (sun f ℓc' s)) = sun f ℓc (reduce-skeleton (ssub 
 reduce-skeleton (ssub ℓc (sbin f ℓc' s1 s2)) = sbin f ℓc (reduce-skeleton (ssub ℓc s1)) (reduce-skeleton (ssub ℓc s2))
 reduce-skeleton (ssub ℓc (ssub ℓc' s)) = reduce-skeleton (ssub ℓc s)
 
-reduce : ∀ {ℓc s} {Γ : Ctx C ℓc} → Exp Γ s → Exp Γ (reduce-skeleton s)
+reduce : ∀ {ℓc s} {Γ : Ctx C ℓc} → Expr Γ s → Expr Γ (reduce-skeleton s)
 reduce (con T) = con T
 reduce (nul U) = nul U
 reduce (un F e) = un F (reduce e)
@@ -161,7 +161,7 @@ reduce (sub (un F e) σ) = un F (reduce (sub e (ctx-map σ)))
 reduce (sub (bin F e1 e2) σ) = bin F (reduce (sub e1 (ctx-map σ))) (reduce (sub e2 (ctx-map σ)))
 reduce (sub (sub e τ) σ) = reduce (sub e (τ ⊚ σ))
 
-reduce-sound : ∀ {ℓc s} {Γ : Ctx C ℓc} (e : Exp Γ s) →
+reduce-sound : ∀ {ℓc s} {Γ : Ctx C ℓc} (e : Expr Γ s) →
                ⟦ e ⟧exp ≅ᵗʸ ⟦ reduce e ⟧exp
 reduce-sound (con T) = ≅ᵗʸ-refl
 reduce-sound (nul U) = ≅ᵗʸ-refl
@@ -208,9 +208,9 @@ reduce-sound (sub (sub e τ) σ) = ≅ᵗʸ-trans (ty-subst-comp ⟦ e ⟧exp τ
 -}
 
 ⟦⟧exp-cong : ∀ {ℓc s s'} {Γ : Ctx C ℓc} →
-             {e : Exp Γ s} {e' : Exp Γ s'} →
+             {e : Expr Γ s} {e' : Expr Γ s'} →
              (p : s ≡ s') →
-             ω-transp (Exp Γ) p e ≡ω e' →
+             ω-transp (Expr Γ) p e ≡ω e' →
              ⟦ e ⟧exp ≅ᵗʸ ⟦ e' ⟧exp
 ⟦⟧exp-cong refl refl = ≅ᵗʸ-refl
 
@@ -218,10 +218,11 @@ reduce-sound (sub (sub e τ) σ) = ≅ᵗʸ-trans (ty-subst-comp ⟦ e ⟧exp τ
 --------------------------------------------------
 -- End result
 
+-- Not for pracical usage. Use the tactic by-naturality from Reflection.Tactic.Naturality instead.
 type-naturality-reflect : ∀ {ℓc s s'} {Γ : Ctx C ℓc} →
-                          (e : Exp Γ s) (e' : Exp Γ s') →
+                          (e : Expr Γ s) (e' : Expr Γ s') →
                           (p : reduce-skeleton s ≡ reduce-skeleton s') →
-                          ω-transp (Exp Γ) p (reduce e) ≡ω reduce e' →
+                          ω-transp (Expr Γ) p (reduce e) ≡ω reduce e' →
                           ⟦ e ⟧exp ≅ᵗʸ ⟦ e' ⟧exp
 type-naturality-reflect e e' p q =
   begin
@@ -233,44 +234,3 @@ type-naturality-reflect e e' p q =
   ≅˘⟨ reduce-sound e' ⟩
     ⟦ e' ⟧exp ∎
   where open ≅ᵗʸ-Reasoning
-
-
---------------------------------------------------
--- Definition of some operations that exist in any presheaf category
-
-module Operations where
-  open import Types.Discrete
-  open import Types.Functions
-  open import Types.Products
-  open import Types.Sums
-
-  instance
-    discr-nul : ∀ {ℓ} {A : Set ℓ} → IsNullaryNatural (Discr A)
-    natural-nul {{discr-nul {A = A}}} σ = Discr-natural A σ
-
-    fun-bin : IsBinaryNatural _⇛_
-    natural-bin {{fun-bin}} σ = ⇛-natural σ
-    cong-bin {{fun-bin}} = ⇛-cong
-
-    prod-bin : IsBinaryNatural _⊠_
-    natural-bin {{prod-bin}} σ = ⊠-natural σ
-    cong-bin {{prod-bin}} = ⊠-cong
-
-    sum-bin : IsBinaryNatural _⊞_
-    natural-bin {{sum-bin}} σ = ⊞-natural σ
-    cong-bin {{sum-bin}} = ⊞-cong
-
-open Operations public
-
-private
-  open import Types.Discrete
-  open import Types.Functions
-  open import Types.Products
-
-  example : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
-            (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
-            ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
-  example σ τ = type-naturality-reflect (sub (bin _⊠_ (bin _⇛_ (nul Bool') (nul Bool')) (sub (nul Bool') τ)) σ)
-                                        (bin _⊠_ (sub (bin _⇛_ (nul Bool') (nul Bool')) σ) (nul Bool'))
-                                        refl
-                                        refl

@@ -16,7 +16,7 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
-open import CwF-Structure.SubstitutionSequence
+open import Reflection.SubstitutionSequence
 
 open Category C
 

@@ -9,9 +9,8 @@
 -- context each type lives in. The reduction strategy is then to move "later" operations to the back
 -- of the sequence (which are applied last) and subsequently group all substitutions in front in one
 -- sequence of substitutions.
--- This solver will be superseded by the naturality solver in Reflection.Naturality. The latter can already
--- do more (e.g. moving substitions into the domain and codomain of a function type) but at the moment it
--- cannot handle the ▻ operation because the argument and result type do not live in the same context.
+-- This solver is superseded by the naturality solver in Reflection.Naturality. The latter can is more
+-- powerful (e.g. it allows moving substitions into the domain and codomain of a function type).
 -- Note that we use the option omega-in-omega in order to define
 -- an inductive data type in Setω and to pattern match on it (which
 -- is not possible in Agda 2.6.1 without this option). This code should
@@ -234,23 +233,3 @@ type-reflect {T = T} seq seq' eq =
   ≅⟨ defer-sound T seq' ⟩
     T ⟦ seq' ⟧ops ∎
   where open ≅ᵗʸ-Reasoning
-
-private
-  module Examples (σ : Δ ⇒ Γ) (τ : ◄ Γ ⇒ ◄ Θ) where
-    open import Types.Discrete
-    open import CwF-Structure.SubstitutionSequence
-    open import CwF-Structure.Terms
-{-
-    example' : (▻ ((▻ Bool') [ τ ])) [ σ ] ≅ᵗʸ ▻ (▻ Bool')
-    example' = type-reflect' (subst (!◇ (◄ (◄ Θ))) ∷ later ∷ subst τ ∷ later ∷ subst σ ∷ [])
-                             (subst (!◇ (◄ (◄ Δ))) ∷ later ∷ later ∷ [])
-                             (▻-cong (▻-cong (ty-subst-seq-cong (!◇ (◄ (◄ Θ)) ∷ ◄-subst τ ∷ ◄-subst (◄-subst σ) ◼)
-                                                                  (!◇ (◄ (◄ Δ)) ◼)
-                                                                  _
-                                                                  (◇-terminal _ _ _))))
-
-    example : (▻ ((▻ Bool') [ τ ])) [ σ ] ≅ᵗʸ ▻ (▻ Bool')
-    example = type-reflect (subst (!◇ (◄ (◄ Θ))) ∷ later ∷ subst τ ∷ later ∷ subst σ ∷ [])
-                           (subst (!◇ (◄ (◄ Δ))) ∷ later ∷ later ∷ [])
-                           (▻-cong (▻-cong (ty-subst-cong-subst (◇-terminal _ _ _) _)))
--}
