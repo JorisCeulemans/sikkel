@@ -21,7 +21,6 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import Types.Functions
-open import Reflection.Naturality
 
 open Category C
 
