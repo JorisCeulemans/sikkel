@@ -17,11 +17,11 @@ infix 1 _≅ᶜ_
 
 private
   variable
-    ℓ : Level
-    Γ Δ Θ : Ctx C ℓ
+    ℓ ℓ' r r' : Level
+    Γ Δ Θ : Ctx C ℓ r
 
 -- Two contexts are equivalent if they are naturally equivalent as presheaves.
-record _≅ᶜ_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
+record _≅ᶜ_ (Δ : Ctx C ℓ r) (Γ : Ctx C ℓ' r') : Set (ℓ ⊔ ℓ' ⊔ r ⊔ r') where
   field
     from : Δ ⇒ Γ
     to : Γ ⇒ Δ
@@ -32,8 +32,8 @@ open _≅ᶜ_ public
 ≅ᶜ-refl : Γ ≅ᶜ Γ
 from (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
 to (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-eq (isoˡ ≅ᶜ-refl) _ = refl
-eq (isoʳ ≅ᶜ-refl) _ = refl
+eq (isoˡ (≅ᶜ-refl {Γ = Γ})) _ = ctx≈-refl Γ
+eq (isoʳ (≅ᶜ-refl {Γ = Γ})) _ = ctx≈-refl Γ
 
 ≅ᶜ-sym : Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
 from (≅ᶜ-sym Δ=Γ) = to Δ=Γ

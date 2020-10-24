@@ -8,7 +8,9 @@ module CwF-Structure.Yoneda {C : Category} where
 
 open import Function using (_∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+import Relation.Binary.Reasoning.Setoid as SetoidReasoning
+open import Relation.Binary.PropositionalEquality
+  hiding ([_]; naturality) renaming (refl to ≡-refl; sym to ≡-sym; trans to ≡-trans; setoid to ≡-setoid)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -18,19 +20,23 @@ open Category C
 private
   variable
     x y : Ob
-    Γ : Ctx C ℓ
+    r : Level
+    Γ : Ctx C ℓ r
+
 
 -- Yoneda embedding
-𝕪 : Ob → Ctx C 0ℓ
-set (𝕪 x) y = Hom y x
+𝕪 : Ob → Ctx C 0ℓ 0ℓ
+setoid (𝕪 x) y = ≡-setoid (Hom y x)
 rel (𝕪 x) f g = g ∙ f
+rel-cong (𝕪 x) f = cong (_∙ f)
 rel-id (𝕪 x) _ = hom-idʳ
-rel-comp (𝕪 x) _ _ _ = sym ∙assoc
+rel-comp (𝕪 x) _ _ _ = ≡-sym ∙assoc
 
 -- The Yoneda lemma
 to-𝕪⇒* : Γ ⟨ x ⟩ → 𝕪 x ⇒ Γ
 func (to-𝕪⇒* {Γ = Γ} γ) f = Γ ⟪ f ⟫ γ
-naturality (to-𝕪⇒* {Γ = Γ} γ) f = sym (rel-comp Γ _ f γ)
+func-cong (to-𝕪⇒* {Γ = Γ} γ) ≡-refl = ctx≈-refl Γ
+naturality (to-𝕪⇒* {Γ = Γ} γ) f = ctx≈-sym Γ (rel-comp Γ _ f γ)
 
 from-𝕪⇒* : 𝕪 x ⇒ Γ → Γ ⟨ x ⟩
 from-𝕪⇒* σ = func σ hom-id
@@ -39,13 +45,13 @@ from-𝕪⇒* σ = func σ hom-id
 eq (𝕪-to-∘-from {Γ = Γ} σ) f =
   begin
     Γ ⟪ f ⟫ func σ hom-id
-  ≡⟨ naturality σ hom-id ⟩
+  ≈⟨ naturality σ hom-id ⟩
     func σ (hom-id ∙ f)
-  ≡⟨ cong (func σ) hom-idˡ ⟩
+  ≈⟨ func-cong σ hom-idˡ ⟩
     func σ f ∎
-  where open ≡-Reasoning
+  where open SetoidReasoning (setoid Γ _)
 
-𝕪-from-∘-to : (γ : Γ ⟨ x ⟩) → from-𝕪⇒* {Γ = Γ} (to-𝕪⇒* γ) ≡ γ
+𝕪-from-∘-to : (γ : Γ ⟨ x ⟩) → from-𝕪⇒* {Γ = Γ} (to-𝕪⇒* γ) ≈[ Γ ]≈ γ
 𝕪-from-∘-to {Γ = Γ} γ = rel-id Γ γ
 
 -- Proving that the Yoneda embedding is fully faithful

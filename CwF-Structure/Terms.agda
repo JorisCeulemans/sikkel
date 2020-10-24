@@ -7,7 +7,8 @@ open import Categories
 module CwF-Structure.Terms {C : Category}  where
 
 open import Level
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+import Relation.Binary.Reasoning.Setoid as SetoidReasoning
+--open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -20,21 +21,22 @@ infix 1 _≅ᵗᵐ_
 private
   variable
     x : Ob
-    Γ Δ Θ : Ctx C ℓ
-    T S R : Ty Γ ℓ
+    r : Level
+    Γ Δ Θ : Ctx C ℓ r
+    T S R : Ty Γ ℓ r
 
 
 --------------------------------------------------
 -- Definition of terms
 
-record Tm {ℓc ℓt} (Γ : Ctx C ℓc) (T : Ty Γ ℓt) : Set (ℓc ⊔ ℓt) where
+record Tm {ℓc rc ℓt rt} (Γ : Ctx C ℓc rc) (T : Ty Γ ℓt rt) : Set (ℓc ⊔ ℓt ⊔ rc ⊔ rt) where
   constructor MkTm
   no-eta-equality
 
   field
     term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
-    naturality : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) →
-                 T ⟪ f , eγ ⟫ (term y γy) ≡ term x γx
+    naturality : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx) →
+                 T ⟪ f , eγ ⟫ (term y γy) ≈⟦ T ⟧≈ term x γx
 open Tm public
 
 private
@@ -49,21 +51,21 @@ t ⟨ x , γ ⟩' = term t x γ
 --------------------------------------------------
 -- Equivalence of terms
 
-record _≅ᵗᵐ_ {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} (t s : Tm Γ T) : Set (ℓc ⊔ ℓt) where
+record _≅ᵗᵐ_ {ℓc ℓt rc rt} {Γ : Ctx C ℓc rc} {T : Ty Γ ℓt rt} (t s : Tm Γ T) : Set (ℓc ⊔ rt) where
   field
-    eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'
+    eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≈⟦ T ⟧≈ s ⟨ x , γ ⟩'
 open _≅ᵗᵐ_ public
 
-≅ᵗᵐ-refl : t ≅ᵗᵐ t
-eq ≅ᵗᵐ-refl _ = refl
+≅ᵗᵐ-refl : {t : Tm Γ T} → t ≅ᵗᵐ t
+eq (≅ᵗᵐ-refl {T = T}) _ = ty≈-refl T
 
-≅ᵗᵐ-sym : t ≅ᵗᵐ t' → t' ≅ᵗᵐ t
-eq (≅ᵗᵐ-sym t=t') γ = sym (eq t=t' γ)
+≅ᵗᵐ-sym : {t : Tm Γ T} → t ≅ᵗᵐ t' → t' ≅ᵗᵐ t
+eq (≅ᵗᵐ-sym {T = T} t=t') γ = ty≈-sym T (eq t=t' γ)
 
 ≅ᵗᵐ-trans : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
-eq (≅ᵗᵐ-trans t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
+eq (≅ᵗᵐ-trans {T = T} t1=t2 t2=t3) γ = ty≈-trans T (eq t1=t2 γ) (eq t2=t3 γ)
 
-module ≅ᵗᵐ-Reasoning {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} where
+module ≅ᵗᵐ-Reasoning where
   infix  3 _∎
   infixr 2 _≅⟨⟩_ step-≅ step-≅˘
   infix  1 begin_
@@ -95,15 +97,15 @@ term (convert-term η t) x γ = func η (t ⟨ x , γ ⟩')
 naturality (convert-term {T = T}{S = S} η t) f eγ =
   begin
     S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
-  ≡⟨ naturality η _ ⟩
+  ≈⟨ naturality η _ ⟩
     func η (T ⟪ f , eγ ⟫ (t ⟨ _ , _ ⟩'))
-  ≡⟨ cong (func η) (naturality t _ _) ⟩
+  ≈⟨ func-cong η (naturality t _ _) ⟩
     func η (t ⟨ _ , _ ⟩') ∎
-  where open ≡-Reasoning
+  where open SetoidReasoning (type S _ _)
 
 convert-term-cong : (η : T ↣ S) → t ≅ᵗᵐ t' →
                     convert-term η t ≅ᵗᵐ convert-term η t'
-eq (convert-term-cong η t=t') γ = cong (func η) (eq t=t' γ)
+eq (convert-term-cong η t=t') γ = func-cong η (eq t=t' γ)
 
 ι[_]_ : T ≅ᵗʸ S → Tm Γ S → Tm Γ T
 ι[ T=S ] s = convert-term (to T=S) s
@@ -113,7 +115,7 @@ eq (convert-term-cong η t=t') γ = cong (func η) (eq t=t' γ)
 ι-cong T=S s=s' = convert-term-cong (to T=S) s=s'
 
 ι-refl : (t : Tm Γ T) → ι[ ≅ᵗʸ-refl ] t ≅ᵗᵐ t
-eq (ι-refl t) _ = refl
+eq (ι-refl {T = T} t) _ = ty≈-refl T
 
 ι-symˡ : (T=S : T ≅ᵗʸ S) (s : Tm Γ S) →
          ι[ ≅ᵗʸ-sym T=S ] (ι[ T=S ] s) ≅ᵗᵐ s
@@ -128,7 +130,7 @@ eq (ι-symʳ T=S t) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
 
 ι-trans : (T=S : T ≅ᵗʸ S) (S=R : S ≅ᵗʸ R) (r : Tm Γ R) →
           ι[ ≅ᵗʸ-trans T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
-eq (ι-trans T=S S=R r) γ = refl
+eq (ι-trans {T = T} T=S S=R r) γ = ty≈-refl T
 
 
 --------------------------------------------------
@@ -143,7 +145,7 @@ eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
 
 convert-subst-commute : (σ : Δ ⇒ Γ) (η : T ↣ S) (t : Tm Γ T) →
                         convert-term (ty-subst-map σ η) (t [ σ ]') ≅ᵗᵐ (convert-term η t) [ σ ]'
-eq (convert-subst-commute σ η t) δ = refl
+eq (convert-subst-commute {S = S} σ η t) δ = ty≈-refl S
 
 ι-subst-commute : (σ : Δ ⇒ Γ) (T=S : T ≅ᵗʸ S) (s : Tm Γ S) →
                   ι[ ty-subst-cong-ty σ T=S ] (s [ σ ]') ≅ᵗᵐ (ι[ T=S ] s) [ σ ]'
@@ -151,11 +153,11 @@ eq (convert-subst-commute σ η t) δ = refl
 
 tm-subst-cong-subst : {σ τ : Δ ⇒ Γ} (t : Tm Γ T) →
                       (σ=τ : σ ≅ˢ τ) → t [ σ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst σ=τ T ] (t [ τ ]')
-eq (tm-subst-cong-subst t σ=τ) δ = sym (naturality t hom-id _)
+eq (tm-subst-cong-subst {T = T} t σ=τ) δ = ty≈-sym T (naturality t hom-id _)
 
 tm-subst-id : (t : Tm Γ T) → t [ id-subst Γ ]' ≅ᵗᵐ ι[ ty-subst-id T ] t
-eq (tm-subst-id t) _ = refl
+eq (tm-subst-id {T = T} t) _ = ty≈-refl T
 
 tm-subst-comp : (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 t [ τ ]' [ σ ]' ≅ᵗᵐ ι[ ty-subst-comp T τ σ ] (t [ τ ⊚ σ ]')
-eq (tm-subst-comp t τ σ) _ = refl
+eq (tm-subst-comp {T = T} t τ σ) _ = ty≈-refl T
