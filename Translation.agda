@@ -81,7 +81,9 @@ instance
 
 
 open import Reflection.Naturality
-open import Reflection.NaturalityTactic
+open import Reflection.Tactic.Lambda
+open import Reflection.Tactic.Lambda
+open import Reflection.Naturality.Instances
 
 nat-sum : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nat-elim (Nat' ⇛ Nat')
