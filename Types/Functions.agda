@@ -7,9 +7,11 @@ open import Categories
 module Types.Functions {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Function using (_∘_)
+open import Function
 open import Level
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
+open import Relation.Binary
+import Relation.Binary.Reasoning.Setoid as SetoidReasoning
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (refl to ≡-refl)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -22,34 +24,41 @@ open Category C
 
 private
   variable
-    ℓc ℓt ℓs : Level
+    ℓc ℓt ℓs r rc rt rs : Level
     x y z : Ob
-    Γ Δ : Ctx C ℓ
-    T T' S S' : Ty Γ ℓ
-
+    Γ Δ : Ctx C ℓ r
+    T T' S S' : Ty Γ ℓ r
+{-
 infixr 12 _⇛_
 
 open import Axiom.UniquenessOfIdentityProofs
 private
   uip : ∀ {a} {A : Set a} → UIP A
   uip refl refl = refl
-
+-}
 
 --------------------------------------------------
 -- Description of a function type at a specific stage (object of the base category)
 
-record PresheafFunc {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓs) (z : Ob) (γ : Γ ⟨ z ⟩) : Set (ℓc ⊔ ℓt ⊔ ℓs) where
+record PresheafFunc {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) (z : Ob) (γ : Γ ⟨ z ⟩) : Set (ℓc ⊔ rc ⊔ ℓt ⊔ rt ⊔ ℓs ⊔ rs) where
   constructor MkFunc
   field
-    _$⟨_,_⟩_ : ∀ {y} (ρ : Hom y z) {γ' : Γ ⟨ y ⟩} (eq : Γ ⟪ ρ ⟫ γ ≡ γ') →
+    _$⟨_,_⟩_ : ∀ {y} (ρ : Hom y z) {γ' : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ ⟫ γ ≈[ Γ ]≈ γ') →
                T ⟨ y , γ' ⟩ → S ⟨ y , γ' ⟩
+    $-cong : ∀ {y} (ρ : Hom y z) {γ' : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ ⟫ γ ≈[ Γ ]≈ γ') →
+             Congruent (ty≈ T y γ') (ty≈ S y γ') (_$⟨_,_⟩_ ρ eγ)
+    $-hom-cong : ∀ {y} {ρ ρ' : Hom y z} (e-hom : ρ ≡ ρ')
+                 {γy : Γ ⟨ y ⟩} {eγ : Γ ⟪ ρ ⟫ γ ≈[ Γ ]≈ γy} {eγ' : Γ ⟪ ρ' ⟫ γ ≈[ Γ ]≈ γy}
+                 {t : T ⟨ y , γy ⟩} →
+                 _$⟨_,_⟩_ ρ eγ t ≈⟦ S ⟧≈ _$⟨_,_⟩_ ρ' eγ' t
     naturality : ∀ {x y} {ρ-xy : Hom x y} {ρ-yz : Hom y z} {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} →
-                 (eq-zy : Γ ⟪ ρ-yz ⟫ γ ≡ γy) (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) (t : T ⟨ y , γy ⟩)→
-                 _$⟨_,_⟩_ (ρ-yz ∙ ρ-xy) (strong-rel-comp Γ eq-zy eq-yx) (T ⟪ ρ-xy , eq-yx ⟫ t) ≡
+                 (eq-zy : Γ ⟪ ρ-yz ⟫ γ ≈[ Γ ]≈ γy) (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≈[ Γ ]≈ γx) (t : T ⟨ y , γy ⟩)→
+                 _$⟨_,_⟩_ (ρ-yz ∙ ρ-xy) (strong-rel-comp Γ eq-zy eq-yx) (T ⟪ ρ-xy , eq-yx ⟫ t) ≈⟦ S ⟧≈
                    S ⟪ ρ-xy , eq-yx ⟫ (_$⟨_,_⟩_ ρ-yz eq-zy t)
   infix 13 _$⟨_,_⟩_
 open PresheafFunc public
 
+{-
 -- Here we make again use of uip by pattern matching on both equality proofs.
 $-cong : {T : Ty Γ ℓt} {S : Ty Γ ℓs}
          {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} (f : PresheafFunc T S y γy)
@@ -68,50 +77,75 @@ to-pshfun-eq : {T : Ty Γ ℓt} {S : Ty Γ ℓs}
 to-pshfun-eq e = cong₂-d MkFunc
   (funextI (funext (λ ρ → funextI (funext λ eq → funext λ t → e ρ eq t))))
   (funextI (funextI (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
+-}
+
+func≈ : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) (y : Ob) (γy : Γ ⟨ y ⟩) →
+        Rel (PresheafFunc T S y γy) (ℓc ⊔ rc ⊔ ℓt ⊔ rs)
+func≈ {Γ = Γ} _ S y γy f g = ∀ {x} (ρ : Hom x y) {γx} (eγ : Γ ⟪ ρ ⟫ γy ≈[ Γ ]≈ γx) t →
+                             f $⟨ ρ , eγ ⟩ t ≈⟦ S ⟧≈ g $⟨ ρ , eγ ⟩ t
+
+func≈-equiv : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) (y : Ob) (γy : Γ ⟨ y ⟩) →
+              IsEquivalence (func≈ T S y γy)
+IsEquivalence.refl (func≈-equiv T S y γy) _ _ _ = ty≈-refl S
+IsEquivalence.sym (func≈-equiv T S y γy) f=g ρ eγ t = ty≈-sym S (f=g ρ eγ t)
+IsEquivalence.trans (func≈-equiv T S y γy) f=g g=h ρ eγ t = ty≈-trans S (f=g ρ eγ t) (g=h ρ eγ t)
 
 -- This will be used to define the action of a function type on morphisms.
-lower-presheaffunc : {T : Ty Γ ℓt} {S : Ty Γ ℓs} (ρ-yz : Hom y z)
-                     {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eq : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
+lower-presheaffunc : {T : Ty Γ ℓt rt} {S : Ty Γ ℓs rs} (ρ-yz : Hom y z)
+                     {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ-yz ⟫ γz ≈[ Γ ]≈ γy) →
                      PresheafFunc T S z γz → PresheafFunc T S y γy
-lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eq-zy f = MkFunc g g-nat
+lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy f = MkFunc g g-cong g-hom-cong g-nat
   where
-    g : ∀ {x} (ρ-xy : Hom x y) {γx} (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) →
+    g : ∀ {x} (ρ-xy : Hom x y) {γx} (eγ-yx : Γ ⟪ ρ-xy ⟫ γy ≈[ Γ ]≈ γx) →
         T ⟨ x , γx ⟩ → S ⟨ x , γx ⟩
-    g ρ-xy eq-yx = f $⟨ ρ-yz ∙ ρ-xy , strong-rel-comp Γ eq-zy eq-yx ⟩_
-    open ≡-Reasoning
+    g ρ-xy eγ-yx = f $⟨ ρ-yz ∙ ρ-xy , strong-rel-comp Γ eγ-zy eγ-yx ⟩_
+    g-cong : ∀ {x} (ρ : Hom x y) {γx : Γ ⟨ x ⟩} (eγ-yx : Γ ⟪ ρ ⟫ γy ≈[ Γ ]≈ γx) →
+             Congruent (ty≈ T x γx) (ty≈ S x γx) (g ρ eγ-yx)
+    g-cong ρ eγ-yx et = $-cong f (ρ-yz ∙ ρ) _ et
+    g-hom-cong : ∀ {x} {ρ ρ' : Hom x y} (e-hom : ρ ≡ ρ')
+                 {γx : Γ ⟨ x ⟩} {eγ-yx : Γ ⟪ ρ ⟫ γy ≈[ Γ ]≈ γx} {eγ-yx' : Γ ⟪ ρ' ⟫ γy ≈[ Γ ]≈ γx}
+                 {t : T ⟨ x , γx ⟩} →
+                 g ρ eγ-yx t ≈⟦ S ⟧≈ g ρ' eγ-yx' t
+    g-hom-cong eρ = $-hom-cong f (cong (ρ-yz ∙_) eρ)
     g-nat : ∀ {w x} {ρ-wx : Hom w x} {ρ-xy : Hom x y} {γx : Γ ⟨ x ⟩} {γw : Γ ⟨ w ⟩}
-            (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) (eq-xw : Γ ⟪ ρ-wx ⟫ γx ≡ γw) → _
-    g-nat {ρ-wx = ρ-wx}{ρ-xy} eq-yx eq-xw t =
+            (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≈[ Γ ]≈ γx) (eq-xw : Γ ⟪ ρ-wx ⟫ γx ≈[ Γ ]≈ γw) → _
+    g-nat {ρ-wx = ρ-wx}{ρ-xy} eγ-yx eγ-xw t =
       begin
-        f $⟨ ρ-yz ∙ (ρ-xy ∙ ρ-wx) , strong-rel-comp Γ eq-zy (strong-rel-comp Γ eq-yx eq-xw) ⟩ (T ⟪ ρ-wx , eq-xw ⟫ t)
-      ≡˘⟨ $-cong f ∙assoc _ _ ⟩
-        f $⟨ (ρ-yz ∙ ρ-xy) ∙ ρ-wx , strong-rel-comp Γ (strong-rel-comp Γ eq-zy eq-yx) eq-xw ⟩ (T ⟪ ρ-wx , eq-xw ⟫ t)
-      ≡⟨ naturality f (strong-rel-comp Γ eq-zy eq-yx) eq-xw t ⟩
-        (S ⟪ ρ-wx , eq-xw ⟫ (f $⟨ ρ-yz ∙ ρ-xy , strong-rel-comp Γ eq-zy eq-yx ⟩ t)) ∎
+        f $⟨ ρ-yz ∙ (ρ-xy ∙ ρ-wx) , strong-rel-comp Γ eγ-zy (strong-rel-comp Γ eγ-yx eγ-xw) ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
+      ≈˘⟨ $-hom-cong f ∙assoc ⟩
+        f $⟨ (ρ-yz ∙ ρ-xy) ∙ ρ-wx , strong-rel-comp Γ (strong-rel-comp Γ eγ-zy eγ-yx) eγ-xw ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
+      ≈⟨ naturality f (strong-rel-comp Γ eγ-zy eγ-yx) eγ-xw t ⟩
+        (S ⟪ ρ-wx , eγ-xw ⟫ (f $⟨ ρ-yz ∙ ρ-xy , strong-rel-comp Γ eγ-zy eγ-yx ⟩ t)) ∎
+      where open SetoidReasoning (type S _ _)
 
 
 --------------------------------------------------
 -- Definition of the function type + term constructors
 
-_⇛_ : {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓs → Ty Γ (ℓc ⊔ ℓt ⊔ ℓs)
-type (_⇛_ {Γ = Γ} T S) z γ = PresheafFunc T S z γ
+_⇛_ : {Γ : Ctx C ℓc rc} → Ty Γ ℓt rt → Ty Γ ℓs rs → Ty Γ (ℓc ⊔ rc ⊔ ℓt ⊔ rt ⊔ ℓs ⊔ rs) (ℓc ⊔ rc ⊔ ℓt ⊔ rs)
+Setoid.Carrier (type (_⇛_ {Γ = Γ} T S) z γ) = PresheafFunc T S z γ
+Setoid._≈_ (type (_⇛_ {Γ = Γ} T S) z γ) = func≈ T S z γ
+Setoid.isEquivalence (type (_⇛_ {Γ = Γ} T S) z γ) = func≈-equiv T S z γ
 morph (T ⇛ S) = lower-presheaffunc
-morph-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl _ _
-morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
-morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ _ → $-cong f ∙assoc _ _)
+morph-cong (T ⇛ S) ρ-zy eγ-zy f=g ρ-yx eγ-yx t = f=g (ρ-zy ∙ ρ-yx) _ t
+morph-hom-cong (T ⇛ S) eρ-zy {t = f} ρ-yx eγ-yx t = $-hom-cong f (cong (_∙ ρ-yx) eρ-zy)
+morph-id (_⇛_ {Γ = Γ} T S) f _ _ _ = $-hom-cong f hom-idˡ 
+morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f _ _ _ = $-hom-cong f ∙assoc
 
-lam : (T : Ty Γ ℓt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
-term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
-                                 (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eq-zy eq-yx t →
+lam : (T : Ty Γ ℓt rt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
+_$⟨_,_⟩_ (term (lam {S = S} T b) z γz) ρ-yz {γy} eγ t = b ⟨ _ , [ γy , t ] ⟩'
+$-cong (term (lam {S = S} T b) z γz) ρ-yz eγ et = {!naturality b!}
+$-hom-cong (term (lam {S = S} T b) z γz) _ = ty≈-refl S
+naturality (term (lam {S = S} T b) z γz) {x = x}{y}{ρ-xy}{_}{γx}{γy} eγ-zy eγ-yx t =
   begin
-    b ⟨ x , [ γx , T ⟪ ρ-xy , eq-yx ⟫ t ] ⟩'
-  ≡⟨ sym (naturality b ρ-xy (to-Σ-eq eq-yx (morph-transport T refl eq-yx t))) ⟩
-    S ⟪ ρ-xy , from-Σ-eq1 (to-Σ-eq eq-yx _) ⟫ b ⟨ y , [ γy , t ] ⟩'
-  ≡⟨ cong (λ x → S ⟪ ρ-xy , x ⟫ _) (from-to-Σ-eq1 (morph-transport T refl eq-yx t)) ⟩
-    S ⟪ ρ-xy , eq-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎)
-  where open ≡-Reasoning
-naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
-
+    b ⟨ x , [ γx , T ⟪ ρ-xy , eγ-yx ⟫ t ] ⟩'
+  ≈˘⟨ naturality b ρ-xy [ eγ-yx , ty≈-trans T (ty≈-sym T (morph-comp T hom-id ρ-xy _ _ t)) {!!} ] ⟩
+    S ⟪ ρ-xy , _ ⟫ b ⟨ y , [ γy , t ] ⟩'
+  ≈⟨ morph-hom-cong S ≡-refl ⟩
+    S ⟪ ρ-xy , eγ-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎
+  where open SetoidReasoning (type S x γx)
+naturality (lam {S = S} T b) _ _ _ _ _ = ty≈-refl S
+{-
 -- An operator used to define function application.
 _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
 _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ ⟩ t
@@ -383,3 +417,4 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
   ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-rel-comp Γ eγ (rel-id Γ γ')) eγ ⟩
     f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)
   where open ≡-Reasoning
+-}
