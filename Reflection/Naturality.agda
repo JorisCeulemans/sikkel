@@ -116,17 +116,16 @@ level (sun f ℓc s) = f ℓc (level s)
 level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
 level (ssub ℓc s) = level s
 
-data Expr : {ℓc : Level} (Γ : Ctx C ℓc) → ExprSkeleton → Setω where
-  con : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
-        (T : Ty Γ ℓ) → Expr Γ (scon ℓ)
-  nul : ∀ {ℓc ℓ} {Γ : Ctx C ℓc} →
+data Expr {ℓc : Level} (Γ : Ctx C ℓc) : ExprSkeleton → Setω where
+  con : ∀ {ℓ} → (T : Ty Γ ℓ) → Expr Γ (scon ℓ)
+  nul : ∀ {ℓ} →
         (U : NullaryTypeOp ℓ) → {{IsNullaryNatural U}} → Expr Γ (snul ℓ)
-  un  : ∀ {ℓc f s} {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} {Γ : Ctx C ℓc} →
+  un  : ∀ {f s} {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} →
         (F : UnaryTypeOp Φ f) → {{IsUnaryNatural F}} → (e : Expr (Φ Γ) s) → Expr Γ (sun f ℓc s)
-  bin : ∀ {ℓc f s s'} {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} {Γ : Ctx C ℓc} →
+  bin : ∀ {f s s'} {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} →
         (F : BinaryTypeOp Φ Ψ f) → {{IsBinaryNatural F}} → (e1 : Expr (Φ Γ) s) (e2 : Expr (Ψ Γ) s') → Expr Γ (sbin f ℓc s s')
-  sub : ∀ {ℓc ℓc' s} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} →
-        Expr Γ s → (σ : Δ ⇒ Γ) → Expr Δ (ssub ℓc s)
+  sub : ∀ {ℓc' s} {Δ : Ctx C ℓc'} →
+        Expr Δ s → (σ : Γ ⇒ Δ) → Expr Γ (ssub ℓc s)
 
 ⟦_⟧exp : ∀ {ℓc s} {Γ : Ctx C ℓc} → Expr Γ s → Ty Γ (level s)
 ⟦ con T ⟧exp = T
