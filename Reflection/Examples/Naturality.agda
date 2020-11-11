@@ -17,7 +17,7 @@ open import Reflection.Naturality
 open import Reflection.Naturality.Instances
 open import Reflection.Tactic.Naturality
 
-example : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
+example : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} →
           (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
           ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
 example σ τ = type-naturality-reflect (sub (bin _⊠_ (bin _⇛_ (nul Bool') (nul Bool')) (sub (nul Bool') τ)) σ)
@@ -25,14 +25,14 @@ example σ τ = type-naturality-reflect (sub (bin _⊠_ (bin _⇛_ (nul Bool') (
                                       refl
                                       refl
 
-example' : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
+example' : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} →
            (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
            ((Bool' ⇛ Bool') ⊠ ((Discr Bool) [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
 example' σ τ = by-naturality
 
 -- Experiments interaction var + by-naturality tactics
 
-not' : ∀ {ℓ} {Γ : Ctx C ℓ} → Tm Γ Bool' → Tm Γ Bool'
+not' : {Γ : Ctx C} → Tm Γ Bool' → Tm Γ Bool'
 term (not' b) x _ = not (b ⟨ x , _ ⟩')
 naturality (not' b) f eγ = cong not (naturality b f eγ)
 

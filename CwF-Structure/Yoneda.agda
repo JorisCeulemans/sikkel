@@ -18,10 +18,10 @@ open Category C
 private
   variable
     x y : Ob
-    Γ : Ctx C ℓ
+    Γ : Ctx C
 
 -- Yoneda embedding
-𝕪 : Ob → Ctx C 0ℓ
+𝕪 : Ob → Ctx C
 set (𝕪 x) y = Hom y x
 rel (𝕪 x) f g = g ∙ f
 rel-id (𝕪 x) _ = hom-idʳ

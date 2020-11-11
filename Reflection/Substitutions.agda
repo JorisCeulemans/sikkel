@@ -21,24 +21,25 @@ open import Categories
 module Reflection.Substitutions {C : Category} where
 
 open import Level
+open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure.Contexts
-open import Reflection.Helpers
+--open import Reflection.Helpers
 
 private
   variable
     ℓ ℓ' ℓ'' : Level
-    Δ Γ Θ Ξ : Ctx C ℓ
+    Δ Γ Θ Ξ : Ctx C
 
 
-data Val : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
-  var : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Val Δ Γ
-  id' : {Γ : Ctx C ℓ} → Val Γ Γ
-  !◇' : {Γ : Ctx C ℓ} → Val Γ ◇
+data Val : Ctx C → Ctx C → Set where
+  var : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) → Val Δ Γ
+  id' : {Γ : Ctx C} → Val Γ Γ
+  !◇' : {Γ : Ctx C} → Val Γ ◇
 
-data Exp : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
-  val : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} → Val Δ Γ → Exp Δ Γ
-  _⊚'_ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
+data Exp : Ctx C → Ctx C → Set₁ where
+  val : {Δ : Ctx C} {Γ : Ctx C} → Val Δ Γ → Exp Δ Γ
+  _⊚'_ : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} →
            Exp Γ Θ → Exp Δ Γ → Exp Δ Θ
 
 ⟦_⟧v : Val Δ Γ → Δ ⇒ Γ
@@ -50,9 +51,9 @@ data Exp : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
 ⟦ val s ⟧e    = ⟦ s ⟧v
 ⟦ e1 ⊚' e2 ⟧e = ⟦ e1 ⟧e ⊚ ⟦ e2 ⟧e
 
-data ValSeq : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
-  [] : {Γ : Ctx C ℓ} → ValSeq Γ Γ
-  _∷_ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Val Γ Θ) (σs : ValSeq Δ Γ) → ValSeq Δ Θ
+data ValSeq : Ctx C → Ctx C → Set₁ where
+  [] : {Γ : Ctx C} → ValSeq Γ Γ
+  _∷_ : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} (σ : Val Γ Θ) (σs : ValSeq Δ Γ) → ValSeq Δ Θ
 
 _++_ : ValSeq Γ Θ → ValSeq Δ Γ → ValSeq Δ Θ
 []       ++ τs = τs
@@ -102,10 +103,10 @@ flatten-sound (e1 ⊚' e2) =
     ⟦ e1 ⟧e ⊚ ⟦ e2 ⟧e ∎
   where open ≅ˢ-Reasoning
 
-vs-cong : {σs τs : ValSeq Δ Γ} → σs ≡ω τs → ⟦ σs ⟧vs ≅ˢ ⟦ τs ⟧vs
+vs-cong : {σs τs : ValSeq Δ Γ} → σs ≡ τs → ⟦ σs ⟧vs ≅ˢ ⟦ τs ⟧vs
 vs-cong refl = ≅ˢ-refl
 
-subst-reflect : (e1 e2 : Exp Δ Γ) → reduce (flatten e1) ≡ω reduce (flatten e2) → ⟦ e1 ⟧e ≅ˢ ⟦ e2 ⟧e
+subst-reflect : (e1 e2 : Exp Δ Γ) → reduce (flatten e1) ≡ reduce (flatten e2) → ⟦ e1 ⟧e ≅ˢ ⟦ e2 ⟧e
 subst-reflect e1 e2 eq =
   begin
     ⟦ e1 ⟧e

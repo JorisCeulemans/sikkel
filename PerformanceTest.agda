@@ -12,21 +12,21 @@ open import Types.Functions
 open import Types.Discrete
 open import Types.Products
 open import Reflection.Naturality
-open import Reflection.NaturalityTactic
+open import Reflection.Tactic.Lambda
 
 private
   variable
     ℓ ℓ' : Level
-    Γ : Ctx C ℓ
+    Γ : Ctx C
 
 
 postulate
-  unop : UnaryTypeOp {C = C} (λ Γ → Γ) (λ _ ℓ → ℓ)
+  unop : UnaryTypeOp {C = C} (λ Γ → Γ)
   instance
     unop-natural : IsUnaryNatural unop
-  unop⊛ : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} → Tm Γ (unop (T ⇛ S)) → Tm Γ (unop T) → Tm Γ (unop S)
-  return-unop : {T : Ty Γ ℓ} → Tm Γ T → Tm Γ (unop T)
-  fakelöb : {T : Ty Γ ℓ} → Tm Γ (unop T ⇛ T) → Tm Γ T
+  unop⊛ : {T : Ty Γ} {S : Ty Γ} → Tm Γ (unop (T ⇛ S)) → Tm Γ (unop T) → Tm Γ (unop S)
+  return-unop : {T : Ty Γ} → Tm Γ T → Tm Γ (unop T)
+  fakelöb : {T : Ty Γ} → Tm Γ (unop T ⇛ T) → Tm Γ T
 
 not-func : Tm Γ (Bool' ⇛ Bool')
 not-func = discr-func not

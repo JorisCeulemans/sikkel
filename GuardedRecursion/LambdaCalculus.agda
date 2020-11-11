@@ -31,7 +31,7 @@ _⇒_.naturality (to ◄𝕪-suc) _ = refl
 eq (isoˡ ◄𝕪-suc) (s≤s m≤n) = refl
 eq (isoʳ ◄𝕪-suc) _ = refl
 
-𝐷 : (n : ℕ) → Ty {C = ω} (𝕪 n) 0ℓ
+𝐷 : (n : ℕ) → Ty {C = ω} (𝕪 n)
 𝐷 zero = Unit' ⇛ Unit'
 𝐷 (suc n) = ▻ (𝐷 n [ from ◄𝕪-suc ]) ⇛ ▻ (𝐷 n [ from ◄𝕪-suc ])
 

@@ -17,12 +17,11 @@ open import Types.Functions
 
 private
   variable
-    ℓ'' : Level
-    Γ Δ : Ctx C ℓ
-    T T' S S' : Ty Γ ℓ
+    Γ Δ : Ctx C
+    T T' S S' : Ty Γ
 
 
-_⊞_ : Ty Γ ℓ → Ty Γ ℓ' → Ty Γ (ℓ ⊔ ℓ')
+_⊞_ : Ty Γ → Ty Γ → Ty Γ
 type (T ⊞ S) x γ = T ⟨ x , γ ⟩ ⊎ S ⟨ x , γ ⟩
 morph (T ⊞ S) f eγ (inl t) = inl (T ⟪ f , eγ ⟫ t)
 morph (T ⊞ S) f eγ (inr s) = inr (S ⟪ f , eγ ⟫ s)
@@ -55,21 +54,21 @@ inr' : Tm Γ S → Tm Γ (T ⊞ S)
 term (inr' s) x γ = inr (s ⟨ x , γ ⟩')
 naturality (inr' s) f eγ = cong inr (naturality s f eγ)
 
-inl'⟨_⟩_ : (S : Ty Γ ℓ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
+inl'⟨_⟩_ : (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
 inl'⟨ S ⟩ t = inl' {S = S} t
 
-inr'⟨_⟩_ : (T : Ty Γ ℓ) (s : Tm Γ S) → Tm Γ (T ⊞ S)
+inr'⟨_⟩_ : (T : Ty Γ) (s : Tm Γ S) → Tm Γ (T ⊞ S)
 inr'⟨ T ⟩ s = inr' {T = T} s
 
-module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} where
+module _ {T : Ty Γ} {S : Ty Γ} where
   inl'-cong : {t t' : Tm Γ T} → t ≅ᵗᵐ t' → inl'⟨ S ⟩ t ≅ᵗᵐ inl' t'
   eq (inl'-cong t=t') γ = cong inl (eq t=t' γ)
 
   inr'-cong : {s s' : Tm Γ S} → s ≅ᵗᵐ s' → inr'⟨ T ⟩ s ≅ᵗᵐ inr' s'
   eq (inr'-cong s=s') γ = cong inr (eq s=s' γ)
 
-module _ {ℓt ℓt' ℓs ℓs'}
-  {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'}
+module _
+  {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
 
@@ -79,7 +78,7 @@ module _ {ℓt ℓt' ℓs ℓs'}
   inr'-ι : (s : Tm Γ S') → ι[ ⊞-cong T=T' S=S' ] inr' s ≅ᵗᵐ inr' (ι[ S=S' ] s)
   eq (inr'-ι s) _ = refl
 
-module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (σ : Δ ⇒ Γ) where
+module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊞-natural : (T ⊞ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊞ (S [ σ ])
   func (from ⊞-natural) = id
   naturality (from ⊞-natural) (inl t) = refl
@@ -102,7 +101,7 @@ inl'-func {T = T} = lam T (ι[ ⊞-natural π ] inl' (var 0))
 inr'-func : Tm Γ (S ⇛ T ⊞ S)
 inr'-func {S = S} = lam S (ι[ ⊞-natural π ] inr' (var 0))
 
-module _ {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (C : Ty Γ ℓ'') where
+module _ {A : Ty Γ} {B : Ty Γ} (C : Ty Γ) where
   ⊞-elim : Tm Γ (A ⇛ C) → Tm Γ (B ⇛ C) → Tm Γ (A ⊞ B ⇛ C)
   term (⊞-elim f g) _ _ $⟨ _ , _ ⟩ inl a = f €⟨ _ , _ ⟩ a
   term (⊞-elim f g) _ _ $⟨ _ , _ ⟩ inr b = g €⟨ _ , _ ⟩ b
@@ -118,7 +117,7 @@ module _ {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (C : Ty Γ ℓ'') where
             app (⊞-elim f g) (inr' b) ≅ᵗᵐ app g b
   eq (β-⊞-inr f g b) _ = refl
 
-η-⊞ : {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (t : Tm Γ (A ⊞ B)) →
+η-⊞ : {A : Ty Γ} {B : Ty Γ} (t : Tm Γ (A ⊞ B)) →
       t ≅ᵗᵐ app (⊞-elim (A ⊞ B) inl'-func inr'-func) t
 eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
 eq (η-⊞ t) γ | inl a = refl

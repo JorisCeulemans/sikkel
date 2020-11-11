@@ -16,9 +16,9 @@ private
 module _ where
   private
     variable
-      Δ Γ Θ : Ctx ω ℓ
+      Δ Γ Θ : Ctx ω
 
-  ⨅ : Ctx ω ℓ → Ctx ★ ℓ
+  ⨅ : Ctx ω → Ctx ★
   set (⨅ Γ) _ = Γ ⟨ 0 ⟩
   rel (⨅ Γ) _ γ = γ
   rel-id (⨅ Γ) _ = refl
@@ -34,7 +34,7 @@ module _ where
   ⨅-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → ⨅-subst (σ ⊚ τ) ≅ˢ ⨅-subst σ ⊚ ⨅-subst τ
   eq (⨅-subst-⊚ σ τ) _ = refl
 
-  ◬ : Ty (⨅ Γ) ℓ' → Ty Γ ℓ'
+  ◬ : Ty (⨅ Γ) → Ty Γ
   type (◬ {Γ = Γ} T) n γ = T ⟨ tt , Γ ⟪ z≤n ⟫ γ ⟩
   morph (◬ {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ tt , proof ⟫
     where
@@ -53,7 +53,7 @@ module _ where
   morph-id (◬ T) t = trans (morph-cong T refl) (morph-id T t)
   morph-comp (◬ T) _ _ _ _ t = trans (morph-cong T refl) (morph-comp T tt tt _ _ t)
 
-  module _ {T : Ty (⨅ Γ) ℓ} where
+  module _ {T : Ty (⨅ Γ)} where
     ◬-intro : Tm (⨅ Γ) T → Tm Γ (◬ T)
     term (◬-intro t) n γ = t ⟨ tt , Γ ⟪ z≤n ⟫ γ ⟩'
     Tm.naturality (◬-intro t) _ _ = Tm.naturality t tt _
@@ -79,7 +79,7 @@ module _ where
     ◬-β : (t : Tm (⨅ Γ) T) → ◬-elim (◬-intro t) ≅ᵗᵐ t
     eq (◬-β t) γ = Tm.naturality t tt _
 
-  ◬-natural : (σ : Δ ⇒ Γ) (T : Ty (⨅ Γ) ℓ) → (◬ T) [ σ ] ≅ᵗʸ ◬ (T [ ⨅-subst σ ])
+  ◬-natural : (σ : Δ ⇒ Γ) (T : Ty (⨅ Γ)) → (◬ T) [ σ ] ≅ᵗʸ ◬ (T [ ⨅-subst σ ])
   func (from (◬-natural σ T)) = ctx-element-subst T (_⇒_.naturality σ _)
   CwF-Structure.naturality (from (◬-natural σ T)) t =
     begin
@@ -123,11 +123,11 @@ module _ where
       t ∎
     where open ≡-Reasoning
 
-  ◬-intro-natural : (σ : Δ ⇒ Γ) {T : Ty (⨅ Γ) ℓ} (t : Tm (⨅ Γ) T) →
+  ◬-intro-natural : (σ : Δ ⇒ Γ) {T : Ty (⨅ Γ)} (t : Tm (⨅ Γ) T) →
                     (◬-intro t) [ σ ]' ≅ᵗᵐ ι[ ◬-natural σ T ] ◬-intro (t [ ⨅-subst σ ]')
   eq (◬-intro-natural σ t) δ = sym (Tm.naturality t tt _)
 
-  ◬-elim-natural : (σ : Δ ⇒ Γ) {T : Ty (⨅ Γ) ℓ} (t : Tm Γ (◬ T)) →
+  ◬-elim-natural : (σ : Δ ⇒ Γ) {T : Ty (⨅ Γ)} (t : Tm Γ (◬ T)) →
                    (◬-elim t) [ ⨅-subst σ ]' ≅ᵗᵐ ◬-elim (ι⁻¹[ ◬-natural σ T ] (t [ σ ]'))
   eq (◬-elim-natural {Δ = Δ}{Γ = Γ} σ {T = T} t) δ =
     begin
@@ -142,9 +142,9 @@ module _ where
 module _ where
   private
     variable
-      Δ Γ Θ : Ctx ★ ℓ
+      Δ Γ Θ : Ctx ★
 
-  ▲ : Ctx ★ ℓ → Ctx ω ℓ
+  ▲ : Ctx ★ → Ctx ω
   set (▲ Γ) _ = Γ ⟨ tt ⟩
   rel (▲ Γ) _ γ = γ
   rel-id (▲ Γ) _ = refl
@@ -164,7 +164,7 @@ module _ where
   func (const-subst γ) _ = γ
   _⇒_.naturality (const-subst γ) _ = refl
 
-  ∇ : Ty (▲ Γ) ℓ → Ty Γ ℓ
+  ∇ : Ty (▲ Γ) → Ty Γ
   type (∇ T) _ γ = Tm ◇ (T [ const-subst γ ])
   morph (∇ {Γ = Γ} T) tt {γm}{γk} eγ t = MkTm tm nat
     where

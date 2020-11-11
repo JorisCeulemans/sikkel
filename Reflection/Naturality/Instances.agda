@@ -24,7 +24,7 @@ open import Reflection.Naturality
 
 
 instance
-  discr-nul : ∀ {ℓ} {A : Set ℓ} → IsNullaryNatural {C} (Discr A)
+  discr-nul : ∀ {A : Set} → IsNullaryNatural {C} (Discr A)
   natural-nul {{discr-nul {A = A}}} σ = Discr-natural A σ
 
   fun-bin : IsBinaryNatural {C} _⇛_

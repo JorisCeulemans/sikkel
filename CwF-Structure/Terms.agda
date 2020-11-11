@@ -20,14 +20,14 @@ infix 1 _≅ᵗᵐ_
 private
   variable
     x : Ob
-    Γ Δ Θ : Ctx C ℓ
-    T S R : Ty Γ ℓ
+    Γ Δ Θ : Ctx C
+    T S R : Ty Γ
 
 
 --------------------------------------------------
 -- Definition of terms
 
-record Tm {ℓc ℓt} (Γ : Ctx C ℓc) (T : Ty Γ ℓt) : Set (ℓc ⊔ ℓt) where
+record Tm (Γ : Ctx C) (T : Ty Γ) : Set where
   constructor MkTm
   no-eta-equality
 
@@ -49,7 +49,7 @@ t ⟨ x , γ ⟩' = term t x γ
 --------------------------------------------------
 -- Equivalence of terms
 
-record _≅ᵗᵐ_ {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} (t s : Tm Γ T) : Set (ℓc ⊔ ℓt) where
+record _≅ᵗᵐ_ {Γ : Ctx C} {T : Ty Γ} (t s : Tm Γ T) : Set where
   field
     eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'
 open _≅ᵗᵐ_ public
@@ -63,7 +63,7 @@ eq (≅ᵗᵐ-sym t=t') γ = sym (eq t=t' γ)
 ≅ᵗᵐ-trans : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
 eq (≅ᵗᵐ-trans t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
 
-module ≅ᵗᵐ-Reasoning {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} where
+module ≅ᵗᵐ-Reasoning {Γ : Ctx C} {T : Ty Γ} where
   infix  3 _∎
   infixr 2 _≅⟨⟩_ step-≅ step-≅˘
   infix  1 begin_

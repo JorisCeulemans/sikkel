@@ -26,25 +26,25 @@ open Category C
 
 private
   variable
-    Γ Δ : Ctx C ℓ
-    T : Ty Γ ℓ
+    Γ Δ : Ctx C
+    T : Ty Γ
 
 
 --------------------------------------------------
 -- General description of discrete types
 
-Discr : (A : Set ℓ) → Ty Γ ℓ
+Discr : (A : Set) → Ty Γ
 type (Discr A) _ _ = A
 morph (Discr A) _ _ = id
 morph-cong (Discr A) _ = refl
 morph-id (Discr A) _ = refl
 morph-comp (Discr A) _ _ _ _ _ = refl
 
-discr : {A : Set ℓ} → A → Tm Γ (Discr A)
+discr : {A : Set} → A → Tm Γ (Discr A)
 term (discr a) _ _ = a
 naturality (discr a) _ _ = refl
 
-discr-func : {A : Set ℓ} {B : Set ℓ'} → (A → B) → Tm Γ (Discr A ⇛ Discr B)
+discr-func : {A B : Set} → (A → B) → Tm Γ (Discr A ⇛ Discr B)
 term (discr-func f) _ _ $⟨ _ , _ ⟩ a = f a
 naturality (term (discr-func f) _ _) _ _ _ = refl
 naturality (discr-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
@@ -63,7 +63,7 @@ discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≅�
 eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
 -}
 
-Discr-natural : (A : Set ℓ) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
+Discr-natural : (A : Set) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
 func (from (Discr-natural A σ)) = id
 naturality (from (Discr-natural A σ)) _ = refl
 func (to (Discr-natural A σ)) = id
@@ -71,14 +71,14 @@ naturality (to (Discr-natural A σ)) _ = refl
 eq (isoˡ (Discr-natural A σ)) _ = refl
 eq (isoʳ (Discr-natural A σ)) _ = refl
 
-discr-natural : {A : Set ℓ} (a : A) (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-natural A σ ] (discr a)
+discr-natural : {A : Set} (a : A) (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-natural A σ ] (discr a)
 eq (discr-natural a σ) _ = refl
 
 
 --------------------------------------------------
 -- The unit type
 
-Unit' : Ty Γ 0ℓ
+Unit' : Ty Γ
 Unit' = Discr ⊤
 
 tt' : Tm Γ Unit'
@@ -91,12 +91,12 @@ naturality !unit _ = refl
 unit-terminal : (η : T ↣ Unit') → η ≅ⁿ !unit
 eq (unit-terminal η) _ = refl
 
-unit-elim : (T : Ty Γ ℓ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
+unit-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
 term (unit-elim T t) _ _ $⟨ _ , _ ⟩ _ = t ⟨ _ , _ ⟩'
 naturality (term (unit-elim T t) _ _) _ eγ _ = sym (naturality t _ eγ)
 naturality (unit-elim T t) f eγ = to-pshfun-eq λ _ _ _ → refl
 
-β-unit' : {T : Ty Γ ℓ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
+β-unit' : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
 eq (β-unit' t) _ = refl
 
 η-unit' : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
@@ -106,7 +106,7 @@ eq (η-unit' t) _ = refl
 --------------------------------------------------
 -- Booleans
 
-Bool' : Ty Γ 0ℓ
+Bool' : Ty Γ
 Bool' = Discr Bool
 
 true' : Tm Γ Bool'
@@ -146,7 +146,7 @@ naturality (t && s) f eγ = cong₂ _∧_ (naturality t f eγ) (naturality s f e
 --------------------------------------------------
 -- Natural numbers
 
-Nat' : Ty Γ 0ℓ
+Nat' : Ty Γ
 Nat' = Discr ℕ
 
 zero' : Tm Γ Nat'
@@ -156,7 +156,7 @@ suc' : Tm Γ Nat' → Tm Γ Nat'
 term (suc' t) x γ = suc (t ⟨ x , γ ⟩')
 naturality (suc' t) f γ = cong suc (naturality t f γ)
 
-nat-elim : (T : Ty Γ ℓ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
+nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
 nat-elim {Γ = Γ} T t f = MkTm tm nat
   where
     open ≡-Reasoning
@@ -182,11 +182,11 @@ nat-elim {Γ = Γ} T t f = MkTm tm nat
           Nat' ⇛ T ⟪ ρ , eγ ⟫ (tm z γz) ≡ tm y γy
     nat {y = y}{z = z} ρ-yz eq-zy = to-pshfun-eq (helper eq-zy)
 
-β-nat-zero : {T : Ty Γ ℓ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) →
+β-nat-zero : {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) →
              app (nat-elim T t f) zero' ≅ᵗᵐ t
 eq (β-nat-zero t f) _ = refl
 
-β-nat-suc : {T : Ty Γ ℓ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) (k : Tm Γ Nat') →
+β-nat-suc : {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) (k : Tm Γ Nat') →
             app (nat-elim T t f) (suc' k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
 eq (β-nat-suc t f k) _ = refl
 

@@ -53,14 +53,14 @@ construct-expr : Term → TC Term
 construct-expr (def (quote ⟦_⟧exp) args) = get-visible-arg 0 args
 construct-expr (def (quote var-type) args) = do  -- Look up the type in the telescope.
   t-telescope ← get-visible-arg 0 args
-  len-telescope ← get-arg 3 args >>= unquoteTC
+  len-telescope ← get-arg 2 args >>= unquoteTC
   var-num ← get-visible-arg 1 args >>= unquoteTC  -- var-num is the de Bruijn index of the variable.
   t-type ← telescope-lookup t-telescope {len-telescope} var-num
   expr-type ← construct-expr t-type
   return (weaken-expr expr-type (suc (toℕ var-num)))
 construct-expr (def (quote weaken-type) args) = do  -- The type is given as argument 1 to weaken-type (but sufficiently π substitutions must still be applied).
   expr-not-weakened-type ← get-visible-arg 1 args >>= construct-expr
-  weaken-nr ← get-arg 4 args >>= unquoteTC  -- Number of times π is applied
+  weaken-nr ← get-arg 2 args >>= unquoteTC  -- Number of times π is applied
   return (weaken-expr expr-not-weakened-type weaken-nr)
 construct-expr (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
   { (_ , (ty ⟨∷⟩ subst ⟨∷⟩ [])) → do

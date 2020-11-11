@@ -31,8 +31,7 @@ infixr 5 _∷_
 
 private
   variable
-    ℓ ℓ' : Level
-    Δ Γ Θ : Ctx ω ℓ
+    Δ Γ Θ : Ctx ω
 
 
 --------------------------------------------------
@@ -40,15 +39,15 @@ private
 
 -- A value of TypeOp Γ Δ represents an operation that transforms a type in
 -- context Γ into a type in context Δ
-data TypeOp : Ctx ω ℓ → Ctx ω ℓ' → Setω where
+data TypeOp : Ctx ω → Ctx ω → Set where
   subst : (σ : Δ ⇒ Γ) → TypeOp Γ Δ
   later : TypeOp (◄ Γ) Γ
 
-_⟦_⟧op : Ty Γ ℓ → TypeOp Γ Δ → Ty Δ ℓ
+_⟦_⟧op : Ty Γ → TypeOp Γ Δ → Ty Δ
 T ⟦ subst σ ⟧op = T [ σ ]
 T ⟦ later   ⟧op = ▻ T
 
-op-cong : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (op : TypeOp Γ Δ) →
+op-cong : {T : Ty Γ} {S : Ty Γ} (op : TypeOp Γ Δ) →
           T ≅ᵗʸ S → T ⟦ op ⟧op ≅ᵗʸ S ⟦ op ⟧op
 op-cong (subst σ) eq = ty-subst-cong-ty σ eq
 op-cong later     eq = ▻-cong eq
@@ -61,15 +60,15 @@ op-cong later     eq = ▻-cong eq
 --------------------------------------------------
 -- Sequences of type operations (keeping track of the context)
 
-data TypeOpSeq : Ctx ω ℓ → Ctx ω ℓ' → Setω where
+data TypeOpSeq : Ctx ω → Ctx ω → Set₁ where
   [] : TypeOpSeq Γ Γ
   _∷_ : TypeOp Γ Δ → TypeOpSeq Δ Θ → TypeOpSeq Γ Θ
 
-_⟦_⟧ops : Ty Γ ℓ → TypeOpSeq Γ Δ → Ty Δ ℓ
+_⟦_⟧ops : Ty Γ → TypeOpSeq Γ Δ → Ty Δ
 T ⟦ []       ⟧ops = T
 T ⟦ op ∷ seq ⟧ops = (T ⟦ op ⟧op) ⟦ seq ⟧ops
 
-ops-cong : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (seq : TypeOpSeq Γ Δ) →
+ops-cong : {T : Ty Γ} {S : Ty Γ} (seq : TypeOpSeq Γ Δ) →
            T ≅ᵗʸ S → T ⟦ seq ⟧ops ≅ᵗʸ S ⟦ seq ⟧ops
 ops-cong []         eq = eq
 ops-cong (op ∷ seq) eq = ops-cong seq (op-cong op eq)
@@ -96,23 +95,23 @@ defer-later (later   ∷ seq) = ◄-opseq (defer-later seq) ∷ʳ later
 --------------------------------------------------
 -- Proving soundness of the first reduction step
 
-snoc-denote : (T : Ty Γ ℓ) (seq : TypeOpSeq Γ Δ) (op : TypeOp Δ Θ) →
+snoc-denote : (T : Ty Γ) (seq : TypeOpSeq Γ Δ) (op : TypeOp Δ Θ) →
               T ⟦ seq ∷ʳ op ⟧ops ≅ᵗʸ (T ⟦ seq ⟧ops) ⟦ op ⟧op
 snoc-denote T []          op  = ≅ᵗʸ-refl
 snoc-denote T (op1 ∷ seq) op2 = snoc-denote (T ⟦ op1 ⟧op) seq op2
 
-▻-op-commute : (T : Ty (◄ Γ) ℓ) (op : TypeOp Γ Δ) →
+▻-op-commute : (T : Ty (◄ Γ)) (op : TypeOp Γ Δ) →
                 ▻ (T ⟦ ◄-op op ⟧op) ≅ᵗʸ (▻ T) ⟦ op ⟧op
 ▻-op-commute T (subst σ) = ≅ᵗʸ-sym (▻-natural σ)
 ▻-op-commute T later     = ≅ᵗʸ-refl
 
-▻-ops-commute : (T : Ty (◄ Γ) ℓ) (seq : TypeOpSeq Γ Δ) →
+▻-ops-commute : (T : Ty (◄ Γ)) (seq : TypeOpSeq Γ Δ) →
                  ▻ (T ⟦ ◄-opseq seq ⟧ops) ≅ᵗʸ (▻ T) ⟦ seq ⟧ops
 ▻-ops-commute T []         = ≅ᵗʸ-refl
 ▻-ops-commute T (op ∷ seq) = ≅ᵗʸ-trans (▻-ops-commute (T ⟦ ◄-op op ⟧op) seq)
                                        (ops-cong seq (▻-op-commute T op))
 
-defer-sound : (T : Ty Γ ℓ) (seq : TypeOpSeq Γ Δ) →
+defer-sound : (T : Ty Γ) (seq : TypeOpSeq Γ Δ) →
               T ⟦ defer-later seq ⟧ops ≅ᵗʸ T ⟦ seq ⟧ops
 defer-sound T []              = ≅ᵗʸ-refl
 defer-sound T (subst σ ∷ seq) = defer-sound (T [ σ ]) seq
@@ -128,7 +127,7 @@ defer-sound T (later   ∷ seq) =
   where open ≅ᵗʸ-Reasoning
 
 -- The following is superseded by type-reflect (see further).
-type-reflect' : {T : Ty Γ ℓ} (seq seq' : TypeOpSeq Γ Δ) →
+type-reflect' : {T : Ty Γ} (seq seq' : TypeOpSeq Γ Δ) →
                 T ⟦ defer-later seq ⟧ops ≅ᵗʸ T ⟦ defer-later seq' ⟧ops →
                 T ⟦ seq ⟧ops ≅ᵗʸ T ⟦ seq' ⟧ops
 type-reflect' {T = T} seq seq' eq =
@@ -147,7 +146,7 @@ type-reflect' {T = T} seq seq' eq =
 -- Second reduction step: grouping substitutions
 
 -- Same definitions as in CwF-Structure.SubstitutionSequence
-data SubstSeq : Ctx ω ℓ → Ctx ω ℓ' → Setω where
+data SubstSeq : Ctx ω → Ctx ω → Set₁ where
   _◼ : (σ : Δ ⇒ Γ) → SubstSeq Δ Γ
   _∷_ : (σ : Γ ⇒ Θ) (σs : SubstSeq Δ Γ) → SubstSeq Δ Θ
 
@@ -157,28 +156,28 @@ fold (σ ∷ σs) = σ ⊚ fold σs
 
 -- This looks very similar to TypeOp but uses substitution sequences instead of
 -- individual substitutions.
-data STypeOp : Ctx ω ℓ → Ctx ω ℓ' → Setω where
+data STypeOp : Ctx ω → Ctx ω → Set₁ where
   subseq : (σs : SubstSeq Δ Γ) → STypeOp Γ Δ
   later  : STypeOp (◄ Γ) Γ
 
-_⟦_⟧sop : Ty Γ ℓ → STypeOp Γ Δ → Ty Δ ℓ
+_⟦_⟧sop : Ty Γ → STypeOp Γ Δ → Ty Δ
 T ⟦ subseq σs ⟧sop = T [ fold σs ]
 T ⟦ later     ⟧sop = ▻ T
 
-sop-cong : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (sop : STypeOp Γ Δ) →
+sop-cong : {T : Ty Γ} {S : Ty Γ} (sop : STypeOp Γ Δ) →
            T ≅ᵗʸ S → T ⟦ sop ⟧sop ≅ᵗʸ S ⟦ sop ⟧sop
 sop-cong (subseq σs) eq = ty-subst-cong-ty (fold σs) eq
 sop-cong later       eq = ▻-cong eq
 
-data STypeOpSeq : Ctx ω ℓ → Ctx ω ℓ' → Setω where
+data STypeOpSeq : Ctx ω → Ctx ω → Set₁ where
   []  : STypeOpSeq Γ Γ
   _∷_ : STypeOp Γ Δ → STypeOpSeq Δ Θ → STypeOpSeq Γ Θ
 
-_⟦_⟧sops : Ty Γ ℓ → STypeOpSeq Γ Δ → Ty Δ ℓ
+_⟦_⟧sops : Ty Γ → STypeOpSeq Γ Δ → Ty Δ
 T ⟦ []        ⟧sops = T
 T ⟦ sop ∷ seq ⟧sops = (T ⟦ sop ⟧sop) ⟦ seq ⟧sops
 
-sops-cong : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (seq : STypeOpSeq Γ Δ) →
+sops-cong : {T : Ty Γ} {S : Ty Γ} (seq : STypeOpSeq Γ Δ) →
             T ≅ᵗʸ S → T ⟦ seq ⟧sops ≅ᵗʸ S ⟦ seq ⟧sops
 sops-cong []          eq = eq
 sops-cong (sop ∷ seq) eq = sops-cong seq (sop-cong sop eq)
@@ -197,13 +196,13 @@ group-subst (later   ∷ seq) = later ∷ group-subst seq
 --------------------------------------------------
 -- Proving soundness of the second reduction step
 
-cons-subst-denote : (σ : Δ ⇒ Γ) (seq : STypeOpSeq Δ Θ) (T : Ty Γ ℓ) →
+cons-subst-denote : (σ : Δ ⇒ Γ) (seq : STypeOpSeq Δ Θ) (T : Ty Γ) →
                     T ⟦ σ ˢ∷ seq ⟧sops ≅ᵗʸ (T [ σ ]) ⟦ seq ⟧sops
 cons-subst-denote σ []                T = ≅ᵗʸ-refl
 cons-subst-denote σ (subseq τs ∷ seq) T = sops-cong seq (≅ᵗʸ-sym (ty-subst-comp T σ (fold τs)))
 cons-subst-denote σ (later     ∷ seq) T = ≅ᵗʸ-refl
 
-group-subst-sound : (T : Ty Γ ℓ) (seq : TypeOpSeq Γ Δ) →
+group-subst-sound : (T : Ty Γ) (seq : TypeOpSeq Γ Δ) →
                     T ⟦ group-subst seq ⟧sops ≅ᵗʸ T ⟦ seq ⟧ops
 group-subst-sound T []              = ≅ᵗʸ-refl
 group-subst-sound T (subst σ ∷ seq) =
@@ -216,7 +215,7 @@ group-subst-sound T (subst σ ∷ seq) =
   where open ≅ᵗʸ-Reasoning
 group-subst-sound T (later   ∷ seq) = group-subst-sound (▻ T) seq
 
-type-reflect : {T : Ty Γ ℓ} (seq seq' : TypeOpSeq Γ Δ) →
+type-reflect : {T : Ty Γ} (seq seq' : TypeOpSeq Γ Δ) →
               T ⟦ group-subst (defer-later seq) ⟧sops ≅ᵗʸ T ⟦ group-subst (defer-later seq') ⟧sops →
               T ⟦ seq ⟧ops ≅ᵗʸ T ⟦ seq' ⟧ops
 type-reflect {T = T} seq seq' eq =

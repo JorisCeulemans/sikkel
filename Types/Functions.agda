@@ -24,8 +24,8 @@ private
   variable
     ℓc ℓt ℓs : Level
     x y z : Ob
-    Γ Δ : Ctx C ℓ
-    T T' S S' : Ty Γ ℓ
+    Γ Δ : Ctx C
+    T T' S S' : Ty Γ
 
 infixr 12 _⇛_
 
@@ -38,7 +38,7 @@ private
 --------------------------------------------------
 -- Description of a function type at a specific stage (object of the base category)
 
-record PresheafFunc {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓs) (z : Ob) (γ : Γ ⟨ z ⟩) : Set (ℓc ⊔ ℓt ⊔ ℓs) where
+record PresheafFunc {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) (z : Ob) (γ : Γ ⟨ z ⟩) : Set where
   constructor MkFunc
   field
     _$⟨_,_⟩_ : ∀ {y} (ρ : Hom y z) {γ' : Γ ⟨ y ⟩} (eq : Γ ⟪ ρ ⟫ γ ≡ γ') →
@@ -51,7 +51,7 @@ record PresheafFunc {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓs) (z : Ob)
 open PresheafFunc public
 
 -- Here we make again use of uip by pattern matching on both equality proofs.
-$-cong : {T : Ty Γ ℓt} {S : Ty Γ ℓs}
+$-cong : {T : Ty Γ} {S : Ty Γ}
          {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} (f : PresheafFunc T S y γy)
          {ρ ρ' : Hom x y} (eρ : ρ ≡ ρ')
          (eγ : Γ ⟪ ρ ⟫ γy ≡ γx) (eγ' : Γ ⟪ ρ' ⟫ γy ≡ γx)
@@ -60,7 +60,7 @@ $-cong : {T : Ty Γ ℓt} {S : Ty Γ ℓs}
 $-cong f refl refl refl = refl
 
 -- This is one of the few places where we use function extensionality.
-to-pshfun-eq : {T : Ty Γ ℓt} {S : Ty Γ ℓs}
+to-pshfun-eq : {T : Ty Γ} {S : Ty Γ}
                {γ : Γ ⟨ y ⟩} {f g : PresheafFunc T S y γ} →
                (∀ {x} (ρ : Hom x y) {γ'} (eq : Γ ⟪ ρ ⟫ γ ≡ γ') t →
                    f $⟨ ρ , eq ⟩ t ≡ g $⟨ ρ , eq ⟩ t) →
@@ -70,7 +70,7 @@ to-pshfun-eq e = cong₂-d MkFunc
   (funextI (funextI (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
 
 -- This will be used to define the action of a function type on morphisms.
-lower-presheaffunc : {T : Ty Γ ℓt} {S : Ty Γ ℓs} (ρ-yz : Hom y z)
+lower-presheaffunc : {T : Ty Γ} {S : Ty Γ} (ρ-yz : Hom y z)
                      {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eq : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
                      PresheafFunc T S z γz → PresheafFunc T S y γy
 lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eq-zy f = MkFunc g g-nat
@@ -93,14 +93,14 @@ lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eq-zy 
 --------------------------------------------------
 -- Definition of the function type + term constructors
 
-_⇛_ : {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓs → Ty Γ (ℓc ⊔ ℓt ⊔ ℓs)
+_⇛_ : {Γ : Ctx C} → Ty Γ → Ty Γ → Ty Γ
 type (_⇛_ {Γ = Γ} T S) z γ = PresheafFunc T S z γ
 morph (T ⇛ S) = lower-presheaffunc
 morph-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl _ _
 morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
 morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ _ → $-cong f ∙assoc _ _)
 
-lam : (T : Ty Γ ℓt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
+lam : (T : Ty Γ) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
                                  (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eq-zy eq-yx t →
   begin
@@ -146,8 +146,7 @@ naturality (app {Γ = Γ}{T = T}{S = S} f t) ρ {γy}{γx} eγ =
 --------------------------------------------------
 -- Congruence proofs
 
-pshfun-dimap : ∀ {ℓt ℓt' ℓs ℓs'}
-               {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'} →
+pshfun-dimap : {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ} →
                (T' ↣ T) → (S ↣ S') →
                (z : Ob) (γ : Γ ⟨ z ⟩) →
                PresheafFunc T S z γ → PresheafFunc T' S' z γ
@@ -187,7 +186,7 @@ eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
     f $⟨ ρ , eγ ⟩ t' ∎)
   where open ≡-Reasoning
 
-lam-cong : (T : Ty Γ ℓ) {b b' : Tm (Γ ,, T) (S [ π ])} →
+lam-cong : (T : Ty Γ) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
 
@@ -206,8 +205,8 @@ app-cong : {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
 eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 
-module _ {ℓt ℓt' ℓs ℓs'}
-  {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'}
+module _
+  {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
   
@@ -233,7 +232,7 @@ module _ {ℓt ℓt' ℓs ℓs'}
 --------------------------------------------------
 -- Naturality proofs
 
-module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) (S : Ty Γ ℓs) {δ : Δ ⟨ z ⟩} where
+module _ (σ : Δ ⇒ Γ) (T : Ty Γ) (S : Ty Γ) {δ : Δ ⟨ z ⟩} where
   pshfun-subst-from : PresheafFunc T S z (func σ δ) → PresheafFunc (T [ σ ]) (S [ σ ]) z δ
   _$⟨_,_⟩_ (pshfun-subst-from f) ρ-yz eδ t = f $⟨ ρ-yz , trans (naturality σ δ) (cong (func σ) eδ) ⟩ t
   naturality (pshfun-subst-from f) _ _ t = trans ($-cong f refl _ _) (naturality f _ _ t)
@@ -269,7 +268,7 @@ module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) (S : Ty Γ ℓs) {δ : Δ ⟨ z ⟩} 
       α = _
       β = _
 
-module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
+module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⇛-natural : (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
   func (from ⇛-natural) = pshfun-subst-from σ T S
   naturality (from ⇛-natural) f = to-pshfun-eq (λ _ _ _ → $-cong f refl _ _)

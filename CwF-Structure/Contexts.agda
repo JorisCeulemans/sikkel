@@ -16,14 +16,14 @@ open import Helpers
 --------------------------------------------------
 -- Definition of contexts and substitutions as presheaves over C
 
-record Ctx (C : Category) ℓ : Set (lsuc ℓ) where
+record Ctx (C : Category) : Set₁ where
   constructor MkCtx
   no-eta-equality
 
   open Category C
 
   field
-    set : Ob → Set ℓ
+    set : Ob → Set
     rel : ∀ {x y} → Hom x y → set y → set x
     rel-id : ∀ {x} (γ : set x) → rel hom-id γ ≡ γ
     rel-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) → rel (g ∙ f) γ ≡ rel f (rel g γ)
@@ -39,21 +39,21 @@ module _ {C : Category} where
   private
     variable
       x y z : Ob
-      Δ Γ Θ : Ctx C ℓ
+      Δ Γ Θ : Ctx C
 
-  _⟨_⟩ : Ctx C ℓ → Ob → Set ℓ
+  _⟨_⟩ : Ctx C → Ob → Set
   Γ ⟨ x ⟩ = set Γ x
 
-  _⟪_⟫ : (Γ : Ctx C ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
+  _⟪_⟫ : (Γ : Ctx C) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
   Γ ⟪ f ⟫ = rel Γ f
 
-  _⟪_⟫_ : (Γ : Ctx C ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
+  _⟪_⟫_ : (Γ : Ctx C) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
   Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
   -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
   -- of function types.
-  strong-rel-comp : (Γ : Ctx C ℓ) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
+  strong-rel-comp : (Γ : Ctx C) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                     (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) →
                     Γ ⟪ g ∙ f ⟫ γz ≡ γx
   strong-rel-comp Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
@@ -68,7 +68,7 @@ module _ {C : Category} where
     where open ≡-Reasoning
 
   -- The type of substitutions from context Δ to context Γ
-  record _⇒_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
+  record _⇒_ (Δ : Ctx C) (Γ : Ctx C) : Set where
     constructor MkSubst
     no-eta-equality
     field
@@ -76,7 +76,7 @@ module _ {C : Category} where
       naturality : ∀ {x y} {f : Hom x y} (δ : Δ ⟨ y ⟩) → Γ ⟪ f ⟫ (func δ) ≡ func (Δ ⟪ f ⟫ δ)
   open _⇒_ public
 
-  id-subst : (Γ : Ctx C ℓ) → Γ ⇒ Γ
+  id-subst : (Γ : Ctx C) → Γ ⇒ Γ
   func (id-subst Γ) = id
   naturality (id-subst Γ) = λ _ → refl
 
@@ -98,7 +98,7 @@ module _ {C : Category} where
 
   -- Two substitutions σ, τ : Δ ⇒ Γ are equivalent if they map every value of
   -- Δ ⟨ x ⟩ (for any object x) to propositionally equal values of Γ ⟨ x ⟩.
-  record _≅ˢ_ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ τ : Δ ⇒ Γ) : Set (ℓ ⊔ ℓ') where
+  record _≅ˢ_ {Δ : Ctx C} {Γ : Ctx C} (σ τ : Δ ⇒ Γ) : Set where
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
   open _≅ˢ_ public
@@ -112,7 +112,7 @@ module _ {C : Category} where
   ≅ˢ-trans : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
   eq (≅ˢ-trans σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
-  module ≅ˢ-Reasoning {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} where
+  module ≅ˢ-Reasoning {Δ : Ctx C} {Γ : Ctx C} where
     infix  3 _∎
     infixr 2 _≅⟨⟩_ step-≅ step-≅˘
     infix  1 begin_
@@ -145,8 +145,7 @@ module _ {C : Category} where
   ⊚-id-substˡ : (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
   eq (⊚-id-substˡ σ) _ = refl
 
-  ⊚-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-             {Γ₁ : Ctx C ℓ₁} {Γ₂ : Ctx C ℓ₂} {Γ₃ : Ctx C ℓ₃} {Γ₄ : Ctx C ℓ₄}
+  ⊚-assoc : {Γ₁ : Ctx C} {Γ₂ : Ctx C} {Γ₃ : Ctx C} {Γ₄ : Ctx C}
              (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) →
              (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≅ˢ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
   eq (⊚-assoc σ₃₄ σ₂₃ σ₁₂) _ = refl
@@ -161,15 +160,15 @@ module _ {C : Category} where
   --------------------------------------------------
   -- The empty context (i.e. terminal object in the category of contexts)
 
-  ◇ : Ctx C 0ℓ
+  ◇ : Ctx C
   set ◇ _ = ⊤
   rel ◇ _ _ = tt
   rel-id ◇ _ = refl
   rel-comp ◇ _ _ _ = refl
 
-  !◇ : (Γ : Ctx C ℓ) → Γ ⇒ ◇
+  !◇ : (Γ : Ctx C) → Γ ⇒ ◇
   func (!◇ Γ) _ = tt
   naturality (!◇ Γ) _ = refl
 
-  ◇-terminal : (Γ : Ctx C ℓ) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ
+  ◇-terminal : (Γ : Ctx C) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ
   eq (◇-terminal Γ σ τ) _ = refl

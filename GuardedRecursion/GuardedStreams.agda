@@ -34,7 +34,7 @@ open import Reflection.Tactic.LobInduction
 
 private
   variable
-    Γ Δ : Ctx ω ℓ
+    Γ Δ : Ctx ω
 
 
 --------------------------------------------------
@@ -65,7 +65,7 @@ first-≤-tail m≤n (a ∷ as) = refl
 --------------------------------------------------
 -- Definition of guarded streams.
 
-Stream : Ty Γ 0ℓ
+Stream : Ty Γ
 type Stream n _ = Vec ℕ (suc n)
 morph Stream m≤n _ = first-≤ (s≤s m≤n)
 morph-cong Stream refl = refl
@@ -151,7 +151,7 @@ zeros = löbι Stream
              (str-cons (pair zero' (varι 0)))
 
 private
-  module _ {Γ : Ctx ω ℓ} where
+  module _ {Γ : Ctx ω} where
     zeros-test : str-head {Γ = Γ} zeros ≅ᵗᵐ zero'
     eq zeros-test {x = zero}  _ = refl
     eq zeros-test {x = suc n} _ = refl
@@ -186,7 +186,7 @@ nats : Tm Γ Stream
 nats = app (iterate' suc-func) zero'
 
 private
-  module _ {Γ : Ctx ω ℓ} where
+  module _ {Γ : Ctx ω} where
     nats-test : str-head {Γ = Γ} nats ≅ᵗᵐ zero'
     eq nats-test {x = zero}  _ = refl
     eq nats-test {x = suc n} _ = refl
@@ -239,8 +239,8 @@ toggle = löbι Stream
 paperfolds : Tm Γ Stream
 paperfolds = löbι Stream (app (app interleave toggle) (varι 0))
 
-module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
-  T : Ty Γ ℓ
+module _ (T-op : NullaryTypeOp {C = ω}) {{_ : IsNullaryNatural T-op}} where
+  T : Ty Γ
   T = ⟦ nul T-op ⟧exp
 
   initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)

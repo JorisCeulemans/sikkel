@@ -19,28 +19,28 @@ open import Types.Functions
 open import GuardedRecursion.Later
 
 
-record isStrongFunctor (F : ∀ {ℓt} → Ty {C = ω} ◇ ℓt → Ty {C = ω} ◇ ℓt) : Setω where
+record isStrongFunctor (F : Ty {C = ω} ◇ → Ty {C = ω} ◇) : Setω where
   field
-    map : ∀ {ℓt ℓs} {T : Ty ◇ ℓt} {S : Ty ◇ ℓs} →
+    map : {T : Ty ◇} {S : Ty ◇} →
           (T ↣ S) → (F T ↣ F S)
-    map-cong : ∀ {ℓt ℓs} {T : Ty ◇ ℓt} {S : Ty ◇ ℓs} {η φ : T ↣ S} →
+    map-cong : {T : Ty ◇} {S : Ty ◇} {η φ : T ↣ S} →
                η ≅ⁿ φ → map η ≅ⁿ map φ
-    map-id : ∀ {ℓt} {T : Ty ◇ ℓt} →
+    map-id : {T : Ty ◇} →
              map (id-trans T) ≅ⁿ id-trans (F T)
-    map-comp : ∀ {ℓr ℓs ℓt} {R : Ty ◇ ℓr} {S : Ty ◇ ℓs} {T : Ty ◇ ℓt} →
+    map-comp : {R : Ty ◇} {S : Ty ◇} {T : Ty ◇} →
                (η : S ↣ T) (φ : R ↣ S) →
                map (η ⊙ φ) ≅ⁿ map η ⊙ map φ
-    strength : ∀ {ℓt ℓs} {T : Ty ◇ ℓt} {S : Ty ◇ ℓs} →
+    strength : {T : Ty ◇} {S : Ty ◇} →
                (T ⇛ S) ↣ (F (▻' T) ⇛ F (▻' S))
 
 module _
-  (F : ∀ {ℓt} → Ty ◇ ℓt → Ty ◇ ℓt)
+  (F : Ty ◇ → Ty ◇)
   (sf : isStrongFunctor F)
   where
 
   open isStrongFunctor sf
 
-  𝑋-type : ℕ → Ty {C = ω} ◇ 0ℓ
+  𝑋-type : ℕ → Ty {C = ω} ◇
   𝑋-type zero    = F (▻' Unit')
   𝑋-type (suc n) = F (▻' (𝑋-type n))
 
@@ -86,7 +86,7 @@ module _
       map (▻'-map (𝑋-nattrans k≤m)) ⊙ map (▻'-map (𝑋-nattrans m≤n)) ∎
     where open ≅ⁿ-Reasoning
 
-  𝑋 : Ty {C = ω} ◇ 0ℓ
+  𝑋 : Ty {C = ω} ◇
   type 𝑋 n _ = 𝑋-type n ⟨ n , _ ⟩
   morph 𝑋 {y = n} m≤n _ = func (𝑋-nattrans m≤n) ∘ (𝑋-type n) ⟪ m≤n , refl ⟫_
   morph-id 𝑋 {x = n} x =

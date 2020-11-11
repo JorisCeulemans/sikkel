@@ -34,7 +34,7 @@ by-naturality-macro hole = do
   rhs-exp ← construct-expr rhs
   debugPrint "vtac" 5 (strErr "naturality solver successfully constructed expressions:" ∷ termErr lhs-exp ∷ termErr rhs-exp ∷ [])
   let sol = def (quote type-naturality-reflect)
-                (vArg lhs-exp ∷ vArg rhs-exp ∷ vArg (con (quote _≡_.refl) []) ∷ vArg (con (quote _≡ω_.refl) []) ∷ [])
+                (vArg lhs-exp ∷ vArg rhs-exp ∷ vArg (con (quote _≡_.refl) []) ∷ vArg (con (quote _≡_.refl) []) ∷ [])
   unify hole sol
 
 macro

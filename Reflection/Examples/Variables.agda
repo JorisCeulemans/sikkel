@@ -19,5 +19,5 @@ test2 = var 0
 test3 : Tm {C = C} (◇ ,, Bool' ,, Nat') ((Bool' [ π ]) [ π ])
 test3 = var 1
 
-id : ∀ {ℓ ℓ'} {Γ : Ctx C ℓ} {T : Ty Γ ℓ'} → Tm Γ (T ⇛ T)
+id : {Γ : Ctx C} {T : Ty Γ} → Tm Γ (T ⇛ T)
 id {Γ = Γ}{T = T} = lam T (var 0)

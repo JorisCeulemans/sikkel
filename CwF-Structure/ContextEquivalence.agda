@@ -18,10 +18,10 @@ infix 1 _≅ᶜ_
 private
   variable
     ℓ : Level
-    Γ Δ Θ : Ctx C ℓ
+    Γ Δ Θ : Ctx C
 
 -- Two contexts are equivalent if they are naturally equivalent as presheaves.
-record _≅ᶜ_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
+record _≅ᶜ_ (Δ : Ctx C) (Γ : Ctx C) : Set where
   field
     from : Δ ⇒ Γ
     to : Γ ⇒ Δ
