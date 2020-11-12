@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 --------------------------------------------------
 -- Definition of categories, functors + some examples
 --------------------------------------------------

@@ -1,4 +1,4 @@
-{-# OPTIONS --omega-in-omega #-}
+{-# OPTIONS --without-K --omega-in-omega #-}
 
 --------------------------------------------------
 -- Definition and use of telescopes in a context

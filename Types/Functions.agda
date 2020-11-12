@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 --------------------------------------------------
 -- (Non-dependent) function types
 --------------------------------------------------
@@ -7,11 +9,12 @@ open import Categories
 module Types.Functions {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Function
+open import Function hiding (_↣_)
 open import Level
-open import Relation.Binary
+open import Relation.Binary hiding (_⇒_)
 import Relation.Binary.Reasoning.Setoid as SetoidReasoning
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (refl to ≡-refl)
+open import Relation.Binary.PropositionalEquality
+  hiding ([_]; naturality) renaming (refl to ≡-refl; sym to ≡-sym; trans to ≡-trans)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -134,181 +137,208 @@ morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f _ _ _ = $-hom-cong f ∙assoc
 
 lam : (T : Ty Γ ℓt rt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 _$⟨_,_⟩_ (term (lam {S = S} T b) z γz) ρ-yz {γy} eγ t = b ⟨ _ , [ γy , t ] ⟩'
-$-cong (term (lam {S = S} T b) z γz) ρ-yz eγ et = {!naturality b!}
+$-cong (term (lam {Γ = Γ}{S = S} T b) z γz) {y} ρ-yz {γy} eγ {t1}{t2} et =
+  begin
+    b ⟨ y , [ γy , t1 ] ⟩'
+  ≈˘⟨ morph-id S _ ⟩
+    S ⟪ hom-id , _ ⟫ (b ⟨ y , [ γy , t1 ] ⟩')
+  ≈⟨ morph-hom-cong S ≡-refl ⟩
+    S ⟪ hom-id , _ ⟫ (b ⟨ y , [ γy , t1 ] ⟩')
+    -- TODO: tidy up!
+  ≈⟨ naturality b hom-id [ rel-id Γ γy , ty≈-trans T (ty≈-trans T (ty≈-trans T (ty≈-sym T (morph-comp T hom-id hom-id _ _ t1))
+                                                                               (morph-hom-cong T hom-idˡ))
+                                                                  (morph-id T t1))
+                                                     et ] ⟩
+    b ⟨ y , [ γy , t2 ] ⟩' ∎
+  where open SetoidReasoning (type S y γy)
 $-hom-cong (term (lam {S = S} T b) z γz) _ = ty≈-refl S
 naturality (term (lam {S = S} T b) z γz) {x = x}{y}{ρ-xy}{_}{γx}{γy} eγ-zy eγ-yx t =
   begin
     b ⟨ x , [ γx , T ⟪ ρ-xy , eγ-yx ⟫ t ] ⟩'
-  ≈˘⟨ naturality b ρ-xy [ eγ-yx , ty≈-trans T (ty≈-sym T (morph-comp T hom-id ρ-xy _ _ t)) {!!} ] ⟩
+  ≈˘⟨ naturality b ρ-xy [ eγ-yx , ty≈-trans T (ty≈-sym T (morph-comp T hom-id ρ-xy _ _ t)) (morph-hom-cong T hom-idʳ) ] ⟩
     S ⟪ ρ-xy , _ ⟫ b ⟨ y , [ γy , t ] ⟩'
   ≈⟨ morph-hom-cong S ≡-refl ⟩
     S ⟪ ρ-xy , eγ-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎
   where open SetoidReasoning (type S x γx)
 naturality (lam {S = S} T b) _ _ _ _ _ = ty≈-refl S
-{-
+
 -- An operator used to define function application.
 _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
 _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ ⟩ t
 
-€-natural : (f : Tm Γ (T ⇛ S)) (ρ : Hom x y)
-            {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ ρ ⟫ γy ≡ γx)
+-- TODO: generalization of Γ T and S seems to fail here, see why that is.
+€-natural : ∀ {ℓc rc} {Γ : Ctx C ℓc rc}
+            {ℓt ℓs rt rs} {T : Ty Γ ℓt rt} {S : Ty Γ ℓs rs}
+            (f : Tm Γ (T ⇛ S)) (ρ : Hom x y)
+            {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ ρ ⟫ γy ≈[ Γ ]≈ γx)
             (t : T ⟨ y , γy ⟩) →
-            S ⟪ ρ , eγ ⟫ (f €⟨ y , γy ⟩ t) ≡ f €⟨ x , γx ⟩ (T ⟪ ρ , eγ ⟫ t)
+            S ⟪ ρ , eγ ⟫ (f €⟨ y , γy ⟩ t) ≈⟦ S ⟧≈ f €⟨ x , γx ⟩ (T ⟪ ρ , eγ ⟫ t)
 €-natural {Γ = Γ}{T = T}{S = S} f ρ {γy}{γx} eγ t =
   begin
     S ⟪ ρ , eγ ⟫ (f ⟨ _ , γy ⟩' $⟨ hom-id , rel-id Γ γy ⟩ t)
-  ≡⟨ sym (naturality (f ⟨ _ , γy ⟩') (rel-id Γ γy) eγ t) ⟩
+  ≈˘⟨ naturality (f ⟨ _ , γy ⟩') (rel-id Γ γy) eγ t ⟩
     f ⟨ _ , γy ⟩' $⟨ hom-id ∙ ρ , strong-rel-comp Γ (rel-id Γ γy) eγ ⟩ (T ⟪ ρ , eγ ⟫ t)
-  ≡⟨ $-cong (f ⟨ _ , γy ⟩') (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
+  ≈⟨ $-hom-cong (f ⟨ _ , γy ⟩') (≡-trans hom-idˡ (≡-sym hom-idʳ)) ⟩
     f ⟨ _ , γy ⟩' $⟨ ρ ∙ hom-id , strong-rel-comp Γ eγ (rel-id Γ γx) ⟩ (T ⟪ ρ , eγ ⟫ t)
-  ≡⟨ cong (λ x → x $⟨ _ , _ ⟩ _) (naturality f ρ eγ) ⟩
+  ≈⟨ naturality f ρ eγ hom-id _ (T ⟪ ρ , eγ ⟫ t) ⟩
     f ⟨ _ , γx ⟩' $⟨ hom-id , rel-id Γ γx ⟩ (T ⟪ ρ , eγ ⟫ t) ∎
-  where open ≡-Reasoning
+  where open SetoidReasoning (type S _ γx)
 
 app : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
 term (app f t) y γ = f €⟨ y , γ ⟩ (t ⟨ y , γ ⟩')
 naturality (app {Γ = Γ}{T = T}{S = S} f t) ρ {γy}{γx} eγ =
   begin
     S ⟪ ρ , eγ ⟫ (f €⟨ _ , γy ⟩ (t ⟨ _ , γy ⟩'))
-  ≡⟨ €-natural f ρ eγ (t ⟨ _ , γy ⟩') ⟩
+  ≈⟨ €-natural f ρ eγ (t ⟨ _ , γy ⟩') ⟩
     f €⟨ _ , γx ⟩ (T ⟪ ρ , eγ ⟫ (t ⟨ _ , γy ⟩'))
-  ≡⟨ cong (f €⟨ _ , γx ⟩_) (naturality t ρ eγ) ⟩
+  ≈⟨ $-cong (f ⟨ _ , γx ⟩') hom-id _ (naturality t ρ eγ) ⟩
     f €⟨ _ , γx ⟩ (t ⟨ _ , γx ⟩') ∎
-  where open ≡-Reasoning
+  where open SetoidReasoning (type S _ γx)
 
 
 --------------------------------------------------
 -- Congruence proofs
 
-pshfun-dimap : ∀ {ℓt ℓt' ℓs ℓs'}
-               {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'} →
+pshfun-dimap : ∀ {ℓt ℓt' rt' ℓs ℓs' rs'}
+               {T : Ty Γ ℓt rt} {T' : Ty Γ ℓt' rt'} {S : Ty Γ ℓs rs} {S' : Ty Γ ℓs' rs'} →
                (T' ↣ T) → (S ↣ S') →
                (z : Ob) (γ : Γ ⟨ z ⟩) →
                PresheafFunc T S z γ → PresheafFunc T' S' z γ
 _$⟨_,_⟩_ (pshfun-dimap η φ _ γ f) ρ eγ t' = func φ (f $⟨ ρ , eγ ⟩ func η t')
+$-cong (pshfun-dimap η φ _ γ f) ρ eγ et = func-cong φ ($-cong f ρ eγ (func-cong η et))
+$-hom-cong (pshfun-dimap η φ _ γ f) eρ = func-cong φ ($-hom-cong f eρ)
 naturality (pshfun-dimap {T = T}{T'}{S}{S'} η φ z γ f) eq-zy eq-yx t' =
   begin
     func φ (f $⟨ _ , _ ⟩ func η (T' ⟪ _ , eq-yx ⟫ t'))
-  ≡˘⟨ cong (func φ ∘ f $⟨ _ , _ ⟩_) (naturality η t') ⟩
+  ≈˘⟨ func-cong φ ($-cong f _ _ (naturality η t')) ⟩
     func φ (f $⟨ _ , _ ⟩ (T ⟪ _ , eq-yx ⟫ func η t'))
-  ≡⟨ cong (func φ) (naturality f eq-zy eq-yx (func η t')) ⟩
+  ≈⟨ func-cong φ (naturality f eq-zy eq-yx (func η t')) ⟩
     func φ (S ⟪ _ , eq-yx ⟫ (f $⟨ _ , eq-zy ⟩ func η t'))
-  ≡˘⟨ naturality φ _ ⟩
+  ≈˘⟨ naturality φ _ ⟩
     S' ⟪ _ , eq-yx ⟫ func φ (f $⟨ _ , eq-zy ⟩ func η t') ∎
-  where open ≡-Reasoning
+  where open SetoidReasoning (type S' _ _)
 
 ⇛-dimap : (T' ↣ T) → (S ↣ S') → (T ⇛ S ↣ T' ⇛ S')
 func (⇛-dimap η φ) = pshfun-dimap η φ _ _
-naturality (⇛-dimap η φ) f = to-pshfun-eq λ _ _ _ → refl
+func-cong (⇛-dimap η φ) ef ρ eγ t = func-cong φ (ef ρ eγ (func η t))
+naturality (⇛-dimap {S' = S'} η φ) f ρ eγ t = ty≈-refl S'
 
 ⇛-cong : T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⇛ S ≅ᵗʸ T' ⇛ S'
 from (⇛-cong T=T' S=S') = ⇛-dimap (to T=T') (from S=S')
 to (⇛-cong T=T' S=S') = ⇛-dimap (from T=T') (to S=S')
-eq (isoˡ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t →
+eq (isoˡ (⇛-cong {S = S} T=T' S=S')) f ρ eγ t = 
   begin
     func (to S=S') (func (from S=S') (f $⟨ ρ , eγ ⟩ func (to T=T') (func (from T=T') t)))
-  ≡⟨ eq (isoˡ S=S') _ ⟩
+  ≈⟨ eq (isoˡ S=S') _ ⟩
     f $⟨ ρ , eγ ⟩ func (to T=T') (func (from T=T') t)
-  ≡⟨ cong (f $⟨ ρ , eγ ⟩_) (eq (isoˡ T=T') t) ⟩
-    f $⟨ ρ , eγ ⟩ t ∎)
-  where open ≡-Reasoning
-eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
+  ≈⟨ $-cong f ρ eγ (eq (isoˡ T=T') t) ⟩
+    f $⟨ ρ , eγ ⟩ t ∎
+  where open SetoidReasoning (type S _ _)
+eq (isoʳ (⇛-cong {S' = S'} T=T' S=S')) f ρ eγ t' = 
   begin
     func (from S=S') (func (to S=S') (f $⟨ ρ , eγ ⟩ func (from T=T') (func (to T=T') t')))
-  ≡⟨ eq (isoʳ S=S') _ ⟩
+  ≈⟨ eq (isoʳ S=S') _ ⟩
     f $⟨ ρ , eγ ⟩ func (from T=T') (func (to T=T') t')
-  ≡⟨ cong (f $⟨ ρ , eγ ⟩_) (eq (isoʳ T=T') t') ⟩
-    f $⟨ ρ , eγ ⟩ t' ∎)
-  where open ≡-Reasoning
+  ≈⟨ $-cong f ρ eγ (eq (isoʳ T=T') t') ⟩
+    f $⟨ ρ , eγ ⟩ t' ∎
+  where open SetoidReasoning (type S' _ _)
 
-lam-cong : (T : Ty Γ ℓ) {b b' : Tm (Γ ,, T) (S [ π ])} →
+lam-cong : (T : Ty Γ ℓ r) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
-eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
+eq (lam-cong T b=b') _ _ {γ'} _ t = eq b=b' [ γ' , t ]
 
 €-cong : {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
-         f ≅ᵗᵐ f' → t ≡ t' → f €⟨ z , γ ⟩ t ≡ f' €⟨ z , γ ⟩ t'
-€-cong {z = z}{f = f}{f'}{γ}{t}{t'} f=f' t=t' =
+         f ≅ᵗᵐ f' → t ≈⟦ T ⟧≈ t' → f €⟨ z , γ ⟩ t ≈⟦ S ⟧≈ f' €⟨ z , γ ⟩ t'
+€-cong {S = S}{z = z}{f = f}{f'}{γ}{t}{t'} f=f' t=t' =
   begin
     f ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t
-  ≡⟨ cong (f ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩_) t=t' ⟩
+  ≈⟨ $-cong (f ⟨ z , γ ⟩') hom-id _ t=t' ⟩
     f ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t'
-  ≡⟨ cong (_$⟨ hom-id , _ ⟩ t') (eq f=f' γ) ⟩
+  ≈⟨ eq f=f' γ hom-id _ t' ⟩
     f' ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t' ∎
-  where open ≡-Reasoning
+  where open SetoidReasoning (type S z γ)
 
 app-cong : {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
 eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 
-module _ {ℓt ℓt' ℓs ℓs'}
-  {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'}
+module _ {ℓt ℓt' rt' ℓs ℓs' rs'}
+  {T : Ty Γ ℓt rt} {T' : Ty Γ ℓt' rt'} {S : Ty Γ ℓs rs} {S' : Ty Γ ℓs' rs'}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
-  
+
   lam-ι : (b : Tm (Γ ,, T') (S' [ π ])) →
           ι[ ⇛-cong T=T' S=S' ] (lam T' b) ≅ᵗᵐ
             lam T (ι[ ty-subst-cong-ty π S=S' ] (
                    ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-proj₁ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ)) S' ] (
                    ι⁻¹[ ty-subst-comp S' π (ty-eq-to-ext-subst Γ T=T') ] (
                    b [ ty-eq-to-ext-subst Γ T=T' ]'))))
-  eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym(
+  eq (lam-ι b) γ _ _ _ = ty≈-sym S (
     begin
       func (to S=S') (S' ⟪ hom-id , _ ⟫ b ⟨ _ , _ ⟩')
-    ≡⟨ cong (func (to S=S')) (morph-cong S' refl) ⟩
+    ≈⟨ func-cong (to S=S') (morph-hom-cong S' ≡-refl) ⟩
       func (to S=S') (S' ⟪ hom-id , _ ⟫ b ⟨ _ , _ ⟩')
-    ≡⟨ cong (func (to S=S')) (morph-id S' _) ⟩
-      func (to S=S') (b ⟨ _ , _ ⟩') ∎))
-    where open ≡-Reasoning
+    ≈⟨ func-cong (to S=S') (morph-id S' _) ⟩
+      func (to S=S') (b ⟨ _ , _ ⟩') ∎)
+    where open SetoidReasoning (type S _ _)
 
   app-ι : (f : Tm Γ (T' ⇛ S')) (t : Tm Γ T') → app (ι[ ⇛-cong T=T' S=S' ] f) (ι[ T=T' ] t) ≅ᵗᵐ ι[ S=S' ] (app f t)
-  eq (app-ι f t) γ = cong (func (to S=S') ∘ f ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩_) (eq (isoʳ T=T') (t ⟨ _ , γ ⟩'))
+  eq (app-ι f t) γ = func-cong (to S=S') ($-cong (f ⟨ _ , γ ⟩') hom-id _ (eq (isoʳ T=T') (t ⟨ _ , γ ⟩')))
 
 
 --------------------------------------------------
 -- Naturality proofs
 
-module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) (S : Ty Γ ℓs) {δ : Δ ⟨ z ⟩} where
+module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) {δ : Δ ⟨ z ⟩} where
   pshfun-subst-from : PresheafFunc T S z (func σ δ) → PresheafFunc (T [ σ ]) (S [ σ ]) z δ
-  _$⟨_,_⟩_ (pshfun-subst-from f) ρ-yz eδ t = f $⟨ ρ-yz , trans (naturality σ δ) (cong (func σ) eδ) ⟩ t
-  naturality (pshfun-subst-from f) _ _ t = trans ($-cong f refl _ _) (naturality f _ _ t)
+  _$⟨_,_⟩_ (pshfun-subst-from f) ρ-yz eδ t = f $⟨ ρ-yz , ctx≈-trans Γ (naturality σ δ) (func-cong σ eδ) ⟩ t
+  $-cong (pshfun-subst-from f) ρ eγ et = $-cong f ρ _ et
+  $-hom-cong (pshfun-subst-from f) eρ = $-hom-cong f eρ
+  naturality (pshfun-subst-from f) _ _ t = ty≈-trans S ($-hom-cong f ≡-refl) (naturality f _ _ t)
 
   pshfun-subst-to : PresheafFunc (T [ σ ]) (S [ σ ]) z δ → PresheafFunc T S z (func σ δ)
   _$⟨_,_⟩_ (pshfun-subst-to f) ρ-yz {γ'} eδ t = ctx-element-subst S proof (
-                                                 f $⟨ ρ-yz , refl ⟩
-                                                 ctx-element-subst T (sym proof) t)
+                                                 f $⟨ ρ-yz , ctx≈-refl Δ ⟩
+                                                 ctx-element-subst T (ctx≈-sym Γ proof) t)
     where
-      proof : func σ (Δ ⟪ ρ-yz ⟫ δ) ≡ γ'
-      proof = trans (sym (naturality σ δ)) eδ
+      proof : func σ (Δ ⟪ ρ-yz ⟫ δ) ≈[ Γ ]≈ γ'
+      proof = ctx≈-trans Γ (ctx≈-sym Γ (naturality σ δ)) eδ
+  $-cong (pshfun-subst-to f) ρ eγ et = morph-cong S hom-id _ ($-cong f ρ _ (morph-cong T hom-id _ et))
+  $-hom-cong (pshfun-subst-to f) ≡-refl = ty≈-trans S (ty≈-trans S (morph-hom-cong S ≡-refl)
+                                                                   (morph-cong S hom-id _ ($-hom-cong f ≡-refl)))
+                                                      (morph-cong S hom-id _ ($-cong f _ _ (morph-hom-cong T ≡-refl)))
   naturality (pshfun-subst-to f) {ρ-xy = ρ-xy}{ρ-yz} _ eq-yx t =
     begin
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩ (T ⟪ hom-id , _ ⟫ T ⟪ ρ-xy , eq-yx ⟫ t)
-    ≡˘⟨ cong (S ⟪ hom-id , α ⟫ ∘ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩_) (morph-comp T hom-id ρ-xy _ _ t) ⟩
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩ (T ⟪ ρ-xy ∙ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , α ⟫ ∘ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩_) (morph-cong T (trans hom-idʳ (sym hom-idˡ))) ⟩
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩ (T ⟪ hom-id ∙ ρ-xy , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , α ⟫ ∘ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩_) (morph-comp T ρ-xy hom-id _ _ t) ⟩
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩ (T ⟪ ρ-xy , _ ⟫ (T ⟪ hom-id , β ⟫ t))
-    ≡⟨ cong (S ⟪ hom-id , α ⟫) ($-cong f refl refl _) ⟩
+      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , ctx≈-refl Δ ⟩ (T ⟪ hom-id , _ ⟫ T ⟪ ρ-xy , eq-yx ⟫ t)
+    ≈˘⟨ morph-cong S hom-id α ($-cong f (ρ-yz ∙ ρ-xy) (ctx≈-refl Δ) (morph-comp T hom-id ρ-xy _ _ t)) ⟩
+      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , ctx≈-refl Δ ⟩ (T ⟪ ρ-xy ∙ hom-id , _ ⟫ t)
+    ≈⟨ morph-cong S hom-id α ($-cong f (ρ-yz ∙ ρ-xy) (ctx≈-refl Δ) (morph-hom-cong T (≡-trans hom-idʳ (≡-sym hom-idˡ)))) ⟩
+      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , ctx≈-refl Δ ⟩ (T ⟪ hom-id ∙ ρ-xy , _ ⟫ t)
+    ≈⟨ morph-cong S hom-id α ($-cong f (ρ-yz ∙ ρ-xy) (ctx≈-refl Δ) (morph-comp T ρ-xy hom-id _ _ t)) ⟩
+      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , ctx≈-refl Δ ⟩ (T ⟪ ρ-xy , _ ⟫ (T ⟪ hom-id , β ⟫ t))
+    ≈⟨ morph-cong S hom-id α ($-hom-cong f ≡-refl) ⟩
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , _ ⟩ (T ⟪ ρ-xy , _ ⟫ (T ⟪ hom-id , β ⟫ t))
-    ≡⟨ cong (S ⟪ hom-id , α ⟫) (naturality f refl (sym (rel-comp Δ ρ-xy ρ-yz δ)) _) ⟩
-      S ⟪ hom-id , α ⟫ S ⟪ ρ-xy , _ ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , β ⟫ t)
-    ≡˘⟨ morph-comp S hom-id ρ-xy _ α _ ⟩
-      S ⟪ ρ-xy ∙ hom-id , _ ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , β ⟫ t)
-    ≡⟨ morph-cong S (trans hom-idʳ (sym hom-idˡ)) ⟩
-      S ⟪ hom-id ∙ ρ-xy , _ ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , β ⟫ t)
-    ≡⟨ morph-comp S ρ-xy hom-id _ eq-yx _ ⟩
-      S ⟪ ρ-xy , eq-yx ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , β ⟫ t) ∎
+    ≈⟨ morph-cong S hom-id α (naturality f (ctx≈-refl Δ) (ctx≈-sym Δ (rel-comp Δ ρ-xy ρ-yz δ)) _) ⟩
+      S ⟪ hom-id , α ⟫ S ⟪ ρ-xy , _ ⟫ f $⟨ ρ-yz , ctx≈-refl Δ ⟩ (T ⟪ hom-id , β ⟫ t)
+    ≈˘⟨ morph-comp S hom-id ρ-xy _ α _ ⟩
+      S ⟪ ρ-xy ∙ hom-id , _ ⟫ f $⟨ ρ-yz , ctx≈-refl Δ ⟩ (T ⟪ hom-id , β ⟫ t)
+    ≈⟨ morph-hom-cong S (≡-trans hom-idʳ (≡-sym hom-idˡ)) ⟩
+      S ⟪ hom-id ∙ ρ-xy , _ ⟫ f $⟨ ρ-yz , ctx≈-refl Δ ⟩ (T ⟪ hom-id , β ⟫ t)
+    ≈⟨ morph-comp S ρ-xy hom-id _ eq-yx _ ⟩
+      S ⟪ ρ-xy , eq-yx ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , ctx≈-refl Δ ⟩ (T ⟪ hom-id , β ⟫ t) ∎
     where
-      open ≡-Reasoning
+      open SetoidReasoning (type S _ _)
       α = _
       β = _
 
-module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
+module _ {T : Ty Γ ℓt rt} {S : Ty Γ ℓs rs} (σ : Δ ⇒ Γ) where
   ⇛-natural : (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
   func (from ⇛-natural) = pshfun-subst-from σ T S
-  naturality (from ⇛-natural) f = to-pshfun-eq (λ _ _ _ → $-cong f refl _ _)
+  func-cong (from ⇛-natural) ef ρ eγ t = ef ρ _ t
+  naturality (from ⇛-natural) f _ _ _ = $-hom-cong f ≡-refl
   func (to ⇛-natural) = pshfun-subst-to σ T S
-  naturality (to ⇛-natural) {_} {_} {ρ-yz} f = to-pshfun-eq λ ρ-xy eγ t →
+  func-cong (to ⇛-natural) ef ρ eγ t = morph-cong S hom-id _ (ef ρ _ _)
+  naturality (to ⇛-natural) {_} {_} {ρ-yz} f ρ-xy eγ t =
     let α = _
         β = _
         ζ = _
@@ -316,81 +346,87 @@ module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
         β' = _
         ζ' = _
     in begin
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , ζ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , α ⟫ ∘ f $⟨ ρ-yz ∙ ρ-xy , β ⟩_) (morph-cong T (sym hom-idʳ)) ⟩
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id ∙ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , α ⟫ ∘ f $⟨ ρ-yz ∙ ρ-xy , β ⟩_) (morph-comp T _ _ ζ' _ t) ⟩
-      S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
-    ≡⟨ cong (S ⟪ hom-id , α ⟫) ($-cong f (sym hom-idʳ) refl _) ⟩
-      S ⟪ hom-id , α ⟫ f $⟨ (ρ-yz ∙ ρ-xy) ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
-    ≡⟨ cong (S ⟪ hom-id , α ⟫) (naturality f _ (trans (rel-id Δ _) (sym β')) _) ⟩
-      S ⟪ hom-id , α ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t)
-    ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
-      S ⟪ hom-id ∙ hom-id , _ ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t)
-    ≡⟨ morph-cong S hom-idʳ ⟩
-      S ⟪ hom-id , α' ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t) ∎
-    where open ≡-Reasoning
-  eq (isoˡ ⇛-natural) f = to-pshfun-eq (λ ρ-yz eγ t →
+        S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , ζ ⟫ t)
+      ≈⟨ morph-cong S hom-id α ($-cong f (ρ-yz ∙ ρ-xy) β (morph-hom-cong T (≡-sym hom-idʳ))) ⟩
+        S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id ∙ hom-id , _ ⟫ t)
+      ≈⟨ morph-cong S hom-id α ($-cong f (ρ-yz ∙ ρ-xy) β (morph-comp T _ _ ζ' _ t)) ⟩
+        S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
+      ≈⟨ morph-cong S hom-id α ($-hom-cong f (≡-sym hom-idʳ)) ⟩
+        S ⟪ hom-id , α ⟫ f $⟨ (ρ-yz ∙ ρ-xy) ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
+      ≈⟨ morph-cong S hom-id α (naturality f _ (ctx≈-trans Δ (rel-id Δ _) (ctx≈-sym Δ β')) _) ⟩
+        S ⟪ hom-id , α ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t)
+      ≈˘⟨ morph-comp S _ _ _ _ _ ⟩
+        S ⟪ hom-id ∙ hom-id , _ ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t)
+      ≈⟨ morph-hom-cong S hom-idʳ ⟩
+        S ⟪ hom-id , α' ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t) ∎
+    where open SetoidReasoning (type S _ _)
+  eq (isoˡ ⇛-natural) f ρ-yz eγ t = 
     begin
       S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , _ ⟩ (T ⟪ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , _ ⟫) ($-cong f (sym hom-idʳ) _ _) ⟩
+    ≈⟨ morph-cong S hom-id _ ($-hom-cong f (≡-sym hom-idʳ)) ⟩
       S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , _ ⟫) (naturality f eγ _ t) ⟩
+    ≈⟨ morph-cong S hom-id _(naturality f eγ _ t) ⟩
       S ⟪ hom-id , _ ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , eγ ⟩ t
-    ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+    ≈˘⟨ morph-comp S _ _ _ _ _ ⟩
       S ⟪ hom-id ∙ hom-id , _ ⟫ f $⟨ ρ-yz , eγ ⟩ t
-    ≡⟨ morph-cong S hom-idʳ ⟩
+    ≈⟨ morph-hom-cong S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , eγ ⟩ t
-    ≡⟨ morph-id S _ ⟩
-      f $⟨ ρ-yz , eγ ⟩ t ∎)
-    where open ≡-Reasoning
-  eq (isoʳ ⇛-natural) f = to-pshfun-eq (λ ρ-yz eδ t →
-    let α = trans (rel-id Δ _) (sym eδ)
+    ≈⟨ morph-id S _ ⟩
+      f $⟨ ρ-yz , eγ ⟩ t ∎
+    where open SetoidReasoning (type S _ _)
+  eq (isoʳ ⇛-natural) f ρ-yz eδ t =
+    let α = ctx≈-trans Δ (rel-id Δ _) (ctx≈-sym Δ eδ)
         β = _
-    in begin
-      S ⟪ hom-id , β ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , β ⟫) ($-cong f (sym hom-idʳ) refl _) ⟩
+    in  begin
+      S ⟪ hom-id , β ⟫ f $⟨ ρ-yz , ctx≈-refl Δ ⟩ (T ⟪ hom-id , _ ⟫ t)
+    ≈⟨ morph-cong S hom-id β ($-hom-cong f (≡-sym hom-idʳ)) ⟩
       S ⟪ hom-id , β ⟫ f $⟨ ρ-yz ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , β ⟫ ∘ f $⟨ ρ-yz ∙ hom-id , _ ⟩_) (morph-cong T refl) ⟩
+    ≈⟨ morph-cong S hom-id β ($-cong f (ρ-yz ∙ hom-id) _(morph-hom-cong T ≡-refl)) ⟩
       S ⟪ hom-id , β ⟫ f $⟨ ρ-yz ∙ hom-id , _ ⟩ (T [ σ ] ⟪ hom-id , α ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , _ ⟫) (naturality f eδ _ t) ⟩
+    ≈⟨ morph-cong S hom-id _ (naturality f eδ _ t) ⟩
       S ⟪ hom-id , β ⟫ S [ σ ] ⟪ hom-id , α ⟫ f $⟨ ρ-yz , eδ ⟩ t
-    ≡˘⟨ morph-comp S _ _ _ _ _ ⟩
+    ≈˘⟨ morph-comp S _ _ _ _ _ ⟩
       S ⟪ hom-id ∙ hom-id , _ ⟫ f $⟨ ρ-yz , eδ ⟩ t
-    ≡⟨ morph-cong S hom-idʳ ⟩
+    ≈⟨ morph-hom-cong S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , eδ ⟩ t
-    ≡⟨ morph-id S _ ⟩
-      f $⟨ ρ-yz , eδ ⟩ t ∎)
-    where open ≡-Reasoning
+    ≈⟨ morph-id S _ ⟩
+      f $⟨ ρ-yz , eδ ⟩ t ∎
+    where open SetoidReasoning (type S _ _)
 
   lam-natural : (b : Tm (Γ ,, T) (S [ π ])) →
                 (lam T b) [ σ ]' ≅ᵗᵐ
                   ι[ ⇛-natural ] (
                   lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π ∷ σ ⊹ ◼) (σ ∷ π ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
-  eq (lam-natural b) δ = to-pshfun-eq (λ ρ {γ'} eγ t → sym (
-    let α = begin
-              transport (λ - → T ⟨ _ , - ⟩) _ (T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t)
-            ≡⟨ morph-transport T refl _ _ ⟩
+  eq (lam-natural b) δ ρ {γ'} eγ t = ty≈-sym S (
+    let α = ty≈-trans T (ty≈-trans T (ty≈-trans T (ty≈-sym T (morph-comp T hom-id hom-id _ _ _))
+                                                  (ty≈-sym T (morph-comp T (hom-id ∙ hom-id) hom-id _ _ t)))
+                                     (morph-hom-cong T (≡-trans hom-idˡ hom-idˡ)))
+                        (morph-id T t)
+    {-begin
+              ?
+            ≈⟨ {!morph-transport T refl _ _!} ⟩
               T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-            ≡˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
+            ≈˘⟨ {!morph-comp T hom-id hom-id _ _ t!} ⟩
               T ⟪ hom-id ∙ hom-id , _ ⟫ t
-            ≡⟨ morph-cong T hom-idʳ ⟩
+            ≈⟨ {!morph-cong T hom-idʳ!} ⟩
               T ⟪ hom-id , _ ⟫ t
-            ≡⟨ morph-id T t ⟩
-              t ∎
+            ≈⟨ {!morph-id T t!} ⟩
+              t ∎-}
     in begin
       S ⟪ hom-id , _ ⟫ S ⟪ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
-    ≡˘⟨ morph-comp S hom-id hom-id _ _ _ ⟩
+    ≈˘⟨ morph-comp S hom-id hom-id _ _ _ ⟩
       S ⟪ hom-id ∙ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
-    ≡⟨ morph-cong S hom-idʳ ⟩
+    ≈⟨ morph-hom-cong S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
-    ≡⟨ naturality b hom-id (to-Σ-eq (trans (rel-id Γ _) (trans (sym (naturality σ δ)) eγ)) α) ⟩
-      b ⟨ _ , [ γ' , t ] ⟩' ∎))
-    where open ≡-Reasoning
+    ≈⟨ naturality b hom-id [ ctx≈-trans Γ (rel-id Γ _) (ctx≈-trans Γ (ctx≈-sym Γ (naturality σ δ)) eγ) , α ] ⟩
+    -- to-Σ-eq (ctx≈-trans Γ (rel-id Γ _) (ctx≈-trans Γ (ctx≈-sym Γ (naturality σ δ)) eγ)) ?
+      b ⟨ _ , [ γ' , t ] ⟩' ∎)
+    where
+      open SetoidReasoning (type S _ _)
 
   app-natural : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) →
                 (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
-  eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl _ _
+  eq (app-natural f t) δ = $-hom-cong (f ⟨ _ , func σ δ ⟩') ≡-refl
 
 
 --------------------------------------------------
@@ -398,23 +434,25 @@ module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
 
 ⇛-to-↣ : Tm Γ (T ⇛ S) → (T ↣ S)
 func (⇛-to-↣ f) = f €⟨ _ , _ ⟩_
+func-cong (⇛-to-↣ f) = $-cong (f ⟨ _ , _ ⟩') hom-id _
 naturality (⇛-to-↣ f) t = €-natural f _ _ t
 
 ↣-to-⇛ : (T ↣ S) → Tm Γ (T ⇛ S)
 (term (↣-to-⇛ η) _ _) $⟨ _ , _ ⟩ t = func η t
-naturality (term (↣-to-⇛ η) _ _) _ _ t = sym (naturality η t)
-naturality (↣-to-⇛ η) _ _ = to-pshfun-eq (λ _ _ _ → refl)
+$-cong (term (↣-to-⇛ η) _ _) _ _ = func-cong η
+$-hom-cong (term (↣-to-⇛ {S = S} η) _ _) _ = ty≈-refl S
+naturality (term (↣-to-⇛ {S = S} η) _ _) _ _ t = ty≈-sym S (naturality η t)
+naturality (↣-to-⇛ {S = S} η) _ _ _ _ _ = ty≈-refl S
 
 ↣-⇛-iso : (η : T ↣ S) → ⇛-to-↣ (↣-to-⇛ η) ≅ⁿ η
-eq (↣-⇛-iso η) _ = refl
+eq (↣-⇛-iso {S = S} η) _ = ty≈-refl S
 
 ⇛-↣-iso : (f : Tm Γ (T ⇛ S)) → ↣-to-⇛ (⇛-to-↣ f) ≅ᵗᵐ f
-eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
+eq (⇛-↣-iso {Γ = Γ}{S = S} f) {x} γ {y} ρ {γ'} eγ t =
   begin
     f ⟨ y , γ' ⟩' $⟨ hom-id , rel-id Γ γ' ⟩ t
-  ≡˘⟨ cong (_$⟨ hom-id , rel-id Γ γ' ⟩ t) (naturality f ρ eγ) ⟩
+  ≈˘⟨ naturality f ρ eγ hom-id (rel-id Γ γ') t ⟩
     f ⟨ x , γ ⟩' $⟨ ρ ∙ hom-id , strong-rel-comp Γ eγ (rel-id Γ γ') ⟩ t
-  ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-rel-comp Γ eγ (rel-id Γ γ')) eγ ⟩
-    f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)
-  where open ≡-Reasoning
--}
+  ≈⟨ $-hom-cong (f ⟨ x , γ ⟩') hom-idʳ ⟩
+    f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎
+  where open SetoidReasoning (type S y γ')

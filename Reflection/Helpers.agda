@@ -1,4 +1,4 @@
-{-# OPTIONS --omega-in-omega #-}
+{-# OPTIONS --without-K --omega-in-omega #-}
 
 -- Note that we use the option omega-in-omega in order to define
 -- an inductive data type in Setω and to pattern match on it (which

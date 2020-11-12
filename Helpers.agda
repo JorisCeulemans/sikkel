@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 module Helpers where
 
 open import Axiom.Extensionality.Propositional

@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 --------------------------------------------------
 -- Contexts and substitutions + category structure
 --------------------------------------------------
