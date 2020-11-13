@@ -29,7 +29,7 @@ private
 
 record Tm {ℓc ℓt} (Γ : Ctx C ℓc) (T : Ty Γ ℓt) : Set (ℓc ⊔ ℓt) where
   constructor MkTm
-  no-eta-equality
+  -- no-eta-equality
 
   field
     term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
@@ -85,6 +85,12 @@ module ≅ᵗᵐ-Reasoning {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} where
 
   syntax step-≅  t1 t2≅t3 t1≅t2 = t1 ≅⟨  t1≅t2 ⟩ t2≅t3
   syntax step-≅˘ t1 t2≅t3 t2≅t1 = t1 ≅˘⟨ t2≅t1 ⟩ t2≅t3
+
+-- Equivalence of terms implies equality of terms (only works because eta-equality for Tm is enabled).
+tm-≅-to-≡ : t ≅ᵗᵐ t' → t ≡ t'
+tm-≅-to-≡ et = cong₂-d MkTm
+  (funext λ _ → funext λ γ → eq et γ)
+  (funextI (funextI (funext (λ _ → funextI (funextI (funext λ _ → uip _ _))))))
 
 
 --------------------------------------------------

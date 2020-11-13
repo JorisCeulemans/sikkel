@@ -29,10 +29,12 @@ private
 
 infixr 12 _⇛_
 
+{-
 open import Axiom.UniquenessOfIdentityProofs
 private
   uip : ∀ {a} {A : Set a} → UIP A
   uip refl refl = refl
+-}
 
 
 --------------------------------------------------
