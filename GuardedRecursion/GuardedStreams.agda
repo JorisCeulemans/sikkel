@@ -139,6 +139,11 @@ instance
 
 --------------------------------------------------
 -- Some operations on guarded streams
+--
+-- Most functions are an implementation of the examples on pages 8-10 of the paper
+--   Ranald Clouston, Aleš Bizjak, Hans Bugge Grathwohl, and Lars Birkedal.
+--   The guarded lambda-calculus: Programming and reasoning with guarded recursion for coinductive types.
+--   Logical Methods of Computer Science (LMCS), 12(3), 2016.
 
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
 str-snd s = next' (lamι Stream (str-head (varι 0))) ⊛' str-tail s
@@ -212,18 +217,6 @@ private
     eq map-test2 {x = suc (suc zero)}    _ = refl
     eq map-test2 {x = suc (suc (suc n))} _ = refl
 
-mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm Γ (Stream ⇛ Stream ⇛ Stream)
-mergef f = löbι (Stream ⇛ Stream ⇛ Stream) (
-                lamι Stream (
-                     lamι Stream (
-                          let xs = varι 1
-                              ys = varι 0
-                          in
-                            app (app (app (↑ι⟨ 3 ⟩ f)
-                                          (str-head xs))
-                                     (str-head ys))
-                                (varι 2 ⊛' str-tail xs ⊛' str-tail ys))))
-
 interleave : Tm Γ (Stream ⇛ ▻' Stream ⇛ Stream)
 interleave = löbι (Stream ⇛ ▻' Stream ⇛ Stream)
                   (lamι Stream
@@ -256,3 +249,19 @@ module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
                      (lamι T let x = app (varι 1) (varι 0)
                              in str-cons (pair (fst x)
                                                (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
+
+-- This is an implementation of an example on page 3 of the paper
+--   Robert Atkey, and Conor McBride.
+--   Productive Coprogramming with Guarded Recursion.
+--   ICFP 2013.
+mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) → Tm Γ (Stream ⇛ Stream ⇛ Stream)
+mergef f = löbι (Stream ⇛ Stream ⇛ Stream) (
+                lamι Stream (
+                     lamι Stream (
+                          let xs = varι 1
+                              ys = varι 0
+                          in
+                            app (app (app (↑ι⟨ 3 ⟩ f)
+                                          (str-head xs))
+                                     (str-head ys))
+                                (varι 2 ⊛' str-tail xs ⊛' str-tail ys))))
