@@ -236,6 +236,7 @@ module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
   T : Ty Γ ℓ
   T = ⟦ nul T-op ⟧exp
 
+{-
   initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
   initial = löbι ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
                  (lamι (Nat' ⊠ ▻' T ⇛ T)
@@ -249,6 +250,7 @@ module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
                      (lamι T let x = app (varι 1) (varι 0)
                              in str-cons (pair (fst x)
                                                (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
+-}
 
 -- This is an implementation of an example on page 3 of the paper
 --   Robert Atkey, and Conor McBride.
@@ -265,3 +267,44 @@ mergef f = löbι (Stream ⇛ Stream ⇛ Stream) (
                                           (str-head xs))
                                      (str-head ys))
                                 (varι 2 ⊛' str-tail xs ⊛' str-tail ys))))
+
+-- Examples that were not taken from a paper.
+str-zipWith : Tm Γ (Nat' ⇛ Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream ⇛ Stream)
+str-zipWith f = mergef (lamι Nat' (
+                             lamι Nat' (
+                                  lamι (▻' Stream) (
+                                       str-cons (pair (app (app (↑ι⟨ 3 ⟩ f) (varι 2)) (varι 1))
+                                                      (varι 0))))))
+
+nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
+nat-sum = nat-elim (Nat' ⇛ Nat')
+                   (lamι Nat' (varι 0))
+                   (lamι (Nat' ⇛ Nat') (
+                         lamι Nat' (suc' (app (varι 1) (varι 0)))))
+
+str-cons' : Tm Γ ((Nat' ⊠ ▻' Stream) ⇛ Stream)
+str-cons' = lamι (Nat' ⊠ ▻' Stream) (str-cons (pair (fst (varι 0)) (snd (varι 0))))
+
+str-tail' : Tm Γ (Stream ⇛ ▻' Stream)
+str-tail' = lamι Stream (str-tail (varι 0))
+
+pair' : Tm Γ (Nat' ⇛ ▻' Stream ⇛ Nat' ⊠ ▻' Stream)
+pair' = lamι Nat' (lamι (▻' Stream) (pair (varι 1) (varι 0)))
+
+fibs : Tm Γ Stream
+fibs = löbι Stream (
+            str-cons (pair (suc' zero')
+                           (next' str-cons' ⊛' (next' pair'
+                                                ⊛' next' (suc' zero')
+                                                ⊛' (next' f ⊛' next' (varι 0) ⊛' (next' str-tail' ⊛' varι 0))))))
+  where
+    f : Tm Γ (▻' Stream ⇛ ▻' Stream ⇛ ▻' Stream)
+    f = lamι (▻' Stream) (lamι (▻' Stream) (next' (str-zipWith nat-sum) ⊛' varι 1 ⊛' varι 0))
+
+private
+  module _ where
+    fibs-test : str-thrd {Γ = Γ} fibs ≅ᵗᵐ next' (next' (discr 2))
+    eq fibs-test {x = zero} _ = refl
+    eq fibs-test {x = suc zero} _ = refl
+    eq fibs-test {x = suc (suc zero)} _ = refl
+    eq fibs-test {x = suc (suc (suc x))} _ = refl
