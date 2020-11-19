@@ -276,11 +276,20 @@ str-zipWith f = mergef (lamι Nat' (
                                        str-cons (pair (app (app (↑ι⟨ 3 ⟩ f) (varι 2)) (varι 1))
                                                       (varι 0))))))
 
+{-
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nat-elim (Nat' ⇛ Nat')
                    (lamι Nat' (varι 0))
                    (lamι (Nat' ⇛ Nat') (
                          lamι Nat' (suc' (app (varι 1) (varι 0)))))
+-}
+
+prim-nat-sum : Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
+term (prim-nat-sum t s) n γ = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
+naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (naturality s m≤n eγ)
+
+nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
+nat-sum = lamι Nat' (lamι Nat' (prim-nat-sum (varι 0) (varι 1)))
 
 str-cons' : Tm Γ ((Nat' ⊠ ▻' Stream) ⇛ Stream)
 str-cons' = lamι (Nat' ⊠ ▻' Stream) (str-cons (pair (fst (varι 0)) (snd (varι 0))))
