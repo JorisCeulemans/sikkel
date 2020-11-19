@@ -36,6 +36,9 @@ private
   variable
     Γ Δ : Ctx ω ℓ
 
+infixl 12 _$_
+_$_ = app
+
 
 --------------------------------------------------
 -- Some basic operations and proofs regarding vectors
@@ -72,6 +75,7 @@ morph-cong Stream refl = refl
 morph-id Stream _ = first-≤-refl
 morph-comp Stream k≤m m≤n _ _ = first-≤-trans (s≤s k≤m) (s≤s m≤n)
 
+{-
 str-head : Tm Γ Stream → Tm Γ Nat'
 term (str-head s) n γ = head (s ⟨ n , γ ⟩')
 naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
@@ -82,7 +86,14 @@ naturality (str-head {Γ = Γ} s) {m}{n} m≤n {γ}{γ'} eγ =
   ≡⟨ cong head (naturality s m≤n eγ) ⟩
     head (s ⟨ m , γ' ⟩') ∎
   where open ≡-Reasoning
+-}
 
+str-head : Tm Γ (Stream ⇛ Nat')
+_$⟨_,_⟩_ (term str-head n γn) _ _ = head
+naturality (term str-head n γn) _ _ v = sym (first-≤-head _ v)
+naturality str-head m≤n eγ = to-pshfun-eq (λ _ _ _ → refl)
+
+{-
 str-tail : Tm Γ Stream → Tm Γ (▻' Stream)
 term (str-tail s) zero _ = tt
 term (str-tail s) (suc n) γ = tail (s ⟨ suc n , γ ⟩')
@@ -95,7 +106,17 @@ naturality (str-tail {Γ = Γ} s) {suc m}{suc n} (s≤s m≤n) {γ}{γ'} eγ =
   ≡⟨ cong tail (naturality s (s≤s m≤n) eγ) ⟩
     tail (s ⟨ suc m , γ' ⟩') ∎
   where open ≡-Reasoning
+-}
 
+str-tail : Tm Γ (Stream ⇛ ▻' Stream)
+_$⟨_,_⟩_ (term str-tail n γn) z≤n       _ = λ _ → tt
+_$⟨_,_⟩_ (term str-tail n γn) (s≤s m≤n) _ = tail
+naturality (term str-tail n γn) {ρ-xy = z≤n}     {ρ-yz = m≤n}     _ _ _ = refl
+naturality (term str-tail n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} _ _ v = sym (first-≤-tail (s≤s k≤m) v)
+naturality str-tail z≤n       eγ = to-pshfun-eq λ { z≤n _ _ → refl }
+naturality str-tail (s≤s m≤n) eγ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
+
+{-
 str-cons : Tm Γ (Nat' ⊠ (▻' Stream)) → Tm Γ Stream
 term (str-cons t) zero γ = fst t ⟨ zero , γ ⟩' ∷ []
 term (str-cons t) (suc n) γ = (fst t ⟨ suc n , _ ⟩') ∷ (snd t ⟨ suc n , γ ⟩')
@@ -103,6 +124,16 @@ naturality (str-cons t) {zero} {zero} z≤n eγ = cong (λ x → proj₁ x ∷ [
 naturality (str-cons t) {zero} {suc n} z≤n eγ = cong (λ x → proj₁ x ∷ []) (naturality t z≤n eγ)
 naturality (str-cons {Γ = Γ} t) {suc m}{suc n} (s≤s m≤n) eγ =
   cong₂ _∷_ (cong proj₁ (naturality t (s≤s m≤n) eγ)) (naturality (snd t) (s≤s m≤n) eγ)
+-}
+
+str-cons : Tm Γ (Nat' ⊠ ▻' Stream ⇛ Stream)
+_$⟨_,_⟩_ (term str-cons n γn) z≤n       _ [ h , _ ] = h ∷ []
+_$⟨_,_⟩_ (term str-cons n γn) (s≤s m≤n) _ [ h , t ] = h ∷ t
+naturality (term str-cons n γn) {ρ-xy = z≤n}     {ρ-yz = z≤n}     _ _ _ = refl
+naturality (term str-cons n γn) {ρ-xy = z≤n}     {ρ-yz = s≤s m≤n} _ _ _ = refl
+naturality (term str-cons n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} _ _ _ = refl
+naturality str-cons z≤n       _ = to-pshfun-eq λ { z≤n _ _ → refl }
+naturality str-cons (s≤s m≤n) _ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
 
 stream-natural : (σ : Δ ⇒ Γ) → Stream [ σ ] ≅ᵗʸ Stream
 func (from (stream-natural σ)) = id
@@ -145,73 +176,110 @@ instance
 --   The guarded lambda-calculus: Programming and reasoning with guarded recursion for coinductive types.
 --   Logical Methods of Computer Science (LMCS), 12(3), 2016.
 
+{-
 str-snd : Tm Γ Stream → Tm Γ (▻' Nat')
-str-snd s = next' (lamι Stream (str-head (varι 0))) ⊛' str-tail s
+str-snd s = next' (lamι Stream (str-head $ varι 0)) ⊛' str-tail $ s
+-}
 
+str-snd : Tm Γ (Stream ⇛ ▻' Nat')
+str-snd = lamι Stream (next' str-head ⊛' (str-tail $ varι 0))
+
+{-
 str-thrd : Tm Γ Stream → Tm Γ (▻' (▻' Nat'))
-str-thrd s = next' (lamι Stream (str-snd (varι 0))) ⊛' str-tail s
+str-thrd s = next' (lamι Stream (str-snd (varι 0))) ⊛' str-tail $ s
+-}
+
+str-thrd : Tm Γ (Stream ⇛ ▻' (▻' Nat'))
+str-thrd = lamι Stream (next' str-snd ⊛' (str-tail $ varι 0))
 
 zeros : Tm Γ Stream
 zeros = löbι Stream
-             (str-cons (pair zero' (varι 0)))
+             (str-cons $ pair zero' (varι 0))
 
 private
   module _ {Γ : Ctx ω ℓ} where
-    zeros-test : str-head {Γ = Γ} zeros ≅ᵗᵐ zero'
+    zeros-test : str-head {Γ = Γ} $ zeros ≅ᵗᵐ zero'
     eq zeros-test {x = zero}  _ = refl
     eq zeros-test {x = suc n} _ = refl
 
-    zeros-test2 : str-snd {Γ = Γ} zeros ≅ᵗᵐ next' zero'
+    zeros-test2 : str-snd {Γ = Γ} $ zeros ≅ᵗᵐ next' zero'
     eq zeros-test2 {x = zero}        _ = refl
     eq zeros-test2 {x = suc zero}    _ = refl
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
-str-map : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
-str-map f = löbι (Stream ⇛ Stream) (
-                 lamι Stream (
-                      str-cons (pair (app (↑ι⟨ 2 ⟩ f) (str-head (varι 0)))
-                                     (varι 1 ⊛' str-tail (varι 0)))))
+{-
+str-map' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream)
+str-map' f = löbι (Stream ⇛ Stream) (
+                  lamι Stream (
+                       str-cons $ (pair (app (↑ι⟨ 2 ⟩ f) (str-head $ varι 0))
+                                        (varι 1 ⊛' str-tail $ varι 0))))
+-}
 
+str-map : Tm Γ ((Nat' ⇛ Nat') ⇛ Stream ⇛ Stream)
+str-map = lamι (Nat' ⇛ Nat') (
+               löbι (Stream ⇛ Stream) (
+                    lamι Stream
+                         (str-cons $ pair (varι 2 $ (str-head $ varι 0))
+                                          (varι 1 ⊛' (str-tail $ varι 0)))))
+
+{-
 iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate f = löbι (Nat' ⇛ Stream) (
                  lamι Nat' (
-                      str-cons (pair (varι 0)
-                                     (varι 1 ⊛' next' (app (↑ι⟨ 2 ⟩ f) (varι 0))))))
+                      str-cons $ (pair (varι 0)
+                                       (varι 1 ⊛' next' (app (↑ι⟨ 2 ⟩ f) (varι 0))))))
+-}
 
+iterate-func : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ Stream)
+iterate-func = lamι (Nat' ⇛ Nat') (
+                    löbι (Nat' ⇛ Stream) (
+                         lamι Nat' (
+                              str-cons $ pair (varι 0)
+                                              (varι 1 ⊛' next' (varι 2 $ varι 0)))))
+
+{-
 iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ Stream)
 iterate' f = lamι Nat' (
                   löbι Stream (
-                       str-cons (pair (varι 1)
-                                      (next' (↑ι⟨ 2 ⟩ str-map f) ⊛' varι 0))))
+                       str-cons $ (pair (varι 1)
+                                        (next' (↑ι⟨ 2 ⟩ (str-map $ f)) ⊛' varι 0))))
+-}
+
+iterate'-func : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ Stream)
+iterate'-func = lamι (Nat' ⇛ Nat') (
+                     lamι Nat' (
+                          löbι Stream (
+                               str-cons $ pair (varι 1)
+                                               (next' (str-map $ varι 2) ⊛' varι 0))))
 
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
 
 nats : Tm Γ Stream
-nats = app (iterate' suc-func) zero'
+nats = iterate'-func $ suc-func $ zero'
 
 private
   module _ {Γ : Ctx ω ℓ} where
-    nats-test : str-head {Γ = Γ} nats ≅ᵗᵐ zero'
+    nats-test : str-head {Γ = Γ} $ nats ≅ᵗᵐ zero'
     eq nats-test {x = zero}  _ = refl
     eq nats-test {x = suc n} _ = refl
 
-    nats-test2 : str-snd {Γ = Γ} nats ≅ᵗᵐ next' (suc' zero')
+    nats-test2 : str-snd {Γ = Γ} $ nats ≅ᵗᵐ next' (suc' zero')
     eq nats-test2 {x = zero}        _ = refl
     eq nats-test2 {x = suc zero}    _ = refl
     eq nats-test2 {x = suc (suc n)} _ = refl
 
-    nats-test3 : str-thrd {Γ = Γ} nats ≅ᵗᵐ next' (next' (suc' (suc' zero')))
+    nats-test3 : str-thrd {Γ = Γ} $ nats ≅ᵗᵐ next' (next' (suc' (suc' zero')))
     eq nats-test3 {x = zero}              _ = refl
     eq nats-test3 {x = suc zero}          _ = refl
     eq nats-test3 {x = suc (suc zero)}    _ = refl
     eq nats-test3 {x = suc (suc (suc n))} _ = refl
 
-    map-test : str-head {Γ = Γ} (app (str-map suc-func) zeros) ≅ᵗᵐ discr 1
+    map-test : str-head {Γ = Γ} $ (str-map $ suc-func $ zeros) ≅ᵗᵐ discr 1
     eq map-test {x = zero}  _ = refl
     eq map-test {x = suc x} _ = refl
 
-    map-test2 : str-thrd {Γ = Γ} (app (str-map suc-func) (app (str-map suc-func) nats)) ≅ᵗᵐ next' (next' (discr 4))
+    map-test2 : str-thrd {Γ = Γ} $ (str-map $ suc-func $ (str-map $ suc-func $ nats)) ≅ᵗᵐ next' (next' (discr 4))
     eq map-test2 {x = zero}              _ = refl
     eq map-test2 {x = suc zero}          _ = refl
     eq map-test2 {x = suc (suc zero)}    _ = refl
@@ -221,36 +289,34 @@ interleave : Tm Γ (Stream ⇛ ▻' Stream ⇛ Stream)
 interleave = löbι (Stream ⇛ ▻' Stream ⇛ Stream)
                   (lamι Stream
                         (lamι (▻' Stream)
-                              (str-cons (pair (str-head (varι 1))
-                                              (varι 2 ⊛' varι 0 ⊛' next' (str-tail (varι 1)))))))
+                              (str-cons $ (pair (str-head $ varι 1)
+                                                (varι 2 ⊛' varι 0 ⊛' next' (str-tail $ varι 1))))))
 
 toggle : Tm Γ Stream
 toggle = löbι Stream
-              (str-cons (pair (suc' zero')
-                              (next' (str-cons (pair zero' (varι 0))))))
+              (str-cons $ pair (suc' zero')
+                               (next' (str-cons $ pair zero' (varι 0))))
 
 paperfolds : Tm Γ Stream
-paperfolds = löbι Stream (app (app interleave toggle) (varι 0))
+paperfolds = löbι Stream (interleave $ toggle $ varι 0)
 
 module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
   T : Ty Γ ℓ
   T = ⟦ nul T-op ⟧exp
 
-{-
   initial : Tm Γ ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
   initial = löbι ((Nat' ⊠ ▻' T ⇛ T) ⇛ Stream ⇛ T)
                  (lamι (Nat' ⊠ ▻' T ⇛ T)
                        (lamι Stream
-                             (app (varι 1) (pair (str-head (varι 0))
-                                                 (varι 2 ⊛' next' (varι 1) ⊛' str-tail (varι 0))))))
+                             (varι 1 $ (pair (str-head $ varι 0)
+                                             (varι 2 ⊛' next' (varι 1) ⊛' (str-tail $ varι 0))))))
 
   final : Tm Γ ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
   final = löbι ((T ⇛ Nat' ⊠ ▻' T) ⇛ T ⇛ Stream)
                (lamι (T ⇛ Nat' ⊠ ▻' T)
-                     (lamι T let x = app (varι 1) (varι 0)
-                             in str-cons (pair (fst x)
-                                               (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
--}
+                     (lamι T let x = varι 1 $ varι 0
+                             in str-cons $ (pair (fst x)
+                                                 (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
 
 -- This is an implementation of an example on page 3 of the paper
 --   Robert Atkey, and Conor McBride.
@@ -264,17 +330,30 @@ mergef f = löbι (Stream ⇛ Stream ⇛ Stream) (
                               ys = varι 0
                           in
                             app (app (app (↑ι⟨ 3 ⟩ f)
-                                          (str-head xs))
-                                     (str-head ys))
-                                (varι 2 ⊛' str-tail xs ⊛' str-tail ys))))
+                                          (str-head $ xs))
+                                     (str-head $ ys))
+                                (varι 2 ⊛' (str-tail $ xs) ⊛' (str-tail $ ys)))))
+
+{-
+mergef : Tm Γ ((Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) ⇛ Stream ⇛ Stream ⇛ Stream)
+mergef = lamι (Nat' ⇛ Nat' ⇛ ▻' Stream ⇛ Stream) (
+              löbι (Stream ⇛ Stream ⇛ Stream) (
+                   lamι Stream (
+                        lamι Stream (
+                             let xs = varι 1
+                                 ys = varι 0
+                             in varι 3 $ (str-head $ xs)
+                                       $ (str-head $ ys)
+                                       $ (varι 2 ⊛' (str-tail $ xs) ⊛' (str-tail $ ys))))))
+-}
 
 -- Examples that were not taken from a paper.
 str-zipWith : Tm Γ (Nat' ⇛ Nat' ⇛ Nat') → Tm Γ (Stream ⇛ Stream ⇛ Stream)
 str-zipWith f = mergef (lamι Nat' (
                              lamι Nat' (
                                   lamι (▻' Stream) (
-                                       str-cons (pair (app (app (↑ι⟨ 3 ⟩ f) (varι 2)) (varι 1))
-                                                      (varι 0))))))
+                                       str-cons $ (pair (app (app (↑ι⟨ 3 ⟩ f) (varι 2)) (varι 1))
+                                                        (varι 0))))))
 
 {-
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
@@ -291,28 +370,22 @@ naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = lamι Nat' (lamι Nat' (prim-nat-sum (varι 0) (varι 1)))
 
-str-cons' : Tm Γ ((Nat' ⊠ ▻' Stream) ⇛ Stream)
-str-cons' = lamι (Nat' ⊠ ▻' Stream) (str-cons (pair (fst (varι 0)) (snd (varι 0))))
-
-str-tail' : Tm Γ (Stream ⇛ ▻' Stream)
-str-tail' = lamι Stream (str-tail (varι 0))
-
 pair' : Tm Γ (Nat' ⇛ ▻' Stream ⇛ Nat' ⊠ ▻' Stream)
 pair' = lamι Nat' (lamι (▻' Stream) (pair (varι 1) (varι 0)))
 
 fibs : Tm Γ Stream
 fibs = löbι Stream (
-            str-cons (pair (suc' zero')
-                           (next' str-cons' ⊛' (next' pair'
+            str-cons $ (pair (suc' zero')
+                             (next' str-cons ⊛' (next' pair'
                                                 ⊛' next' (suc' zero')
-                                                ⊛' (next' f ⊛' next' (varι 0) ⊛' (next' str-tail' ⊛' varι 0))))))
+                                                ⊛' (next' f ⊛' next' (varι 0) ⊛' (next' str-tail ⊛' varι 0))))))
   where
     f : Tm Γ (▻' Stream ⇛ ▻' Stream ⇛ ▻' Stream)
     f = lamι (▻' Stream) (lamι (▻' Stream) (next' (str-zipWith nat-sum) ⊛' varι 1 ⊛' varι 0))
 
 private
   module _ where
-    fibs-test : str-thrd {Γ = Γ} fibs ≅ᵗᵐ next' (next' (discr 2))
+    fibs-test : str-thrd {Γ = Γ} $ fibs ≅ᵗᵐ next' (next' (discr 2))
     eq fibs-test {x = zero} _ = refl
     eq fibs-test {x = suc zero} _ = refl
     eq fibs-test {x = suc (suc zero)} _ = refl
