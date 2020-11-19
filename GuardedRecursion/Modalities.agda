@@ -11,7 +11,7 @@ open import CwF-Structure
 
 private
   variable
-    ℓ ℓ' : Level
+    ℓ ℓ' ℓc ℓt : Level
 
 module _ where
   private
@@ -170,53 +170,114 @@ module _ where
   const-subst-natural : (δ : Δ ⟨ tt ⟩) (σ : Δ ⇒ Γ) → timeless-subst σ ⊚ const-subst δ ≅ˢ const-subst (func σ δ)
   eq (const-subst-natural δ σ) _ = refl
 
-  collapse-ty : Ty (timeless-ctx Γ) ℓ → Ty Γ ℓ
-  type (collapse-ty T) tt γ = Tm ◇ (T [ const-subst γ ])
-  morph (collapse-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
+  global-ty : Ty (timeless-ctx Γ) ℓ → Ty Γ ℓ
+  type (global-ty T) tt γ = Tm ◇ (T [ const-subst γ ])
+  morph (global-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
     where
       proof : T [ const-subst γ ] ≅ᵗʸ T [ const-subst γ' ]
       proof = ty-subst-cong-subst (const-subst-cong (trans (sym (rel-id Γ γ)) eγ)) T
-  morph-cong (collapse-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → morph-cong T refl })
-  morph-id (collapse-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → trans (morph-cong T refl) (morph-id T _) })
-  morph-comp (collapse-ty T) tt tt eγ-zy eγ-yx t = tm-≅-to-≡
+  morph-cong (global-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → morph-cong T refl })
+  morph-id (global-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → trans (morph-cong T refl) (morph-id T _) })
+  morph-comp (global-ty T) tt tt eγ-zy eγ-yx t = tm-≅-to-≡
     (record { eq = λ _ → trans (morph-cong T (≤-irrelevant _ _)) (morph-comp T ≤-refl ≤-refl _ _ _) })
 
   module _ {T : Ty (timeless-ctx Γ) ℓ} where
-    collapse-tm : Tm (timeless-ctx Γ) T → Tm Γ (collapse-ty T)
-    term (term (collapse-tm t) tt γ) n tt = t ⟨ n , γ ⟩'
-    Tm.naturality (term (collapse-tm t) tt γ) m≤n refl = Tm.naturality t m≤n refl
-    Tm.naturality (collapse-tm t) tt refl = tm-≅-to-≡ (record { eq = λ _ → Tm.naturality t ≤-refl _ })
+    global-tm : Tm (timeless-ctx Γ) T → Tm Γ (global-ty T)
+    term (term (global-tm t) tt γ) n tt = t ⟨ n , γ ⟩'
+    Tm.naturality (term (global-tm t) tt γ) m≤n refl = Tm.naturality t m≤n refl
+    Tm.naturality (global-tm t) tt refl = tm-≅-to-≡ (record { eq = λ _ → Tm.naturality t ≤-refl _ })
 
-    uncollapse-tm : Tm Γ (collapse-ty T) → Tm (timeless-ctx Γ) T
-    term (uncollapse-tm t) n γ = t ⟨ tt , γ ⟩' ⟨ n , tt ⟩'
-    Tm.naturality (uncollapse-tm t) m≤n refl = Tm.naturality (t ⟨ tt , _ ⟩') m≤n refl
+    unglobal-tm : Tm Γ (global-ty T) → Tm (timeless-ctx Γ) T
+    term (unglobal-tm t) n γ = t ⟨ tt , γ ⟩' ⟨ n , tt ⟩'
+    Tm.naturality (unglobal-tm t) m≤n refl = Tm.naturality (t ⟨ tt , _ ⟩') m≤n refl
 
-    collapse-ty-β : (t : Tm (timeless-ctx Γ) T) → uncollapse-tm (collapse-tm t) ≅ᵗᵐ t
-    eq (collapse-ty-β t) _ = refl
+    global-ty-β : (t : Tm (timeless-ctx Γ) T) → unglobal-tm (global-tm t) ≅ᵗᵐ t
+    eq (global-ty-β t) _ = refl
 
-    collapse-ty-η : (t : Tm Γ (collapse-ty T)) → collapse-tm (uncollapse-tm t) ≅ᵗᵐ t
-    eq (collapse-ty-η t) γ = tm-≅-to-≡ (record { eq = λ { tt → refl } })
+    global-ty-η : (t : Tm Γ (global-ty T)) → global-tm (unglobal-tm t) ≅ᵗᵐ t
+    eq (global-ty-η t) γ = tm-≅-to-≡ (record { eq = λ { tt → refl } })
 
   ty-const-subst : (T : Ty (timeless-ctx Γ) ℓ) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
                    (T [ timeless-subst σ ]) [ const-subst δ ] ≅ᵗʸ T [ const-subst (func σ δ) ]
   ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (const-subst _))
                                    (ty-subst-cong-subst (const-subst-natural _ σ) T)
 
-  collapse-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (timeless-ctx Γ) ℓ) → (collapse-ty T) [ σ ] ≅ᵗʸ collapse-ty (T [ timeless-subst σ ])
-  func (from (collapse-ty-natural σ T)) = ι[ ty-const-subst T σ _ ]_
-  CwF-Structure.naturality (from (collapse-ty-natural σ T)) t = tm-≅-to-≡ (record { eq = λ _ → 
+  global-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (timeless-ctx Γ) ℓ) → (global-ty T) [ σ ] ≅ᵗʸ global-ty (T [ timeless-subst σ ])
+  func (from (global-ty-natural σ T)) = ι[ ty-const-subst T σ _ ]_
+  CwF-Structure.naturality (from (global-ty-natural σ T)) t = tm-≅-to-≡ (record { eq = λ _ → 
     trans (sym (morph-comp T _ _ _ _ _)) (trans (morph-cong T refl) (morph-comp T _ _ _ _ _)) })
-  func (to (collapse-ty-natural σ T)) = ι⁻¹[ ty-const-subst T σ _ ]_
-  CwF-Structure.naturality (to (collapse-ty-natural σ T)) t = tm-≅-to-≡ (record { eq = λ _ →
+  func (to (global-ty-natural σ T)) = ι⁻¹[ ty-const-subst T σ _ ]_
+  CwF-Structure.naturality (to (global-ty-natural σ T)) t = tm-≅-to-≡ (record { eq = λ _ →
     trans (sym (morph-comp T _ _ _ _ _)) (trans (morph-cong T refl) (morph-comp T _ _ _ _ _)) })
-  eq (isoˡ (collapse-ty-natural σ T)) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
-  eq (isoʳ (collapse-ty-natural σ T)) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
+  eq (isoˡ (global-ty-natural σ T)) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
+  eq (isoʳ (global-ty-natural σ T)) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
 
   module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ) ℓ} where
-    collapse-tm-natural : (t : Tm (timeless-ctx Γ) T) →
-                          (collapse-tm t) [ σ ]' ≅ᵗᵐ ι[ collapse-ty-natural σ T ] collapse-tm (t [ timeless-subst σ ]')
-    eq (collapse-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (morph-id T _) })
+    global-tm-natural : (t : Tm (timeless-ctx Γ) T) →
+                          (global-tm t) [ σ ]' ≅ᵗᵐ ι[ global-ty-natural σ T ] global-tm (t [ timeless-subst σ ]')
+    eq (global-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (morph-id T _) })
 
-    uncollapse-tm-natural : (t : Tm Γ (collapse-ty T)) →
-                            (uncollapse-tm t) [ timeless-subst σ ]' ≅ᵗᵐ uncollapse-tm (ι⁻¹[ collapse-ty-natural σ T ] (t [ σ ]'))
-    eq (uncollapse-tm-natural t) _ = sym (morph-id T _)
+    unglobal-tm-natural : (t : Tm Γ (global-ty T)) →
+                            (unglobal-tm t) [ timeless-subst σ ]' ≅ᵗᵐ unglobal-tm (ι⁻¹[ global-ty-natural σ T ] (t [ σ ]'))
+    eq (unglobal-tm-natural t) _ = sym (morph-id T _)
+
+
+open import GuardedRecursion.Later
+import Data.Unit.Polymorphic as PolyUnit
+
+earlier-timeless-ctx : {Γ : Ctx ★ ℓ} → ◄ (timeless-ctx Γ) ≅ᶜ timeless-ctx Γ
+func (from (earlier-timeless-ctx {Γ = Γ})) γ = γ
+_⇒_.naturality (from (earlier-timeless-ctx {Γ = Γ})) _ = refl
+func (to (earlier-timeless-ctx {Γ = Γ})) γ = γ
+_⇒_.naturality (to (earlier-timeless-ctx {Γ = Γ})) _ = refl
+eq (isoˡ (earlier-timeless-ctx {Γ = Γ})) _ = refl
+eq (isoʳ (earlier-timeless-ctx {Γ = Γ})) _ = refl
+
+global-later-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
+                  global-ty T ≅ᵗʸ global-ty (▻ (T [ from-earlier (timeless-ctx Γ) ]))
+term (func (from (global-later-ty T)) t) zero _ = PolyUnit.tt
+term (func (from (global-later-ty T)) t) (suc n) _ = t ⟨ n , tt ⟩'
+Tm.naturality (func (from (global-later-ty T)) t) z≤n _ = refl
+Tm.naturality (func (from (global-later-ty T)) t) (_≤_.s≤s m≤n) _ = trans (morph-cong T refl) (Tm.naturality t m≤n refl)
+CwF-Structure.naturality (from (global-later-ty T)) t = tm-≅-to-≡ (record { eq =  λ { {zero} _ → refl ; {suc n} _ → morph-cong T refl } })
+term (func (to (global-later-ty T)) t) n _ = t ⟨ suc n , tt ⟩'
+Tm.naturality (func (to (global-later-ty T)) t) m≤n _ = trans (morph-cong T refl) (Tm.naturality t (_≤_.s≤s m≤n) refl)
+CwF-Structure.naturality (to (global-later-ty T)) t = tm-≅-to-≡ (record { eq = λ _ → morph-cong T refl })
+eq (isoˡ (global-later-ty T)) t = tm-≅-to-≡ (record { eq = λ _ → refl })
+eq (isoʳ (global-later-ty T)) t = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → refl } })
+
+global-later'-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
+                   global-ty T ≅ᵗʸ global-ty (▻' T)
+global-later'-ty = global-later-ty
+
+
+open import GuardedRecursion.GuardedStreams renaming (Stream to GuardedStream)
+open import Types.Functions
+open import Types.Discrete
+open import Types.Products
+-- open import Reflection.Tactic.Lambda
+-- open import Reflection.Naturality.Instances
+
+discr-global : {Γ : Ctx ★ ℓc} {A : Set ℓ} →
+               global-ty (Discr A) ≅ᵗʸ Discr {Γ = Γ} A
+func (from discr-global) t = t ⟨ 0 , tt ⟩'
+CwF-Structure.naturality (from discr-global) _ = refl
+term (func (to discr-global) a) n _ = a
+Tm.naturality (func (to discr-global) a) _ _ = refl
+CwF-Structure.naturality (to discr-global) a = tm-≅-to-≡ (record { eq = λ _ → refl })
+eq (isoˡ discr-global) t = tm-≅-to-≡ (record { eq = λ _ → sym (Tm.naturality t z≤n refl) })
+eq (isoʳ discr-global) _ = refl
+
+module _ {Γ : Ctx ★ ℓ} where
+  Stream : Ty Γ 0ℓ
+  Stream = global-ty GuardedStream
+
+  head : Tm Γ Stream → Tm Γ Nat'
+  head s = ι⁻¹[ discr-global ] global-tm (str-head $ unglobal-tm s)
+
+  tail : Tm Γ Stream → Tm Γ Stream
+  tail s = ι[ global-later'-ty GuardedStream ] global-tm (str-tail $ unglobal-tm s)
+
+  cons : Tm Γ Nat' → Tm Γ Stream → Tm Γ Stream
+  cons n s = global-tm (str-cons $ pair (unglobal-tm (ι[ discr-global ] n))
+                                        (unglobal-tm (ι⁻¹[ global-later'-ty GuardedStream ] s)))
