@@ -14,6 +14,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
+open import GuardedRecursion.Modalities renaming (Stream to Stream'; head to head'; tail to tail')
 
 private
   variable
@@ -120,3 +121,47 @@ test6 m n = {!translate-cong {T = Nat'}
                            {t = app (app nat-sum (suc' (discr m))) (discr n)}
                            {s = suc' (app (app nat-sum (discr m)) (discr n))}
                            {!nat-sum-β (discr m) (discr n)!}!}
+
+
+
+open import Data.Vec using (Vec; _∷_; [])
+open import GuardedRecursion.GuardedStreams using (first-≤; first-≤-refl; paperfolds; fibs)
+
+record Stream (A : Set ℓ) : Set ℓ where
+  coinductive
+  field
+    head : A
+    tail : Stream A
+open Stream
+
+take : {A : Set ℓ} (n : ℕ) → Stream A → Vec A n
+take zero    s = []
+take (suc n) s = head s ∷ take n (tail s)
+
+take-first : {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
+             first-≤ m≤n (take n s) ≡ take m s
+take-first z≤n       s = refl
+take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
+
+instance
+  translate-stream : Translatable Stream'
+  translated-type {{translate-stream}} = Stream ℕ
+  head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
+  tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)
+  translate-back {{translate-stream}} s = MkTm (λ _ _ → MkTm (λ n _ → take (suc n) s)
+                                                             (λ m≤n _ → take-first (s≤s m≤n) s))
+                                               (λ _ _ → tm-≅-to-≡ (record { eq = λ _ → first-≤-refl }))
+  translate-cong {{translate-stream}} = {!!}
+
+paperfolds-stream : Stream ℕ
+paperfolds-stream = translate-term (global-tm paperfolds)
+
+fibs-stream : Stream ℕ
+fibs-stream = translate-term (global-tm fibs)
+
+private
+  fibs-stream-test : take 10 fibs-stream ≡ (1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ [])
+  fibs-stream-test = refl
+
+  paperfolds-stream-test : take 10 paperfolds-stream ≡ (1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ [])
+  paperfolds-stream-test = refl

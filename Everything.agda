@@ -8,6 +8,7 @@ import Types.Sums
 import LiftingFunctors
 import GuardedRecursion.Later
 import GuardedRecursion.GuardedStreams
+import GuardedRecursion.Modalities
 import Reflection.Helpers
 import Reflection.Substitutions
 import Reflection.SubstitutionSequence

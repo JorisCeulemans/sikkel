@@ -36,9 +36,6 @@ private
   variable
     Γ Δ : Ctx ω ℓ
 
-infixl 12 _$_
-_$_ = app
-
 
 --------------------------------------------------
 -- Some basic operations and proofs regarding vectors
