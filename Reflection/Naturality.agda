@@ -18,10 +18,9 @@
 -- typecheck without this option in Agda 2.6.2 once released.
 --------------------------------------------------
 
+module Reflection.Naturality where
+
 open import Categories
-
-module Reflection.Naturality {C : Category} where
-
 open import Level
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
@@ -29,14 +28,18 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import Reflection.Helpers public
 
+private
+  variable
+    C D D' : Category
+
 
 --------------------------------------------------
 -- Definition of endofunctors on a context category.
 
-CtxOp : Setω
-CtxOp = ∀ {ℓ} → Ctx C ℓ → Ctx C ℓ
+CtxOp : Category → Category → Setω
+CtxOp C D = ∀ {ℓ} → Ctx C ℓ → Ctx D ℓ
 
-record IsCtxFunctor (Φ : CtxOp) : Setω where
+record IsCtxFunctor (Φ : CtxOp C D) : Setω where
   field
     ctx-map : ∀ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} → Δ ⇒ Γ → Φ Δ ⇒ Φ Γ
     ctx-map-id : ∀ {ℓ} {Γ : Ctx C ℓ} → ctx-map (id-subst Γ) ≅ˢ id-subst (Φ Γ)
@@ -47,7 +50,7 @@ record IsCtxFunctor (Φ : CtxOp) : Setω where
 open IsCtxFunctor {{...}} public
 
 instance
-  id-ctx-functor : IsCtxFunctor (λ Γ → Γ)
+  id-ctx-functor : IsCtxFunctor {C = C} (λ Γ → Γ)
   ctx-map {{id-ctx-functor}} σ = σ
   ctx-map-id {{id-ctx-functor}} = ≅ˢ-refl
   ctx-map-⊚ {{id-ctx-functor}} _ _ = ≅ˢ-refl
@@ -56,20 +59,20 @@ instance
 --------------------------------------------------
 -- Definition of (natural) nullary, unary and binary type operations.
 
-NullaryTypeOp : Level → Setω
-NullaryTypeOp ℓ = ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
+NullaryTypeOp : Category → Level → Setω
+NullaryTypeOp C ℓ = ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
 
-record IsNullaryNatural {ℓ} (U : NullaryTypeOp ℓ) : Setω where
+record IsNullaryNatural {ℓ} (U : NullaryTypeOp C ℓ) : Setω where
   field
     natural-nul : ∀ {ℓc ℓc'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
                   U [ σ ] ≅ᵗʸ U
 
 open IsNullaryNatural {{...}} public
 
-UnaryTypeOp : CtxOp → (Level → Level → Level) → Setω
-UnaryTypeOp Φ f = ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty (Φ Γ) ℓt → Ty Γ (f ℓc ℓt)
+UnaryTypeOp : CtxOp C D → (Level → Level → Level) → Setω
+UnaryTypeOp {C = C} Φ f = ∀ {ℓc ℓt} {Γ : Ctx C ℓc} → Ty (Φ Γ) ℓt → Ty Γ (f ℓc ℓt)
 
-record IsUnaryNatural {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} {f} (F : UnaryTypeOp Φ f) : Setω where
+record IsUnaryNatural {Φ : CtxOp C D} {{_ : IsCtxFunctor Φ}} {f} (F : UnaryTypeOp Φ f) : Setω where
   field
     natural-un : ∀ {ℓc ℓc' ℓt} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) {T : Ty (Φ Γ) ℓt} →
                  (F T) [ σ ] ≅ᵗʸ F (T [ ctx-map σ ])
@@ -79,10 +82,14 @@ record IsUnaryNatural {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} {f} (F : UnaryTypeOp 
 
 open IsUnaryNatural {{...}} public
 
-BinaryTypeOp : CtxOp → CtxOp → (Level → Level → Level → Level) → Setω
-BinaryTypeOp Φ Ψ f = ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty (Φ Γ) ℓt → Ty (Ψ Γ) ℓt' → Ty Γ (f ℓc ℓt ℓt')
+BinaryTypeOp : CtxOp C D → CtxOp C D' → (Level → Level → Level → Level) → Setω
+BinaryTypeOp {C = C} Φ Ψ f = ∀ {ℓc ℓt ℓt'} {Γ : Ctx C ℓc} → Ty (Φ Γ) ℓt → Ty (Ψ Γ) ℓt' → Ty Γ (f ℓc ℓt ℓt')
 
-record IsBinaryNatural {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} {f} (F : BinaryTypeOp Φ Ψ f) : Setω where
+record IsBinaryNatural
+  {Φ : CtxOp C D} {Ψ : CtxOp C D'}
+  {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}}
+  {f} (F : BinaryTypeOp Φ Ψ f) : Setω where
+
   field
     natural-bin : ∀ {ℓc ℓc' ℓt ℓt'} {Δ : Ctx C ℓc} {Γ : Ctx C ℓc'} (σ : Δ ⇒ Γ) →
                   {T : Ty (Φ Γ) ℓt} {S : Ty (Ψ Γ) ℓt'} →
@@ -119,10 +126,10 @@ level (ssub ℓc s) = level s
 data Expr {ℓc : Level} (Γ : Ctx C ℓc) : ExprSkeleton → Setω where
   con : ∀ {ℓ} → (T : Ty Γ ℓ) → Expr Γ (scon ℓ)
   nul : ∀ {ℓ} →
-        (U : NullaryTypeOp ℓ) → {{IsNullaryNatural U}} → Expr Γ (snul ℓ)
-  un  : ∀ {f s} {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} →
+        (U : NullaryTypeOp C ℓ) → {{IsNullaryNatural U}} → Expr Γ (snul ℓ)
+  un  : ∀ {D f s} {Φ : CtxOp C D} {{_ : IsCtxFunctor Φ}} →
         (F : UnaryTypeOp Φ f) → {{IsUnaryNatural F}} → (e : Expr (Φ Γ) s) → Expr Γ (sun f ℓc s)
-  bin : ∀ {f s s'} {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} →
+  bin : ∀ {D D' f s s'} {Φ : CtxOp C D} {Ψ : CtxOp C D'} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} →
         (F : BinaryTypeOp Φ Ψ f) → {{IsBinaryNatural F}} → (e1 : Expr (Φ Γ) s) (e2 : Expr (Ψ Γ) s') → Expr Γ (sbin f ℓc s s')
   sub : ∀ {ℓc' s} {Δ : Ctx C ℓc'} →
         Expr Δ s → (σ : Γ ⇒ Δ) → Expr Γ (ssub ℓc s)

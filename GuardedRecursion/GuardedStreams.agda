@@ -300,7 +300,7 @@ toggle = löbι Stream
 paperfolds : Tm Γ Stream
 paperfolds = löbι Stream (interleave $ toggle $ varι 0)
 
-module _ (T-op : NullaryTypeOp {C = ω} ℓ) {{_ : IsNullaryNatural T-op}} where
+module _ (T-op : NullaryTypeOp ω ℓ) {{_ : IsNullaryNatural T-op}} where
   T : Ty Γ ℓ
   T = ⟦ nul T-op ⟧exp
 

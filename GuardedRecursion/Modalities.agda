@@ -1,3 +1,5 @@
+{-# OPTIONS --omega-in-omega #-}
+
 module GuardedRecursion.Modalities where
 
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n)
@@ -78,6 +80,16 @@ module _ where
 
     timeless-ty-β : (t : Tm (now Γ) T) → untimeless-tm (timeless-tm t) ≅ᵗᵐ t
     eq (timeless-ty-β t) γ = Tm.naturality t tt _
+
+  timeless-ty-cong : {T : Ty (now Γ) ℓ} {S : Ty (now Γ) ℓ'} → T ≅ᵗʸ S → timeless-ty T ≅ᵗʸ timeless-ty S
+  func (from (timeless-ty-cong T=S)) = func (from T=S)
+  CwF-Structure.naturality (from (timeless-ty-cong T=S)) = CwF-Structure.naturality (from T=S)
+  func (to (timeless-ty-cong T=S)) = func (to T=S)
+  CwF-Structure.naturality (to (timeless-ty-cong T=S)) = CwF-Structure.naturality (to T=S)
+  eq (isoˡ (timeless-ty-cong T=S)) = eq (isoˡ T=S)
+  eq (isoʳ (timeless-ty-cong T=S)) = eq (isoʳ T=S)
+
+  -- TODO: Show that timeless-tm and untimeless-tm are congruent as well.
 
   timeless-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (now Γ) ℓ) → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
   func (from (timeless-ty-natural σ T)) = ctx-element-subst T (_⇒_.naturality σ _)
@@ -197,6 +209,15 @@ module _ where
     global-ty-η : (t : Tm Γ (global-ty T)) → global-tm (unglobal-tm t) ≅ᵗᵐ t
     eq (global-ty-η t) γ = tm-≅-to-≡ (record { eq = λ { tt → refl } })
 
+  global-ty-cong : {T : Ty (timeless-ctx Γ) ℓ} {S : Ty (timeless-ctx Γ) ℓ'} →
+                   T ≅ᵗʸ S → global-ty T ≅ᵗʸ global-ty S
+  func (from (global-ty-cong T=S)) = ι⁻¹[ ty-subst-cong-ty (const-subst _) T=S ]_
+  CwF-Structure.naturality (from (global-ty-cong T=S)) _ = tm-≅-to-≡ (record { eq = λ _ → CwF-Structure.naturality (from T=S) _ })
+  func (to (global-ty-cong T=S)) = ι[ ty-subst-cong-ty (const-subst _) T=S ]_
+  CwF-Structure.naturality (to (global-ty-cong T=S)) _ = tm-≅-to-≡ (record { eq = λ _ → CwF-Structure.naturality (to T=S) _ })
+  eq (isoˡ (global-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symʳ (ty-subst-cong-ty (const-subst _) T=S) _)
+  eq (isoʳ (global-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symˡ (ty-subst-cong-ty (const-subst _) T=S) _)
+
   ty-const-subst : (T : Ty (timeless-ctx Γ) ℓ) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
                    (T [ timeless-subst σ ]) [ const-subst δ ] ≅ᵗʸ T [ const-subst (func σ δ) ]
   ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (const-subst _))
@@ -251,12 +272,32 @@ global-later'-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
 global-later'-ty = global-later-ty
 
 
-open import GuardedRecursion.GuardedStreams renaming (Stream to GuardedStream)
+open import GuardedRecursion.GuardedStreams renaming (Stream to GuardedStream; stream-nul to guarded-stream-nul)
 open import Types.Functions
 open import Types.Discrete
 open import Types.Products
--- open import Reflection.Tactic.Lambda
--- open import Reflection.Naturality.Instances
+open import Reflection.Naturality
+open import Reflection.Tactic.Lambda
+open import Reflection.Naturality.Instances
+
+instance
+  now-functor : IsCtxFunctor now
+  IsCtxFunctor.ctx-map now-functor = now-subst
+  IsCtxFunctor.ctx-map-id now-functor = now-subst-id
+  IsCtxFunctor.ctx-map-⊚ now-functor = now-subst-⊚
+  
+  timeless-ty-un : IsUnaryNatural timeless-ty
+  IsUnaryNatural.natural-un timeless-ty-un = λ σ → timeless-ty-natural σ _
+  IsUnaryNatural.cong-un timeless-ty-un = timeless-ty-cong
+
+  timeless-ctx-functor : IsCtxFunctor timeless-ctx
+  IsCtxFunctor.ctx-map timeless-ctx-functor = timeless-subst
+  IsCtxFunctor.ctx-map-id timeless-ctx-functor = timeless-subst-id
+  IsCtxFunctor.ctx-map-⊚ timeless-ctx-functor = timeless-subst-⊚
+
+  global-ty-un : IsUnaryNatural global-ty
+  IsUnaryNatural.natural-un global-ty-un = λ σ → global-ty-natural σ _
+  IsUnaryNatural.cong-un global-ty-un = global-ty-cong
 
 discr-global : {Γ : Ctx ★ ℓc} {A : Set ℓ} →
                global-ty (Discr A) ≅ᵗʸ Discr {Γ = Γ} A
@@ -268,15 +309,34 @@ CwF-Structure.naturality (to discr-global) a = tm-≅-to-≡ (record { eq = λ _
 eq (isoˡ discr-global) t = tm-≅-to-≡ (record { eq = λ _ → sym (Tm.naturality t z≤n refl) })
 eq (isoʳ discr-global) _ = refl
 
-module _ {Γ : Ctx ★ ℓ} where
+module _ where
+  private
+    variable
+      Γ : Ctx ★ ℓ
+      
   Stream : Ty Γ 0ℓ
   Stream = global-ty GuardedStream
 
+  instance
+    stream-nul : IsNullaryNatural Stream
+    IsNullaryNatural.natural-nul stream-nul σ = ≅ᵗʸ-trans (global-ty-natural σ GuardedStream)
+                                                         (global-ty-cong (stream-natural (timeless-subst σ)))
+
+  {-
   head : Tm Γ Stream → Tm Γ Nat'
   head s = ι⁻¹[ discr-global ] global-tm (str-head $ unglobal-tm s)
+  -}
 
+  head : Tm Γ (Stream ⇛ Nat')
+  head = lamι Stream (ι⁻¹[ discr-global ] global-tm (str-head $ unglobal-tm (varι 0)))
+  
+  {-
   tail : Tm Γ Stream → Tm Γ Stream
   tail s = ι[ global-later'-ty GuardedStream ] global-tm (str-tail $ unglobal-tm s)
+  -}
+
+  tail : Tm Γ (Stream ⇛ Stream)
+  tail = lamι Stream (ι[ global-later'-ty GuardedStream ] global-tm (str-tail $ unglobal-tm (varι 0)))
 
   cons : Tm Γ Nat' → Tm Γ Stream → Tm Γ Stream
   cons n s = global-tm (str-cons $ pair (unglobal-tm (ι[ discr-global ] n))
