@@ -272,7 +272,7 @@ global-later'-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
 global-later'-ty = global-later-ty
 
 
-open import GuardedRecursion.GuardedStreams renaming (Stream to GuardedStream; stream-nul to guarded-stream-nul)
+open import GuardedRecursion.GuardedStreams
 open import Types.Functions
 open import Types.Discrete
 open import Types.Products
@@ -309,35 +309,39 @@ CwF-Structure.naturality (to discr-global) a = tm-≅-to-≡ (record { eq = λ _
 eq (isoˡ discr-global) t = tm-≅-to-≡ (record { eq = λ _ → sym (Tm.naturality t z≤n refl) })
 eq (isoʳ discr-global) _ = refl
 
+Stream' : {Γ : Ctx ★ ℓ} → Ty Γ 0ℓ
+Stream' = global-ty GStream
+
 module _ where
   private
     variable
       Γ : Ctx ★ ℓ
-      
-  Stream : Ty Γ 0ℓ
-  Stream = global-ty GuardedStream
+  {-
+  Stream' : Ty Γ 0ℓ
+  Stream' = global-ty GStream
+  -}
 
   instance
-    stream-nul : IsNullaryNatural Stream
-    IsNullaryNatural.natural-nul stream-nul σ = ≅ᵗʸ-trans (global-ty-natural σ GuardedStream)
-                                                         (global-ty-cong (stream-natural (timeless-subst σ)))
+    stream'-nul : IsNullaryNatural Stream'
+    IsNullaryNatural.natural-nul stream'-nul σ = ≅ᵗʸ-trans (global-ty-natural σ GStream)
+                                                           (global-ty-cong (gstream-natural (timeless-subst σ)))
 
   {-
-  head : Tm Γ Stream → Tm Γ Nat'
-  head s = ι⁻¹[ discr-global ] global-tm (str-head $ unglobal-tm s)
+  head' : Tm Γ Stream → Tm Γ Nat'
+  head' s = ι⁻¹[ discr-global ] global-tm (str-head $ unglobal-tm s)
   -}
 
-  head : Tm Γ (Stream ⇛ Nat')
-  head = lamι Stream (ι⁻¹[ discr-global ] global-tm (str-head $ unglobal-tm (varι 0)))
+  head' : Tm Γ (Stream' ⇛ Nat')
+  head' = lamι Stream' (ι⁻¹[ discr-global ] global-tm (g-head $ unglobal-tm (varι 0)))
   
   {-
-  tail : Tm Γ Stream → Tm Γ Stream
-  tail s = ι[ global-later'-ty GuardedStream ] global-tm (str-tail $ unglobal-tm s)
+  tail' : Tm Γ Stream → Tm Γ Stream
+  tail' s = ι[ global-later'-ty GuardedStream ] global-tm (str-tail $ unglobal-tm s)
   -}
 
-  tail : Tm Γ (Stream ⇛ Stream)
-  tail = lamι Stream (ι[ global-later'-ty GuardedStream ] global-tm (str-tail $ unglobal-tm (varι 0)))
+  tail' : Tm Γ (Stream' ⇛ Stream')
+  tail' = lamι Stream' (ι[ global-later'-ty GStream ] global-tm (g-tail $ unglobal-tm (varι 0)))
 
-  cons : Tm Γ Nat' → Tm Γ Stream → Tm Γ Stream
-  cons n s = global-tm (str-cons $ pair (unglobal-tm (ι[ discr-global ] n))
-                                        (unglobal-tm (ι⁻¹[ global-later'-ty GuardedStream ] s)))
+  cons' : Tm Γ Nat' → Tm Γ Stream' → Tm Γ Stream'
+  cons' n s = global-tm (g-cons $ pair (unglobal-tm (ι[ discr-global ] n))
+                                       (unglobal-tm (ι⁻¹[ global-later'-ty GStream ] s)))

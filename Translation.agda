@@ -14,7 +14,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
-open import GuardedRecursion.Modalities renaming (Stream to Stream'; head to head'; tail to tail')
+open import GuardedRecursion.Modalities
 
 private
   variable
@@ -125,7 +125,7 @@ test6 m n = {!translate-cong {T = Nat'}
 
 
 open import Data.Vec using (Vec; _∷_; [])
-open import GuardedRecursion.GuardedStreams using (first-≤; first-≤-refl; paperfolds; fibs)
+open import GuardedRecursion.GuardedStreams using (first-≤; first-≤-refl; g-paperfolds; g-fibs)
 
 record Stream (A : Set ℓ) : Set ℓ where
   coinductive
@@ -153,15 +153,19 @@ instance
                                                (λ _ _ → tm-≅-to-≡ (record { eq = λ _ → first-≤-refl }))
   translate-cong {{translate-stream}} = {!!}
 
-paperfolds-stream : Stream ℕ
-paperfolds-stream = translate-term (global-tm paperfolds)
+paperfolds : Stream ℕ
+paperfolds = translate-term (global-tm g-paperfolds)
 
-fibs-stream : Stream ℕ
-fibs-stream = translate-term (global-tm fibs)
+fibs' : Tm ◇ Stream'
+fibs' = global-tm g-fibs
+
+fibs : Stream ℕ
+fibs = translate-term fibs'
 
 private
-  fibs-stream-test : take 10 fibs-stream ≡ (1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ [])
-  fibs-stream-test = refl
+  fibs-test : take 10 fibs ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷
+                             8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
+  fibs-test = refl
 
-  paperfolds-stream-test : take 10 paperfolds-stream ≡ (1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ [])
-  paperfolds-stream-test = refl
+  paperfolds-test : take 10 paperfolds ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
+  paperfolds-test = refl
