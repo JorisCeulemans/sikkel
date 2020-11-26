@@ -1,7 +1,7 @@
 {-# OPTIONS --omega-in-omega #-}
 
 --------------------------------------------------
--- Examples with guarded streams of natural numbers
+-- Examples with guarded streams of natural numbers in mode ω
 --
 -- Note that the option omega-in-omega is used to
 -- make the type GStream an instance of IsNullaryNatural.
@@ -9,7 +9,7 @@
 -- 2.6.2 once released.
 --------------------------------------------------
 
-module GuardedRecursion.GuardedStreams where
+module GuardedRecursion.Streams.Guarded where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
@@ -26,9 +26,10 @@ open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
 open import Types.Products
-open import GuardedRecursion.Later
+open import GuardedRecursion.Modalities.Later
 open import Reflection.Naturality
 open import Reflection.Naturality.Instances
+open import Reflection.Naturality.GuardedRecursion.Instances
 open import Reflection.Tactic.Lambda
 open import Reflection.Tactic.LobInduction
 
@@ -142,7 +143,7 @@ eq (isoʳ (gstream-natural σ)) _ = refl
 
 
 --------------------------------------------------
--- Declarations needed for the naturality solver
+-- Declaration needed for the naturality solver
 -- This shows that it is easy to extend the solver to work with custom types
 -- and type operations (even the ones that are only definable in a particular
 -- base category).
@@ -150,19 +151,6 @@ eq (isoʳ (gstream-natural σ)) _ = refl
 instance
   gstream-nul : IsNullaryNatural GStream
   natural-nul {{gstream-nul}} = gstream-natural
-
-  ▻'-un : IsUnaryNatural ▻'
-  natural-un {{▻'-un}} = ▻'-natural
-  cong-un {{▻'-un}} = ▻'-cong
-
-  ◄-functor : IsCtxFunctor ◄
-  ctx-map {{◄-functor}} = ◄-subst
-  ctx-map-id {{◄-functor}} = ◄-subst-id
-  ctx-map-⊚ {{◄-functor}} = ◄-subst-⊚
-
-  ▻-un : IsUnaryNatural ▻
-  natural-un {{▻-un}} = ▻-natural
-  cong-un {{▻-un}} = ▻-cong
 
 
 --------------------------------------------------

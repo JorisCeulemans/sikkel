@@ -24,7 +24,7 @@ open import Level
 
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
-open import GuardedRecursion.Later
+open import GuardedRecursion.Modalities.Later
 open import Reflection.Helpers
 
 infixr 5 _∷_
