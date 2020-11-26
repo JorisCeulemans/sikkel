@@ -142,8 +142,11 @@ term (next t) (suc n) γ = t ⟨ n , γ ⟩'
 naturality (next t) z≤n γ = refl
 naturality (next t) (s≤s m≤n) eγ = naturality t m≤n eγ
 
+prev' : {T : Ty Γ ℓ} → Tm Γ T → Tm (◄ Γ) (T [ from-earlier Γ ])
+prev' t = t [ from-earlier _ ]'
+
 next' : {T : Ty Γ ℓ} → Tm Γ T → Tm Γ (▻' T)
-next' t = next (t [ from-earlier _ ]')
+next' t = next (prev' t)
 
 prev : {T : Ty (◄ Γ) ℓ} → Tm Γ (▻ T) → Tm (◄ Γ) T
 term (prev t) n γ = t ⟨ suc n , γ ⟩'
