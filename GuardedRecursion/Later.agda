@@ -23,8 +23,8 @@ private
     m n : ℕ
     Γ Δ Θ : Ctx ω ℓ
 
+infixl 12 _⟨$⟩_
 infixl 12 _⊛_
-infixl 12 _⊛'_
 
 
 --------------------------------------------------
@@ -198,8 +198,11 @@ eq (fixpoint-unique f t s t-fix s-fix) {x = suc n} γ =
   where open ≡-Reasoning
 
 -- ▻ is an applicative functor
+_⟨$⟩_ : {T : Ty (◄ Γ) ℓ} {S : Ty (◄ Γ) ℓ'} → Tm (◄ Γ) (T ⇛ S) → Tm Γ (▻ T) → Tm Γ (▻ S)
+f ⟨$⟩ t = next (app f (prev t))
+
 _⊛_ : {T : Ty (◄ Γ) ℓ} {S : Ty (◄ Γ) ℓ'} → Tm Γ (▻ (T ⇛ S)) → Tm Γ (▻ T) → Tm Γ (▻ S)
-f ⊛ t = next (app (prev f) (prev t))
+f ⊛ t = prev f ⟨$⟩ t
 
 
 --------------------------------------------------
@@ -318,8 +321,15 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
       g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
 -- ▻' is an applicative functor as well (but this requires ▻-cong).
-_⊛'_ : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} → Tm Γ (▻' (T ⇛ S)) → Tm Γ (▻' T) → Tm Γ (▻' S)
-f ⊛' t = (ι⁻¹[ ▻-cong (⇛-natural _) ] f) ⊛ t
+module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} where
+  infixl 12 _⊛'_
+  infixl 12 _⟨$⟩'_
+
+  _⊛'_ : Tm Γ (▻' (T ⇛ S)) → Tm Γ (▻' T) → Tm Γ (▻' S)
+  f ⊛' t = (ι⁻¹[ ▻-cong (⇛-natural _) ] f) ⊛ t
+
+  _⟨$⟩'_ : Tm Γ (T ⇛ S) → Tm Γ (▻' T) → Tm Γ (▻' S)
+  f ⟨$⟩' t = next' f ⊛' t
 
 
 --------------------------------------------------
