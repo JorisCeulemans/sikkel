@@ -7,6 +7,7 @@ module GuardedRecursion.Later where
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Unit.Polymorphic using (⊤; tt)
+open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id; _∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -377,3 +378,11 @@ eq (▻-map-comp η φ) {x = suc x} _ = refl
   ≅⟨ ▻-map-comp _ _ ⟩
     ▻'-map η ⊙ ▻'-map φ ∎
   where open ≅ⁿ-Reasoning
+
+◄-▻-,, : (Γ : Ctx ω ℓ) (T : Ty (◄ Γ) ℓ') → ◄ (Γ ,, ▻ T) ≅ᶜ ◄ Γ ,, T
+func (from (◄-▻-,, Γ T)) γt = γt
+naturality (from (◄-▻-,, Γ T)) γt = refl
+func (to (◄-▻-,, Γ T)) γt = γt
+naturality (to (◄-▻-,, Γ T)) γt = refl
+eq (isoˡ (◄-▻-,, Γ T)) γt = refl
+eq (isoʳ (◄-▻-,, Γ T)) γt = refl
