@@ -12,7 +12,9 @@ open import Types.Functions
 open import Types.Discrete
 open import Types.Products
 open import Reflection.Naturality
-open import Reflection.NaturalityTactic
+open import Reflection.Naturality.Instances
+open import Reflection.Tactic.Naturality
+open import Reflection.Tactic.Lambda
 
 private
   variable

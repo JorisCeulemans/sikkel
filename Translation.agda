@@ -14,7 +14,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
-open import GuardedRecursion.Modalities
+open import GuardedRecursion.Streams.Coinductive
 
 private
   variable
@@ -125,7 +125,7 @@ test6 m n = {!translate-cong {T = Nat'}
 
 
 open import Data.Vec using (Vec; _∷_; [])
-open import GuardedRecursion.GuardedStreams using (first-≤; first-≤-refl; g-paperfolds; g-fibs)
+open import GuardedRecursion.Streams.Guarded using (first-≤; first-≤-refl; g-paperfolds; g-fibs)
 
 record Stream (A : Set ℓ) : Set ℓ where
   coinductive
@@ -151,13 +151,10 @@ instance
   translate-back {{translate-stream}} s = MkTm (λ _ _ → MkTm (λ n _ → take (suc n) s)
                                                              (λ m≤n _ → take-first (s≤s m≤n) s))
                                                (λ _ _ → tm-≅-to-≡ (record { eq = λ _ → first-≤-refl }))
-  translate-cong {{translate-stream}} = {!!}
+  translate-cong {{translate-stream}} = {!!} -- not provable unless you assume that bisimilarity implies equality of streams
 
 paperfolds : Stream ℕ
-paperfolds = translate-term (global-tm g-paperfolds)
-
-fibs' : Tm ◇ Stream'
-fibs' = global-tm g-fibs
+paperfolds = translate-term paperfolds'
 
 fibs : Stream ℕ
 fibs = translate-term fibs'

@@ -1,8 +1,8 @@
 --------------------------------------------------
--- Later and earlier modalities for types
+-- The earlier-later dependent adjunction
 --------------------------------------------------
 
-module GuardedRecursion.Later where
+module GuardedRecursion.Modalities.Later where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
@@ -29,7 +29,7 @@ infixl 12 _⊛_
 
 
 --------------------------------------------------
--- The "earlier" CwF-endomorphism
+-- The "earlier" Context operation
 
 ctx-m≤1+n : (Γ : Ctx ω ℓ) (m≤n : m ≤ n) (γ : Γ ⟨ suc n ⟩) →
             Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ) ≡ Γ ⟪ n≤1+n m ⟫ (Γ ⟪ s≤s m≤n ⟫ γ)
@@ -54,6 +54,8 @@ rel-comp (◄ Γ) k≤m m≤n = rel-comp Γ (s≤s k≤m) (s≤s m≤n)
 func (◄-subst σ) {n} = func σ {suc n}
 naturality (◄-subst σ) {f = m≤n} = naturality σ {f = s≤s m≤n}
 
+{-
+-- The operations on types and terms are not used anywhere
 ◅-ty : Ty Γ ℓ → Ty (◄ Γ) ℓ
 type (◅-ty T) n γ = T ⟨ suc n , γ ⟩
 morph (◅-ty T) m≤n eγ = T ⟪ s≤s m≤n , eγ ⟫
@@ -64,6 +66,7 @@ morph-comp (◅-ty T) k≤m m≤n = morph-comp T (s≤s k≤m) (s≤s m≤n)
 ◅-tm : {T : Ty Γ ℓ} → Tm Γ T → Tm (◄ Γ) (◅-ty T)
 term (◅-tm t) n γ = t ⟨ suc n , γ ⟩'
 naturality (◅-tm t) m≤n eγ = naturality t (s≤s m≤n) eγ
+-}
 
 from-earlier : (Γ : Ctx ω ℓ) → ◄ Γ ⇒ Γ
 func (from-earlier Γ) = Γ ⟪ n≤1+n _ ⟫
@@ -76,6 +79,8 @@ naturality (from-earlier Γ) γ = ctx-m≤1+n Γ _ γ
 ◄-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → ◄-subst σ ≅ˢ ◄-subst τ
 eq (◄-subst-cong σ=τ) δ = eq σ=τ δ
 
+{-
+-- The operations on types and terms are not used anywhere
 ◅-ty-cong : {T : Ty Γ ℓ} {T' : Ty Γ ℓ'} → T ≅ᵗʸ T' → ◅-ty T ≅ᵗʸ ◅-ty T'
 func (from (◅-ty-cong T=T')) = func (from T=T')
 naturality (from (◅-ty-cong T=T')) = naturality (from T=T')
@@ -102,6 +107,7 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
 
   ◅-tm-natural : (t : Tm Γ T) → (◅-tm t) [ ◄-subst σ ]' ≅ᵗᵐ ι[ ◅-ty-natural ] (◅-tm (t [ σ ]'))
   eq (◅-tm-natural t) _ = refl
+-}
 
 from-earlier-natural : (σ : Δ ⇒ Γ) → from-earlier Γ ⊚ ◄-subst σ ≅ˢ σ ⊚ from-earlier Δ
 eq (from-earlier-natural σ) δ = naturality σ δ

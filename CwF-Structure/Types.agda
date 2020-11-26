@@ -24,7 +24,7 @@ infixl 20 _⊙_
 private
   variable
     ℓc ℓt ℓt' : Level
-    x y z : Ob
+    x y z w : Ob
     Δ Γ Θ : Ctx C ℓ
 
 
@@ -67,6 +67,7 @@ _⟪_,_⟫ T f eγ = morph T f eγ
 _⟪_,_⟫_ : (T : Ty Γ ℓ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx →
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 T ⟪ f , eγ ⟫ t = (T ⟪ f , eγ ⟫) t
+
 {-
 -- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
 -- by adding a field to a type T requiring morph T to "not depend on eγ" (propositionally).
@@ -76,8 +77,50 @@ morph-cong : (T : Ty Γ ℓ) {f f' : Hom x y} (e-hom : f ≡ f')
              T ⟪ f , eγ ⟫ t ≡ T ⟪ f' , eγ' ⟫ t
 morph-cong T refl refl refl = refl
 -}
+
+morph-cong-2-1 : (T : Ty Γ ℓ)
+                 {f : Hom x y} {g : Hom y z} {h : Hom x z} (e-hom : g ∙ f ≡ h)
+                 {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+                 {ef : Γ ⟪ f ⟫ γy ≡ γx} {eg : Γ ⟪ g ⟫ γz ≡ γy} {eh : Γ ⟪ h ⟫ γz ≡ γx}
+                 {t : T ⟨ z , γz ⟩} →
+                 T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≡ T ⟪ h , eh ⟫ t
+morph-cong-2-1 T {f}{g}{h} e-hom {t = t} =
+  begin
+    T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
+  ≡˘⟨ morph-comp T f g _ _ t ⟩
+    T ⟪ g ∙ f , _ ⟫ t
+  ≡⟨ morph-cong T e-hom ⟩
+    T ⟪ h , _ ⟫ t ∎
+  where open ≡-Reasoning
+
+morph-cong-2-2 : (T : Ty Γ ℓ)
+                 {f : Hom x y} {f' : Hom x z} {g : Hom y w} {g' : Hom z w} (e-hom : g ∙ f ≡ g' ∙ f')
+                 {γw : Γ ⟨ w ⟩} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+                 {ef : Γ ⟪ f ⟫ γy ≡ γx} {ef' : Γ ⟪ f' ⟫ γz ≡ γx}
+                 {eg : Γ ⟪ g ⟫ γw ≡ γy} {eg' : Γ ⟪ g' ⟫ γw ≡ γz}
+                 {t : T ⟨ w , γw ⟩} →
+                 T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≡ T ⟪ f' , ef' ⟫ (T ⟪ g' , eg' ⟫ t)
+morph-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
+  begin
+    T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
+  ≡˘⟨ morph-comp T f g _ _ t ⟩
+    T ⟪ g ∙ f , _ ⟫ t
+  ≡⟨ morph-cong T e-hom ⟩
+    T ⟪ g' ∙ f' , _ ⟫ t
+  ≡⟨ morph-comp T f' g' _ _ t ⟩
+    T ⟪ f' , _ ⟫ T ⟪ g' , _ ⟫ t ∎
+  where open ≡-Reasoning
+
 ctx-element-subst : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
 ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
+
+ctx-element-subst-inverseˡ : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} (t : T ⟨ x , γ ⟩)→
+                            ctx-element-subst T (sym eγ) (ctx-element-subst T eγ t) ≡ t
+ctx-element-subst-inverseˡ T t = trans (morph-cong-2-1 T hom-idˡ) (morph-id T t)
+
+ctx-element-subst-inverseʳ : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} (t : T ⟨ x , γ' ⟩)→
+                            ctx-element-subst T eγ (ctx-element-subst T (sym eγ) t) ≡ t
+ctx-element-subst-inverseʳ T t = trans (morph-cong-2-1 T hom-idˡ) (morph-id T t)
 
 -- The following definitions are needed when defining context extension.
 morph-transport : (T : Ty Γ ℓ) {f : Hom x y}
