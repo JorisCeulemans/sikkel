@@ -258,45 +258,28 @@ instance
 open import Reflection.Tactic.Naturality
 
 module _ {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}} where
-{-
-g-snd : Tm Γ GStream → Tm Γ (▻' Nat')
-g-snd s = next' (lamι GStream (g-head $ varι 0)) ⊛' g-tail $ s
--}
-  test : {Γ : Ctx ω ℓc} {T : Ty Γ ℓ} → ▻' (timeless-ty A) [ π {T = T} ] ≅ᵗʸ ▻' (timeless-ty A)
-  test = by-naturality
-  {-type-naturality-reflect (sub (un ▻' (un timeless-ty (nul A))) π)
-                                 (un ▻' (un timeless-ty (nul A)))
-                                 refl
-                                 refl-}
   
---  g-snd : Tm Γ (GStream A ⇛ ▻' (timeless-ty A))
---  g-snd = lamι (GStream A) {S = ▻' (timeless-ty A)} {body-type = [ ▻' (timeless-ty A) , by-naturality ]} {!!}
-{-
-g-snd : Tm Γ (GStream ⇛ ▻' Nat')
-g-snd = lamι GStream (next' g-head ⊛' (g-tail $ varι 0))
+  g-snd : Tm Γ (GStream A ⇛ ▻' (timeless-ty A))
+  g-snd = lamι (GStream A) (g-head ⟨$⟩' (g-tail $ varι 0))
 
-{-
-g-thrd : Tm Γ GStream → Tm Γ (▻' (▻' Nat'))
-g-thrd s = next' (lamι GStream (g-snd (varι 0))) ⊛' g-tail $ s
--}
+  g-thrd : Tm Γ (GStream A ⇛ ▻' (▻' (timeless-ty A)))
+  g-thrd = lamι (GStream A) (g-snd ⟨$⟩' (g-tail $ varι 0))
 
-g-thrd : Tm Γ (GStream ⇛ ▻' (▻' Nat'))
-g-thrd = lamι GStream (next' g-snd ⊛' (g-tail $ varι 0))
-
-g-zeros : Tm Γ GStream
-g-zeros = löbι GStream (g-cons $ pair zero' (varι 0))
+g-zeros : Tm Γ (GStream Nat')
+g-zeros = löbι (GStream Nat') (g-cons $ pair (timeless-tm zero') (varι 0))
 
 private
   module _ {Γ : Ctx ω ℓ} where
-    zeros-test : g-head {Γ = Γ} $ g-zeros ≅ᵗᵐ zero'
+    zeros-test : g-head {Γ = Γ} $ g-zeros ≅ᵗᵐ timeless-tm zero'
     eq zeros-test {x = zero}  _ = refl
     eq zeros-test {x = suc n} _ = refl
 
-    zeros-test2 : g-snd {Γ = Γ} $ g-zeros ≅ᵗᵐ next' zero'
+    zeros-test2 : g-snd {Γ = Γ} $ g-zeros ≅ᵗᵐ next' (timeless-tm zero')
     eq zeros-test2 {x = zero}        _ = refl
     eq zeros-test2 {x = suc zero}    _ = refl
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
+{-
 {-
 g-map' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (GStream ⇛ GStream)
 g-map' f = löbι (GStream ⇛ GStream) (
