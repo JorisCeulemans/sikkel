@@ -12,6 +12,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renam
 
 open import Helpers
 open import CwF-Structure.Contexts
+open import CwF-Structure.ContextEquivalence
 
 open Category C
 
@@ -420,3 +421,7 @@ eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
   ≡⟨ morph-id T t ⟩
     t ∎
   where open ≡-Reasoning
+
+-- Nicer syntax for substitutions coming from context equality
+ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ ℓ → Ty Γ ℓ
+ιc[ Γ=Δ ] T = T [ from Γ=Δ ]

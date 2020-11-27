@@ -11,6 +11,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
+open import CwF-Structure.ContextEquivalence
 open import CwF-Structure.Types
 
 open Category C
@@ -165,3 +166,7 @@ eq (tm-subst-id t) _ = refl
 tm-subst-comp : (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 t [ τ ]' [ σ ]' ≅ᵗᵐ ι[ ty-subst-comp T τ σ ] (t [ τ ⊚ σ ]')
 eq (tm-subst-comp t τ σ) _ = refl
+
+-- Nicer syntax for substitutions coming from context equality
+ιc[_]'_ : {S : Ty Δ ℓ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Δ S → Tm Γ (ιc[ Γ=Δ ] S)
+ιc[ Γ=Δ ]' s = s [ from Γ=Δ ]'
