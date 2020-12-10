@@ -1,4 +1,4 @@
-{-# OPTIONS --omega-in-omega #-}
+{-# OPTIONS --omega-in-omega --allow-unsolved-metas #-}
 
 --------------------------------------------------
 -- Examples with coinductive streams of natural numbers in mode ★

@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module Translation where
 
 open import Data.Product using (_×_; _,_)

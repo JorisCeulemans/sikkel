@@ -4,6 +4,7 @@
 
 module Categories where
 
+open import Data.Empty
 open import Data.Nat using (ℕ; _≤_)
 open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
@@ -53,6 +54,58 @@ _∙_ ★ _ _ = tt
 ∙assoc ★ = refl
 hom-idʳ ★ = refl
 hom-idˡ ★ = refl
+
+data ParamObj : Set where
+  type-obj : ParamObj
+  pred-obj : ParamObj
+
+data ParamMorph : ParamObj → ParamObj → Set where
+  type-id : ParamMorph type-obj type-obj
+  pred-id : ParamMorph pred-obj pred-obj
+  type-pred : ParamMorph type-obj pred-obj
+
+𝟚 : Category
+Ob 𝟚 = ParamObj
+Hom 𝟚 = ParamMorph
+hom-id 𝟚 {type-obj} = type-id
+hom-id 𝟚 {pred-obj} = pred-id
+_∙_ 𝟚 g type-id = g
+_∙_ 𝟚 g pred-id = g
+_∙_ 𝟚 pred-id type-pred = type-pred
+∙assoc 𝟚 {f = type-id} = refl
+∙assoc 𝟚 {f = pred-id} = refl
+∙assoc 𝟚 {f = type-pred} {pred-id} = refl
+hom-idʳ 𝟚 {x = type-obj} = refl
+hom-idʳ 𝟚 {x = pred-obj} = refl
+hom-idˡ 𝟚 {f = type-id} = refl
+hom-idˡ 𝟚 {f = pred-id} = refl
+hom-idˡ 𝟚 {f = type-pred} = refl
+
+{-
+𝟚 : Category
+Ob 𝟚 = ParamObj
+Hom 𝟚 type-obj type-obj = ⊤
+Hom 𝟚 type-obj pred-obj = ⊥
+Hom 𝟚 pred-obj type-obj = ⊤
+Hom 𝟚 pred-obj pred-obj = ⊤
+hom-id 𝟚 {x = type-obj} = tt
+hom-id 𝟚 {x = pred-obj} = tt
+_∙_ 𝟚 {type-obj} {type-obj} {type-obj} _ _ = tt
+_∙_ 𝟚 {pred-obj} {type-obj} {type-obj} _ _ = tt
+_∙_ 𝟚 {pred-obj} {pred-obj} {type-obj} _ _ = tt
+_∙_ 𝟚 {pred-obj} {pred-obj} {pred-obj} _ _ = tt
+∙assoc 𝟚 {type-obj} {type-obj} {type-obj} {type-obj} = refl
+∙assoc 𝟚 {pred-obj} {type-obj} {type-obj} {type-obj} = refl
+∙assoc 𝟚 {pred-obj} {pred-obj} {type-obj} {type-obj} = refl
+∙assoc 𝟚 {pred-obj} {pred-obj} {pred-obj} {type-obj} = refl
+∙assoc 𝟚 {pred-obj} {pred-obj} {pred-obj} {pred-obj} = refl
+hom-idʳ 𝟚 {type-obj} {type-obj} = refl
+hom-idʳ 𝟚 {pred-obj} {type-obj} = refl
+hom-idʳ 𝟚 {pred-obj} {pred-obj} = refl
+hom-idˡ 𝟚 {type-obj} {type-obj} = refl
+hom-idˡ 𝟚 {pred-obj} {type-obj} = refl
+hom-idˡ 𝟚 {pred-obj} {pred-obj} = refl
+-}
 
 Type-groupoid : (X : Set) → Category
 Ob (Type-groupoid X) = X
