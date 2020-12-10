@@ -170,3 +170,6 @@ eq (tm-subst-comp t τ σ) _ = refl
 -- Nicer syntax for substitutions coming from context equality
 ιc[_]'_ : {S : Ty Δ ℓ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Δ S → Tm Γ (ιc[ Γ=Δ ] S)
 ιc[ Γ=Δ ]' s = s [ from Γ=Δ ]'
+
+ιc⁻¹[_]'_ : {T : Ty Γ ℓ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Γ T → Tm Δ (ιc⁻¹[ Γ=Δ ] T)
+ιc⁻¹[ Γ=Δ ]' t = t [ to Γ=Δ ]'

@@ -425,3 +425,6 @@ eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
 -- Nicer syntax for substitutions coming from context equality
 ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ ℓ → Ty Γ ℓ
 ιc[ Γ=Δ ] T = T [ from Γ=Δ ]
+
+ιc⁻¹[_]_ : Γ ≅ᶜ Δ → Ty Γ ℓ → Ty Δ ℓ
+ιc⁻¹[ Γ=Δ ] T = T [ to Γ=Δ ]

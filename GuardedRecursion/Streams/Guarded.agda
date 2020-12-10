@@ -37,7 +37,7 @@ open import Reflection.Tactic.LobInduction
 
 private
   variable
-    ℓa ℓc : Level
+    ℓa ℓb ℓc : Level
     Γ Δ : Ctx ω ℓ
 
 
@@ -279,100 +279,136 @@ private
     eq zeros-test2 {x = suc zero}    _ = refl
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
+g-map : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
+        Tm Γ (timeless-ty (A ⇛ B) ⇛ GStream A ⇛ GStream B)
+g-map {A = A}{B = B} =
+  lamι (timeless-ty (A ⇛ B)) (
+       löbι (GStream A ⇛ GStream B) (
+            lamι (GStream A) (
+                 g-cons $ pair (timeless-tm (untimeless-tm (varι 2) $ untimeless-tm (g-head $ varι 0)))
+                               (varι 1 ⊛' (g-tail $ varι 0)))))
 {-
-{-
-g-map' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (GStream ⇛ GStream)
-g-map' f = löbι (GStream ⇛ GStream) (
-                lamι GStream (
-                     g-cons $ (pair (app (↑ι⟨ 2 ⟩ f) (g-head $ varι 0))
-                                    (varι 1 ⊛' g-tail $ varι 0))))
--}
-
 g-map : Tm Γ ((Nat' ⇛ Nat') ⇛ GStream ⇛ GStream)
-g-map = lamι (Nat' ⇛ Nat') (
-             löbι (GStream ⇛ GStream) (
-                  lamι GStream
-                       (g-cons $ pair (varι 2 $ (g-head $ varι 0))
-                                      (varι 1 ⊛' (g-tail $ varι 0)))))
-
-{-
-g-iterate : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ GStream)
-g-iterate f = löbι (Nat' ⇛ GStream) (
-                   lamι Nat' (
-                        g-cons $ (pair (varι 0)
-                                       (varι 1 ⊛' next' (app (↑ι⟨ 2 ⟩ f) (varι 0))))))
+g-map =
+  lamι (Nat' ⇛ Nat') (
+    löbι (GStream ⇛ GStream) (
+      lamι GStream
+        (g-cons $ pair (varι 2 $ (g-head $ varι 0))
+                       (varι 1 ⊛' (g-tail $ varι 0)))))
 -}
 
-g-iterate-func : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ GStream)
-g-iterate-func = lamι (Nat' ⇛ Nat') (
-                      löbι (Nat' ⇛ GStream) (
-                           lamι Nat' (
-                                g-cons $ pair (varι 0)
-                                              (varι 1 ⊛' next' (varι 2 $ varι 0)))))
+g-iterate : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+            Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
+g-iterate {A = A} =
+  lamι (timeless-ty (A ⇛ A)) (
+       löbι (timeless-ty A ⇛ GStream A) (
+            lamι (timeless-ty A) (
+                 g-cons $ pair (varι 0)
+                               (varι 1 ⊛' next' (timeless-tm (untimeless-tm (varι 2) $ untimeless-tm (varι 0)))))))
 
 {-
-g-iterate' : Tm Γ (Nat' ⇛ Nat') → Tm Γ (Nat' ⇛ GStream)
-g-iterate' f = lamι Nat' (
-                    löbι GStream (
-                         g-cons $ (pair (varι 1)
-                                        (next' (↑ι⟨ 2 ⟩ (g-map $ f)) ⊛' varι 0))))
+g-iterate : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ GStream)
+g-iterate = 
+  lamι (Nat' ⇛ Nat') (
+    löbι (Nat' ⇛ GStream) (
+      lamι Nat' (
+        g-cons $ pair (varι 0)
+                      (varι 1 ⊛' next' (varι 2 $ varι 0)))))
 -}
 
-g-iterate'-func : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ GStream)
-g-iterate'-func = lamι (Nat' ⇛ Nat') (
-                       lamι Nat' (
-                            löbι GStream (
-                                 g-cons $ pair (varι 1)
-                                               (next' (g-map $ varι 2) ⊛' varι 0))))
+g-iterate' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+             Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
+g-iterate' {A = A} =
+  lamι (timeless-ty (A ⇛ A)) (
+       lamι (timeless-ty A) (
+            löbι (GStream A)
+                 (g-cons $ pair (varι 1)
+                                (next' (g-map $ varι 2) ⊛' varι 0))))
 
-suc-func : Tm Γ (Nat' ⇛ Nat')
+{-
+g-iterate' : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ GStream)
+g-iterate' = lamι (Nat' ⇛ Nat') (
+                  lamι Nat' (
+                       löbι GStream (
+                            g-cons $ pair (varι 1)
+                                          (next' (g-map $ varι 2) ⊛' varι 0))))
+-}
+
+suc-func : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
 
-g-nats : Tm Γ GStream
-g-nats = g-iterate'-func $ suc-func $ zero'
+g-nats : Tm Γ (GStream Nat')
+g-nats = g-iterate' $ timeless-tm suc-func $ timeless-tm zero'
 
 private
   module _ {Γ : Ctx ω ℓ} where
-    nats-test : g-head {Γ = Γ} $ g-nats ≅ᵗᵐ zero'
+    nats-test : g-head {Γ = Γ} $ g-nats ≅ᵗᵐ timeless-tm zero'
     eq nats-test {x = zero}  _ = refl
     eq nats-test {x = suc n} _ = refl
 
-    nats-test2 : g-snd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (suc' zero')
+    nats-test2 : g-snd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (timeless-tm (suc' zero'))
     eq nats-test2 {x = zero}        _ = refl
     eq nats-test2 {x = suc zero}    _ = refl
     eq nats-test2 {x = suc (suc n)} _ = refl
 
-    nats-test3 : g-thrd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (next' (suc' (suc' zero')))
+    nats-test3 : g-thrd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (next' (timeless-tm (suc' (suc' zero'))))
     eq nats-test3 {x = zero}              _ = refl
     eq nats-test3 {x = suc zero}          _ = refl
     eq nats-test3 {x = suc (suc zero)}    _ = refl
     eq nats-test3 {x = suc (suc (suc n))} _ = refl
 
-    map-test : g-head {Γ = Γ} $ (g-map $ suc-func $ g-zeros) ≅ᵗᵐ discr 1
+    map-test : g-head {Γ = Γ} $ (g-map $ timeless-tm suc-func $ g-zeros) ≅ᵗᵐ timeless-tm (discr 1)
     eq map-test {x = zero}  _ = refl
     eq map-test {x = suc x} _ = refl
 
-    map-test2 : g-thrd {Γ = Γ} $ (g-map $ suc-func $ (g-map $ suc-func $ g-nats)) ≅ᵗᵐ next' (next' (discr 4))
+    map-test2 : g-thrd {Γ = Γ} $ (g-map $ timeless-tm suc-func $ (g-map $ timeless-tm suc-func $ g-nats))
+                ≅ᵗᵐ next' (next' (timeless-tm ((discr 4))))
     eq map-test2 {x = zero}              _ = refl
     eq map-test2 {x = suc zero}          _ = refl
     eq map-test2 {x = suc (suc zero)}    _ = refl
     eq map-test2 {x = suc (suc (suc n))} _ = refl
 
+g-interleave : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+               Tm Γ (GStream A ⇛ ▻' (GStream A) ⇛ GStream A)
+g-interleave {A = A} =
+  löbι (GStream A ⇛ ▻' (GStream A) ⇛ GStream A) (
+       lamι (GStream A) (
+            lamι (▻' (GStream A)) (
+                 g-cons $ pair (g-head $ varι 1)
+                               (varι 2 ⊛' varι 0 ⊛' next' (g-tail $ varι 1)))))
+{-
 g-interleave : Tm Γ (GStream ⇛ ▻' GStream ⇛ GStream)
 g-interleave = löbι (GStream ⇛ ▻' GStream ⇛ GStream)
                     (lamι GStream
                           (lamι (▻' GStream)
                                 (g-cons $ (pair (g-head $ varι 1)
                                                 (varι 2 ⊛' varι 0 ⊛' next' (g-tail $ varι 1))))))
+-}
 
+one' : {Γ : Ctx ★ ℓ} → Tm Γ Nat'
+one' = suc' zero'
+
+g-toggle : Tm Γ (GStream Nat')
+g-toggle = löbι (GStream Nat') (
+                g-cons $ pair (timeless-tm one')
+                              (next' (g-cons $ pair (timeless-tm zero') (varι 0))))
+
+{-
 g-toggle : Tm Γ GStream
 g-toggle = löbι GStream
                 (g-cons $ pair (suc' zero')
                                (next' (g-cons $ pair zero' (varι 0))))
+-}
 
+g-paperfolds : Tm Γ (GStream Nat')
+g-paperfolds = löbι (GStream Nat') (g-interleave $ g-toggle $ varι 0)
+
+{-
 g-paperfolds : Tm Γ GStream
 g-paperfolds = löbι GStream (g-interleave $ g-toggle $ varι 0)
+-}
 
+{-
 module _ (T-op : NullaryTypeOp ω ℓ) {{_ : IsNullaryNatural T-op}} where
   T : Ty Γ ℓ
   T = ⟦ nul T-op ⟧exp
@@ -390,36 +426,65 @@ module _ (T-op : NullaryTypeOp ω ℓ) {{_ : IsNullaryNatural T-op}} where
                        (lamι T let x = varι 1 $ varι 0
                                in g-cons $ (pair (fst x)
                                                  (varι 2 ⊛' next' (varι 1) ⊛' snd x))))
-
--- This is an implementation of an example on page 3 of the paper
---   Robert Atkey, and Conor McBride.
---   Productive Coprogramming with Guarded Recursion.
---   ICFP 2013.
-g-mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' GStream ⇛ GStream) → Tm Γ (GStream ⇛ GStream ⇛ GStream)
-g-mergef f = löbι (GStream ⇛ GStream ⇛ GStream) (
-                  lamι GStream (
-                       lamι GStream (
-                            let xs = varι 1
-                                ys = varι 0
-                            in app (app (app (↑ι⟨ 3 ⟩ f)
-                                             (g-head $ xs))
-                                        (g-head $ ys))
-                                   (varι 2 ⊛' (g-tail $ xs) ⊛' (g-tail $ ys)))))
-
-{-
-g-mergef : Tm Γ ((Nat' ⇛ Nat' ⇛ ▻' GStream ⇛ GStream) ⇛ GStream ⇛ GStream ⇛ GStream)
-g-mergef = lamι (Nat' ⇛ Nat' ⇛ ▻' GStream ⇛ GStream) (
-                löbι (GStream ⇛ GStream ⇛ GStream) (
-                     lamι GStream (
-                          lamι GStream (
-                               let xs = varι 1
-                                   ys = varι 0
-                               in varι 3 $ (g-head $ xs)
-                                         $ (g-head $ ys)
-                                         $ (varι 2 ⊛' (g-tail $ xs) ⊛' (g-tail $ ys))))))
 -}
 
--- Examples that were not taken from a paper.
+module _
+  {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}}
+  {B : NullaryTypeOp ★ ℓb} {{_ : IsNullaryNatural B}}
+  {C : NullaryTypeOp ★ ℓc} {{_ : IsNullaryNatural C}}
+  where
+
+  -- This is an implementation of an example on page 3 of the paper
+  --   Robert Atkey, and Conor McBride.
+  --   Productive Coprogramming with Guarded Recursion.
+  --   ICFP 2013.
+  g-mergef : Tm Γ (timeless-ty A ⇛ timeless-ty B ⇛ ▻' (GStream C) ⇛ GStream C) →
+             Tm Γ (GStream A ⇛ GStream B ⇛ GStream C)
+  g-mergef f = löbι (GStream A ⇛ GStream B ⇛ GStream C) (
+                    lamι (GStream A) (
+                         lamι (GStream B)
+                              let xs = varι 1
+                                  ys = varι 0
+                              in (↑ι⟨ 3 ⟩ f) $ (g-head $ xs)
+                                             $ (g-head $ ys)
+                                             $ (varι 2 ⊛' (g-tail $ xs) ⊛' (g-tail $ ys))))
+
+  {-
+  g-mergef : Tm Γ (Nat' ⇛ Nat' ⇛ ▻' GStream ⇛ GStream) → Tm Γ (GStream ⇛ GStream ⇛ GStream)
+  g-mergef f = löbι (GStream ⇛ GStream ⇛ GStream) (
+                    lamι GStream (
+                         lamι GStream (
+                              let xs = varι 1
+                                  ys = varι 0
+                              in app (app (app (↑ι⟨ 3 ⟩ f)
+                                               (g-head $ xs))
+                                          (g-head $ ys))
+                                     (varι 2 ⊛' (g-tail $ xs) ⊛' (g-tail $ ys)))))
+
+  g-mergef : Tm Γ ((Nat' ⇛ Nat' ⇛ ▻' GStream ⇛ GStream) ⇛ GStream ⇛ GStream ⇛ GStream)
+  g-mergef = lamι (Nat' ⇛ Nat' ⇛ ▻' GStream ⇛ GStream) (
+                  löbι (GStream ⇛ GStream ⇛ GStream) (
+                       lamι GStream (
+                            lamι GStream (
+                                 let xs = varι 1
+                                     ys = varι 0
+                                 in varι 3 $ (g-head $ xs)
+                                           $ (g-head $ ys)
+                                           $ (varι 2 ⊛' (g-tail $ xs) ⊛' (g-tail $ ys))))))
+  -}
+
+  -- Examples that were not taken from a paper.
+  g-zipWith : Tm Γ (timeless-ty (A ⇛ B ⇛ C)) →
+              Tm Γ (GStream A ⇛ GStream B ⇛ GStream C)
+  g-zipWith f = g-mergef (
+    lamι (timeless-ty A) (
+         lamι (timeless-ty B) (
+              lamι (▻' (GStream C)) (
+                   g-cons $ pair (timeless-tm (untimeless-tm (↑ι⟨ 3 ⟩ f) $ untimeless-tm (varι 2)
+                                                                         $ untimeless-tm (varι 1)))
+                                 (varι 0)))))
+
+{-
 g-zipWith : Tm Γ (Nat' ⇛ Nat' ⇛ Nat') → Tm Γ (GStream ⇛ GStream ⇛ GStream)
 g-zipWith f = g-mergef (
   lamι Nat' (
@@ -427,6 +492,7 @@ g-zipWith f = g-mergef (
             lamι (▻' GStream) (
                  g-cons $ (pair (app (app (↑ι⟨ 3 ⟩ f) (varι 2)) (varι 1))
                                 (varι 0))))))
+-}
 
 {-
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
@@ -436,19 +502,28 @@ nat-sum = nat-elim (Nat' ⇛ Nat')
                          lamι Nat' (suc' (app (varι 1) (varι 0)))))
 -}
 
-prim-nat-sum : Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
+prim-nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
 term (prim-nat-sum t s) n γ = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
 naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (naturality s m≤n eγ)
 
-nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
+nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = lamι Nat' (lamι Nat' (prim-nat-sum (varι 0) (varι 1)))
 
-pair' : Tm Γ (Nat' ⇛ ▻' GStream ⇛ Nat' ⊠ ▻' GStream)
-pair' = lamι Nat' (lamι (▻' GStream) (pair (varι 1) (varι 0)))
+pair' : Tm Γ (timeless-ty Nat' ⇛ ▻' (GStream Nat') ⇛ timeless-ty Nat' ⊠ ▻' (GStream Nat'))
+pair' = lamι (timeless-ty Nat') (lamι (▻' (GStream Nat')) (pair (varι 1) (varι 0)))
 
-one' : Tm Γ Nat'
-one' = suc' zero'
+g-fibs : Tm Γ (GStream Nat')
+g-fibs = löbι (GStream Nat') (
+  g-cons $ pair (timeless-tm one') (
+  g-cons ⟨$⟩' ((pair' $ timeless-tm one') ⟨$⟩' (
+  (f $ varι 0) ⟨$⟩' (g-tail ⟨$⟩' varι 0)))))
+  where
+    f : Tm Γ (▻' (GStream Nat') ⇛ ▻' (GStream Nat') ⇛ ▻' (GStream Nat'))
+    f = lamι (▻' (GStream Nat')) (
+             lamι (▻' (GStream Nat')) (
+                  g-zipWith (timeless-tm nat-sum) ⟨$⟩' varι 1 ⊛' varι 0))
 
+{-
 g-fibs : Tm Γ GStream
 g-fibs = löbι GStream (
   g-cons $ pair one' (
@@ -459,12 +534,12 @@ g-fibs = löbι GStream (
     f = lamι (▻' GStream) (
              lamι (▻' GStream) (
                   g-zipWith nat-sum ⟨$⟩' varι 1 ⊛' varι 0))
+-}
 
 private
-  module _ where
-    fibs-test : g-thrd {Γ = Γ} $ g-fibs ≅ᵗᵐ next' (next' (discr 2))
+  module _ {Γ : Ctx ω ℓ} where
+    fibs-test : g-thrd {Γ = Γ} $ g-fibs ≅ᵗᵐ next' (next' (timeless-tm (discr 2)))
     eq fibs-test {x = zero} _ = refl
     eq fibs-test {x = suc zero} _ = refl
     eq fibs-test {x = suc (suc zero)} _ = refl
     eq fibs-test {x = suc (suc (suc x))} _ = refl
--}

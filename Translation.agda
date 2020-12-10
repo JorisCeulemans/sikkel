@@ -144,15 +144,15 @@ take-first z≤n       s = refl
 take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
 
 instance
-  translate-stream : Translatable Stream'
-  translated-type {{translate-stream}} = Stream ℕ
-  head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
-  tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)
-  translate-back {{translate-stream}} s = MkTm (λ _ _ → MkTm (λ n _ → take (suc n) s)
+  translate-stream : {A : Ty ◇ ℓ} → {{_ : Translatable A}} → Translatable (Stream' A)
+  translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
+  head (translate-term {{translate-stream}} s) = {!translate-term (head' $ s)!}
+  tail (translate-term {{translate-stream}} s) = {!translate-term (tail' $ s)!}
+  translate-back {{translate-stream}} s = {!MkTm (λ _ _ → MkTm (λ n _ → take (suc n) s)
                                                              (λ m≤n _ → take-first (s≤s m≤n) s))
-                                               (λ _ _ → tm-≅-to-≡ (record { eq = λ _ → first-≤-refl }))
+                                               (λ _ _ → tm-≅-to-≡ (record { eq = λ _ → first-≤-refl }))!}
   translate-cong {{translate-stream}} = {!!} -- not provable unless you assume that bisimilarity implies equality of streams
-
+{-
 paperfolds : Stream ℕ
 paperfolds = translate-term paperfolds'
 
@@ -166,3 +166,4 @@ private
 
   paperfolds-test : take 10 paperfolds ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
   paperfolds-test = refl
+-}

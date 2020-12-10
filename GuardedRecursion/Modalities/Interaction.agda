@@ -7,6 +7,7 @@ module GuardedRecursion.Modalities.Interaction where
 
 open import Data.Nat
 open import Data.Unit
+open import Function using (id; _∘_)
 open import Level renaming (suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
@@ -18,7 +19,7 @@ open import GuardedRecursion.Modalities.Global
 
 private
   variable
-    ℓ ℓc ℓt : Level
+    ℓ ℓ' ℓc ℓt : Level
 
 
 --------------------------------------------------
@@ -48,3 +49,31 @@ eq (isoʳ (global-later-ty T)) t = tm-≅-to-≡ (record { eq = λ { {zero} _ �
 global-later'-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
                    global-ty T ≅ᵗʸ global-ty (▻' T)
 global-later'-ty = global-later-ty
+
+
+--------------------------------------------------
+-- Interaction between the global and timeless modalities
+
+now-timeless-ctx : {Γ : Ctx ★ ℓc} → now (timeless-ctx Γ) ≅ᶜ Γ
+func (from now-timeless-ctx) = id
+_⇒_.naturality (from (now-timeless-ctx {Γ = Γ})) {f = tt} = rel-id Γ
+func (to now-timeless-ctx) = id
+_⇒_.naturality (to (now-timeless-ctx {Γ = Γ})) = sym ∘ rel-id Γ
+eq (isoˡ now-timeless-ctx) _ = refl
+eq (isoʳ now-timeless-ctx) _ = refl
+
+now-timeless-natural : {Δ : Ctx ★ ℓ} {Γ : Ctx ★ ℓ'} (σ : Δ ⇒ Γ) →
+                       from now-timeless-ctx ⊚ now-subst (timeless-subst σ) ≅ˢ σ ⊚ from now-timeless-ctx
+eq (now-timeless-natural σ) _ = refl
+
+global-timeless-ty : {Γ : Ctx ★ ℓc} (T : Ty Γ ℓ) →
+                     global-ty (timeless-ty (ιc[ now-timeless-ctx ] T)) ≅ᵗʸ T
+func (from (global-timeless-ty T)) tm = tm ⟨ 0 , tt ⟩'
+CwF-Structure.naturality (from (global-timeless-ty T)) _ = morph-cong T refl
+term (func (to (global-timeless-ty T)) t) _ _ = t
+Tm.naturality (func (to (global-timeless-ty T)) t) _ _ = trans (morph-cong T refl) (morph-id T _)
+CwF-Structure.naturality (to (global-timeless-ty T)) t = tm-≅-to-≡ (record { eq = λ _ → morph-cong T refl })
+eq (isoˡ (global-timeless-ty T)) tm = tm-≅-to-≡ (record { eq = λ _ → trans (sym (Tm.naturality tm z≤n refl))
+                                                                            (trans (morph-cong T refl)
+                                                                                   (morph-id T _)) })
+eq (isoʳ (global-timeless-ty T)) _ = refl

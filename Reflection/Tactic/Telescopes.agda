@@ -127,13 +127,16 @@ bounded-ctx-to-telescope (suc n) _ = typeError (strErr "Weakening this far is no
 
 construct-weaken-solution : ℕ → Term → Term → TC Term
 construct-weaken-solution n term hole = do
-  extended-ctx ← inferType hole >>= get-ctx
+  goal ← inferType hole
+  debugPrint "vtac" 5 (strErr "↑ macro called, goal:" ∷ termErr goal ∷ [])
+  extended-ctx ← get-ctx goal
   ty-seq ← bounded-ctx-to-telescope n extended-ctx
   return (def (quote weaken-term) (vArg ty-seq ∷ vArg term ∷ []))
 
 weaken-macro : ℕ → Term → Term → TC ⊤
 weaken-macro n term hole = do
   solution ← construct-weaken-solution n term hole
+  debugPrint "vtac" 5 (strErr "↑ macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro
@@ -150,6 +153,7 @@ weakenι-macro n term hole = do
   expr-resultType ← inferType partial-solution >>= get-term-type >>= construct-expr
   let proof = def (quote reduce-sound) (vArg expr-resultType ∷ [])
   let solution = def (quote ι⁻¹[_]_) (vArg proof ∷ vArg partial-solution ∷ [])
+  debugPrint "vtac" 5 (strErr "↑ macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro
