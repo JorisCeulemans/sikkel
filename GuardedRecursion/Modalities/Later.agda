@@ -6,8 +6,9 @@ module GuardedRecursion.Modalities.Later where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
-open import Data.Unit.Polymorphic using (⊤; tt)
+open import Data.String
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.Unit.Polymorphic using (⊤; tt)
 open import Function using (id; _∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -177,6 +178,9 @@ naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'}
 
 löb' : (T : Ty Γ ℓ) → Tm (Γ ,, ▻' T) (T [ π ]) → Tm Γ T
 löb' T f = löb T (lam (▻' T) f)
+
+nlöb' : (v : String) (T : Ty Γ ℓ) → Tm (Γ ,, v ∈ ▻' T) (T [ π ]) → Tm Γ T
+nlöb' v = löb'
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
                   app f (next' (löb T f)) ≅ᵗᵐ löb T f

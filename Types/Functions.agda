@@ -7,6 +7,7 @@ open import Categories
 module Types.Functions {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.String
 open import Function using (_∘_)
 open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
@@ -388,3 +389,10 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
   ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-rel-comp Γ eγ (rel-id Γ γ')) eγ ⟩
     f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)
   where open ≡-Reasoning
+
+
+--------------------------------------------------
+-- Alternative version of lambda abstraction that allows to name the bound variable
+
+nlam : (v : String) (T : Ty Γ ℓt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
+nlam v = lam

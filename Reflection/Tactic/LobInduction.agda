@@ -6,6 +6,7 @@ module Reflection.Tactic.LobInduction where
 
 open import Data.List hiding ([_])
 open import Data.Product
+open import Data.String
 open import Data.Unit
 open import Reflection
 
@@ -28,3 +29,8 @@ löbι : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (T : Ty Γ ℓt)
       {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
       Tm (Γ ,, ▻' T) (proj₁ body-type) → Tm Γ T
 löbι T {body-type = S , T=S} b = löb' T (ι[ T=S ] b)
+
+nlöbι : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (v : String) (T : Ty Γ ℓt)
+        {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
+        Tm (Γ ,, v ∈ ▻' T) (proj₁ body-type) → Tm Γ T
+nlöbι v = löbι

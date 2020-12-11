@@ -8,8 +8,9 @@ module Reflection.Tactic.Telescopes where
 
 open import Data.Bool hiding (_<?_)
 open import Data.Fin using (#_)
-open import Data.List
+open import Data.List hiding (_++_)
 open import Data.Nat
+open import Data.String hiding (_<?_)
 open import Data.Unit
 open import Reflection hiding (var)
 open import Reflection.TypeChecking.Monad.Syntax
@@ -17,7 +18,7 @@ open import Relation.Nullary.Decidable using (⌊_⌋)
 
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
-open import CwF-Structure.Telescopes
+open import CwF-Structure.Telescopes hiding (_++_)
 open import Reflection.Naturality renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 open import Reflection.Tactic.Util
@@ -34,18 +35,20 @@ get-ctx (meta m args) = debugPrint "vtac" 5 (strErr "Blocing on meta" ∷ termEr
                         blockOnMeta m
 get-ctx _ = typeError (strErr "get-ctx can only get the context of a term." ∷ [])
 
--- ctx-to-telescope takes a value of type Ctx C ℓ and transforms it into a type
--- sequence. If a context is of the form Γ ,, T then T is added to the type
--- sequence and ctx-to-telescope is called recursively on Γ. Otherwise the process
--- stops and ctx-to-telescope returns an empty sequence.
+-- ctx-to-telescope takes a value of type Ctx C ℓ and transforms it into a telescope
+-- If a context is of the form Γ ,, T then T is added to the telescope
+-- and ctx-to-telescope is called recursively on Γ. Otherwise the process
+-- stops and ctx-to-telescope returns an empty telescope.
+{-# TERMINATING #-}
 ctx-to-telescope : Term → TC Term
-ctx-to-telescope (def (quote _,,_) xs) = go xs
-  where
-    go : List (Arg Term) → TC Term
-    go [] = typeError (strErr "Invalid use of context extension." ∷ [])
-    go (vArg ctx ∷ vArg ty ∷ xs) = (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$>
-                                   (ctx-to-telescope ctx)
-    go (_ ∷ xs) = go xs
+ctx-to-telescope (def (quote _,,_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 1 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> ctx-to-telescope ctx
+ctx-to-telescope (def (quote _,,_∈_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 2 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> ctx-to-telescope ctx
 ctx-to-telescope (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-telescope." ∷ []) >>
                                  blockOnMeta m
 ctx-to-telescope _ = return (con (quote Telescope.[]) [])
@@ -108,19 +111,60 @@ macro
   varι = varι-macro
 
 
+--------------------------------------------------
+-- Variable macro that allows to name variables using strings.
+
+{-# TERMINATING #-}
+get-deBruijn-index : Term → String → TC ℕ
+get-deBruijn-index (def (quote _,,_) args) v = do
+  ctx ← get-visible-arg 0 args
+  i ← get-deBruijn-index ctx v
+  return (1 + i)
+get-deBruijn-index (def (quote _,,_∈_) args) v = do
+  w ← get-visible-arg 1 args >>= unquoteTC -- name of the last variable added to the context
+  if (v == w)
+    then return 0
+    else do
+      ctx ← get-visible-arg 0 args
+      i ← get-deBruijn-index ctx v
+      return (1 + i)
+get-deBruijn-index (meta m args) v = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in get-deBruijn-index." ∷ []) >>
+                                     blockOnMeta m
+get-deBruijn-index _ v = typeError (strErr ("Could not find a variable with name " ++ v) ∷ [])
+
+nvar-macro : String → Term → TC ⊤
+nvar-macro v hole = do
+  goal ← inferType hole
+  ctx ← get-ctx goal
+  i ← get-deBruijn-index ctx v >>= quoteTC
+  var-macro i hole
+
+nvarι-macro : String → Term → TC ⊤
+nvarι-macro v hole = do
+  goal ← inferType hole
+  ctx ← get-ctx goal
+  i ← get-deBruijn-index ctx v >>= quoteTC
+  varι-macro i hole
+
+macro
+  nvar = nvar-macro
+  nvarι = nvarι-macro
+
+
 -------------------------------------------------
 -- Definition of a macro that performs weakening of terms
 -- and infers the telescope itself from the current context.
 
 bounded-ctx-to-telescope : ℕ → Term → TC Term
 bounded-ctx-to-telescope 0       _ = return (con (quote Telescope.[]) [])
-bounded-ctx-to-telescope (suc n) (def (quote _,,_) xs) = go xs
-  where
-    go : List (Arg Term) → TC Term
-    go [] = typeError (strErr "Invalid use of context extension." ∷ [])
-    go (vArg ctx ∷ vArg ty ∷ xs) = (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$>
-                                   (bounded-ctx-to-telescope n ctx)
-    go (_ ∷ xs) = go xs
+bounded-ctx-to-telescope (suc n) (def (quote _,,_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 1 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> bounded-ctx-to-telescope n ctx
+bounded-ctx-to-telescope (suc n) (def (quote _,,_∈_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 2 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> bounded-ctx-to-telescope n ctx
 bounded-ctx-to-telescope (suc n) (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-telescope." ∷ []) >>
                                                  blockOnMeta m
 bounded-ctx-to-telescope (suc n) _ = typeError (strErr "Weakening this far is not possible in the current context." ∷ [])

@@ -7,6 +7,7 @@ module Reflection.Tactic.Lambda where
 
 open import Data.List hiding ([_])
 open import Data.Product
+open import Data.String
 open import Data.Unit
 open import Reflection hiding (lam)
 
@@ -30,3 +31,8 @@ lamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (T : Ty Γ ℓt) {S : Ty 
        {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
        Tm (Γ ,, T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 lamι T {body-type = S' , Sπ=S'} b = lam T (ι[ Sπ=S' ] b)
+
+nlamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (v : String) (T : Ty Γ ℓt) {S : Ty Γ ℓs}
+        {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
+        Tm (Γ ,, v ∈ T) (proj₁ body-type) → Tm Γ (T ⇛ S)
+nlamι v = lamι
