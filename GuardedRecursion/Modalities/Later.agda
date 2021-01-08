@@ -27,6 +27,7 @@ private
 
 infixl 12 _⟨$⟩_
 infixl 12 _⊛_
+infixr 4 nlöb'[_∈_]_
 
 
 --------------------------------------------------
@@ -179,8 +180,8 @@ naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'}
 löb' : (T : Ty Γ ℓ) → Tm (Γ ,, ▻' T) (T [ π ]) → Tm Γ T
 löb' T f = löb T (lam (▻' T) f)
 
-nlöb' : (v : String) (T : Ty Γ ℓ) → Tm (Γ ,, v ∈ ▻' T) (T [ π ]) → Tm Γ T
-nlöb' v = löb'
+nlöb'[_∈_]_ : (v : String) (T : Ty Γ ℓ) → Tm (Γ ,, v ∈ ▻' T) (T [ π ]) → Tm Γ T
+nlöb'[_∈_]_ v = löb'
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
                   app f (next' (löb T f)) ≅ᵗᵐ löb T f

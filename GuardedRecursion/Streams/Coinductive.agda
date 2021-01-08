@@ -62,16 +62,16 @@ instance
 
 module _ {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
   head' : Tm Γ (Stream' A ⇛ A)
-  head' = nlamι "s" (Stream' A) (ι⁻¹[ global-timeless-ty A ] global-tm (g-head $ unglobal-tm (nvarι "s")))
+  head' = nlamι[ "s" ∈ Stream' A ] ι⁻¹[ global-timeless-ty A ] global-tm (g-head $ unglobal-tm (nvarι "s"))
 
   tail' : Tm Γ (Stream' A ⇛ Stream' A)
-  tail' = nlamι "s" (Stream' A) (ι[ global-later'-ty _ ] global-tm (g-tail $ unglobal-tm (nvarι "s")))
+  tail' = nlamι[ "s" ∈ Stream' A ] ι[ global-later'-ty _ ] global-tm (g-tail $ unglobal-tm (nvarι "s"))
 
   cons' : Tm Γ (A ⇛ Stream' A ⇛ Stream' A)
-  cons' = nlamι "x" A (
-                nlamι "xs" (Stream' A) (
-                      global-tm (g-cons $ pair (unglobal-tm (ι[ global-timeless-ty A ] nvarι "x"))
-                                               (unglobal-tm (ι⁻¹[ global-later'-ty _ ] nvarι "xs")))))
+  cons' = nlamι[ "x" ∈ A ]
+            nlamι[ "xs" ∈ Stream' A ]
+              global-tm (g-cons $ pair (unglobal-tm (ι[ global-timeless-ty A ] nvarι "x"))
+                                       (unglobal-tm (ι⁻¹[ global-later'-ty _ ] nvarι "xs")))
 
 paperfolds' : Tm Γ (Stream' Nat')
 paperfolds' = global-tm (ι[ by-naturality ] g-paperfolds)
@@ -81,27 +81,27 @@ fibs' = global-tm (ι[ by-naturality ] g-fibs)
 
 map' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
        Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
-map' {A = A}{B = B} = nlamι "f" (A ⇛ B) (nlamι "s" (Stream' A) (global-tm {!!}))
+map' {A = A}{B = B} = nlamι[ "f" ∈ A ⇛ B ] nlamι[ "s" ∈ Stream' A ] global-tm {!!}
 
 open import Reflection.Tactic.LobInduction
 
 module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
   every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
-  every2nd = nlöbι "g" (timeless-ty (Stream' A) ⇛ GStream A) (
-                   nlamι "s" (timeless-ty (Stream' A)) (
-                         g-cons $ pair (timeless-tm (head' $ untimeless-tm (nvarι "s")))
-                                       (nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "s")))))))
+  every2nd = nlöbι[ "g" ∈ timeless-ty (Stream' A) ⇛ GStream A ]
+               nlamι[ "s" ∈ timeless-ty (Stream' A) ]
+                 g-cons $ pair (timeless-tm (head' $ untimeless-tm (nvarι "s")))
+                               (nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "s")))))
 
   instance
     stream-a-nat : IsNullaryNatural (Stream' A)
     natural-nul {{stream-a-nat}} σ = ≅ᵗʸ-trans (natural-un σ) (cong-un (natural-nul σ))
 
   g-diag : Tm Γ (timeless-ty (Stream' (Stream' A)) ⇛ GStream A)
-  g-diag = nlöbι "g" (timeless-ty (Stream' (Stream' A)) ⇛ GStream A) (
-                 nlamι "xss" (timeless-ty (Stream' (Stream' A))) (
-                       g-cons $ pair (timeless-tm (head' $ (head' $ untimeless-tm (nvarι "xss"))))
-                                     (nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "xss")))))))
+  g-diag = nlöbι[ "g" ∈ timeless-ty (Stream' (Stream' A)) ⇛ GStream A ]
+             nlamι[ "xss" ∈ timeless-ty (Stream' (Stream' A)) ]
+               g-cons $ pair (timeless-tm (head' $ (head' $ untimeless-tm (nvarι "xss"))))
+                             (nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "xss")))))
 
 diag : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
-diag {A = A} = nlamι "xss" (Stream' (Stream' A)) (global-tm {!g-diag $ ?!})
+diag {A = A} = nlamι[ "xss" ∈ Stream' (Stream' A) ] global-tm {!g-diag $ ?!}

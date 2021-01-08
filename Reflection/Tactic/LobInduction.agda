@@ -16,6 +16,9 @@ open import GuardedRecursion.Modalities.Later
 open import Reflection.Naturality renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 
+infixr 4 nlöbι[_∈_]_
+
+
 löb-tactic : ∀ {ℓc ℓt} {Γ : Ctx ω ℓc} → Ty Γ ℓt → Term → TC ⊤
 löb-tactic T hole = do
   t-wantedBodyType ← quoteTC (T [ π {T = ▻' T} ])
@@ -30,7 +33,7 @@ löbι : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (T : Ty Γ ℓt)
       Tm (Γ ,, ▻' T) (proj₁ body-type) → Tm Γ T
 löbι T {body-type = S , T=S} b = löb' T (ι[ T=S ] b)
 
-nlöbι : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (v : String) (T : Ty Γ ℓt)
-        {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
-        Tm (Γ ,, v ∈ ▻' T) (proj₁ body-type) → Tm Γ T
-nlöbι v = löbι
+nlöbι[_∈_]_ : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (v : String) (T : Ty Γ ℓt)
+              {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
+              Tm (Γ ,, v ∈ ▻' T) (proj₁ body-type) → Tm Γ T
+nlöbι[_∈_]_ v = löbι

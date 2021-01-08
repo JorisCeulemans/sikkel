@@ -29,6 +29,7 @@ private
     T T' S S' : Ty Γ ℓ
 
 infixr 12 _⇛_
+infixr 4 nlam[_∈_]_
 
 {-
 open import Axiom.UniquenessOfIdentityProofs
@@ -394,5 +395,5 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
 --------------------------------------------------
 -- Alternative version of lambda abstraction that allows to name the bound variable
 
-nlam : (v : String) (T : Ty Γ ℓt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
-nlam v = lam
+nlam[_∈_]_ : (v : String) (T : Ty Γ ℓt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
+nlam[_∈_]_ v = lam

@@ -32,4 +32,4 @@ test6 : Tm {C = C} (◇ ,, "x" ∈ Bool' ,, "y" ∈ Nat') ((Bool' [ π ]) [ π ]
 test6 = nvar "x"
 
 id2 : ∀ {ℓ ℓ'} {Γ : Ctx C ℓ} {T : Ty Γ ℓ'} → Tm Γ (T ⇛ T)
-id2 {Γ = Γ}{T = T} = nlam "x" T (nvar "x")
+id2 {Γ = Γ}{T = T} = nlam[ "x" ∈ T ] nvar "x"
