@@ -4,7 +4,6 @@
 
 module Categories where
 
-open import Data.Empty
 open import Data.Nat using (ℕ; _≤_)
 open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
