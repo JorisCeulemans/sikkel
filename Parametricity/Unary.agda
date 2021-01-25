@@ -1,8 +1,8 @@
 {-# OPTIONS --omega-in-omega #-}
 
-module Parametricity.Booleans where
+module Parametricity.Unary where
 
-open import Data.Bool using (Bool; true; false; _∧_) renaming (not to b-not)
+--open import Data.Bool using (Bool; true; false; _∧_) renaming (not to b-not)
 open import Data.Nat
 open import Data.Product renaming (_,_ to [_,_])
 open import Data.Sum hiding ([_,_])
