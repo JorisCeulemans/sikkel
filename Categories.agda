@@ -56,6 +56,69 @@ _∙_ ★ _ _ = tt
 hom-idʳ ★ = refl
 hom-idˡ ★ = refl
 
+data 𝟚-Obj : Set where
+  type-obj : 𝟚-Obj
+  pred-obj : 𝟚-Obj
+
+data 𝟚-Hom : 𝟚-Obj → 𝟚-Obj → Set where
+  type-id : 𝟚-Hom type-obj type-obj
+  pred-id : 𝟚-Hom pred-obj pred-obj
+  type-pred : 𝟚-Hom type-obj pred-obj
+
+𝟚 : Category
+Ob 𝟚 = 𝟚-Obj
+Hom 𝟚 = 𝟚-Hom
+hom-id 𝟚 {type-obj} = type-id
+hom-id 𝟚 {pred-obj} = pred-id
+_∙_ 𝟚 g type-id = g
+_∙_ 𝟚 g pred-id = g
+_∙_ 𝟚 pred-id type-pred = type-pred
+∙assoc 𝟚 {f = type-id} = refl
+∙assoc 𝟚 {f = pred-id} = refl
+∙assoc 𝟚 {f = type-pred} {pred-id} = refl
+hom-idʳ 𝟚 {x = type-obj} = refl
+hom-idʳ 𝟚 {x = pred-obj} = refl
+hom-idˡ 𝟚 {f = type-id} = refl
+hom-idˡ 𝟚 {f = pred-id} = refl
+hom-idˡ 𝟚 {f = type-pred} = refl
+
+data ⋀-Obj : Set where
+  left : ⋀-Obj
+  right : ⋀-Obj
+  relation : ⋀-Obj
+
+data ⋀-Hom : ⋀-Obj → ⋀-Obj → Set where
+  left-id     : ⋀-Hom left left
+  right-id    : ⋀-Hom right right
+  relation-id : ⋀-Hom relation relation
+  left-rel    : ⋀-Hom left relation
+  right-rel   : ⋀-Hom right relation
+
+⋀ : Category
+Ob ⋀ = ⋀-Obj
+Hom ⋀ = ⋀-Hom
+hom-id ⋀ {left} = left-id
+hom-id ⋀ {right} = right-id
+hom-id ⋀ {relation} = relation-id
+_∙_ ⋀ g left-id = g
+_∙_ ⋀ g right-id = g
+_∙_ ⋀ g relation-id = g
+_∙_ ⋀ relation-id left-rel = left-rel
+_∙_ ⋀ relation-id right-rel = right-rel
+∙assoc ⋀ {f = left-id} = refl
+∙assoc ⋀ {f = right-id} = refl
+∙assoc ⋀ {f = relation-id} = refl
+∙assoc ⋀ {f = left-rel} {relation-id} = refl
+∙assoc ⋀ {f = right-rel} {relation-id} = refl
+hom-idʳ ⋀ {left} = refl
+hom-idʳ ⋀ {right} = refl
+hom-idʳ ⋀ {relation} = refl
+hom-idˡ ⋀ {f = left-id} = refl
+hom-idˡ ⋀ {f = right-id} = refl
+hom-idˡ ⋀ {f = relation-id} = refl
+hom-idˡ ⋀ {f = left-rel} = refl
+hom-idˡ ⋀ {f = right-rel} = refl
+
 Type-groupoid : (X : Set) → Category
 Ob (Type-groupoid X) = X
 Hom (Type-groupoid X) = _≡_

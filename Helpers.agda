@@ -19,7 +19,7 @@ postulate
   funextI : ∀ {ℓ ℓ'} → ExtensionalityImplicit ℓ ℓ'
 
 {-
--- Shouldn't be used globally anymore, for the moment only in Types.Functions.
+-- Shouldn't be used globally anymore, for the moment only in Types.Functions and CwF-Structure.Terms.
 uip : ∀ {a} {A : Set a} → UIP A
 uip refl refl = refl
 -}

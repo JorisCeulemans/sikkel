@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module Translation where
 
 open import Data.Product using (_×_; _,_)
@@ -14,6 +15,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
+open import GuardedRecursion.Streams.Coinductive
 
 private
   variable
@@ -81,7 +83,9 @@ instance
 
 
 open import Reflection.Naturality
-open import Reflection.NaturalityTactic
+open import Reflection.Tactic.Lambda
+open import Reflection.Tactic.Lambda
+open import Reflection.Naturality.Instances
 
 nat-sum : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nat-elim (Nat' ⇛ Nat')
@@ -111,10 +115,56 @@ test4 n = refl
 
 test5 : (n : ℕ) → n +' 0 ≡ n
 test5 zero    = refl
-test5 (suc n) = {!cong suc (test3 n)!}
+test5 (suc n) = {!cong suc (test5 n)!}
 
 test6 : (m n : ℕ) → suc m +' n ≡ suc (m +' n)
 test6 m n = {!translate-cong {T = Nat'}
                            {t = app (app nat-sum (suc' (discr m))) (discr n)}
                            {s = suc' (app (app nat-sum (discr m)) (discr n))}
                            {!nat-sum-β (discr m) (discr n)!}!}
+
+
+
+open import Data.Vec using (Vec; _∷_; [])
+open import GuardedRecursion.Streams.Guarded using (first-≤; first-≤-refl; g-paperfolds; g-fibs)
+
+record Stream (A : Set ℓ) : Set ℓ where
+  coinductive
+  field
+    head : A
+    tail : Stream A
+open Stream
+
+take : {A : Set ℓ} (n : ℕ) → Stream A → Vec A n
+take zero    s = []
+take (suc n) s = head s ∷ take n (tail s)
+
+take-first : {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
+             first-≤ m≤n (take n s) ≡ take m s
+take-first z≤n       s = refl
+take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
+
+instance
+  translate-stream : {A : Ty ◇ ℓ} → {{_ : Translatable A}} → Translatable (Stream' A)
+  translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
+  head (translate-term {{translate-stream}} s) = {!translate-term (head' $ s)!}
+  tail (translate-term {{translate-stream}} s) = {!translate-term (tail' $ s)!}
+  translate-back {{translate-stream}} s = {!MkTm (λ _ _ → MkTm (λ n _ → take (suc n) s)
+                                                             (λ m≤n _ → take-first (s≤s m≤n) s))
+                                               (λ _ _ → tm-≅-to-≡ (record { eq = λ _ → first-≤-refl }))!}
+  translate-cong {{translate-stream}} = {!!} -- not provable unless you assume that bisimilarity implies equality of streams
+{-
+paperfolds : Stream ℕ
+paperfolds = translate-term paperfolds'
+
+fibs : Stream ℕ
+fibs = translate-term fibs'
+
+private
+  fibs-test : take 10 fibs ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷
+                             8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
+  fibs-test = refl
+
+  paperfolds-test : take 10 paperfolds ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
+  paperfolds-test = refl
+-}

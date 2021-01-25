@@ -9,6 +9,7 @@ open import Categories
 module CwF-Structure.ContextExtension {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.String
 open import Level
 open import Relation.Binary using (Setoid)
 import Relation.Binary.Reasoning.Setoid as SetoidReasoning
@@ -23,6 +24,7 @@ open import CwF-Structure.Terms
 open Category C
 
 infixl 15 _,,_
+infixl 15 _,,_∈_
 
 private
   variable
@@ -39,30 +41,22 @@ Setoid._≈_ (setoid (Γ ,, T) x) [ γ1 , t1 ] [ γ2 , t2 ] = Σ[ eγ ∈ γ1 �
 Relation.Binary.IsEquivalence.refl (Setoid.isEquivalence (setoid (Γ ,, T) x)) {[ γ , t ]} = [ ctx≈-refl Γ , ty≈-trans T (morph-hom-cong T ≡-refl) (morph-id T t) ]
 Relation.Binary.IsEquivalence.sym (Setoid.isEquivalence (setoid (Γ ,, T) x)) [ eγ , et ] = [ ctx≈-sym Γ eγ ,
   ty≈-trans T (morph-cong T hom-id _ (ty≈-sym T et))
-              (ty≈-trans T (ty≈-sym T (morph-comp T hom-id hom-id _ _ _))
-                           (ty≈-trans T (morph-hom-cong T hom-idʳ)
-                                        (morph-id T _))) ]
+              (ty≈-trans T (morph-hom-cong-2-1 T hom-idˡ)
+                           (morph-id T _)) ]
 Relation.Binary.IsEquivalence.trans (Setoid.isEquivalence (setoid (Γ ,, T) x)) [ eγ12 , et12 ] [ eγ23 , et23 ] =
   [ ctx≈-trans Γ eγ12 eγ23
-  , ty≈-trans T (morph-hom-cong T (≡-sym hom-idʳ))
-                (ty≈-trans T (morph-comp T hom-id hom-id _ _ _)
-                             (ty≈-trans T (morph-cong T hom-id _ et12)
-                                          et23))
+  , ty≈-trans T (ty≈-sym T (morph-hom-cong-2-1 T hom-idˡ))
+                (ty≈-trans T (morph-cong T hom-id _ et12)
+                             et23)
   ]
 rel (Γ ,, T) f [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
 rel-cong (Γ ,, T) f [ eγ , et ] = [ rel-cong Γ f eγ ,
-  ty≈-trans T (ty≈-sym T (morph-comp T hom-id f _ _ _))
-              (ty≈-trans T (morph-hom-cong T (≡-trans hom-idʳ (≡-sym hom-idˡ)))
-                           (ty≈-trans T (morph-comp T f hom-id _ _ _)
-                                        (morph-cong T f _ et))) ]
+  ty≈-trans T (morph-hom-cong-2-2 T (≡-trans hom-idʳ (≡-sym hom-idˡ)))
+              (morph-cong T f _ et) ]
 rel-id (Γ ,, T) [ γ , t ] = [ rel-id Γ γ ,
-  ty≈-trans T (ty≈-sym T (morph-comp T hom-id hom-id _ _ _))
-              (ty≈-trans T (morph-hom-cong T hom-idʳ)
-                           (morph-id T t)) ]
-rel-comp (Γ ,, T) f g [ γ , t ] = [ rel-comp Γ f g γ ,
-  ty≈-trans T (ty≈-sym T (morph-comp T hom-id (g ∙ f) _ _ t))
-              (ty≈-trans T (morph-hom-cong T hom-idʳ)
-                           (morph-comp T f g _ _ t)) ]
+  ty≈-trans T (morph-hom-cong-2-1 T hom-idˡ)
+              (morph-id T t) ]
+rel-comp (Γ ,, T) f g [ γ , t ] = [ rel-comp Γ f g γ , morph-hom-cong-2-2 T hom-idʳ ]
 
 π : Γ ,, T ⇒ Γ
 func π = proj₁
@@ -74,9 +68,7 @@ naturality (π {Γ = Γ}) _ = ctx≈-refl Γ
 -- T because the latter is not a type in context Γ ,, T.
 ξ : Tm (Γ ,, T) (T [ π ])
 term ξ _ = proj₂
-naturality (ξ {T = T}) f [ eγ , et ] = ty≈-trans T (morph-hom-cong T (≡-sym hom-idʳ))
-                                                   (ty≈-trans T (morph-comp T hom-id f _ _ _)
-                                                                et)
+naturality (ξ {T = T}) f [ eγ , et ] = ty≈-trans T (ty≈-sym T (morph-hom-cong-2-1 T hom-idʳ)) et
 
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
 -- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
@@ -90,9 +82,8 @@ ext-subst-to-term {T = T} τ = ι⁻¹[ ty-subst-comp T π τ ] (ξ [ τ ]')
 to-ext-subst : (T : Ty Γ ℓ r) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
 func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
 func-cong (to-ext-subst {Δ = Δ} T σ t) eδ = [ func-cong σ eδ , ty≈-trans T (morph-hom-cong T ≡-refl) (naturality t hom-id (ctx≈-trans Δ (rel-id Δ _) eδ)) ]
-naturality (to-ext-subst {Δ = Δ} T σ t) δ = [ naturality σ δ , ty≈-trans T (ty≈-sym T (morph-comp T hom-id _ _ _ _))
-                                                                           (ty≈-trans T (morph-hom-cong T hom-idʳ)
-                                                                                        (naturality t _ (ctx≈-refl Δ))) ]
+naturality (to-ext-subst {Δ = Δ} T σ t) δ = [ naturality σ δ , ty≈-trans T (morph-hom-cong-2-1 T hom-idʳ)
+                                                                           (naturality t _ (ctx≈-refl Δ)) ]
 
 syntax to-ext-subst T σ t = ⟨ σ , t ∈ T ⟩
 
@@ -156,3 +147,7 @@ _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
         ≅⟨ ty-subst-id S ⟩
       S ∎
 -}
+
+-- Context extension which includes a variable name
+_,,_∈_ : (Γ : Ctx C ℓc rc) → String → (T : Ty Γ ℓt rt) → Ctx C (ℓc ⊔ ℓt) (rc ⊔ rt)
+Γ ,, v ∈ T = Γ ,, T

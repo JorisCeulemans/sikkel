@@ -17,6 +17,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Helpers
 open import CwF-Structure.Contexts
+open import CwF-Structure.ContextEquivalence
 
 open Category C
 
@@ -28,7 +29,7 @@ infixl 20 _⊙_
 private
   variable
     ℓc ℓt ℓt' r rc rt rt' : Level
-    x y z : Ob
+    x y z w : Ob
     Δ Γ Θ : Ctx C ℓ r
 
 
@@ -91,6 +92,7 @@ syntax ty≈-syntax T t1 t2 = t1 ≈⟦ T ⟧≈ t2
 private
   variable
     T S R : Ty Γ ℓ r
+
 {-
 _⟨_,_⟩ : Ty Γ ℓ → (x : Ob) → Γ ⟨ x ⟩ → Set ℓ
 T ⟨ x , γ ⟩ = type T x γ
@@ -99,6 +101,7 @@ _⟪_,_⟫ : (T : Ty Γ ℓ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x 
          T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 _⟪_,_⟫ T f eγ = morph T f eγ
 -}
+
 _⟪_,_⟫_ : (T : Ty Γ ℓ r) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx →
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 T ⟪ f , eγ ⟫ t = morph T f eγ t
@@ -112,8 +115,51 @@ morph-cong : (T : Ty Γ ℓ) {f f' : Hom x y} (e-hom : f ≡ f')
              T ⟪ f , eγ ⟫ t ≡ T ⟪ f' , eγ' ⟫ t
 morph-cong T refl refl refl = refl
 -}
+
+morph-hom-cong-2-1 : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓ r)
+                     {f : Hom x y} {g : Hom y z} {h : Hom x z} (e-hom : g ∙ f ≡ h)
+                     {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+                     {ef : Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx} {eg : Γ ⟪ g ⟫ γz ≈[ Γ ]≈ γy} {eh : Γ ⟪ h ⟫ γz ≈[ Γ ]≈ γx}
+                     {t : T ⟨ z , γz ⟩} →
+                     T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≈⟦ T ⟧≈ T ⟪ h , eh ⟫ t
+morph-hom-cong-2-1 T {f}{g}{h} e-hom {t = t} =
+  begin
+    T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
+  ≈˘⟨ morph-comp T f g _ _ t ⟩
+    T ⟪ g ∙ f , _ ⟫ t
+  ≈⟨ morph-hom-cong T e-hom ⟩
+    T ⟪ h , _ ⟫ t ∎
+  where open SetoidReasoning (type T _ _)
+
+morph-hom-cong-2-2 : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓ r)
+                     {f : Hom x y} {f' : Hom x z} {g : Hom y w} {g' : Hom z w} (e-hom : g ∙ f ≡ g' ∙ f')
+                     {γw : Γ ⟨ w ⟩} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+                     {ef : Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx} {ef' : Γ ⟪ f' ⟫ γz ≈[ Γ ]≈ γx}
+                     {eg : Γ ⟪ g ⟫ γw ≈[ Γ ]≈ γy} {eg' : Γ ⟪ g' ⟫ γw ≈[ Γ ]≈ γz}
+                     {t : T ⟨ w , γw ⟩} →
+                     T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≈⟦ T ⟧≈ T ⟪ f' , ef' ⟫ (T ⟪ g' , eg' ⟫ t)
+morph-hom-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
+  begin
+    T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
+  ≈˘⟨ morph-comp T f g _ _ t ⟩
+    T ⟪ g ∙ f , _ ⟫ t
+  ≈⟨ morph-hom-cong T e-hom ⟩
+    T ⟪ g' ∙ f' , _ ⟫ t
+  ≈⟨ morph-comp T f' g' _ _ t ⟩
+    T ⟪ f' , _ ⟫ T ⟪ g' , _ ⟫ t ∎
+  where open SetoidReasoning (type T _ _)
+
 ctx-element-subst : (T : Ty Γ ℓ r) {γ γ' : Γ ⟨ x ⟩} → γ ≈[ Γ ]≈ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
 ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , ctx≈-trans Γ (rel-id Γ _) eγ ⟫_
+
+ctx-element-subst-inverseˡ : (T : Ty Γ ℓ r) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≈[ Γ ]≈ γ'} (t : T ⟨ x , γ ⟩)→
+                            ctx-element-subst T (ctx≈-sym Γ eγ) (ctx-element-subst T eγ t) ≈⟦ T ⟧≈ t
+ctx-element-subst-inverseˡ T t = ty≈-trans T (morph-hom-cong-2-1 T hom-idˡ) (morph-id T t)
+
+ctx-element-subst-inverseʳ : (T : Ty Γ ℓ r) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≈[ Γ ]≈ γ'} (t : T ⟨ x , γ' ⟩)→
+                            ctx-element-subst T eγ (ctx-element-subst T (ctx≈-sym Γ eγ) t) ≈⟦ T ⟧≈ t
+ctx-element-subst-inverseʳ T t = ty≈-trans T (morph-hom-cong-2-1 T hom-idˡ) (morph-id T t)
+
 {-
 -- The following definitions are needed when defining context extension.
 morph-transport : (T : Ty Γ ℓ) {f : Hom x y}
@@ -123,6 +169,7 @@ morph-transport : (T : Ty Γ ℓ) {f : Hom x y}
                   transport (λ - → T ⟨ x , - ⟩) eq23 (T ⟪ f , eq12 ⟫ t) ≡ T ⟪ f , trans eq12 eq23 ⟫ t
 morph-transport T refl refl t = refl
 -}
+
 module _ {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) where
   strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
   strict-morph f γ t = T ⟪ f , ctx≈-refl Γ ⟫ t
@@ -380,36 +427,16 @@ eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ ℓ r) → T [ σ ] ≅ᵗʸ T [ τ ]
 func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
 func-cong (from (ty-subst-cong-subst σ=τ T)) e = morph-cong T hom-id _ e
-naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
-  begin
-    T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≈˘⟨ morph-comp T f hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ f , _ ⟫ t
-  ≈⟨ morph-hom-cong T (≡-trans hom-idˡ (≡-sym hom-idʳ)) ⟩
-    T ⟪ f ∙ hom-id , _ ⟫ t
-  ≈⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
-  where open SetoidReasoning (type T _ _)
+naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-hom-cong-2-2 T (≡-trans hom-idˡ (≡-sym hom-idʳ))
 func (to (ty-subst-cong-subst {Γ = Γ} σ=τ T)) {_}{δ} t = ctx-element-subst T (ctx≈-sym Γ (eq σ=τ δ)) t
 func-cong (to (ty-subst-cong-subst σ=τ T)) e = morph-cong T hom-id _ e
-naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
-  begin
-    T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≈˘⟨ morph-comp T f hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ f , _ ⟫ t
-  ≈⟨ morph-hom-cong T (≡-trans hom-idˡ (≡-sym hom-idʳ)) ⟩
-    T ⟪ f ∙ hom-id , _ ⟫ t
-  ≈⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
-  where open SetoidReasoning (type T _ _)
+naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-hom-cong-2-2 T (≡-trans hom-idˡ (≡-sym hom-idʳ))
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   -- Here we cannot use morph-id T twice because the omitted equality proofs are not rel-id Γ _
   -- (i.e. T ⟪_⟫ t is not applied to the identity morphism in the category of elements of Γ).
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≈˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ hom-id , _ ⟫ t
-  ≈⟨ morph-hom-cong T hom-idˡ ⟩
+  ≈⟨ morph-hom-cong-2-1 T hom-idˡ ⟩
     T ⟪ hom-id , rel-id Γ _ ⟫ t
   ≈⟨ morph-id T t ⟩
     t ∎
@@ -417,10 +444,15 @@ eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
 eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≈˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ hom-id , _ ⟫ t
-  ≈⟨ morph-hom-cong T hom-idˡ ⟩
+  ≈⟨ morph-hom-cong-2-1 T hom-idˡ ⟩
     T ⟪ hom-id , _ ⟫ t
   ≈⟨ morph-id T t ⟩
     t ∎
   where open SetoidReasoning (type T _ _)
+
+-- Nicer syntax for substitutions coming from context equality
+ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ ℓ r → Ty Γ ℓ r
+ιc[ Γ=Δ ] T = T [ from Γ=Δ ]
+
+ιc⁻¹[_]_ : Γ ≅ᶜ Δ → Ty Γ ℓ r → Ty Δ ℓ r
+ιc⁻¹[ Γ=Δ ] T = T [ to Γ=Δ ]

@@ -14,6 +14,7 @@ import Relation.Binary.Reasoning.Setoid as SetoidReasoning
 
 open import Helpers
 open import CwF-Structure.Contexts
+open import CwF-Structure.ContextEquivalence
 open import CwF-Structure.Types
 
 open Category C
@@ -90,6 +91,14 @@ module ≅ᵗᵐ-Reasoning where
   syntax step-≅  t1 t2≅t3 t1≅t2 = t1 ≅⟨  t1≅t2 ⟩ t2≅t3
   syntax step-≅˘ t1 t2≅t3 t2≅t1 = t1 ≅˘⟨ t2≅t1 ⟩ t2≅t3
 
+{-
+-- Equivalence of terms implies equality of terms (only works if eta-equality for Tm is enabled).
+tm-≅-to-≡ : t ≅ᵗᵐ t' → t ≡ t'
+tm-≅-to-≡ et = cong₂-d MkTm
+  (funext λ _ → funext λ γ → eq et γ)
+  (funextI (funextI (funext (λ _ → funextI (funextI (funext λ _ → uip _ _))))))
+-}
+
 
 --------------------------------------------------
 -- Reindexing maps (cf. Dybjer's internal type theory)
@@ -163,3 +172,10 @@ eq (tm-subst-id {T = T} t) _ = ty≈-refl T
 tm-subst-comp : (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 t [ τ ]' [ σ ]' ≅ᵗᵐ ι[ ty-subst-comp T τ σ ] (t [ τ ⊚ σ ]')
 eq (tm-subst-comp {T = T} t τ σ) _ = ty≈-refl T
+
+-- Nicer syntax for substitutions coming from context equality
+ιc[_]'_ : {S : Ty Δ ℓ r} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Δ S → Tm Γ (ιc[ Γ=Δ ] S)
+ιc[ Γ=Δ ]' s = s [ from Γ=Δ ]'
+
+ιc⁻¹[_]'_ : {T : Ty Γ ℓ r} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Γ T → Tm Δ (ιc⁻¹[ Γ=Δ ] T)
+ιc⁻¹[ Γ=Δ ]' t = t [ to Γ=Δ ]'

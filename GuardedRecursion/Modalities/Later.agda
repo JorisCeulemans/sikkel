@@ -1,11 +1,13 @@
 --------------------------------------------------
--- Later and earlier modalities for types
+-- The earlier-later dependent adjunction
 --------------------------------------------------
 
-module GuardedRecursion.Later where
+module GuardedRecursion.Modalities.Later where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
+open import Data.String
+open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.Unit.Polymorphic using (⊤; tt)
 open import Function using (id; _∘_)
 open import Level renaming (zero to lzero; suc to lsuc)
@@ -23,12 +25,13 @@ private
     m n : ℕ
     Γ Δ Θ : Ctx ω ℓ
 
+infixl 12 _⟨$⟩_
 infixl 12 _⊛_
-infixl 12 _⊛'_
+infixr 4 nlöb'[_∈_]_
 
 
 --------------------------------------------------
--- The "earlier" CwF-endomorphism
+-- The "earlier" Context operation
 
 ctx-m≤1+n : (Γ : Ctx ω ℓ) (m≤n : m ≤ n) (γ : Γ ⟨ suc n ⟩) →
             Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ) ≡ Γ ⟪ n≤1+n m ⟫ (Γ ⟪ s≤s m≤n ⟫ γ)
@@ -53,6 +56,8 @@ rel-comp (◄ Γ) k≤m m≤n = rel-comp Γ (s≤s k≤m) (s≤s m≤n)
 func (◄-subst σ) {n} = func σ {suc n}
 naturality (◄-subst σ) {f = m≤n} = naturality σ {f = s≤s m≤n}
 
+{-
+-- The operations on types and terms are not used anywhere
 ◅-ty : Ty Γ ℓ → Ty (◄ Γ) ℓ
 type (◅-ty T) n γ = T ⟨ suc n , γ ⟩
 morph (◅-ty T) m≤n eγ = T ⟪ s≤s m≤n , eγ ⟫
@@ -63,6 +68,7 @@ morph-comp (◅-ty T) k≤m m≤n = morph-comp T (s≤s k≤m) (s≤s m≤n)
 ◅-tm : {T : Ty Γ ℓ} → Tm Γ T → Tm (◄ Γ) (◅-ty T)
 term (◅-tm t) n γ = t ⟨ suc n , γ ⟩'
 naturality (◅-tm t) m≤n eγ = naturality t (s≤s m≤n) eγ
+-}
 
 from-earlier : (Γ : Ctx ω ℓ) → ◄ Γ ⇒ Γ
 func (from-earlier Γ) = Γ ⟪ n≤1+n _ ⟫
@@ -75,6 +81,8 @@ naturality (from-earlier Γ) γ = ctx-m≤1+n Γ _ γ
 ◄-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → ◄-subst σ ≅ˢ ◄-subst τ
 eq (◄-subst-cong σ=τ) δ = eq σ=τ δ
 
+{-
+-- The operations on types and terms are not used anywhere
 ◅-ty-cong : {T : Ty Γ ℓ} {T' : Ty Γ ℓ'} → T ≅ᵗʸ T' → ◅-ty T ≅ᵗʸ ◅-ty T'
 func (from (◅-ty-cong T=T')) = func (from T=T')
 naturality (from (◅-ty-cong T=T')) = naturality (from T=T')
@@ -101,6 +109,7 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
 
   ◅-tm-natural : (t : Tm Γ T) → (◅-tm t) [ ◄-subst σ ]' ≅ᵗᵐ ι[ ◅-ty-natural ] (◅-tm (t [ σ ]'))
   eq (◅-tm-natural t) _ = refl
+-}
 
 from-earlier-natural : (σ : Δ ⇒ Γ) → from-earlier Γ ⊚ ◄-subst σ ≅ˢ σ ⊚ from-earlier Δ
 eq (from-earlier-natural σ) δ = naturality σ δ
@@ -136,9 +145,6 @@ term (next t) (suc n) γ = t ⟨ n , γ ⟩'
 naturality (next t) z≤n γ = refl
 naturality (next t) (s≤s m≤n) eγ = naturality t m≤n eγ
 
-next' : {T : Ty Γ ℓ} → Tm Γ T → Tm Γ (▻' T)
-next' t = next (t [ from-earlier _ ]')
-
 prev : {T : Ty (◄ Γ) ℓ} → Tm Γ (▻ T) → Tm (◄ Γ) T
 term (prev t) n γ = t ⟨ suc n , γ ⟩'
 naturality (prev t) m≤n eγ = naturality t (s≤s m≤n) eγ
@@ -149,6 +155,12 @@ eq (prev-next t) _ = refl
 next-prev : {T : Ty (◄ Γ) ℓ} (t : Tm Γ (▻ T)) → next (prev t) ≅ᵗᵐ t
 eq (next-prev t) {zero} γ = refl
 eq (next-prev t) {suc n} γ = refl
+
+prev' : {T : Ty Γ ℓ} → Tm Γ T → Tm (◄ Γ) (T [ from-earlier Γ ])
+prev' t = t [ from-earlier _ ]'
+
+next' : {T : Ty Γ ℓ} → Tm Γ T → Tm Γ (▻' T)
+next' t = next (prev' t)
 
 -- TODO: Update : See if T can be made implicit.
 löb : (T : Ty Γ ℓ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
@@ -167,6 +179,9 @@ naturality (löb {Γ = Γ} T f) {x = suc m} {y = suc n} (s≤s m≤n) {γ} {γ'}
 
 löb' : (T : Ty Γ ℓ) → Tm (Γ ,, ▻' T) (T [ π ]) → Tm Γ T
 löb' T f = löb T (lam (▻' T) f)
+
+nlöb'[_∈_]_ : (v : String) (T : Ty Γ ℓ) → Tm (Γ ,, v ∈ ▻' T) (T [ π ]) → Tm Γ T
+nlöb'[_∈_]_ v = löb'
 
 löb-is-fixpoint : {T : Ty Γ ℓ} (f : Tm Γ (▻' T ⇛ T)) →
                   app f (next' (löb T f)) ≅ᵗᵐ löb T f
@@ -195,8 +210,11 @@ eq (fixpoint-unique f t s t-fix s-fix) {x = suc n} γ =
   where open ≡-Reasoning
 
 -- ▻ is an applicative functor
+_⟨$⟩_ : {T : Ty (◄ Γ) ℓ} {S : Ty (◄ Γ) ℓ'} → Tm (◄ Γ) (T ⇛ S) → Tm Γ (▻ T) → Tm Γ (▻ S)
+f ⟨$⟩ t = next (app f (prev t))
+
 _⊛_ : {T : Ty (◄ Γ) ℓ} {S : Ty (◄ Γ) ℓ'} → Tm Γ (▻ (T ⇛ S)) → Tm Γ (▻ T) → Tm Γ (▻ S)
-f ⊛ t = next (app (prev f) (prev t))
+f ⊛ t = prev f ⟨$⟩ t
 
 
 --------------------------------------------------
@@ -315,8 +333,15 @@ module _ {Δ : Ctx ω ℓ} {Γ : Ctx ω ℓ'} (σ : Δ ⇒ Γ) {T : Ty Γ ℓt} 
       g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
 -- ▻' is an applicative functor as well (but this requires ▻-cong).
-_⊛'_ : {T : Ty Γ ℓ} {S : Ty Γ ℓ'} → Tm Γ (▻' (T ⇛ S)) → Tm Γ (▻' T) → Tm Γ (▻' S)
-f ⊛' t = (ι⁻¹[ ▻-cong (⇛-natural _) ] f) ⊛ t
+module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} where
+  infixl 12 _⊛'_
+  infixl 12 _⟨$⟩'_
+
+  _⊛'_ : Tm Γ (▻' (T ⇛ S)) → Tm Γ (▻' T) → Tm Γ (▻' S)
+  f ⊛' t = (ι⁻¹[ ▻-cong (⇛-natural _) ] f) ⊛ t
+
+  _⟨$⟩'_ : Tm Γ (T ⇛ S) → Tm Γ (▻' T) → Tm Γ (▻' S)
+  f ⟨$⟩' t = next' f ⊛' t
 
 
 --------------------------------------------------
@@ -364,3 +389,11 @@ eq (▻-map-comp η φ) {x = suc x} _ = refl
   ≅⟨ ▻-map-comp _ _ ⟩
     ▻'-map η ⊙ ▻'-map φ ∎
   where open ≅ⁿ-Reasoning
+
+◄-▻-,, : (Γ : Ctx ω ℓ) (T : Ty (◄ Γ) ℓ') → ◄ (Γ ,, ▻ T) ≅ᶜ ◄ Γ ,, T
+func (from (◄-▻-,, Γ T)) γt = γt
+naturality (from (◄-▻-,, Γ T)) γt = refl
+func (to (◄-▻-,, Γ T)) γt = γt
+naturality (to (◄-▻-,, Γ T)) γt = refl
+eq (isoˡ (◄-▻-,, Γ T)) γt = refl
+eq (isoʳ (◄-▻-,, Γ T)) γt = refl
