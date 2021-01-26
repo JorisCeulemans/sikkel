@@ -253,16 +253,17 @@ lam-cong : (T : Ty Γ ℓ r) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') _ _ {γ'} _ t = eq b=b' [ γ' , t ]
 
+€-congˡ : {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t : T ⟨ z , γ ⟩} →
+          f ≅ᵗᵐ f' → f €⟨ z , γ ⟩ t ≈⟦ S ⟧≈ f' €⟨ z , γ ⟩ t
+€-congˡ f=f' = eq f=f' _ hom-id _ _
+
+€-congʳ : (f : Tm Γ (T ⇛ S)) {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
+          t ≈⟦ T ⟧≈ t' → f €⟨ z , γ ⟩ t ≈⟦ S ⟧≈ f €⟨ z , γ ⟩ t'
+€-congʳ f = $-cong (f ⟨ _ , _ ⟩') hom-id _
+
 €-cong : {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
          f ≅ᵗᵐ f' → t ≈⟦ T ⟧≈ t' → f €⟨ z , γ ⟩ t ≈⟦ S ⟧≈ f' €⟨ z , γ ⟩ t'
-€-cong {S = S}{z = z}{f = f}{f'}{γ}{t}{t'} f=f' t=t' =
-  begin
-    f ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t
-  ≈⟨ $-cong (f ⟨ z , γ ⟩') hom-id _ t=t' ⟩
-    f ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t'
-  ≈⟨ eq f=f' γ hom-id _ t' ⟩
-    f' ⟨ z , γ ⟩' $⟨ hom-id , _ ⟩ t' ∎
-  where open SetoidReasoning (type S z γ)
+€-cong {S = S}{f = f} f=f' t=t' = ty≈-trans S (€-congʳ f t=t') (€-congˡ f=f')
 
 app-cong : {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
