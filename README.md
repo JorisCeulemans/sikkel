@@ -4,7 +4,7 @@ This repository contains Agda code for shallow embeddings of extensions of Marti
 The framework can be instantiated with an arbitrary small base category, and a user can then manipulate types and terms in a similar way as in MLTT.
 The notions of contexts, types and terms are organized as an internal category with families, as defined by Peter Dybjer (see [here](https://link.springer.com/chapter/10.1007/3-540-61780-9_66)).
 
-We use Agda 2.6.1 and the Agda standard library (version 1.4).
+We use Agda 2.6.1 and the Agda standard library (version 1.5).
 We assume uniqueness of identity proofs and function extensionality (although the latter is only used when working with functions in the embedded type theory).
 
 ## Overview of this Repository
