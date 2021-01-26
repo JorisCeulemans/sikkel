@@ -9,6 +9,8 @@ import LiftingFunctors
 import GuardedRecursion.Modalities
 import GuardedRecursion.Streams.Guarded
 import GuardedRecursion.Streams.Coinductive
+import Parametricity.Unary
+import Parametricity.Binary
 import Reflection.Helpers
 import Reflection.Substitutions
 import Reflection.SubstitutionSequence

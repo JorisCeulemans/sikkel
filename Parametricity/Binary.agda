@@ -1,5 +1,10 @@
 {-# OPTIONS --omega-in-omega #-}
 
+--------------------------------------------------
+-- An example of representation independence using
+-- binary parametricity
+--------------------------------------------------
+
 module Parametricity.Binary where
 
 open import Data.Nat
@@ -24,6 +29,10 @@ private
     ℓ ℓ' : Level
     Γ : Ctx ⋀ ℓ
 
+
+--------------------------------------------------
+-- Constructing an embedded type in base category ⋀
+-- using two Agda types and a relation
 
 PrimFromRel : (A B : Set ℓ) (R : REL A B ℓ) → Ty {C = ⋀} ◇ ℓ
 type (PrimFromRel A B R) left  _ = A
@@ -95,22 +104,25 @@ Tm.naturality (from-rel2 f g h) left-rel  refl = refl
 Tm.naturality (from-rel2 f g h) right-rel refl = refl
 
 
-record IsInteger (A : NullaryTypeOp ⋀ ℓ) {{_ : IsNullaryNatural A}} : Setω where
+--------------------------------------------------
+-- Example: types representing integers
+
+record IntStructure (A : NullaryTypeOp ⋀ ℓ) {{_ : IsNullaryNatural A}} : Setω where
   field
-    prim-int-add : Tm (Γ ,, A ⊠ A) A
+    prim-add : Tm (Γ ,, A ⊠ A) A
     prim-negate : Tm (Γ ,, A) A
 
-  int-add : Tm Γ (A ⊠ A ⇛ A)
-  int-add = lamι (A ⊠ A) prim-int-add
+  add : Tm Γ (A ⊠ A ⇛ A)
+  add = lamι (A ⊠ A) prim-add
 
   negate : Tm Γ (A ⇛ A)
   negate = lamι A prim-negate
 
-open IsInteger {{...}}
+open IntStructure {{...}}
 
-int-subtract : {A : NullaryTypeOp ⋀ ℓ} {{_ : IsNullaryNatural A}} {{_ : IsInteger A}} →
-               Tm Γ (A ⇛ A ⇛ A)
-int-subtract {A = A} = nlamι[ "i" ∈ A ] nlamι[ "j" ∈ A ] int-add $ pair (nvarι "i") (negate $ nvarι "j")
+subtract : {A : NullaryTypeOp ⋀ ℓ} {{_ : IsNullaryNatural A}} {{_ : IntStructure A}} →
+           Tm Γ (A ⇛ A ⇛ A)
+subtract {A = A} = nlamι[ "i" ∈ A ] nlamι[ "j" ∈ A ] add $ pair (nvarι "i") (negate $ nvarι "j")
 
 data Sign : Set where
   pos neg : Sign
@@ -138,8 +150,6 @@ PrimIntRep = PrimFromRel DiffInt SignNat _∼_
 IntRep : NullaryTypeOp ⋀ 0ℓ
 IntRep = FromRel DiffInt SignNat _∼_
 
-
-
 _+D_ : DiffInt → DiffInt → DiffInt
 [ m1 , n1 ] +D [ m2 , n2 ] = [ m1 + m2 , n1 + n2 ]
 
@@ -159,7 +169,6 @@ _+S_ : SignNat → SignNat → SignNat
 
 negateS : SignNat → SignNat
 negateS = map₁ flipSign
-
 
 negate-preserves-∼ : (_∼_ ⟨→⟩ _∼_) negateD negateS
 negate-preserves-∼ pos-zero = neg-zero
@@ -182,8 +191,8 @@ difference-∼ (suc m) (suc n) = diff-suc (difference-∼ m n)
 +-preserves-∼ (diff-suc r1)   r2 = diff-suc (+-preserves-∼ r1 r2)
 
 instance
-  intrep-is-int : IsInteger IntRep
-  prim-int-add {{intrep-is-int}} = from-rel2 _+D_ _+S_ +-preserves-∼
+  intrep-is-int : IntStructure IntRep
+  prim-add {{intrep-is-int}} = from-rel2 _+D_ _+S_ +-preserves-∼
   prim-negate {{intrep-is-int}} = from-rel1 negateD negateS negate-preserves-∼
 
 module _ (i : Tm ◇ IntRep) where
@@ -196,3 +205,71 @@ module _ (i : Tm ◇ IntRep) where
   translations-related : translate-i1 ∼ translate-i2
   translations-related with i ⟨ relation , _ ⟩' | Tm.naturality i left-rel refl | Tm.naturality i right-rel refl
   translations-related | [ _ , r ] | refl | refl = r
+
+
+open import Data.Unit
+open import Data.Empty.Polymorphic
+
+just-left : Ctx ★ ℓ → Ctx ⋀ ℓ
+set (just-left Γ) left = Γ ⟨ tt ⟩
+set (just-left Γ) right = ⊥
+set (just-left Γ) relation = ⊥
+rel (just-left Γ) left-id = id
+rel (just-left Γ) right-id = id
+rel (just-left Γ) relation-id = id
+rel (just-left Γ) left-rel = ⊥-elim
+rel (just-left Γ) right-rel = id
+rel-id (just-left Γ) {x = left} _ = refl
+rel-comp (just-left Γ) left-id g _ = refl
+rel-comp (just-left Γ) right-id g _ = refl
+rel-comp (just-left Γ) relation-id g _ = refl
+rel-comp (just-left Γ) left-rel relation-id _ = refl
+rel-comp (just-left Γ) right-rel relation-id _ = refl
+
+forget-right : {Γ : Ctx ★ ℓ} → Ty (just-left Γ) ℓ' → Ty Γ ℓ'
+type (forget-right T) tt γ = T ⟨ left , γ ⟩
+morph (forget-right {Γ = Γ} T) tt eγ = T ⟪ left-id , trans (sym (rel-id Γ _)) eγ ⟫_
+morph-cong (forget-right T) refl {eγ = refl} {eγ' = refl} = refl
+morph-id (forget-right T) t = trans (morph-cong T refl) (morph-id T t)
+morph-comp (forget-right T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
+
+module _ {Γ : Ctx ★ ℓ} {T : Ty (just-left Γ) ℓ'} where
+  forget-right-intro : Tm (just-left Γ) T → Tm Γ (forget-right T)
+  term (forget-right-intro t) _ γ = t ⟨ left , γ ⟩'
+  Tm.naturality (forget-right-intro t) tt eγ = Tm.naturality t left-id _
+
+  forget-right-elim : Tm Γ (forget-right T) → Tm (just-left Γ) T
+  term (forget-right-elim t) left γ = t ⟨ tt , γ ⟩'
+  Tm.naturality (forget-right-elim t) left-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
+
+just-right : Ctx ★ ℓ → Ctx ⋀ ℓ
+set (just-right Γ) left = ⊥
+set (just-right Γ) right = Γ ⟨ tt ⟩
+set (just-right Γ) relation = ⊥
+rel (just-right Γ) left-id = id
+rel (just-right Γ) right-id = id
+rel (just-right Γ) relation-id = id
+rel (just-right Γ) left-rel = id
+rel (just-right Γ) right-rel = ⊥-elim
+rel-id (just-right Γ) {x = right} _ = refl
+rel-comp (just-right Γ) left-id g _ = refl
+rel-comp (just-right Γ) right-id g _ = refl
+rel-comp (just-right Γ) relation-id g _ = refl
+rel-comp (just-right Γ) left-rel relation-id _ = refl
+rel-comp (just-right Γ) right-rel relation-id _ = refl
+
+forget-left : {Γ : Ctx ★ ℓ} → Ty (just-right Γ) ℓ' → Ty Γ ℓ'
+type (forget-left T) tt γ = T ⟨ right , γ ⟩
+morph (forget-left {Γ = Γ} T) tt eγ = T ⟪ right-id , trans (sym (rel-id Γ _)) eγ ⟫_
+morph-cong (forget-left T) refl {eγ = refl} {eγ' = refl} = refl
+morph-id (forget-left T) t = trans (morph-cong T refl) (morph-id T t)
+morph-comp (forget-left T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
+
+module _ {Γ : Ctx ★ ℓ} {T : Ty (just-right Γ) ℓ'} where
+  forget-left-intro : Tm (just-right Γ) T → Tm Γ (forget-left T)
+  term (forget-left-intro t) _ γ = t ⟨ right , γ ⟩'
+  Tm.naturality (forget-left-intro t) tt eγ = Tm.naturality t right-id _
+
+  forget-left-elim : Tm Γ (forget-left T) → Tm (just-right Γ) T
+  term (forget-left-elim t) right γ = t ⟨ tt , γ ⟩'
+  Tm.naturality (forget-left-elim t) right-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))

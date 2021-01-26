@@ -1,15 +1,19 @@
 {-# OPTIONS --omega-in-omega #-}
 
+--------------------------------------------------
+-- An example of representation independence using
+-- unary parametricity
+--------------------------------------------------
+
 module Parametricity.Unary where
 
---open import Data.Bool using (Bool; true; false; _∧_) renaming (not to b-not)
 open import Data.Nat
 open import Data.Product renaming (_,_ to [_,_])
 open import Data.Sum hiding ([_,_])
 open import Function using (id)
 open import Level using (Level; Setω; 0ℓ)
 open import Relation.Binary.PropositionalEquality hiding ([_])
-open import Relation.Unary
+open import Relation.Unary hiding (_⇒_)
 
 open import Categories
 open import CwF-Structure
@@ -25,6 +29,10 @@ private
     ℓ ℓ' : Level
     Γ : Ctx 𝟚 ℓ
 
+
+--------------------------------------------------
+-- Constructing an embedded type in base category 𝟚
+-- using an Agda type and a predicate
 
 PrimFromPred : (A : Set ℓ) → Pred A ℓ → Ty {C = 𝟚} ◇ ℓ
 type (PrimFromPred A P) type-obj _ = A
@@ -74,7 +82,10 @@ term (from-pred2 f g) pred-obj [ _ , [ [ a , p ] , [ b , q ] ] ] = [ f a b , g p
 Tm.naturality (from-pred2 f g) type-id refl = refl
 Tm.naturality (from-pred2 f g) pred-id refl = refl
 Tm.naturality (from-pred2 f g) type-pred refl = refl
-             
+
+
+--------------------------------------------------
+-- Example: types representing booleans
 
 record BoolStructure (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} : Setω where
   field
@@ -86,11 +97,13 @@ record BoolStructure (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} : S
   
   not : Tm Γ (B ⇛ B)
   not = lamι B prim-not
+
 open BoolStructure {{...}}
 
-or : (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⊠ B ⇛ B)
-or B = nlamι[ "bs" ∈ B ⊠ B ] not $ (and $ pair (not $ fst (nvarι "bs")) (not $ snd (nvarι "bs")))
+or : (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
+or B = nlamι[ "b1" ∈ B ] nlamι[ "b2" ∈ B ] not $ (and $ pair (not $ nvarι "b1") (not $ nvarι "b2"))
 
+-- Representing booleans as natural numbers (0 = false, 1 = true)
 data IsBit : Pred ℕ 0ℓ where
   0-bit : IsBit 0
   1-bit : IsBit 1
@@ -99,12 +112,21 @@ PrimBinaryBool : Ty {C = 𝟚} ◇ 0ℓ
 PrimBinaryBool = PrimFromPred ℕ IsBit
 
 BinaryBool : NullaryTypeOp 𝟚 0ℓ
-BinaryBool {Γ = Γ} = FromPred ℕ IsBit
+BinaryBool = FromPred ℕ IsBit
 
 instance
   binarybool-is-bool : BoolStructure BinaryBool
-  prim-and {{binarybool-is-bool}} = from-pred2 _⊓_ (λ { 0-bit _ → 0-bit ; 1-bit 0-bit → 0-bit ; 1-bit 1-bit → 1-bit })
-  prim-not {{binarybool-is-bool}} = from-pred1 (1 ∸_) (λ { 0-bit → 1-bit ; 1-bit → 0-bit })
+  prim-and {{binarybool-is-bool}} = from-pred2 _⊓_ ⊓-preserves-bitness
+    where
+      ⊓-preserves-bitness : (IsBit ⟨→⟩ IsBit ⟨→⟩ IsBit) _⊓_
+      ⊓-preserves-bitness 0-bit _     = 0-bit
+      ⊓-preserves-bitness 1-bit 0-bit = 0-bit
+      ⊓-preserves-bitness 1-bit 1-bit = 1-bit
+  prim-not {{binarybool-is-bool}} = from-pred1 (1 ∸_) 1∸-preserves-bitness
+    where
+      1∸-preserves-bitness : (IsBit ⟨→⟩ IsBit) (1 ∸_)
+      1∸-preserves-bitness 0-bit = 1-bit
+      1∸-preserves-bitness 1-bit = 0-bit
 
 ⊎-trans : {A : Set ℓ} {x y z w : A} → x ≡ y → y ≡ z ⊎ y ≡ w → x ≡ z ⊎ x ≡ w
 ⊎-trans e = Data.Sum.map (trans e) (trans e)
@@ -126,15 +148,44 @@ module _ (b : Tm ◇ BinaryBool) where
   result' | [ _ , p ] | refl = p
 
 
-{-
-discard-pred-ty : Ty {C = 𝟚} ◇ ℓ → Ty {C = ★} ◇ ℓ
-type (discard-pred-ty T) tt tt = T ⟨ type-obj , tt ⟩
-morph (discard-pred-ty T) tt _ = id
-morph-cong (discard-pred-ty T) {f = tt} _ = refl
-morph-id (discard-pred-ty T) _ = refl
-morph-comp (discard-pred-ty T) _ _ _ _ _ = refl
+open import Data.Unit
+open import Data.Empty.Polymorphic
 
-discard-pred-tm : {T : Ty ◇ ℓ} → Tm ◇ T → Tm ◇ (discard-pred-ty T)
-term (discard-pred-tm t) tt tt = t ⟨ type-obj , tt ⟩'
-Tm.naturality (discard-pred-tm t) _ _ = refl
--}
+always-false : Ctx ★ ℓ → Ctx 𝟚 ℓ
+set (always-false Γ) type-obj = Γ ⟨ tt ⟩
+set (always-false Γ) pred-obj = ⊥
+rel (always-false Γ) type-id = id
+rel (always-false Γ) pred-id = id
+rel (always-false Γ) type-pred = ⊥-elim
+rel-id (always-false Γ) {x = type-obj} _ = refl
+rel-comp (always-false Γ) type-id g _ = refl
+rel-comp (always-false Γ) pred-id g _ = refl
+rel-comp (always-false Γ) type-pred pred-id _ = refl
+
+always-false-subst : {Δ Γ : Ctx ★ ℓ} → Δ ⇒ Γ → always-false Δ ⇒ always-false Γ
+func (always-false-subst σ) {x = type-obj} = func σ
+func (always-false-subst σ) {x = pred-obj} = id
+_⇒_.naturality (always-false-subst σ) {f = type-id} _ = refl
+
+always-false-subst-id : {Γ : Ctx ★ ℓ} → always-false-subst (id-subst Γ) ≅ˢ id-subst (always-false Γ)
+eq always-false-subst-id {x = type-obj} _ = refl
+
+always-false-subst-⊚ : {Δ Γ Θ : Ctx ★ ℓ} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
+                       always-false-subst (σ ⊚ τ) ≅ˢ always-false-subst σ ⊚ always-false-subst τ
+eq (always-false-subst-⊚ σ τ) {x = type-obj} _ = refl
+
+forget : {Γ : Ctx ★ ℓ} → Ty (always-false Γ) ℓ' → Ty Γ ℓ'
+type (forget T) tt γ = T ⟨ type-obj , γ ⟩
+morph (forget {Γ = Γ} T) tt eγ = T ⟪ type-id , trans (sym (rel-id Γ _ )) eγ ⟫
+morph-cong (forget T) refl {eγ = refl} {eγ' = refl} = refl
+morph-id (forget T) t = trans (morph-cong T refl) (morph-id T t)
+morph-comp (forget T) _ _ _ _ t = sym (morph-cong-2-1 T refl)
+
+module _ {Γ : Ctx ★ ℓ} {T : Ty (always-false Γ) ℓ'} where
+  forget-intro : Tm (always-false Γ) T → Tm Γ (forget T)
+  term (forget-intro t) tt γ = t ⟨ type-obj , γ ⟩'
+  Tm.naturality (forget-intro t) tt _ = Tm.naturality t type-id _
+
+  forget-elim : Tm Γ (forget T) → Tm (always-false Γ) T
+  term (forget-elim t) type-obj γ = t ⟨ tt , γ ⟩'
+  Tm.naturality (forget-elim t) type-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
