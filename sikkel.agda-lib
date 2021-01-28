@@ -1,0 +1,3 @@
+name: sikkel
+include: .
+depend: standard-library
