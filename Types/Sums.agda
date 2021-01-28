@@ -128,8 +128,8 @@ module _ {A : Ty Γ ℓ r} {B : Ty Γ ℓ' r'} (C : Ty Γ ℓ'' r'') where
             app (⊞-elim f g) (inr b) ≅ᵗᵐ app g b
   eq (β-⊞-inr f g b) _ = ty≈-refl C
 
-η-⊞ : {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (t : Tm Γ (A ⊞ B)) →
+η-⊞ : {A : Ty Γ ℓ r} {B : Ty Γ ℓ' r'} (t : Tm Γ (A ⊞ B)) →
       t ≅ᵗᵐ app (⊞-elim (A ⊞ B) inl-func inr-func) t
 eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
-eq (η-⊞ t) γ | inj₁ a = refl
-eq (η-⊞ t) γ | inj₂ b = refl
+eq (η-⊞ {A = A} t) γ | inj₁ a = inj₁ (ty≈-refl A)
+eq (η-⊞ {B = B} t) γ | inj₂ b = inj₂ (ty≈-refl B)
