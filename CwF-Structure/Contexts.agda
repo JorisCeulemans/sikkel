@@ -81,6 +81,9 @@ module _ {C : Category} where
   _⟪_⟫_ : (Γ : Ctx C ℓ r) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
   Γ ⟪ f ⟫ γ = rel Γ f γ
 
+  rel-hom-cong : (Γ : Ctx C ℓ r) {f f' : Hom x y} {γy : Γ ⟨ y ⟩} →
+                 f ≡ f' → Γ ⟪ f ⟫ γy ≈[ Γ ]≈ Γ ⟪ f' ⟫ γy
+  rel-hom-cong Γ ≡-refl = ctx≈-refl Γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
   -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
