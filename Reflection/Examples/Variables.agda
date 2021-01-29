@@ -10,6 +10,7 @@ open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
 
+
 test : Tm {C = C} (◇ ,, Bool') (Bool' [ π ])
 test = var 0
 
@@ -19,7 +20,7 @@ test2 = var 0
 test3 : Tm {C = C} (◇ ,, Bool' ,, Nat') ((Bool' [ π ]) [ π ])
 test3 = var 1
 
-id : ∀ {ℓ ℓ'} {Γ : Ctx C ℓ} {T : Ty Γ ℓ'} → Tm Γ (T ⇛ T)
+id : ∀ {ℓ ℓ' r r'} {Γ : Ctx C ℓ r} {T : Ty Γ ℓ' r'} → Tm Γ (T ⇛ T)
 id {Γ = Γ}{T = T} = lam T (var 0)
 
 test4 : Tm {C = C} (◇ ,, "x" ∈ Bool') (Bool' [ π ])
@@ -31,5 +32,5 @@ test5 = nvar "y"
 test6 : Tm {C = C} (◇ ,, "x" ∈ Bool' ,, "y" ∈ Nat') ((Bool' [ π ]) [ π ])
 test6 = nvar "x"
 
-id2 : ∀ {ℓ ℓ'} {Γ : Ctx C ℓ} {T : Ty Γ ℓ'} → Tm Γ (T ⇛ T)
+id2 : ∀ {ℓ ℓ' r r'} {Γ : Ctx C ℓ r} {T : Ty Γ ℓ' r'} → Tm Γ (T ⇛ T)
 id2 {Γ = Γ}{T = T} = nlam[ "x" ∈ T ] nvar "x"
