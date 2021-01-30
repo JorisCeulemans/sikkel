@@ -1,7 +1,8 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 module Translation where
 
-open import Data.Product using (_×_; _,_)
+open import Function using (_∘_)
+open import Data.Product using (_×_) renaming (_,_ to [_,_])
 open import Data.Sum using (_⊎_; map) renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Sum.Relation.Binary.Pointwise renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Unit using (⊤; tt)
@@ -57,9 +58,9 @@ instance
                    {S : Ty ◇ ℓ'} {{_ : Translatable S}} →
                    Translatable (T ⊠ S)
   translated-type {{translate-prod {T = T} {S = S}}} = translate-type T × translate-type S
-  translate-term  {{translate-prod {T = T} {S = S}}} p = translate-term (fst p) , translate-term (snd p)
-  translate-back  {{translate-prod {T = T} {S = S}}} (t , s) = pair (translate-back t) (translate-back s)
-  translate-cong  {{translate-prod {T = T} {S = S}}} e = cong₂ _,_ (translate-cong (fst-cong e)) (translate-cong (snd-cong e))
+  translate-term  {{translate-prod {T = T} {S = S}}} p = [ translate-term (fst p) , translate-term (snd p) ]
+  translate-back  {{translate-prod {T = T} {S = S}}} [ t , s ] = pair (translate-back t) (translate-back s)
+  translate-cong  {{translate-prod {T = T} {S = S}}} e = cong₂ [_,_] (translate-cong (fst-cong e)) (translate-cong (snd-cong e))
 
   translate-sum : {T : Ty ◇ ℓ}  {{_ : Translatable T}}
                   {S : Ty ◇ ℓ'} {{_ : Translatable S}} →
@@ -72,12 +73,24 @@ instance
   ... | inl t1 | inl t2 | inl et = cong inl (translate-cong et)
   ... | inr s1 | inr s2 | inr es = cong inr (translate-cong es)
 
+to-★-◇-term : {T : Ty {C = ★} ◇ ℓ} → T ⟨ tt , tt ⟩ → Tm ◇ T
+term (to-★-◇-term t) _ _ = t
+Tm.naturality (to-★-◇-term {T = T} t) _ refl = morph-id T t
+
+func-★-◇ : {T : Ty {C = ★} ◇ ℓ} {S : Ty {C = ★} ◇ ℓ'} →
+           (Tm ◇ T → Tm ◇ S) → Tm ◇ (T ⇛ S)
+_$⟨_,_⟩_ (term (func-★-◇ {T = T} f) _ _) _ refl t = f (to-★-◇-term t) ⟨ tt , tt ⟩'
+PresheafFunc.naturality (term (func-★-◇ {T = T}{S = S} f) _ _) {ρ-xy = _} refl refl t =
+  trans (cong (λ x → term (f (to-★-◇-term x)) tt tt) (morph-id T t)) (sym (morph-id S _))
+Tm.naturality (func-★-◇ f) _ refl = to-pshfun-eq (λ { _ refl _ → refl })
+
+instance
   translate-func : {T : Ty ◇ ℓ}  {{_ : Translatable T}}
                    {S : Ty ◇ ℓ'} {{_ : Translatable S}} →
                    Translatable (T ⇛ S)
   translated-type {{translate-func {T = T} {S = S}}} = translate-type T → translate-type S
   translate-term  {{translate-func {T = T} {S = S}}} f t = translate-term (app f (translate-back t))
-  translate-back  {{translate-func {T = T} {S = S}}} f = lam T {!!}
+  translate-back  {{translate-func {T = T} {S = S}}} f = func-★-◇ (translate-back ∘ f ∘ translate-term)
   translate-cong  {{translate-func {T = T} {S = S}}} ef = funext λ x → translate-cong (app-cong ef ≅ᵗᵐ-refl)
 
 
