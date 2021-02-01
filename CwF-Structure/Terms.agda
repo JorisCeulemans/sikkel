@@ -143,6 +143,10 @@ eq (ι-symʳ T=S t) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
           ι[ ≅ᵗʸ-trans T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
 eq (ι-trans {T = T} T=S S=R r) γ = ty≈-refl T
 
+ι⁻¹-cong : (T=S : T ≅ᵗʸ S) →
+           t ≅ᵗᵐ t' → ι⁻¹[ T=S ] t ≅ᵗᵐ ι⁻¹[ T=S ] t'
+ι⁻¹-cong T=S = ι-cong (≅ᵗʸ-sym T=S)
+
 
 --------------------------------------------------
 -- Substitution of terms
