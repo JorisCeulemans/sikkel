@@ -16,9 +16,11 @@ open import Data.Nat.Properties
 open import Data.Product using (proj₁; proj₂) renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
 open import Data.Vec hiding ([_]; _⊛_)
-open import Data.Vec.Properties
+-- open import Data.Vec.Properties
+import Data.Vec.Relation.Binary.Pointwise.Inductive as Vec
 open import Function using (id; _∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality; subst)
+import Relation.Binary.Reasoning.Setoid as SetoidReasoning
 open import Level renaming (zero to lzero; suc to lsuc)
 
 open import Categories
@@ -36,31 +38,60 @@ open import Reflection.Tactic.LobInduction
 
 private
   variable
-    ℓa ℓb ℓc : Level
-    Γ Δ : Ctx ω ℓ
+    ℓa ℓb ℓc r : Level
+    Γ Δ : Ctx ω ℓ r
 
 
 --------------------------------------------------
 -- Some basic operations and proofs regarding vectors
 
 first-≤ : ∀ {m n} {A : Set ℓ} → m ≤ n → Vec A n → Vec A m
-first-≤ z≤n as = []
-first-≤ (s≤s ineq) (a ∷ as) = a ∷ first-≤ ineq as
+first-≤ z≤n       as       = []
+first-≤ (s≤s m≤n) (a ∷ as) = a ∷ first-≤ m≤n as
 
-first-≤-refl : ∀ {n} {A : Set ℓ} {as : Vec A n} → first-≤ (≤-refl) as ≡ as
-first-≤-refl {as = []} = refl
-first-≤-refl {as = a ∷ as} = cong (a ∷_) first-≤-refl
+open import Relation.Binary using (REL; Rel; Reflexive)
 
-first-≤-trans : ∀ {k m n} {A : Set ℓ} (k≤m : k ≤ m) (m≤n : m ≤ n) (as : Vec A n) →
-                first-≤ (≤-trans k≤m m≤n) as ≡ first-≤ k≤m (first-≤ m≤n as)
-first-≤-trans z≤n m≤n as = refl
-first-≤-trans (s≤s k≤m) (s≤s m≤n) (a ∷ as) = cong (a ∷_) (first-≤-trans k≤m m≤n as)
+first-≤-cong : ∀ {a b ℓ} {A : Set a} {B : Set b} {_∼_ : REL A B ℓ}
+               {m n} (m≤n : m ≤ n) {xs : Vec A n} {ys : Vec B n} →
+               Vec.Pointwise _∼_ xs ys → Vec.Pointwise _∼_ (first-≤ m≤n xs) (first-≤ m≤n ys)
+first-≤-cong z≤n       xs~ys             = Vec.[]
+first-≤-cong (s≤s m≤n) (x∼y Vec.∷ xs∼ys) = x∼y Vec.∷ first-≤-cong m≤n xs∼ys
 
-map-first-≤ : ∀ {m n} {A : Set ℓ} {B : Set ℓ'} (f : A → B) (m≤n : m ≤ n) (as : Vec A n) →
-              map f (first-≤ m≤n as) ≡ first-≤ m≤n (map f as)
-map-first-≤ f z≤n       as       = refl
-map-first-≤ f (s≤s m≤n) (a ∷ as) = cong (f a ∷_) (map-first-≤ f m≤n as)
+map⁺ˡ : ∀ {a b c ℓ} {A : Set a} {B : Set b} {C : Set c}
+        {_∼_ : REL B C ℓ} {f : A → B} {g : A → C} →
+        (∀ {x} → f x ∼ g x) → {n : ℕ} → {xs : Vec A n} →
+        Vec.Pointwise _∼_ (map f xs) (map g xs)
+map⁺ˡ f∼g {xs = []}     = Vec.[]
+map⁺ˡ f∼g {xs = x ∷ xs} = f∼g Vec.∷ map⁺ˡ f∼g
 
+first-≤-refl : ∀ {a ℓ n} {A : Set a} {_∼_ : Rel A ℓ} →
+               Reflexive _∼_ → {as : Vec A n} → Vec.Pointwise _∼_ (first-≤ (≤-refl) as) as
+first-≤-refl rfl {as = []}     = Vec.[]
+first-≤-refl rfl {as = a ∷ as} = rfl Vec.∷ first-≤-refl rfl
+
+map-id : ∀ {a ℓ n} {A : Set a} {_∼_ : Rel A ℓ} →
+         Reflexive _∼_ → {as : Vec A n} → Vec.Pointwise _∼_ (map id as) as
+map-id rfl {as = []}     = Vec.[]
+map-id rfl {as = a ∷ as} = rfl Vec.∷ map-id rfl
+
+first-≤-trans : ∀ {a ℓ k m n} {A : Set a} {_∼_ : Rel A ℓ} → Reflexive _∼_ →
+                (k≤m : k ≤ m) (m≤n : m ≤ n) (as : Vec A n) →
+                Vec.Pointwise _∼_ (first-≤ (≤-trans k≤m m≤n) as) (first-≤ k≤m (first-≤ m≤n as))
+first-≤-trans rfl z≤n       m≤n       as       = Vec.[]
+first-≤-trans rfl (s≤s k≤m) (s≤s m≤n) (a ∷ as) = rfl Vec.∷ first-≤-trans rfl k≤m m≤n as
+
+map-∘ : ∀ {a b c ℓ n} {A : Set a} {B : Set b} {C : Set c} {_∼_ : Rel C ℓ} → Reflexive _∼_ →
+        (f : B → C) (g : A → B) →
+        {as : Vec A n} → Vec.Pointwise _∼_ (map (f ∘ g) as) (map f (map g as))
+map-∘ rfl f g {[]}     = Vec.[]
+map-∘ rfl f g {a ∷ as} = rfl Vec.∷ map-∘ rfl f g
+
+map-first-≤ : ∀ {a b m n ℓ} {A : Set a} {B : Set b} {_∼_ : Rel B ℓ} → Reflexive _∼_ →
+              (f : A → B) (m≤n : m ≤ n) (as : Vec A n) →
+              Vec.Pointwise _∼_ (map f (first-≤ m≤n as)) (first-≤ m≤n (map f as))
+map-first-≤ rfl f z≤n       as       = Vec.[]
+map-first-≤ rfl f (s≤s m≤n) (a ∷ as) = rfl Vec.∷ map-first-≤ rfl f m≤n as
+{-
 first-≤-head : ∀ {m n} {A : Set ℓ} (m≤n : m ≤ n) (as : Vec A (suc n)) →
                head (first-≤ (s≤s m≤n) as) ≡ head as
 first-≤-head m≤n (a ∷ as) = refl
@@ -106,40 +137,39 @@ map-inverse {f = f}{g} e as =
   ≡⟨ map-id as ⟩
     as ∎
   where open ≡-Reasoning
-
+-}
 
 --------------------------------------------------
 -- Definition of guarded streams.
 
-GStream : Ty (now Γ) ℓ → Ty Γ ℓ
-type (GStream {Γ = Γ} A) n γ = Vec (timeless-ty A ⟨ n , γ ⟩) (suc n)
-morph (GStream A) m≤n eγ v = map (timeless-ty A ⟪ m≤n , eγ ⟫) (first-≤ (s≤s m≤n) v)
-morph-cong (GStream A) refl = map-cong (λ _ → morph-cong A refl) _
+GStream : Ty (now Γ) ℓ r → Ty Γ ℓ (ℓ ⊔ r)
+type (GStream A) n γ = Vec.setoid (type (timeless-ty A) n γ) (suc n)
+morph (GStream A) m≤n eγ v = map (timeless-ty A ⟪ m≤n , eγ ⟫_) (first-≤ (s≤s m≤n) v)
+morph-cong (GStream A) m≤n eγ ev = Vec.map⁺ (morph-cong (timeless-ty A) m≤n eγ) (first-≤-cong (s≤s m≤n) ev)
+morph-hom-cong (GStream A) refl = map⁺ˡ (morph-hom-cong A refl)
 morph-id (GStream A) v =
   begin
     map (timeless-ty A ⟪ ≤-refl , _ ⟫_) (first-≤ (s≤s ≤-refl) v)
-  ≡⟨ map-cong (λ a → morph-id (timeless-ty A) a) (first-≤ (s≤s ≤-refl) v) ⟩
-    map id (first-≤ (s≤s ≤-refl) v)
-  ≡⟨ map-id (first-≤ (s≤s ≤-refl) v) ⟩
-    first-≤ (s≤s ≤-refl) v
-  ≡⟨ first-≤-refl ⟩
+  ≈⟨ Vec.map⁺ (λ e → ty≈-trans A (morph-id (timeless-ty A) _) e) (first-≤-refl (ty≈-refl (timeless-ty A))) ⟩
+    map id v
+  ≈⟨ map-id (ty≈-refl (timeless-ty A)) ⟩
     v ∎
-  where open ≡-Reasoning
-morph-comp (GStream A) k≤m m≤n eγ-zy eγ-yx v =
+  where open SetoidReasoning (type (GStream A) _ _)
+morph-comp (GStream A) k≤m m≤n eγ-nm eγ-mk v =
   begin
     map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s (≤-trans k≤m m≤n)) v)
-  ≡⟨ cong (map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_)) (first-≤-trans (s≤s k≤m) (s≤s m≤n) v) ⟩
-    map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
-  ≡⟨ map-cong (λ a → morph-comp (timeless-ty A) k≤m m≤n eγ-zy eγ-yx a) _ ⟩
-    map (timeless-ty A ⟪ k≤m , eγ-yx ⟫_ ∘ timeless-ty A ⟪ m≤n , eγ-zy ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
-  ≡⟨ map-∘ (timeless-ty A ⟪ k≤m , eγ-yx ⟫_) (timeless-ty A ⟪ m≤n , eγ-zy ⟫_) _ ⟩
-    map (timeless-ty A ⟪ k≤m , eγ-yx ⟫_) (map (timeless-ty A ⟪ m≤n , eγ-zy ⟫_)
+  ≈⟨ Vec.map⁺ (λ e → ty≈-trans (timeless-ty A) (morph-comp (timeless-ty A) k≤m m≤n eγ-nm eγ-mk _) e)
+              (first-≤-trans (ty≈-refl (timeless-ty A)) (s≤s k≤m) (s≤s m≤n) v) ⟩
+    map (timeless-ty A ⟪ k≤m , _ ⟫_ ∘ timeless-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
+  ≈⟨ map-∘ (ty≈-refl (timeless-ty A)) _ _ ⟩
+    map (timeless-ty A ⟪ k≤m , _ ⟫_) (map (timeless-ty A ⟪ m≤n , _ ⟫_)
       (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v)))
-  ≡⟨ cong (map (timeless-ty A ⟪ k≤m , eγ-yx ⟫_)) (map-first-≤ (timeless-ty A ⟪ m≤n , eγ-zy ⟫_) (s≤s k≤m) _) ⟩
-    map (timeless-ty A ⟪ k≤m , eγ-yx ⟫_) (first-≤ (s≤s k≤m)
-      (map (timeless-ty A ⟪ m≤n , eγ-zy ⟫_) (first-≤ (s≤s m≤n) v))) ∎
-  where open ≡-Reasoning
-
+  ≈⟨ Vec.map⁺ (morph-cong (timeless-ty A) k≤m eγ-mk)
+              (map-first-≤ (ty≈-refl (timeless-ty A)) _ (s≤s k≤m) (first-≤ (s≤s m≤n) v)) ⟩
+    map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (first-≤ (s≤s k≤m)
+      (map (timeless-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s m≤n) v))) ∎
+  where open SetoidReasoning (type (GStream A) _ _)
+{-
 module _ {A : Ty (now Γ) ℓ} where
   g-head : Tm Γ (GStream A ⇛ timeless-ty A)
   _$⟨_,_⟩_ (term g-head n γn) _ _ = head
@@ -437,3 +467,4 @@ private
     eq fibs-test {x = suc zero} _ = refl
     eq fibs-test {x = suc (suc zero)} _ = refl
     eq fibs-test {x = suc (suc (suc x))} _ = refl
+-}
