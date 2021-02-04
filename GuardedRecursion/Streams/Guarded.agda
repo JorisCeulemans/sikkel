@@ -14,7 +14,7 @@ module GuardedRecursion.Streams.Guarded where
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Product using (proj₁; proj₂) renaming (_,_ to [_,_])
-open import Data.Unit using (⊤; tt)
+open import Data.Unit.Polymorphic using (⊤; tt)
 open import Data.Vec hiding ([_]; _⊛_)
 -- open import Data.Vec.Properties
 import Data.Vec.Relation.Binary.Pointwise.Inductive as Vec
@@ -64,6 +64,13 @@ map⁺ˡ : ∀ {a b c ℓ} {A : Set a} {B : Set b} {C : Set c}
 map⁺ˡ f∼g {xs = []}     = Vec.[]
 map⁺ˡ f∼g {xs = x ∷ xs} = f∼g Vec.∷ map⁺ˡ f∼g
 
+map⁺ʳ : ∀ {a b ℓ ℓ'} {A : Set a} {B : Set b}
+        {_∼₁_ : Rel A ℓ} {_∼₂_ : Rel B ℓ'} {f : A → B} →
+        (∀ {x y} → x ∼₁ y → f x ∼₂ f y) → {n : ℕ} → {xs ys : Vec A n} →
+        Vec.Pointwise _∼₁_ xs ys → Vec.Pointwise _∼₂_ (map f xs) (map f ys)
+map⁺ʳ f-cong Vec.[]            = Vec.[]
+map⁺ʳ f-cong (x∼y Vec.∷ xs∼ys) = f-cong x∼y Vec.∷ map⁺ʳ f-cong xs∼ys
+
 first-≤-refl : ∀ {a ℓ n} {A : Set a} {_∼_ : Rel A ℓ} →
                Reflexive _∼_ → {as : Vec A n} → Vec.Pointwise _∼_ (first-≤ (≤-refl) as) as
 first-≤-refl rfl {as = []}     = Vec.[]
@@ -91,38 +98,36 @@ map-first-≤ : ∀ {a b m n ℓ} {A : Set a} {B : Set b} {_∼_ : Rel B ℓ} �
               Vec.Pointwise _∼_ (map f (first-≤ m≤n as)) (first-≤ m≤n (map f as))
 map-first-≤ rfl f z≤n       as       = Vec.[]
 map-first-≤ rfl f (s≤s m≤n) (a ∷ as) = rfl Vec.∷ map-first-≤ rfl f m≤n as
-{-
-first-≤-head : ∀ {m n} {A : Set ℓ} (m≤n : m ≤ n) (as : Vec A (suc n)) →
-               head (first-≤ (s≤s m≤n) as) ≡ head as
-first-≤-head m≤n (a ∷ as) = refl
 
-map-head : ∀ {n} {A : Set ℓ} {B : Set ℓ'} (f : A → B) (as : Vec A (suc n)) →
-           head (map f as) ≡ f (head as)
-map-head f (a ∷ as) = refl
+map-head : ∀ {a b ℓ n} {A : Set a} {B : Set b} {_∼_ : Rel B ℓ} → Reflexive _∼_ →
+           (f : A → B) (as : Vec A (suc n)) →
+           head (map f as) ∼ f (head as)
+map-head rfl f (a ∷ as) = rfl
 
-first-≤-tail : ∀ {m n} {A : Set ℓ} (m≤n : m ≤ n) (as : Vec A (suc n)) →
-               tail (first-≤ (s≤s m≤n) as) ≡ first-≤ m≤n (tail as)
-first-≤-tail m≤n (a ∷ as) = refl
+first-≤-head : ∀ {a ℓ m n} {A : Set a} {_∼_ : Rel A ℓ} → Reflexive _∼_ →
+               (m≤n : m ≤ n) (as : Vec A (suc n)) →
+               head (first-≤ (s≤s m≤n) as) ∼ head as
+first-≤-head rfl m≤n (a ∷ as) = rfl
 
-map-tail : ∀ {n} {A : Set ℓ} {B : Set ℓ'} (f : A → B) (as : Vec A (suc n)) →
-           tail (map f as) ≡ map f (tail as)
-map-tail f (a ∷ as) = refl
+map-tail : ∀ {a b ℓ n} {A : Set a} {B : Set b} {_∼_ : Rel B ℓ} → Reflexive _∼_ →
+           (f : A → B) (as : Vec A (suc n)) →
+           Vec.Pointwise _∼_ (tail (map f as)) (map f (tail as))
+map-tail rfl f (a ∷ as) = Vec.refl rfl
 
-map-map-cong : ∀ {n ℓa ℓb ℓc ℓd} {A : Set ℓa} {B : Set ℓb} {C : Set ℓc} {D : Set ℓd}
-               {f : A → B} {g : B → D} {f' : A → C} {g' : C → D} (e : g ∘ f ≗ g' ∘ f')
+map-map-cong : ∀ {a b c d ℓ n} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
+               {_∼_ : Rel D ℓ} →
+               {f : A → B} {g : B → D} {f' : A → C} {g' : C → D}
+               (e : ∀ {x} → g (f x) ∼ g' (f' x))
                (as : Vec A n) →
-               map g (map f as) ≡ map g' (map f' as)
-map-map-cong {f = f}{g}{f'}{g'} e as =
-  begin
-    map g (map f as)
-  ≡˘⟨ map-∘ g f as ⟩
-    map (g ∘ f) as
-  ≡⟨ map-cong e as ⟩
-    map (g' ∘ f') as
-  ≡⟨ map-∘ g' f' as ⟩
-    map g' (map f' as) ∎
-  where open ≡-Reasoning
+               Vec.Pointwise _∼_ (map g (map f as)) (map g' (map f' as))
+map-map-cong e []       = Vec.[]
+map-map-cong e (x ∷ as) = e Vec.∷ map-map-cong e as
 
+first-≤-tail : ∀ {a ℓ m n} {A : Set a} {_∼_ : Rel A ℓ} → Reflexive _∼_ →
+               (m≤n : m ≤ n) (as : Vec A (suc n)) →
+               Vec.Pointwise _∼_ (tail (first-≤ (s≤s m≤n) as)) (first-≤ m≤n (tail as))
+first-≤-tail rfl m≤n (a ∷ as) = Vec.refl rfl
+{-
 map-inverse : ∀ {n} {A : Set ℓ} {B : Set ℓ'}
               {f : A → B} {g : B → A} (e : g ∘ f ≗ id)
               (as : Vec A n) →
@@ -150,7 +155,7 @@ morph-hom-cong (GStream A) refl = map⁺ˡ (morph-hom-cong A refl)
 morph-id (GStream A) v =
   begin
     map (timeless-ty A ⟪ ≤-refl , _ ⟫_) (first-≤ (s≤s ≤-refl) v)
-  ≈⟨ Vec.map⁺ (λ e → ty≈-trans A (morph-id (timeless-ty A) _) e) (first-≤-refl (ty≈-refl (timeless-ty A))) ⟩
+  ≈⟨ Vec.map⁺ (ty≈-trans A (morph-id (timeless-ty A) _)) (first-≤-refl (ty≈-refl (timeless-ty A))) ⟩
     map id v
   ≈⟨ map-id (ty≈-refl (timeless-ty A)) ⟩
     v ∎
@@ -158,66 +163,78 @@ morph-id (GStream A) v =
 morph-comp (GStream A) k≤m m≤n eγ-nm eγ-mk v =
   begin
     map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s (≤-trans k≤m m≤n)) v)
-  ≈⟨ Vec.map⁺ (λ e → ty≈-trans (timeless-ty A) (morph-comp (timeless-ty A) k≤m m≤n eγ-nm eγ-mk _) e)
+  ≈⟨ Vec.map⁺ (ty≈-trans (timeless-ty A) (morph-comp (timeless-ty A) k≤m m≤n eγ-nm eγ-mk _))
               (first-≤-trans (ty≈-refl (timeless-ty A)) (s≤s k≤m) (s≤s m≤n) v) ⟩
-    map (timeless-ty A ⟪ k≤m , _ ⟫_ ∘ timeless-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
+    map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_ ∘ timeless-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
   ≈⟨ map-∘ (ty≈-refl (timeless-ty A)) _ _ ⟩
-    map (timeless-ty A ⟪ k≤m , _ ⟫_) (map (timeless-ty A ⟪ m≤n , _ ⟫_)
+    map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (map (timeless-ty A ⟪ m≤n , eγ-nm ⟫_)
       (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v)))
   ≈⟨ Vec.map⁺ (morph-cong (timeless-ty A) k≤m eγ-mk)
               (map-first-≤ (ty≈-refl (timeless-ty A)) _ (s≤s k≤m) (first-≤ (s≤s m≤n) v)) ⟩
     map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (first-≤ (s≤s k≤m)
       (map (timeless-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s m≤n) v))) ∎
   where open SetoidReasoning (type (GStream A) _ _)
-{-
-module _ {A : Ty (now Γ) ℓ} where
+
+module _ {A : Ty (now Γ) ℓ r} where
   g-head : Tm Γ (GStream A ⇛ timeless-ty A)
   _$⟨_,_⟩_ (term g-head n γn) _ _ = head
-  naturality (term g-head n γn) _ _ v =
+  $-cong (term g-head n γn) _ _ {x = _ ∷ _} {y = _ ∷ _} = Vec.head
+  $-hom-cong (term g-head n γn) _ = ty≈-refl (timeless-ty A)
+  naturality (term g-head n γn) {x = k} {y = m} {ρ-xy = k≤m} {γx = γk} {γy = γm} eγ-nm eγ-mk v =
     begin
-      head (map (timeless-ty A ⟪ _ , _ ⟫_) (first-≤ (s≤s _) v))
-    ≡⟨ map-head (timeless-ty A ⟪ _ , _ ⟫_) (first-≤ (s≤s _) v) ⟩
-      timeless-ty A ⟪ _ , _ ⟫ (head (first-≤ (s≤s _) v))
-    ≡⟨ cong (timeless-ty A ⟪ _ , _ ⟫_) (first-≤-head _ v) ⟩
-      timeless-ty A ⟪ _ , _ ⟫ head v ∎
-    where open ≡-Reasoning
-  naturality g-head m≤n eγ = to-pshfun-eq λ _ _ _ → refl
+      head (map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (first-≤ (s≤s k≤m) v))
+    ≈⟨ map-head {_∼_ = ty≈ (timeless-ty A) k γk} (ty≈-refl (timeless-ty A)) (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (first-≤ (s≤s k≤m) v) ⟩
+      timeless-ty A ⟪ k≤m , eγ-mk ⟫ head (first-≤ (s≤s k≤m) v)
+    ≈⟨ morph-cong (timeless-ty A) k≤m eγ-mk (first-≤-head {_∼_ = ty≈ (timeless-ty A) m γm} (ty≈-refl (timeless-ty A)) k≤m v) ⟩
+      timeless-ty A ⟪ k≤m , eγ-mk ⟫ head v ∎
+    where open SetoidReasoning (type (timeless-ty A) k γk)
+  naturality g-head _ _ _ _ _ = ty≈-refl (timeless-ty A)
 
   g-tail : Tm Γ (GStream A ⇛ ▻' (GStream A))
-  _$⟨_,_⟩_ (term g-tail n γn) z≤n       _ = λ _ → _ -- = tt
-  _$⟨_,_⟩_ (term g-tail n γn) (s≤s m≤n) _ = map (timeless-ty A ⟪ n≤1+n _ , refl ⟫_) ∘ tail
-  naturality (term g-tail n γn) {ρ-xy = z≤n}     {ρ-yz = m≤n}     _ _ _ = refl
-  naturality (term g-tail n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} _ _ v = -- {!sym (first-≤-tail (s≤s k≤m) v)!}
+  _$⟨_,_⟩_ (term g-tail n γn) z≤n       _ = λ _ → tt
+  _$⟨_,_⟩_ (term g-tail n γn) (s≤s m≤n) _ = map (timeless-ty A ⟪ n≤1+n _ , ctx≈-refl Γ ⟫_) ∘ tail
+  $-cong (term g-tail n γn) z≤n       _                        _  = tt
+  $-cong (term g-tail n γn) (s≤s m≤n) _ {x = _ ∷ _}{y = _ ∷ _} et = map⁺ʳ (morph-cong (timeless-ty A) _ _) (Vec.tail et)
+  $-hom-cong (term g-tail n γn) {ρ = z≤n}     e    = tt
+  $-hom-cong (term g-tail n γn) {ρ = s≤s m≤n} refl = ty≈-refl (GStream A)
+  naturality (term g-tail n γn) {ρ-xy = z≤n}     {ρ-yz = m≤n} _ _ _ = tt
+  naturality (term g-tail n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} eγ-nm eγ-mk v =
     begin
-      map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ cong (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_)) (map-tail (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)) ⟩
-      map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ map-map-cong (λ _ → morph-cong-2-2 (timeless-ty A) (≤-irrelevant _ _)) _ ⟩
+      map (timeless-ty A ⟪ n≤1+n _ , ctx≈-refl Γ ⟫_) (tail (map (timeless-ty A ⟪ s≤s k≤m , eγ-mk ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)))
+    ≈⟨ map⁺ʳ (morph-cong (timeless-ty A) _ (ctx≈-refl Γ)) (map-tail (ty≈-refl (timeless-ty A)) _ (first-≤ (s≤s (s≤s k≤m)) v)) ⟩
+      map (timeless-ty A ⟪ n≤1+n _ , ctx≈-refl Γ ⟫_) (map (timeless-ty A ⟪ s≤s k≤m , eγ-mk ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
+    ≈⟨ map-map-cong (morph-hom-cong-2-2 (timeless-ty A) (≤-irrelevant _ _)) (tail (first-≤ (s≤s (s≤s k≤m)) v)) ⟩
       map (timeless-ty A ⟪ k≤m , _ ⟫_) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ cong (map (timeless-ty A ⟪ k≤m , _ ⟫_) ∘ map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_)) (first-≤-tail (s≤s k≤m) v) ⟩
+    ≈⟨ map⁺ʳ (morph-cong (timeless-ty A) k≤m _) (map⁺ʳ (morph-cong (timeless-ty A) (n≤1+n _) _) (first-≤-tail (ty≈-refl (timeless-ty A)) (s≤s k≤m) v)) ⟩
       map (timeless-ty A ⟪ k≤m , _ ⟫_) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (first-≤ (s≤s k≤m) (tail v)))
-    ≡⟨ cong (map (timeless-ty A ⟪ k≤m , _ ⟫_)) (map-first-≤ (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (s≤s k≤m) (tail v)) ⟩
+    ≈⟨ map⁺ʳ (morph-cong (timeless-ty A) k≤m _) (map-first-≤ (ty≈-refl (timeless-ty A)) _ (s≤s k≤m) (tail v)) ⟩
       map (timeless-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail v))) ∎
-    where open ≡-Reasoning
-  naturality g-tail z≤n       eγ = to-pshfun-eq λ { z≤n _ _ → refl }
-  naturality g-tail (s≤s m≤n) eγ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
-
+    where open SetoidReasoning (type (GStream A) _ (Γ ⟪ n≤1+n _ ⟫ _))
+  naturality g-tail z≤n       _ z≤n       _ _ = tt
+  naturality g-tail (s≤s m≤n) _ z≤n       _ _ = tt
+  naturality g-tail (s≤s m≤n) _ (s≤s k≤m) _ _ = ty≈-refl (GStream A)
+  
   g-cons : Tm Γ (timeless-ty A ⊠ ▻' (GStream A) ⇛ GStream A)
-  _$⟨_,_⟩_ (term g-cons n γn) z≤n       _ [ h , _ ] = h ∷ []
-  _$⟨_,_⟩_ (term g-cons n γn) (s≤s m≤n) _ [ h , t ] = h ∷ map (ctx-element-subst A (sym (rel-comp Γ z≤n (n≤1+n _) _))) t
-  naturality (term g-cons n γn) {ρ-xy = z≤n}     {ρ-yz = z≤n}     _ _ _         = refl
-  naturality (term g-cons n γn) {ρ-xy = z≤n}     {ρ-yz = s≤s m≤n} _ _ _         = refl
-  naturality (term g-cons n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} _ _ [ a , v ] = cong (timeless-ty A ⟪ s≤s k≤m , _ ⟫ a ∷_) (
-    begin
+  term g-cons n γn $⟨ z≤n ,     _ ⟩ [ h , _ ] = h ∷ []
+  term g-cons n γn $⟨ s≤s m≤n , _ ⟩ [ h , t ] = h ∷ map (ctx-element-subst A (ctx≈-sym Γ (rel-comp Γ z≤n (n≤1+n _) _))) t
+  $-cong (term g-cons n γn) z≤n       _ [ eh , et ] = eh Vec.∷ Vec.[]
+  $-cong (term g-cons n γn) (s≤s m≤n) _ [ eh , et ] = eh Vec.∷ map⁺ʳ (morph-cong A _ _) et
+  $-hom-cong (term g-cons n γn) {ρ = z≤n}     refl = ty≈-refl (GStream A)
+  $-hom-cong (term g-cons n γn) {ρ = s≤s m≤n} refl = ty≈-refl (GStream A)
+  naturality (term g-cons n γn)             {ρ-xy = z≤n}     {ρ-yz = z≤n}     _ _ _         = ty≈-refl (GStream A)
+  naturality (term g-cons n γn)             {ρ-xy = z≤n}     {ρ-yz = s≤s m≤n} _ _ _         = ty≈-refl (GStream A)
+  naturality (term g-cons n γn) {x = suc k} {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} _ _ [ a , v ] = ty≈-refl A Vec.∷
+    (begin
       map (ctx-element-subst A _) (map (timeless-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) v))
-    ≡⟨ map-map-cong (λ _ → morph-cong-2-2 A refl) _ ⟩
+    ≈⟨ map-map-cong (morph-hom-cong-2-2 A refl) (first-≤ (s≤s k≤m) v) ⟩
       map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (map (ctx-element-subst A _) (first-≤ (s≤s k≤m) v))
-    ≡⟨ cong (map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_)) (map-first-≤ (ctx-element-subst A _) (s≤s k≤m) v) ⟩
+    ≈⟨ map⁺ʳ (morph-cong (timeless-ty A) (s≤s k≤m) _) (map-first-≤ (ty≈-refl (timeless-ty A)) _ (s≤s k≤m) v) ⟩
       map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (ctx-element-subst A _) v)) ∎)
-    where open ≡-Reasoning
-  naturality g-cons z≤n       _ = to-pshfun-eq λ { z≤n _ _ → refl }
-  naturality g-cons (s≤s m≤n) _ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
-
+    where open SetoidReasoning (Vec.setoid (type (timeless-ty A) (suc k) _) (suc k))
+  naturality g-cons z≤n       _ z≤n       _ _ = ty≈-refl (GStream A)
+  naturality g-cons (s≤s m≤n) _ z≤n       _ _ = ty≈-refl (GStream A)
+  naturality g-cons (s≤s m≤n) _ (s≤s k≤m) _ _ = ty≈-refl (GStream A)
+{-
   gstream-natural : (σ : Δ ⇒ Γ) → (GStream A) [ σ ] ≅ᵗʸ GStream (A [ now-subst σ ])
   func (from (gstream-natural σ)) = map (ctx-element-subst A (naturality σ _))
   naturality (from (gstream-natural σ)) v =
