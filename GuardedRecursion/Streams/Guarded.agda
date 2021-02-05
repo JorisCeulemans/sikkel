@@ -14,7 +14,8 @@ module GuardedRecursion.Streams.Guarded where
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
 open import Data.Product using (proj₁; proj₂) renaming (_,_ to [_,_])
-open import Data.Unit.Polymorphic using (⊤; tt)
+open import Data.Unit using (⊤; tt)
+import Data.Unit.Polymorphic as P using (⊤; tt)
 open import Data.Vec hiding ([_]; _⊛_)
 -- open import Data.Vec.Properties
 import Data.Vec.Relation.Binary.Pointwise.Inductive as Vec
@@ -38,7 +39,7 @@ open import Reflection.Tactic.LobInduction
 
 private
   variable
-    ℓa ℓb ℓc r : Level
+    ℓa ℓb ℓc r r' ra rb rc : Level
     Γ Δ : Ctx ω ℓ r
 
 
@@ -127,22 +128,14 @@ first-≤-tail : ∀ {a ℓ m n} {A : Set a} {_∼_ : Rel A ℓ} → Reflexive _
                (m≤n : m ≤ n) (as : Vec A (suc n)) →
                Vec.Pointwise _∼_ (tail (first-≤ (s≤s m≤n) as)) (first-≤ m≤n (tail as))
 first-≤-tail rfl m≤n (a ∷ as) = Vec.refl rfl
-{-
-map-inverse : ∀ {n} {A : Set ℓ} {B : Set ℓ'}
-              {f : A → B} {g : B → A} (e : g ∘ f ≗ id)
+
+map-inverse : ∀ {a b ℓ n} {A : Set a} {B : Set b} {_∼_ : Rel A ℓ}
+              {f : A → B} {g : B → A} (e : ∀ {x} → g (f x) ∼ x)
               (as : Vec A n) →
-              map g (map f as) ≡ as
-map-inverse {f = f}{g} e as =
-  begin
-    map g (map f as)
-  ≡˘⟨ map-∘ g f as ⟩
-    map (g ∘ f) as
-  ≡⟨ map-cong e as ⟩
-    map id as
-  ≡⟨ map-id as ⟩
-    as ∎
-  where open ≡-Reasoning
--}
+              Vec.Pointwise _∼_ (map g (map f as)) as
+map-inverse e []       = Vec.[]
+map-inverse e (a ∷ as) = e Vec.∷ map-inverse e as
+
 
 --------------------------------------------------
 -- Definition of guarded streams.
@@ -191,13 +184,13 @@ module _ {A : Ty (now Γ) ℓ r} where
   naturality g-head _ _ _ _ _ = ty≈-refl (timeless-ty A)
 
   g-tail : Tm Γ (GStream A ⇛ ▻' (GStream A))
-  _$⟨_,_⟩_ (term g-tail n γn) z≤n       _ = λ _ → tt
+  _$⟨_,_⟩_ (term g-tail n γn) z≤n       _ = λ _ → P.tt
   _$⟨_,_⟩_ (term g-tail n γn) (s≤s m≤n) _ = map (timeless-ty A ⟪ n≤1+n _ , ctx≈-refl Γ ⟫_) ∘ tail
-  $-cong (term g-tail n γn) z≤n       _                        _  = tt
+  $-cong (term g-tail n γn) z≤n       _                        _  = P.tt
   $-cong (term g-tail n γn) (s≤s m≤n) _ {x = _ ∷ _}{y = _ ∷ _} et = map⁺ʳ (morph-cong (timeless-ty A) _ _) (Vec.tail et)
-  $-hom-cong (term g-tail n γn) {ρ = z≤n}     e    = tt
+  $-hom-cong (term g-tail n γn) {ρ = z≤n}     e    = P.tt
   $-hom-cong (term g-tail n γn) {ρ = s≤s m≤n} refl = ty≈-refl (GStream A)
-  naturality (term g-tail n γn) {ρ-xy = z≤n}     {ρ-yz = m≤n} _ _ _ = tt
+  naturality (term g-tail n γn) {ρ-xy = z≤n}     {ρ-yz = m≤n} _ _ _ = P.tt
   naturality (term g-tail n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} eγ-nm eγ-mk v =
     begin
       map (timeless-ty A ⟪ n≤1+n _ , ctx≈-refl Γ ⟫_) (tail (map (timeless-ty A ⟪ s≤s k≤m , eγ-mk ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)))
@@ -210,8 +203,8 @@ module _ {A : Ty (now Γ) ℓ r} where
     ≈⟨ map⁺ʳ (morph-cong (timeless-ty A) k≤m _) (map-first-≤ (ty≈-refl (timeless-ty A)) _ (s≤s k≤m) (tail v)) ⟩
       map (timeless-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail v))) ∎
     where open SetoidReasoning (type (GStream A) _ (Γ ⟪ n≤1+n _ ⟫ _))
-  naturality g-tail z≤n       _ z≤n       _ _ = tt
-  naturality g-tail (s≤s m≤n) _ z≤n       _ _ = tt
+  naturality g-tail z≤n       _ z≤n       _ _ = P.tt
+  naturality g-tail (s≤s m≤n) _ z≤n       _ _ = P.tt
   naturality g-tail (s≤s m≤n) _ (s≤s k≤m) _ _ = ty≈-refl (GStream A)
   
   g-cons : Tm Γ (timeless-ty A ⊠ ▻' (GStream A) ⇛ GStream A)
@@ -234,51 +227,56 @@ module _ {A : Ty (now Γ) ℓ r} where
   naturality g-cons z≤n       _ z≤n       _ _ = ty≈-refl (GStream A)
   naturality g-cons (s≤s m≤n) _ z≤n       _ _ = ty≈-refl (GStream A)
   naturality g-cons (s≤s m≤n) _ (s≤s k≤m) _ _ = ty≈-refl (GStream A)
-{-
+
+  -- TODO: Construction of substitutions in gstream-natural + gstream-cong is very similar. See if we can abstract it out somehow.
   gstream-natural : (σ : Δ ⇒ Γ) → (GStream A) [ σ ] ≅ᵗʸ GStream (A [ now-subst σ ])
   func (from (gstream-natural σ)) = map (ctx-element-subst A (naturality σ _))
+  func-cong (from (gstream-natural σ)) = map⁺ʳ (morph-cong A tt _)
   naturality (from (gstream-natural σ)) v =
     begin
       map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (A ⟪ tt , _ ⟫_) v))
-    ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) (map-first-≤ _ (s≤s _) v) ⟩
-      map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫) (first-≤ (s≤s _) v))
-    ≡⟨ map-map-cong (λ _ → morph-cong-2-2 A refl) (first-≤ (s≤s _) v) ⟩
-      map (ctx-element-subst A _) (map (A ⟪ tt , _ ⟫) (first-≤ (s≤s _) v)) ∎
-    where open ≡-Reasoning
-  func (to (gstream-natural σ)) = map (ctx-element-subst A (sym (naturality σ _)))
+    ≈˘⟨ map⁺ʳ (morph-cong A tt _) (map-first-≤ (ty≈-refl A) _ (s≤s _) v) ⟩
+      map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v))
+    ≈⟨ map-map-cong (morph-hom-cong-2-2 A refl) _ ⟩
+      map (ctx-element-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
+    where open SetoidReasoning (type (GStream (A [ now-subst σ ])) _ _)
+  func (to (gstream-natural σ)) = map (ctx-element-subst A (ctx≈-sym Γ (naturality σ _)))
+  func-cong (to (gstream-natural σ)) = map⁺ʳ (morph-cong A tt _)
   naturality (to (gstream-natural σ)) v =
     begin
       map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (A ⟪ tt , _ ⟫_) v))
-    ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) (map-first-≤ _ (s≤s _) v) ⟩
-      map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫) (first-≤ (s≤s _) v))
-    ≡⟨ map-map-cong (λ _ → morph-cong-2-2 A refl) (first-≤ (s≤s _) v) ⟩
-      map (ctx-element-subst A _) (map (A ⟪ tt , _ ⟫) (first-≤ (s≤s _) v)) ∎
-    where open ≡-Reasoning
-  eq (isoˡ (gstream-natural σ)) = map-inverse (ctx-element-subst-inverseˡ A)
-  eq (isoʳ (gstream-natural σ)) = map-inverse (ctx-element-subst-inverseʳ A)
+    ≈˘⟨ map⁺ʳ (morph-cong A tt _) (map-first-≤ (ty≈-refl A) _ (s≤s _) v) ⟩
+      map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v))
+    ≈⟨ map-map-cong (morph-hom-cong-2-2 A refl) _ ⟩
+      map (ctx-element-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
+    where open SetoidReasoning (type ((GStream A) [ σ ]) _ _)
+  eq (isoˡ (gstream-natural σ)) = map-inverse (ctx-element-subst-inverseˡ A _)
+  eq (isoʳ (gstream-natural σ)) = map-inverse (ctx-element-subst-inverseʳ A _)
 
-gstream-cong : {A : Ty (now Γ) ℓ} {A' : Ty (now Γ) ℓ'} →
+gstream-cong : {A : Ty (now Γ) ℓ r} {A' : Ty (now Γ) ℓ' r'} →
                A ≅ᵗʸ A' → GStream A ≅ᵗʸ GStream A'
 func (from (gstream-cong A=A')) = map (func (from A=A'))
+func-cong (from (gstream-cong A=A')) = map⁺ʳ (func-cong (from A=A'))
 naturality (from (gstream-cong {A = A}{A' = A'} A=A')) v =
   begin
     map (A' ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (func (from A=A')) v))
-  ≡˘⟨ cong (map (A' ⟪ tt , _ ⟫_)) (map-first-≤ _ (s≤s _) v) ⟩
+  ≈˘⟨ map⁺ʳ (morph-cong A' tt _) (map-first-≤ (ty≈-refl A') (func (from A=A')) (s≤s _) v) ⟩
     map (A' ⟪ tt , _ ⟫_) (map (func (from A=A')) (first-≤ (s≤s _) v))
-  ≡⟨ map-map-cong (naturality (from A=A')) (first-≤ (s≤s _) v) ⟩
-    map (func (from A=A')) (map (A ⟪ tt , _ ⟫) (first-≤ (s≤s _) v)) ∎
-  where open ≡-Reasoning
+  ≈⟨ map-map-cong (naturality (from A=A') _) _ ⟩
+    map (func (from A=A')) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
+  where open SetoidReasoning (type (GStream A') _ _)
 func (to (gstream-cong A=A')) = map (func (to A=A'))
+func-cong (to (gstream-cong A=A')) = map⁺ʳ (func-cong (to A=A'))
 naturality (to (gstream-cong {A = A}{A' = A'} A=A')) v =
   begin
     map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (func (to A=A')) v))
-  ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) (map-first-≤ _ (s≤s _) v) ⟩
+  ≈˘⟨ map⁺ʳ (morph-cong A tt _) (map-first-≤ (ty≈-refl A) (func (to A=A')) (s≤s _) v) ⟩
     map (A ⟪ tt , _ ⟫_) (map (func (to A=A')) (first-≤ (s≤s _) v))
-  ≡⟨ map-map-cong (naturality (to A=A')) (first-≤ (s≤s _) v) ⟩
-    map (func (to A=A')) (map (A' ⟪ tt , _ ⟫) (first-≤ (s≤s _) v)) ∎
-  where open ≡-Reasoning
-eq (isoˡ (gstream-cong A=A')) = map-inverse (eq (isoˡ A=A'))
-eq (isoʳ (gstream-cong A=A')) = map-inverse (eq (isoʳ A=A'))
+  ≈⟨ map-map-cong (naturality (to A=A') _) _ ⟩
+    map (func (to A=A')) (map (A' ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
+  where open SetoidReasoning (type (GStream A) _ _)
+eq (isoˡ (gstream-cong A=A')) = map-inverse (eq (isoˡ A=A') _)
+eq (isoʳ (gstream-cong A=A')) = map-inverse (eq (isoʳ A=A') _)
 
 
 --------------------------------------------------
@@ -303,8 +301,8 @@ instance
 
 open import Reflection.Tactic.Naturality
 
-module _ {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}} where
-  
+module _ {A : NullaryTypeOp ★ ℓa ra} {{_ : IsNullaryNatural A}} where
+
   g-snd : Tm Γ (GStream A ⇛ ▻' (timeless-ty A))
   g-snd = nlamι[ "s" ∈ GStream A ] g-head ⟨$⟩' (g-tail $ nvarι "s")
 
@@ -315,17 +313,17 @@ g-zeros : Tm Γ (GStream Nat')
 g-zeros = nlöbι[ "s" ∈ GStream Nat' ] g-cons $ pair (timeless-tm zero') (nvarι "s")
 
 private
-  module _ {Γ : Ctx ω ℓ} where
+  module _ {Γ : Ctx ω ℓ r} where
     zeros-test : g-head {Γ = Γ} $ g-zeros ≅ᵗᵐ timeless-tm zero'
     eq zeros-test {x = zero}  _ = refl
     eq zeros-test {x = suc n} _ = refl
 
     zeros-test2 : g-snd {Γ = Γ} $ g-zeros ≅ᵗᵐ next' (timeless-tm zero')
-    eq zeros-test2 {x = zero}        _ = refl
+    eq zeros-test2 {x = zero}        _ = P.tt
     eq zeros-test2 {x = suc zero}    _ = refl
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
-g-map : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
+g-map : {A : NullaryTypeOp ★ ℓ r} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ' r'} {{_ : IsNullaryNatural B}} →
         Tm Γ (timeless-ty (A ⇛ B) ⇛ GStream A ⇛ GStream B)
 g-map {A = A}{B = B} =
   nlamι[ "f" ∈ timeless-ty (A ⇛ B) ]
@@ -334,7 +332,7 @@ g-map {A = A}{B = B} =
         g-cons $ pair (timeless-tm (untimeless-tm (nvarι "f") $ untimeless-tm (g-head $ nvarι "s")))
                       (nvarι "m" ⊛' (g-tail $ nvarι "s"))
 
-g-iterate : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+g-iterate : {A : NullaryTypeOp ★ ℓ r} {{_ : IsNullaryNatural A}} →
             Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
 g-iterate {A = A} =
   nlamι[ "f" ∈ timeless-ty (A ⇛ A) ]
@@ -343,7 +341,7 @@ g-iterate {A = A} =
         g-cons $ pair (nvarι "x")
                       (nvarι "g" ⊛' next' (timeless-tm (untimeless-tm (nvarι "f") $ untimeless-tm (nvarι "x"))))
 
-g-iterate' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+g-iterate' : {A : NullaryTypeOp ★ ℓ r} {{_ : IsNullaryNatural A}} →
              Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
 g-iterate' {A = A} =
   nlamι[ "f" ∈ timeless-ty (A ⇛ A) ]
@@ -352,26 +350,26 @@ g-iterate' {A = A} =
         g-cons $ pair (nvarι "a")
                       (next' (g-map $ nvarι "f") ⊛' nvarι "s")
 
-suc-func : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat')
+suc-func : {Γ : Ctx ★ ℓ r} → Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
 
 g-nats : Tm Γ (GStream Nat')
 g-nats = g-iterate' $ timeless-tm suc-func $ timeless-tm zero'
 
 private
-  module _ {Γ : Ctx ω ℓ} where
+  module _ {Γ : Ctx ω ℓ r} where
     nats-test : g-head {Γ = Γ} $ g-nats ≅ᵗᵐ timeless-tm zero'
     eq nats-test {x = zero}  _ = refl
     eq nats-test {x = suc n} _ = refl
 
     nats-test2 : g-snd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (timeless-tm (suc' zero'))
-    eq nats-test2 {x = zero}        _ = refl
+    eq nats-test2 {x = zero}        _ = P.tt
     eq nats-test2 {x = suc zero}    _ = refl
     eq nats-test2 {x = suc (suc n)} _ = refl
 
     nats-test3 : g-thrd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (next' (timeless-tm (suc' (suc' zero'))))
-    eq nats-test3 {x = zero}              _ = refl
-    eq nats-test3 {x = suc zero}          _ = refl
+    eq nats-test3 {x = zero}              _ = P.tt
+    eq nats-test3 {x = suc zero}          _ = P.tt
     eq nats-test3 {x = suc (suc zero)}    _ = refl
     eq nats-test3 {x = suc (suc (suc n))} _ = refl
 
@@ -381,12 +379,12 @@ private
 
     map-test2 : g-thrd {Γ = Γ} $ (g-map $ timeless-tm suc-func $ (g-map $ timeless-tm suc-func $ g-nats))
                 ≅ᵗᵐ next' (next' (timeless-tm ((discr 4))))
-    eq map-test2 {x = zero}              _ = refl
-    eq map-test2 {x = suc zero}          _ = refl
+    eq map-test2 {x = zero}              _ = P.tt
+    eq map-test2 {x = suc zero}          _ = P.tt
     eq map-test2 {x = suc (suc zero)}    _ = refl
     eq map-test2 {x = suc (suc (suc n))} _ = refl
 
-g-interleave : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+g-interleave : {A : NullaryTypeOp ★ ℓ r} {{_ : IsNullaryNatural A}} →
                Tm Γ (GStream A ⇛ ▻' (GStream A) ⇛ GStream A)
 g-interleave {A = A} =
   nlöbι[ "g" ∈ GStream A ⇛ ▻' (GStream A) ⇛ GStream A ]
@@ -395,7 +393,7 @@ g-interleave {A = A} =
         g-cons $ pair (g-head $ nvarι "s")
                       (nvarι "g" ⊛' nvarι "t" ⊛' next' (g-tail $ nvarι "s"))
 
-one' : {Γ : Ctx ★ ℓ} → Tm Γ Nat'
+one' : {Γ : Ctx ★ ℓ r} → Tm Γ Nat'
 one' = suc' zero'
 
 g-toggle : Tm Γ (GStream Nat')
@@ -427,9 +425,9 @@ module _ (T-op : NullaryTypeOp ω ℓ) {{_ : IsNullaryNatural T-op}} where
 -}
 
 module _
-  {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}}
-  {B : NullaryTypeOp ★ ℓb} {{_ : IsNullaryNatural B}}
-  {C : NullaryTypeOp ★ ℓc} {{_ : IsNullaryNatural C}}
+  {A : NullaryTypeOp ★ ℓa ra} {{_ : IsNullaryNatural A}}
+  {B : NullaryTypeOp ★ ℓb rb} {{_ : IsNullaryNatural B}}
+  {C : NullaryTypeOp ★ ℓc rc} {{_ : IsNullaryNatural C}}
   where
 
   -- This is an implementation of an example on page 3 of the paper
@@ -456,11 +454,11 @@ module _
                                                                 $ untimeless-tm (nvarι "y")))
                         (nvarι "zs"))
 
-prim-nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
+prim-nat-sum : {Γ : Ctx ★ ℓ r} → Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
 term (prim-nat-sum t s) n γ = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
 naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (naturality s m≤n eγ)
 
-nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
+nat-sum : {Γ : Ctx ★ ℓ r} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nlamι[ "m" ∈ Nat' ] nlamι[ "n" ∈ Nat' ] prim-nat-sum (nvarι "m") (nvarι "n")
 
 pair' : Tm Γ (timeless-ty Nat' ⇛ ▻' (GStream Nat') ⇛ timeless-ty Nat' ⊠ ▻' (GStream Nat'))
@@ -478,10 +476,9 @@ g-fibs = nlöbι[ "s" ∈ GStream Nat' ]
             g-zipWith (timeless-tm nat-sum) ⟨$⟩' nvarι "ms" ⊛' nvarι "ns"
 
 private
-  module _ {Γ : Ctx ω ℓ} where
+  module _ {Γ : Ctx ω ℓ r} where
     fibs-test : g-thrd {Γ = Γ} $ g-fibs ≅ᵗᵐ next' (next' (timeless-tm (discr 2)))
-    eq fibs-test {x = zero} _ = refl
-    eq fibs-test {x = suc zero} _ = refl
-    eq fibs-test {x = suc (suc zero)} _ = refl
+    eq fibs-test {x = zero}              _ = P.tt
+    eq fibs-test {x = suc zero}          _ = P.tt
+    eq fibs-test {x = suc (suc zero)}    _ = refl
     eq fibs-test {x = suc (suc (suc x))} _ = refl
--}
