@@ -33,6 +33,7 @@ _⇒_.naturality (to (earlier-timeless-ctx {Γ = Γ})) _ = refl
 eq (isoˡ (earlier-timeless-ctx {Γ = Γ})) _ = refl
 eq (isoʳ (earlier-timeless-ctx {Γ = Γ})) _ = refl
 
+{-# TERMINATING #-}
 global-later-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
                   global-ty T ≅ᵗʸ global-ty (▻ (T [ from-earlier (timeless-ctx Γ) ]))
 term (func (from (global-later-ty T)) t) zero _ = _ -- = tt
