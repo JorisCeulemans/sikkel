@@ -27,15 +27,14 @@ open Category C
 
 private
   variable
-    r : Level
-    Γ Δ : Ctx C ℓ r
-    T : Ty Γ ℓ r
+    Γ Δ : Ctx C ℓ
+    T : Ty Γ ℓ
 
 
 --------------------------------------------------
 -- General description of discrete types
 
-Discr : (A : Set ℓ) → Ty Γ ℓ ℓ
+Discr : (A : Set ℓ) → Ty Γ ℓ
 type (Discr A) _ _ = ≡-setoid A
 morph (Discr A) _ _ = id
 morph-cong (Discr A) _ _ = id
@@ -85,7 +84,7 @@ eq (discr-natural a σ) _ = refl
 --------------------------------------------------
 -- The unit type
 
-Unit' : Ty Γ 0ℓ 0ℓ
+Unit' : Ty Γ 0ℓ
 Unit' = Discr ⊤
 
 tt' : Tm Γ Unit'
@@ -99,14 +98,14 @@ naturality !unit _ = refl
 unit-terminal : (η : T ↣ Unit') → η ≅ⁿ !unit
 eq (unit-terminal η) _ = refl
 
-unit-elim : (T : Ty Γ ℓ r) → Tm Γ T → Tm Γ (Unit' ⇛ T)
+unit-elim : (T : Ty Γ ℓ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
 term (unit-elim T t) _ _ $⟨ _ , _ ⟩ _ = t ⟨ _ , _ ⟩'
 $-cong (term (unit-elim T t) _ _) _ _ _ = ty≈-refl T
 $-hom-cong (term (unit-elim T t) _ _) _ = ty≈-refl T
 naturality (term (unit-elim T t) _ _) _ eγ _ = ty≈-sym T (naturality t _ eγ)
 naturality (unit-elim T t) _ _ _ _ _ = ty≈-refl T
 
-β-unit' : {T : Ty Γ ℓ r} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
+β-unit' : {T : Ty Γ ℓ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
 eq (β-unit' {T = T} t) _ = ty≈-refl T
 
 η-unit' : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
@@ -116,7 +115,7 @@ eq (η-unit' t) _ = refl
 --------------------------------------------------
 -- Booleans
 
-Bool' : Ty Γ 0ℓ 0ℓ
+Bool' : Ty Γ 0ℓ
 Bool' = Discr Bool
 
 true' : Tm Γ Bool'
@@ -155,7 +154,7 @@ naturality (t && s) f eγ = cong₂ _∧_ (naturality t f eγ) (naturality s f e
 --------------------------------------------------
 -- Natural numbers
 
-Nat' : Ty Γ 0ℓ 0ℓ
+Nat' : Ty Γ 0ℓ
 Nat' = Discr ℕ
 
 zero' : Tm Γ Nat'
@@ -165,7 +164,7 @@ suc' : Tm Γ Nat' → Tm Γ Nat'
 term (suc' t) x γ = suc (t ⟨ x , γ ⟩')
 naturality (suc' t) f γ = cong suc (naturality t f γ)
 
-nat-elim : (T : Ty Γ ℓ r) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
+nat-elim : (T : Ty Γ ℓ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
 nat-elim {Γ = Γ} T t f = MkTm tm nat
   where
     tm : (x : Ob) (γ : Γ ⟨ x ⟩) → (Nat' ⇛ T) ⟨ x , γ ⟩
@@ -195,7 +194,7 @@ nat-elim {Γ = Γ} T t f = MkTm tm nat
           (Nat' ⇛ T) ⟪ ρ , eγ ⟫ (tm z γz) ≈⟦ Nat' ⇛ T ⟧≈ tm y γy
     nat {y = y}{z = z} ρ-yz = helper
 
-module _ {T : Ty Γ ℓ r} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
+module _ {T : Ty Γ ℓ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
   β-nat-zero : app (nat-elim T t f) zero' ≅ᵗᵐ t
   eq β-nat-zero _ = ty≈-refl T
 

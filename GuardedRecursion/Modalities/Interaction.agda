@@ -21,13 +21,13 @@ open import GuardedRecursion.Modalities.Global
 
 private
   variable
-    ℓ ℓ' ℓc ℓt r r' rc rt : Level
+    ℓ ℓ' ℓc ℓt : Level
 
 
 --------------------------------------------------
 -- Interaction between the global and later modalities
 
-earlier-timeless-ctx : {Γ : Ctx ★ ℓ r} → ◄ (timeless-ctx Γ) ≅ᶜ timeless-ctx Γ
+earlier-timeless-ctx : {Γ : Ctx ★ ℓ} → ◄ (timeless-ctx Γ) ≅ᶜ timeless-ctx Γ
 from (earlier-timeless-ctx {Γ = Γ}) = from-earlier (timeless-ctx Γ)
 func (to (earlier-timeless-ctx {Γ = Γ})) γ = γ
 func-cong (to (earlier-timeless-ctx {Γ = Γ})) e = e
@@ -35,7 +35,7 @@ _⇒_.naturality (to (earlier-timeless-ctx {Γ = Γ})) _ = ctx≈-refl Γ
 eq (isoˡ (earlier-timeless-ctx {Γ = Γ})) _ = ctx≈-refl Γ
 eq (isoʳ (earlier-timeless-ctx {Γ = Γ})) _ = ctx≈-refl Γ
 
-global-later-ty : {Γ : Ctx ★ ℓc rc} (T : Ty (timeless-ctx Γ) ℓt rt) →
+global-later-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
                   global-ty T ≅ᵗʸ global-ty (▻ (ιc[ earlier-timeless-ctx ] T))
 term (func (from (global-later-ty T)) t)  zero   _ = Polymorphic.tt
 term (func (from (global-later-ty T)) t) (suc n) _ = t ⟨ n , tt ⟩'
@@ -53,7 +53,7 @@ eq (eq (isoˡ (global-later-ty T)) t) _ = ty≈-refl T
 eq (eq (isoʳ (global-later-ty T)) t) {x = zero}  _ = Polymorphic.tt
 eq (eq (isoʳ (global-later-ty T)) t) {x = suc x} _ = ty≈-refl T
 
-global-later'-ty : {Γ : Ctx ★ ℓc rc} (T : Ty (timeless-ctx Γ) ℓt rt) →
+global-later'-ty : {Γ : Ctx ★ ℓc} (T : Ty (timeless-ctx Γ) ℓt) →
                    global-ty T ≅ᵗʸ global-ty (▻' T)
 global-later'-ty = global-later-ty
 
@@ -61,7 +61,7 @@ global-later'-ty = global-later-ty
 --------------------------------------------------
 -- Interaction between the global and timeless modalities
 
-now-timeless-ctx : {Γ : Ctx ★ ℓc rc} → now (timeless-ctx Γ) ≅ᶜ Γ
+now-timeless-ctx : {Γ : Ctx ★ ℓc} → now (timeless-ctx Γ) ≅ᶜ Γ
 func (from now-timeless-ctx) = id
 func-cong (from now-timeless-ctx) = id
 _⇒_.naturality (from (now-timeless-ctx {Γ = Γ})) = rel-id Γ
@@ -71,11 +71,11 @@ _⇒_.naturality (to (now-timeless-ctx {Γ = Γ})) = ctx≈-sym Γ ∘ rel-id Γ
 eq (isoˡ (now-timeless-ctx {Γ = Γ})) _ = ctx≈-refl Γ
 eq (isoʳ (now-timeless-ctx {Γ = Γ})) _ = ctx≈-refl Γ
 
-now-timeless-natural : {Δ : Ctx ★ ℓ r} {Γ : Ctx ★ ℓ' r'} (σ : Δ ⇒ Γ) →
+now-timeless-natural : {Δ : Ctx ★ ℓ} {Γ : Ctx ★ ℓ'} (σ : Δ ⇒ Γ) →
                        from now-timeless-ctx ⊚ now-subst (timeless-subst σ) ≅ˢ σ ⊚ from now-timeless-ctx
 eq (now-timeless-natural {Γ = Γ} σ) _ = ctx≈-refl Γ
 
-global-timeless-ty : {Γ : Ctx ★ ℓc rc} (T : Ty Γ ℓt rt) →
+global-timeless-ty : {Γ : Ctx ★ ℓc} (T : Ty Γ ℓt) →
                      global-ty (timeless-ty (ιc[ now-timeless-ctx ] T)) ≅ᵗʸ T
 func (from (global-timeless-ty T)) tm = tm ⟨ 0 , tt ⟩'
 func-cong (from (global-timeless-ty T)) e-tm = eq e-tm tt
@@ -96,11 +96,11 @@ eq (eq (isoˡ (global-timeless-ty T)) tm) {x = n} _ =
   where open SetoidReasoning (type T tt _)
 eq (isoʳ (global-timeless-ty T)) _ = ty≈-refl T
 
-to-timeless-now-ctx : (Γ : Ctx ω ℓ r) → Γ ⇒ timeless-ctx (now Γ)
+to-timeless-now-ctx : (Γ : Ctx ω ℓ) → Γ ⇒ timeless-ctx (now Γ)
 func (to-timeless-now-ctx Γ) = Γ ⟪ z≤n ⟫_
 func-cong (to-timeless-now-ctx Γ) = rel-cong Γ z≤n
 _⇒_.naturality (to-timeless-now-ctx Γ) = rel-comp Γ z≤n _
 
-from-timeless-global-ty : {Γ : Ctx ω ℓc rc} {T : Ty (timeless-ctx (now Γ)) ℓt rt} →
+from-timeless-global-ty : {Γ : Ctx ω ℓc} {T : Ty (timeless-ctx (now Γ)) ℓt} →
                           Tm Γ (timeless-ty (global-ty T)) → Tm Γ (T [ to-timeless-now-ctx Γ ])
 from-timeless-global-ty {Γ = Γ} t = unglobal-tm (untimeless-tm t) [ to-timeless-now-ctx Γ ]'

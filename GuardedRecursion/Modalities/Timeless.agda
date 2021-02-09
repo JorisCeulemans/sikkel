@@ -16,11 +16,11 @@ open import CwF-Structure
 
 private
   variable
-    ℓ ℓ' r r' : Level
-    Δ Γ Θ : Ctx ω ℓ r
+    ℓ ℓ' : Level
+    Δ Γ Θ : Ctx ω ℓ
 
 
-now : Ctx ω ℓ r → Ctx ★ ℓ r
+now : Ctx ω ℓ → Ctx ★ ℓ
 setoid (now Γ) _ = setoid Γ 0
 rel (now Γ) _ γ = γ
 rel-cong (now Γ) _ e = e
@@ -38,7 +38,7 @@ eq (now-subst-id {Γ = Γ}) _ = ctx≈-refl Γ
 now-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → now-subst (σ ⊚ τ) ≅ˢ now-subst σ ⊚ now-subst τ
 eq (now-subst-⊚ {Θ = Θ} σ τ) _ = ctx≈-refl Θ
 
-timeless-ty : Ty (now Γ) ℓ r → Ty Γ ℓ r
+timeless-ty : Ty (now Γ) ℓ → Ty Γ ℓ
 type (timeless-ty {Γ = Γ} T) n γ = type T tt (Γ ⟪ z≤n ⟫ γ)
 morph (timeless-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ  = T ⟪ tt , proof ⟫_
   where
@@ -58,7 +58,7 @@ morph-hom-cong (timeless-ty T) e = morph-hom-cong T refl
 morph-id (timeless-ty T) t = ty≈-trans T (morph-hom-cong T refl) (morph-id T t)
 morph-comp (timeless-ty T) _ _ _ _ t = ty≈-trans T (morph-hom-cong T refl) (morph-comp T tt tt _ _ t)
 
-module _ {T : Ty (now Γ) ℓ r} where
+module _ {T : Ty (now Γ) ℓ} where
   timeless-tm : Tm (now Γ) T → Tm Γ (timeless-ty T)
   term (timeless-tm t) n γ = t ⟨ tt , Γ ⟪ z≤n ⟫ γ ⟩'
   Tm.naturality (timeless-tm t) _ _ = Tm.naturality t tt _
@@ -83,7 +83,7 @@ module _ {T : Ty (now Γ) ℓ r} where
   timeless-ty-β : (t : Tm (now Γ) T) → untimeless-tm (timeless-tm t) ≅ᵗᵐ t
   eq (timeless-ty-β t) γ = Tm.naturality t tt _
 
-timeless-ty-cong : {T : Ty (now Γ) ℓ r} {S : Ty (now Γ) ℓ' r'} → T ≅ᵗʸ S → timeless-ty T ≅ᵗʸ timeless-ty S
+timeless-ty-cong : {T : Ty (now Γ) ℓ} {S : Ty (now Γ) ℓ'} → T ≅ᵗʸ S → timeless-ty T ≅ᵗʸ timeless-ty S
 func (from (timeless-ty-cong T=S)) = func (from T=S)
 func-cong (from (timeless-ty-cong T=S)) = func-cong (from T=S)
 CwF-Structure.naturality (from (timeless-ty-cong T=S)) = CwF-Structure.naturality (from T=S)
@@ -93,14 +93,14 @@ CwF-Structure.naturality (to (timeless-ty-cong T=S)) = CwF-Structure.naturality 
 eq (isoˡ (timeless-ty-cong T=S)) = eq (isoˡ T=S)
 eq (isoʳ (timeless-ty-cong T=S)) = eq (isoʳ T=S)
 
-module _ {T : Ty (now Γ) ℓ r} where
+module _ {T : Ty (now Γ) ℓ} where
   timeless-tm-cong : {t s : Tm (now Γ) T} → t ≅ᵗᵐ s → timeless-tm t ≅ᵗᵐ timeless-tm s
   eq (timeless-tm-cong t=s) γ = eq t=s (Γ ⟪ z≤n ⟫ γ)
 
   untimeless-tm-cong : {t s : Tm Γ (timeless-ty T)} → t ≅ᵗᵐ s → untimeless-tm t ≅ᵗᵐ untimeless-tm s
   eq (untimeless-tm-cong t=s) γ = morph-cong T tt _ (eq t=s γ)
 
-timeless-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (now Γ) ℓ r) → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
+timeless-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (now Γ) ℓ) → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
 func (from (timeless-ty-natural σ T)) = ctx-element-subst T (_⇒_.naturality σ _)
 func-cong (from (timeless-ty-natural σ T)) = morph-cong T tt _
 CwF-Structure.naturality (from (timeless-ty-natural σ T)) t = morph-hom-cong-2-2 T refl
@@ -124,7 +124,7 @@ eq (isoʳ (timeless-ty-natural σ T)) t =
     t ∎
   where open SetoidReasoning (type T tt _)
 
-module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ r} where
+module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} where
   timeless-tm-natural : (t : Tm (now Γ) T) →
                         (timeless-tm t) [ σ ]' ≅ᵗᵐ ι[ timeless-ty-natural σ T ] timeless-tm (t [ now-subst σ ]')
   eq (timeless-tm-natural t) δ = ty≈-sym T (Tm.naturality t tt _)

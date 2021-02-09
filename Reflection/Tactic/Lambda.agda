@@ -19,7 +19,7 @@ open import Reflection.Tactic.ConstructExpression
 infixr 4 nlamι[_∈_]_
 
 
-lam-tactic : ∀ {C ℓc ℓt ℓs rc rt rs} {Γ : Ctx C ℓc rc} → Ty Γ ℓt rt → Ty Γ ℓs rs → Term → TC ⊤
+lam-tactic : ∀ {C ℓc ℓt ℓs} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓs → Term → TC ⊤
 lam-tactic T S hole = do
   t-wantedBodyType ← quoteTC (S [ π {T = T} ])
   debugPrint "vtac" 5 (strErr "lam-tactic called with type" ∷ termErr t-wantedBodyType ∷ [])
@@ -30,12 +30,12 @@ lam-tactic T S hole = do
   let proof = def (quote reduce-sound) (vArg expr-wantedBodyType ∷ [])
   unify hole (con (quote _,_) (vArg t-reducedBodyType ∷ vArg proof ∷ []))
 
-lamι : ∀ {C ℓc ℓt ℓs ℓs' rc rt rs rs'} {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) {S : Ty Γ ℓs rs}
-       {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' rs' ] (S [ π ] ≅ᵗʸ S')} →
+lamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (T : Ty Γ ℓt) {S : Ty Γ ℓs}
+       {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
        Tm (Γ ,, T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 lamι T {body-type = S' , Sπ=S'} b = lam T (ι[ Sπ=S' ] b)
 
-nlamι[_∈_]_ : ∀ {C ℓc ℓt ℓs ℓs' rc rt rs rs'} {Γ : Ctx C ℓc rc} (v : String) (T : Ty Γ ℓt rt) {S : Ty Γ ℓs rs}
-              {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' rs' ] (S [ π ] ≅ᵗʸ S')} →
+nlamι[_∈_]_ : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (v : String) (T : Ty Γ ℓt) {S : Ty Γ ℓs}
+              {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
               Tm (Γ ,, v ∈ T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 nlamι[_∈_]_ v = lamι

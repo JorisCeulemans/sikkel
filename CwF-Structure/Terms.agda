@@ -24,15 +24,14 @@ infix 1 _≅ᵗᵐ_
 private
   variable
     x : Ob
-    r : Level
-    Γ Δ Θ : Ctx C ℓ r
-    T S R : Ty Γ ℓ r
+    Γ Δ Θ : Ctx C ℓ
+    T S R : Ty Γ ℓ
 
 
 --------------------------------------------------
 -- Definition of terms
 
-record Tm {ℓc rc ℓt rt} (Γ : Ctx C ℓc rc) (T : Ty Γ ℓt rt) : Set (ℓc ⊔ ℓt ⊔ rc ⊔ rt) where
+record Tm {ℓc ℓt} (Γ : Ctx C ℓc) (T : Ty Γ ℓt) : Set (ℓc ⊔ ℓt) where
   constructor MkTm
   no-eta-equality
 
@@ -54,7 +53,7 @@ t ⟨ x , γ ⟩' = term t x γ
 --------------------------------------------------
 -- Equivalence of terms
 
-record _≅ᵗᵐ_ {ℓc ℓt rc rt} {Γ : Ctx C ℓc rc} {T : Ty Γ ℓt rt} (t s : Tm Γ T) : Set (ℓc ⊔ rt) where
+record _≅ᵗᵐ_ {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} (t s : Tm Γ T) : Set (ℓc ⊔ ℓt) where
   field
     eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≈⟦ T ⟧≈ s ⟨ x , γ ⟩'
 open _≅ᵗᵐ_ public
@@ -178,8 +177,8 @@ tm-subst-comp : (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
 eq (tm-subst-comp {T = T} t τ σ) _ = ty≈-refl T
 
 -- Nicer syntax for substitutions coming from context equality
-ιc[_]'_ : {S : Ty Δ ℓ r} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Δ S → Tm Γ (ιc[ Γ=Δ ] S)
+ιc[_]'_ : {S : Ty Δ ℓ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Δ S → Tm Γ (ιc[ Γ=Δ ] S)
 ιc[ Γ=Δ ]' s = s [ from Γ=Δ ]'
 
-ιc⁻¹[_]'_ : {T : Ty Γ ℓ r} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Γ T → Tm Δ (ιc⁻¹[ Γ=Δ ] T)
+ιc⁻¹[_]'_ : {T : Ty Γ ℓ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Γ T → Tm Δ (ιc⁻¹[ Γ=Δ ] T)
 ιc⁻¹[ Γ=Δ ]' t = t [ to Γ=Δ ]'

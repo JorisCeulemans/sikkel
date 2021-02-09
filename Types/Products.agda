@@ -19,12 +19,12 @@ open import CwF-Structure.Terms
 
 private
   variable
-    ℓc ℓt ℓt' r r' rt rt' rs rs' : Level
-    Γ Δ : Ctx C ℓ r
-    T T' S S' : Ty Γ ℓ r
+    ℓc ℓt ℓt' : Level
+    Γ Δ : Ctx C ℓ
+    T T' S S' : Ty Γ ℓ
 
 
-_⊠_ : Ty Γ ℓ r → Ty Γ ℓ' r' → Ty Γ (ℓ ⊔ ℓ') (r ⊔ r')
+_⊠_ : Ty Γ ℓ → Ty Γ ℓ' → Ty Γ (ℓ ⊔ ℓ')
 type (T ⊠ S) x γ = type T x γ ×ₛ type S x γ
 morph (T ⊠ S) f eγ [ t , s ] = [ T ⟪ f , eγ ⟫ t , S ⟪ f , eγ ⟫ s ]
 morph-cong (T ⊠ S) f eγ [ t=t' , s=s' ] = [ morph-cong T f eγ t=t' , morph-cong S f eγ s=s' ]
@@ -65,7 +65,7 @@ snd-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → snd p ≅ᵗᵐ snd p
 eq (snd-cong p=p') γ = proj₂ (eq p=p' γ)
 
 module _ {ℓt ℓt' ℓs ℓs'}
-  {T : Ty Γ ℓt rt} {T' : Ty Γ ℓt' rt'} {S : Ty Γ ℓs rs} {S' : Ty Γ ℓs' rs'}
+  {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
   pair-ι : (t : Tm Γ T') (s : Tm Γ S') → ι[ ⊠-cong T=T' S=S' ] pair t s ≅ᵗᵐ pair (ι[ T=T' ] t) (ι[ S=S' ] s)
@@ -77,7 +77,7 @@ module _ {ℓt ℓt' ℓs ℓs'}
   snd-ι : (p : Tm Γ (T' ⊠ S')) → ι[ S=S' ] snd p ≅ᵗᵐ snd (ι[ ⊠-cong T=T' S=S' ] p)
   eq (snd-ι p) _ = ty≈-refl S
 
-module _ {T : Ty Γ ℓ r} {S : Ty Γ ℓ' r'} (σ : Δ ⇒ Γ) where
+module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (σ : Δ ⇒ Γ) where
   ⊠-natural : (T ⊠ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊠ (S [ σ ])
   func (from ⊠-natural) = id
   func-cong (from ⊠-natural) = id
@@ -97,7 +97,7 @@ module _ {T : Ty Γ ℓ r} {S : Ty Γ ℓ' r'} (σ : Δ ⇒ Γ) where
   snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≅ᵗᵐ snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
   eq (snd-natural p) _ = ty≈-refl (S [ σ ])
 
-module _ {T : Ty Γ ℓ r} {S : Ty Γ ℓ' r'} (t : Tm Γ T) (s : Tm Γ S) where
+module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (t : Tm Γ T) (s : Tm Γ S) where
   β-⊠-fst : fst (pair t s) ≅ᵗᵐ t
   eq β-⊠-fst _ = ty≈-refl T
 

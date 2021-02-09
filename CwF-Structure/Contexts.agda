@@ -17,15 +17,11 @@ open import Relation.Binary.PropositionalEquality
 open import Categories
 open import Helpers
 
-private
-  variable
-    r r' : Level
-
 
 --------------------------------------------------
 -- Definition of contexts and substitutions as presheaves over C
 
-record Ctx (C : Category) ℓ r : Set (lsuc ℓ ⊔ lsuc r) where
+record Ctx (C : Category) ℓ : Set (lsuc ℓ) where
   constructor MkCtx
   no-eta-equality
 
@@ -33,12 +29,12 @@ record Ctx (C : Category) ℓ r : Set (lsuc ℓ ⊔ lsuc r) where
   open Setoid
 
   field
-    setoid : Ob → Setoid ℓ r
+    setoid : Ob → Setoid ℓ ℓ
 
   _⟨_⟩ : Ob → Set ℓ
   _⟨_⟩ x = Carrier (setoid x)
 
-  ctx≈ : (x : Ob) → _⟨_⟩ x → _⟨_⟩ x → Set r
+  ctx≈ : (x : Ob) → _⟨_⟩ x → _⟨_⟩ x → Set ℓ
   ctx≈ x = _≈_ (setoid x)
 
   field
@@ -60,7 +56,7 @@ record Ctx (C : Category) ℓ r : Set (lsuc ℓ ⊔ lsuc r) where
 
 open Ctx public
 
-ctx≈-syntax : {C : Category} (Γ : Ctx C ℓ r) {x : Category.Ob C} (γ1 γ2 : Γ ⟨ x ⟩) → Set r
+ctx≈-syntax : {C : Category} (Γ : Ctx C ℓ) {x : Category.Ob C} (γ1 γ2 : Γ ⟨ x ⟩) → Set ℓ
 ctx≈-syntax Γ {x} = ctx≈ Γ x
 
 infix 1 ctx≈-syntax
@@ -76,19 +72,19 @@ module _ {C : Category} where
   private
     variable
       x y z : Ob
-      Δ Γ Θ : Ctx C ℓ r
+      Δ Γ Θ : Ctx C ℓ
 
-  _⟪_⟫_ : (Γ : Ctx C ℓ r) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
+  _⟪_⟫_ : (Γ : Ctx C ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
   Γ ⟪ f ⟫ γ = rel Γ f γ
 
-  rel-hom-cong : (Γ : Ctx C ℓ r) {f f' : Hom x y} {γy : Γ ⟨ y ⟩} →
+  rel-hom-cong : (Γ : Ctx C ℓ) {f f' : Hom x y} {γy : Γ ⟨ y ⟩} →
                  f ≡ f' → Γ ⟪ f ⟫ γy ≈[ Γ ]≈ Γ ⟪ f' ⟫ γy
   rel-hom-cong Γ ≡-refl = ctx≈-refl Γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
   -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
   -- of function types.
-  strong-rel-comp : (Γ : Ctx C ℓ r) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
+  strong-rel-comp : (Γ : Ctx C ℓ) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                     (eq-zy : Γ ⟪ g ⟫ γz ≈[ Γ ]≈ γy) (eq-yx : Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx) →
                     Γ ⟪ g ∙ f ⟫ γz ≈[ Γ ]≈ γx
   strong-rel-comp {x = x} Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
@@ -103,7 +99,7 @@ module _ {C : Category} where
     where open SetoidReasoning (setoid Γ x)
 
   -- The type of substitutions from context Δ to context Γ
-  record _⇒_ (Δ : Ctx C ℓ r) (Γ : Ctx C ℓ' r') : Set (ℓ ⊔ ℓ' ⊔ r ⊔ r') where
+  record _⇒_ (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
     constructor MkSubst
     no-eta-equality
     field
@@ -112,7 +108,7 @@ module _ {C : Category} where
       naturality : ∀ {x y} {f : Hom x y} (δ : Δ ⟨ y ⟩) → Γ ⟪ f ⟫ (func δ) ≈[ Γ ]≈ func (Δ ⟪ f ⟫ δ)
   open _⇒_ public
 
-  id-subst : (Γ : Ctx C ℓ r) → Γ ⇒ Γ
+  id-subst : (Γ : Ctx C ℓ) → Γ ⇒ Γ
   func (id-subst Γ) = id
   func-cong (id-subst Γ) e = e
   naturality (id-subst Γ) = λ _ → ctx≈-refl Γ
@@ -136,7 +132,7 @@ module _ {C : Category} where
 
   -- Two substitutions σ, τ : Δ ⇒ Γ are equivalent if they map every value of
   -- Δ ⟨ x ⟩ (for any object x) to equivalent values of Γ ⟨ x ⟩.
-  record _≅ˢ_ {ℓ ℓ'} {Δ : Ctx C ℓ r} {Γ : Ctx C ℓ' r'} (σ τ : Δ ⇒ Γ) : Set (ℓ ⊔ r') where
+  record _≅ˢ_ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ τ : Δ ⇒ Γ) : Set (ℓ ⊔ ℓ') where
     field
       eq : ∀ {x} δ → func σ {x} δ ≈[ Γ ]≈ func τ δ
   open _≅ˢ_ public
@@ -183,8 +179,8 @@ module _ {C : Category} where
   ⊚-id-substˡ : (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
   eq (⊚-id-substˡ {Γ = Γ} σ) _ = ctx≈-refl Γ
 
-  ⊚-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ r₁ r₂ r₃ r₄}
-             {Γ₁ : Ctx C ℓ₁ r₁} {Γ₂ : Ctx C ℓ₂ r₂} {Γ₃ : Ctx C ℓ₃ r₃} {Γ₄ : Ctx C ℓ₄ r₄}
+  ⊚-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+             {Γ₁ : Ctx C ℓ₁} {Γ₂ : Ctx C ℓ₂} {Γ₃ : Ctx C ℓ₃} {Γ₄ : Ctx C ℓ₄}
              (σ₃₄ : Γ₃ ⇒ Γ₄) (σ₂₃ : Γ₂ ⇒ Γ₃) (σ₁₂ : Γ₁ ⇒ Γ₂) →
              (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≅ˢ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
   eq (⊚-assoc {Γ₄ = Γ₄} σ₃₄ σ₂₃ σ₁₂) _ = ctx≈-refl Γ₄
@@ -199,17 +195,17 @@ module _ {C : Category} where
   --------------------------------------------------
   -- The empty context (i.e. terminal object in the category of contexts)
 
-  ◇ : Ctx C 0ℓ 0ℓ
+  ◇ : Ctx C 0ℓ
   setoid ◇ _ = ≡-setoid ⊤
   rel ◇ _ _ = tt
   rel-cong ◇ _ _ = ≡-refl
   rel-id ◇ _ = ≡-refl
   rel-comp ◇ _ _ _ = ≡-refl
 
-  !◇ : (Γ : Ctx C ℓ r) → Γ ⇒ ◇
+  !◇ : (Γ : Ctx C ℓ) → Γ ⇒ ◇
   func (!◇ Γ) _ = tt
   func-cong (!◇ Γ) _ = ≡-refl
   naturality (!◇ Γ) _ = ≡-refl
 
-  ◇-terminal : (Γ : Ctx C ℓ r) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ
+  ◇-terminal : (Γ : Ctx C ℓ) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ
   eq (◇-terminal Γ σ τ) _ = ≡-refl

@@ -28,9 +28,9 @@ infixl 20 _⊙_
 
 private
   variable
-    ℓc ℓt ℓt' r rc rt rt' : Level
+    ℓc ℓt ℓt' : Level
     x y z w : Ob
-    Δ Γ Θ : Ctx C ℓ r
+    Δ Γ Θ : Ctx C ℓ
 
 
 --------------------------------------------------
@@ -41,7 +41,7 @@ private
 --   a morphism f : Hom x y together with a proof that Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx. This explains
 --   the type of the field morph (representing the action of the presheaf on morphisms).
 
-record Ty (Γ : Ctx C ℓc rc) (ℓt rt : Level) : Set (ℓc ⊔ lsuc ℓt ⊔ rc ⊔ lsuc rt) where
+record Ty (Γ : Ctx C ℓc) (ℓt : Level) : Set (ℓc ⊔ lsuc ℓt) where
   constructor MkTy
   no-eta-equality
 
@@ -50,12 +50,12 @@ record Ty (Γ : Ctx C ℓc rc) (ℓt rt : Level) : Set (ℓc ⊔ lsuc ℓt ⊔ r
   open Setoid
   
   field
-    type : (x : Ob) (γ : Γ ⟨ x ⟩) → Setoid ℓt rt
+    type : (x : Ob) (γ : Γ ⟨ x ⟩) → Setoid ℓt ℓt
 
   _⟨_,_⟩ : (x : Ob) → Γ ⟨ x ⟩ → Set ℓt
   _⟨_,_⟩ x γ = Carrier (type x γ)
 
-  ty≈ : (x : Ob) (γ : Γ ⟨ x ⟩) → _⟨_,_⟩ x γ → _⟨_,_⟩ x γ → Set rt
+  ty≈ : (x : Ob) (γ : Γ ⟨ x ⟩) → _⟨_,_⟩ x γ → _⟨_,_⟩ x γ → Set ℓt
   ty≈ x γ = _≈_ (type x γ)
 
   field
@@ -83,7 +83,7 @@ record Ty (Γ : Ctx C ℓc rc) (ℓt rt : Level) : Set (ℓc ⊔ lsuc ℓt ⊔ r
 
 open Ty public
 
-ty≈-syntax : (T : Ty Γ ℓ r) {x : Category.Ob C} {γ : Γ ⟨ x ⟩} (t1 t2 : T ⟨ x , γ ⟩) → Set r
+ty≈-syntax : (T : Ty Γ ℓ) {x : Category.Ob C} {γ : Γ ⟨ x ⟩} (t1 t2 : T ⟨ x , γ ⟩) → Set ℓ
 ty≈-syntax T {x}{γ} = ty≈ T x γ
 
 infix 1 ty≈-syntax
@@ -91,7 +91,7 @@ syntax ty≈-syntax T t1 t2 = t1 ≈⟦ T ⟧≈ t2
 
 private
   variable
-    T S R : Ty Γ ℓ r
+    T S R : Ty Γ ℓ
 
 {-
 _⟨_,_⟩ : Ty Γ ℓ → (x : Ob) → Γ ⟨ x ⟩ → Set ℓ
@@ -102,7 +102,7 @@ _⟪_,_⟫ : (T : Ty Γ ℓ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x 
 _⟪_,_⟫ T f eγ = morph T f eγ
 -}
 
-_⟪_,_⟫_ : (T : Ty Γ ℓ r) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx →
+_⟪_,_⟫_ : (T : Ty Γ ℓ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx →
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 T ⟪ f , eγ ⟫ t = morph T f eγ t
 
@@ -116,7 +116,7 @@ morph-cong : (T : Ty Γ ℓ) {f f' : Hom x y} (e-hom : f ≡ f')
 morph-cong T refl refl refl = refl
 -}
 
-morph-hom-cong-2-1 : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓ r)
+morph-hom-cong-2-1 : {Γ : Ctx C ℓc} (T : Ty Γ ℓ)
                      {f : Hom x y} {g : Hom y z} {h : Hom x z} (e-hom : g ∙ f ≡ h)
                      {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
                      {ef : Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx} {eg : Γ ⟪ g ⟫ γz ≈[ Γ ]≈ γy} {eh : Γ ⟪ h ⟫ γz ≈[ Γ ]≈ γx}
@@ -131,7 +131,7 @@ morph-hom-cong-2-1 T {f}{g}{h} e-hom {t = t} =
     T ⟪ h , _ ⟫ t ∎
   where open SetoidReasoning (type T _ _)
 
-morph-hom-cong-2-2 : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓ r)
+morph-hom-cong-2-2 : {Γ : Ctx C ℓc} (T : Ty Γ ℓ)
                      {f : Hom x y} {f' : Hom x z} {g : Hom y w} {g' : Hom z w} (e-hom : g ∙ f ≡ g' ∙ f')
                      {γw : Γ ⟨ w ⟩} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
                      {ef : Γ ⟪ f ⟫ γy ≈[ Γ ]≈ γx} {ef' : Γ ⟪ f' ⟫ γz ≈[ Γ ]≈ γx}
@@ -149,14 +149,14 @@ morph-hom-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
     T ⟪ f' , _ ⟫ T ⟪ g' , _ ⟫ t ∎
   where open SetoidReasoning (type T _ _)
 
-ctx-element-subst : (T : Ty Γ ℓ r) {γ γ' : Γ ⟨ x ⟩} → γ ≈[ Γ ]≈ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
+ctx-element-subst : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} → γ ≈[ Γ ]≈ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
 ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , ctx≈-trans Γ (rel-id Γ _) eγ ⟫_
 
-ctx-element-subst-inverseˡ : (T : Ty Γ ℓ r) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≈[ Γ ]≈ γ'} (t : T ⟨ x , γ ⟩)→
+ctx-element-subst-inverseˡ : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≈[ Γ ]≈ γ'} (t : T ⟨ x , γ ⟩)→
                             ctx-element-subst T (ctx≈-sym Γ eγ) (ctx-element-subst T eγ t) ≈⟦ T ⟧≈ t
 ctx-element-subst-inverseˡ T t = ty≈-trans T (morph-hom-cong-2-1 T hom-idˡ) (morph-id T t)
 
-ctx-element-subst-inverseʳ : (T : Ty Γ ℓ r) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≈[ Γ ]≈ γ'} (t : T ⟨ x , γ' ⟩)→
+ctx-element-subst-inverseʳ : (T : Ty Γ ℓ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≈[ Γ ]≈ γ'} (t : T ⟨ x , γ' ⟩)→
                             ctx-element-subst T eγ (ctx-element-subst T (ctx≈-sym Γ eγ) t) ≈⟦ T ⟧≈ t
 ctx-element-subst-inverseʳ T t = ty≈-trans T (morph-hom-cong-2-1 T hom-idˡ) (morph-id T t)
 
@@ -170,7 +170,7 @@ morph-transport : (T : Ty Γ ℓ) {f : Hom x y}
 morph-transport T refl refl t = refl
 -}
 
-module _ {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) where
+module _ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) where
   strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
   strict-morph f γ t = T ⟪ f , ctx≈-refl Γ ⟫ t
 {-
@@ -203,7 +203,7 @@ module _ {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) where
 --------------------------------------------------
 -- Natural transformations between types
 
-record _↣_ {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓt' rt') : Set (ℓc ⊔ ℓt ⊔ ℓt' ⊔ rc ⊔ rt ⊔ rt') where
+record _↣_ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓt') : Set (ℓc ⊔ ℓt ⊔ ℓt') where
   no-eta-equality
   field
     func : ∀ {x}{γ} → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
@@ -212,7 +212,7 @@ record _↣_ {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓt' rt') : Se
                  S ⟪ f , eγ ⟫ (func t) ≈⟦ S ⟧≈ func (T ⟪ f , eγ ⟫ t)
 open _↣_ public
 
-record _≅ⁿ_ {Γ : Ctx C ℓc rc} {T : Ty Γ ℓt rt} {S : Ty Γ ℓt' rt'} (η φ : T ↣ S) : Set (ℓc ⊔ ℓt ⊔ rt') where
+record _≅ⁿ_ {Γ : Ctx C ℓc} {T : Ty Γ ℓt} {S : Ty Γ ℓt'} (η φ : T ↣ S) : Set (ℓc ⊔ ℓt ⊔ ℓt') where
   field
     eq : ∀ {x γ} (t : T ⟨ x , γ ⟩) → func η t ≈⟦ S ⟧≈ func φ t
 open _≅ⁿ_ public
@@ -249,7 +249,7 @@ module ≅ⁿ-Reasoning where
   syntax step-≅  η φ≅µ η≅φ = η ≅⟨  η≅φ ⟩ φ≅µ
   syntax step-≅˘ η φ≅µ φ≅η = η ≅˘⟨ φ≅η ⟩ φ≅µ
 
-id-trans : (T : Ty Γ ℓ r) → T ↣ T
+id-trans : (T : Ty Γ ℓ) → T ↣ T
 func (id-trans T) = id
 func-cong (id-trans T) e = e
 naturality (id-trans T) _ = ty≈-refl T
@@ -272,8 +272,8 @@ eq (⊙-id-transʳ {S = S} η) _ = ty≈-refl S
 ⊙-id-transˡ : (η : T ↣ S) → id-trans S ⊙ η ≅ⁿ η
 eq (⊙-id-transˡ {S = S} η) _ = ty≈-refl S
 
-⊙-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ r₁ r₂ r₃ r₄}
-           {T₁ : Ty Γ ℓ₁ r₁} {T₂ : Ty Γ ℓ₂ r₂} {T₃ : Ty Γ ℓ₃ r₃} {T₄ : Ty Γ ℓ₄ r₄}
+⊙-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+           {T₁ : Ty Γ ℓ₁} {T₂ : Ty Γ ℓ₂} {T₃ : Ty Γ ℓ₃} {T₄ : Ty Γ ℓ₄}
            (η₃₄ : T₃ ↣ T₄) (η₂₃ : T₂ ↣ T₃) (η₁₂ : T₁ ↣ T₂) →
            (η₃₄ ⊙ η₂₃) ⊙ η₁₂ ≅ⁿ η₃₄ ⊙ (η₂₃ ⊙ η₁₂)
 eq (⊙-assoc {T₄ = T₄} η₃₄ η₂₃ η₁₂) _ = ty≈-refl T₄
@@ -290,7 +290,7 @@ eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
 
 -- Two types are said to be equivalent if they are naturally isomorphic as presheaves.
 -- This turns out to be easier to work with than standard propositional equality.
-record _≅ᵗʸ_ {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓt' rt') : Set (ℓc ⊔ ℓt ⊔ ℓt' ⊔ rc ⊔ rt ⊔ rt') where
+record _≅ᵗʸ_ {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓt') : Set (ℓc ⊔ ℓt ⊔ ℓt') where
   field
     from : T ↣ S
     to : S ↣ T
@@ -350,16 +350,16 @@ module ≅ᵗʸ-Reasoning where
   begin_ : T ≅ᵗʸ S → T ≅ᵗʸ S
   begin_ T=S = T=S
 
-  _≅⟨⟩_ : (T : Ty Γ ℓt rt) → T ≅ᵗʸ S → T ≅ᵗʸ S
+  _≅⟨⟩_ : (T : Ty Γ ℓt) → T ≅ᵗʸ S → T ≅ᵗʸ S
   _ ≅⟨⟩ T=S = T=S
 
-  step-≅ : (T : Ty Γ ℓt rt) → S ≅ᵗʸ R → T ≅ᵗʸ S → T ≅ᵗʸ R
+  step-≅ : (T : Ty Γ ℓt) → S ≅ᵗʸ R → T ≅ᵗʸ S → T ≅ᵗʸ R
   step-≅ _ S≅R T≅S = ≅ᵗʸ-trans T≅S S≅R
 
-  step-≅˘ : (T : Ty Γ ℓt rt) → S ≅ᵗʸ R → S ≅ᵗʸ T → T ≅ᵗʸ R
+  step-≅˘ : (T : Ty Γ ℓt) → S ≅ᵗʸ R → S ≅ᵗʸ T → T ≅ᵗʸ R
   step-≅˘ _ S≅R S≅T = ≅ᵗʸ-trans (≅ᵗʸ-sym S≅T) S≅R
 
-  _∎ : (T : Ty Γ ℓt rt) → T ≅ᵗʸ T
+  _∎ : (T : Ty Γ ℓt) → T ≅ᵗʸ T
   _∎ _ = ≅ᵗʸ-refl
 
   syntax step-≅  T S≅R T≅S = T ≅⟨  T≅S ⟩ S≅R
@@ -369,7 +369,7 @@ module ≅ᵗʸ-Reasoning where
 --------------------------------------------------
 -- Substitution of types
 
-_[_] : Ty Γ ℓ r → Δ ⇒ Γ → Ty Δ ℓ r
+_[_] : Ty Γ ℓ → Δ ⇒ Γ → Ty Δ ℓ
 type (T [ σ ]) x δ = type T x (func σ δ)
 morph (_[_] {Γ = Γ} T σ) f {δy}{δx} eq-yx t = T ⟪ f , proof ⟫ t
   where
@@ -382,7 +382,7 @@ morph-id (T [ σ ]) t = ty≈-trans T (morph-hom-cong T ≡-refl)
 morph-comp (T [ σ ]) f g eq-zy eq-yx t = ty≈-trans T (morph-hom-cong T ≡-refl)
                                                      (morph-comp T f g _ _ t)
 
-ty-subst-id : (T : Ty Γ ℓ r) → T [ id-subst Γ ] ≅ᵗʸ T
+ty-subst-id : (T : Ty Γ ℓ) → T [ id-subst Γ ] ≅ᵗʸ T
 func (from (ty-subst-id T)) = id
 func-cong (from (ty-subst-id T)) = id
 naturality (from (ty-subst-id T)) _ = morph-hom-cong T ≡-refl
@@ -392,7 +392,7 @@ naturality (to (ty-subst-id T)) _ = morph-hom-cong T ≡-refl
 eq (isoˡ (ty-subst-id T)) _ = ty≈-refl T
 eq (isoʳ (ty-subst-id T)) _ = ty≈-refl T
 
-ty-subst-comp : (T : Ty Θ ℓ r) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
+ty-subst-comp : (T : Ty Θ ℓ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
 func (from (ty-subst-comp T τ σ)) = id
 func-cong (from (ty-subst-comp T τ σ)) = id
 naturality (from (ty-subst-comp T τ σ)) _ = morph-hom-cong T ≡-refl
@@ -424,7 +424,7 @@ to (ty-subst-cong-ty σ T=S) = ty-subst-map σ (to T=S)
 eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
-ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ ℓ r) → T [ σ ] ≅ᵗʸ T [ τ ]
+ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ ℓ) → T [ σ ] ≅ᵗʸ T [ τ ]
 func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
 func-cong (from (ty-subst-cong-subst σ=τ T)) e = morph-cong T hom-id _ e
 naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-hom-cong-2-2 T (≡-trans hom-idˡ (≡-sym hom-idʳ))
@@ -451,8 +451,8 @@ eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
   where open SetoidReasoning (type T _ _)
 
 -- Nicer syntax for substitutions coming from context equality
-ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ ℓ r → Ty Γ ℓ r
+ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ ℓ → Ty Γ ℓ
 ιc[ Γ=Δ ] T = T [ from Γ=Δ ]
 
-ιc⁻¹[_]_ : Γ ≅ᶜ Δ → Ty Γ ℓ r → Ty Δ ℓ r
+ιc⁻¹[_]_ : Γ ≅ᶜ Δ → Ty Γ ℓ → Ty Δ ℓ
 ιc⁻¹[ Γ=Δ ] T = T [ to Γ=Δ ]

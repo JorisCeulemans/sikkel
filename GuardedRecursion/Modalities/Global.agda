@@ -17,11 +17,11 @@ open import CwF-Structure
 
 private
   variable
-    ℓ ℓ' r r' : Level
-    Δ Γ Θ : Ctx ★ ℓ r
+    ℓ ℓ' : Level
+    Δ Γ Θ : Ctx ★ ℓ
 
 
-timeless-ctx : Ctx ★ ℓ r → Ctx ω ℓ r
+timeless-ctx : Ctx ★ ℓ → Ctx ω ℓ
 setoid (timeless-ctx Γ) _ = setoid Γ tt
 rel (timeless-ctx Γ) _ γ = γ
 rel-cong (timeless-ctx Γ) _ e = e
@@ -47,14 +47,14 @@ _⇒_.naturality (const-subst {Γ = Γ} γ) _ = ctx≈-refl Γ
 const-subst-cong : {γ1 γ2 : Γ ⟨ tt ⟩} → γ1 ≈[ Γ ]≈ γ2 → const-subst {Γ = Γ} γ1 ≅ˢ const-subst γ2
 eq (const-subst-cong eγ) tt = eγ
 
-ty-const-subst-cong : {γ1 γ2 : Γ ⟨ tt ⟩} (T : Ty (timeless-ctx Γ) ℓ r) →
+ty-const-subst-cong : {γ1 γ2 : Γ ⟨ tt ⟩} (T : Ty (timeless-ctx Γ) ℓ) →
                       γ1 ≈[ Γ ]≈ γ2 → T [ const-subst γ1 ] ≅ᵗʸ T [ const-subst γ2 ]
 ty-const-subst-cong T eγ = ty-subst-cong-subst (const-subst-cong eγ) T
 
 const-subst-natural : (δ : Δ ⟨ tt ⟩) (σ : Δ ⇒ Γ) → timeless-subst σ ⊚ const-subst δ ≅ˢ const-subst (func σ δ)
 eq (const-subst-natural {Γ = Γ} δ σ) _ = ctx≈-refl Γ
 
-tm-setoid : ∀ {C} (Γ : Ctx C ℓ r) → Ty Γ ℓ' r' → Setoid (ℓ ⊔ r ⊔ ℓ' ⊔ r') (ℓ ⊔ r')
+tm-setoid : ∀ {C} (Γ : Ctx C ℓ) → Ty Γ ℓ' → Setoid (ℓ ⊔ ℓ') (ℓ ⊔ ℓ')
 Setoid.Carrier (tm-setoid Γ T) = Tm Γ T
 Setoid._≈_ (tm-setoid Γ T) = _≅ᵗᵐ_
 Setoid.isEquivalence (tm-setoid Γ T) = record
@@ -63,7 +63,7 @@ Setoid.isEquivalence (tm-setoid Γ T) = record
   ; trans = ≅ᵗᵐ-trans
   }
 
-global-ty : Ty (timeless-ctx Γ) ℓ r → Ty Γ (ℓ ⊔ r) r
+global-ty : Ty (timeless-ctx Γ) ℓ → Ty Γ ℓ
 type (global-ty T) _ γ = tm-setoid ◇ (T [ const-subst γ ])
 morph (global-ty {Γ = Γ} T) _ {γ}{γ'} eγ t = ι⁻¹[ ty-const-subst-cong T (ctx≈-trans Γ (ctx≈-sym Γ (rel-id Γ γ)) eγ) ] t
 morph-cong (global-ty {Γ = Γ} T) _ {γy = γ} eγ = ι⁻¹-cong (ty-const-subst-cong T (ctx≈-trans Γ (ctx≈-sym Γ (rel-id Γ γ)) eγ))
@@ -72,7 +72,7 @@ morph-id (global-ty T) _ = record { eq = λ _ → ty≈-trans T (morph-hom-cong 
 morph-comp (global-ty T) _ _ _ _ _ =
   record { eq = λ _ → ty≈-trans T (morph-hom-cong T (≤-irrelevant _ _)) (morph-comp T ≤-refl ≤-refl _ _ _) }
 
-module _ {T : Ty (timeless-ctx Γ) ℓ r} where
+module _ {T : Ty (timeless-ctx Γ) ℓ} where
   global-tm : Tm (timeless-ctx Γ) T → Tm Γ (global-ty T)
   term (term (global-tm t) tt γ) n tt = t ⟨ n , γ ⟩'
   Tm.naturality (term (global-tm t) tt γ) m≤n _ = Tm.naturality t m≤n _
@@ -97,7 +97,7 @@ module _ {T : Ty (timeless-ctx Γ) ℓ r} where
   global-ty-η : (t : Tm Γ (global-ty T)) → global-tm (unglobal-tm t) ≅ᵗᵐ t
   eq (eq (global-ty-η t) γ) tt = ty≈-refl T
 
-global-ty-cong : {T : Ty (timeless-ctx Γ) ℓ r} {S : Ty (timeless-ctx Γ) ℓ' r'} →
+global-ty-cong : {T : Ty (timeless-ctx Γ) ℓ} {S : Ty (timeless-ctx Γ) ℓ'} →
                  T ≅ᵗʸ S → global-ty T ≅ᵗʸ global-ty S
 func (from (global-ty-cong T=S)) = ι⁻¹[ ty-subst-cong-ty (const-subst _) T=S ]_
 func-cong (from (global-ty-cong T=S)) = ι⁻¹-cong (ty-subst-cong-ty (const-subst _) T=S)
@@ -108,12 +108,12 @@ CwF-Structure.naturality (to (global-ty-cong T=S)) _ = record { eq = λ _ → Cw
 eq (isoˡ (global-ty-cong T=S)) _ = ι-symʳ (ty-subst-cong-ty (const-subst _) T=S) _
 eq (isoʳ (global-ty-cong T=S)) _ = ι-symˡ (ty-subst-cong-ty (const-subst _) T=S) _
 
-ty-const-subst : (T : Ty (timeless-ctx Γ) ℓ r) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
+ty-const-subst : (T : Ty (timeless-ctx Γ) ℓ) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
                  (T [ timeless-subst σ ]) [ const-subst δ ] ≅ᵗʸ T [ const-subst (func σ δ) ]
 ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (const-subst _))
                                  (ty-subst-cong-subst (const-subst-natural _ σ) T)
 
-global-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (timeless-ctx Γ) ℓ r) → (global-ty T) [ σ ] ≅ᵗʸ global-ty (T [ timeless-subst σ ])
+global-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (timeless-ctx Γ) ℓ) → (global-ty T) [ σ ] ≅ᵗʸ global-ty (T [ timeless-subst σ ])
 func (from (global-ty-natural σ T)) = ι[ ty-const-subst T σ _ ]_
 func-cong (from (global-ty-natural σ T)) = ι-cong (ty-const-subst T σ _)
 CwF-Structure.naturality (from (global-ty-natural σ T)) t = record { eq = λ _ → morph-hom-cong-2-2 T refl }
@@ -123,7 +123,7 @@ CwF-Structure.naturality (to (global-ty-natural σ T)) t = record { eq = λ _ �
 eq (isoˡ (global-ty-natural σ T)) t = ι-symˡ (ty-const-subst T σ _) t
 eq (isoʳ (global-ty-natural σ T)) t = ι-symʳ (ty-const-subst T σ _) t
 
-module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ) ℓ r} where
+module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ) ℓ} where
   global-tm-natural : (t : Tm (timeless-ctx Γ) T) →
                       (global-tm t) [ σ ]' ≅ᵗᵐ ι[ global-ty-natural σ T ] global-tm (t [ timeless-subst σ ]')
   eq (global-tm-natural t) _ = record { eq = λ _ → ty≈-trans T (ty≈-sym T (morph-id T _)) (morph-hom-cong T refl) }

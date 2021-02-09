@@ -22,12 +22,11 @@ open Category C
 private
   variable
     x y : Ob
-    r : Level
-    Γ : Ctx C ℓ r
+    Γ : Ctx C ℓ
 
 
 -- Yoneda embedding
-𝕪 : Ob → Ctx C 0ℓ 0ℓ
+𝕪 : Ob → Ctx C 0ℓ
 setoid (𝕪 x) y = ≡-setoid (Hom y x)
 rel (𝕪 x) f g = g ∙ f
 rel-cong (𝕪 x) f = cong (_∙ f)

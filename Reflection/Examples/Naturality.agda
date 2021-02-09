@@ -20,8 +20,8 @@ open import Reflection.Tactic.Naturality
 
 private
   variable
-    ℓ r : Level
-    Γ Δ Θ : Ctx C ℓ r
+    ℓ : Level
+    Γ Δ Θ : Ctx C ℓ
 
 example : (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
           ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'

@@ -28,10 +28,10 @@ open Category C
 
 private
   variable
-    ℓc ℓt ℓs r rc rt rs : Level
+    ℓc ℓt ℓs : Level
     x y z : Ob
-    Γ Δ : Ctx C ℓ r
-    T T' S S' : Ty Γ ℓ r
+    Γ Δ : Ctx C ℓ
+    T T' S S' : Ty Γ ℓ
 
 infixr 12 _⇛_
 infixr 4 nlam[_∈_]_
@@ -47,7 +47,7 @@ private
 --------------------------------------------------
 -- Description of a function type at a specific stage (object of the base category)
 
-record PresheafFunc {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) (z : Ob) (γ : Γ ⟨ z ⟩) : Set (ℓc ⊔ rc ⊔ ℓt ⊔ rt ⊔ ℓs ⊔ rs) where
+record PresheafFunc {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓs) (z : Ob) (γ : Γ ⟨ z ⟩) : Set (ℓc ⊔ ℓt ⊔ ℓs) where
   constructor MkFunc
   field
     _$⟨_,_⟩_ : ∀ {y} (ρ : Hom y z) {γ' : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ ⟫ γ ≈[ Γ ]≈ γ') →
@@ -86,19 +86,19 @@ to-pshfun-eq e = cong₂-d MkFunc
   (funextI (funextI (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → funext λ _ → uip _ _)))))))
 -}
 
-func≈ : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) (y : Ob) (γy : Γ ⟨ y ⟩) →
-        Rel (PresheafFunc T S y γy) (ℓc ⊔ rc ⊔ ℓt ⊔ rs)
+func≈ : {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓs) (y : Ob) (γy : Γ ⟨ y ⟩) →
+        Rel (PresheafFunc T S y γy) (ℓc ⊔ ℓt ⊔ ℓs)
 func≈ {Γ = Γ} _ S y γy f g = ∀ {x} (ρ : Hom x y) {γx} (eγ : Γ ⟪ ρ ⟫ γy ≈[ Γ ]≈ γx) t →
                              f $⟨ ρ , eγ ⟩ t ≈⟦ S ⟧≈ g $⟨ ρ , eγ ⟩ t
 
-func≈-equiv : {Γ : Ctx C ℓc rc} (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) (y : Ob) (γy : Γ ⟨ y ⟩) →
+func≈-equiv : {Γ : Ctx C ℓc} (T : Ty Γ ℓt) (S : Ty Γ ℓs) (y : Ob) (γy : Γ ⟨ y ⟩) →
               IsEquivalence (func≈ T S y γy)
 IsEquivalence.refl (func≈-equiv T S y γy) _ _ _ = ty≈-refl S
 IsEquivalence.sym (func≈-equiv T S y γy) f=g ρ eγ t = ty≈-sym S (f=g ρ eγ t)
 IsEquivalence.trans (func≈-equiv T S y γy) f=g g=h ρ eγ t = ty≈-trans S (f=g ρ eγ t) (g=h ρ eγ t)
 
 -- This will be used to define the action of a function type on morphisms.
-lower-presheaffunc : {T : Ty Γ ℓt rt} {S : Ty Γ ℓs rs} (ρ-yz : Hom y z)
+lower-presheaffunc : {T : Ty Γ ℓt} {S : Ty Γ ℓs} (ρ-yz : Hom y z)
                      {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ-yz ⟫ γz ≈[ Γ ]≈ γy) →
                      PresheafFunc T S z γz → PresheafFunc T S y γy
 lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy f = MkFunc g g-cong g-hom-cong g-nat
@@ -129,7 +129,7 @@ lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy
 --------------------------------------------------
 -- Definition of the function type + term constructors
 
-_⇛_ : {Γ : Ctx C ℓc rc} → Ty Γ ℓt rt → Ty Γ ℓs rs → Ty Γ (ℓc ⊔ rc ⊔ ℓt ⊔ rt ⊔ ℓs ⊔ rs) (ℓc ⊔ rc ⊔ ℓt ⊔ rs)
+_⇛_ : {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓs → Ty Γ (ℓc ⊔ ℓt ⊔ ℓs)
 Setoid.Carrier (type (_⇛_ {Γ = Γ} T S) z γ) = PresheafFunc T S z γ
 Setoid._≈_ (type (_⇛_ {Γ = Γ} T S) z γ) = func≈ T S z γ
 Setoid.isEquivalence (type (_⇛_ {Γ = Γ} T S) z γ) = func≈-equiv T S z γ
@@ -139,7 +139,7 @@ morph-hom-cong (T ⇛ S) eρ-zy {t = f} ρ-yx eγ-yx t = $-hom-cong f (cong (_�
 morph-id (_⇛_ {Γ = Γ} T S) f _ _ _ = $-hom-cong f hom-idˡ 
 morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f _ _ _ = $-hom-cong f ∙assoc
 
-lam : (T : Ty Γ ℓt rt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
+lam : (T : Ty Γ ℓt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 _$⟨_,_⟩_ (term (lam {S = S} T b) z γz) ρ-yz {γy} eγ t = b ⟨ _ , [ γy , t ] ⟩'
 $-cong (term (lam {Γ = Γ}{S = S} T b) z γz) {y} ρ-yz {γy} eγ {t1}{t2} et =
   begin
@@ -170,8 +170,8 @@ _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , 
 _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ ⟩ t
 
 -- TODO: generalization of Γ T and S seems to fail here, see why that is.
-€-natural : ∀ {ℓc rc} {Γ : Ctx C ℓc rc}
-            {ℓt ℓs rt rs} {T : Ty Γ ℓt rt} {S : Ty Γ ℓs rs}
+€-natural : ∀ {ℓc} {Γ : Ctx C ℓc}
+            {ℓt ℓs} {T : Ty Γ ℓt} {S : Ty Γ ℓs}
             (f : Tm Γ (T ⇛ S)) (ρ : Hom x y)
             {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ ρ ⟫ γy ≈[ Γ ]≈ γx)
             (t : T ⟨ y , γy ⟩) →
@@ -205,8 +205,8 @@ _$_ = app
 --------------------------------------------------
 -- Congruence proofs
 
-pshfun-dimap : ∀ {ℓt ℓt' rt' ℓs ℓs' rs'}
-               {T : Ty Γ ℓt rt} {T' : Ty Γ ℓt' rt'} {S : Ty Γ ℓs rs} {S' : Ty Γ ℓs' rs'} →
+pshfun-dimap : ∀ {ℓt ℓt' ℓs ℓs'}
+               {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'} →
                (T' ↣ T) → (S ↣ S') →
                (z : Ob) (γ : Γ ⟨ z ⟩) →
                PresheafFunc T S z γ → PresheafFunc T' S' z γ
@@ -249,7 +249,7 @@ eq (isoʳ (⇛-cong {S' = S'} T=T' S=S')) f ρ eγ t' =
     f $⟨ ρ , eγ ⟩ t' ∎
   where open SetoidReasoning (type S' _ _)
 
-lam-cong : (T : Ty Γ ℓ r) {b b' : Tm (Γ ,, T) (S [ π ])} →
+lam-cong : (T : Ty Γ ℓ) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') _ _ {γ'} _ t = eq b=b' [ γ' , t ]
 
@@ -269,8 +269,8 @@ app-cong : {f f' : Tm Γ (T ⇛ S)} {t t' : Tm Γ T} →
            f ≅ᵗᵐ f' → t ≅ᵗᵐ t' → app f t ≅ᵗᵐ app f' t'
 eq (app-cong {f = f}{f'}{t}{t'} f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 
-module _ {ℓt ℓt' rt' ℓs ℓs' rs'}
-  {T : Ty Γ ℓt rt} {T' : Ty Γ ℓt' rt'} {S : Ty Γ ℓs rs} {S' : Ty Γ ℓs' rs'}
+module _ {ℓt ℓt' ℓs ℓs'}
+  {T : Ty Γ ℓt} {T' : Ty Γ ℓt'} {S : Ty Γ ℓs} {S' : Ty Γ ℓs'}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
 
@@ -296,7 +296,7 @@ module _ {ℓt ℓt' rt' ℓs ℓs' rs'}
 --------------------------------------------------
 -- Naturality proofs
 
-module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) {δ : Δ ⟨ z ⟩} where
+module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt) (S : Ty Γ ℓs) {δ : Δ ⟨ z ⟩} where
   pshfun-subst-from : PresheafFunc T S z (func σ δ) → PresheafFunc (T [ σ ]) (S [ σ ]) z δ
   _$⟨_,_⟩_ (pshfun-subst-from f) ρ-yz eδ t = f $⟨ ρ-yz , ctx≈-trans Γ (naturality σ δ) (func-cong σ eδ) ⟩ t
   $-cong (pshfun-subst-from f) ρ eγ et = $-cong f ρ _ et
@@ -330,7 +330,7 @@ module _ (σ : Δ ⇒ Γ) (T : Ty Γ ℓt rt) (S : Ty Γ ℓs rs) {δ : Δ ⟨ z
       α = _
       β = _
 
-module _ {T : Ty Γ ℓt rt} {S : Ty Γ ℓs rs} (σ : Δ ⇒ Γ) where
+module _ {T : Ty Γ ℓt} {S : Ty Γ ℓs} (σ : Δ ⇒ Γ) where
   ⇛-natural : (T ⇛ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⇛ (S [ σ ])
   func (from ⇛-natural) = pshfun-subst-from σ T S
   func-cong (from ⇛-natural) ef ρ eγ t = ef ρ _ t
@@ -438,5 +438,5 @@ eq (⇛-↣-iso {Γ = Γ}{S = S} f) {x} γ {y} ρ {γ'} eγ t =
 --------------------------------------------------
 -- Alternative version of lambda abstraction that allows to name the bound variable
 
-nlam[_∈_]_ : (v : String) (T : Ty Γ ℓt rt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
+nlam[_∈_]_ : (v : String) (T : Ty Γ ℓt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
 nlam[_∈_]_ v = lam

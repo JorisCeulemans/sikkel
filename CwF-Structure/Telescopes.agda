@@ -25,8 +25,8 @@ open import CwF-Structure.ContextExtension
 
 private
   variable
-    ℓ ℓ' ℓc ℓt r rc rt : Level
-    Γ : Ctx C ℓ r
+    ℓ ℓ' ℓc ℓt : Level
+    Γ : Ctx C ℓ
     n : ℕ
     ℓs rs : Vec Level n
 
@@ -40,12 +40,12 @@ max-level = foldr _ _⊔_ 0ℓ
 -- A value of Telescope Γ n ℓs is a list of types Ts = [] ∷ T1 ∷ T2 ∷ ... ∷ Tn so that
 -- T1 is valid in Γ, T2 is valid in Γ ,, T1 etc. and hence Γ ,, T1 ,, T2 ,, ... ,, Tn
 -- is a valid context written as Γ ++ Ts.
-data Telescope (Γ : Ctx C ℓc rc) : (n : ℕ) → Vec Level n → Vec Level n → Setω
-_++_ : (Γ : Ctx C ℓc rc) {n : ℕ} {ℓs rs : Vec Level n} → Telescope Γ n ℓs rs → Ctx C (ℓc ⊔ max-level ℓs) (rc ⊔ max-level rs)
+data Telescope (Γ : Ctx C ℓc) : (n : ℕ) → Vec Level n → Setω
+_++_ : (Γ : Ctx C ℓc) {n : ℕ} {ℓs : Vec Level n} → Telescope Γ n ℓs → Ctx C (ℓc ⊔ max-level ℓs)
 
 data Telescope Γ where
-  []  : Telescope Γ 0 [] []
-  _∷_ : ∀ {ℓt n ℓs rs} (Ts : Telescope Γ n ℓs rs) → Ty (Γ ++ Ts) ℓt rt → Telescope Γ (suc n) (ℓt ∷ ℓs) (rt ∷ rs)
+  []  : Telescope Γ 0 []
+  _∷_ : ∀ {ℓt n ℓs} (Ts : Telescope Γ n ℓs) → Ty (Γ ++ Ts) ℓt → Telescope Γ (suc n) (ℓt ∷ ℓs)
 
 Γ ++ []       = Γ
 Γ ++ (Ts ∷ T) = (Γ ++ Ts) ,, T
@@ -55,12 +55,12 @@ data Telescope Γ where
 -- A telescope of length n can be used to denote variables
 -- as de Bruijn indices using elements of type Fin n.
 
-var-type : (Ts : Telescope Γ n ℓs rs) (x : Fin n) → Ty (Γ ++ Ts) (lookup ℓs x) (lookup rs x)
+var-type : (Ts : Telescope Γ n ℓs) (x : Fin n) → Ty (Γ ++ Ts) (lookup ℓs x)
 var-type (Ts ∷ T) zero    = T [ π ]
 var-type (Ts ∷ T) (suc x) = (var-type Ts x) [ π ]
 
 -- Not for direct use. See Reflection.Tactic.Telescopes.
-prim-var : (Ts : Telescope Γ n ℓs rs) (x : Fin n) → Tm (Γ ++ Ts) (var-type Ts x)
+prim-var : (Ts : Telescope Γ n ℓs) (x : Fin n) → Tm (Γ ++ Ts) (var-type Ts x)
 prim-var (Ts ∷ T) zero    = ξ
 prim-var (Ts ∷ T) (suc x) = (prim-var Ts x) [ π ]'
 
@@ -68,13 +68,13 @@ prim-var (Ts ∷ T) (suc x) = (prim-var Ts x) [ π ]'
 --------------------------------------------------
 -- Using a telescope to define weakening of types and terms.
 
-weaken-type : {Γ : Ctx C ℓc rc} {n : ℕ} {ℓs rs : _} (Ts : Telescope Γ n ℓs rs) →
-              Ty Γ ℓt rt → Ty (Γ ++ Ts) ℓt rt
+weaken-type : {Γ : Ctx C ℓc} {n : ℕ} {ℓs : _} (Ts : Telescope Γ n ℓs) →
+              Ty Γ ℓt → Ty (Γ ++ Ts) ℓt
 weaken-type []       S = S
 weaken-type (Ts ∷ T) S = (weaken-type Ts S) [ π ]
 
 -- Not for direct use. See Reflection.Tactic.Telescopes.
-weaken-term : {Γ : Ctx C ℓc rc} {n : ℕ} {ℓs rs : _} (Ts : Telescope Γ n ℓs rs) {S : Ty Γ ℓt rt} →
+weaken-term : {Γ : Ctx C ℓc} {n : ℕ} {ℓs : _} (Ts : Telescope Γ n ℓs) {S : Ty Γ ℓt} →
               Tm Γ S → Tm (Γ ++ Ts) (weaken-type Ts S)
 weaken-term []       s = s
 weaken-term (Ts ∷ T) s = (weaken-term Ts s) [ π ]'

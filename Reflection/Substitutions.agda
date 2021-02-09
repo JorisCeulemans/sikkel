@@ -27,18 +27,18 @@ open import Reflection.Helpers
 
 private
   variable
-    ℓ ℓ' ℓ'' r r' r'' : Level
-    Δ Γ Θ Ξ : Ctx C ℓ r
+    ℓ ℓ' ℓ'' : Level
+    Δ Γ Θ Ξ : Ctx C ℓ
 
 
-data Val : {ℓ ℓ' : Level} → Ctx C ℓ r → Ctx C ℓ' r' → Setω where
-  var : {Δ : Ctx C ℓ r} {Γ : Ctx C ℓ' r'} (σ : Δ ⇒ Γ) → Val Δ Γ
-  id' : {Γ : Ctx C ℓ r} → Val Γ Γ
-  !◇' : {Γ : Ctx C ℓ r} → Val Γ ◇
+data Val : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
+  var : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} (σ : Δ ⇒ Γ) → Val Δ Γ
+  id' : {Γ : Ctx C ℓ} → Val Γ Γ
+  !◇' : {Γ : Ctx C ℓ} → Val Γ ◇
 
-data Exp : {ℓ ℓ' : Level} → Ctx C ℓ r → Ctx C ℓ' r' → Setω where
-  val : {Δ : Ctx C ℓ r} {Γ : Ctx C ℓ' r'} → Val Δ Γ → Exp Δ Γ
-  _⊚'_ : {Δ : Ctx C ℓ r} {Γ : Ctx C ℓ' r'} {Θ : Ctx C ℓ'' r''} →
+data Exp : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
+  val : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} → Val Δ Γ → Exp Δ Γ
+  _⊚'_ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →
            Exp Γ Θ → Exp Δ Γ → Exp Δ Θ
 
 ⟦_⟧v : Val Δ Γ → Δ ⇒ Γ
@@ -50,9 +50,9 @@ data Exp : {ℓ ℓ' : Level} → Ctx C ℓ r → Ctx C ℓ' r' → Setω where
 ⟦ val s ⟧e    = ⟦ s ⟧v
 ⟦ e1 ⊚' e2 ⟧e = ⟦ e1 ⟧e ⊚ ⟦ e2 ⟧e
 
-data ValSeq : {ℓ ℓ' : Level} → Ctx C ℓ r → Ctx C ℓ' r' → Setω where
-  [] : {Γ : Ctx C ℓ r} → ValSeq Γ Γ
-  _∷_ : {Δ : Ctx C ℓ r} {Γ : Ctx C ℓ'' r''} {Θ : Ctx C ℓ' r'} (σ : Val Γ Θ) (σs : ValSeq Δ Γ) → ValSeq Δ Θ
+data ValSeq : {ℓ ℓ' : Level} → Ctx C ℓ → Ctx C ℓ' → Setω where
+  [] : {Γ : Ctx C ℓ} → ValSeq Γ Γ
+  _∷_ : {Δ : Ctx C ℓ} {Γ : Ctx C ℓ''} {Θ : Ctx C ℓ'} (σ : Val Γ Θ) (σs : ValSeq Δ Γ) → ValSeq Δ Θ
 
 _++_ : ValSeq Γ Θ → ValSeq Δ Γ → ValSeq Δ Θ
 []       ++ τs = τs
