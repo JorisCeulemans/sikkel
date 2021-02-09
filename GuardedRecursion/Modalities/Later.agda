@@ -163,6 +163,7 @@ eq (next-prev t) {zero} γ = refl
 eq (next-prev t) {suc n} γ = refl
 
 -- TODO: Update : See if T can be made implicit.
+{-# TERMINATING #-}
 löb : (T : Ty Γ ℓ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 term (löb T f) zero γ = f €⟨ zero , γ ⟩ tt
 term (löb {Γ = Γ} T f) (suc n) γ = f €⟨ suc n , γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ γ ⟩')
