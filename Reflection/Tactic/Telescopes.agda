@@ -55,8 +55,9 @@ ctx-to-telescope _ = return (con (quote Telescope.[]) [])
 
 
 --------------------------------------------------
--- Definition of the macro var that turns a context
--- into a telescope and applies prim-var.
+-- Definition of the macro db-var that allows to refer
+-- to variables in context by de Bruijn indices.
+-- It turns a context into a telescope and applies prim-var.
 
 -- Check whether the provided de Bruijn index is within bounds (i.e. does not
 -- exceed the length of the telescope - 1).
@@ -83,22 +84,22 @@ construct-var-solution x hole = do
   check-within-bounds x telescope
   return (def (quote prim-var) (vArg telescope ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ []))
 
-var-macro : Term → Term → TC ⊤
-var-macro x hole = do
+db-var-macro : Term → Term → TC ⊤
+db-var-macro x hole = do
   solution ← construct-var-solution x hole
   debugPrint "vtac" 5 (strErr "var macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro
-  var : Term → Term → TC ⊤
-  var = var-macro
+  db-var : Term → Term → TC ⊤
+  db-var = db-var-macro
 
 
 -------------------------------------------------
--- Variable macro that automatically performs naturality reduction on its type
+-- Variable (de Bruijn index) macro that automatically performs naturality reduction on its type
 
-varι-macro : Term → Term → TC ⊤
-varι-macro x hole = do
+db-varι-macro : Term → Term → TC ⊤
+db-varι-macro x hole = do
   partialSolution ← construct-var-solution x hole
   expr-resultType ← inferType partialSolution >>= get-term-type >>= construct-expr
   let proof = def (quote reduce-sound) (vArg expr-resultType ∷ [])
@@ -107,8 +108,8 @@ varι-macro x hole = do
   unify hole solution
 
 macro
-  varι : Term → Term → TC ⊤
-  varι = varι-macro
+  db-varι : Term → Term → TC ⊤
+  db-varι = db-varι-macro
 
 
 --------------------------------------------------
@@ -132,23 +133,23 @@ get-deBruijn-index (meta m args) v = debugPrint "vtac" 5 (strErr "Blocking on me
                                      blockOnMeta m
 get-deBruijn-index _ v = typeError (strErr ("Could not find a variable with name " ++ v) ∷ [])
 
-nvar-macro : String → Term → TC ⊤
-nvar-macro v hole = do
+var-macro : String → Term → TC ⊤
+var-macro v hole = do
   goal ← inferType hole
   ctx ← get-ctx goal
   i ← get-deBruijn-index ctx v >>= quoteTC
-  var-macro i hole
+  db-var-macro i hole
 
-nvarι-macro : String → Term → TC ⊤
-nvarι-macro v hole = do
+varι-macro : String → Term → TC ⊤
+varι-macro v hole = do
   goal ← inferType hole
   ctx ← get-ctx goal
   i ← get-deBruijn-index ctx v >>= quoteTC
-  varι-macro i hole
+  db-varι-macro i hole
 
 macro
-  nvar = nvar-macro
-  nvarι = nvarι-macro
+  var = var-macro
+  varι = varι-macro
 
 
 -------------------------------------------------

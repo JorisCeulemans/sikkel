@@ -37,4 +37,4 @@ term (not' b) x _ = not (b ⟨ x , _ ⟩')
 naturality (not' b) f eγ = cong not (naturality b f eγ)
 
 not-fun : Tm {C = C} ◇ (Bool' ⇛ Bool')
-not-fun = lam Bool' (ι[ by-naturality ] not' (ι[ by-naturality ] var 0))
+not-fun = lam[ "b" ∈ Bool' ] ι[ by-naturality ] not' (ι[ by-naturality ] var "b")

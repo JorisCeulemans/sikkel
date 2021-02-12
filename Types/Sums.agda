@@ -97,10 +97,10 @@ module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (σ : Δ ⇒ Γ) where
   eq (inr'-natural s) _ = refl
 
 inl'-func : Tm Γ (T ⇛ T ⊞ S)
-inl'-func {T = T} = lam T (ι[ ⊞-natural π ] inl' (var 0))
+inl'-func {T = T} = lam[ "t" ∈ T ] ι[ ⊞-natural π ] inl' (var "t")
 
 inr'-func : Tm Γ (S ⇛ T ⊞ S)
-inr'-func {S = S} = lam S (ι[ ⊞-natural π ] inr' (var 0))
+inr'-func {S = S} = lam[ "s" ∈ S ] ι[ ⊞-natural π ] inr' (var "s")
 
 module _ {A : Ty Γ ℓ} {B : Ty Γ ℓ'} (C : Ty Γ ℓ'') where
   ⊞-elim : Tm Γ (A ⇛ C) → Tm Γ (B ⇛ C) → Tm Γ (A ⊞ B ⇛ C)

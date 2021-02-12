@@ -29,7 +29,7 @@ private
     T T' S S' : Ty Γ ℓ
 
 infixr 12 _⇛_
-infixr 4 nlam[_∈_]_
+infixr 4 lam[_∈_]_
 
 {-
 open import Axiom.UniquenessOfIdentityProofs
@@ -104,6 +104,7 @@ morph-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl _ _
 morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
 morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ _ → $-cong f ∙assoc _ _)
 
+-- Lambda abstraction that adds a nameless variable to the context (only accessible by de Bruijn index).
 lam : (T : Ty Γ ℓt) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
                                  (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eq-zy eq-yx t →
@@ -115,6 +116,10 @@ term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy 
     S ⟪ ρ-xy , eq-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎)
   where open ≡-Reasoning
 naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
+
+-- Version of lambda abstraction that allows to name the bound variable.
+lam[_∈_]_ : (v : String) (T : Ty Γ ℓt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
+lam[_∈_]_ v = lam
 
 -- An operator used to define function application.
 _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
@@ -390,10 +395,3 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
   ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-rel-comp Γ eγ (rel-id Γ γ')) eγ ⟩
     f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)
   where open ≡-Reasoning
-
-
---------------------------------------------------
--- Alternative version of lambda abstraction that allows to name the bound variable
-
-nlam[_∈_]_ : (v : String) (T : Ty Γ ℓt) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
-nlam[_∈_]_ v = lam

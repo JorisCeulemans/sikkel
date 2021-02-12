@@ -101,7 +101,7 @@ record BoolStructure (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} : S
 open BoolStructure {{...}}
 
 or : (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
-or B = nlamι[ "b1" ∈ B ] nlamι[ "b2" ∈ B ] not $ (and $ pair (not $ nvarι "b1") (not $ nvarι "b2"))
+or B = lamι[ "b1" ∈ B ] lamι[ "b2" ∈ B ] not $ (and $ pair (not $ varι "b1") (not $ varι "b2"))
 
 -- Representing booleans as natural numbers (0 = false, 1 = true)
 data IsBit : Pred ℕ 0ℓ where
@@ -229,8 +229,8 @@ binary-or : Tm Γ (BinaryBool ⇛ BinaryBool ⇛ BinaryBool)
 binary-or = or BinaryBool
 
 binary-or★ : {Γ : Ctx ★ 0ℓ} → Tm Γ (forget BinaryBool ⇛ forget BinaryBool ⇛ forget BinaryBool)
-binary-or★ = nlamι[ "x" ∈ forget BinaryBool ] nlamι[ "y" ∈ forget BinaryBool ]
-             forget-intro binary-or ⊛ nvarι "x" ⊛ nvarι "y"
+binary-or★ = lamι[ "x" ∈ forget BinaryBool ] lamι[ "y" ∈ forget BinaryBool ]
+             forget-intro binary-or ⊛ varι "x" ⊛ varι "y"
 
 open import Translation
 

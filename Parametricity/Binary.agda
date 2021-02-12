@@ -122,7 +122,7 @@ open IntStructure {{...}}
 
 subtract : {A : NullaryTypeOp ⋀ ℓ} {{_ : IsNullaryNatural A}} {{_ : IntStructure A}} →
            Tm Γ (A ⇛ A ⇛ A)
-subtract {A = A} = nlamι[ "i" ∈ A ] nlamι[ "j" ∈ A ] add $ pair (nvarι "i") (negate $ nvarι "j")
+subtract {A = A} = lamι[ "i" ∈ A ] lamι[ "j" ∈ A ] add $ pair (varι "i") (negate $ varι "j")
 
 data Sign : Set where
   pos neg : Sign
@@ -372,12 +372,12 @@ subtract-rep : Tm Γ (IntRep ⇛ IntRep ⇛ IntRep)
 subtract-rep = subtract
 
 subtract★-left : {Γ : Ctx ★ 0ℓ} → Tm Γ (forget-right IntRep ⇛ forget-right IntRep ⇛ forget-right IntRep)
-subtract★-left = nlamι[ "i" ∈ forget-right IntRep ] nlamι[ "j" ∈ forget-right IntRep ]
-                 forget-right-intro subtract-rep ⊛ʳ nvarι "i" ⊛ʳ nvarι "j"
+subtract★-left = lamι[ "i" ∈ forget-right IntRep ] lamι[ "j" ∈ forget-right IntRep ]
+                 forget-right-intro subtract-rep ⊛ʳ varι "i" ⊛ʳ varι "j"
 
 subtract★-right : {Γ : Ctx ★ 0ℓ} → Tm Γ (forget-left IntRep ⇛ forget-left IntRep ⇛ forget-left IntRep)
-subtract★-right = nlamι[ "i" ∈ forget-left IntRep ] nlamι[ "j" ∈ forget-left IntRep ]
-                  forget-left-intro subtract-rep ⊛ˡ nvarι "i" ⊛ˡ nvarι "j"
+subtract★-right = lamι[ "i" ∈ forget-left IntRep ] lamι[ "j" ∈ forget-left IntRep ]
+                  forget-left-intro subtract-rep ⊛ˡ varι "i" ⊛ˡ varι "j"
 
 open import Translation
 

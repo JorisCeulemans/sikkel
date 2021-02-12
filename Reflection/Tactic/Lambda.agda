@@ -16,7 +16,7 @@ open import Types.Functions
 open import Reflection.Naturality renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 
-infixr 4 nlamι[_∈_]_
+infixr 4 lamι[_∈_]_
 
 
 lam-tactic : ∀ {C ℓc ℓt ℓs} {Γ : Ctx C ℓc} → Ty Γ ℓt → Ty Γ ℓs → Term → TC ⊤
@@ -35,7 +35,7 @@ lamι : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (T : Ty Γ ℓt) {S : Ty 
        Tm (Γ ,, T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 lamι T {body-type = S' , Sπ=S'} b = lam T (ι[ Sπ=S' ] b)
 
-nlamι[_∈_]_ : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (v : String) (T : Ty Γ ℓt) {S : Ty Γ ℓs}
+lamι[_∈_]_ : ∀ {C ℓc ℓt ℓs ℓs'} {Γ : Ctx C ℓc} (v : String) (T : Ty Γ ℓt) {S : Ty Γ ℓs}
             {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ℓs' ] (S [ π ] ≅ᵗʸ S')} →
             Tm (Γ ,, v ∈ T) (proj₁ body-type) → Tm Γ (T ⇛ S)
-nlamι[_∈_]_ v = lamι
+lamι[_∈_]_ v = lamι

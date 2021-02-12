@@ -102,9 +102,9 @@ open import Reflection.Naturality.Instances
 
 nat-sum : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nat-elim (Nat' ⇛ Nat')
-                   (lamι Nat' (varι 0))
-                   (lamι (Nat' ⇛ Nat')
-                         (lamι Nat' (suc' (app (varι 1) (varι 0)))))
+                   (lamι[ "n" ∈ Nat' ] varι "n")
+                   (lamι[ "f" ∈ Nat' ⇛ Nat' ]
+                     lamι[ "n" ∈ Nat' ] suc' (varι "f" $ varι "n"))
 
 nat-sum-β : (m n : Tm {C = ★} ◇ Nat') → app (app nat-sum (suc' m)) n ≅ᵗᵐ suc' (app (app nat-sum m) n)
 nat-sum-β m n = {!!}
