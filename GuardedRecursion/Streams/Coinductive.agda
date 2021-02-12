@@ -70,8 +70,8 @@ module _ {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
   cons' : Tm Γ (A ⇛ Stream' A ⇛ Stream' A)
   cons' = nlamι[ "x" ∈ A ]
             nlamι[ "xs" ∈ Stream' A ]
-              global-tm (g-cons $ pair (unglobal-tm (ι[ global-timeless-ty A ] nvarι "x"))
-                                       (unglobal-tm (ι⁻¹[ global-later'-ty _ ] nvarι "xs")))
+              global-tm (g-cons $ unglobal-tm (ι[ global-timeless-ty A ] nvarι "x")
+                                $ unglobal-tm (ι⁻¹[ global-later'-ty _ ] nvarι "xs"))
 
 paperfolds' : Tm Γ (Stream' Nat')
 paperfolds' = global-tm (ι[ by-naturality ] g-paperfolds)
@@ -89,8 +89,8 @@ module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A
   every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
   every2nd = nlöbι[ "g" ∈ timeless-ty (Stream' A) ⇛ GStream A ]
                nlamι[ "s" ∈ timeless-ty (Stream' A) ]
-                 g-cons $ pair (timeless-tm (head' $ untimeless-tm (nvarι "s")))
-                               (nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "s")))))
+                 g-cons $ timeless-tm (head' $ untimeless-tm (nvarι "s"))
+                        $ nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "s"))))
 
   instance
     stream-a-nat : IsNullaryNatural (Stream' A)
@@ -99,8 +99,8 @@ module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A
   g-diag : Tm Γ (timeless-ty (Stream' (Stream' A)) ⇛ GStream A)
   g-diag = nlöbι[ "g" ∈ timeless-ty (Stream' (Stream' A)) ⇛ GStream A ]
              nlamι[ "xss" ∈ timeless-ty (Stream' (Stream' A)) ]
-               g-cons $ pair (timeless-tm (head' $ (head' $ untimeless-tm (nvarι "xss"))))
-                             (nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "xss")))))
+               g-cons $ timeless-tm (head' $ (head' $ untimeless-tm (nvarι "xss")))
+                      $ nvarι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (nvarι "xss"))))
 
 diag : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)

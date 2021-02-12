@@ -26,7 +26,6 @@ open import Helpers
 open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
-open import Types.Products
 open import GuardedRecursion.Modalities
 open import Reflection.Naturality
 open import Reflection.Naturality.Instances
@@ -172,21 +171,24 @@ module _ {A : Ty (now Γ) ℓ} where
   naturality g-tail z≤n       eγ = to-pshfun-eq λ { z≤n _ _ → refl }
   naturality g-tail (s≤s m≤n) eγ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
 
-  g-cons : Tm Γ (timeless-ty A ⊠ ▻' (GStream A) ⇛ GStream A)
-  _$⟨_,_⟩_ (term g-cons n γn) z≤n       _ [ h , _ ] = h ∷ []
-  _$⟨_,_⟩_ (term g-cons n γn) (s≤s m≤n) _ [ h , t ] = h ∷ map (ctx-element-subst A (sym (rel-comp Γ z≤n (n≤1+n _) _))) t
-  naturality (term g-cons n γn) {ρ-xy = z≤n}     {ρ-yz = z≤n}     _ _ _         = refl
-  naturality (term g-cons n γn) {ρ-xy = z≤n}     {ρ-yz = s≤s m≤n} _ _ _         = refl
-  naturality (term g-cons n γn) {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} _ _ [ a , v ] = cong (timeless-ty A ⟪ s≤s k≤m , _ ⟫ a ∷_) (
+  prim-g-cons : Tm (Γ ,, timeless-ty A ,, (▻' (GStream A)) [ π ]) (((GStream A) [ π ]) [ π ])
+  term prim-g-cons zero    [ [ γn , a ] , t ] = a ∷ []
+  term prim-g-cons (suc n) [ [ γn , a ] , t ] = a ∷ map (ctx-element-subst A (sym (rel-comp Γ z≤n (n≤1+n n) _))) t
+  naturality prim-g-cons {y = zero}  z≤n       refl = refl
+  naturality prim-g-cons {y = suc n} z≤n       refl = refl
+  naturality prim-g-cons             (s≤s m≤n) refl = cong (timeless-ty A ⟪ s≤s m≤n , refl ⟫ _ ∷_) (sym (
     begin
-      map (ctx-element-subst A _) (map (timeless-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) v))
+      map (ctx-element-subst A _) (map (timeless-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s m≤n) _))
     ≡⟨ map-map-cong (λ _ → morph-cong-2-2 A refl) _ ⟩
-      map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (map (ctx-element-subst A _) (first-≤ (s≤s k≤m) v))
-    ≡⟨ cong (map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_)) (map-first-≤ (ctx-element-subst A _) (s≤s k≤m) v) ⟩
-      map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (ctx-element-subst A _) v)) ∎)
+      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (map (ctx-element-subst A _) (first-≤ (s≤s m≤n) _))
+    ≡⟨ cong (map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_)) (map-first-≤ (ctx-element-subst A _) (s≤s m≤n) _) ⟩
+      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (first-≤ (s≤s m≤n) (map (ctx-element-subst A _) _)) ∎))
     where open ≡-Reasoning
-  naturality g-cons z≤n       _ = to-pshfun-eq λ { z≤n _ _ → refl }
-  naturality g-cons (s≤s m≤n) _ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
+
+  g-cons : Tm Γ (timeless-ty A ⇛ ▻' (GStream A) ⇛ GStream A)
+  g-cons = lam (timeless-ty A) (ι[ ⇛-natural π ]
+               lam (▻' (GStream A) [ π ])
+                   prim-g-cons)
 
   gstream-natural : (σ : Δ ⇒ Γ) → (GStream A) [ σ ] ≅ᵗʸ GStream (A [ now-subst σ ])
   func (from (gstream-natural σ)) = map (ctx-element-subst A (naturality σ _))
@@ -265,7 +267,7 @@ module _ {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}} where
   g-thrd = nlamι[ "s" ∈ GStream A ] g-snd ⟨$⟩' (g-tail $ nvarι "s")
 
 g-zeros : Tm Γ (GStream Nat')
-g-zeros = nlöbι[ "s" ∈ GStream Nat' ] g-cons $ pair (timeless-tm zero') (nvarι "s")
+g-zeros = nlöbι[ "s" ∈ GStream Nat' ] g-cons $ timeless-tm zero' $ nvarι "s"
 
 private
   module _ {Γ : Ctx ω ℓ} where
@@ -284,8 +286,8 @@ g-map {A = A}{B = B} =
   nlamι[ "f" ∈ timeless-ty (A ⇛ B) ]
     nlöbι[ "m" ∈ GStream A ⇛ GStream B ]
       nlamι[ "s" ∈ GStream A ]
-        g-cons $ pair (timeless-tm (untimeless-tm (nvarι "f") $ untimeless-tm (g-head $ nvarι "s")))
-                      (nvarι "m" ⊛' (g-tail $ nvarι "s"))
+        g-cons $ timeless-tm (untimeless-tm (nvarι "f") $ untimeless-tm (g-head $ nvarι "s"))
+               $ nvarι "m" ⊛' (g-tail $ nvarι "s")
 
 g-iterate : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
             Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
@@ -293,8 +295,8 @@ g-iterate {A = A} =
   nlamι[ "f" ∈ timeless-ty (A ⇛ A) ]
     nlöbι[ "g" ∈ timeless-ty A ⇛ GStream A ]
       nlamι[ "x" ∈ timeless-ty A ]
-        g-cons $ pair (nvarι "x")
-                      (nvarι "g" ⊛' next' (timeless-tm (untimeless-tm (nvarι "f") $ untimeless-tm (nvarι "x"))))
+        g-cons $ nvarι "x"
+               $ nvarι "g" ⊛' next' (timeless-tm (untimeless-tm (nvarι "f") $ untimeless-tm (nvarι "x")))
 
 g-iterate' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
              Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
@@ -302,8 +304,8 @@ g-iterate' {A = A} =
   nlamι[ "f" ∈ timeless-ty (A ⇛ A) ]
     nlamι[ "a" ∈ timeless-ty A ]
       nlöbι[ "s" ∈ GStream A ]
-        g-cons $ pair (nvarι "a")
-                      (next' (g-map $ nvarι "f") ⊛' nvarι "s")
+        g-cons $ nvarι "a"
+               $ next' (g-map $ nvarι "f") ⊛' nvarι "s"
 
 suc-func : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat')
 suc-func = discr-func suc
@@ -345,16 +347,16 @@ g-interleave {A = A} =
   nlöbι[ "g" ∈ GStream A ⇛ ▻' (GStream A) ⇛ GStream A ]
     nlamι[ "s" ∈ GStream A ]
       nlamι[ "t" ∈ ▻' (GStream A) ]
-        g-cons $ pair (g-head $ nvarι "s")
-                      (nvarι "g" ⊛' nvarι "t" ⊛' next' (g-tail $ nvarι "s"))
+        g-cons $ (g-head $ nvarι "s")
+               $ nvarι "g" ⊛' nvarι "t" ⊛' next' (g-tail $ nvarι "s")
 
 one' : {Γ : Ctx ★ ℓ} → Tm Γ Nat'
 one' = suc' zero'
 
 g-toggle : Tm Γ (GStream Nat')
 g-toggle = nlöbι[ "s" ∈ GStream Nat' ]
-             g-cons $ pair (timeless-tm one')
-                           (next' (g-cons $ pair (timeless-tm zero') (nvarι "s")))
+             g-cons $ timeless-tm one'
+                    $ next' (g-cons $ timeless-tm zero' $ nvarι "s")
 
 g-paperfolds : Tm Γ (GStream Nat')
 g-paperfolds = nlöbι[ "s" ∈ GStream Nat' ] g-interleave $ g-toggle $ nvarι "s"
@@ -405,9 +407,9 @@ module _
     nlamι[ "x" ∈ timeless-ty A ]
       nlamι[ "y" ∈ timeless-ty B ]
         nlamι[ "zs" ∈ ▻' (GStream C) ]
-          g-cons $ pair (timeless-tm (untimeless-tm (↑ι⟨ 3 ⟩ f) $ untimeless-tm (nvarι "x")
-                                                                $ untimeless-tm (nvarι "y")))
-                        (nvarι "zs"))
+          g-cons $ timeless-tm (untimeless-tm (↑ι⟨ 3 ⟩ f) $ untimeless-tm (nvarι "x")
+                                                          $ untimeless-tm (nvarι "y"))
+                 $ nvarι "zs")
 
 prim-nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
 term (prim-nat-sum t s) n γ = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
@@ -416,14 +418,11 @@ naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (
 nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nlamι[ "m" ∈ Nat' ] nlamι[ "n" ∈ Nat' ] prim-nat-sum (nvarι "m") (nvarι "n")
 
-pair' : Tm Γ (timeless-ty Nat' ⇛ ▻' (GStream Nat') ⇛ timeless-ty Nat' ⊠ ▻' (GStream Nat'))
-pair' = nlamι[ "x" ∈ timeless-ty Nat' ] nlamι[ "y" ∈ ▻' (GStream Nat') ] pair (nvarι "x") (nvarι "y")
-
 g-fibs : Tm Γ (GStream Nat')
 g-fibs = nlöbι[ "s" ∈ GStream Nat' ]
-  g-cons $ pair (timeless-tm one') (
-  g-cons ⟨$⟩' ((pair' $ timeless-tm one') ⟨$⟩' (
-  (f $ nvarι "s") ⟨$⟩' (g-tail ⟨$⟩' nvarι "s"))))
+  g-cons $ timeless-tm one' $ (
+  (g-cons $ timeless-tm one') ⟨$⟩' (
+  (f $ nvarι "s") ⟨$⟩' (g-tail ⟨$⟩' nvarι "s")))
   where
     f : Tm Γ (▻' (GStream Nat') ⇛ ▻' (GStream Nat') ⇛ ▻' (GStream Nat'))
     f = nlamι[ "ms" ∈ ▻' (GStream Nat') ]

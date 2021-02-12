@@ -146,7 +146,7 @@ naturality (app {Γ = Γ}{T = T}{S = S} f t) ρ {γy}{γx} eγ =
     f €⟨ _ , γx ⟩ (t ⟨ _ , γx ⟩') ∎
   where open ≡-Reasoning
 
-infixl 12 _$_
+infixl 10 _$_
 _$_ = app
 
 
