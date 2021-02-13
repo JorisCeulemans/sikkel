@@ -267,7 +267,7 @@ module _ {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}} where
   g-thrd = lamι[ "s" ∈ GStream A ] g-snd ⟨$⟩' (g-tail $ varι "s")
 
 g-zeros : Tm Γ (GStream Nat')
-g-zeros = löbι[ "s" ∈ GStream Nat' ] g-cons $ timeless-tm zero' $ varι "s"
+g-zeros = löbι[ "s" ∈▻' GStream Nat' ] g-cons $ timeless-tm zero' $ varι "s"
 
 private
   module _ {Γ : Ctx ω ℓ} where
@@ -284,7 +284,7 @@ g-map : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeO
         Tm Γ (timeless-ty (A ⇛ B) ⇛ GStream A ⇛ GStream B)
 g-map {A = A}{B = B} =
   lamι[ "f" ∈ timeless-ty (A ⇛ B) ]
-    löbι[ "m" ∈ GStream A ⇛ GStream B ]
+    löbι[ "m" ∈▻' (GStream A ⇛ GStream B) ]
       lamι[ "s" ∈ GStream A ]
         g-cons $ timeless-tm (untimeless-tm (varι "f") $ untimeless-tm (g-head $ varι "s"))
                $ varι "m" ⊛' (g-tail $ varι "s")
@@ -293,7 +293,7 @@ g-iterate : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
             Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
 g-iterate {A = A} =
   lamι[ "f" ∈ timeless-ty (A ⇛ A) ]
-    löbι[ "g" ∈ timeless-ty A ⇛ GStream A ]
+    löbι[ "g" ∈▻' (timeless-ty A ⇛ GStream A) ]
       lamι[ "x" ∈ timeless-ty A ]
         g-cons $ varι "x"
                $ varι "g" ⊛' next' (timeless-tm (untimeless-tm (varι "f") $ untimeless-tm (varι "x")))
@@ -303,7 +303,7 @@ g-iterate' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
 g-iterate' {A = A} =
   lamι[ "f" ∈ timeless-ty (A ⇛ A) ]
     lamι[ "a" ∈ timeless-ty A ]
-      löbι[ "s" ∈ GStream A ]
+      löbι[ "s" ∈▻' GStream A ]
         g-cons $ varι "a"
                $ next' (g-map $ varι "f") ⊛' varι "s"
 
@@ -344,7 +344,7 @@ private
 g-interleave : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
                Tm Γ (GStream A ⇛ ▻' (GStream A) ⇛ GStream A)
 g-interleave {A = A} =
-  löbι[ "g" ∈ GStream A ⇛ ▻' (GStream A) ⇛ GStream A ]
+  löbι[ "g" ∈▻' (GStream A ⇛ ▻' (GStream A) ⇛ GStream A) ]
     lamι[ "s" ∈ GStream A ]
       lamι[ "t" ∈ ▻' (GStream A) ]
         g-cons $ (g-head $ varι "s")
@@ -354,12 +354,12 @@ one' : {Γ : Ctx ★ ℓ} → Tm Γ Nat'
 one' = suc' zero'
 
 g-toggle : Tm Γ (GStream Nat')
-g-toggle = löbι[ "s" ∈ GStream Nat' ]
+g-toggle = löbι[ "s" ∈▻' GStream Nat' ]
              g-cons $ timeless-tm one'
                     $ next' (g-cons $ timeless-tm zero' $ varι "s")
 
 g-paperfolds : Tm Γ (GStream Nat')
-g-paperfolds = löbι[ "s" ∈ GStream Nat' ] g-interleave $ g-toggle $ varι "s"
+g-paperfolds = löbι[ "s" ∈▻' GStream Nat' ] g-interleave $ g-toggle $ varι "s"
 
 {-
 module _ (T-op : NullaryTypeOp ω ℓ) {{_ : IsNullaryNatural T-op}} where
@@ -393,7 +393,7 @@ module _
   --   ICFP 2013.
   g-mergef : Tm Γ (timeless-ty A ⇛ timeless-ty B ⇛ ▻' (GStream C) ⇛ GStream C) →
              Tm Γ (GStream A ⇛ GStream B ⇛ GStream C)
-  g-mergef f = löbι[ "g" ∈ GStream A ⇛ GStream B ⇛ GStream C ]
+  g-mergef f = löbι[ "g" ∈▻' (GStream A ⇛ GStream B ⇛ GStream C) ]
                  lamι[ "xs" ∈ GStream A ]
                    lamι[ "ys" ∈ GStream B ]
                      (↑ι⟨ 3 ⟩ f) $ (g-head $ varι "xs")
@@ -419,7 +419,7 @@ nat-sum : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = lamι[ "m" ∈ Nat' ] lamι[ "n" ∈ Nat' ] prim-nat-sum (varι "m") (varι "n")
 
 g-fibs : Tm Γ (GStream Nat')
-g-fibs = löbι[ "s" ∈ GStream Nat' ]
+g-fibs = löbι[ "s" ∈▻' GStream Nat' ]
   g-cons $ timeless-tm one' $ (
   (g-cons $ timeless-tm one') ⟨$⟩' (
   (f $ varι "s") ⟨$⟩' (g-tail ⟨$⟩' varι "s")))

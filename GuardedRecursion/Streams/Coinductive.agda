@@ -87,7 +87,7 @@ open import Reflection.Tactic.LobInduction
 
 module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
   every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
-  every2nd = löbι[ "g" ∈ timeless-ty (Stream' A) ⇛ GStream A ]
+  every2nd = löbι[ "g" ∈▻' (timeless-ty (Stream' A) ⇛ GStream A) ]
                lamι[ "s" ∈ timeless-ty (Stream' A) ]
                  g-cons $ timeless-tm (head' $ untimeless-tm (varι "s"))
                         $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "s"))))
@@ -97,7 +97,7 @@ module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A
     natural-nul {{stream-a-nat}} σ = ≅ᵗʸ-trans (natural-un σ) (cong-un (natural-nul σ))
 
   g-diag : Tm Γ (timeless-ty (Stream' (Stream' A)) ⇛ GStream A)
-  g-diag = löbι[ "g" ∈ timeless-ty (Stream' (Stream' A)) ⇛ GStream A ]
+  g-diag = löbι[ "g" ∈▻' (timeless-ty (Stream' (Stream' A)) ⇛ GStream A) ]
              lamι[ "xss" ∈ timeless-ty (Stream' (Stream' A)) ]
                g-cons $ timeless-tm (head' $ (head' $ untimeless-tm (varι "xss")))
                       $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "xss"))))
