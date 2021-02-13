@@ -266,6 +266,12 @@ module _ {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}} where
   g-thrd : Tm Γ (GStream A ⇛ ▻' (▻' (timeless-ty A)))
   g-thrd = lamι[ "s" ∈ GStream A ] g-snd ⟨$⟩' (g-tail $ varι "s")
 
+  -- g-flipFst flips the first two elements of a guarded stream.
+  g-flipFst : Tm Γ (GStream A ⇛ ▻' (GStream A))
+  g-flipFst = lamι[ "s" ∈ GStream A ]
+                g-cons ⟨$⟩' (g-snd $ varι "s") ⊛' next' (
+                g-cons ⟨$⟩' next' (g-head $ varι "s") ⊛' (g-tail ⟨$⟩' (g-tail $ varι "s")))
+
 g-zeros : Tm Γ (GStream Nat')
 g-zeros = löbι[ "s" ∈▻' GStream Nat' ] g-cons $ timeless-tm zero' $ varι "s"
 
