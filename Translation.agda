@@ -104,9 +104,9 @@ nat-sum : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nat-elim (Nat' ⇛ Nat')
                    (lamι[ "n" ∈ Nat' ] varι "n")
                    (lamι[ "f" ∈ Nat' ⇛ Nat' ]
-                     lamι[ "n" ∈ Nat' ] suc' (varι "f" $ varι "n"))
+                     lamι[ "n" ∈ Nat' ] suc' $ (varι "f" $ varι "n"))
 
-nat-sum-β : (m n : Tm {C = ★} ◇ Nat') → app (app nat-sum (suc' m)) n ≅ᵗᵐ suc' (app (app nat-sum m) n)
+nat-sum-β : (m n : Tm {C = ★} ◇ Nat') → app (app nat-sum (suc' $ m)) n ≅ᵗᵐ suc' $ (app (app nat-sum m) n)
 nat-sum-β m n = {!!}
 
 open import Data.Nat

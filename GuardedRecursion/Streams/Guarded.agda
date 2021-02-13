@@ -313,11 +313,8 @@ g-iterate' {A = A} =
         g-cons $ varι "a"
                $ next' (g-map $ varι "f") ⊛' varι "s"
 
-suc-func : {Γ : Ctx ★ ℓ} → Tm Γ (Nat' ⇛ Nat')
-suc-func = discr-func suc
-
 g-nats : Tm Γ (GStream Nat')
-g-nats = g-iterate' $ timeless-tm suc-func $ timeless-tm zero'
+g-nats = g-iterate' $ timeless-tm suc' $ timeless-tm zero'
 
 private
   module _ {Γ : Ctx ω ℓ} where
@@ -325,22 +322,22 @@ private
     eq nats-test {x = zero}  _ = refl
     eq nats-test {x = suc n} _ = refl
 
-    nats-test2 : g-snd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (timeless-tm (suc' zero'))
+    nats-test2 : g-snd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (timeless-tm (suc' $ zero'))
     eq nats-test2 {x = zero}        _ = refl
     eq nats-test2 {x = suc zero}    _ = refl
     eq nats-test2 {x = suc (suc n)} _ = refl
 
-    nats-test3 : g-thrd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (next' (timeless-tm (suc' (suc' zero'))))
+    nats-test3 : g-thrd {Γ = Γ} $ g-nats ≅ᵗᵐ next' (next' (timeless-tm (suc' $ (suc' $ zero'))))
     eq nats-test3 {x = zero}              _ = refl
     eq nats-test3 {x = suc zero}          _ = refl
     eq nats-test3 {x = suc (suc zero)}    _ = refl
     eq nats-test3 {x = suc (suc (suc n))} _ = refl
 
-    map-test : g-head {Γ = Γ} $ (g-map $ timeless-tm suc-func $ g-zeros) ≅ᵗᵐ timeless-tm (discr 1)
+    map-test : g-head {Γ = Γ} $ (g-map $ timeless-tm suc' $ g-zeros) ≅ᵗᵐ timeless-tm (discr 1)
     eq map-test {x = zero}  _ = refl
     eq map-test {x = suc x} _ = refl
 
-    map-test2 : g-thrd {Γ = Γ} $ (g-map $ timeless-tm suc-func $ (g-map $ timeless-tm suc-func $ g-nats))
+    map-test2 : g-thrd {Γ = Γ} $ (g-map $ timeless-tm suc' $ (g-map $ timeless-tm suc' $ g-nats))
                 ≅ᵗᵐ next' (next' (timeless-tm ((discr 4))))
     eq map-test2 {x = zero}              _ = refl
     eq map-test2 {x = suc zero}          _ = refl
@@ -355,9 +352,6 @@ g-interleave {A = A} =
       lamι[ "t" ∈ ▻' (GStream A) ]
         g-cons $ (g-head $ varι "s")
                $ varι "g" ⊛' varι "t" ⊛' next' (g-tail $ varι "s")
-
-one' : {Γ : Ctx ★ ℓ} → Tm Γ Nat'
-one' = suc' zero'
 
 g-toggle : Tm Γ (GStream Nat')
 g-toggle = löbι[ "s" ∈▻' GStream Nat' ]
