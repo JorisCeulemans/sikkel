@@ -1,4 +1,4 @@
-{-# OPTIONS --omega-in-omega --allow-unsolved-metas #-}
+{-# OPTIONS --omega-in-omega  #-}
 
 --------------------------------------------------
 -- Examples with coinductive streams of natural numbers in mode ★
@@ -81,16 +81,21 @@ fibs' = global-tm (ι[ by-naturality ] g-fibs)
 
 map' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
        Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
-map' {A = A}{B = B} = lamι[ "f" ∈ A ⇛ B ] lamι[ "s" ∈ Stream' A ] global-tm {!!}
+map' {A = A}{B = B} =
+  lamι[ "f" ∈ A ⇛ B ]
+    lamι[ "s" ∈ Stream' A ]
+      global-tm (ι[ by-naturality ]
+        (g-map $ timeless-tm (ι[ by-naturality ] (varι "f" [ from now-timeless-ctx ]'))
+               $ unglobal-tm (ι[ global-ty-cong by-naturality ] varι "s")))
 
 open import Reflection.Tactic.LobInduction
 
 module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
-  every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
-  every2nd = löbι[ "g" ∈▻' (timeless-ty (Stream' A) ⇛ GStream A) ]
-               lamι[ "s" ∈ timeless-ty (Stream' A) ]
-                 g-cons $ timeless-tm (head' $ untimeless-tm (varι "s"))
-                        $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "s"))))
+  g-every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
+  g-every2nd = löbι[ "g" ∈▻' (timeless-ty (Stream' A) ⇛ GStream A) ]
+                 lamι[ "s" ∈ timeless-ty (Stream' A) ]
+                   g-cons $ timeless-tm (head' $ untimeless-tm (varι "s"))
+                          $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "s"))))
 
   instance
     stream-a-nat : IsNullaryNatural (Stream' A)
@@ -102,6 +107,16 @@ module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A
                g-cons $ timeless-tm (head' $ (head' $ untimeless-tm (varι "xss")))
                       $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "xss"))))
 
+every2nd : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+           Tm Γ (Stream' A ⇛ Stream' A)
+every2nd {A = A} =
+  lamι[ "s" ∈ Stream' A ]
+    global-tm (ι[ by-naturality ] (
+      g-every2nd {A = A} $ timeless-tm (ι[ by-naturality ] (varι "s" [ from now-timeless-ctx ]'))))
+
 diag : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
-diag {A = A} = lamι[ "xss" ∈ Stream' (Stream' A) ] global-tm {!g-diag $ ?!}
+diag {A = A} =
+  lamι[ "xss" ∈ Stream' (Stream' A) ]
+    global-tm (ι[ by-naturality ] (
+      g-diag {A = A} $ timeless-tm (ι[ by-naturality ] (varι "xss" [ from now-timeless-ctx ]'))))

@@ -1,5 +1,5 @@
--- {-# OPTIONS --allow-unsolved-metas #-}
-{-# OPTIONS --omega-in-omega #-}
+{-# OPTIONS --allow-unsolved-metas --omega-in-omega #-}
+
 module Translation where
 
 open import Function using (_∘_)

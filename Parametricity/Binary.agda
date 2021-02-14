@@ -393,7 +393,7 @@ instance
   Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
   Translatable.translate-cong forget-left-rel t=s = eq t=s tt
-
+{-
 subtract-left-agda : DiffInt → DiffInt → DiffInt
 subtract-left-agda = translate-term subtract★-left
 
@@ -402,3 +402,4 @@ subtract-right-agda = translate-term subtract★-right
 
 translate-result : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-left-agda subtract-right-agda
 translate-result {d1}{s1} r1 {d2}{s2} r2 = proj₂ ((subtract-rep {Γ = ◇} €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])
+-}

@@ -240,9 +240,10 @@ instance
   Translatable.translate-term forget-pred t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-pred a = MkTm (λ _ _ → a) (λ _ _ → refl)
   Translatable.translate-cong forget-pred t=s = eq t=s tt
-
+{-
 binary-or-agda : ℕ → ℕ → ℕ
 binary-or-agda = translate-term binary-or★
 
 translate-result : (IsBit ⟨→⟩ IsBit ⟨→⟩ IsBit) binary-or-agda
 translate-result {m} x {n} y = proj₂ ((binary-or {Γ = ◇} €⟨ pred-obj , tt ⟩ [ m , x ]) $⟨ pred-id , refl ⟩ [ n , y ])
+-}
