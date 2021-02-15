@@ -6,8 +6,11 @@ import Types.Functions
 import Types.Products
 import Types.Sums
 import LiftingFunctors
-import GuardedRecursion.Later
-import GuardedRecursion.GuardedStreams
+import GuardedRecursion.Modalities
+import GuardedRecursion.Streams.Guarded
+import GuardedRecursion.Streams.Coinductive
+import Parametricity.Unary
+import Parametricity.Binary
 import Reflection.Helpers
 import Reflection.Substitutions
 import Reflection.SubstitutionSequence

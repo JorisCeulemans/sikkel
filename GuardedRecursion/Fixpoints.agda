@@ -16,7 +16,7 @@ open import Categories
 open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
-open import GuardedRecursion.Later
+open import GuardedRecursion.Modalities.Later
 
 
 record isStrongFunctor (F : Ty {C = ω} ◇ → Ty {C = ω} ◇) : Setω where

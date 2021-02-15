@@ -8,8 +8,9 @@ module Reflection.Tactic.Telescopes where
 
 open import Data.Bool hiding (_<?_)
 open import Data.Fin using (#_)
-open import Data.List
+open import Data.List hiding (_++_)
 open import Data.Nat
+open import Data.String hiding (_<?_)
 open import Data.Unit
 open import Reflection hiding (var)
 open import Reflection.TypeChecking.Monad.Syntax
@@ -17,7 +18,7 @@ open import Relation.Nullary.Decidable using (⌊_⌋)
 
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
-open import CwF-Structure.Telescopes
+open import CwF-Structure.Telescopes hiding (_++_)
 open import Reflection.Naturality renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 open import Reflection.Tactic.Util
@@ -34,26 +35,29 @@ get-ctx (meta m args) = debugPrint "vtac" 5 (strErr "Blocing on meta" ∷ termEr
                         blockOnMeta m
 get-ctx _ = typeError (strErr "get-ctx can only get the context of a term." ∷ [])
 
--- ctx-to-telescope takes a value of type Ctx C ℓ and transforms it into a type
--- sequence. If a context is of the form Γ ,, T then T is added to the type
--- sequence and ctx-to-telescope is called recursively on Γ. Otherwise the process
--- stops and ctx-to-telescope returns an empty sequence.
+-- ctx-to-telescope takes a value of type Ctx C ℓ and transforms it into a telescope
+-- If a context is of the form Γ ,, T then T is added to the telescope
+-- and ctx-to-telescope is called recursively on Γ. Otherwise the process
+-- stops and ctx-to-telescope returns an empty telescope.
+{-# TERMINATING #-}
 ctx-to-telescope : Term → TC Term
-ctx-to-telescope (def (quote _,,_) xs) = go xs
-  where
-    go : List (Arg Term) → TC Term
-    go [] = typeError (strErr "Invalid use of context extension." ∷ [])
-    go (vArg ctx ∷ vArg ty ∷ xs) = (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$>
-                                   (ctx-to-telescope ctx)
-    go (_ ∷ xs) = go xs
+ctx-to-telescope (def (quote _,,_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 1 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> ctx-to-telescope ctx
+ctx-to-telescope (def (quote _,,_∈_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 2 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> ctx-to-telescope ctx
 ctx-to-telescope (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-telescope." ∷ []) >>
                                  blockOnMeta m
 ctx-to-telescope _ = return (con (quote Telescope.[]) [])
 
 
 --------------------------------------------------
--- Definition of the macro var that turns a context
--- into a telescope and applies prim-var.
+-- Definition of the macro db-var that allows to refer
+-- to variables in context by de Bruijn indices.
+-- It turns a context into a telescope and applies prim-var.
 
 -- Check whether the provided de Bruijn index is within bounds (i.e. does not
 -- exceed the length of the telescope - 1).
@@ -80,22 +84,22 @@ construct-var-solution x hole = do
   check-within-bounds x telescope
   return (def (quote prim-var) (vArg telescope ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ []))
 
-var-macro : Term → Term → TC ⊤
-var-macro x hole = do
+db-var-macro : Term → Term → TC ⊤
+db-var-macro x hole = do
   solution ← construct-var-solution x hole
   debugPrint "vtac" 5 (strErr "var macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro
-  var : Term → Term → TC ⊤
-  var = var-macro
+  db-var : Term → Term → TC ⊤
+  db-var = db-var-macro
 
 
 -------------------------------------------------
--- Variable macro that automatically performs naturality reduction on its type
+-- Variable (de Bruijn index) macro that automatically performs naturality reduction on its type
 
-varι-macro : Term → Term → TC ⊤
-varι-macro x hole = do
+db-varι-macro : Term → Term → TC ⊤
+db-varι-macro x hole = do
   partialSolution ← construct-var-solution x hole
   expr-resultType ← inferType partialSolution >>= get-term-type >>= construct-expr
   let proof = def (quote reduce-sound) (vArg expr-resultType ∷ [])
@@ -104,7 +108,47 @@ varι-macro x hole = do
   unify hole solution
 
 macro
-  varι : Term → Term → TC ⊤
+  db-varι : Term → Term → TC ⊤
+  db-varι = db-varι-macro
+
+
+--------------------------------------------------
+-- Variable macro that allows to name variables using strings.
+
+{-# TERMINATING #-}
+get-deBruijn-index : Term → String → TC ℕ
+get-deBruijn-index (def (quote _,,_) args) v = do
+  ctx ← get-visible-arg 0 args
+  i ← get-deBruijn-index ctx v
+  return (1 + i)
+get-deBruijn-index (def (quote _,,_∈_) args) v = do
+  w ← get-visible-arg 1 args >>= unquoteTC -- name of the last variable added to the context
+  if (v == w)
+    then return 0
+    else do
+      ctx ← get-visible-arg 0 args
+      i ← get-deBruijn-index ctx v
+      return (1 + i)
+get-deBruijn-index (meta m args) v = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in get-deBruijn-index." ∷ []) >>
+                                     blockOnMeta m
+get-deBruijn-index _ v = typeError (strErr ("Could not find a variable with name " ++ v) ∷ [])
+
+var-macro : String → Term → TC ⊤
+var-macro v hole = do
+  goal ← inferType hole
+  ctx ← get-ctx goal
+  i ← get-deBruijn-index ctx v >>= quoteTC
+  db-var-macro i hole
+
+varι-macro : String → Term → TC ⊤
+varι-macro v hole = do
+  goal ← inferType hole
+  ctx ← get-ctx goal
+  i ← get-deBruijn-index ctx v >>= quoteTC
+  db-varι-macro i hole
+
+macro
+  var = var-macro
   varι = varι-macro
 
 
@@ -114,26 +158,30 @@ macro
 
 bounded-ctx-to-telescope : ℕ → Term → TC Term
 bounded-ctx-to-telescope 0       _ = return (con (quote Telescope.[]) [])
-bounded-ctx-to-telescope (suc n) (def (quote _,,_) xs) = go xs
-  where
-    go : List (Arg Term) → TC Term
-    go [] = typeError (strErr "Invalid use of context extension." ∷ [])
-    go (vArg ctx ∷ vArg ty ∷ xs) = (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$>
-                                   (bounded-ctx-to-telescope n ctx)
-    go (_ ∷ xs) = go xs
+bounded-ctx-to-telescope (suc n) (def (quote _,,_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 1 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> bounded-ctx-to-telescope n ctx
+bounded-ctx-to-telescope (suc n) (def (quote _,,_∈_) args) = do
+  ctx ← get-visible-arg 0 args
+  ty ← get-visible-arg 2 args
+  (λ telescope → con (quote Telescope._∷_) (vArg telescope ∷ vArg ty ∷ [])) <$> bounded-ctx-to-telescope n ctx
 bounded-ctx-to-telescope (suc n) (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in ctx-to-telescope." ∷ []) >>
                                                  blockOnMeta m
 bounded-ctx-to-telescope (suc n) _ = typeError (strErr "Weakening this far is not possible in the current context." ∷ [])
 
 construct-weaken-solution : ℕ → Term → Term → TC Term
 construct-weaken-solution n term hole = do
-  extended-ctx ← inferType hole >>= get-ctx
+  goal ← inferType hole
+  debugPrint "vtac" 5 (strErr "↑ macro called, goal:" ∷ termErr goal ∷ [])
+  extended-ctx ← get-ctx goal
   ty-seq ← bounded-ctx-to-telescope n extended-ctx
   return (def (quote weaken-term) (vArg ty-seq ∷ vArg term ∷ []))
 
 weaken-macro : ℕ → Term → Term → TC ⊤
 weaken-macro n term hole = do
   solution ← construct-weaken-solution n term hole
+  debugPrint "vtac" 5 (strErr "↑ macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro
@@ -150,6 +198,7 @@ weakenι-macro n term hole = do
   expr-resultType ← inferType partial-solution >>= get-term-type >>= construct-expr
   let proof = def (quote reduce-sound) (vArg expr-resultType ∷ [])
   let solution = def (quote ι⁻¹[_]_) (vArg proof ∷ vArg partial-solution ∷ [])
+  debugPrint "vtac" 5 (strErr "↑ macro successfully constructed solution:" ∷ termErr solution ∷ [])
   unify hole solution
 
 macro

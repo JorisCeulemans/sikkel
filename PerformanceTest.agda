@@ -12,6 +12,8 @@ open import Types.Functions
 open import Types.Discrete
 open import Types.Products
 open import Reflection.Naturality
+open import Reflection.Naturality.Instances
+open import Reflection.Tactic.Naturality
 open import Reflection.Tactic.Lambda
 
 private
@@ -34,23 +36,23 @@ not-func = discr-func not
 test1 : Tm Γ ((Bool' ⇛ Bool') ⇛ Bool' ⇛ Bool')
 test1 = lamι (Bool' ⇛ Bool')
              (lamι Bool'
-                   (app (varι 1) (app not-func (varι 0))))
+                   (app (db-varι 1) (app not-func (db-varι 0))))
 
 test2 : Tm Γ ((Bool' ⇛ Bool' ⇛ Bool') ⇛ Bool' ⇛ Bool' ⇛ Bool')
 test2 = lamι (Bool' ⇛ Bool' ⇛ Bool')
              (lamι Bool'
                    (lamι Bool'
-                         (app (app (varι 2) (varι 0)) (varι 1))))
+                         (app (app (db-varι 2) (db-varι 0)) (db-varι 1))))
 
 test3 : Tm Γ (((unop Bool' ⇛ Bool') ⇛ Bool' ⇛ Bool') ⇛ (unop Bool' ⇛ Bool') ⇛ Bool' ⇛ Bool')
 test3 = lamι ((unop Bool' ⇛ Bool') ⇛ Bool' ⇛ Bool')
              (lamι (unop Bool' ⇛ Bool')
                    (lamι Bool'
-                         (app (app (varι 2) (varι 1)) (app not-func (varι 0)))))
+                         (app (app (db-varι 2) (db-varι 1)) (app not-func (db-varι 0)))))
 
 test4 : Tm Γ ((Bool' ⊠ unop Bool' ⇛ Bool') ⇛ Bool' ⇛ Bool')
 test4 = fakelöb (lamι (unop (((Bool' ⊠ unop Bool') ⇛ Bool') ⇛ Bool' ⇛ Bool'))
                       (lamι ((Bool' ⊠ unop Bool') ⇛ Bool')
                             (lamι Bool'
-                                  (app (varι 1) (pair (varι 0)
-                                                      (unop⊛ (unop⊛ (varι 2) (return-unop (varι 1))) (return-unop (varι 0))))))))
+                                  (app (db-varι 1) (pair (db-varι 0)
+                                                      (unop⊛ (unop⊛ (db-varι 2) (return-unop (db-varι 1))) (return-unop (db-varι 0))))))))

@@ -48,8 +48,23 @@ weaken-expr : Term → ℕ → Term
 weaken-expr expr zero    = expr
 weaken-expr expr (suc n) = con (quote sub) (weaken-expr expr n ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
 
-{-# TERMINATING #-}
+default-construct-expr : (List (Arg Term) → Term) → List (Arg Term) → TC Term
 construct-expr : Term → TC Term
+
+-- Construct expressions for defined terms and Agda variables
+default-construct-expr operation args = breakTC is-arg-semtype (filter visible-dec args) >>= λ
+  { (others , []) → return (con (quote nul) (vArg (operation others) ∷ []))  -- Nullary type operation.
+  ; (others , (ty1 ⟨∷⟩ [])) → do  -- Unary type operation.
+      ty1-exp ← construct-expr ty1
+      return (con (quote un) (vArg (operation others) ∷ vArg ty1-exp ∷ []))
+  ; (others , (ty1 ⟨∷⟩ ty2 ⟨∷⟩ [])) → do  -- Binary type operation.
+      ty1-exp ← construct-expr ty1
+      ty2-exp ← construct-expr ty2
+      return (con (quote bin) (vArg (operation others) ∷ vArg ty1-exp ∷ vArg ty2-exp ∷ []))
+  ; _ → typeError (strErr "No type operator recognized." ∷ [])
+  }
+
+{-# TERMINATING #-}
 construct-expr (def (quote ⟦_⟧exp) args) = get-visible-arg 0 args
 construct-expr (def (quote var-type) args) = do  -- Look up the type in the telescope.
   t-telescope ← get-visible-arg 0 args
@@ -68,17 +83,8 @@ construct-expr (def (quote _[_]) args) = breakTC is-arg-semtype args >>= λ
       return (con (quote sub) (vArg ty-exp ∷ vArg subst ∷ []))
   ; _ → typeError (strErr "Illegal substitution." ∷ [])
   }
-construct-expr (def op args) = breakTC is-arg-semtype (filter visible-dec args) >>= λ
-  { (others , []) → return (con (quote nul) (vArg (def op others) ∷ []))  -- Nullary type operation.
-  ; (others , (ty1 ⟨∷⟩ [])) → do  -- Unary type operation.
-      ty1-exp ← construct-expr ty1
-      return (con (quote un) (vArg (def op others) ∷ vArg ty1-exp ∷ []))
-  ; (others , (ty1 ⟨∷⟩ ty2 ⟨∷⟩ [])) → do  -- Binary type operation.
-      ty1-exp ← construct-expr ty1
-      ty2-exp ← construct-expr ty2
-      return (con (quote bin) (vArg (def op others) ∷ vArg ty1-exp ∷ vArg ty2-exp ∷ []))
-  ; _ → typeError (strErr "No type operator recognized." ∷ [])
-  }
+construct-expr (def op args) = default-construct-expr (def op) args
+construct-expr (var x args) = default-construct-expr (var x) args
 construct-expr (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in construct-expr." ∷ []) >>
                                blockOnMeta m
 construct-expr ty = typeError (strErr "The naturality tactic does not work for the type" ∷ termErr ty ∷ [])

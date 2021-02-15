@@ -18,10 +18,9 @@
 -- typecheck without this option in Agda 2.6.2 once released.
 --------------------------------------------------
 
+module Reflection.Naturality where
+
 open import Categories
-
-module Reflection.Naturality {C : Category} where
-
 open import Level
 open import Relation.Binary.PropositionalEquality using (_≡_; refl) renaming (subst to transp)
 
@@ -29,14 +28,18 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import Reflection.Helpers public
 
+private
+  variable
+    C D D' : Category
+
 
 --------------------------------------------------
 -- Definition of endofunctors on a context category.
 
-CtxOp : Set₁
-CtxOp = Ctx C → Ctx C
+CtxOp : Category → Category → Set₁
+CtxOp C D = Ctx C → Ctx D
 
-record IsCtxFunctor (Φ : CtxOp) : Set₁ where
+record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
   field
     ctx-map : ∀ {Δ : Ctx C} {Γ : Ctx C} → Δ ⇒ Γ → Φ Δ ⇒ Φ Γ
     ctx-map-id : {Γ : Ctx C} → ctx-map (id-subst Γ) ≅ˢ id-subst (Φ Γ)
@@ -47,7 +50,7 @@ record IsCtxFunctor (Φ : CtxOp) : Set₁ where
 open IsCtxFunctor {{...}} public
 
 instance
-  id-ctx-functor : IsCtxFunctor (λ Γ → Γ)
+  id-ctx-functor : IsCtxFunctor {C = C} (λ Γ → Γ)
   ctx-map {{id-ctx-functor}} σ = σ
   ctx-map-id {{id-ctx-functor}} = ≅ˢ-refl
   ctx-map-⊚ {{id-ctx-functor}} _ _ = ≅ˢ-refl
@@ -56,20 +59,20 @@ instance
 --------------------------------------------------
 -- Definition of (natural) nullary, unary and binary type operations.
 
-NullaryTypeOp : Set₁
-NullaryTypeOp = {Γ : Ctx C} → Ty Γ
+NullaryTypeOp : Category → Set₁
+NullaryTypeOp C = {Γ : Ctx C} → Ty Γ
 
-record IsNullaryNatural (U : NullaryTypeOp) : Set₁ where
+record IsNullaryNatural (U : NullaryTypeOp C) : Set₁ where
   field
     natural-nul : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) →
                   U [ σ ] ≅ᵗʸ U
 
 open IsNullaryNatural {{...}} public
 
-UnaryTypeOp : CtxOp → Set₁
-UnaryTypeOp Φ = {Γ : Ctx C} → Ty (Φ Γ) → Ty Γ
+UnaryTypeOp : CtxOp C D → Set₁
+UnaryTypeOp {C = C} Φ = {Γ : Ctx C} → Ty (Φ Γ) → Ty Γ
 
-record IsUnaryNatural {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} (F : UnaryTypeOp Φ) : Set₁ where
+record IsUnaryNatural {Φ : CtxOp C D} {{_ : IsCtxFunctor Φ}} (F : UnaryTypeOp Φ) : Set₁ where
   field
     natural-un : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) {T : Ty (Φ Γ)} →
                  (F T) [ σ ] ≅ᵗʸ F (T [ ctx-map σ ])
@@ -79,10 +82,15 @@ record IsUnaryNatural {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} (F : UnaryTypeOp Φ) 
 
 open IsUnaryNatural {{...}} public
 
-BinaryTypeOp : CtxOp → CtxOp → Set₁
-BinaryTypeOp Φ Ψ = {Γ : Ctx C} → Ty (Φ Γ) → Ty (Ψ Γ) → Ty Γ
+BinaryTypeOp : CtxOp C D → CtxOp C D' → Set₁
+BinaryTypeOp {C = C} Φ Ψ = {Γ : Ctx C} → Ty (Φ Γ) → Ty (Ψ Γ) → Ty Γ
 
-record IsBinaryNatural {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} (F : BinaryTypeOp Φ Ψ) : Set₁ where
+record IsBinaryNatural
+  {Φ : CtxOp C D} {Ψ : CtxOp C D'}
+  {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}}
+  (F : BinaryTypeOp Φ Ψ) : Set₁
+  where
+
   field
     natural-bin : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) →
                   {T : Ty (Φ Γ)} {S : Ty (Ψ Γ)} →
@@ -109,10 +117,10 @@ data ExprSkeleton : Set where
 
 data Expr (Γ : Ctx C) : ExprSkeleton → Set₁ where
   con : (T : Ty Γ) → Expr Γ scon
-  nul : (U : NullaryTypeOp) → {{IsNullaryNatural U}} → Expr Γ snul
-  un  : ∀ {s} {Φ : CtxOp} {{_ : IsCtxFunctor Φ}} →
+  nul : (U : NullaryTypeOp C) → {{IsNullaryNatural U}} → Expr Γ snul
+  un  : ∀ {s} {Φ : CtxOp C D} {{_ : IsCtxFunctor Φ}} →
         (F : UnaryTypeOp Φ) → {{IsUnaryNatural F}} → (e : Expr (Φ Γ) s) → Expr Γ (sun s)
-  bin : ∀ {s s'} {Φ Ψ : CtxOp} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} →
+  bin : ∀ {s s'} {Φ : CtxOp C D} {Ψ : CtxOp C D'} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} →
         (F : BinaryTypeOp Φ Ψ) → {{IsBinaryNatural F}} → (e1 : Expr (Φ Γ) s) (e2 : Expr (Ψ Γ) s') → Expr Γ (sbin s s')
   sub : ∀ {s} {Δ : Ctx C} →
         Expr Δ s → (σ : Γ ⇒ Δ) → Expr Γ (ssub s)

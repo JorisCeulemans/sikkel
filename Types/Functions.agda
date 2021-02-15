@@ -7,6 +7,7 @@ open import Categories
 module Types.Functions {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.String
 open import Function using (_∘_)
 open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
@@ -28,11 +29,14 @@ private
     T T' S S' : Ty Γ
 
 infixr 12 _⇛_
+infixr 4 lam[_∈_]_
 
+{-
 open import Axiom.UniquenessOfIdentityProofs
 private
   uip : ∀ {a} {A : Set a} → UIP A
   uip refl refl = refl
+-}
 
 
 --------------------------------------------------
@@ -100,6 +104,7 @@ morph-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl _ _
 morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
 morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ _ → $-cong f ∙assoc _ _)
 
+-- Lambda abstraction that adds a nameless variable to the context (only accessible by de Bruijn index).
 lam : (T : Ty Γ) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
 term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
                                  (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eq-zy eq-yx t →
@@ -111,6 +116,10 @@ term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy 
     S ⟪ ρ-xy , eq-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎)
   where open ≡-Reasoning
 naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
+
+-- Version of lambda abstraction that allows to name the bound variable.
+lam[_∈_]_ : (v : String) (T : Ty Γ) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
+lam[_∈_]_ v = lam
 
 -- An operator used to define function application.
 _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
@@ -141,6 +150,9 @@ naturality (app {Γ = Γ}{T = T}{S = S} f t) ρ {γy}{γx} eγ =
   ≡⟨ cong (f €⟨ _ , γx ⟩_) (naturality t ρ eγ) ⟩
     f €⟨ _ , γx ⟩ (t ⟨ _ , γx ⟩') ∎
   where open ≡-Reasoning
+
+infixl 10 _$_
+_$_ = app
 
 
 --------------------------------------------------

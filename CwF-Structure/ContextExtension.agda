@@ -7,6 +7,7 @@ open import Categories
 module CwF-Structure.ContextExtension {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
+open import Data.String
 open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
@@ -18,6 +19,7 @@ open import CwF-Structure.Terms
 open Category C
 
 infixl 15 _,,_
+infixl 15 _,,_∈_
 
 private
   variable
@@ -131,3 +133,7 @@ _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
         ≅⟨ ty-subst-id S ⟩
       S ∎
 -}
+
+-- Context extension which includes a variable name
+_,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C
+Γ ,, v ∈ T = Γ ,, T

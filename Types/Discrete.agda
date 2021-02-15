@@ -152,9 +152,17 @@ Nat' = Discr ℕ
 zero' : Tm Γ Nat'
 zero' = discr zero
 
+one' : Tm Γ Nat'
+one' = discr (suc zero)
+
+{-
 suc' : Tm Γ Nat' → Tm Γ Nat'
 term (suc' t) x γ = suc (t ⟨ x , γ ⟩')
 naturality (suc' t) f γ = cong suc (naturality t f γ)
+-}
+
+suc' : Tm Γ (Nat' ⇛ Nat')
+suc' = discr-func suc
 
 nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
 nat-elim {Γ = Γ} T t f = MkTm tm nat
@@ -187,12 +195,12 @@ nat-elim {Γ = Γ} T t f = MkTm tm nat
 eq (β-nat-zero t f) _ = refl
 
 β-nat-suc : {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) (k : Tm Γ Nat') →
-            app (nat-elim T t f) (suc' k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
+            app (nat-elim T t f) (suc' $ k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
 eq (β-nat-suc t f k) _ = refl
 
-η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ app (nat-elim Nat' zero' (discr-func suc)) k
+η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ app (nat-elim Nat' zero' suc') k
 eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
   where
-    go : (n : ℕ) → n ≡ nat-elim Nat' zero' (discr-func suc) €⟨ _ , γ ⟩ n
+    go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc' €⟨ _ , γ ⟩ n
     go zero    = refl
     go (suc n) = cong suc (go n)

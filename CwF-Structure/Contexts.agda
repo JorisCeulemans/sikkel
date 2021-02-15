@@ -26,7 +26,8 @@ record Ctx (C : Category) : Set₁ where
     set : Ob → Set
     rel : ∀ {x y} → Hom x y → set y → set x
     rel-id : ∀ {x} (γ : set x) → rel hom-id γ ≡ γ
-    rel-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) → rel (g ∙ f) γ ≡ rel f (rel g γ)
+    rel-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) →
+               rel (g ∙ f) γ ≡ rel f (rel g γ)
 open Ctx public
 
 module _ {C : Category} where
