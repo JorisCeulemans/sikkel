@@ -9,7 +9,7 @@
 -- 2.6.2 once released.
 --------------------------------------------------
 
-module GuardedRecursion.Streams.Coinductive where
+module GuardedRecursion.Streams.Standard where
 
 open import Data.Nat
 open import Data.Unit
@@ -37,58 +37,58 @@ private
     Γ : Ctx ★ ℓ
 
 
-discr-global : {Γ : Ctx ★ ℓc} {A : Set ℓ} →
-               global-ty (Discr A) ≅ᵗʸ Discr {Γ = Γ} A
-func (from discr-global) t = t ⟨ 0 , tt ⟩'
-CwF-Structure.naturality (from discr-global) _ = refl
-term (func (to discr-global) a) n _ = a
-Tm.naturality (func (to discr-global) a) _ _ = refl
-CwF-Structure.naturality (to discr-global) a = tm-≅-to-≡ (record { eq = λ _ → refl })
-eq (isoˡ discr-global) t = tm-≅-to-≡ (record { eq = λ _ → sym (Tm.naturality t z≤n refl) })
-eq (isoʳ discr-global) _ = refl
+discr-allnow : {Γ : Ctx ★ ℓc} {A : Set ℓ} →
+               allnow-ty (Discr A) ≅ᵗʸ Discr {Γ = Γ} A
+func (from discr-allnow) t = t ⟨ 0 , tt ⟩'
+CwF-Structure.naturality (from discr-allnow) _ = refl
+term (func (to discr-allnow) a) n _ = a
+Tm.naturality (func (to discr-allnow) a) _ _ = refl
+CwF-Structure.naturality (to discr-allnow) a = tm-≅-to-≡ (record { eq = λ _ → refl })
+eq (isoˡ discr-allnow) t = tm-≅-to-≡ (record { eq = λ _ → sym (Tm.naturality t z≤n refl) })
+eq (isoʳ discr-allnow) _ = refl
 
 {-
 Stream' : {Γ : Ctx ★ ℓc} → Ty Γ ℓ → Ty Γ ℓ
-Stream' A = global-ty (GStream (A [ from now-timeless-ctx ]))
+Stream' A = allnow-ty (GStream (A [ from now-timeless-ctx ]))
 
 instance
   stream'-un : IsUnaryNatural Stream'
   natural-un {{stream'-un}} σ {T = T} =
-    ≅ᵗʸ-trans (global-ty-natural σ _) (global-ty-cong (
+    ≅ᵗʸ-trans (allnow-ty-natural σ _) (allnow-ty-cong (
               ≅ᵗʸ-trans (gstream-natural (timeless-subst σ)) (gstream-cong (
                         ty-subst-seq-cong (from now-timeless-ctx ∷ (now-subst (timeless-subst σ) ◼))
                                           (σ ∷ (from now-timeless-ctx ◼))
                                           T
                                           (now-timeless-natural σ)))))
-  cong-un {{stream'-un}} = global-ty-cong ∘ gstream-cong ∘ ty-subst-cong-ty _
+  cong-un {{stream'-un}} = allnow-ty-cong ∘ gstream-cong ∘ ty-subst-cong-ty _
 
 module _ {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
   head' : Tm Γ (Stream' A ⇛ A)
-  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ global-timeless-ty A ] global-tm (g-head $ unglobal-tm (varι "s"))
+  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ allnow-timeless-ty A ] allnow-tm (g-head $ unallnow-tm (varι "s"))
 
   tail' : Tm Γ (Stream' A ⇛ Stream' A)
-  tail' = lamι[ "s" ∈ Stream' A ] ι[ global-later'-ty _ ] global-tm (g-tail $ unglobal-tm (varι "s"))
+  tail' = lamι[ "s" ∈ Stream' A ] ι[ allnow-later'-ty _ ] allnow-tm (g-tail $ unallnow-tm (varι "s"))
 
   cons' : Tm Γ (A ⇛ Stream' A ⇛ Stream' A)
   cons' = lamι[ "x" ∈ A ]
             lamι[ "xs" ∈ Stream' A ]
-              global-tm (g-cons $ unglobal-tm (ι[ global-timeless-ty A ] varι "x")
-                                $ unglobal-tm (ι⁻¹[ global-later'-ty _ ] varι "xs"))
+              allnow-tm (g-cons $ unallnow-tm (ι[ allnow-timeless-ty A ] varι "x")
+                                $ unallnow-tm (ι⁻¹[ allnow-later'-ty _ ] varι "xs"))
 
 paperfolds' : Tm Γ (Stream' Nat')
-paperfolds' = global-tm (ι[ by-naturality ] g-paperfolds)
+paperfolds' = allnow-tm (ι[ by-naturality ] g-paperfolds)
 
 fibs' : Tm Γ (Stream' Nat')
-fibs' = global-tm (ι[ by-naturality ] g-fibs)
+fibs' = allnow-tm (ι[ by-naturality ] g-fibs)
 
 map' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
        Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
 map' {A = A}{B = B} =
   lamι[ "f" ∈ A ⇛ B ]
     lamι[ "s" ∈ Stream' A ]
-      global-tm (ι[ by-naturality ]
+      allnow-tm (ι[ by-naturality ]
         (g-map $ timeless-tm (ι[ by-naturality ] (varι "f" [ from now-timeless-ctx ]'))
-               $ unglobal-tm (ι[ global-ty-cong by-naturality ] varι "s")))
+               $ unallnow-tm (ι[ allnow-ty-cong by-naturality ] varι "s")))
 
 open import Reflection.Tactic.LobInduction
 
@@ -113,48 +113,48 @@ every2nd : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
            Tm Γ (Stream' A ⇛ Stream' A)
 every2nd {A = A} =
   lamι[ "s" ∈ Stream' A ]
-    global-tm (ι[ by-naturality ] (
+    allnow-tm (ι[ by-naturality ] (
       g-every2nd {A = A} $ timeless-tm (ι[ by-naturality ] (varι "s" [ from now-timeless-ctx ]'))))
 
 diag : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
 diag {A = A} =
   lamι[ "xss" ∈ Stream' (Stream' A) ]
-    global-tm (ι[ by-naturality ] (
+    allnow-tm (ι[ by-naturality ] (
       g-diag {A = A} $ timeless-tm (ι[ by-naturality ] (varι "xss" [ from now-timeless-ctx ]'))))
 -}
 
 Stream' : NullaryTypeOp ★ fℓ → NullaryTypeOp ★ fℓ
-Stream' A = global-ty (GStream A)
+Stream' A = allnow-ty (GStream A)
 
 instance
   stream'-nul : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} → IsNullaryNatural (Stream' A)
   natural-nul {{stream'-nul}} σ =
-    ≅ᵗʸ-trans (global-ty-natural σ _) (global-ty-cong
+    ≅ᵗʸ-trans (allnow-ty-natural σ _) (allnow-ty-cong
               (≅ᵗʸ-trans (gstream-natural (timeless-subst σ)) (gstream-cong
                          (natural-nul (now-subst (timeless-subst σ))))))
 
 module _ {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} where
-  global-timeless-ty-nul : {Γ : Ctx ★ ℓc} → global-ty (timeless-ty A) ≅ᵗʸ A {Γ = Γ}
-  global-timeless-ty-nul = ≅ᵗʸ-trans by-naturality (global-timeless-ty A)
+  allnow-timeless-ty-nul : {Γ : Ctx ★ ℓc} → allnow-ty (timeless-ty A) ≅ᵗʸ A {Γ = Γ}
+  allnow-timeless-ty-nul = ≅ᵗʸ-trans by-naturality (allnow-timeless-ty A)
 
   head' : Tm Γ (Stream' A ⇛ A)
-  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ global-timeless-ty-nul ] global-tm (g-head $ unglobal-tm (varι "s"))
+  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ allnow-timeless-ty-nul ] allnow-tm (g-head $ unallnow-tm (varι "s"))
 
   tail' : Tm Γ (Stream' A ⇛ Stream' A)
-  tail' = lamι[ "s" ∈ Stream' A ] ι[ global-later'-ty _ ] global-tm (g-tail $ unglobal-tm (varι "s"))
+  tail' = lamι[ "s" ∈ Stream' A ] ι[ allnow-later'-ty _ ] allnow-tm (g-tail $ unallnow-tm (varι "s"))
 
   cons' : Tm Γ (A ⇛ Stream' A ⇛ Stream' A)
   cons' = lamι[ "x" ∈ A ]
             lamι[ "xs" ∈ Stream' A ]
-              global-tm (g-cons $ unglobal-tm (ι[ global-timeless-ty-nul ] varι "x")
-                                $ unglobal-tm (ι⁻¹[ global-later'-ty _ ] varι "xs"))
+              allnow-tm (g-cons $ unallnow-tm (ι[ allnow-timeless-ty-nul ] varι "x")
+                                $ unallnow-tm (ι⁻¹[ allnow-later'-ty _ ] varι "xs"))
 
 paperfolds' : Tm Γ (Stream' Nat')
-paperfolds' = global-tm g-paperfolds
+paperfolds' = allnow-tm g-paperfolds
 
 fibs' : Tm Γ (Stream' Nat')
-fibs' = global-tm g-fibs
+fibs' = allnow-tm g-fibs
 
 now-timeless-ctx-nul : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {Γ : Ctx ★ ℓc} →
                        Tm Γ A → Tm (now (timeless-ctx Γ)) A
@@ -170,8 +170,8 @@ map' : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeO
 map' {A = A}{B = B} =
   lamι[ "f" ∈ A ⇛ B ]
     lamι[ "s" ∈ Stream' A ]
-      global-tm (g-map $ timeless-tm (now-timeless-ctx-nul (varι "f"))
-                       $ unglobal-tm (varι "s"))
+      allnow-tm (g-map $ timeless-tm (now-timeless-ctx-nul (varι "f"))
+                       $ unallnow-tm (varι "s"))
 
 open import Reflection.Tactic.LobInduction
 
@@ -190,10 +190,10 @@ module _ {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {Γ : Ctx ω �
 
 every2nd : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
            Tm Γ (Stream' A ⇛ Stream' A)
-every2nd {A = A} = lamι[ "s" ∈ Stream' A ] global-tm (
+every2nd {A = A} = lamι[ "s" ∈ Stream' A ] allnow-tm (
                      g-every2nd $ timeless-tm (now-timeless-ctx-nul (varι "s")))
 
 diag : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
-diag {A = A} = lamι[ "xss" ∈ Stream' (Stream' A) ] global-tm (
-                     g-diag $ timeless-tm (now-timeless-ctx-nul (varι "xss")))
+diag {A = A} = lamι[ "xss" ∈ Stream' (Stream' A) ] allnow-tm (
+                 g-diag $ timeless-tm (now-timeless-ctx-nul (varι "xss")))

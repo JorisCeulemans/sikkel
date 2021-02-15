@@ -17,7 +17,7 @@ module Reflection.Naturality.GuardedRecursion.Instances where
 open import Reflection.Naturality
 open import GuardedRecursion.Modalities.Later
 open import GuardedRecursion.Modalities.Timeless
-open import GuardedRecursion.Modalities.Global
+open import GuardedRecursion.Modalities.AllNow
 
 
 instance
@@ -48,6 +48,6 @@ instance
   IsCtxFunctor.ctx-map-id timeless-ctx-functor = timeless-subst-id
   IsCtxFunctor.ctx-map-⊚ timeless-ctx-functor = timeless-subst-⊚
 
-  global-ty-un : IsUnaryNatural global-ty
-  IsUnaryNatural.natural-un global-ty-un = λ σ → global-ty-natural σ _
-  IsUnaryNatural.cong-un global-ty-un = global-ty-cong
+  allnow-ty-un : IsUnaryNatural allnow-ty
+  IsUnaryNatural.natural-un allnow-ty-un = λ σ → allnow-ty-natural σ _
+  IsUnaryNatural.cong-un allnow-ty-un = allnow-ty-cong
