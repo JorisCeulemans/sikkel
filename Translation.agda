@@ -24,18 +24,19 @@ open import Reflection.Naturality.Instances
 private
   variable
     ℓc : Level
+    fℓ gℓ : Level → Level
 
 
-record Translatable (T : NullaryTypeOp ★ ℓ) : Set (lsuc ℓ) where
+record Translatable (T : NullaryTypeOp ★ fℓ) : Set (lsuc (fℓ 0ℓ)) where
   field
-    translated-type : Set ℓ
+    translated-type : Set (fℓ 0ℓ)
     translate-term  : Tm ◇ T → translated-type
     translate-back  : translated-type → Tm ◇ T
     translate-cong  : {t s : Tm ◇ T} → t ≅ᵗᵐ s → translate-term t ≡ translate-term s
 
 open Translatable {{...}} public
 
-translate-type : (T : NullaryTypeOp ★ ℓ) → {{Translatable T}} → Set ℓ
+translate-type : (T : NullaryTypeOp ★ fℓ) → {{Translatable T}} → Set (fℓ 0ℓ)
 translate-type T = translated-type {T = T}
 
 instance
@@ -45,8 +46,8 @@ instance
   translate-back  {{translate-discr {A = A}}} a = discr a
   translate-cong  {{translate-discr {A = A}}} e = eq e tt
 
-  translate-prod : {T : NullaryTypeOp ★ ℓ}  {{_ : Translatable T}}
-                   {S : NullaryTypeOp ★ ℓ'} {{_ : Translatable S}} →
+  translate-prod : {T : NullaryTypeOp ★ fℓ}  {{_ : Translatable T}}
+                   {S : NullaryTypeOp ★ gℓ} {{_ : Translatable S}} →
                    Translatable (T ⊠ S)
   translated-type {{translate-prod {T = T} {S = S}}} = translate-type T × translate-type S
   translate-term  {{translate-prod {T = T} {S = S}}} p = [ translate-term (fst p) , translate-term (snd p) ]
@@ -66,8 +67,8 @@ expose-sum-cong {t = t}{s = s} e with t ⟨ tt , tt ⟩' | s ⟨ tt , tt ⟩' | 
 ... | inr b | .(inr b) | refl = inr (record { eq = λ _ → refl })
 
 instance
-  translate-sum : {T : NullaryTypeOp ★ ℓ}  {{_ : Translatable T}}
-                  {S : NullaryTypeOp ★ ℓ'} {{_ : Translatable S}} →
+  translate-sum : {T : NullaryTypeOp ★ fℓ}  {{_ : Translatable T}}
+                  {S : NullaryTypeOp ★ gℓ} {{_ : Translatable S}} →
                   Translatable (T ⊞ S)
   translated-type {{translate-sum {T = T} {S = S}}} = translate-type T ⊎ translate-type S
   translate-term  {{translate-sum {T = T} {S = S}}} p = map translate-term translate-term (expose-sum-term p)
@@ -87,16 +88,15 @@ _$⟨_,_⟩_ (term (func-★-◇ {T = T} f) _ _) _ refl t = f (to-★-◇-term t
 PresheafFunc.naturality (term (func-★-◇ {T = T}{S = S} f) _ _) {ρ-xy = _} refl refl t =
   trans (cong (λ x → term (f (to-★-◇-term x)) tt tt) (morph-id T t)) (sym (morph-id S _))
 Tm.naturality (func-★-◇ f) _ refl = to-pshfun-eq (λ { _ refl _ → refl })
-{-
+
 instance
-  translate-func : {T : NullaryTypeOp ★ ℓ}  {{_ : Translatable T}}
-                   {S : NullaryTypeOp ★ ℓ'} {{_ : Translatable S}} →
-                   Translatable {!T ⇛ S!}
+  translate-func : {T : NullaryTypeOp ★ fℓ}  {{_ : Translatable T}}
+                   {S : NullaryTypeOp ★ gℓ} {{_ : Translatable S}} →
+                   Translatable (T ⇛ S)
   translated-type {{translate-func {T = T} {S = S}}} = translate-type T → translate-type S
   translate-term  {{translate-func {T = T} {S = S}}} f t = translate-term (app f (translate-back t))
   translate-back  {{translate-func {T = T} {S = S}}} f = func-★-◇ (translate-back ∘ f ∘ translate-term)
   translate-cong  {{translate-func {T = T} {S = S}}} ef = funext λ x → translate-cong (app-cong ef ≅ᵗᵐ-refl)
--}
 
 
 open import Reflection.Naturality
@@ -114,7 +114,7 @@ nat-sum-β : (m n : Tm {C = ★} ◇ Nat') → app (app nat-sum (suc' $ m)) n �
 nat-sum-β m n = {!!}
 
 open import Data.Nat
-{-
+
 _+'_ : ℕ → ℕ → ℕ
 _+'_ = translate-term nat-sum
 
@@ -139,7 +139,6 @@ test6 m n = {!translate-cong {T = Nat'}
                            {t = app (app nat-sum (suc' (discr m))) (discr n)}
                            {s = suc' (app (app nat-sum (discr m)) (discr n))}
                            {!nat-sum-β (discr m) (discr n)!}!}
--}
 
 
 open import Data.Vec using (Vec; _∷_; [])
@@ -162,27 +161,29 @@ take-first : {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
 take-first z≤n       s = refl
 take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
 
+
+open import GuardedRecursion.Modalities
 instance
-  translate-stream : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {{_ : Translatable A}} → Translatable (Stream' A)
+  translate-stream : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {{_ : Translatable A}} → Translatable (Stream' A)
   translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
   head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
   tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)
-  translate-back {{translate-stream {A = A}}} s = MkTm (λ _ _ → MkTm (λ n _ → Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (take (suc n) s))
-                                                                     (λ { m≤n refl → nat (s≤s m≤n) s }))
-                                                       (λ { m≤n refl → tm-≅-to-≡ (record { eq = λ _ → nat _ s }) })
+  translate-back {{translate-stream {A = A}}} s = global-tm (MkTm (λ n _ → Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩')
+                                                                                        (take (suc n) s))
+                                                                  (λ { m≤n refl → nat (s≤s m≤n) s }))
     where
       open ≡-Reasoning
       nat : ∀ {m n} (m≤n : m ≤ n) (s' : Stream (translate-type A)) →
-        Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (take n s')))
-          ≡ Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (take m s')
+        Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
+          ≡ Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s')
       nat {m}{n} m≤n s' = begin
-          Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (take n s')))
+          Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
         ≡⟨ trans (map-cong (morph-id A) _) (map-id _) ⟩
-          first-≤ m≤n (Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (take n s'))
+          first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s'))
         ≡˘⟨ map-first-≤ _ m≤n (take n s') ⟩
-          Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
+          Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
         ≡⟨ cong (Data.Vec.map _) (take-first m≤n s') ⟩
-          Data.Vec.map (λ a → translate-back a ⟨ tt , tt ⟩') (take m s') ∎
+          Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s') ∎
   translate-cong {{translate-stream}} = {!!} -- not provable unless you assume that bisimilarity implies equality of streams
 
 paperfolds : Stream ℕ

@@ -27,6 +27,7 @@ open import Reflection.Tactic.Lambda
 private
   variable
     ℓ ℓ' ℓ'' : Level
+    fℓ : Level → Level
     Γ : Ctx ⋀ ℓ
 
 
@@ -53,7 +54,7 @@ morph-comp (PrimFromRel A B R) relation-id g refl refl _ = refl
 morph-comp (PrimFromRel A B R) left-rel  relation-id _ _ _ = refl
 morph-comp (PrimFromRel A B R) right-rel relation-id _ _ _ = refl
 
-FromRel : (A B : Set ℓ) (R : REL A B ℓ) → NullaryTypeOp ⋀ ℓ
+FromRel : (A B : Set ℓ) (R : REL A B ℓ) → NullaryTypeOp ⋀ (λ _ → ℓ)
 FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
 
 instance
@@ -107,7 +108,7 @@ Tm.naturality (from-rel2 f g h) right-rel refl = refl
 --------------------------------------------------
 -- Example: types representing integers
 
-record IntStructure (A : NullaryTypeOp ⋀ ℓ) {{_ : IsNullaryNatural A}} : Setω where
+record IntStructure (A : NullaryTypeOp ⋀ fℓ) {{_ : IsNullaryNatural A}} : Setω where
   field
     prim-add : Tm (Γ ,, A ⊠ A) A
     prim-negate : Tm (Γ ,, A) A
@@ -120,7 +121,7 @@ record IntStructure (A : NullaryTypeOp ⋀ ℓ) {{_ : IsNullaryNatural A}} : Set
 
 open IntStructure {{...}}
 
-subtract : {A : NullaryTypeOp ⋀ ℓ} {{_ : IsNullaryNatural A}} {{_ : IntStructure A}} →
+subtract : {A : NullaryTypeOp ⋀ fℓ} {{_ : IsNullaryNatural A}} {{_ : IntStructure A}} →
            Tm Γ (A ⇛ A ⇛ A)
 subtract {A = A} = lamι[ "i" ∈ A ] lamι[ "j" ∈ A ] add $ pair (varι "i") (negate $ varι "j")
 
@@ -147,7 +148,7 @@ data _∼_ : REL DiffInt SignNat 0ℓ where
 PrimIntRep : Ty {C = ⋀} ◇ 0ℓ
 PrimIntRep = PrimFromRel DiffInt SignNat _∼_
 
-IntRep : NullaryTypeOp ⋀ 0ℓ
+IntRep : NullaryTypeOp ⋀ (λ _ → 0ℓ)
 IntRep = FromRel DiffInt SignNat _∼_
 
 _+D_ : DiffInt → DiffInt → DiffInt

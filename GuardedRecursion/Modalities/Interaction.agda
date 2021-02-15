@@ -67,7 +67,7 @@ now-timeless-natural : {Δ : Ctx ★ ℓ} {Γ : Ctx ★ ℓ'} (σ : Δ ⇒ Γ) �
 eq (now-timeless-natural σ) _ = refl
 
 global-timeless-ty : {Γ : Ctx ★ ℓc} (T : Ty Γ ℓ) →
-                     global-ty (timeless-ty (ιc[ now-timeless-ctx ] T)) ≅ᵗʸ T
+                     global-ty (timeless-ty (T [ from now-timeless-ctx ])) ≅ᵗʸ T
 func (from (global-timeless-ty T)) tm = tm ⟨ 0 , tt ⟩'
 CwF-Structure.naturality (from (global-timeless-ty T)) _ = morph-cong T refl
 term (func (to (global-timeless-ty T)) t) _ _ = t

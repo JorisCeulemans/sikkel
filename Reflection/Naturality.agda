@@ -59,8 +59,8 @@ instance
 --------------------------------------------------
 -- Definition of (natural) nullary, unary and binary type operations.
 
-NullaryTypeOp : Category → Level → Setω
-NullaryTypeOp C ℓ = ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ ℓ
+NullaryTypeOp : Category → (Level → Level) → Setω
+NullaryTypeOp C f = ∀ {ℓc} {Γ : Ctx C ℓc} → Ty Γ (f ℓc)
 
 record IsNullaryNatural {ℓ} (U : NullaryTypeOp C ℓ) : Setω where
   field
@@ -109,7 +109,7 @@ open IsBinaryNatural {{...}} public
 -- to convince Agda that the function reduce below terminates.
 data ExprSkeleton : Set where
   scon : Level → ExprSkeleton
-  snul : Level → ExprSkeleton
+  snul : (f : Level → Level) (ℓc : Level) → ExprSkeleton
   sun  : (f : Level → Level → Level) (ℓc : Level) →
          ExprSkeleton → ExprSkeleton
   sbin : (f : Level → Level → Level → Level) (ℓc : Level) →
@@ -118,15 +118,15 @@ data ExprSkeleton : Set where
 
 level : ExprSkeleton → Level
 level (scon ℓ) = ℓ
-level (snul ℓ) = ℓ
+level (snul f ℓc) = f ℓc
 level (sun f ℓc s) = f ℓc (level s)
 level (sbin f ℓc s1 s2) = f ℓc (level s1) (level s2)
 level (ssub ℓc s) = level s
 
 data Expr {ℓc : Level} (Γ : Ctx C ℓc) : ExprSkeleton → Setω where
   con : ∀ {ℓ} → (T : Ty Γ ℓ) → Expr Γ (scon ℓ)
-  nul : ∀ {ℓ} →
-        (U : NullaryTypeOp C ℓ) → {{IsNullaryNatural U}} → Expr Γ (snul ℓ)
+  nul : ∀ {f} →
+        (U : NullaryTypeOp C f) → {{IsNullaryNatural U}} → Expr Γ (snul f ℓc)
   un  : ∀ {D f s} {Φ : CtxOp C D} {{_ : IsCtxFunctor Φ}} →
         (F : UnaryTypeOp Φ f) → {{IsUnaryNatural F}} → (e : Expr (Φ Γ) s) → Expr Γ (sun f ℓc s)
   bin : ∀ {D D' f s s'} {Φ : CtxOp C D} {Ψ : CtxOp C D'} {{_ : IsCtxFunctor Φ}} {{_ : IsCtxFunctor Ψ}} →
@@ -147,11 +147,11 @@ data Expr {ℓc : Level} (Γ : Ctx C ℓc) : ExprSkeleton → Setω where
 
 reduce-skeleton : ExprSkeleton → ExprSkeleton
 reduce-skeleton (scon ℓ) = scon ℓ
-reduce-skeleton (snul ℓ) = snul ℓ
+reduce-skeleton (snul f ℓc) = snul f ℓc
 reduce-skeleton (sun f ℓc s) = sun f ℓc (reduce-skeleton s)
 reduce-skeleton (sbin f ℓc s1 s2) = sbin f ℓc (reduce-skeleton s1) (reduce-skeleton s2)
 reduce-skeleton (ssub ℓc (scon ℓ)) = ssub ℓc (scon ℓ)
-reduce-skeleton (ssub ℓc (snul ℓ)) = snul ℓ
+reduce-skeleton (ssub ℓc (snul f ℓc')) = snul f ℓc
 reduce-skeleton (ssub ℓc (sun f ℓc' s)) = sun f ℓc (reduce-skeleton (ssub ℓc s))
 reduce-skeleton (ssub ℓc (sbin f ℓc' s1 s2)) = sbin f ℓc (reduce-skeleton (ssub ℓc s1)) (reduce-skeleton (ssub ℓc s2))
 reduce-skeleton (ssub ℓc (ssub ℓc' s)) = reduce-skeleton (ssub ℓc s)

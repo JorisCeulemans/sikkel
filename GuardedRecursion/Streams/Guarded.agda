@@ -35,7 +35,8 @@ open import Reflection.Tactic.LobInduction
 
 private
   variable
-    ℓa ℓb ℓc : Level
+    -- ℓa ℓb ℓc : Level
+    fℓ gℓ hℓ : Level → Level
     Γ Δ : Ctx ω ℓ
 
 
@@ -258,7 +259,7 @@ instance
 
 open import Reflection.Tactic.Naturality
 
-module _ {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}} where
+module _ {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} where
   
   g-snd : Tm Γ (GStream A ⇛ ▻' (timeless-ty A))
   g-snd = lamι[ "s" ∈ GStream A ] g-head ⟨$⟩' (g-tail $ varι "s")
@@ -286,7 +287,7 @@ private
     eq zeros-test2 {x = suc zero}    _ = refl
     eq zeros-test2 {x = suc (suc n)} _ = refl
 
-g-map : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
+g-map : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ gℓ} {{_ : IsNullaryNatural B}} →
         Tm Γ (timeless-ty (A ⇛ B) ⇛ GStream A ⇛ GStream B)
 g-map {A = A}{B = B} =
   lamι[ "f" ∈ timeless-ty (A ⇛ B) ]
@@ -295,7 +296,7 @@ g-map {A = A}{B = B} =
         g-cons $ timeless-tm (untimeless-tm (varι "f") $ untimeless-tm (g-head $ varι "s"))
                $ varι "m" ⊛' (g-tail $ varι "s")
 
-g-iterate : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+g-iterate : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
             Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
 g-iterate {A = A} =
   lamι[ "f" ∈ timeless-ty (A ⇛ A) ]
@@ -304,7 +305,7 @@ g-iterate {A = A} =
         g-cons $ varι "x"
                $ varι "g" ⊛' next' (timeless-tm (untimeless-tm (varι "f") $ untimeless-tm (varι "x")))
 
-g-iterate' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+g-iterate' : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
              Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
 g-iterate' {A = A} =
   lamι[ "f" ∈ timeless-ty (A ⇛ A) ]
@@ -344,7 +345,7 @@ private
     eq map-test2 {x = suc (suc zero)}    _ = refl
     eq map-test2 {x = suc (suc (suc n))} _ = refl
 
-g-interleave : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+g-interleave : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
                Tm Γ (GStream A ⇛ ▻' (GStream A) ⇛ GStream A)
 g-interleave {A = A} =
   löbι[ "g" ∈▻' (GStream A ⇛ ▻' (GStream A) ⇛ GStream A) ]
@@ -382,9 +383,9 @@ module _ (T-op : NullaryTypeOp ω ℓ) {{_ : IsNullaryNatural T-op}} where
 -}
 
 module _
-  {A : NullaryTypeOp ★ ℓa} {{_ : IsNullaryNatural A}}
-  {B : NullaryTypeOp ★ ℓb} {{_ : IsNullaryNatural B}}
-  {C : NullaryTypeOp ★ ℓc} {{_ : IsNullaryNatural C}}
+  {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}}
+  {B : NullaryTypeOp ★ gℓ} {{_ : IsNullaryNatural B}}
+  {C : NullaryTypeOp ★ hℓ} {{_ : IsNullaryNatural C}}
   where
 
   -- This is an implementation of an example on page 3 of the paper

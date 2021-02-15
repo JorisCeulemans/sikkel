@@ -27,6 +27,7 @@ open import Reflection.SubstitutionSequence
 private
   variable
     ℓ ℓ' ℓ'' : Level
+    fℓ : Level → Level
     Γ : Ctx 𝟚 ℓ
 
 
@@ -47,7 +48,7 @@ morph-comp (PrimFromPred A P) type-id g refl refl _ = refl
 morph-comp (PrimFromPred A P) pred-id g refl refl _ = refl
 morph-comp (PrimFromPred A P) type-pred pred-id _ _ _ = refl
 
-FromPred : (A : Set ℓ) → Pred A ℓ → NullaryTypeOp 𝟚 ℓ
+FromPred : (A : Set ℓ) → Pred A ℓ → NullaryTypeOp 𝟚 (λ _ → ℓ)
 FromPred A P {Γ = Γ} = PrimFromPred A P [ !◇ Γ ]
 
 instance
@@ -87,7 +88,7 @@ Tm.naturality (from-pred2 f g) type-pred refl = refl
 --------------------------------------------------
 -- Example: types representing booleans
 
-record BoolStructure (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} : Setω where
+record BoolStructure (B : NullaryTypeOp 𝟚 fℓ) {{_ : IsNullaryNatural B}} : Setω where
   field
     prim-and : Tm (Γ ,, B ⊠ B) B
     prim-not : Tm (Γ ,, B) B
@@ -100,7 +101,7 @@ record BoolStructure (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} : S
 
 open BoolStructure {{...}}
 
-or : (B : NullaryTypeOp 𝟚 ℓ) {{_ : IsNullaryNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
+or : (B : NullaryTypeOp 𝟚 fℓ) {{_ : IsNullaryNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
 or B = lamι[ "b1" ∈ B ] lamι[ "b2" ∈ B ] not $ (and $ pair (not $ varι "b1") (not $ varι "b2"))
 
 -- Representing booleans as natural numbers (0 = false, 1 = true)
@@ -111,7 +112,7 @@ data IsBit : Pred ℕ 0ℓ where
 PrimBinaryBool : Ty {C = 𝟚} ◇ 0ℓ
 PrimBinaryBool = PrimFromPred ℕ IsBit
 
-BinaryBool : NullaryTypeOp 𝟚 0ℓ
+BinaryBool : NullaryTypeOp 𝟚 (λ _ → 0ℓ)
 BinaryBool = FromPred ℕ IsBit
 
 instance
