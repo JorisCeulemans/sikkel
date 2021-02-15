@@ -8,7 +8,7 @@ import Types.Sums
 import LiftingFunctors
 import GuardedRecursion.Modalities
 import GuardedRecursion.Streams.Guarded
-import GuardedRecursion.Streams.Coinductive
+import GuardedRecursion.Streams.Standard
 import Parametricity.Unary
 import Parametricity.Binary
 import Reflection.Helpers

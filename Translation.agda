@@ -17,7 +17,7 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
-open import GuardedRecursion.Streams.Coinductive
+open import GuardedRecursion.Streams.Standard
 open import Reflection.Naturality
 open import Reflection.Naturality.Instances
 
@@ -163,7 +163,7 @@ instance
   translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
   head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
   tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)
-  translate-back {{translate-stream {A = A}}} s = global-tm (MkTm (λ n _ → Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩')
+  translate-back {{translate-stream {A = A}}} s = allnow-tm (MkTm (λ n _ → Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩')
                                                                                         (take (suc n) s))
                                                                   (λ { m≤n refl → nat (s≤s m≤n) s }))
     where
