@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Reflection for type equality
 --
@@ -11,21 +9,14 @@
 -- sequence of substitutions.
 -- This solver is superseded by the naturality solver in Reflection.Naturality. The latter can is more
 -- powerful (e.g. it allows moving substitions into the domain and codomain of a function type).
--- Note that we use the option omega-in-omega in order to define
--- an inductive data type in Setω and to pattern match on it (which
--- is not possible in Agda 2.6.1 without this option). This code should
--- typecheck without this option in Agda 2.6.2 once released
 --------------------------------------------------
 
 open import Categories
 module Reflection.Types where
 
-open import Level
-
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import GuardedRecursion.Modalities.Later
-open import Reflection.Helpers
 
 infixr 5 _∷_
 

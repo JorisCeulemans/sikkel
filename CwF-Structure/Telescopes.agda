@@ -1,12 +1,5 @@
--- {-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Definition and use of telescopes in a context
---
--- Note that we use the option omega-in-omega in order to define
--- an inductive data type in Setω and to pattern match on it (which
--- is not possible in Agda 2.6.1 without this option). This code should
--- typecheck without this option in Agda 2.6.2 once released.
 --------------------------------------------------
 
 open import Categories

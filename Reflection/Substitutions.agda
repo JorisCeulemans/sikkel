@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Substitution solver
 --
@@ -9,11 +7,6 @@
 -- to a typed setting (keeping track of domain and codomain contexts of a substitution)
 -- and extended to cut off any substitutions before the terminal substitution to
 -- the empty context.
--- Note that we use the option omega-in-omega in order to define
--- an inductive data type in Setω and to pattern match on it (which
--- is not possible in Agda 2.6.1 without this option). This code should
--- typecheck without this option in Agda 2.6.2 once released (tested with
--- the development version on July 10, 2020).
 --------------------------------------------------
 
 open import Categories

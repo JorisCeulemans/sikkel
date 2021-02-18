@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Naturality solver
 --
@@ -12,21 +10,15 @@
 -- operation in a specific base category, you can make the solver work with it
 -- by providing a value of the appropriate record type below (NullaryTypeOp,
 -- UnaryTypeOp or BinaryTypeOp).
--- Note that we use the option omega-in-omega in order to define
--- an inductive data type in Setω and to pattern match on it (which
--- is not possible in Agda 2.6.1 without this option). This code should
--- typecheck without this option in Agda 2.6.2 once released.
 --------------------------------------------------
 
 module Reflection.Naturality.Solver where
 
-open import Level
 open import Relation.Binary.PropositionalEquality using (_≡_; refl) renaming (subst to transp)
 
 open import Categories
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
-open import Reflection.Helpers public
 open import Reflection.Naturality.TypeOperations
 
 private
