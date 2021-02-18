@@ -18,7 +18,7 @@ open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
 open import CwF-Structure.Telescopes
-open import Reflection.Naturality renaming (reduce to nat-reduce)
+open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.Util
 
 

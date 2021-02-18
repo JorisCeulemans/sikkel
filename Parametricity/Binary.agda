@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- An example of representation independence using
 -- binary parametricity
@@ -19,8 +17,8 @@ open import Categories
 open import CwF-Structure
 open import Types.Functions
 open import Types.Products
-open import Reflection.Naturality
-open import Reflection.Naturality.Instances
+open import Types.Instances
+open import Reflection.Naturality.TypeOperations
 open import Reflection.SubstitutionSequence
 open import Reflection.Tactic.Lambda
 
@@ -52,11 +50,11 @@ morph-comp (PrimFromRel A B R) relation-id g refl refl _ = refl
 morph-comp (PrimFromRel A B R) left-rel  relation-id _ _ _ = refl
 morph-comp (PrimFromRel A B R) right-rel relation-id _ _ _ = refl
 
-FromRel : (A B : Set) (R : REL A B 0ℓ) → NullaryTypeOp ⋀
+FromRel : (A B : Set) (R : REL A B 0ℓ) → ClosedType ⋀
 FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
 
 instance
-  fromrel-natural : {A B : Set} {R : REL A B 0ℓ} → IsNullaryNatural (FromRel A B R)
+  fromrel-natural : {A B : Set} {R : REL A B 0ℓ} → IsClosedNatural (FromRel A B R)
   natural-nul {{fromrel-natural}} σ = ty-subst-seq-cong (!◇ _ ∷ σ ◼) (!◇ _ ◼) (PrimFromRel _ _ _) (◇-terminal _ _ _)
 
 from-rel : {A B : Set} {R : REL A B 0ℓ} (a : A) (b : B) → R a b → Tm Γ (FromRel A B R)
@@ -105,7 +103,7 @@ Tm.naturality (from-rel2 f g h) right-rel refl = refl
 --------------------------------------------------
 -- Example: types representing integers
 
-record IntStructure (A : NullaryTypeOp ⋀) {{_ : IsNullaryNatural A}} : Setω where
+record IntStructure (A : ClosedType ⋀) {{_ : IsClosedNatural A}} : Set₁ where
   field
     prim-add : Tm (Γ ,, A ⊠ A) A
     prim-negate : Tm (Γ ,, A) A
@@ -118,7 +116,7 @@ record IntStructure (A : NullaryTypeOp ⋀) {{_ : IsNullaryNatural A}} : Setω w
 
 open IntStructure {{...}}
 
-subtract : {A : NullaryTypeOp ⋀} {{_ : IsNullaryNatural A}} {{_ : IntStructure A}} →
+subtract : {A : ClosedType ⋀} {{_ : IsClosedNatural A}} {{_ : IntStructure A}} →
            Tm Γ (A ⇛ A ⇛ A)
 subtract {A = A} = lamι[ "i" ∈ A ] lamι[ "j" ∈ A ] add $ pair (varι "i") (negate $ varι "j")
 
@@ -145,7 +143,7 @@ data _∼_ : REL DiffInt SignNat 0ℓ where
 PrimIntRep : Ty {C = ⋀} ◇
 PrimIntRep = PrimFromRel DiffInt SignNat _∼_
 
-IntRep : NullaryTypeOp ⋀
+IntRep : ClosedType ⋀
 IntRep = FromRel DiffInt SignNat _∼_
 
 _+D_ : DiffInt → DiffInt → DiffInt

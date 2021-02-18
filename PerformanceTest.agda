@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 open import Categories
 
 module PerformanceTest {C : Category} where
@@ -11,8 +9,8 @@ open import CwF-Structure
 open import Types.Functions
 open import Types.Discrete
 open import Types.Products
-open import Reflection.Naturality
-open import Reflection.Naturality.Instances
+open import Types.Instances
+open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Naturality
 open import Reflection.Tactic.Lambda
 

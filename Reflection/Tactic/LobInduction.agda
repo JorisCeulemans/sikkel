@@ -13,7 +13,7 @@ open import Reflection
 open import Categories
 open import CwF-Structure
 open import GuardedRecursion.Modalities.Later
-open import Reflection.Naturality renaming (reduce to nat-reduce)
+open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 
 infixr 4 löbι[_∈▻'_]_
