@@ -9,7 +9,6 @@ module Types.Functions {C : Category} where
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.String
 open import Function using (_∘_)
-open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
 open import Helpers
@@ -23,7 +22,6 @@ open Category C
 
 private
   variable
-    ℓc ℓt ℓs : Level
     x y z : Ob
     Γ Δ : Ctx C
     T T' S S' : Ty Γ

@@ -8,7 +8,6 @@ module CwF-Structure.ContextExtension {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.String
-open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
 open import Helpers
@@ -23,7 +22,6 @@ infixl 15 _,,_∈_
 
 private
   variable
-    ℓc ℓt ℓt' : Level
     Γ Δ Θ : Ctx C
     T S : Ty Γ
 

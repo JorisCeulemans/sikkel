@@ -10,7 +10,6 @@ open import Data.String using (String)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.Unit.Polymorphic using (⊤; tt)
 open import Function using (id; _∘_)
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Categories

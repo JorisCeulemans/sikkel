@@ -137,18 +137,18 @@ open import Data.Vec using (Vec; _∷_; [])
 open import Data.Vec.Properties
 open import GuardedRecursion.Streams.Guarded using (first-≤; map-first-≤; first-≤-refl; g-paperfolds; g-fibs)
 
-record Stream (A : Set ℓ) : Set ℓ where
+record Stream {ℓ} (A : Set ℓ) : Set ℓ where
   coinductive
   field
     head : A
     tail : Stream A
 open Stream
 
-take : {A : Set ℓ} (n : ℕ) → Stream A → Vec A n
+take : ∀ {ℓ} {A : Set ℓ} (n : ℕ) → Stream A → Vec A n
 take zero    s = []
 take (suc n) s = head s ∷ take n (tail s)
 
-take-first : {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
+take-first : ∀ {ℓ} {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
              first-≤ m≤n (take n s) ≡ take m s
 take-first z≤n       s = refl
 take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))

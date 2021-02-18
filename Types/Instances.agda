@@ -19,7 +19,7 @@ instance
   closed-natural {{discr-closed {A = A}}} = Discr-natural A
 
 instance
---  discr-nul : ∀ {ℓ} {A : Set ℓ} → IsNullaryNatural {C} (Discr A)
+--  discr-nul : {A : Set} → IsNullaryNatural {C} (Discr A)
 --  discr-nul = discr-closed
 
   fun-bin : IsBinaryNatural {C} _⇛_

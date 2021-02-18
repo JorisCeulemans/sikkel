@@ -6,7 +6,6 @@ open import Categories
 
 module CwF-Structure.Types {C : Category} where
 
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Function hiding (_⟨_⟩_; _↣_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 

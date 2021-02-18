@@ -7,7 +7,6 @@ module GuardedRecursion.Modalities.Timeless where
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n)
 open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Categories
@@ -15,7 +14,6 @@ open import CwF-Structure
 
 private
   variable
-    ℓ ℓ' : Level
     Δ Γ Θ : Ctx ω
 
 

@@ -13,7 +13,6 @@ open import Data.Bool using (Bool; true; false; if_then_else_; _∧_; _∨_)
 open import Data.Nat hiding (_⊔_)
 open import Data.Unit using (⊤; tt)
 open import Function using (id)
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers

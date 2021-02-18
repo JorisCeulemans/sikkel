@@ -8,7 +8,6 @@ module Types.Sums {C : Category} where
 
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Function using (id)
-open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers

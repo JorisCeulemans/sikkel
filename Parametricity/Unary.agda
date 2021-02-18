@@ -9,7 +9,7 @@ open import Data.Nat
 open import Data.Product renaming (_,_ to [_,_])
 open import Data.Sum hiding ([_,_])
 open import Function using (id)
-open import Level using (Level; Setω; 0ℓ)
+open import Level using (0ℓ)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Relation.Unary hiding (_⇒_)
 
@@ -82,7 +82,7 @@ Tm.naturality (from-pred2 f g) type-pred refl = refl
 --------------------------------------------------
 -- Example: types representing booleans
 
-record BoolStructure (B : ClosedType 𝟚) {{_ : IsClosedNatural B}} : Setω where
+record BoolStructure (B : ClosedType 𝟚) {{_ : IsClosedNatural B}} : Set₁ where
   field
     prim-and : Tm (Γ ,, B ⊠ B) B
     prim-not : Tm (Γ ,, B) B

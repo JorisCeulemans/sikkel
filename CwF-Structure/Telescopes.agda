@@ -9,7 +9,6 @@ module CwF-Structure.Telescopes {C : Category} where
 open import Data.Fin
 open import Data.Nat hiding (_⊔_)
 open import Data.Vec hiding ([_]; _++_)
-open import Level renaming (zero to lzero; suc to lsuc)
 
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
@@ -18,17 +17,12 @@ open import CwF-Structure.ContextExtension
 
 private
   variable
-    ℓ ℓ' ℓc ℓt : Level
     Γ : Ctx C
     n : ℕ
-    ℓs : Vec Level n
 
 
 --------------------------------------------------
 -- Definition of a telescope in a context of a certain length
-
-max-level : ∀ {n} → Vec Level n → Level
-max-level = foldr _ _⊔_ 0ℓ
 
 -- A value of Telescope Γ n ℓs is a list of types Ts = [] ∷ T1 ∷ T2 ∷ ... ∷ Tn so that
 -- T1 is valid in Γ, T2 is valid in Γ ,, T1 etc. and hence Γ ,, T1 ,, T2 ,, ... ,, Tn

@@ -7,7 +7,6 @@ open import Categories
 module CwF-Structure.Yoneda {C : Category} where
 
 open import Function using (_∘_)
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers

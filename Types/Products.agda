@@ -8,7 +8,6 @@ module Types.Products {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
-open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
@@ -18,7 +17,6 @@ open import CwF-Structure.Terms
 
 private
   variable
-    ℓc ℓt ℓt' : Level
     Γ Δ : Ctx C
     T T' S S' : Ty Γ
 

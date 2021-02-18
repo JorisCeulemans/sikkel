@@ -13,15 +13,12 @@ open import Categories
 
 module Reflection.Substitutions {C : Category} where
 
-open import Level
 open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure.Contexts
---open import Reflection.Helpers
 
 private
   variable
-    ℓ ℓ' ℓ'' : Level
     Δ Γ Θ Ξ : Ctx C
 
 

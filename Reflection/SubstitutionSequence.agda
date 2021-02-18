@@ -11,7 +11,6 @@ open import Categories
 
 module Reflection.SubstitutionSequence {C : Category} where
 
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers

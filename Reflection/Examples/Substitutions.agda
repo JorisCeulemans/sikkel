@@ -2,12 +2,10 @@ open import Categories
 
 module Reflection.Examples.Substitutions {C : Category} where
 
-open import Level
 open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure hiding (var)
 open import Reflection.Substitutions
---open import Reflection.Helpers
 
 private
   variable

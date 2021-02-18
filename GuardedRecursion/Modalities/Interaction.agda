@@ -8,7 +8,6 @@ module GuardedRecursion.Modalities.Interaction where
 open import Data.Nat
 open import Data.Unit
 open import Function using (id; _∘_)
-open import Level renaming (suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Categories
@@ -16,10 +15,6 @@ open import CwF-Structure
 open import GuardedRecursion.Modalities.Later
 open import GuardedRecursion.Modalities.Timeless
 open import GuardedRecursion.Modalities.AllNow
-
-private
-  variable
-    ℓ ℓ' ℓc ℓt : Level
 
 
 --------------------------------------------------

@@ -27,6 +27,7 @@ open import Reflection.Tactic.LobInduction
 
 private
   variable
+    ℓ ℓ' : Level
     Γ Δ : Ctx ω
 
 

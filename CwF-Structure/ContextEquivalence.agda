@@ -6,7 +6,6 @@ open import Categories
 
 module CwF-Structure.ContextEquivalence {C : Category} where
 
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import CwF-Structure.Contexts
@@ -16,7 +15,6 @@ infix 1 _≅ᶜ_
 
 private
   variable
-    ℓ : Level
     Γ Δ Θ : Ctx C
 
 -- Two contexts are equivalent if they are naturally equivalent as presheaves.

@@ -12,7 +12,6 @@ module LiftingFunctors {C D : Category} (F : Functor C D) where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Function
-open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers

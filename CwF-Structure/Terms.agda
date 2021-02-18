@@ -6,7 +6,6 @@ open import Categories
 
 module CwF-Structure.Terms {C : Category}  where
 
-open import Level
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers

@@ -9,7 +9,7 @@ open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Product renaming (_,_ to [_,_])
 open import Function using (id; _∘_)
-open import Level using (Level; 0ℓ; _⊔_; Setω)
+open import Level using (0ℓ)
 open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 

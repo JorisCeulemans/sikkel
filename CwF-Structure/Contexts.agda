@@ -6,7 +6,6 @@ module CwF-Structure.Contexts where
 
 open import Data.Unit using (⊤; tt)
 open import Function using (id; _∘_)
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Categories
