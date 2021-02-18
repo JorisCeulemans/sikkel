@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- An example of representation independence using
 -- unary parametricity
@@ -19,8 +17,8 @@ open import Categories
 open import CwF-Structure
 open import Types.Functions
 open import Types.Products
-open import Reflection.Naturality
-open import Reflection.Naturality.Instances
+open import Types.Instances
+open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Lambda
 open import Reflection.SubstitutionSequence
 
@@ -48,11 +46,11 @@ morph-comp (PrimFromPred A P) type-id g refl refl _ = refl
 morph-comp (PrimFromPred A P) pred-id g refl refl _ = refl
 morph-comp (PrimFromPred A P) type-pred pred-id _ _ _ = refl
 
-FromPred : (A : Set ℓ) → Pred A ℓ → NullaryTypeOp 𝟚 (λ _ → ℓ)
+FromPred : (A : Set ℓ) → Pred A ℓ → ClosedType 𝟚 (λ _ → ℓ)
 FromPred A P {Γ = Γ} = PrimFromPred A P [ !◇ Γ ]
 
 instance
-  frompred-natural : {A : Set ℓ} {P : Pred A ℓ} → IsNullaryNatural (FromPred A P)
+  frompred-natural : {A : Set ℓ} {P : Pred A ℓ} → IsClosedNatural (FromPred A P)
   natural-nul {{frompred-natural}} σ = ty-subst-seq-cong (!◇ _ ∷ σ ◼) (!◇ _ ◼) (PrimFromPred _ _) (◇-terminal _ _ _)
 
 from-pred : {A : Set ℓ} {P : Pred A ℓ} (a : A) → P a → Tm Γ (FromPred A P)
@@ -88,7 +86,7 @@ Tm.naturality (from-pred2 f g) type-pred refl = refl
 --------------------------------------------------
 -- Example: types representing booleans
 
-record BoolStructure (B : NullaryTypeOp 𝟚 fℓ) {{_ : IsNullaryNatural B}} : Setω where
+record BoolStructure (B : ClosedType 𝟚 fℓ) {{_ : IsClosedNatural B}} : Setω where
   field
     prim-and : Tm (Γ ,, B ⊠ B) B
     prim-not : Tm (Γ ,, B) B
@@ -101,7 +99,7 @@ record BoolStructure (B : NullaryTypeOp 𝟚 fℓ) {{_ : IsNullaryNatural B}} : 
 
 open BoolStructure {{...}}
 
-or : (B : NullaryTypeOp 𝟚 fℓ) {{_ : IsNullaryNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
+or : (B : ClosedType 𝟚 fℓ) {{_ : IsClosedNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
 or B = lamι[ "b1" ∈ B ] lamι[ "b2" ∈ B ] not $ (and $ pair (not $ varι "b1") (not $ varι "b2"))
 
 -- Representing booleans as natural numbers (0 = false, 1 = true)
@@ -112,7 +110,7 @@ data IsBit : Pred ℕ 0ℓ where
 PrimBinaryBool : Ty {C = 𝟚} ◇ 0ℓ
 PrimBinaryBool = PrimFromPred ℕ IsBit
 
-BinaryBool : NullaryTypeOp 𝟚 (λ _ → 0ℓ)
+BinaryBool : ClosedType 𝟚 (λ _ → 0ℓ)
 BinaryBool = FromPred ℕ IsBit
 
 instance

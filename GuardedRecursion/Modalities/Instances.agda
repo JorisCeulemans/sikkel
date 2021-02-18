@@ -1,20 +1,10 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Some instances for the naturality solver to work with guarded recursion
---
--- Note: The option omega-in-omega is used here in order to work with
--- Setω as a valid sort (which is not possible in Agda 2.6.1 without
--- this option). This code should typecheck without this option in Agda 2.6.2
--- once released.
--- Note 2: The instances defined in this file will eventually be moved
--- to the files in which the respective type operations are defined.
--- However, we do not want to use the option omega-in-omega there.
 --------------------------------------------------
 
-module Reflection.Naturality.GuardedRecursion.Instances where
+module GuardedRecursion.Modalities.Instances where
 
-open import Reflection.Naturality
+open import Reflection.Naturality.TypeOperations
 open import GuardedRecursion.Modalities.Later
 open import GuardedRecursion.Modalities.Timeless
 open import GuardedRecursion.Modalities.AllNow

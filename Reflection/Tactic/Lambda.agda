@@ -13,7 +13,7 @@ open import Reflection hiding (lam)
 
 open import CwF-Structure
 open import Types.Functions
-open import Reflection.Naturality renaming (reduce to nat-reduce)
+open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 
 infixr 4 lamι[_∈_]_

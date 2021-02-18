@@ -1,5 +1,3 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- An example of representation independence using
 -- binary parametricity
@@ -19,8 +17,8 @@ open import Categories
 open import CwF-Structure
 open import Types.Functions
 open import Types.Products
-open import Reflection.Naturality
-open import Reflection.Naturality.Instances
+open import Types.Instances
+open import Reflection.Naturality.TypeOperations
 open import Reflection.SubstitutionSequence
 open import Reflection.Tactic.Lambda
 
@@ -54,11 +52,11 @@ morph-comp (PrimFromRel A B R) relation-id g refl refl _ = refl
 morph-comp (PrimFromRel A B R) left-rel  relation-id _ _ _ = refl
 morph-comp (PrimFromRel A B R) right-rel relation-id _ _ _ = refl
 
-FromRel : (A B : Set ℓ) (R : REL A B ℓ) → NullaryTypeOp ⋀ (λ _ → ℓ)
+FromRel : (A B : Set ℓ) (R : REL A B ℓ) → ClosedType ⋀ (λ _ → ℓ)
 FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
 
 instance
-  fromrel-natural : {A B : Set ℓ} {R : REL A B ℓ} → IsNullaryNatural (FromRel A B R)
+  fromrel-natural : {A B : Set ℓ} {R : REL A B ℓ} → IsClosedNatural (FromRel A B R)
   natural-nul {{fromrel-natural}} σ = ty-subst-seq-cong (!◇ _ ∷ σ ◼) (!◇ _ ◼) (PrimFromRel _ _ _) (◇-terminal _ _ _)
 
 from-rel : {A B : Set ℓ} {R : REL A B ℓ} (a : A) (b : B) → R a b → Tm Γ (FromRel A B R)
@@ -108,7 +106,7 @@ Tm.naturality (from-rel2 f g h) right-rel refl = refl
 --------------------------------------------------
 -- Example: types representing integers
 
-record IntStructure (A : NullaryTypeOp ⋀ fℓ) {{_ : IsNullaryNatural A}} : Setω where
+record IntStructure (A : ClosedType ⋀ fℓ) {{_ : IsClosedNatural A}} : Setω where
   field
     prim-add : Tm (Γ ,, A ⊠ A) A
     prim-negate : Tm (Γ ,, A) A
@@ -121,7 +119,7 @@ record IntStructure (A : NullaryTypeOp ⋀ fℓ) {{_ : IsNullaryNatural A}} : Se
 
 open IntStructure {{...}}
 
-subtract : {A : NullaryTypeOp ⋀ fℓ} {{_ : IsNullaryNatural A}} {{_ : IntStructure A}} →
+subtract : {A : ClosedType ⋀ fℓ} {{_ : IsClosedNatural A}} {{_ : IntStructure A}} →
            Tm Γ (A ⇛ A ⇛ A)
 subtract {A = A} = lamι[ "i" ∈ A ] lamι[ "j" ∈ A ] add $ pair (varι "i") (negate $ varι "j")
 
@@ -148,7 +146,7 @@ data _∼_ : REL DiffInt SignNat 0ℓ where
 PrimIntRep : Ty {C = ⋀} ◇ 0ℓ
 PrimIntRep = PrimFromRel DiffInt SignNat _∼_
 
-IntRep : NullaryTypeOp ⋀ (λ _ → 0ℓ)
+IntRep : ClosedType ⋀ (λ _ → 0ℓ)
 IntRep = FromRel DiffInt SignNat _∼_
 
 _+D_ : DiffInt → DiffInt → DiffInt

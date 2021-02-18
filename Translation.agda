@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas --omega-in-omega #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 module Translation where
 
@@ -17,9 +17,9 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
+open import Types.Instances
 open import GuardedRecursion.Streams.Standard
-open import Reflection.Naturality
-open import Reflection.Naturality.Instances
+open import Reflection.Naturality.TypeOperations
 
 private
   variable
@@ -27,7 +27,7 @@ private
     fℓ gℓ : Level → Level
 
 
-record Translatable (T : NullaryTypeOp ★ fℓ) : Set (lsuc (fℓ 0ℓ)) where
+record Translatable (T : ClosedType ★ fℓ) : Set (lsuc (fℓ 0ℓ)) where
   field
     translated-type : Set (fℓ 0ℓ)
     translate-term  : Tm ◇ T → translated-type
@@ -36,7 +36,7 @@ record Translatable (T : NullaryTypeOp ★ fℓ) : Set (lsuc (fℓ 0ℓ)) where
 
 open Translatable {{...}} public
 
-translate-type : (T : NullaryTypeOp ★ fℓ) → {{Translatable T}} → Set (fℓ 0ℓ)
+translate-type : (T : ClosedType ★ fℓ) → {{Translatable T}} → Set (fℓ 0ℓ)
 translate-type T = translated-type {T = T}
 
 instance
@@ -46,8 +46,8 @@ instance
   translate-back  {{translate-discr {A = A}}} a = discr a
   translate-cong  {{translate-discr {A = A}}} e = eq e tt
 
-  translate-prod : {T : NullaryTypeOp ★ fℓ}  {{_ : Translatable T}}
-                   {S : NullaryTypeOp ★ gℓ} {{_ : Translatable S}} →
+  translate-prod : {T : ClosedType ★ fℓ}  {{_ : Translatable T}}
+                   {S : ClosedType ★ gℓ} {{_ : Translatable S}} →
                    Translatable (T ⊠ S)
   translated-type {{translate-prod {T = T} {S = S}}} = translate-type T × translate-type S
   translate-term  {{translate-prod {T = T} {S = S}}} p = [ translate-term (fst p) , translate-term (snd p) ]
@@ -67,8 +67,8 @@ expose-sum-cong {t = t}{s = s} e with t ⟨ tt , tt ⟩' | s ⟨ tt , tt ⟩' | 
 ... | inr b | .(inr b) | refl = inr (record { eq = λ _ → refl })
 
 instance
-  translate-sum : {T : NullaryTypeOp ★ fℓ}  {{_ : Translatable T}}
-                  {S : NullaryTypeOp ★ gℓ} {{_ : Translatable S}} →
+  translate-sum : {T : ClosedType ★ fℓ}  {{_ : Translatable T}}
+                  {S : ClosedType ★ gℓ} {{_ : Translatable S}} →
                   Translatable (T ⊞ S)
   translated-type {{translate-sum {T = T} {S = S}}} = translate-type T ⊎ translate-type S
   translate-term  {{translate-sum {T = T} {S = S}}} p = map translate-term translate-term (expose-sum-term p)
@@ -90,8 +90,8 @@ PresheafFunc.naturality (term (func-★-◇ {T = T}{S = S} f) _ _) {ρ-xy = _} r
 Tm.naturality (func-★-◇ f) _ refl = to-pshfun-eq (λ { _ refl _ → refl })
 
 instance
-  translate-func : {T : NullaryTypeOp ★ fℓ}  {{_ : Translatable T}}
-                   {S : NullaryTypeOp ★ gℓ} {{_ : Translatable S}} →
+  translate-func : {T : ClosedType ★ fℓ}  {{_ : Translatable T}}
+                   {S : ClosedType ★ gℓ} {{_ : Translatable S}} →
                    Translatable (T ⇛ S)
   translated-type {{translate-func {T = T} {S = S}}} = translate-type T → translate-type S
   translate-term  {{translate-func {T = T} {S = S}}} f t = translate-term (app f (translate-back t))
@@ -99,10 +99,7 @@ instance
   translate-cong  {{translate-func {T = T} {S = S}}} ef = funext λ x → translate-cong (app-cong ef ≅ᵗᵐ-refl)
 
 
-open import Reflection.Naturality
 open import Reflection.Tactic.Lambda
-open import Reflection.Tactic.Lambda
-open import Reflection.Naturality.Instances
 
 nat-sum : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = nat-elim (Nat' ⇛ Nat')
@@ -164,7 +161,7 @@ take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
 
 open import GuardedRecursion.Modalities
 instance
-  translate-stream : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {{_ : Translatable A}} → Translatable (Stream' A)
+  translate-stream : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} {{_ : Translatable A}} → Translatable (Stream' A)
   translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
   head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
   tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)

@@ -13,8 +13,9 @@ open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
 open import Types.Products
-open import Reflection.Naturality
-open import Reflection.Naturality.Instances
+open import Types.Instances
+open import Reflection.Naturality.Solver
+open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Naturality
 
 example : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} {Θ : Ctx C ℓ''} →

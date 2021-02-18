@@ -12,7 +12,7 @@ open import Reflection
 open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure
-open import Reflection.Naturality renaming (reduce to nat-reduce)
+open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 
 get-equality-sides : Type → Maybe (Term × Term)

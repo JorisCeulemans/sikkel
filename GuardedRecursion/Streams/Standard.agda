@@ -1,12 +1,5 @@
-{-# OPTIONS --omega-in-omega #-}
-
 --------------------------------------------------
 -- Examples with coinductive streams of natural numbers in mode ★
---
--- Note that the option omega-in-omega is used to
--- make the type Stream' an instance of IsNullaryNatural.
--- This code should typecheck without this option in Agda
--- 2.6.2 once released.
 --------------------------------------------------
 
 module GuardedRecursion.Streams.Standard where
@@ -22,12 +15,12 @@ open import CwF-Structure
 open import Types.Functions
 open import Types.Discrete
 open import Types.Products
+open import Types.Instances
 open import GuardedRecursion.Streams.Guarded
 open import GuardedRecursion.Modalities
-open import Reflection.Naturality
+open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Lambda
 open import Reflection.Tactic.Naturality
-open import Reflection.Naturality.Instances
 open import Reflection.SubstitutionSequence
 
 private
@@ -62,7 +55,7 @@ instance
                                           (now-timeless-natural σ)))))
   cong-un {{stream'-un}} = allnow-ty-cong ∘ gstream-cong ∘ ty-subst-cong-ty _
 
-module _ {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
+module _ {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} where
   head' : Tm Γ (Stream' A ⇛ A)
   head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ allnow-timeless-ty A ] allnow-tm (g-head $ unallnow-tm (varι "s"))
 
@@ -81,7 +74,7 @@ paperfolds' = allnow-tm (ι[ by-naturality ] g-paperfolds)
 fibs' : Tm Γ (Stream' Nat')
 fibs' = allnow-tm (ι[ by-naturality ] g-fibs)
 
-map' : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ ℓ'} {{_ : IsNullaryNatural B}} →
+map' : {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} {B : ClosedType ★ ℓ'} {{_ : IsNullaryNatural B}} →
        Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
 map' {A = A}{B = B} =
   lamι[ "f" ∈ A ⇛ B ]
@@ -92,7 +85,7 @@ map' {A = A}{B = B} =
 
 open import Reflection.Tactic.LobInduction
 
-module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} where
+module _ {Γ : Ctx ω ℓc} {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} where
   g-every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
   g-every2nd = löbι[ "g" ∈▻' (timeless-ty (Stream' A) ⇛ GStream A) ]
                  lamι[ "s" ∈ timeless-ty (Stream' A) ]
@@ -109,14 +102,14 @@ module _ {Γ : Ctx ω ℓc} {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A
                g-cons $ timeless-tm (head' $ (head' $ untimeless-tm (varι "xss")))
                       $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "xss"))))
 
-every2nd : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+every2nd : {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} →
            Tm Γ (Stream' A ⇛ Stream' A)
 every2nd {A = A} =
   lamι[ "s" ∈ Stream' A ]
     allnow-tm (ι[ by-naturality ] (
       g-every2nd {A = A} $ timeless-tm (ι[ by-naturality ] (varι "s" [ from now-timeless-ctx ]'))))
 
-diag : {A : NullaryTypeOp ★ ℓ} {{_ : IsNullaryNatural A}} →
+diag : {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
 diag {A = A} =
   lamι[ "xss" ∈ Stream' (Stream' A) ]
@@ -124,17 +117,17 @@ diag {A = A} =
       g-diag {A = A} $ timeless-tm (ι[ by-naturality ] (varι "xss" [ from now-timeless-ctx ]'))))
 -}
 
-Stream' : NullaryTypeOp ★ fℓ → NullaryTypeOp ★ fℓ
+Stream' : ClosedType ★ fℓ → ClosedType ★ fℓ
 Stream' A = allnow-ty (GStream A)
 
 instance
-  stream'-nul : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} → IsNullaryNatural (Stream' A)
-  natural-nul {{stream'-nul}} σ =
+  stream'-natural : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} → IsClosedNatural (Stream' A)
+  closed-natural {{stream'-natural}} σ =
     ≅ᵗʸ-trans (allnow-ty-natural σ _) (allnow-ty-cong
               (≅ᵗʸ-trans (gstream-natural (timeless-subst σ)) (gstream-cong
-                         (natural-nul (now-subst (timeless-subst σ))))))
+                         (closed-natural (now-subst (timeless-subst σ))))))
 
-module _ {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} where
+module _ {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} where
   allnow-timeless-ty-nul : {Γ : Ctx ★ ℓc} → allnow-ty (timeless-ty A) ≅ᵗʸ A {Γ = Γ}
   allnow-timeless-ty-nul = ≅ᵗʸ-trans by-naturality (allnow-timeless-ty A)
 
@@ -156,16 +149,16 @@ paperfolds' = allnow-tm g-paperfolds
 fibs' : Tm Γ (Stream' Nat')
 fibs' = allnow-tm g-fibs
 
-now-timeless-ctx-nul : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {Γ : Ctx ★ ℓc} →
+now-timeless-ctx-nul : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} {Γ : Ctx ★ ℓc} →
                        Tm Γ A → Tm (now (timeless-ctx Γ)) A
 now-timeless-ctx-nul t = ι[ by-naturality ] (t [ from now-timeless-ctx ]')
 
 instance
-  ⇛-nul : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ gℓ} {{_ : IsNullaryNatural B}} →
-          IsNullaryNatural (A ⇛ B)
-  natural-nul {{⇛-nul}} σ = by-naturality
+  ⇛-closed : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} {B : ClosedType ★ gℓ} {{_ : IsClosedNatural B}} →
+             IsClosedNatural (A ⇛ B)
+  closed-natural {{⇛-closed}} σ = by-naturality
 
-map' : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {B : NullaryTypeOp ★ gℓ} {{_ : IsNullaryNatural B}} →
+map' : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} {B : ClosedType ★ gℓ} {{_ : IsClosedNatural B}} →
        Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
 map' {A = A}{B = B} =
   lamι[ "f" ∈ A ⇛ B ]
@@ -175,7 +168,7 @@ map' {A = A}{B = B} =
 
 open import Reflection.Tactic.LobInduction
 
-module _ {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {Γ : Ctx ω ℓc} where
+module _ {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} {Γ : Ctx ω ℓc} where
   g-every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
   g-every2nd = löbι[ "g" ∈▻' (timeless-ty (Stream' A) ⇛ GStream A) ]
                  lamι[ "s" ∈ timeless-ty (Stream' A) ]
@@ -188,12 +181,12 @@ module _ {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} {Γ : Ctx ω �
                g-cons $ timeless-tm (head' $ (head' $ untimeless-tm (varι "xss")))
                       $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "xss"))))
 
-every2nd : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
+every2nd : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} →
            Tm Γ (Stream' A ⇛ Stream' A)
 every2nd {A = A} = lamι[ "s" ∈ Stream' A ] allnow-tm (
                      g-every2nd $ timeless-tm (now-timeless-ctx-nul (varι "s")))
 
-diag : {A : NullaryTypeOp ★ fℓ} {{_ : IsNullaryNatural A}} →
+diag : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
 diag {A = A} = lamι[ "xss" ∈ Stream' (Stream' A) ] allnow-tm (
                  g-diag $ timeless-tm (now-timeless-ctx-nul (varι "xss")))
