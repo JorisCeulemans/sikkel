@@ -26,6 +26,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Categories
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
+open import CwF-Structure.ContextFunctors
 open import Reflection.Helpers public
 open import Reflection.Naturality.TypeOperations
 

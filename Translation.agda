@@ -19,7 +19,6 @@ open import Types.Products
 open import Types.Sums
 open import Types.Instances
 open import GuardedRecursion.Streams.Standard
-open import Reflection.Naturality.TypeOperations
 
 private
   variable

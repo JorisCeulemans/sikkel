@@ -10,34 +10,12 @@ open import Categories
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.ClosedTypes
+open import CwF-Structure.ContextFunctors
 
 private
   variable
     f : Level → Level
     C D D' : Category
-
-
---------------------------------------------------
--- Definition of endofunctors on a context category.
-
-CtxOp : Category → Category → Setω
-CtxOp C D = ∀ {ℓ} → Ctx C ℓ → Ctx D ℓ
-
-record IsCtxFunctor (Φ : CtxOp C D) : Setω where
-  field
-    ctx-map : ∀ {ℓ ℓ'} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} → Δ ⇒ Γ → Φ Δ ⇒ Φ Γ
-    ctx-map-id : ∀ {ℓ} {Γ : Ctx C ℓ} → ctx-map (id-subst Γ) ≅ˢ id-subst (Φ Γ)
-    ctx-map-⊚ : ∀ {ℓ ℓ' ℓ''} {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'}  {Θ : Ctx C ℓ''} →
-                 (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
-                 ctx-map (τ ⊚ σ) ≅ˢ ctx-map τ ⊚ ctx-map σ
-
-open IsCtxFunctor {{...}} public
-
-instance
-  id-ctx-functor : IsCtxFunctor {C = C} (λ Γ → Γ)
-  ctx-map {{id-ctx-functor}} σ = σ
-  ctx-map-id {{id-ctx-functor}} = ≅ˢ-refl
-  ctx-map-⊚ {{id-ctx-functor}} _ _ = ≅ˢ-refl
 
 
 --------------------------------------------------
