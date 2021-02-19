@@ -19,6 +19,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl) renaming (
 open import Categories
 open import CwF-Structure.Contexts
 open import CwF-Structure.Types
+open import CwF-Structure.ContextFunctors
 open import Reflection.Naturality.TypeOperations
 
 private

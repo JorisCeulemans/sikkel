@@ -4,6 +4,7 @@
 
 module GuardedRecursion.Modalities.Instances where
 
+open import CwF-Structure
 open import Reflection.Naturality.TypeOperations
 open import GuardedRecursion.Modalities.Later
 open import GuardedRecursion.Modalities.Timeless

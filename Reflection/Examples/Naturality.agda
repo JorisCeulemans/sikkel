@@ -15,7 +15,6 @@ open import Types.Functions
 open import Types.Products
 open import Types.Instances
 open import Reflection.Naturality.Solver
-open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Naturality
 
 example : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} →

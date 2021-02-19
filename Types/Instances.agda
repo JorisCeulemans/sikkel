@@ -7,11 +7,12 @@ open import Categories
 module Types.Instances {C : Category} where
 
 open import CwF-Structure.ClosedTypes
+open import CwF-Structure.ContextFunctors
+open import Reflection.Naturality.TypeOperations
 open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Sums
-open import Reflection.Naturality.TypeOperations
 
 
 instance

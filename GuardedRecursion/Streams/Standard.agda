@@ -17,7 +17,6 @@ open import Types.Products
 open import Types.Instances
 open import GuardedRecursion.Streams.Guarded
 open import GuardedRecursion.Modalities
-open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Lambda
 open import Reflection.Tactic.Naturality
 open import Reflection.SubstitutionSequence
