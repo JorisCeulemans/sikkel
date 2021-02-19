@@ -122,7 +122,7 @@ Stream' A = allnow-ty (GStream A)
 instance
   stream'-natural : {A : ClosedType ★ fℓ} {{_ : IsClosedNatural A}} → IsClosedNatural (Stream' A)
   closed-natural {{stream'-natural}} σ =
-    ≅ᵗʸ-trans (allnow-ty-natural σ _) (allnow-ty-cong
+    ≅ᵗʸ-trans (allnow-ty-natural σ) (allnow-ty-cong
               (≅ᵗʸ-trans (gstream-natural (timeless-subst σ)) (gstream-cong
                          (closed-natural (now-subst (timeless-subst σ))))))
 

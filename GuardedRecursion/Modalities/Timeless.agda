@@ -88,11 +88,16 @@ CwF-Structure.naturality (to (timeless-ty-cong T=S)) = CwF-Structure.naturality 
 eq (isoˡ (timeless-ty-cong T=S)) = eq (isoˡ T=S)
 eq (isoʳ (timeless-ty-cong T=S)) = eq (isoʳ T=S)
 
--- TODO: Show that timeless-tm and untimeless-tm are congruent as well.
+module _ {T : Ty (now Γ) ℓ} where
+  timeless-tm-cong : {t s : Tm (now Γ) T} → t ≅ᵗᵐ s → timeless-tm t ≅ᵗᵐ timeless-tm s
+  eq (timeless-tm-cong t=s) γ = eq t=s (Γ ⟪ z≤n ⟫ γ)
 
-timeless-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (now Γ) ℓ) → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
-func (from (timeless-ty-natural σ T)) = ctx-element-subst T (_⇒_.naturality σ _)
-CwF-Structure.naturality (from (timeless-ty-natural σ T)) t =
+  untimeless-tm-cong : {t s : Tm Γ (timeless-ty T)} → t ≅ᵗᵐ s → untimeless-tm t ≅ᵗᵐ untimeless-tm s
+  eq (untimeless-tm-cong t=s) γ = cong (T ⟪ tt , _ ⟫_) (eq t=s γ)
+
+timeless-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
+func (from (timeless-ty-natural σ {T})) = ctx-element-subst T (_⇒_.naturality σ _)
+CwF-Structure.naturality (from (timeless-ty-natural σ {T})) t =
   begin
     T ⟪ tt , _ ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
   ≡˘⟨ morph-comp T tt tt _ _ t ⟩
@@ -102,8 +107,8 @@ CwF-Structure.naturality (from (timeless-ty-natural σ T)) t =
   ≡⟨ morph-comp T tt tt _ _ t ⟩
     T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , _ ⟫ t) ∎
   where open ≡-Reasoning
-func (to (timeless-ty-natural σ T)) = ctx-element-subst T (sym (_⇒_.naturality σ _))
-CwF-Structure.naturality (to (timeless-ty-natural σ T)) t =
+func (to (timeless-ty-natural σ {T})) = ctx-element-subst T (sym (_⇒_.naturality σ _))
+CwF-Structure.naturality (to (timeless-ty-natural σ {T})) t =
   begin
     T ⟪ tt , _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
   ≡˘⟨ morph-comp T tt tt _ _ t ⟩
@@ -113,7 +118,7 @@ CwF-Structure.naturality (to (timeless-ty-natural σ T)) t =
   ≡⟨ morph-comp T tt tt _ _ t ⟩
     T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _ ⟫ t) ∎
   where open ≡-Reasoning
-eq (isoˡ (timeless-ty-natural σ T)) t =
+eq (isoˡ (timeless-ty-natural σ {T})) t =
   begin
     T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
   ≡˘⟨ morph-comp T tt tt _ _ t ⟩
@@ -123,7 +128,7 @@ eq (isoˡ (timeless-ty-natural σ T)) t =
   ≡⟨ morph-id T t ⟩
     t ∎
   where open ≡-Reasoning
-eq (isoʳ (timeless-ty-natural σ T)) t =
+eq (isoʳ (timeless-ty-natural σ {T})) t =
   begin
     T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
   ≡˘⟨ morph-comp T tt tt _ _ t ⟩
@@ -135,11 +140,11 @@ eq (isoʳ (timeless-ty-natural σ T)) t =
   where open ≡-Reasoning
 
 timeless-tm-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} (t : Tm (now Γ) T) →
-                  (timeless-tm t) [ σ ]' ≅ᵗᵐ ι[ timeless-ty-natural σ T ] timeless-tm (t [ now-subst σ ]')
+                  (timeless-tm t) [ σ ]' ≅ᵗᵐ ι[ timeless-ty-natural σ ] timeless-tm (t [ now-subst σ ]')
 eq (timeless-tm-natural σ t) δ = sym (Tm.naturality t tt _)
 
 untimeless-tm-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} (t : Tm Γ (timeless-ty T)) →
-                 (untimeless-tm t) [ now-subst σ ]' ≅ᵗᵐ untimeless-tm (ι⁻¹[ timeless-ty-natural σ T ] (t [ σ ]'))
+                 (untimeless-tm t) [ now-subst σ ]' ≅ᵗᵐ untimeless-tm (ι⁻¹[ timeless-ty-natural σ ] (t [ σ ]'))
 eq (untimeless-tm-natural {Δ = Δ}{Γ = Γ} σ {T = T} t) δ =
   begin
     T ⟪ tt , rel-id Γ (func σ δ) ⟫ (t ⟨ 0 , func σ δ ⟩')
