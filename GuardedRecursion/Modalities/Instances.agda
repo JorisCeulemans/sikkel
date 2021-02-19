@@ -31,7 +31,7 @@ instance
   IsCtxFunctor.ctx-map-⊚ now-functor = now-subst-⊚
 
   timeless-ty-un : IsUnaryNatural timeless-ty
-  IsUnaryNatural.natural-un timeless-ty-un = λ σ → timeless-ty-natural σ _
+  IsUnaryNatural.natural-un timeless-ty-un = λ σ → timeless-ty-natural σ
   IsUnaryNatural.cong-un timeless-ty-un = timeless-ty-cong
 
   timeless-ctx-functor : IsCtxFunctor timeless-ctx
@@ -40,5 +40,5 @@ instance
   IsCtxFunctor.ctx-map-⊚ timeless-ctx-functor = timeless-subst-⊚
 
   allnow-ty-un : IsUnaryNatural allnow-ty
-  IsUnaryNatural.natural-un allnow-ty-un = λ σ → allnow-ty-natural σ _
+  IsUnaryNatural.natural-un allnow-ty-un = λ σ → allnow-ty-natural σ
   IsUnaryNatural.cong-un allnow-ty-un = allnow-ty-cong

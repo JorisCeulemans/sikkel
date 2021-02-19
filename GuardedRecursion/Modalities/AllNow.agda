@@ -79,26 +79,33 @@ CwF-Structure.naturality (to (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (record { e
 eq (isoˡ (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symʳ (ty-subst-cong-ty (const-subst _) T=S) _)
 eq (isoʳ (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symˡ (ty-subst-cong-ty (const-subst _) T=S) _)
 
+module _ {T : Ty (timeless-ctx Γ)} where
+  allnow-tm-cong : {t s : Tm (timeless-ctx Γ) T} → t ≅ᵗᵐ s → allnow-tm t ≅ᵗᵐ allnow-tm s
+  eq (allnow-tm-cong t=s) γ = tm-≅-to-≡ (record { eq = λ _ → eq t=s γ })
+
+  unallnow-tm-cong : {t s : Tm Γ (allnow-ty T)} → t ≅ᵗᵐ s → unallnow-tm t ≅ᵗᵐ unallnow-tm s
+  eq (unallnow-tm-cong t=s) γ = cong (λ - → - ⟨ _ , tt ⟩') (eq t=s γ)
+
 ty-const-subst : (T : Ty (timeless-ctx Γ)) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
                  (T [ timeless-subst σ ]) [ const-subst δ ] ≅ᵗʸ T [ const-subst (func σ δ) ]
 ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (const-subst _))
                                  (ty-subst-cong-subst (const-subst-natural _ σ) T)
 
-allnow-ty-natural : (σ : Δ ⇒ Γ) (T : Ty (timeless-ctx Γ)) → (allnow-ty T) [ σ ] ≅ᵗʸ allnow-ty (T [ timeless-subst σ ])
-func (from (allnow-ty-natural σ T)) = ι[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (from (allnow-ty-natural σ T)) t = tm-≅-to-≡ (record { eq = λ _ →
+allnow-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} → (allnow-ty T) [ σ ] ≅ᵗʸ allnow-ty (T [ timeless-subst σ ])
+func (from (allnow-ty-natural σ {T})) = ι[ ty-const-subst T σ _ ]_
+CwF-Structure.naturality (from (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ →
   trans (sym (morph-comp T _ _ _ _ _)) (trans (morph-cong T refl) (morph-comp T _ _ _ _ _)) })
-func (to (allnow-ty-natural σ T)) = ι⁻¹[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (to (allnow-ty-natural σ T)) t = tm-≅-to-≡ (record { eq = λ _ →
+func (to (allnow-ty-natural σ {T})) = ι⁻¹[ ty-const-subst T σ _ ]_
+CwF-Structure.naturality (to (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ →
   trans (sym (morph-comp T _ _ _ _ _)) (trans (morph-cong T refl) (morph-comp T _ _ _ _ _)) })
-eq (isoˡ (allnow-ty-natural σ T)) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
-eq (isoʳ (allnow-ty-natural σ T)) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
+eq (isoˡ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
+eq (isoʳ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} where
   allnow-tm-natural : (t : Tm (timeless-ctx Γ) T) →
-                        (allnow-tm t) [ σ ]' ≅ᵗᵐ ι[ allnow-ty-natural σ T ] allnow-tm (t [ timeless-subst σ ]')
+                        (allnow-tm t) [ σ ]' ≅ᵗᵐ ι[ allnow-ty-natural σ ] allnow-tm (t [ timeless-subst σ ]')
   eq (allnow-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (morph-id T _) })
 
   unallnow-tm-natural : (t : Tm Γ (allnow-ty T)) →
-                          (unallnow-tm t) [ timeless-subst σ ]' ≅ᵗᵐ unallnow-tm (ι⁻¹[ allnow-ty-natural σ T ] (t [ σ ]'))
+                          (unallnow-tm t) [ timeless-subst σ ]' ≅ᵗᵐ unallnow-tm (ι⁻¹[ allnow-ty-natural σ ] (t [ σ ]'))
   eq (unallnow-tm-natural t) _ = sym (morph-id T _)

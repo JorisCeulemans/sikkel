@@ -18,6 +18,7 @@ open import CwF-Structure
 open import Types.Functions
 open import Types.Products
 open import Types.Instances
+open import Modalities
 open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Lambda
 open import Reflection.SubstitutionSequence
@@ -185,15 +186,22 @@ module _ {Γ : Ctx ★} {T : Ty (always-false Γ)} where
   term (forget-elim t) type-obj γ = t ⟨ tt , γ ⟩'
   Tm.naturality (forget-elim t) type-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
 
-forget-natural : {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ)
-                 {T : Ty (always-false Γ)} →
-                 (forget T) [ σ ] ≅ᵗʸ forget (T [ always-false-subst σ ])
-func (from (forget-natural σ)) = id
-CwF-Structure.naturality (from (forget-natural σ {T = T})) _ = morph-cong T refl
-func (to (forget-natural σ)) = id
-CwF-Structure.naturality (to (forget-natural σ {T = T})) _ = morph-cong T refl
-eq (isoˡ (forget-natural σ)) _ = refl
-eq (isoʳ (forget-natural σ)) _ = refl
+module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (always-false Γ)} where
+  forget-natural : (forget T) [ σ ] ≅ᵗʸ forget (T [ always-false-subst σ ])
+  func (from forget-natural) = id
+  CwF-Structure.naturality (from forget-natural) _ = morph-cong T refl
+  func (to forget-natural) = id
+  CwF-Structure.naturality (to forget-natural) _ = morph-cong T refl
+  eq (isoˡ forget-natural) _ = refl
+  eq (isoʳ forget-natural) _ = refl
+
+  forget-intro-natural : (t : Tm (always-false Γ) T) →
+                         forget-intro t [ σ ]' ≅ᵗᵐ ι[ forget-natural ] forget-intro (t [ always-false-subst σ ]')
+  eq (forget-intro-natural t) _ = refl
+
+  forget-elim-natural : (t : Tm Γ (forget T)) →
+                        forget-elim t [ always-false-subst σ ]' ≅ᵗᵐ forget-elim (ι⁻¹[ forget-natural ] (t [ σ ]'))
+  eq (forget-elim-natural t) {x = type-obj} _ = refl
 
 forget-cong : {Γ : Ctx ★} {T : Ty (always-false Γ)} {T' : Ty (always-false Γ)} →
               T ≅ᵗʸ T' → forget T ≅ᵗʸ forget T'
@@ -203,6 +211,19 @@ func (to (forget-cong T=T')) = func (to T=T')
 CwF-Structure.naturality (to (forget-cong T=T')) = CwF-Structure.naturality (to T=T')
 eq (isoˡ (forget-cong T=T')) = eq (isoˡ T=T')
 eq (isoʳ (forget-cong T=T')) = eq (isoʳ T=T')
+
+module _ {Γ : Ctx ★} {T : Ty (always-false Γ)} where
+  forget-intro-cong : {t t' : Tm (always-false Γ) T} → t ≅ᵗᵐ t' → forget-intro t ≅ᵗᵐ forget-intro t'
+  eq (forget-intro-cong t=t') γ = eq t=t' γ
+
+  forget-elim-cong : {t t' : Tm Γ (forget T)} → t ≅ᵗᵐ t' → forget-elim t ≅ᵗᵐ forget-elim t'
+  eq (forget-elim-cong t=t') {x = type-obj} γ = eq t=t' γ
+
+  forget-β : (t : Tm (always-false Γ) T) → forget-elim (forget-intro t) ≅ᵗᵐ t
+  eq (forget-β t) {x = type-obj} _ = refl
+
+  forget-η : (t : Tm Γ (forget T)) → forget-intro (forget-elim t) ≅ᵗᵐ t
+  eq (forget-η t) _ = refl
 
 instance
   always-false-functor : IsCtxFunctor always-false
@@ -214,18 +235,28 @@ instance
   natural-un {{forget-unarynat}} = forget-natural
   cong-un {{forget-unarynat}} = forget-cong
 
-
-infixl 12 _⊛_
-_⊛_ : {Γ : Ctx ★} {A B : Ty (always-false Γ)} →
-      Tm Γ (forget (A ⇛ B)) → Tm Γ (forget A) → Tm Γ (forget B)
-f ⊛ a = forget-intro (forget-elim f $ forget-elim a)
+forget-mod : Modality 𝟚 ★
+forget-mod = record
+   { ctx-op = always-false
+   ; mod = forget
+   ; mod-cong = forget-cong
+   ; mod-natural = forget-natural
+   ; mod-intro = forget-intro
+   ; mod-intro-cong = forget-intro-cong
+   ; mod-intro-natural = forget-intro-natural
+   ; mod-elim = forget-elim
+   ; mod-elim-cong = forget-elim-cong
+   ; mod-elim-natural = forget-elim-natural
+   ; mod-β = forget-β
+   ; mod-η = forget-η
+   }
 
 binary-or : Tm Γ (BinaryBool ⇛ BinaryBool ⇛ BinaryBool)
 binary-or = or BinaryBool
 
 binary-or★ : {Γ : Ctx ★} → Tm Γ (forget BinaryBool ⇛ forget BinaryBool ⇛ forget BinaryBool)
 binary-or★ = lamι[ "x" ∈ forget BinaryBool ] lamι[ "y" ∈ forget BinaryBool ]
-             forget-intro binary-or ⊛ varι "x" ⊛ varι "y"
+             forget-intro binary-or ⊛⟨ forget-mod ⟩ varι "x" ⊛⟨ forget-mod ⟩ varι "y"
 
 open import Translation
 
@@ -235,10 +266,9 @@ instance
   Translatable.translate-term forget-pred t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-pred a = MkTm (λ _ _ → a) (λ _ _ → refl)
   Translatable.translate-cong forget-pred t=s = eq t=s tt
-{-
+
 binary-or-agda : ℕ → ℕ → ℕ
 binary-or-agda = translate-term binary-or★
 
 translate-result : (IsBit ⟨→⟩ IsBit ⟨→⟩ IsBit) binary-or-agda
 translate-result {m} x {n} y = proj₂ ((binary-or {Γ = ◇} €⟨ pred-obj , tt ⟩ [ m , x ]) $⟨ pred-id , refl ⟩ [ n , y ])
--}

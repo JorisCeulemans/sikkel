@@ -7,6 +7,7 @@ import Types.Products
 import Types.Sums
 import Types.Instances
 import LiftingFunctors
+import Modalities
 import GuardedRecursion.Modalities
 import GuardedRecursion.Streams.Guarded
 import GuardedRecursion.Streams.Standard
