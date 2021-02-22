@@ -25,7 +25,7 @@ private
 
 infixl 12 _⟨$⟩_
 infixl 12 _⊛_
-infixr 4 löb'[_∈▻'_]_
+infixr 4 löb[_∈▻'_]_
 
 
 --------------------------------------------------
@@ -186,8 +186,8 @@ löb {Γ = Γ} T f = MkTm tm nat
 löb' : (T : Ty Γ) → Tm (Γ ,, ▻' T) (T [ π ]) → Tm Γ T
 löb' T f = löb T (lam (▻' T) f)
 
-löb'[_∈▻'_]_ : (v : String) (T : Ty Γ) → Tm (Γ ,, v ∈ ▻' T) (T [ π ]) → Tm Γ T
-löb'[_∈▻'_]_ v = löb'
+löb[_∈▻'_]_ : (v : String) (T : Ty Γ) → Tm (Γ ,, v ∈ ▻' T) (T [ π ]) → Tm Γ T
+löb[_∈▻'_]_ v = löb'
 
 löb-is-fixpoint : {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
                   app f (next' (löb T f)) ≅ᵗᵐ löb T f

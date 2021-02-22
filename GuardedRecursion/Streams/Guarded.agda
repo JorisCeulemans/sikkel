@@ -20,6 +20,7 @@ open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
 open import Types.Instances
+open import Modalities
 open import GuardedRecursion.Modalities
 open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Lambda
@@ -284,7 +285,7 @@ g-map {A = A}{B = B} =
   lamι[ "f" ∈ timeless-ty (A ⇛ B) ]
     löbι[ "m" ∈▻' (GStream A ⇛ GStream B) ]
       lamι[ "s" ∈ GStream A ]
-        g-cons $ timeless-tm (untimeless-tm (varι "f") $ untimeless-tm (g-head $ varι "s"))
+        g-cons $ varι "f" ⊛⟨ timeless ⟩ (g-head $ varι "s")
                $ varι "m" ⊛' (g-tail $ varι "s")
 
 g-iterate : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
@@ -294,7 +295,7 @@ g-iterate {A = A} =
     löbι[ "g" ∈▻' (timeless-ty A ⇛ GStream A) ]
       lamι[ "x" ∈ timeless-ty A ]
         g-cons $ varι "x"
-               $ varι "g" ⊛' next' (timeless-tm (untimeless-tm (varι "f") $ untimeless-tm (varι "x")))
+               $ varι "g" ⊛' next' (varι "f" ⊛⟨ timeless ⟩ varι "x")
 
 g-iterate' : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
              Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
