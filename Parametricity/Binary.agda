@@ -5,9 +5,11 @@
 
 module Parametricity.Binary where
 
+open import Data.Empty
 open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Product renaming (_,_ to [_,_])
+open import Data.Unit
 open import Function using (id; _∘_)
 open import Level using (0ℓ)
 open import Relation.Binary hiding (_⇒_)
@@ -22,6 +24,7 @@ open import Modalities
 open import Reflection.Naturality.TypeOperations
 open import Reflection.SubstitutionSequence
 open import Reflection.Tactic.Lambda
+open import Translation
 
 private
   variable
@@ -90,10 +93,10 @@ from-rel2 : {A1 B1 : Set} {R1 : REL A1 B1 0ℓ}
             {A2 B2 : Set} {R2 : REL A2 B2 0ℓ}
             {A3 B3 : Set} {R3 : REL A3 B3 0ℓ}
             (f : A1 → A2 → A3) (g : B1 → B2 → B3) → (R1 ⟨→⟩ R2 ⟨→⟩ R3) f g →
-            Tm (Γ ,, FromRel A1 B1 R1 ⊠ FromRel A2 B2 R2) (FromRel A3 B3 R3)
-term (from-rel2 f g h) left  [ _ , [ a1 , a2 ] ] = f a1 a2
-term (from-rel2 f g h) right [ _ , [ b1 , b2 ] ] = g b1 b2
-term (from-rel2 f g h) relation [ _ , [ [ [ a1 , b1 ] , r1 ] , [ [ a2 , b2 ] , r2 ] ] ] = [ [ f a1 a2 , g b1 b2 ] , h r1 r2 ]
+            Tm (Γ ,, FromRel A1 B1 R1 ,, FromRel A2 B2 R2) (FromRel A3 B3 R3)
+term (from-rel2 f g h) left  [ [ _ , a1 ] , a2 ] = f a1 a2
+term (from-rel2 f g h) right [ [ _ , b1 ] , b2 ] = g b1 b2
+term (from-rel2 f g h) relation [ [ _ , [ [ a1 , b1 ] , r1 ] ] , [ [ a2 , b2 ] , r2 ] ] = [ [ f a1 a2 , g b1 b2 ] , h r1 r2 ]
 Tm.naturality (from-rel2 f g h) left-id  refl = refl
 Tm.naturality (from-rel2 f g h) right-id refl = refl
 Tm.naturality (from-rel2 f g h) relation-id refl = refl
@@ -104,22 +107,22 @@ Tm.naturality (from-rel2 f g h) right-rel refl = refl
 --------------------------------------------------
 -- Example: types representing integers
 
-record IntStructure (A : ClosedType ⋀) {{_ : IsClosedNatural A}} : Set₁ where
+record IntStructure {C} (A : ClosedType C) {{_ : IsClosedNatural A}} : Set₁ where
   field
-    prim-add : Tm (Γ ,, A ⊠ A) A
-    prim-negate : Tm (Γ ,, A) A
+    prim-add : ∀ {Γ} → Tm (Γ ,, A ,, A) A
+    prim-negate : ∀ {Γ} → Tm (Γ ,, A) A
 
-  add : Tm Γ (A ⊠ A ⇛ A)
-  add = lamι (A ⊠ A) prim-add
+  add : ∀ {Γ} → Tm Γ (A ⇛ A ⇛ A)
+  add = lamι A (lamι A prim-add)
 
-  negate : Tm Γ (A ⇛ A)
+  negate : ∀ {Γ} → Tm Γ (A ⇛ A)
   negate = lamι A prim-negate
 
 open IntStructure {{...}}
 
-subtract : {A : ClosedType ⋀} {{_ : IsClosedNatural A}} {{_ : IntStructure A}} →
+subtract : ∀ {C Γ} {A : ClosedType C} {{_ : IsClosedNatural A}} {{_ : IntStructure A}} →
            Tm Γ (A ⇛ A ⇛ A)
-subtract {A = A} = lamι[ "i" ∈ A ] lamι[ "j" ∈ A ] add $ pair (varι "i") (negate $ varι "j")
+subtract {A = A} = lamι[ "i" ∈ A ] lamι[ "j" ∈ A ] add $ varι "i" $ (negate $ varι "j")
 
 data Sign : Set where
   pos neg : Sign
@@ -128,29 +131,29 @@ flipSign : Sign → Sign
 flipSign pos = neg
 flipSign neg = pos
 
-DiffInt : Set
-DiffInt = ℕ × ℕ
+DiffNat : Set
+DiffNat = ℕ × ℕ
 
 SignNat : Set
 SignNat = Sign × ℕ
 
 infix 3 _∼_
 
-data _∼_ : REL DiffInt SignNat 0ℓ where
+data _∼_ : REL DiffNat SignNat 0ℓ where
   pos-zero : ∀ {n} → [ n , 0 ] ∼ [ pos , n ]
   neg-zero : ∀ {n} → [ 0 , n ] ∼ [ neg , n ]
   diff-suc : ∀ {m n j} → [ m , n ] ∼ j → [ suc m , suc n ] ∼ j
 
-PrimIntRep : Ty {C = ⋀} ◇
-PrimIntRep = PrimFromRel DiffInt SignNat _∼_
+Primℤ : Ty {C = ⋀} ◇
+Primℤ = PrimFromRel DiffNat SignNat _∼_
 
-IntRep : ClosedType ⋀
-IntRep = FromRel DiffInt SignNat _∼_
+ℤ : ClosedType ⋀
+ℤ = FromRel DiffNat SignNat _∼_
 
-_+D_ : DiffInt → DiffInt → DiffInt
+_+D_ : DiffNat → DiffNat → DiffNat
 [ m1 , n1 ] +D [ m2 , n2 ] = [ m1 + m2 , n1 + n2 ]
 
-negateD : DiffInt → DiffInt
+negateD : DiffNat → DiffNat
 negateD [ m , n ] = [ n , m ]
 
 _-_ : ℕ → ℕ → SignNat
@@ -188,12 +191,12 @@ difference-∼ (suc m) (suc n) = diff-suc (difference-∼ m n)
 +-preserves-∼ (diff-suc r1)   r2 = diff-suc (+-preserves-∼ r1 r2)
 
 instance
-  intrep-is-int : IntStructure IntRep
-  prim-add {{intrep-is-int}} = from-rel2 _+D_ _+S_ +-preserves-∼
-  prim-negate {{intrep-is-int}} = from-rel1 negateD negateS negate-preserves-∼
+  ℤ-is-int : IntStructure ℤ
+  prim-add {{ℤ-is-int}} = from-rel2 _+D_ _+S_ +-preserves-∼
+  prim-negate {{ℤ-is-int}} = from-rel1 negateD negateS negate-preserves-∼
 
-module _ (i : Tm ◇ IntRep) where
-  translate-i1 : DiffInt
+module _ (i : Tm ◇ ℤ) where
+  translate-i1 : DiffNat
   translate-i1 = i ⟨ left , _ ⟩'
 
   translate-i2 : SignNat
@@ -204,8 +207,8 @@ module _ (i : Tm ◇ IntRep) where
   translations-related | [ _ , r ] | refl | refl = r
 
 
-open import Data.Unit
-open import Data.Empty.Polymorphic
+--------------------------------------------------
+-- Definition of 2 modalities from ⋀ to ★.
 
 just-left : Ctx ★ → Ctx ⋀
 set (just-left Γ) left = Γ ⟨ tt ⟩
@@ -236,59 +239,59 @@ just-left-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒ 
                     just-left-subst (σ ⊚ τ) ≅ˢ just-left-subst σ ⊚ just-left-subst τ
 eq (just-left-subst-⊚ σ τ) {x = left} _ = refl
 
-forget-right : {Γ : Ctx ★} → Ty (just-left Γ) → Ty Γ
-type (forget-right T) tt γ = T ⟨ left , γ ⟩
-morph (forget-right {Γ = Γ} T) tt eγ = T ⟪ left-id , trans (sym (rel-id Γ _)) eγ ⟫_
-morph-cong (forget-right T) refl {eγ = refl} {eγ' = refl} = refl
-morph-id (forget-right T) t = trans (morph-cong T refl) (morph-id T t)
-morph-comp (forget-right T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
+forget-right-ty : {Γ : Ctx ★} → Ty (just-left Γ) → Ty Γ
+type (forget-right-ty T) tt γ = T ⟨ left , γ ⟩
+morph (forget-right-ty {Γ = Γ} T) tt eγ = T ⟪ left-id , trans (sym (rel-id Γ _)) eγ ⟫_
+morph-cong (forget-right-ty T) refl {eγ = refl} {eγ' = refl} = refl
+morph-id (forget-right-ty T) t = trans (morph-cong T refl) (morph-id T t)
+morph-comp (forget-right-ty T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
-  forget-right-intro : Tm (just-left Γ) T → Tm Γ (forget-right T)
-  term (forget-right-intro t) _ γ = t ⟨ left , γ ⟩'
-  Tm.naturality (forget-right-intro t) tt eγ = Tm.naturality t left-id _
+  forget-right-tm : Tm (just-left Γ) T → Tm Γ (forget-right-ty T)
+  term (forget-right-tm t) _ γ = t ⟨ left , γ ⟩'
+  Tm.naturality (forget-right-tm t) tt eγ = Tm.naturality t left-id _
 
-  forget-right-elim : Tm Γ (forget-right T) → Tm (just-left Γ) T
-  term (forget-right-elim t) left γ = t ⟨ tt , γ ⟩'
-  Tm.naturality (forget-right-elim t) left-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
+  unforget-right-tm : Tm Γ (forget-right-ty T) → Tm (just-left Γ) T
+  term (unforget-right-tm t) left γ = t ⟨ tt , γ ⟩'
+  Tm.naturality (unforget-right-tm t) left-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-left Γ)} where
-  forget-right-natural : (forget-right T) [ σ ] ≅ᵗʸ forget-right (T [ just-left-subst σ ])
-  func (from forget-right-natural) = id
-  CwF-Structure.naturality (from forget-right-natural) _ = morph-cong T refl
-  func (to forget-right-natural) = id
-  CwF-Structure.naturality (to forget-right-natural) _ = morph-cong T refl
-  eq (isoˡ forget-right-natural) _ = refl
-  eq (isoʳ forget-right-natural) _ = refl
+  forget-right-ty-natural : (forget-right-ty T) [ σ ] ≅ᵗʸ forget-right-ty (T [ just-left-subst σ ])
+  func (from forget-right-ty-natural) = id
+  CwF-Structure.naturality (from forget-right-ty-natural) _ = morph-cong T refl
+  func (to forget-right-ty-natural) = id
+  CwF-Structure.naturality (to forget-right-ty-natural) _ = morph-cong T refl
+  eq (isoˡ forget-right-ty-natural) _ = refl
+  eq (isoʳ forget-right-ty-natural) _ = refl
 
-  forget-right-intro-natural : (t : Tm (just-left Γ) T) →
-                               forget-right-intro t [ σ ]' ≅ᵗᵐ ι[ forget-right-natural ] forget-right-intro (t [ just-left-subst σ ]')
-  eq (forget-right-intro-natural t) _ = refl
+  forget-right-tm-natural : (t : Tm (just-left Γ) T) →
+                            forget-right-tm t [ σ ]' ≅ᵗᵐ ι[ forget-right-ty-natural ] forget-right-tm (t [ just-left-subst σ ]')
+  eq (forget-right-tm-natural t) _ = refl
 
-  forget-right-elim-natural : (t : Tm Γ (forget-right T)) →
-                              forget-right-elim t [ just-left-subst σ ]' ≅ᵗᵐ forget-right-elim (ι⁻¹[ forget-right-natural ] (t [ σ ]'))
-  eq (forget-right-elim-natural t) {x = left} _ = refl
+  unforget-right-tm-natural : (t : Tm Γ (forget-right-ty T)) →
+                              unforget-right-tm t [ just-left-subst σ ]' ≅ᵗᵐ unforget-right-tm (ι⁻¹[ forget-right-ty-natural ] (t [ σ ]'))
+  eq (unforget-right-tm-natural t) {x = left} _ = refl
 
-forget-right-cong : {Γ : Ctx ★} {T : Ty (just-left Γ)} {T' : Ty (just-left Γ)} →
-                    T ≅ᵗʸ T' → forget-right T ≅ᵗʸ forget-right T'
-func (from (forget-right-cong T=T')) = func (from T=T')
-CwF-Structure.naturality (from (forget-right-cong T=T')) = CwF-Structure.naturality (from T=T')
-func (to (forget-right-cong T=T')) = func (to T=T')
-CwF-Structure.naturality (to (forget-right-cong T=T')) = CwF-Structure.naturality (to T=T')
-eq (isoˡ (forget-right-cong T=T')) = eq (isoˡ T=T')
-eq (isoʳ (forget-right-cong T=T')) = eq (isoʳ T=T')
+forget-right-ty-cong : {Γ : Ctx ★} {T : Ty (just-left Γ)} {T' : Ty (just-left Γ)} →
+                       T ≅ᵗʸ T' → forget-right-ty T ≅ᵗʸ forget-right-ty T'
+func (from (forget-right-ty-cong T=T')) = func (from T=T')
+CwF-Structure.naturality (from (forget-right-ty-cong T=T')) = CwF-Structure.naturality (from T=T')
+func (to (forget-right-ty-cong T=T')) = func (to T=T')
+CwF-Structure.naturality (to (forget-right-ty-cong T=T')) = CwF-Structure.naturality (to T=T')
+eq (isoˡ (forget-right-ty-cong T=T')) = eq (isoˡ T=T')
+eq (isoʳ (forget-right-ty-cong T=T')) = eq (isoʳ T=T')
 
 module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
-  forget-right-intro-cong : {t t' : Tm (just-left Γ) T} → t ≅ᵗᵐ t' → forget-right-intro t ≅ᵗᵐ forget-right-intro t'
-  eq (forget-right-intro-cong t=t') γ = eq t=t' γ
+  forget-right-tm-cong : {t t' : Tm (just-left Γ) T} → t ≅ᵗᵐ t' → forget-right-tm t ≅ᵗᵐ forget-right-tm t'
+  eq (forget-right-tm-cong t=t') γ = eq t=t' γ
 
-  forget-right-elim-cong : {t t' : Tm Γ (forget-right T)} → t ≅ᵗᵐ t' → forget-right-elim t ≅ᵗᵐ forget-right-elim t'
-  eq (forget-right-elim-cong t=t') {x = left} γ = eq t=t' γ
+  unforget-right-tm-cong : {t t' : Tm Γ (forget-right-ty T)} → t ≅ᵗᵐ t' → unforget-right-tm t ≅ᵗᵐ unforget-right-tm t'
+  eq (unforget-right-tm-cong t=t') {x = left} γ = eq t=t' γ
 
-  forget-right-β : (t : Tm (just-left Γ) T) → forget-right-elim (forget-right-intro t) ≅ᵗᵐ t
+  forget-right-β : (t : Tm (just-left Γ) T) → unforget-right-tm (forget-right-tm t) ≅ᵗᵐ t
   eq (forget-right-β t) {x = left} _ = refl
 
-  forget-right-η : (t : Tm Γ (forget-right T)) → forget-right-intro (forget-right-elim t) ≅ᵗᵐ t
+  forget-right-η : (t : Tm Γ (forget-right-ty T)) → forget-right-tm (unforget-right-tm t) ≅ᵗᵐ t
   eq (forget-right-η t) _ = refl
 
 instance
@@ -297,22 +300,22 @@ instance
   IsCtxFunctor.ctx-map-id just-left-functor = just-left-subst-id
   IsCtxFunctor.ctx-map-⊚ just-left-functor = just-left-subst-⊚
 
-  forget-right-unarynat : IsUnaryNatural forget-right
-  IsUnaryNatural.natural-un forget-right-unarynat = forget-right-natural
-  IsUnaryNatural.cong-un forget-right-unarynat = forget-right-cong
+  forget-right-unarynat : IsUnaryNatural forget-right-ty
+  IsUnaryNatural.natural-un forget-right-unarynat = forget-right-ty-natural
+  IsUnaryNatural.cong-un forget-right-unarynat = forget-right-ty-cong
 
-forget-right-mod : Modality ⋀ ★
-forget-right-mod = record
+forget-right : Modality ⋀ ★
+forget-right = record
    { ctx-op = just-left
-   ; mod = forget-right
-   ; mod-cong = forget-right-cong
-   ; mod-natural = forget-right-natural
-   ; mod-intro = forget-right-intro
-   ; mod-intro-cong = forget-right-intro-cong
-   ; mod-intro-natural = forget-right-intro-natural
-   ; mod-elim = forget-right-elim
-   ; mod-elim-cong = forget-right-elim-cong
-   ; mod-elim-natural = forget-right-elim-natural
+   ; mod = forget-right-ty
+   ; mod-cong = forget-right-ty-cong
+   ; mod-natural = forget-right-ty-natural
+   ; mod-intro = forget-right-tm
+   ; mod-intro-cong = forget-right-tm-cong
+   ; mod-intro-natural = forget-right-tm-natural
+   ; mod-elim = unforget-right-tm
+   ; mod-elim-cong = unforget-right-tm-cong
+   ; mod-elim-natural = unforget-right-tm-natural
    ; mod-β = forget-right-β
    ; mod-η = forget-right-η
    }
@@ -346,59 +349,59 @@ just-right-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒
                      just-right-subst (σ ⊚ τ) ≅ˢ just-right-subst σ ⊚ just-right-subst τ
 eq (just-right-subst-⊚ σ τ) {x = right} _ = refl
 
-forget-left : {Γ : Ctx ★} → Ty (just-right Γ) → Ty Γ
-type (forget-left T) tt γ = T ⟨ right , γ ⟩
-morph (forget-left {Γ = Γ} T) tt eγ = T ⟪ right-id , trans (sym (rel-id Γ _)) eγ ⟫_
-morph-cong (forget-left T) refl {eγ = refl} {eγ' = refl} = refl
-morph-id (forget-left T) t = trans (morph-cong T refl) (morph-id T t)
-morph-comp (forget-left T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
+forget-left-ty : {Γ : Ctx ★} → Ty (just-right Γ) → Ty Γ
+type (forget-left-ty T) tt γ = T ⟨ right , γ ⟩
+morph (forget-left-ty {Γ = Γ} T) tt eγ = T ⟪ right-id , trans (sym (rel-id Γ _)) eγ ⟫_
+morph-cong (forget-left-ty T) refl {eγ = refl} {eγ' = refl} = refl
+morph-id (forget-left-ty T) t = trans (morph-cong T refl) (morph-id T t)
+morph-comp (forget-left-ty T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
-  forget-left-intro : Tm (just-right Γ) T → Tm Γ (forget-left T)
-  term (forget-left-intro t) _ γ = t ⟨ right , γ ⟩'
-  Tm.naturality (forget-left-intro t) tt eγ = Tm.naturality t right-id _
+  forget-left-tm : Tm (just-right Γ) T → Tm Γ (forget-left-ty T)
+  term (forget-left-tm t) _ γ = t ⟨ right , γ ⟩'
+  Tm.naturality (forget-left-tm t) tt eγ = Tm.naturality t right-id _
 
-  forget-left-elim : Tm Γ (forget-left T) → Tm (just-right Γ) T
-  term (forget-left-elim t) right γ = t ⟨ tt , γ ⟩'
-  Tm.naturality (forget-left-elim t) right-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
+  unforget-left-tm : Tm Γ (forget-left-ty T) → Tm (just-right Γ) T
+  term (unforget-left-tm t) right γ = t ⟨ tt , γ ⟩'
+  Tm.naturality (unforget-left-tm t) right-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-right Γ)} where
-  forget-left-natural : (forget-left T) [ σ ] ≅ᵗʸ forget-left (T [ just-right-subst σ ])
-  func (from forget-left-natural) = id
-  CwF-Structure.naturality (from forget-left-natural) _ = morph-cong T refl
-  func (to forget-left-natural) = id
-  CwF-Structure.naturality (to forget-left-natural) _ = morph-cong T refl
-  eq (isoˡ forget-left-natural) _ = refl
-  eq (isoʳ forget-left-natural) _ = refl
+  forget-left-ty-natural : (forget-left-ty T) [ σ ] ≅ᵗʸ forget-left-ty (T [ just-right-subst σ ])
+  func (from forget-left-ty-natural) = id
+  CwF-Structure.naturality (from forget-left-ty-natural) _ = morph-cong T refl
+  func (to forget-left-ty-natural) = id
+  CwF-Structure.naturality (to forget-left-ty-natural) _ = morph-cong T refl
+  eq (isoˡ forget-left-ty-natural) _ = refl
+  eq (isoʳ forget-left-ty-natural) _ = refl
 
-  forget-left-intro-natural : (t : Tm (just-right Γ) T) →
-                              forget-left-intro t [ σ ]' ≅ᵗᵐ ι[ forget-left-natural ] forget-left-intro (t [ just-right-subst σ ]')
-  eq (forget-left-intro-natural t) _ = refl
+  forget-left-tm-natural : (t : Tm (just-right Γ) T) →
+                           forget-left-tm t [ σ ]' ≅ᵗᵐ ι[ forget-left-ty-natural ] forget-left-tm (t [ just-right-subst σ ]')
+  eq (forget-left-tm-natural t) _ = refl
 
-  forget-left-elim-natural : (t : Tm Γ (forget-left T)) →
-                              forget-left-elim t [ just-right-subst σ ]' ≅ᵗᵐ forget-left-elim (ι⁻¹[ forget-left-natural ] (t [ σ ]'))
-  eq (forget-left-elim-natural t) {x = right} _ = refl
+  unforget-left-tm-natural : (t : Tm Γ (forget-left-ty T)) →
+                             unforget-left-tm t [ just-right-subst σ ]' ≅ᵗᵐ unforget-left-tm (ι⁻¹[ forget-left-ty-natural ] (t [ σ ]'))
+  eq (unforget-left-tm-natural t) {x = right} _ = refl
 
-forget-left-cong : {Γ : Ctx ★} {T : Ty (just-right Γ)} {T' : Ty (just-right Γ)} →
-                   T ≅ᵗʸ T' → forget-left T ≅ᵗʸ forget-left T'
-func (from (forget-left-cong T=T')) = func (from T=T')
-CwF-Structure.naturality (from (forget-left-cong T=T')) = CwF-Structure.naturality (from T=T')
-func (to (forget-left-cong T=T')) = func (to T=T')
-CwF-Structure.naturality (to (forget-left-cong T=T')) = CwF-Structure.naturality (to T=T')
-eq (isoˡ (forget-left-cong T=T')) = eq (isoˡ T=T')
-eq (isoʳ (forget-left-cong T=T')) = eq (isoʳ T=T')
+forget-left-ty-cong : {Γ : Ctx ★} {T : Ty (just-right Γ)} {T' : Ty (just-right Γ)} →
+                      T ≅ᵗʸ T' → forget-left-ty T ≅ᵗʸ forget-left-ty T'
+func (from (forget-left-ty-cong T=T')) = func (from T=T')
+CwF-Structure.naturality (from (forget-left-ty-cong T=T')) = CwF-Structure.naturality (from T=T')
+func (to (forget-left-ty-cong T=T')) = func (to T=T')
+CwF-Structure.naturality (to (forget-left-ty-cong T=T')) = CwF-Structure.naturality (to T=T')
+eq (isoˡ (forget-left-ty-cong T=T')) = eq (isoˡ T=T')
+eq (isoʳ (forget-left-ty-cong T=T')) = eq (isoʳ T=T')
 
 module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
-  forget-left-intro-cong : {t t' : Tm (just-right Γ) T} → t ≅ᵗᵐ t' → forget-left-intro t ≅ᵗᵐ forget-left-intro t'
-  eq (forget-left-intro-cong t=t') γ = eq t=t' γ
+  forget-left-tm-cong : {t t' : Tm (just-right Γ) T} → t ≅ᵗᵐ t' → forget-left-tm t ≅ᵗᵐ forget-left-tm t'
+  eq (forget-left-tm-cong t=t') γ = eq t=t' γ
 
-  forget-left-elim-cong : {t t' : Tm Γ (forget-left T)} → t ≅ᵗᵐ t' → forget-left-elim t ≅ᵗᵐ forget-left-elim t'
-  eq (forget-left-elim-cong t=t') {x = right} γ = eq t=t' γ
+  unforget-left-tm-cong : {t t' : Tm Γ (forget-left-ty T)} → t ≅ᵗᵐ t' → unforget-left-tm t ≅ᵗᵐ unforget-left-tm t'
+  eq (unforget-left-tm-cong t=t') {x = right} γ = eq t=t' γ
 
-  forget-left-β : (t : Tm (just-right Γ) T) → forget-left-elim (forget-left-intro t) ≅ᵗᵐ t
+  forget-left-β : (t : Tm (just-right Γ) T) → unforget-left-tm (forget-left-tm t) ≅ᵗᵐ t
   eq (forget-left-β t) {x = right} _ = refl
 
-  forget-left-η : (t : Tm Γ (forget-left T)) → forget-left-intro (forget-left-elim t) ≅ᵗᵐ t
+  forget-left-η : (t : Tm Γ (forget-left-ty T)) → forget-left-tm (unforget-left-tm t) ≅ᵗᵐ t
   eq (forget-left-η t) _ = refl
 
 instance
@@ -407,57 +410,59 @@ instance
   IsCtxFunctor.ctx-map-id just-right-functor = just-right-subst-id
   IsCtxFunctor.ctx-map-⊚ just-right-functor = just-right-subst-⊚
 
-  forget-left-unarynat : IsUnaryNatural forget-left
-  IsUnaryNatural.natural-un forget-left-unarynat = forget-left-natural
-  IsUnaryNatural.cong-un forget-left-unarynat = forget-left-cong
+  forget-left-unarynat : IsUnaryNatural forget-left-ty
+  IsUnaryNatural.natural-un forget-left-unarynat = forget-left-ty-natural
+  IsUnaryNatural.cong-un forget-left-unarynat = forget-left-ty-cong
 
-forget-left-mod : Modality ⋀ ★
-forget-left-mod = record
+forget-left : Modality ⋀ ★
+forget-left = record
    { ctx-op = just-right
-   ; mod = forget-left
-   ; mod-cong = forget-left-cong
-   ; mod-natural = forget-left-natural
-   ; mod-intro = forget-left-intro
-   ; mod-intro-cong = forget-left-intro-cong
-   ; mod-intro-natural = forget-left-intro-natural
-   ; mod-elim = forget-left-elim
-   ; mod-elim-cong = forget-left-elim-cong
-   ; mod-elim-natural = forget-left-elim-natural
+   ; mod = forget-left-ty
+   ; mod-cong = forget-left-ty-cong
+   ; mod-natural = forget-left-ty-natural
+   ; mod-intro = forget-left-tm
+   ; mod-intro-cong = forget-left-tm-cong
+   ; mod-intro-natural = forget-left-tm-natural
+   ; mod-elim = unforget-left-tm
+   ; mod-elim-cong = unforget-left-tm-cong
+   ; mod-elim-natural = unforget-left-tm-natural
    ; mod-β = forget-left-β
    ; mod-η = forget-left-η
    }
 
-subtract-rep : Tm Γ (IntRep ⇛ IntRep ⇛ IntRep)
-subtract-rep = subtract
 
-subtract★-left : {Γ : Ctx ★} → Tm Γ (forget-right IntRep ⇛ forget-right IntRep ⇛ forget-right IntRep)
-subtract★-left = lamι[ "i" ∈ forget-right IntRep ] lamι[ "j" ∈ forget-right IntRep ]
-                 subtract-rep ⟨$- forget-right-mod ⟩ varι "i" ⊛⟨ forget-right-mod ⟩ varι "j"
+--------------------------------------------------
+-- Continuing the example of integer representations.
 
-subtract★-right : {Γ : Ctx ★} → Tm Γ (forget-left IntRep ⇛ forget-left IntRep ⇛ forget-left IntRep)
-subtract★-right = lamι[ "i" ∈ forget-left IntRep ] lamι[ "j" ∈ forget-left IntRep ]
-                  subtract-rep ⟨$- forget-left-mod ⟩ varι "i" ⊛⟨ forget-left-mod ⟩ varι "j"
+subtract★-left : {Γ : Ctx ★} → Tm Γ (forget-right-ty ℤ ⇛ forget-right-ty ℤ ⇛ forget-right-ty ℤ)
+subtract★-left = lamι[ "i" ∈ forget-right-ty ℤ ] lamι[ "j" ∈ forget-right-ty ℤ ]
+                 subtract ⟨$- forget-right ⟩ varι "i" ⊛⟨ forget-right ⟩ varι "j"
 
-open import Translation
+subtract★-right : {Γ : Ctx ★} → Tm Γ (forget-left-ty ℤ ⇛ forget-left-ty ℤ ⇛ forget-left-ty ℤ)
+subtract★-right = lamι[ "i" ∈ forget-left-ty ℤ ] lamι[ "j" ∈ forget-left-ty ℤ ]
+                  subtract ⟨$- forget-left ⟩ varι "i" ⊛⟨ forget-left ⟩ varι "j"
 
 instance
-  forget-right-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-right (FromRel A B R))
+  forget-right-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-right-ty (FromRel A B R))
   Translatable.translated-type (forget-right-rel {A = A}) = A
   Translatable.translate-term forget-right-rel t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-right-rel a = MkTm (λ _ _ → a) (λ _ _ → refl)
   Translatable.translate-cong forget-right-rel t=s = eq t=s tt
 
-  forget-left-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-left (FromRel A B R))
+  forget-left-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-left-ty (FromRel A B R))
   Translatable.translated-type (forget-left-rel {B = B}) = B
   Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
   Translatable.translate-cong forget-left-rel t=s = eq t=s tt
 
-subtract-left-agda : DiffInt → DiffInt → DiffInt
+subtract-left-agda : DiffNat → DiffNat → DiffNat
 subtract-left-agda = translate-term subtract★-left
 
 subtract-right-agda : SignNat → SignNat → SignNat
 subtract-right-agda = translate-term subtract★-right
 
+subtract-ℤ : Tm Γ (ℤ ⇛ ℤ ⇛ ℤ)
+subtract-ℤ = subtract
+
 translate-result : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-left-agda subtract-right-agda
-translate-result {d1}{s1} r1 {d2}{s2} r2 = proj₂ ((subtract-rep {Γ = ◇} €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])
+translate-result {d1}{s1} r1 {d2}{s2} r2 = proj₂ ((subtract-ℤ {Γ = ◇} €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])
