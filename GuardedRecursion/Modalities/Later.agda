@@ -162,7 +162,6 @@ next-prev : {T : Ty (◄ Γ)} (t : Tm Γ (▻ T)) → next (prev t) ≅ᵗᵐ t
 eq (next-prev t) {zero} γ = refl
 eq (next-prev t) {suc n} γ = refl
 
--- TODO: Update : See if T can be made implicit.
 löb : (T : Ty Γ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 löb {Γ = Γ} T f = MkTm tm nat
   where

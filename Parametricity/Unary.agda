@@ -5,9 +5,11 @@
 
 module Parametricity.Unary where
 
+open import Data.Empty
 open import Data.Nat
 open import Data.Product renaming (_,_ to [_,_])
 open import Data.Sum hiding ([_,_])
+open import Data.Unit
 open import Function using (id)
 open import Level using (0ℓ)
 open import Relation.Binary.PropositionalEquality hiding ([_])
@@ -137,16 +139,16 @@ module _ (b : Tm ◇ BinaryBool) where
   type-pred-result [ .0 , 0-bit ] = inj₁ refl
   type-pred-result [ .1 , 1-bit ] = inj₂ refl
 
-  result : translate-b ≡ 0 ⊎ translate-b ≡ 1
-  result = ⊎-trans (sym (Tm.naturality b type-pred refl)) (type-pred-result (b ⟨ pred-obj , _ ⟩'))
+  translated-binary-is-0-or-1 : translate-b ≡ 0 ⊎ translate-b ≡ 1
+  translated-binary-is-0-or-1 = ⊎-trans (sym (Tm.naturality b type-pred refl)) (type-pred-result (b ⟨ pred-obj , _ ⟩'))
 
-  result' : IsBit translate-b
-  result' with b ⟨ pred-obj , _ ⟩' | Tm.naturality b type-pred refl
-  result' | [ _ , p ] | refl = p
+  translated-binary-is-bit : IsBit translate-b
+  translated-binary-is-bit with b ⟨ pred-obj , _ ⟩' | Tm.naturality b type-pred refl
+  translated-binary-is-bit | [ _ , p ] | refl = p
 
 
-open import Data.Unit
-open import Data.Empty.Polymorphic
+--------------------------------------------------
+-- Definition of a modality from 𝟚 to ★.
 
 always-false : Ctx ★ → Ctx 𝟚
 set (always-false Γ) type-obj = Γ ⟨ tt ⟩
@@ -251,6 +253,10 @@ forget-mod = record
    ; mod-β = forget-β
    ; mod-η = forget-η
    }
+
+
+--------------------------------------------------
+-- Continuing the example of binary numbers representing booleans
 
 binary-or : Tm Γ (BinaryBool ⇛ BinaryBool ⇛ BinaryBool)
 binary-or = or BinaryBool
