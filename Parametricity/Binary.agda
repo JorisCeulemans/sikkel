@@ -447,13 +447,11 @@ instance
   Translatable.translated-type (forget-right-rel {A = A}) = A
   Translatable.translate-term forget-right-rel t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-right-rel a = MkTm (λ _ _ → a) (λ _ _ → refl)
-  Translatable.translate-cong forget-right-rel t=s = eq t=s tt
 
   forget-left-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-left-ty (FromRel A B R))
   Translatable.translated-type (forget-left-rel {B = B}) = B
   Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
-  Translatable.translate-cong forget-left-rel t=s = eq t=s tt
 
 subtract-left-agda : DiffNat → DiffNat → DiffNat
 subtract-left-agda = translate-term subtract★-left

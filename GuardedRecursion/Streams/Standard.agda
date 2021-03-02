@@ -5,7 +5,9 @@
 module GuardedRecursion.Streams.Standard where
 
 open import Data.Nat
-open import Data.Unit
+open import Data.Unit hiding (_≤_)
+open import Data.Vec using (Vec; _∷_; [])
+open import Data.Vec.Properties
 open import Function using (id; _∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
@@ -20,6 +22,7 @@ open import GuardedRecursion.Modalities
 open import Reflection.Tactic.Lambda
 open import Reflection.Tactic.Naturality
 open import Reflection.SubstitutionSequence
+open import Translation
 
 private
   variable
@@ -117,3 +120,67 @@ diag : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
 diag {A = A} = lamι[ "xss" ∈ Stream' (Stream' A) ] allnow-tm (
                  g-diag $ timeless-tm (now-timeless-ctx-intro (varι "xss")))
+
+
+--------------------------------------------------
+-- Definition of standard Agda streams (note that the standard library uses
+-- sized types and we want to avoid any extension of standard Agda) & translation
+-- of standard Sikkel streams to Agda streams.
+
+record Stream {ℓ} (A : Set ℓ) : Set ℓ where
+  coinductive
+  field
+    head : A
+    tail : Stream A
+open Stream
+
+take : ∀ {ℓ} {A : Set ℓ} (n : ℕ) → Stream A → Vec A n
+take zero    s = []
+take (suc n) s = head s ∷ take n (tail s)
+
+take-first : ∀ {ℓ} {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
+             first-≤ m≤n (take n s) ≡ take m s
+take-first z≤n       s = refl
+take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
+
+instance
+  translate-stream : {A : ClosedType ★} {{_ : IsClosedNatural A}} {{_ : Translatable A}} → Translatable (Stream' A)
+  translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
+  head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
+  tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)
+  translate-back {{translate-stream {A = A}}} s = allnow-tm (MkTm (λ n _ → Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩')
+                                                                                        (take (suc n) s))
+                                                                  (λ { m≤n refl → nat (s≤s m≤n) s }))
+    where
+      open ≡-Reasoning
+      nat : ∀ {m n} (m≤n : m ≤ n) (s' : Stream (translate-type A)) →
+        Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
+          ≡ Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s')
+      nat {m}{n} m≤n s' = begin
+          Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
+        ≡⟨ trans (map-cong (morph-id A) _) (map-id _) ⟩
+          first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s'))
+        ≡˘⟨ map-first-≤ _ m≤n (take n s') ⟩
+          Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
+        ≡⟨ cong (Data.Vec.map _) (take-first m≤n s') ⟩
+          Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s') ∎
+
+-- The example from the introduction and section 3.1 of the ICFP submission
+nats : Stream ℕ
+nats = translate-term nats'
+
+paperfolds : Stream ℕ
+paperfolds = translate-term paperfolds'
+
+fibs : Stream ℕ
+fibs = translate-term fibs'
+
+private
+  nats-test : take 10 nats ≡ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ []
+  nats-test = refl
+
+  fibs-test : take 10 fibs ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
+  fibs-test = refl
+
+  paperfolds-test : take 10 paperfolds ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
+  paperfolds-test = refl

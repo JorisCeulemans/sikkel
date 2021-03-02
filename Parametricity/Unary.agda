@@ -19,6 +19,7 @@ open import Types.Functions
 open import Types.Products
 open import Types.Instances
 open import Modalities
+open import Translation
 open import Reflection.Naturality.TypeOperations
 open import Reflection.Tactic.Lambda
 open import Reflection.SubstitutionSequence
@@ -258,14 +259,11 @@ binary-or★ : {Γ : Ctx ★} → Tm Γ (forget BinaryBool ⇛ forget BinaryBool
 binary-or★ = lamι[ "x" ∈ forget BinaryBool ] lamι[ "y" ∈ forget BinaryBool ]
              forget-intro binary-or ⊛⟨ forget-mod ⟩ varι "x" ⊛⟨ forget-mod ⟩ varι "y"
 
-open import Translation
-
 instance
   forget-pred : {A : Set} {P : Pred A 0ℓ} → Translatable (forget (FromPred A P))
   Translatable.translated-type (forget-pred {A = A}) = A
   Translatable.translate-term forget-pred t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-pred a = MkTm (λ _ _ → a) (λ _ _ → refl)
-  Translatable.translate-cong forget-pred t=s = eq t=s tt
 
 binary-or-agda : ℕ → ℕ → ℕ
 binary-or-agda = translate-term binary-or★
