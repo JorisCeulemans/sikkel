@@ -123,15 +123,15 @@ open import Categories
   Note that unlike the definition given in the paper, the fields of the record
   type Ctx have names set, rel, rel-id and rel-comp instead of _⟨_⟩, _⟪_⟫_, ctx-id
   and ctx-comp. The operators _⟨_⟩ and _⟪_⟫_ are defined after Ctx and are used
-  in the definition of functions, but not as destructors when copattern matching.
+  in Agda definitions, but not as destructors when copattern matching.
 -}
 
 open import CwF-Structure.Contexts
 
 {-
-  Definition of types and type equality
+  Definition of types and type equality.
   Note again that the field names for Ty differ from the one in the paper.
-  The code replaces _⟨_,_⟩ by type, _⟪_,_⟫_ by morph, ty-cong by morph-cong,
+  In the code we replace _⟨_,_⟩ by type, _⟪_,_⟫_ by morph, ty-cong by morph-cong,
   ty-id by morph-id and ty-comp by morph-comp. Again _⟨_,_⟩ and _⟪_,_⟫_ are
   defined as functions.
 -}
@@ -140,7 +140,7 @@ open import CwF-Structure.Types
 
 {-
   Definition of terms
-  The field _⟨_,_⟩' from the paper is renamed to term.
+  The field _⟨_,_⟩' from the paper is named term in the code.
 -}
 
 open import CwF-Structure.Terms
@@ -176,9 +176,9 @@ open import Reflection.Tactic.Naturality
 {-
   Apart from binary parametricity, we also have a worked-out example of unary parametricity.
   The set-up is quite similar: we describe a simplistic interface for booleans and an implementation
-  of this interface by ℕ (0 representinf false and 1 representing true).
+  of this interface by ℕ (0 representing false and 1 representing true).
   Unary parametricity will then allow us to prove that any function implemented with the operations
-  of the interface will map 0 and 1 again to 0 or 1 (but no other natural number).
+  of the interface will map 0 and 1 again to 0 or 1 (but not to another natural number).
 -}
 
 open import Parametricity.Unary
