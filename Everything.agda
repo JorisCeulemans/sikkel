@@ -12,6 +12,8 @@ import Translation
 import GuardedRecursion.Modalities
 import GuardedRecursion.Streams.Guarded
 import GuardedRecursion.Streams.Standard
+import GuardedRecursion.Streams.Examples.Guarded
+import GuardedRecursion.Streams.Examples.Standard
 import Parametricity.Unary
 import Parametricity.Binary
 import Reflection.Substitutions

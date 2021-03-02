@@ -57,6 +57,10 @@ _⇒_.naturality (to (now-timeless-ctx {Γ = Γ})) = sym ∘ rel-id Γ
 eq (isoˡ now-timeless-ctx) _ = refl
 eq (isoʳ now-timeless-ctx) _ = refl
 
+now-timeless-ctx-intro : {A : ClosedType ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
+                         Tm Γ A → Tm (now (timeless-ctx Γ)) A
+now-timeless-ctx-intro t = ι⁻¹[ closed-natural (from now-timeless-ctx) ] (t [ from now-timeless-ctx ]')
+
 now-timeless-natural : {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) →
                        from now-timeless-ctx ⊚ now-subst (timeless-subst σ) ≅ˢ σ ⊚ from now-timeless-ctx
 eq (now-timeless-natural σ) _ = refl
