@@ -23,6 +23,7 @@ import Reflection.Tactic.ConstructExpression
 import Reflection.Tactic.Lambda
 import Reflection.Tactic.LobInduction
 import Reflection.Tactic.Naturality
+import Reflection.Tactic.Telescopes
 import Reflection.Tactic.Util
 import Reflection.Examples.Naturality
 import Reflection.Examples.Substitutions
