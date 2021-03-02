@@ -159,22 +159,22 @@ instance
   translated-type {{translate-stream {A = A}}} = Stream (translate-type A)
   head (translate-term {{translate-stream}} s) = translate-term (head' $ s)
   tail (translate-term {{translate-stream}} s) = translate-term (tail' $ s)
-  translate-back {{translate-stream {A = A}}} s = allnow-tm (MkTm (λ n _ → Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩')
+  translate-back {{translate-stream {A = A}}} s = allnow-tm (MkTm (λ n _ → Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩')
                                                                                         (take (suc n) s))
                                                                   (λ { m≤n refl → nat (s≤s m≤n) s }))
     where
       open ≡-Reasoning
       nat : ∀ {m n} (m≤n : m ≤ n) (s' : Stream (translate-type A)) →
-        Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
-          ≡ Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s')
+        Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
+          ≡ Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s')
       nat {m}{n} m≤n s' = begin
-          Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
+          Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
         ≡⟨ trans (map-cong (morph-id A) _) (map-id _) ⟩
-          first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s'))
+          first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s'))
         ≡˘⟨ map-first-≤ _ m≤n (take n s') ⟩
-          Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
+          Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
         ≡⟨ cong (Data.Vec.map _) (take-first m≤n s') ⟩
-          Data.Vec.map (λ a → now-timeless-ctx-nul {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s') ∎
+          Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s') ∎
   translate-cong {{translate-stream}} = {!!} -- not provable unless you assume that bisimilarity implies equality of streams
 
 paperfolds : Stream ℕ

@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Examples with coinductive streams of natural numbers in mode ★
+-- Examples with standard streams in mode ★
 --------------------------------------------------
 
 module GuardedRecursion.Streams.Standard where
@@ -26,93 +26,8 @@ private
     Γ : Ctx ★
 
 
--- Not used anymore.
-discr-allnow : {Γ : Ctx ★} {A : Set} →
-               allnow-ty (Discr A) ≅ᵗʸ Discr {Γ = Γ} A
-func (from discr-allnow) t = t ⟨ 0 , tt ⟩'
-CwF-Structure.naturality (from discr-allnow) _ = refl
-term (func (to discr-allnow) a) n _ = a
-Tm.naturality (func (to discr-allnow) a) _ _ = refl
-CwF-Structure.naturality (to discr-allnow) a = tm-≅-to-≡ (record { eq = λ _ → refl })
-eq (isoˡ discr-allnow) t = tm-≅-to-≡ (record { eq = λ _ → sym (Tm.naturality t z≤n refl) })
-eq (isoʳ discr-allnow) _ = refl
-
-{-
-Stream' : {Γ : Ctx ★ ℓc} → Ty Γ ℓ → Ty Γ ℓ
-Stream' A = allnow-ty (GStream (A [ from now-timeless-ctx ]))
-
-instance
-  stream'-un : IsUnaryNatural Stream'
-  natural-un {{stream'-un}} σ {T = T} =
-    ≅ᵗʸ-trans (allnow-ty-natural σ _) (allnow-ty-cong (
-              ≅ᵗʸ-trans (gstream-natural (timeless-subst σ)) (gstream-cong (
-                        ty-subst-seq-cong (from now-timeless-ctx ∷ (now-subst (timeless-subst σ) ◼))
-                                          (σ ∷ (from now-timeless-ctx ◼))
-                                          T
-                                          (now-timeless-natural σ)))))
-  cong-un {{stream'-un}} = allnow-ty-cong ∘ gstream-cong ∘ ty-subst-cong-ty _
-
-module _ {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} where
-  head' : Tm Γ (Stream' A ⇛ A)
-  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ allnow-timeless-ty A ] allnow-tm (g-head $ unallnow-tm (varι "s"))
-
-  tail' : Tm Γ (Stream' A ⇛ Stream' A)
-  tail' = lamι[ "s" ∈ Stream' A ] ι[ allnow-later'-ty _ ] allnow-tm (g-tail $ unallnow-tm (varι "s"))
-
-  cons' : Tm Γ (A ⇛ Stream' A ⇛ Stream' A)
-  cons' = lamι[ "x" ∈ A ]
-            lamι[ "xs" ∈ Stream' A ]
-              allnow-tm (g-cons $ unallnow-tm (ι[ allnow-timeless-ty A ] varι "x")
-                                $ unallnow-tm (ι⁻¹[ allnow-later'-ty _ ] varι "xs"))
-
-paperfolds' : Tm Γ (Stream' Nat')
-paperfolds' = allnow-tm (ι[ by-naturality ] g-paperfolds)
-
-fibs' : Tm Γ (Stream' Nat')
-fibs' = allnow-tm (ι[ by-naturality ] g-fibs)
-
-map' : {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} {B : ClosedType ★ ℓ'} {{_ : IsNullaryNatural B}} →
-       Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
-map' {A = A}{B = B} =
-  lamι[ "f" ∈ A ⇛ B ]
-    lamι[ "s" ∈ Stream' A ]
-      allnow-tm (ι[ by-naturality ]
-        (g-map $ timeless-tm (ι[ by-naturality ] (varι "f" [ from now-timeless-ctx ]'))
-               $ unallnow-tm (ι[ allnow-ty-cong by-naturality ] varι "s")))
-
-open import Reflection.Tactic.LobInduction
-
-module _ {Γ : Ctx ω ℓc} {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} where
-  g-every2nd : Tm Γ (timeless-ty (Stream' A) ⇛ GStream A)
-  g-every2nd = löbι[ "g" ∈▻' (timeless-ty (Stream' A) ⇛ GStream A) ]
-                 lamι[ "s" ∈ timeless-ty (Stream' A) ]
-                   g-cons $ timeless-tm (head' $ untimeless-tm (varι "s"))
-                          $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "s"))))
-
-  instance
-    stream-a-nat : IsNullaryNatural (Stream' A)
-    natural-nul {{stream-a-nat}} σ = ≅ᵗʸ-trans (natural-un σ) (cong-un (natural-nul σ))
-
-  g-diag : Tm Γ (timeless-ty (Stream' (Stream' A)) ⇛ GStream A)
-  g-diag = löbι[ "g" ∈▻' (timeless-ty (Stream' (Stream' A)) ⇛ GStream A) ]
-             lamι[ "xss" ∈ timeless-ty (Stream' (Stream' A)) ]
-               g-cons $ timeless-tm (head' $ (head' $ untimeless-tm (varι "xss")))
-                      $ varι "g" ⊛' next' (timeless-tm (tail' $ (tail' $ untimeless-tm (varι "xss"))))
-
-every2nd : {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} →
-           Tm Γ (Stream' A ⇛ Stream' A)
-every2nd {A = A} =
-  lamι[ "s" ∈ Stream' A ]
-    allnow-tm (ι[ by-naturality ] (
-      g-every2nd {A = A} $ timeless-tm (ι[ by-naturality ] (varι "s" [ from now-timeless-ctx ]'))))
-
-diag : {A : ClosedType ★ ℓ} {{_ : IsNullaryNatural A}} →
-       Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
-diag {A = A} =
-  lamι[ "xss" ∈ Stream' (Stream' A) ]
-    allnow-tm (ι[ by-naturality ] (
-      g-diag {A = A} $ timeless-tm (ι[ by-naturality ] (varι "xss" [ from now-timeless-ctx ]'))))
--}
+--------------------------------------------------
+-- Definition of Stream' & corresponding constructor and destructors
 
 Stream' : ClosedType ★ → ClosedType ★
 Stream' A = allnow-ty (GStream A)
@@ -140,27 +55,42 @@ module _ {A : ClosedType ★} {{_ : IsClosedNatural A}} where
               allnow-tm (g-cons $ unallnow-tm (ι[ allnow-timeless-ty-nul ] varι "x")
                                 $ unallnow-tm (ι⁻¹[ allnow-later'-ty ] varι "xs"))
 
+
+--------------------------------------------------
+-- Examples of standard streams & functions on standard streams, implemented in Sikkel
+
+-- The example from the introduction and section 3.1 of the ICFP submission
+nats' : Tm Γ (Stream' Nat')
+nats' = allnow-tm g-nats
+
 paperfolds' : Tm Γ (Stream' Nat')
 paperfolds' = allnow-tm g-paperfolds
 
 fibs' : Tm Γ (Stream' Nat')
 fibs' = allnow-tm g-fibs
 
-now-timeless-ctx-nul : {A : ClosedType ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
-                       Tm Γ A → Tm (now (timeless-ctx Γ)) A
-now-timeless-ctx-nul t = ι[ by-naturality ] (t [ from now-timeless-ctx ]')
+now-timeless-ctx-intro : {A : ClosedType ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
+                         Tm Γ A → Tm (now (timeless-ctx Γ)) A
+now-timeless-ctx-intro t = ι[ by-naturality ] (t [ from now-timeless-ctx ]')
 
 instance
-  ⇛-closed : {A : ClosedType ★} {{_ : IsClosedNatural A}} {B : ClosedType ★} {{_ : IsClosedNatural B}} →
+  ⇛-closed : {A B : ClosedType ★} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
              IsClosedNatural (A ⇛ B)
   closed-natural {{⇛-closed}} σ = by-naturality
 
-map' : {A : ClosedType ★} {{_ : IsClosedNatural A}} {B : ClosedType ★} {{_ : IsClosedNatural B}} →
+
+-- The following are implementations of all examples involving streams on page 11 of the paper
+--   Ranald Clouston, Aleš Bizjak, Hans Bugge Grathwohl, and Lars Birkedal.
+--   The Guarded Lambda-Calculus: Programming and Reasoning with Guarded Recursion for Coinductive Types.
+--   Logical Methods of Computer Science (LMCS), 12(3), 2016.
+--   https://doi.org/10.2168/LMCS-12(3:7)2016
+
+map' : {A B : ClosedType ★} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
        Tm Γ ((A ⇛ B) ⇛ Stream' A ⇛ Stream' B)
 map' {A = A}{B = B} =
   lamι[ "f" ∈ A ⇛ B ]
     lamι[ "s" ∈ Stream' A ]
-      allnow-tm (g-map $ timeless-tm (now-timeless-ctx-nul (varι "f"))
+      allnow-tm (g-map $ timeless-tm (now-timeless-ctx-intro (varι "f"))
                        $ unallnow-tm (varι "s"))
 
 open import Reflection.Tactic.LobInduction
@@ -181,9 +111,9 @@ module _ {A : ClosedType ★} {{_ : IsClosedNatural A}} {Γ : Ctx ω} where
 every2nd : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
            Tm Γ (Stream' A ⇛ Stream' A)
 every2nd {A = A} = lamι[ "s" ∈ Stream' A ] allnow-tm (
-                     g-every2nd $ timeless-tm (now-timeless-ctx-nul (varι "s")))
+                     g-every2nd $ timeless-tm (now-timeless-ctx-intro (varι "s")))
 
 diag : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
        Tm Γ (Stream' (Stream' A) ⇛ Stream' A)
 diag {A = A} = lamι[ "xss" ∈ Stream' (Stream' A) ] allnow-tm (
-                 g-diag $ timeless-tm (now-timeless-ctx-nul (varι "xss")))
+                 g-diag $ timeless-tm (now-timeless-ctx-intro (varι "xss")))

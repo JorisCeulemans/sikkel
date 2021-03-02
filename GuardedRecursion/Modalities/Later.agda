@@ -349,6 +349,25 @@ module _ {T : Ty Γ} {S : Ty Γ} where
   _⟨$⟩'_ : Tm Γ (T ⇛ S) → Tm Γ (▻' T) → Tm Γ (▻' S)
   f ⟨$⟩' t = next' f ⊛' t
 
+-- The following operations would be easier to define for closed types (since we can then make use of
+-- lamι, varι, ⟨$⟩ and ⊛) but we want them to work for all types.
+lift▻ : {T S : Ty (◄ Γ)} → Tm (◄ Γ) (T ⇛ S) → Tm Γ (▻ T ⇛ ▻ S)
+lift▻ {T = T} f = lam[ "t" ∈ (▻ T) ] (
+  ι[ ▻-natural π ] next (
+  ι⁻¹[ ⇛-natural (◄-subst π) ] (f [ ◄-subst π ]') $ prev (ι⁻¹[ ▻-natural π ] (var "t"))))
+
+lift2▻ : {T S R : Ty (◄ Γ)} → Tm (◄ Γ) (T ⇛ S ⇛ R) → Tm Γ (▻ T ⇛ ▻ S ⇛ ▻ R)
+lift2▻ {T = T}{S} f = lam[ "t" ∈ (▻ T) ] (ι[ ⇛-natural π ] ι[ ⇛-cong (▻-natural π) (▻-natural π) ]
+  lift▻ (ι⁻¹[ ⇛-natural (◄-subst π) ] (
+  ι⁻¹[ ⇛-natural (◄-subst π) ] (f [ ◄-subst π ]') $ prev (ι⁻¹[ ▻-natural π ] var "t"))))
+
+lift▻' : {T S : Ty Γ} → Tm Γ (T ⇛ S) → Tm Γ (▻' T ⇛ ▻' S)
+lift▻' {Γ = Γ} f = lift▻ (ι⁻¹[ ⇛-natural (from-earlier Γ) ] (f [ from-earlier Γ ]'))
+
+lift2▻' : {T S R : Ty Γ} → Tm Γ (T ⇛ S ⇛ R) → Tm Γ (▻' T ⇛ ▻' S ⇛ ▻' R)
+lift2▻' {Γ = Γ} f =
+  lift2▻ (ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (⇛-natural (from-earlier Γ)) ] ι⁻¹[ ⇛-natural (from-earlier Γ) ] (f [ from-earlier Γ ]'))
+
 
 --------------------------------------------------
 -- Proofs that ▻ and ▻' act functorially on types
