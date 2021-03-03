@@ -453,14 +453,15 @@ instance
   Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
   Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
 
-subtract-left-agda : DiffNat → DiffNat → DiffNat
-subtract-left-agda = translate-term subtract★-left
+subtract-DiffNat : DiffNat → DiffNat → DiffNat
+subtract-DiffNat = translate-term subtract★-left
 
-subtract-right-agda : SignNat → SignNat → SignNat
-subtract-right-agda = translate-term subtract★-right
+subtract-SignNat : SignNat → SignNat → SignNat
+subtract-SignNat = translate-term subtract★-right
 
 subtract-ℤ : Tm Γ (ℤ ⇛ ℤ ⇛ ℤ)
 subtract-ℤ = subtract
 
-translate-result : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-left-agda subtract-right-agda
-translate-result {d1}{s1} r1 {d2}{s2} r2 = proj₂ ((subtract-ℤ {Γ = ◇} €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])
+subtract-preserves-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
+subtract-preserves-∼ {d1}{s1} r1 {d2}{s2} r2 = proj₂ (
+  (subtract-ℤ {Γ = ◇} €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])

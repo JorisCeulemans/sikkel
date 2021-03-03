@@ -104,6 +104,7 @@ open import GuardedRecursion.Streams.Examples.Standard
 
 {-
   The case study involving parametricity is worked out in the following file.
+  Note that we used synonyms DiffNat for ℕ × ℕ and SignNat for Sign × ℕ.
 -}
 
 open import Parametricity.Binary
@@ -154,6 +155,8 @@ open import Types.Functions
 {-
   The implementation of the later modality and of the parametricity example
   can be found in the following modules.
+  The end result for the parametricity example (subtract-preserves-∼) can be
+  found at the bottom of the file Parametricity.Binary.
 -}
 
 open import GuardedRecursion.Modalities.Later
