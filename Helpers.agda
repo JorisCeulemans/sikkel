@@ -9,8 +9,9 @@ open import Relation.Binary.PropositionalEquality hiding (Extensionality)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Unary using (Pred; Decidable)
 
-variable
-  ℓ ℓ' : Level
+private
+  variable
+    ℓ ℓ' : Level
 
 postulate
   funext : ∀ {ℓ ℓ'} → Extensionality ℓ ℓ'

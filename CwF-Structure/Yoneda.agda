@@ -17,6 +17,7 @@ open Category C
 
 private
   variable
+    ℓ : Level
     x y : Ob
     Γ : Ctx C ℓ
 

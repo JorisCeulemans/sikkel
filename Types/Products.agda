@@ -18,7 +18,7 @@ open import CwF-Structure.Terms
 
 private
   variable
-    ℓc ℓt ℓt' : Level
+    ℓ ℓ' ℓc ℓt ℓt' : Level
     Γ Δ : Ctx C ℓ
     T T' S S' : Ty Γ ℓ
 
@@ -93,13 +93,12 @@ module _ {T : Ty Γ ℓ} {S : Ty Γ ℓ'} (σ : Δ ⇒ Γ) where
   snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≅ᵗᵐ snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
   eq (snd-natural p) _ = refl
 
-β-⊠-fst : (t : Tm Γ T) (s : Tm Γ S) →
-          fst (pair t s) ≅ᵗᵐ t
-eq (β-⊠-fst t s) _ = refl
+module _ (t : Tm Γ T) (s : Tm Γ S) where
+  β-⊠-fst : fst (pair t s) ≅ᵗᵐ t
+  eq β-⊠-fst _ = refl
 
-β-⊠-snd : (t : Tm Γ T) (s : Tm Γ S) →
-          snd (pair t s) ≅ᵗᵐ s
-eq (β-⊠-snd t s) _ = refl
+  β-⊠-snd : snd (pair t s) ≅ᵗᵐ s
+  eq β-⊠-snd _ = refl
 
 η-⊠ : (p : Tm Γ (T ⊠ S)) →
       p ≅ᵗᵐ pair (fst p) (snd p)

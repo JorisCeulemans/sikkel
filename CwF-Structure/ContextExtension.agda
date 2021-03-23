@@ -23,7 +23,7 @@ infixl 15 _,,_∈_
 
 private
   variable
-    ℓc ℓt ℓt' : Level
+    ℓ ℓc ℓt ℓt' : Level
     Γ Δ Θ : Ctx C ℓ
     T S : Ty Γ ℓ
 

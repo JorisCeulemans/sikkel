@@ -30,6 +30,7 @@ infixr 5 _∷_
 
 private
   variable
+    ℓ : Level
     Δ Γ : Ctx C ℓ
     T : Ty Γ ℓ
 

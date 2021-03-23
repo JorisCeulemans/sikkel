@@ -77,3 +77,11 @@ eq (isoˡ (allnow-timeless-ty T)) tm = tm-≅-to-≡ (record { eq = λ _ → tra
                                                                             (trans (morph-cong T refl)
                                                                                    (morph-id T _)) })
 eq (isoʳ (allnow-timeless-ty T)) _ = refl
+
+to-timeless-now-ctx : (Γ : Ctx ω ℓ) → (Γ ⇒ timeless-ctx (now Γ))
+func (to-timeless-now-ctx Γ) = Γ ⟪ z≤n ⟫_
+_⇒_.naturality (to-timeless-now-ctx Γ) = rel-comp Γ z≤n _
+
+from-timeless-allnow-ty : {Γ : Ctx ω ℓc} {T : Ty (timeless-ctx (now Γ)) ℓt} →
+                          Tm Γ (timeless-ty (allnow-ty T)) → Tm Γ (T [ to-timeless-now-ctx Γ ])
+from-timeless-allnow-ty {Γ = Γ} t = unallnow-tm (untimeless-tm t) [ to-timeless-now-ctx Γ ]'

@@ -4,8 +4,8 @@ module Translation where
 
 open import Function using (_∘_)
 open import Data.Product using (_×_) renaming (_,_ to [_,_])
-open import Data.Sum using (_⊎_; map) renaming (inj₁ to inl; inj₂ to inr)
-open import Data.Sum.Relation.Binary.Pointwise renaming (inj₁ to inl; inj₂ to inr)
+open import Data.Sum using (_⊎_; inj₁; inj₂; map)
+open import Data.Sum.Relation.Binary.Pointwise
 open import Data.Unit using (⊤; tt)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality
@@ -22,7 +22,7 @@ open import GuardedRecursion.Streams.Standard
 
 private
   variable
-    ℓc : Level
+    ℓ ℓ' ℓc : Level
     fℓ gℓ : Level → Level
 
 
@@ -56,14 +56,14 @@ instance
 expose-sum-term : {A : Ty {C = ★} ◇ ℓ} {B : Ty ◇ ℓ'} →
                   Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B
 expose-sum-term {A = A}{B = B} p with p ⟨ tt , tt ⟩'
-... | inl a = inl (MkTm (λ { tt tt → a }) (λ { tt refl → morph-id A a }))
-... | inr b = inr (MkTm (λ { tt tt → b }) (λ { tt refl → morph-id B b }))
+... | inj₁ a = inj₁ (MkTm (λ { tt tt → a }) (λ { tt refl → morph-id A a }))
+... | inj₂ b = inj₂ (MkTm (λ { tt tt → b }) (λ { tt refl → morph-id B b }))
 
 expose-sum-cong : {A : Ty {C = ★} ◇ ℓ} {B : Ty ◇ ℓ'} {t s : Tm ◇ (A ⊞ B)} →
                   t ≅ᵗᵐ s → Pointwise _≅ᵗᵐ_ _≅ᵗᵐ_ (expose-sum-term t) (expose-sum-term s)
 expose-sum-cong {t = t}{s = s} e with t ⟨ tt , tt ⟩' | s ⟨ tt , tt ⟩' | eq e tt
-... | inl a | .(inl a) | refl = inl (record { eq = λ _ → refl })
-... | inr b | .(inr b) | refl = inr (record { eq = λ _ → refl })
+... | inj₁ a | .(inj₁ a) | refl = inj₁ (record { eq = λ _ → refl })
+... | inj₂ b | .(inj₂ b) | refl = inj₂ (record { eq = λ _ → refl })
 
 instance
   translate-sum : {T : ClosedType ★ fℓ}  {{_ : Translatable T}}
@@ -71,11 +71,11 @@ instance
                   Translatable (T ⊞ S)
   translated-type {{translate-sum {T = T} {S = S}}} = translate-type T ⊎ translate-type S
   translate-term  {{translate-sum {T = T} {S = S}}} p = map translate-term translate-term (expose-sum-term p)
-  translate-back  {{translate-sum {T = T} {S = S}}} (inl t) = inl' (translate-back t)
-  translate-back  {{translate-sum {T = T} {S = S}}} (inr s) = inr' (translate-back s)
+  translate-back  {{translate-sum {T = T} {S = S}}} (inj₁ t) = inl (translate-back t)
+  translate-back  {{translate-sum {T = T} {S = S}}} (inj₂ s) = inr (translate-back s)
   translate-cong  {{translate-sum {T = T} {S = S}}} {t = p}{s = q} e with expose-sum-term p | expose-sum-term q | expose-sum-cong e
-  ... | inl t1 | inl t2 | inl et = cong inl (translate-cong et)
-  ... | inr s1 | inr s2 | inr es = cong inr (translate-cong es)
+  ... | inj₁ t1 | inj₁ t2 | inj₁ et = cong inj₁ (translate-cong et)
+  ... | inj₂ s1 | inj₂ s2 | inj₂ es = cong inj₂ (translate-cong es)
 
 to-★-◇-term : {T : Ty {C = ★} ◇ ℓ} → T ⟨ tt , tt ⟩ → Tm ◇ T
 term (to-★-◇-term t) _ _ = t

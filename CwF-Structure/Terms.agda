@@ -20,6 +20,7 @@ infix 1 _≅ᵗᵐ_
 
 private
   variable
+    ℓ : Level
     x : Ob
     Γ Δ Θ : Ctx C ℓ
     T S R : Ty Γ ℓ
@@ -64,7 +65,7 @@ eq (≅ᵗᵐ-sym t=t') γ = sym (eq t=t' γ)
 ≅ᵗᵐ-trans : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
 eq (≅ᵗᵐ-trans t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
 
-module ≅ᵗᵐ-Reasoning {ℓc ℓt} {Γ : Ctx C ℓc} {T : Ty Γ ℓt} where
+module ≅ᵗᵐ-Reasoning where
   infix  3 _∎
   infixr 2 _≅⟨⟩_ step-≅ step-≅˘
   infix  1 begin_

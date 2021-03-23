@@ -39,17 +39,15 @@ module _ {C : Category} where
 
   private
     variable
+      ℓ ℓ' : Level
       x y z : Ob
       Δ Γ Θ : Ctx C ℓ
 
   _⟨_⟩ : Ctx C ℓ → Ob → Set ℓ
   Γ ⟨ x ⟩ = set Γ x
 
-  _⟪_⟫ : (Γ : Ctx C ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
-  Γ ⟪ f ⟫ = rel Γ f
-
   _⟪_⟫_ : (Γ : Ctx C ℓ) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
-  Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
+  Γ ⟪ f ⟫ γ = rel Γ f γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
   -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
@@ -62,14 +60,14 @@ module _ {C : Category} where
       Γ ⟪ g ∙ f ⟫ γz
     ≡⟨ rel-comp Γ f g γz ⟩
       Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γz)
-    ≡⟨ cong (Γ ⟪ f ⟫) eq-zy ⟩
+    ≡⟨ cong (Γ ⟪ f ⟫_) eq-zy ⟩
       Γ ⟪ f ⟫ γy
     ≡⟨ eq-yx ⟩
       γx ∎
     where open ≡-Reasoning
 
   -- The type of substitutions from context Δ to context Γ
-  record _⇒_ {ℓ ℓ'} (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
+  record _⇒_ (Δ : Ctx C ℓ) (Γ : Ctx C ℓ') : Set (ℓ ⊔ ℓ') where
     constructor MkSubst
     no-eta-equality
     field
@@ -113,7 +111,7 @@ module _ {C : Category} where
   ≅ˢ-trans : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
   eq (≅ˢ-trans σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
-  module ≅ˢ-Reasoning {Δ : Ctx C ℓ} {Γ : Ctx C ℓ'} where
+  module ≅ˢ-Reasoning where
     infix  3 _∎
     infixr 2 _≅⟨⟩_ step-≅ step-≅˘
     infix  1 begin_

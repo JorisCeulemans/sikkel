@@ -26,6 +26,7 @@ open Category C
 
 private
   variable
+    ℓ ℓ' : Level
     Γ Δ : Ctx C ℓ
     T : Ty Γ ℓ
 
@@ -121,13 +122,12 @@ naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ with c ⟨ x , γ'
 naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | false | .false | refl = naturality f φ eγ
 naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | true  | .true  | refl = naturality t φ eγ
 
-β-bool'-true : (t t' : Tm Γ T) →
-               if' true' then' t else' t' ≅ᵗᵐ t
-eq (β-bool'-true t t') _ = refl
+module _ (t t' : Tm Γ T) where
+  β-bool'-true : if' true' then' t else' t' ≅ᵗᵐ t
+  eq β-bool'-true _ = refl
 
-β-bool'-false : (t t' : Tm Γ T) →
-                if' false' then' t else' t' ≅ᵗᵐ t'
-eq (β-bool'-false t t') _ = refl
+  β-bool'-false : if' false' then' t else' t' ≅ᵗᵐ t'
+  eq β-bool'-false _ = refl
 
 η-bool' : (t : Tm Γ Bool') → t ≅ᵗᵐ if' t then' true' else' false'
 eq (η-bool' t) γ with t ⟨ _ , γ ⟩'
@@ -190,13 +190,13 @@ nat-elim {Γ = Γ} T t f = MkTm tm nat
           Nat' ⇛ T ⟪ ρ , eγ ⟫ (tm z γz) ≡ tm y γy
     nat {y = y}{z = z} ρ-yz eq-zy = to-pshfun-eq (helper eq-zy)
 
-β-nat-zero : {T : Ty Γ ℓ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) →
-             app (nat-elim T t f) zero' ≅ᵗᵐ t
-eq (β-nat-zero t f) _ = refl
+module _ {T : Ty Γ ℓ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
+  β-nat-zero : app (nat-elim T t f) zero' ≅ᵗᵐ t
+  eq β-nat-zero _ = refl
 
-β-nat-suc : {T : Ty Γ ℓ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) (k : Tm Γ Nat') →
-            app (nat-elim T t f) (suc' $ k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
-eq (β-nat-suc t f k) _ = refl
+  β-nat-suc : (k : Tm Γ Nat') →
+              app (nat-elim T t f) (suc' $ k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
+  eq (β-nat-suc k) _ = refl
 
 η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ app (nat-elim Nat' zero' suc') k
 eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')

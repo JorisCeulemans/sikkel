@@ -29,11 +29,11 @@ löb-tactic T hole = do
   unify hole (con (quote _,_) (vArg t-reducedBodyType ∷ vArg proof ∷ []))
 
 löbι : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (T : Ty Γ ℓt)
-      {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
-      Tm (Γ ,, ▻' T) (proj₁ body-type) → Tm Γ T
+       {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
+       Tm (Γ ,, ▻' T) (proj₁ body-type) → Tm Γ T
 löbι T {body-type = S , T=S} b = löb' T (ι[ T=S ] b)
 
 löbι[_∈▻'_]_ : ∀ {ℓc ℓt ℓs} {Γ : Ctx ω ℓc} (v : String) (T : Ty Γ ℓt)
-              {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
-              Tm (Γ ,, v ∈ ▻' T) (proj₁ body-type) → Tm Γ T
+                {@(tactic löb-tactic T) body-type : Σ[ S ∈ Ty (Γ ,, ▻' T) ℓs ] (T [ π ] ≅ᵗʸ S)} →
+                Tm (Γ ,, v ∈ ▻' T) (proj₁ body-type) → Tm Γ T
 löbι[_∈▻'_]_ v = löbι

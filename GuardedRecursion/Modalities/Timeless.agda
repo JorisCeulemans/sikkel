@@ -35,9 +35,9 @@ eq now-subst-id _ = refl
 now-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → now-subst (σ ⊚ τ) ≅ˢ now-subst σ ⊚ now-subst τ
 eq (now-subst-⊚ σ τ) _ = refl
 
-timeless-ty : Ty (now Γ) ℓ' → Ty Γ ℓ'
+timeless-ty : Ty (now Γ) ℓ → Ty Γ ℓ
 type (timeless-ty {Γ = Γ} T) n γ = T ⟨ tt , Γ ⟪ z≤n ⟫ γ ⟩
-morph (timeless-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ tt , proof ⟫
+morph (timeless-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ tt , proof ⟫_
   where
     open ≡-Reasoning
     proof : Γ ⟪ z≤n ⟫ γn ≡ Γ ⟪ z≤n ⟫ γm
@@ -69,9 +69,7 @@ module _ {T : Ty (now Γ) ℓ} where
       T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
     ≡˘⟨ cong (T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫_) (Tm.naturality t z≤n refl) ⟩
       T ⟪ tt , rel-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
-    ≡˘⟨ morph-comp T tt tt _ _ (t ⟨ n , γ ⟩') ⟩
-      T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
-    ≡⟨ morph-cong T refl ⟩
+    ≡⟨ morph-cong-2-1 T refl ⟩
       T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
     ≡⟨ Tm.naturality t ≤-refl (rel-id Γ γ) ⟩
       t ⟨ n , γ ⟩' ∎
@@ -97,59 +95,31 @@ module _ {T : Ty (now Γ) ℓ} where
 
 timeless-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
 func (from (timeless-ty-natural σ {T})) = ctx-element-subst T (_⇒_.naturality σ _)
-CwF-Structure.naturality (from (timeless-ty-natural σ {T})) t =
-  begin
-    T ⟪ tt , _ ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
-  ≡˘⟨ morph-comp T tt tt _ _ t ⟩
-    T ⟪ tt , _ ⟫ t
-  ≡⟨ morph-cong T refl ⟩ -- no refl here because proofs don't match
-    T ⟪ tt , _ ⟫ t
-  ≡⟨ morph-comp T tt tt _ _ t ⟩
-    T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , _ ⟫ t) ∎
-  where open ≡-Reasoning
+CwF-Structure.naturality (from (timeless-ty-natural σ {T})) t = morph-cong-2-2 T refl
 func (to (timeless-ty-natural σ {T})) = ctx-element-subst T (sym (_⇒_.naturality σ _))
-CwF-Structure.naturality (to (timeless-ty-natural σ {T})) t =
-  begin
-    T ⟪ tt , _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
-  ≡˘⟨ morph-comp T tt tt _ _ t ⟩
-    T ⟪ tt , _ ⟫ t
-  ≡⟨ morph-cong T refl ⟩ -- no refl here because proofs don't match
-    T ⟪ tt , _ ⟫ t
-  ≡⟨ morph-comp T tt tt _ _ t ⟩
-    T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _ ⟫ t) ∎
-  where open ≡-Reasoning
+CwF-Structure.naturality (to (timeless-ty-natural σ {T})) t = morph-cong-2-2 T refl
 eq (isoˡ (timeless-ty-natural σ {T})) t =
   begin
-    T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ (T ⟪ tt , _⇒_.naturality σ _ ⟫ t)
-  ≡˘⟨ morph-comp T tt tt _ _ t ⟩
-    T ⟪ tt , _ ⟫ t
-  ≡⟨ morph-cong T refl ⟩
+    T ⟪ tt , _ ⟫ (T ⟪ tt , _ ⟫ t)
+  ≡⟨ morph-cong-2-1 T refl ⟩
     T ⟪ tt , refl ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎
   where open ≡-Reasoning
 eq (isoʳ (timeless-ty-natural σ {T})) t =
   begin
-    T ⟪ tt , _⇒_.naturality σ _ ⟫ (T ⟪ tt , sym (_⇒_.naturality σ _) ⟫ t)
-  ≡˘⟨ morph-comp T tt tt _ _ t ⟩
-    T ⟪ tt , _ ⟫ t
-  ≡⟨ morph-cong T refl ⟩
+    T ⟪ tt , _ ⟫ (T ⟪ tt , _ ⟫ t)
+  ≡⟨ morph-cong-2-1 T refl ⟩
     T ⟪ tt , refl ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎
   where open ≡-Reasoning
 
-timeless-tm-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} (t : Tm (now Γ) T) →
-                  (timeless-tm t) [ σ ]' ≅ᵗᵐ ι[ timeless-ty-natural σ ] timeless-tm (t [ now-subst σ ]')
-eq (timeless-tm-natural σ t) δ = sym (Tm.naturality t tt _)
+module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} where
+  timeless-tm-natural : (t : Tm (now Γ) T) →
+                        (timeless-tm t) [ σ ]' ≅ᵗᵐ ι[ timeless-ty-natural σ ] timeless-tm (t [ now-subst σ ]')
+  eq (timeless-tm-natural t) δ = sym (Tm.naturality t tt _)
 
-untimeless-tm-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ) ℓ} (t : Tm Γ (timeless-ty T)) →
-                 (untimeless-tm t) [ now-subst σ ]' ≅ᵗᵐ untimeless-tm (ι⁻¹[ timeless-ty-natural σ ] (t [ σ ]'))
-eq (untimeless-tm-natural {Δ = Δ}{Γ = Γ} σ {T = T} t) δ =
-  begin
-    T ⟪ tt , rel-id Γ (func σ δ) ⟫ (t ⟨ 0 , func σ δ ⟩')
-  ≡⟨ morph-cong T refl ⟩
-    T ⟪ tt , _ ⟫ (t ⟨ 0 , func σ δ ⟩')
-  ≡⟨ morph-comp T tt tt _ _ _ ⟩
-    T ⟪ tt , cong (func σ) (rel-id Δ δ) ⟫ (T ⟪ tt , _⇒_.naturality σ δ ⟫ (t ⟨ 0 , func σ δ ⟩')) ∎
-  where open ≡-Reasoning
+  untimeless-tm-natural : (t : Tm Γ (timeless-ty T)) →
+                          (untimeless-tm t) [ now-subst σ ]' ≅ᵗᵐ untimeless-tm (ι⁻¹[ timeless-ty-natural σ ] (t [ σ ]'))
+  eq (untimeless-tm-natural t) δ = sym (morph-cong-2-1 T refl)
