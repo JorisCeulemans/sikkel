@@ -93,11 +93,9 @@ ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (co
 
 allnow-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} → (allnow-ty T) [ σ ] ≅ᵗʸ allnow-ty (T [ timeless-subst σ ])
 func (from (allnow-ty-natural σ {T})) = ι[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (from (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ →
-  trans (sym (morph-comp T _ _ _ _ _)) (trans (morph-cong T refl) (morph-comp T _ _ _ _ _)) })
+CwF-Structure.naturality (from (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → morph-cong-2-2 T refl })
 func (to (allnow-ty-natural σ {T})) = ι⁻¹[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (to (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ →
-  trans (sym (morph-comp T _ _ _ _ _)) (trans (morph-cong T refl) (morph-comp T _ _ _ _ _)) })
+CwF-Structure.naturality (to (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → morph-cong-2-2 T refl })
 eq (isoˡ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
 eq (isoʳ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
 

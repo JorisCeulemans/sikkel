@@ -175,7 +175,7 @@ eq (always-false-subst-⊚ σ τ) {x = type-obj} _ = refl
 
 forget : {Γ : Ctx ★} → Ty (always-false Γ) → Ty Γ
 type (forget T) tt γ = T ⟨ type-obj , γ ⟩
-morph (forget {Γ = Γ} T) tt eγ = T ⟪ type-id , trans (sym (rel-id Γ _ )) eγ ⟫
+morph (forget {Γ = Γ} T) tt eγ = T ⟪ type-id , trans (sym (rel-id Γ _ )) eγ ⟫_
 morph-cong (forget T) refl {eγ = refl} {eγ' = refl} = refl
 morph-id (forget T) t = trans (morph-cong T refl) (morph-id T t)
 morph-comp (forget T) _ _ _ _ t = sym (morph-cong-2-1 T refl)

@@ -36,6 +36,6 @@ lamι : ∀ {C} {Γ : Ctx C} (T : Ty Γ) {S : Ty Γ}
 lamι T {body-type = S' , Sπ=S'} b = lam T (ι[ Sπ=S' ] b)
 
 lamι[_∈_]_ : ∀ {C} {Γ : Ctx C} (v : String) (T : Ty Γ) {S : Ty Γ}
-            {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ] (S [ π ] ≅ᵗʸ S')} →
-            Tm (Γ ,, v ∈ T) (proj₁ body-type) → Tm Γ (T ⇛ S)
+             {@(tactic lam-tactic T S) body-type : Σ[ S' ∈ Ty (Γ ,, T) ] (S [ π ] ≅ᵗʸ S')} →
+             Tm (Γ ,, v ∈ T) (proj₁ body-type) → Tm Γ (T ⇛ S)
 lamι[_∈_]_ v = lamι

@@ -7,6 +7,7 @@ open import Categories
 module Reflection.Examples.Naturality {C : Category} where
 
 open import Data.Bool
+open import Level
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 
 open import CwF-Structure
@@ -17,22 +18,25 @@ open import Types.Instances
 open import Reflection.Naturality.Solver
 open import Reflection.Tactic.Naturality
 
-example : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} →
-          (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
+private
+  variable
+    Γ Δ Θ : Ctx C
+
+
+example : (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
           ((Bool' ⇛ Bool') ⊠ (Bool' [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
 example σ τ = type-naturality-reflect (sub (bin _⊠_ (bin _⇛_ (nul Bool') (nul Bool')) (sub (nul Bool') τ)) σ)
                                       (bin _⊠_ (sub (bin _⇛_ (nul Bool') (nul Bool')) σ) (nul Bool'))
                                       refl
                                       refl
 
-example' : {Δ : Ctx C} {Γ : Ctx C} {Θ : Ctx C} →
-           (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
+example' : (σ : Δ ⇒ Γ) (τ : Γ ⇒ Θ) →
            ((Bool' ⇛ Bool') ⊠ ((Discr Bool) [ τ ])) [ σ ] ≅ᵗʸ ((Bool' ⇛ Bool') [ σ ]) ⊠ Bool'
 example' σ τ = by-naturality
 
 -- Experiments interaction var + by-naturality tactics
 
-not' : {Γ : Ctx C} → Tm Γ Bool' → Tm Γ Bool'
+not' : Tm Γ Bool' → Tm Γ Bool'
 term (not' b) x _ = not (b ⟨ x , _ ⟩')
 naturality (not' b) f eγ = cong not (naturality b f eγ)
 

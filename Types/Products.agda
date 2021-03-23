@@ -91,13 +91,12 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≅ᵗᵐ snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
   eq (snd-natural p) _ = refl
 
-β-⊠-fst : (t : Tm Γ T) (s : Tm Γ S) →
-          fst (pair t s) ≅ᵗᵐ t
-eq (β-⊠-fst t s) _ = refl
+module _ (t : Tm Γ T) (s : Tm Γ S) where
+  β-⊠-fst : fst (pair t s) ≅ᵗᵐ t
+  eq β-⊠-fst _ = refl
 
-β-⊠-snd : (t : Tm Γ T) (s : Tm Γ S) →
-          snd (pair t s) ≅ᵗᵐ s
-eq (β-⊠-snd t s) _ = refl
+  β-⊠-snd : snd (pair t s) ≅ᵗᵐ s
+  eq β-⊠-snd _ = refl
 
 η-⊠ : (p : Tm Γ (T ⊠ S)) →
       p ≅ᵗᵐ pair (fst p) (snd p)

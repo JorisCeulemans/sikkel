@@ -23,7 +23,7 @@ open Functor
 
 ctx-lift : Ctx D → Ctx C
 set (ctx-lift Γ) c = Γ ⟨ ob F c ⟩
-rel (ctx-lift Γ) f = Γ ⟪ hom F f ⟫
+rel (ctx-lift Γ) f = Γ ⟪ hom F f ⟫_
 rel-id (ctx-lift Γ) γ =
   begin
     Γ ⟪ hom F (hom-id C) ⟫ γ

@@ -44,11 +44,8 @@ module _ {C : Category} where
   _⟨_⟩ : Ctx C → Ob → Set
   Γ ⟨ x ⟩ = set Γ x
 
-  _⟪_⟫ : (Γ : Ctx C) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
-  Γ ⟪ f ⟫ = rel Γ f
-
   _⟪_⟫_ : (Γ : Ctx C) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
-  Γ ⟪ f ⟫ γ = (Γ ⟪ f ⟫) γ
+  Γ ⟪ f ⟫ γ = rel Γ f γ
 
   -- The following proof is needed to define composition of morphisms in the category of elements
   -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
@@ -61,7 +58,7 @@ module _ {C : Category} where
       Γ ⟪ g ∙ f ⟫ γz
     ≡⟨ rel-comp Γ f g γz ⟩
       Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γz)
-    ≡⟨ cong (Γ ⟪ f ⟫) eq-zy ⟩
+    ≡⟨ cong (Γ ⟪ f ⟫_) eq-zy ⟩
       Γ ⟪ f ⟫ γy
     ≡⟨ eq-yx ⟩
       γx ∎
@@ -112,7 +109,7 @@ module _ {C : Category} where
   ≅ˢ-trans : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
   eq (≅ˢ-trans σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
-  module ≅ˢ-Reasoning {Δ : Ctx C} {Γ : Ctx C} where
+  module ≅ˢ-Reasoning where
     infix  3 _∎
     infixr 2 _≅⟨⟩_ step-≅ step-≅˘
     infix  1 begin_

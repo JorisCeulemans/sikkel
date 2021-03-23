@@ -59,13 +59,9 @@ private
 _⟨_,_⟩ : Ty Γ → (x : Ob) → Γ ⟨ x ⟩ → Set
 T ⟨ x , γ ⟩ = type T x γ
 
-_⟪_,_⟫ : (T : Ty Γ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx →
-         T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
-_⟪_,_⟫ T f eγ = morph T f eγ
-
 _⟪_,_⟫_ : (T : Ty Γ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx →
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
-T ⟪ f , eγ ⟫ t = (T ⟪ f , eγ ⟫) t
+T ⟪ f , eγ ⟫ t = morph T f eγ t
 
 {-
 -- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
@@ -111,7 +107,7 @@ morph-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
   where open ≡-Reasoning
 
 ctx-element-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
-ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫
+ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫_
 
 ctx-element-subst-inverseˡ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} (t : T ⟨ x , γ ⟩)→
                             ctx-element-subst T (sym eγ) (ctx-element-subst T eγ t) ≡ t
@@ -184,7 +180,7 @@ eq (≅ⁿ-sym η=φ) t = sym (eq η=φ t)
 ≅ⁿ-trans : {η φ µ : T ↣ S} → η ≅ⁿ φ → φ ≅ⁿ µ → η ≅ⁿ µ
 eq (≅ⁿ-trans η=φ φ=µ) t = trans (eq η=φ t) (eq φ=µ t)
 
-module ≅ⁿ-Reasoning {Γ : Ctx C} {T : Ty Γ} {S : Ty Γ} where
+module ≅ⁿ-Reasoning where
   infix  3 _∎
   infixr 2 _≅⟨⟩_ step-≅ step-≅˘
   infix  1 begin_
@@ -375,35 +371,15 @@ eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
 func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
-naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
-  begin
-    T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ f , _ ⟫ t
-  ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) ⟩
-    T ⟪ f ∙ hom-id , _ ⟫ t
-  ≡⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
-  where open ≡-Reasoning
+naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
 func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (sym (eq σ=τ δ)) t
-naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t =
-  begin
-    T ⟪ f , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≡˘⟨ morph-comp T f hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ f , _ ⟫ t
-  ≡⟨ morph-cong T (trans hom-idˡ (sym hom-idʳ)) ⟩
-    T ⟪ f ∙ hom-id , _ ⟫ t
-  ≡⟨ morph-comp T hom-id f _ _ t ⟩
-    T ⟪ hom-id , _ ⟫ T ⟪ f , _ ⟫ t ∎
-  where open ≡-Reasoning
+naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   -- Here we cannot use morph-id T twice because the omitted equality proofs are not rel-id Γ _
   -- (i.e. T ⟪_⟫ t is not applied to the identity morphism in the category of elements of Γ).
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≡˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ hom-id , _ ⟫ t
-  ≡⟨ morph-cong T hom-idˡ ⟩
+  ≡⟨ morph-cong-2-1 T hom-idˡ ⟩
     T ⟪ hom-id , rel-id Γ _ ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎
@@ -411,9 +387,7 @@ eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
 eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≡˘⟨ morph-comp T hom-id hom-id _ _ t ⟩
-    T ⟪ hom-id ∙ hom-id , _ ⟫ t
-  ≡⟨ morph-cong T hom-idˡ ⟩
+  ≡⟨ morph-cong-2-1 T hom-idˡ ⟩
     T ⟪ hom-id , _ ⟫ t
   ≡⟨ morph-id T t ⟩
     t ∎

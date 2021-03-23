@@ -46,7 +46,7 @@ ctx-m≤1+n {m = m}{n = n} Γ m≤n γ =
 
 ◄ : Ctx ω → Ctx ω
 set (◄ Γ) n = Γ ⟨ suc n ⟩
-rel (◄ Γ) m≤n = Γ ⟪ s≤s m≤n ⟫
+rel (◄ Γ) m≤n = Γ ⟪ s≤s m≤n ⟫_
 rel-id (◄ Γ) = rel-id Γ
 rel-comp (◄ Γ) k≤m m≤n = rel-comp Γ (s≤s k≤m) (s≤s m≤n)
 
@@ -69,7 +69,7 @@ naturality (◅-tm t) m≤n eγ = naturality t (s≤s m≤n) eγ
 -}
 
 from-earlier : (Γ : Ctx ω) → ◄ Γ ⇒ Γ
-func (from-earlier Γ) = Γ ⟪ n≤1+n _ ⟫
+func (from-earlier Γ) = Γ ⟪ n≤1+n _ ⟫_
 naturality (from-earlier Γ) γ = ctx-m≤1+n Γ _ γ
 
 
@@ -128,7 +128,7 @@ eq (◄-subst-⊚ τ σ) _ = refl
 type (▻ T) zero _ = ⊤
 type (▻ T) (suc n) γ = T ⟨ n , γ ⟩
 morph (▻ T) z≤n _ _ = tt
-morph (▻ T) (s≤s m≤n) eγ = T ⟪ m≤n , eγ ⟫
+morph (▻ T) (s≤s m≤n) eγ = T ⟪ m≤n , eγ ⟫_
 morph-cong (▻ T) {f = z≤n} {f' = z≤n} e = refl
 morph-cong (▻ T) {f = s≤s m≤n} {f' = s≤s .m≤n} refl = morph-cong T refl
 morph-id (▻ T) {zero} _ = refl
@@ -139,28 +139,29 @@ morph-comp (▻ T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m≤n
 ▻' : Ty Γ → Ty Γ
 ▻' {Γ = Γ} T = ▻ (T [ from-earlier Γ ])
 
-next : {T : Ty (◄ Γ)} → Tm (◄ Γ) T → Tm Γ (▻ T)
-term (next t) zero _ = tt
-term (next t) (suc n) γ = t ⟨ n , γ ⟩'
-naturality (next t) z≤n γ = refl
-naturality (next t) (s≤s m≤n) eγ = naturality t m≤n eγ
+module _ {T : Ty (◄ Γ)} where
+  next : Tm (◄ Γ) T → Tm Γ (▻ T)
+  term (next t) zero _ = tt
+  term (next t) (suc n) γ = t ⟨ n , γ ⟩'
+  naturality (next t) z≤n γ = refl
+  naturality (next t) (s≤s m≤n) eγ = naturality t m≤n eγ
+
+  prev : Tm Γ (▻ T) → Tm (◄ Γ) T
+  term (prev t) n γ = t ⟨ suc n , γ ⟩'
+  naturality (prev t) m≤n eγ = naturality t (s≤s m≤n) eγ
+
+  prev-next : (t : Tm (◄ Γ) T) → prev (next t) ≅ᵗᵐ t
+  eq (prev-next t) _ = refl
+
+  next-prev : (t : Tm Γ (▻ T)) → next (prev t) ≅ᵗᵐ t
+  eq (next-prev t) {zero} γ = refl
+  eq (next-prev t) {suc n} γ = refl
 
 prev' : {T : Ty Γ} → Tm Γ T → Tm (◄ Γ) (T [ from-earlier Γ ])
 prev' t = t [ from-earlier _ ]'
 
 next' : {T : Ty Γ} → Tm Γ T → Tm Γ (▻' T)
 next' t = next (prev' t)
-
-prev : {T : Ty (◄ Γ)} → Tm Γ (▻ T) → Tm (◄ Γ) T
-term (prev t) n γ = t ⟨ suc n , γ ⟩'
-naturality (prev t) m≤n eγ = naturality t (s≤s m≤n) eγ
-
-prev-next : {T : Ty (◄ Γ)} (t : Tm (◄ Γ) T) → prev (next t) ≅ᵗᵐ t
-eq (prev-next t) _ = refl
-
-next-prev : {T : Ty (◄ Γ)} (t : Tm Γ (▻ T)) → next (prev t) ≅ᵗᵐ t
-eq (next-prev t) {zero} γ = refl
-eq (next-prev t) {suc n} γ = refl
 
 löb : (T : Ty Γ) → Tm Γ (▻' T ⇛ T) → Tm Γ T
 löb {Γ = Γ} T f = MkTm tm nat
@@ -190,7 +191,7 @@ löb[_∈▻'_]_ v = löb'
 
 löb-is-fixpoint : {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
                   app f (next' (löb T f)) ≅ᵗᵐ löb T f
-eq (löb-is-fixpoint f) {zero} γ = refl
+eq (löb-is-fixpoint f) {zero}  γ = refl
 eq (löb-is-fixpoint f) {suc n} γ = refl
 
 fixpoint-unique : {T : Ty Γ} (f  : Tm Γ (▻' T ⇛ T)) (t s : Tm Γ T) →
@@ -238,27 +239,27 @@ naturality (▻-map η) {f = s≤s m≤n} t = naturality η t
 from (▻-cong T=T') = ▻-map (from T=T')
 to (▻-cong T=T') = ▻-map (to T=T')
 eq (isoˡ (▻-cong T=T')) {zero} _ = refl
-eq (isoˡ (▻-cong T=T')) {suc n} t = eq (isoˡ T=T') t
+eq (isoˡ (▻-cong T=T')) {suc n} = eq (isoˡ T=T')
 eq (isoʳ (▻-cong T=T')) {zero} _ = refl
-eq (isoʳ (▻-cong T=T')) {suc n} t = eq (isoʳ T=T') t
+eq (isoʳ (▻-cong T=T')) {suc n} = eq (isoʳ T=T')
 
 ▻'-cong : {T : Ty Γ} {T' : Ty Γ} → T ≅ᵗʸ T' → ▻' T ≅ᵗʸ ▻' T'
 ▻'-cong {Γ = Γ} T=T' = ▻-cong (ty-subst-cong-ty (from-earlier Γ) T=T')
 
 next-cong : {T : Ty (◄ Γ)} {t t' : Tm (◄ Γ) T} → t ≅ᵗᵐ t' → next t ≅ᵗᵐ next t'
 eq (next-cong t=t') {zero} _ = refl
-eq (next-cong t=t') {suc n} γ = eq t=t' γ
+eq (next-cong t=t') {suc n} = eq t=t'
 
 prev-cong : {T : Ty (◄ Γ)} {t t' : Tm Γ (▻ T)} → t ≅ᵗᵐ t' → prev t ≅ᵗᵐ prev t'
-eq (prev-cong t=t') γ = eq t=t' γ
+eq (prev-cong t=t') = eq t=t'
 
 löb-cong : (T : Ty Γ) {f f' : Tm Γ (▻' T ⇛ T)} → f ≅ᵗᵐ f' → löb T f ≅ᵗᵐ löb T f'
 eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ tt) (eq f=f' γ)
-eq (löb-cong T f=f') {suc n} γ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
+eq (löb-cong T f=f') {suc n} _ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
 
 module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} (T=T' : T ≅ᵗʸ T') where
   next-ι : (t : Tm (◄ Γ) T') → ι[ ▻-cong T=T' ] next t ≅ᵗᵐ next (ι[ T=T' ] t)
-  eq (next-ι t) {zero} _ = refl
+  eq (next-ι t) {zero}  _ = refl
   eq (next-ι t) {suc n} _ = refl
 
   prev-ι : (t : Tm Γ (▻ T')) → ι[ T=T' ] (prev t) ≅ᵗᵐ prev (ι[ ▻-cong T=T' ] t)
@@ -266,7 +267,7 @@ module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} (T=T' : T ≅ᵗʸ T
 
 löb-ι : {T : Ty Γ} {T' : Ty Γ} (T=T' : T ≅ᵗʸ T') (f : Tm Γ (▻' T' ⇛ T')) →
         ι[ T=T' ] (löb T' f) ≅ᵗᵐ löb T (ι[ ⇛-cong (▻'-cong T=T') T=T' ] f)
-eq (löb-ι T=T' f) {zero} γ = refl
+eq (löb-ι T=T' f) {zero} _ = refl
 eq (löb-ι {Γ = Γ}{T = T}{T' = T'} T=T' f) {suc n} γ = cong (func (to T=T')) (€-cong (≅ᵗᵐ-refl {t = f}) (
   begin
     löb T' f ⟨ n , _ ⟩'
@@ -295,9 +296,9 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty (◄ Γ)} where
   ▻-natural : (▻ T) [ σ ] ≅ᵗʸ ▻ (T [ ◄-subst σ ])
   from ▻-natural = ▻-natural-from
   to ▻-natural = ▻-natural-to
-  eq (isoˡ ▻-natural) {zero} _ = refl
+  eq (isoˡ ▻-natural) {zero}  _ = refl
   eq (isoˡ ▻-natural) {suc n} _ = refl
-  eq (isoʳ ▻-natural) {zero} _ = refl
+  eq (isoʳ ▻-natural) {zero}  _ = refl
   eq (isoʳ ▻-natural) {suc n} _ = refl
 
   next-natural : (t : Tm (◄ Γ) T) → (next t) [ σ ]' ≅ᵗᵐ ι[ ▻-natural ] (next (t [ ◄-subst σ ]'))
@@ -328,7 +329,7 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ (func σ δ) ⟩')
     ≡˘⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_) (naturality (löb T f) ≤-refl β) ⟩
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (T ⟪ ≤-refl , β ⟫ ((löb T f) [ σ ]' ⟨ n , Δ ⟪ n≤1+n n ⟫ δ ⟩'))
-    ≡⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_ ∘ T ⟪ ≤-refl , β ⟫) (eq (löb-natural f) {n} (Δ ⟪ n≤1+n n ⟫ δ)) ⟩
+    ≡⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_ ∘ T ⟪ ≤-refl , β ⟫_) (eq (löb-natural f) {n} (Δ ⟪ n≤1+n n ⟫ δ)) ⟩
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (T ⟪ ≤-refl , β ⟫ (löb (T [ σ ]) g ⟨ n , Δ ⟪ n≤1+n n ⟫ δ ⟩')) ∎
     where
       open ≡-Reasoning
@@ -373,16 +374,16 @@ lift2▻' {Γ = Γ} f =
 
 ▻-map-cong : {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} {η φ : T ↣ T'} →
               η ≅ⁿ φ → ▻-map η ≅ⁿ ▻-map φ
-eq (▻-map-cong e) {x = zero } _ = refl
-eq (▻-map-cong e) {x = suc x} t = eq e t
+eq (▻-map-cong e) {x = zero} _ = refl
+eq (▻-map-cong e) {x = suc _} = eq e
 
 ▻'-map-cong : {T : Ty Γ} {S : Ty Γ} {η φ : T ↣ S} →
                η ≅ⁿ φ → ▻'-map η ≅ⁿ ▻'-map φ
 ▻'-map-cong e = ▻-map-cong (ty-subst-map-cong e)
 
 ▻-map-id : {T : Ty (◄ Γ)} → ▻-map (id-trans T) ≅ⁿ id-trans (▻ T)
-eq ▻-map-id {x = zero } _ = refl
-eq ▻-map-id {x = suc x} _ = refl
+eq ▻-map-id {x = zero} _ = refl
+eq ▻-map-id {x = suc _} _ = refl
 
 ▻'-map-id : {T : Ty Γ} → ▻'-map (id-trans T) ≅ⁿ id-trans (▻' T)
 ▻'-map-id {T = T} =
@@ -397,8 +398,8 @@ eq ▻-map-id {x = suc x} _ = refl
 ▻-map-comp : {R : Ty (◄ Γ)} {S : Ty (◄ Γ)} {T : Ty (◄ Γ)}
               (η : S ↣ T) (φ : R ↣ S) →
               ▻-map (η ⊙ φ) ≅ⁿ ▻-map η ⊙ ▻-map φ
-eq (▻-map-comp η φ) {x = zero } _ = refl
-eq (▻-map-comp η φ) {x = suc x} _ = refl
+eq (▻-map-comp η φ) {x = zero} _ = refl
+eq (▻-map-comp η φ) {x = suc _} _ = refl
 
 ▻'-map-comp : {R : Ty Γ} {S : Ty Γ} {T : Ty Γ}
                (η : S ↣ T) (φ : R ↣ S) →

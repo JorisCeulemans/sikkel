@@ -10,6 +10,7 @@ open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
 
+
 test : Tm {C = C} (◇ ,, Bool') (Bool' [ π ])
 test = db-var 0
 

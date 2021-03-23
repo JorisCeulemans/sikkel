@@ -7,8 +7,8 @@ module Translation where
 open import Function using (_∘_)
 open import Data.Nat
 open import Data.Product using (_×_) renaming (_,_ to [_,_])
-open import Data.Sum using (_⊎_; map) renaming (inj₁ to inl; inj₂ to inr)
-open import Data.Sum.Relation.Binary.Pointwise renaming (inj₁ to inl; inj₂ to inr)
+open import Data.Sum using (_⊎_; inj₁; inj₂; map)
+open import Data.Sum.Relation.Binary.Pointwise
 open import Data.Unit using (⊤; tt)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality
@@ -59,8 +59,8 @@ instance
 expose-sum-term : {A : Ty {C = ★} ◇} {B : Ty ◇} →
                   Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B
 expose-sum-term {A = A}{B = B} p with p ⟨ tt , tt ⟩'
-... | inl a = inl (MkTm (λ { tt tt → a }) (λ { tt refl → morph-id A a }))
-... | inr b = inr (MkTm (λ { tt tt → b }) (λ { tt refl → morph-id B b }))
+... | inj₁ a = inj₁ (MkTm (λ { tt tt → a }) (λ { tt refl → morph-id A a }))
+... | inj₂ b = inj₂ (MkTm (λ { tt tt → b }) (λ { tt refl → morph-id B b }))
 
 instance
   translate-sum : {T : ClosedType ★} {{_ : Translatable T}}
@@ -68,8 +68,8 @@ instance
                   Translatable (T ⊞ S)
   translated-type {{translate-sum {T = T} {S = S}}} = translate-type T ⊎ translate-type S
   translate-term  {{translate-sum {T = T} {S = S}}} p = map translate-term translate-term (expose-sum-term p)
-  translate-back  {{translate-sum {T = T} {S = S}}} (inl t) = inl' (translate-back t)
-  translate-back  {{translate-sum {T = T} {S = S}}} (inr s) = inr' (translate-back s)
+  translate-back  {{translate-sum {T = T} {S = S}}} (inj₁ t) = inl (translate-back t)
+  translate-back  {{translate-sum {T = T} {S = S}}} (inj₂ s) = inr (translate-back s)
 
 -- A term in the empty context in mode ★ is nothing more than an Agda value.
 to-★-◇-term : {T : Ty {C = ★} ◇} → T ⟨ tt , tt ⟩ → Tm ◇ T

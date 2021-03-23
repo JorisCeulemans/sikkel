@@ -6,7 +6,7 @@ open import Categories
 
 module Types.Sums {C : Category} where
 
-open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
@@ -22,102 +22,102 @@ private
 
 _⊞_ : Ty Γ → Ty Γ → Ty Γ
 type (T ⊞ S) x γ = T ⟨ x , γ ⟩ ⊎ S ⟨ x , γ ⟩
-morph (T ⊞ S) f eγ (inl t) = inl (T ⟪ f , eγ ⟫ t)
-morph (T ⊞ S) f eγ (inr s) = inr (S ⟪ f , eγ ⟫ s)
-morph-cong (T ⊞ S) e {t = inl t} = cong inl (morph-cong T e)
-morph-cong (T ⊞ S) e {t = inr s} = cong inr (morph-cong S e)
-morph-id (T ⊞ S) (inl t) = cong inl (morph-id T t)
-morph-id (T ⊞ S) (inr s) = cong inr (morph-id S s)
-morph-comp (T ⊞ S) f g eq-nm eq-mk (inl t) = cong inl (morph-comp T f g eq-nm eq-mk t)
-morph-comp (T ⊞ S) f g eq-nm eq-mk (inr s) = cong inr (morph-comp S f g eq-nm eq-mk s)
+morph (T ⊞ S) f eγ (inj₁ t) = inj₁ (T ⟪ f , eγ ⟫ t)
+morph (T ⊞ S) f eγ (inj₂ s) = inj₂ (S ⟪ f , eγ ⟫ s)
+morph-cong (T ⊞ S) e {t = inj₁ t} = cong inj₁ (morph-cong T e)
+morph-cong (T ⊞ S) e {t = inj₂ s} = cong inj₂ (morph-cong S e)
+morph-id (T ⊞ S) (inj₁ t) = cong inj₁ (morph-id T t)
+morph-id (T ⊞ S) (inj₂ s) = cong inj₂ (morph-id S s)
+morph-comp (T ⊞ S) f g eq-nm eq-mk (inj₁ t) = cong inj₁ (morph-comp T f g eq-nm eq-mk t)
+morph-comp (T ⊞ S) f g eq-nm eq-mk (inj₂ s) = cong inj₂ (morph-comp S f g eq-nm eq-mk s)
 
 ⊞-bimap : (T ↣ T') → (S ↣ S') → (T ⊞ S ↣ T' ⊞ S')
-func (⊞-bimap η φ) (inl t) = inl (func η t)
-func (⊞-bimap η φ) (inr s) = inr (func φ s)
-naturality (⊞-bimap η φ) (inl t) = cong inl (naturality η t)
-naturality (⊞-bimap η φ) (inr s) = cong inr (naturality φ s)
+func (⊞-bimap η φ) (inj₁ t) = inj₁ (func η t)
+func (⊞-bimap η φ) (inj₂ s) = inj₂ (func φ s)
+naturality (⊞-bimap η φ) (inj₁ t) = cong inj₁ (naturality η t)
+naturality (⊞-bimap η φ) (inj₂ s) = cong inj₂ (naturality φ s)
 
 ⊞-cong : T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⊞ S ≅ᵗʸ T' ⊞ S'
 from (⊞-cong T=T' S=S') = ⊞-bimap (from T=T') (from S=S')
 to (⊞-cong T=T' S=S') = ⊞-bimap (to T=T') (to S=S')
-eq (isoˡ (⊞-cong T=T' S=S')) (inl t) = cong inl (eq (isoˡ T=T') t)
-eq (isoˡ (⊞-cong T=T' S=S')) (inr s) = cong inr (eq (isoˡ S=S') s)
-eq (isoʳ (⊞-cong T=T' S=S')) (inl t) = cong inl (eq (isoʳ T=T') t)
-eq (isoʳ (⊞-cong T=T' S=S')) (inr s) = cong inr (eq (isoʳ S=S') s)
+eq (isoˡ (⊞-cong T=T' S=S')) (inj₁ t) = cong inj₁ (eq (isoˡ T=T') t)
+eq (isoˡ (⊞-cong T=T' S=S')) (inj₂ s) = cong inj₂ (eq (isoˡ S=S') s)
+eq (isoʳ (⊞-cong T=T' S=S')) (inj₁ t) = cong inj₁ (eq (isoʳ T=T') t)
+eq (isoʳ (⊞-cong T=T' S=S')) (inj₂ s) = cong inj₂ (eq (isoʳ S=S') s)
 
-inl' : Tm Γ T → Tm Γ (T ⊞ S)
-term (inl' t) x γ = inl (t ⟨ x , γ ⟩')
-naturality (inl' t) f eγ = cong inl (naturality t f eγ)
+inl : Tm Γ T → Tm Γ (T ⊞ S)
+term (inl t) x γ = inj₁ (t ⟨ x , γ ⟩')
+naturality (inl t) f eγ = cong inj₁ (naturality t f eγ)
 
-inr' : Tm Γ S → Tm Γ (T ⊞ S)
-term (inr' s) x γ = inr (s ⟨ x , γ ⟩')
-naturality (inr' s) f eγ = cong inr (naturality s f eγ)
+inr : Tm Γ S → Tm Γ (T ⊞ S)
+term (inr s) x γ = inj₂ (s ⟨ x , γ ⟩')
+naturality (inr s) f eγ = cong inj₂ (naturality s f eγ)
 
-inl'⟨_⟩_ : (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
-inl'⟨ S ⟩ t = inl' {S = S} t
+inl⟨_⟩_ : (S : Ty Γ) (t : Tm Γ T) → Tm Γ (T ⊞ S)
+inl⟨ S ⟩ t = inl {S = S} t
 
-inr'⟨_⟩_ : (T : Ty Γ) (s : Tm Γ S) → Tm Γ (T ⊞ S)
-inr'⟨ T ⟩ s = inr' {T = T} s
+inr⟨_⟩_ : (T : Ty Γ) (s : Tm Γ S) → Tm Γ (T ⊞ S)
+inr⟨ T ⟩ s = inr {T = T} s
 
-module _ {T : Ty Γ} {S : Ty Γ} where
-  inl'-cong : {t t' : Tm Γ T} → t ≅ᵗᵐ t' → inl'⟨ S ⟩ t ≅ᵗᵐ inl' t'
-  eq (inl'-cong t=t') γ = cong inl (eq t=t' γ)
+module _ {T S : Ty Γ} where
+  inl-cong : {t t' : Tm Γ T} → t ≅ᵗᵐ t' → inl⟨ S ⟩ t ≅ᵗᵐ inl t'
+  eq (inl-cong t=t') γ = cong inj₁ (eq t=t' γ)
 
-  inr'-cong : {s s' : Tm Γ S} → s ≅ᵗᵐ s' → inr'⟨ T ⟩ s ≅ᵗᵐ inr' s'
-  eq (inr'-cong s=s') γ = cong inr (eq s=s' γ)
+  inr-cong : {s s' : Tm Γ S} → s ≅ᵗᵐ s' → inr⟨ T ⟩ s ≅ᵗᵐ inr s'
+  eq (inr-cong s=s') γ = cong inj₂ (eq s=s' γ)
 
 module _
   {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
 
-  inl'-ι : (t : Tm Γ T') → ι[ ⊞-cong T=T' S=S' ] inl' t ≅ᵗᵐ inl' (ι[ T=T' ] t)
-  eq (inl'-ι t) _ = refl
+  inl-ι : (t : Tm Γ T') → ι[ ⊞-cong T=T' S=S' ] inl t ≅ᵗᵐ inl (ι[ T=T' ] t)
+  eq (inl-ι t) _ = refl
 
-  inr'-ι : (s : Tm Γ S') → ι[ ⊞-cong T=T' S=S' ] inr' s ≅ᵗᵐ inr' (ι[ S=S' ] s)
-  eq (inr'-ι s) _ = refl
+  inr-ι : (s : Tm Γ S') → ι[ ⊞-cong T=T' S=S' ] inr s ≅ᵗᵐ inr (ι[ S=S' ] s)
+  eq (inr-ι s) _ = refl
 
 module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊞-natural : (T ⊞ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊞ (S [ σ ])
   func (from ⊞-natural) = id
-  naturality (from ⊞-natural) (inl t) = refl
-  naturality (from ⊞-natural) (inr s) = refl
+  naturality (from ⊞-natural) (inj₁ t) = refl
+  naturality (from ⊞-natural) (inj₂ s) = refl
   func (to ⊞-natural) = id
-  naturality (to ⊞-natural) (inl t) = refl
-  naturality (to ⊞-natural) (inr s) = refl
+  naturality (to ⊞-natural) (inj₁ t) = refl
+  naturality (to ⊞-natural) (inj₂ s) = refl
   eq (isoˡ ⊞-natural) _ = refl
   eq (isoʳ ⊞-natural) _ = refl
 
-  inl'-natural : (t : Tm Γ T) → (inl' t) [ σ ]' ≅ᵗᵐ ι[ ⊞-natural ] (inl' (t [ σ ]'))
-  eq (inl'-natural t) _ = refl
+  inl-natural : (t : Tm Γ T) → (inl t) [ σ ]' ≅ᵗᵐ ι[ ⊞-natural ] (inl (t [ σ ]'))
+  eq (inl-natural t) _ = refl
 
-  inr'-natural : (s : Tm Γ S) → (inr' s) [ σ ]' ≅ᵗᵐ ι[ ⊞-natural ] (inr' (s [ σ ]'))
-  eq (inr'-natural s) _ = refl
+  inr-natural : (s : Tm Γ S) → (inr s) [ σ ]' ≅ᵗᵐ ι[ ⊞-natural ] (inr (s [ σ ]'))
+  eq (inr-natural s) _ = refl
 
-inl'-func : Tm Γ (T ⇛ T ⊞ S)
-inl'-func {T = T} = lam[ "t" ∈ T ] ι[ ⊞-natural π ] inl' (var "t")
+inl-func : Tm Γ (T ⇛ T ⊞ S)
+inl-func {T = T} = lam[ "t" ∈ T ] ι[ ⊞-natural π ] inl (var "t")
 
-inr'-func : Tm Γ (S ⇛ T ⊞ S)
-inr'-func {S = S} = lam[ "s" ∈ S ] ι[ ⊞-natural π ] inr' (var "s")
+inr-func : Tm Γ (S ⇛ T ⊞ S)
+inr-func {S = S} = lam[ "s" ∈ S ] ι[ ⊞-natural π ] inr (var "s")
 
 module _ {A : Ty Γ} {B : Ty Γ} (C : Ty Γ) where
   ⊞-elim : Tm Γ (A ⇛ C) → Tm Γ (B ⇛ C) → Tm Γ (A ⊞ B ⇛ C)
-  term (⊞-elim f g) _ _ $⟨ _ , _ ⟩ inl a = f €⟨ _ , _ ⟩ a
-  term (⊞-elim f g) _ _ $⟨ _ , _ ⟩ inr b = g €⟨ _ , _ ⟩ b
-  naturality (term (⊞-elim f g) _ _) _ _ (inl a) = sym (€-natural f _ _ a)
-  naturality (term (⊞-elim f g) _ _) _ _ (inr b) = sym (€-natural g _ _ b)
-  naturality (⊞-elim f g) _ _ = to-pshfun-eq λ { _ _ (inl a) → refl ; _ _ (inr b) → refl }
+  term (⊞-elim f g) _ _ $⟨ _ , _ ⟩ inj₁ a = f €⟨ _ , _ ⟩ a
+  term (⊞-elim f g) _ _ $⟨ _ , _ ⟩ inj₂ b = g €⟨ _ , _ ⟩ b
+  naturality (term (⊞-elim f g) _ _) _ _ (inj₁ a) = sym (€-natural f _ _ a)
+  naturality (term (⊞-elim f g) _ _) _ _ (inj₂ b) = sym (€-natural g _ _ b)
+  naturality (⊞-elim f g) _ _ = to-pshfun-eq λ { _ _ (inj₁ a) → refl ; _ _ (inj₂ b) → refl }
 
   β-⊞-inl : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (a : Tm Γ A) →
-            app (⊞-elim f g) (inl' a) ≅ᵗᵐ app f a
+            app (⊞-elim f g) (inl a) ≅ᵗᵐ app f a
   eq (β-⊞-inl f g a) _ = refl
 
   β-⊞-inr : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (b : Tm Γ B) →
-            app (⊞-elim f g) (inr' b) ≅ᵗᵐ app g b
+            app (⊞-elim f g) (inr b) ≅ᵗᵐ app g b
   eq (β-⊞-inr f g b) _ = refl
 
 η-⊞ : {A : Ty Γ} {B : Ty Γ} (t : Tm Γ (A ⊞ B)) →
-      t ≅ᵗᵐ app (⊞-elim (A ⊞ B) inl'-func inr'-func) t
+      t ≅ᵗᵐ app (⊞-elim (A ⊞ B) inl-func inr-func) t
 eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
-eq (η-⊞ t) γ | inl a = refl
-eq (η-⊞ t) γ | inr b = refl
+eq (η-⊞ t) γ | inj₁ a = refl
+eq (η-⊞ t) γ | inj₂ b = refl
