@@ -145,7 +145,7 @@ module _
 -- the eliminator for booleans. This version works with the timeless modality, but in
 -- principle it could be implemented for any modality from that departs from ★.
 modal-if'_then'_else'_ : {T : Ty Γ} → Tm (now Γ) Bool' → Tm Γ T → Tm Γ T → Tm Γ T
-term (modal-if' c then' t else' f) n γ = if timeless-tm c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
+modal-if' c then' t else' f ⟨ n , γ ⟩' = if timeless-tm c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
 naturality (modal-if'_then'_else'_ c t f) {m} {n} m≤n {γ} {γ'} eγ with timeless-tm c ⟨ m , γ' ⟩' | timeless-tm c ⟨ n , γ ⟩' | naturality (timeless-tm c) m≤n eγ
 naturality (modal-if'_then'_else'_ c t f) {m} {n} m≤n {γ} {γ'} eγ | false | .false | refl = naturality f m≤n eγ
 naturality (modal-if'_then'_else'_ c t f) {m} {n} m≤n {γ} {γ'} eγ | true  | .true  | refl = naturality t m≤n eγ
@@ -209,7 +209,7 @@ g-zipWith {A = A}{B}{C} f =
                $ varι "g" ⊛' (g-tail $ varι "as") ⊛' (g-tail $ varι "bs")
 
 prim-nat-sum : {Γ : Ctx ★} → Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
-term (prim-nat-sum t s) n γ = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
+prim-nat-sum t s ⟨ n , γ ⟩' = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
 naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (naturality s m≤n eγ)
 
 nat-sum : {Γ : Ctx ★} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')

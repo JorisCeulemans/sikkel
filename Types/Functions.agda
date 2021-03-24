@@ -47,7 +47,7 @@ record PresheafFunc {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) (z : Ob) (γ : Γ ⟨ z
                T ⟨ y , γ' ⟩ → S ⟨ y , γ' ⟩
     naturality : ∀ {x y} {ρ-xy : Hom x y} {ρ-yz : Hom y z} {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} →
                  (eγ-zy : Γ ⟪ ρ-yz ⟫ γ ≡ γy) (eγ-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) (t : T ⟨ y , γy ⟩)→
-                 _$⟨_,_⟩_ (ρ-yz ∙ ρ-xy) (strong-rel-comp Γ eγ-zy eγ-yx) (T ⟪ ρ-xy , eγ-yx ⟫ t) ≡
+                 _$⟨_,_⟩_ (ρ-yz ∙ ρ-xy) (strong-ctx-comp Γ eγ-zy eγ-yx) (T ⟪ ρ-xy , eγ-yx ⟫ t) ≡
                    S ⟪ ρ-xy , eγ-yx ⟫ (_$⟨_,_⟩_ ρ-yz eγ-zy t)
   infix 13 _$⟨_,_⟩_
 open PresheafFunc public
@@ -79,33 +79,33 @@ lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy
   where
     g : ∀ {x} (ρ-xy : Hom x y) {γx} (eγ-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) →
         T ⟨ x , γx ⟩ → S ⟨ x , γx ⟩
-    g ρ-xy eγ-yx = f $⟨ ρ-yz ∙ ρ-xy , strong-rel-comp Γ eγ-zy eγ-yx ⟩_
+    g ρ-xy eγ-yx = f $⟨ ρ-yz ∙ ρ-xy , strong-ctx-comp Γ eγ-zy eγ-yx ⟩_
     open ≡-Reasoning
     g-nat : ∀ {w x} {ρ-wx : Hom w x} {ρ-xy : Hom x y} {γx : Γ ⟨ x ⟩} {γw : Γ ⟨ w ⟩}
             (eγ-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) (eγ-xw : Γ ⟪ ρ-wx ⟫ γx ≡ γw) → _
     g-nat {ρ-wx = ρ-wx}{ρ-xy} eγ-yx eγ-xw t =
       begin
-        f $⟨ ρ-yz ∙ (ρ-xy ∙ ρ-wx) , strong-rel-comp Γ eγ-zy (strong-rel-comp Γ eγ-yx eγ-xw) ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
+        f $⟨ ρ-yz ∙ (ρ-xy ∙ ρ-wx) , strong-ctx-comp Γ eγ-zy (strong-ctx-comp Γ eγ-yx eγ-xw) ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
       ≡˘⟨ $-cong f ∙assoc _ _ ⟩
-        f $⟨ (ρ-yz ∙ ρ-xy) ∙ ρ-wx , strong-rel-comp Γ (strong-rel-comp Γ eγ-zy eγ-yx) eγ-xw ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
-      ≡⟨ naturality f (strong-rel-comp Γ eγ-zy eγ-yx) eγ-xw t ⟩
-        (S ⟪ ρ-wx , eγ-xw ⟫ (f $⟨ ρ-yz ∙ ρ-xy , strong-rel-comp Γ eγ-zy eγ-yx ⟩ t)) ∎
+        f $⟨ (ρ-yz ∙ ρ-xy) ∙ ρ-wx , strong-ctx-comp Γ (strong-ctx-comp Γ eγ-zy eγ-yx) eγ-xw ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
+      ≡⟨ naturality f (strong-ctx-comp Γ eγ-zy eγ-yx) eγ-xw t ⟩
+        (S ⟪ ρ-wx , eγ-xw ⟫ (f $⟨ ρ-yz ∙ ρ-xy , strong-ctx-comp Γ eγ-zy eγ-yx ⟩ t)) ∎
 
 
 --------------------------------------------------
 -- Definition of the function type + term constructors
 
 _⇛_ : {Γ : Ctx C} → Ty Γ → Ty Γ → Ty Γ
-type (_⇛_ {Γ = Γ} T S) z γ = PresheafFunc T S z γ
-morph (T ⇛ S) = lower-presheaffunc
-morph-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl _ _
-morph-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
-morph-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ _ → $-cong f ∙assoc _ _)
+_⇛_ {Γ = Γ} T S ⟨ z , γ ⟩ = PresheafFunc T S z γ
+_⟪_,_⟫_ (T ⇛ S) = lower-presheaffunc
+ty-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl _ _
+ty-id (_⇛_ {Γ = Γ} T S) f = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ _ eγ)
+ty-comp (_⇛_ {Γ = Γ} T S) _ _ _ _ f = to-pshfun-eq (λ _ _ _ → $-cong f ∙assoc _ _)
 
 -- Lambda abstraction that adds a nameless variable to the context (only accessible by de Bruijn index).
 lam : (T : Ty Γ) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
-term (lam {S = S} T b) z γz = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
-                                 (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eγ-zy eγ-yx t →
+lam {S = S} T b ⟨ z , γz ⟩' = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
+                                     (λ {x = x}{y}{ρ-xy}{_}{γx}{γy} eγ-zy eγ-yx t →
   begin
     b ⟨ x , [ γx , T ⟪ ρ-xy , eγ-yx ⟫ t ] ⟩'
   ≡⟨ sym (naturality b ρ-xy (to-Σ-eq eγ-yx (morph-transport T refl eγ-yx t))) ⟩
@@ -121,7 +121,7 @@ lam[_∈_]_ v = lam
 
 -- An operator used to define function application.
 _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
-_€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ ⟩ t
+_€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , ctx-id Γ γ ⟩ t
 
 €-natural : (f : Tm Γ (T ⇛ S)) (ρ : Hom x y)
             {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ ρ ⟫ γy ≡ γx)
@@ -129,17 +129,17 @@ _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , rel-id Γ γ
             S ⟪ ρ , eγ ⟫ (f €⟨ y , γy ⟩ t) ≡ f €⟨ x , γx ⟩ (T ⟪ ρ , eγ ⟫ t)
 €-natural {Γ = Γ}{T = T}{S = S} f ρ {γy}{γx} eγ t =
   begin
-    S ⟪ ρ , eγ ⟫ (f ⟨ _ , γy ⟩' $⟨ hom-id , rel-id Γ γy ⟩ t)
-  ≡⟨ sym (naturality (f ⟨ _ , γy ⟩') (rel-id Γ γy) eγ t) ⟩
-    f ⟨ _ , γy ⟩' $⟨ hom-id ∙ ρ , strong-rel-comp Γ (rel-id Γ γy) eγ ⟩ (T ⟪ ρ , eγ ⟫ t)
+    S ⟪ ρ , eγ ⟫ (f ⟨ _ , γy ⟩' $⟨ hom-id , ctx-id Γ γy ⟩ t)
+  ≡⟨ sym (naturality (f ⟨ _ , γy ⟩') (ctx-id Γ γy) eγ t) ⟩
+    f ⟨ _ , γy ⟩' $⟨ hom-id ∙ ρ , strong-ctx-comp Γ (ctx-id Γ γy) eγ ⟩ (T ⟪ ρ , eγ ⟫ t)
   ≡⟨ $-cong (f ⟨ _ , γy ⟩') (trans hom-idˡ (sym hom-idʳ)) _ _ ⟩
-    f ⟨ _ , γy ⟩' $⟨ ρ ∙ hom-id , strong-rel-comp Γ eγ (rel-id Γ γx) ⟩ (T ⟪ ρ , eγ ⟫ t)
+    f ⟨ _ , γy ⟩' $⟨ ρ ∙ hom-id , strong-ctx-comp Γ eγ (ctx-id Γ γx) ⟩ (T ⟪ ρ , eγ ⟫ t)
   ≡⟨ cong (λ x → x $⟨ _ , _ ⟩ _) (naturality f ρ eγ) ⟩
-    f ⟨ _ , γx ⟩' $⟨ hom-id , rel-id Γ γx ⟩ (T ⟪ ρ , eγ ⟫ t) ∎
+    f ⟨ _ , γx ⟩' $⟨ hom-id , ctx-id Γ γx ⟩ (T ⟪ ρ , eγ ⟫ t) ∎
   where open ≡-Reasoning
 
 app : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
-term (app f t) y γ = f €⟨ y , γ ⟩ (t ⟨ y , γ ⟩')
+app f t ⟨ y , γ ⟩' = f €⟨ y , γ ⟩ (t ⟨ y , γ ⟩')
 naturality (app {Γ = Γ}{T = T}{S = S} f t) ρ {γy}{γx} eγ =
   begin
     S ⟪ ρ , eγ ⟫ (f €⟨ _ , γy ⟩ (t ⟨ _ , γy ⟩'))
@@ -229,9 +229,9 @@ module _
   eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym(
     begin
       func (to S=S') (S' ⟪ hom-id , _ ⟫ b ⟨ _ , _ ⟩')
-    ≡⟨ cong (func (to S=S')) (morph-cong S' refl) ⟩
+    ≡⟨ cong (func (to S=S')) (ty-cong S' refl) ⟩
       func (to S=S') (S' ⟪ hom-id , _ ⟫ b ⟨ _ , _ ⟩')
-    ≡⟨ cong (func (to S=S')) (morph-id S' _) ⟩
+    ≡⟨ cong (func (to S=S')) (ty-id S' _) ⟩
       func (to S=S') (b ⟨ _ , _ ⟩') ∎))
     where open ≡-Reasoning
 
@@ -257,13 +257,13 @@ module _ (σ : Δ ⇒ Γ) (T : Ty Γ) (S : Ty Γ) {δ : Δ ⟨ z ⟩} where
   naturality (pshfun-subst-to f) {ρ-xy = ρ-xy}{ρ-yz} _ eγ-yx t =
     begin
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩ (T ⟪ hom-id , _ ⟫ T ⟪ ρ-xy , eγ-yx ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , α ⟫_ ∘ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩_) (morph-cong-2-2 T (trans hom-idʳ (sym hom-idˡ))) ⟩
+    ≡⟨ cong (S ⟪ hom-id , α ⟫_ ∘ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩_) (ty-cong-2-2 T (trans hom-idʳ (sym hom-idˡ))) ⟩
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , refl ⟩ (T ⟪ ρ-xy , _ ⟫ (T ⟪ hom-id , β ⟫ t))
     ≡⟨ cong (S ⟪ hom-id , α ⟫_) ($-cong f refl refl _) ⟩
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , _ ⟩ (T ⟪ ρ-xy , _ ⟫ (T ⟪ hom-id , β ⟫ t))
-    ≡⟨ cong (S ⟪ hom-id , α ⟫_) (naturality f refl (sym (rel-comp Δ ρ-xy ρ-yz δ)) _) ⟩
+    ≡⟨ cong (S ⟪ hom-id , α ⟫_) (naturality f refl (sym (ctx-comp Δ ρ-xy ρ-yz δ)) _) ⟩
       S ⟪ hom-id , α ⟫ S ⟪ ρ-xy , _ ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , β ⟫ t)
-    ≡⟨ morph-cong-2-2 S (trans hom-idʳ (sym hom-idˡ)) ⟩
+    ≡⟨ ty-cong-2-2 S (trans hom-idʳ (sym hom-idˡ)) ⟩
       S ⟪ ρ-xy , eγ-yx ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , β ⟫ t) ∎
     where
       open ≡-Reasoning
@@ -284,13 +284,13 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
         ζ' = _
     in begin
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , ζ ⟫ t)
-    ≡˘⟨ cong (S ⟪ hom-id , α ⟫_ ∘ f $⟨ ρ-yz ∙ ρ-xy , β ⟩_) (morph-cong-2-1 T hom-idˡ) ⟩
+    ≡˘⟨ cong (S ⟪ hom-id , α ⟫_ ∘ f $⟨ ρ-yz ∙ ρ-xy , β ⟩_) (ty-cong-2-1 T hom-idˡ) ⟩
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
     ≡⟨ cong (S ⟪ hom-id , α ⟫_) ($-cong f (sym hom-idʳ) refl _) ⟩
       S ⟪ hom-id , α ⟫ f $⟨ (ρ-yz ∙ ρ-xy) ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
-    ≡⟨ cong (S ⟪ hom-id , α ⟫_) (naturality f _ (trans (rel-id Δ _) (sym β')) _) ⟩
+    ≡⟨ cong (S ⟪ hom-id , α ⟫_) (naturality f _ (trans (ctx-id Δ _) (sym β')) _) ⟩
       S ⟪ hom-id , α ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t)
-    ≡⟨ morph-cong-2-1 S hom-idʳ ⟩
+    ≡⟨ ty-cong-2-1 S hom-idʳ ⟩
       S ⟪ hom-id , α' ⟫ f $⟨ ρ-yz ∙ ρ-xy , β' ⟩ (T ⟪ hom-id , ζ' ⟫ t) ∎
     where open ≡-Reasoning
   eq (isoˡ ⇛-natural) f = to-pshfun-eq (λ ρ-yz eγ t →
@@ -301,25 +301,25 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ t)
     ≡⟨ cong (S ⟪ hom-id , α ⟫_) (naturality f eγ _ t) ⟩
       S ⟪ hom-id , α ⟫ S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , eγ ⟩ t
-    ≡⟨ morph-cong-2-1 S hom-idʳ ⟩
+    ≡⟨ ty-cong-2-1 S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , eγ ⟩ t
-    ≡⟨ morph-id S _ ⟩
+    ≡⟨ ty-id S _ ⟩
       f $⟨ ρ-yz , eγ ⟩ t ∎)
     where open ≡-Reasoning
   eq (isoʳ ⇛-natural) f = to-pshfun-eq (λ ρ-yz eδ t →
-    let α = trans (rel-id Δ _) (sym eδ)
+    let α = trans (ctx-id Δ _) (sym eδ)
         β = _
     in begin
       S ⟪ hom-id , β ⟫ f $⟨ ρ-yz , refl ⟩ (T ⟪ hom-id , _ ⟫ t)
     ≡⟨ cong (S ⟪ hom-id , β ⟫_) ($-cong f (sym hom-idʳ) refl _) ⟩
       S ⟪ hom-id , β ⟫ f $⟨ ρ-yz ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ t)
-    ≡⟨ cong (S ⟪ hom-id , β ⟫_ ∘ f $⟨ ρ-yz ∙ hom-id , _ ⟩_) (morph-cong T refl) ⟩
+    ≡⟨ cong (S ⟪ hom-id , β ⟫_ ∘ f $⟨ ρ-yz ∙ hom-id , _ ⟩_) (ty-cong T refl) ⟩
       S ⟪ hom-id , β ⟫ f $⟨ ρ-yz ∙ hom-id , _ ⟩ (T [ σ ] ⟪ hom-id , α ⟫ t)
     ≡⟨ cong (S ⟪ hom-id , β ⟫_) (naturality f eδ _ t) ⟩
       S ⟪ hom-id , β ⟫ S [ σ ] ⟪ hom-id , α ⟫ f $⟨ ρ-yz , eδ ⟩ t
-    ≡⟨ morph-cong-2-1 S hom-idʳ ⟩
+    ≡⟨ ty-cong-2-1 S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ f $⟨ ρ-yz , eδ ⟩ t
-    ≡⟨ morph-id S _ ⟩
+    ≡⟨ ty-id S _ ⟩
       f $⟨ ρ-yz , eδ ⟩ t ∎)
     where open ≡-Reasoning
 
@@ -332,15 +332,15 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
               transport (λ - → T ⟨ _ , - ⟩) _ (T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t)
             ≡⟨ morph-transport T refl _ _ ⟩
               T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-            ≡⟨ morph-cong-2-1 T hom-idʳ ⟩
+            ≡⟨ ty-cong-2-1 T hom-idʳ ⟩
               T ⟪ hom-id , _ ⟫ t
-            ≡⟨ morph-id T t ⟩
+            ≡⟨ ty-id T t ⟩
               t ∎
     in begin
       S ⟪ hom-id , _ ⟫ S ⟪ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
-    ≡⟨ morph-cong-2-1 S hom-idʳ ⟩
+    ≡⟨ ty-cong-2-1 S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
-    ≡⟨ naturality b hom-id (to-Σ-eq (trans (rel-id Γ _) (trans (sym (naturality σ δ)) eγ)) α) ⟩
+    ≡⟨ naturality b hom-id (to-Σ-eq (trans (ctx-id Γ _) (trans (sym (naturality σ δ)) eγ)) α) ⟩
       b ⟨ _ , [ γ' , t ] ⟩' ∎))
     where open ≡-Reasoning
 
@@ -357,8 +357,8 @@ func (⇛-to-↣ f) = f €⟨ _ , _ ⟩_
 naturality (⇛-to-↣ f) t = €-natural f _ _ t
 
 ↣-to-⇛ : (T ↣ S) → Tm Γ (T ⇛ S)
-(term (↣-to-⇛ η) _ _) $⟨ _ , _ ⟩ t = func η t
-naturality (term (↣-to-⇛ η) _ _) _ _ t = sym (naturality η t)
+(↣-to-⇛ η ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ t = func η t
+naturality (↣-to-⇛ η ⟨ _ , _ ⟩') _ _ t = sym (naturality η t)
 naturality (↣-to-⇛ η) _ _ = to-pshfun-eq (λ _ _ _ → refl)
 
 ↣-⇛-iso : (η : T ↣ S) → ⇛-to-↣ (↣-to-⇛ η) ≅ⁿ η
@@ -367,9 +367,9 @@ eq (↣-⇛-iso η) _ = refl
 ⇛-↣-iso : (f : Tm Γ (T ⇛ S)) → ↣-to-⇛ (⇛-to-↣ f) ≅ᵗᵐ f
 eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
   begin
-    f ⟨ y , γ' ⟩' $⟨ hom-id , rel-id Γ γ' ⟩ t
-  ≡˘⟨ cong (_$⟨ hom-id , rel-id Γ γ' ⟩ t) (naturality f ρ eγ) ⟩
-    f ⟨ x , γ ⟩' $⟨ ρ ∙ hom-id , strong-rel-comp Γ eγ (rel-id Γ γ') ⟩ t
-  ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-rel-comp Γ eγ (rel-id Γ γ')) eγ ⟩
+    f ⟨ y , γ' ⟩' $⟨ hom-id , ctx-id Γ γ' ⟩ t
+  ≡˘⟨ cong (_$⟨ hom-id , ctx-id Γ γ' ⟩ t) (naturality f ρ eγ) ⟩
+    f ⟨ x , γ ⟩' $⟨ ρ ∙ hom-id , strong-ctx-comp Γ eγ (ctx-id Γ γ') ⟩ t
+  ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ (strong-ctx-comp Γ eγ (ctx-id Γ γ')) eγ ⟩
     f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)
   where open ≡-Reasoning

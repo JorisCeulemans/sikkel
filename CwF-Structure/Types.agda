@@ -15,8 +15,6 @@ open import CwF-Structure.ContextEquivalence
 
 open Category C
 
-infix 15 _⟨_,_⟩
-infixr 11 _⟪_,_⟫_
 infix 10 _↣_
 infix 1 _≅ⁿ_ _≅ᵗʸ_
 infixl 20 _⊙_
@@ -42,27 +40,27 @@ record Ty (Γ : Ctx C) : Set₁ where
   field
     type : (x : Ob) (γ : Γ ⟨ x ⟩) → Set
     morph : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx → type y γy → type x γx
-    morph-cong : {f f' : Hom x y} (e-hom : f ≡ f')
-                 {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} {eγ' : Γ ⟪ f' ⟫ γy ≡ γx}
-                 {t : type y γy} →
-                 morph f eγ t ≡ morph f' eγ' t
-    morph-id : ∀ {x} {γ : Γ ⟨ x ⟩} (t : type x γ) → morph hom-id (rel-id Γ γ) t ≡ t
-    morph-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
-                 (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) (t : type z γz) →
-                 morph (g ∙ f) (strong-rel-comp Γ eq-zy eq-yx) t ≡ morph f eq-yx (morph g eq-zy t)
-open Ty public
+    ty-cong : {f f' : Hom x y} (e-hom : f ≡ f')
+              {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} {eγ' : Γ ⟪ f' ⟫ γy ≡ γx}
+              {t : type y γy} →
+              morph f eγ t ≡ morph f' eγ' t
+    ty-id : ∀ {x} {γ : Γ ⟨ x ⟩} (t : type x γ) → morph hom-id (ctx-id Γ γ) t ≡ t
+    ty-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
+              (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) (t : type z γz) →
+              morph (g ∙ f) (strong-ctx-comp Γ eq-zy eq-yx) t ≡ morph f eq-yx (morph g eq-zy t)
+open Ty public renaming (type to infix 15 _⟨_,_⟩; morph to infixr 11 _⟪_,_⟫_)
 
 private
   variable
     T S R : Ty Γ
-
+{-
 _⟨_,_⟩ : Ty Γ → (x : Ob) → Γ ⟨ x ⟩ → Set
 T ⟨ x , γ ⟩ = type T x γ
 
 _⟪_,_⟫_ : (T : Ty Γ) (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx →
           T ⟨ y , γy ⟩ → T ⟨ x , γx ⟩
 T ⟪ f , eγ ⟫ t = morph T f eγ t
-
+-}
 {-
 -- This is one of the places where we assume uip (by pattern matching on both eγ and eγ'). We could probably avoid it
 -- by adding a field to a type T requiring morph T to "not depend on eγ" (propositionally).
@@ -73,49 +71,49 @@ morph-cong : (T : Ty Γ ℓ) {f f' : Hom x y} (e-hom : f ≡ f')
 morph-cong T refl refl refl = refl
 -}
 
-morph-cong-2-1 : (T : Ty Γ)
-                 {f : Hom x y} {g : Hom y z} {h : Hom x z} (e-hom : g ∙ f ≡ h)
-                 {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
-                 {ef : Γ ⟪ f ⟫ γy ≡ γx} {eg : Γ ⟪ g ⟫ γz ≡ γy} {eh : Γ ⟪ h ⟫ γz ≡ γx}
-                 {t : T ⟨ z , γz ⟩} →
-                 T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≡ T ⟪ h , eh ⟫ t
-morph-cong-2-1 T {f}{g}{h} e-hom {t = t} =
+ty-cong-2-1 : (T : Ty Γ)
+              {f : Hom x y} {g : Hom y z} {h : Hom x z} (e-hom : g ∙ f ≡ h)
+              {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+              {ef : Γ ⟪ f ⟫ γy ≡ γx} {eg : Γ ⟪ g ⟫ γz ≡ γy} {eh : Γ ⟪ h ⟫ γz ≡ γx}
+              {t : T ⟨ z , γz ⟩} →
+              T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≡ T ⟪ h , eh ⟫ t
+ty-cong-2-1 T {f}{g}{h} e-hom {t = t} =
   begin
     T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
-  ≡˘⟨ morph-comp T f g _ _ t ⟩
+  ≡˘⟨ ty-comp T f g _ _ t ⟩
     T ⟪ g ∙ f , _ ⟫ t
-  ≡⟨ morph-cong T e-hom ⟩
+  ≡⟨ ty-cong T e-hom ⟩
     T ⟪ h , _ ⟫ t ∎
   where open ≡-Reasoning
 
-morph-cong-2-2 : (T : Ty Γ)
-                 {f : Hom x y} {f' : Hom x z} {g : Hom y w} {g' : Hom z w} (e-hom : g ∙ f ≡ g' ∙ f')
-                 {γw : Γ ⟨ w ⟩} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
-                 {ef : Γ ⟪ f ⟫ γy ≡ γx} {ef' : Γ ⟪ f' ⟫ γz ≡ γx}
-                 {eg : Γ ⟪ g ⟫ γw ≡ γy} {eg' : Γ ⟪ g' ⟫ γw ≡ γz}
-                 {t : T ⟨ w , γw ⟩} →
-                 T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≡ T ⟪ f' , ef' ⟫ (T ⟪ g' , eg' ⟫ t)
-morph-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
+ty-cong-2-2 : (T : Ty Γ)
+              {f : Hom x y} {f' : Hom x z} {g : Hom y w} {g' : Hom z w} (e-hom : g ∙ f ≡ g' ∙ f')
+              {γw : Γ ⟨ w ⟩} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+              {ef : Γ ⟪ f ⟫ γy ≡ γx} {ef' : Γ ⟪ f' ⟫ γz ≡ γx}
+              {eg : Γ ⟪ g ⟫ γw ≡ γy} {eg' : Γ ⟪ g' ⟫ γw ≡ γz}
+              {t : T ⟨ w , γw ⟩} →
+              T ⟪ f , ef ⟫ (T ⟪ g , eg ⟫ t) ≡ T ⟪ f' , ef' ⟫ (T ⟪ g' , eg' ⟫ t)
+ty-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
   begin
     T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
-  ≡˘⟨ morph-comp T f g _ _ t ⟩
+  ≡˘⟨ ty-comp T f g _ _ t ⟩
     T ⟪ g ∙ f , _ ⟫ t
-  ≡⟨ morph-cong T e-hom ⟩
+  ≡⟨ ty-cong T e-hom ⟩
     T ⟪ g' ∙ f' , _ ⟫ t
-  ≡⟨ morph-comp T f' g' _ _ t ⟩
+  ≡⟨ ty-comp T f' g' _ _ t ⟩
     T ⟪ f' , _ ⟫ T ⟪ g' , _ ⟫ t ∎
   where open ≡-Reasoning
 
 ctx-element-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
-ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (rel-id Γ _) eγ ⟫_
+ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (ctx-id Γ _) eγ ⟫_
 
 ctx-element-subst-inverseˡ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} (t : T ⟨ x , γ ⟩)→
                             ctx-element-subst T (sym eγ) (ctx-element-subst T eγ t) ≡ t
-ctx-element-subst-inverseˡ T t = trans (morph-cong-2-1 T hom-idˡ) (morph-id T t)
+ctx-element-subst-inverseˡ T t = trans (ty-cong-2-1 T hom-idˡ) (ty-id T t)
 
 ctx-element-subst-inverseʳ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} (t : T ⟨ x , γ' ⟩)→
                             ctx-element-subst T eγ (ctx-element-subst T (sym eγ) t) ≡ t
-ctx-element-subst-inverseʳ T t = trans (morph-cong-2-1 T hom-idˡ) (morph-id T t)
+ctx-element-subst-inverseʳ T t = trans (ty-cong-2-1 T hom-idˡ) (ty-id T t)
 
 -- The following definitions are needed when defining context extension.
 morph-transport : (T : Ty Γ) {f : Hom x y}
@@ -129,28 +127,28 @@ module _ {Γ : Ctx C} (T : Ty Γ) where
   strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
   strict-morph f γ t = T ⟪ f , refl ⟫ t
 
-  strict-morph-id : {γ : Γ ⟨ y ⟩} (t : T ⟨ y , γ ⟩) →
-                    transport (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t) ≡ t
-  strict-morph-id {y = y}{γ = γ} t =
+  strict-ty-id : {γ : Γ ⟨ y ⟩} (t : T ⟨ y , γ ⟩) →
+                 transport (λ - → T ⟨ y , - ⟩) (ctx-id Γ γ) (strict-morph hom-id γ t) ≡ t
+  strict-ty-id {y = y}{γ = γ} t =
     begin
-      transport (λ - → T ⟨ y , - ⟩) (rel-id Γ γ) (strict-morph hom-id γ t)
-    ≡⟨ morph-transport T refl (rel-id Γ γ) t ⟩
-      T ⟪ hom-id , rel-id Γ γ ⟫ t
-    ≡⟨ morph-id T t ⟩
+      transport (λ - → T ⟨ y , - ⟩) (ctx-id Γ γ) (strict-morph hom-id γ t)
+    ≡⟨ morph-transport T refl (ctx-id Γ γ) t ⟩
+      T ⟪ hom-id , ctx-id Γ γ ⟫ t
+    ≡⟨ ty-id T t ⟩
       t ∎
     where open ≡-Reasoning
 
-  strict-morph-comp : (f : Hom x y) (g : Hom y z) {γ : Γ ⟨ z ⟩} (t : T ⟨ z , γ ⟩) →
-                      transport (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
-                        strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t)
-  strict-morph-comp {x = x} f g {γ = γ} t =
+  strict-ty-comp : (f : Hom x y) (g : Hom y z) {γ : Γ ⟨ z ⟩} (t : T ⟨ z , γ ⟩) →
+                   transport (λ - → T ⟨ x , - ⟩) (ctx-comp Γ f g γ) (strict-morph (g ∙ f) γ t) ≡
+                     strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t)
+  strict-ty-comp {x = x} f g {γ = γ} t =
     begin
-      transport (λ - → T ⟨ x , - ⟩) (rel-comp Γ f g γ) (strict-morph (g ∙ f) γ t)
-    ≡⟨ morph-transport T refl (rel-comp Γ f g γ) t ⟩
-      T ⟪ g ∙ f , rel-comp Γ f g γ ⟫ t
+      transport (λ - → T ⟨ x , - ⟩) (ctx-comp Γ f g γ) (strict-morph (g ∙ f) γ t)
+    ≡⟨ morph-transport T refl (ctx-comp Γ f g γ) t ⟩
+      T ⟪ g ∙ f , ctx-comp Γ f g γ ⟫ t
     ≡˘⟨ cong (λ - → T ⟪ g ∙ f , - ⟫ t) (trans-reflʳ _) ⟩
-      T ⟪ g ∙ f , trans (rel-comp Γ f g γ) refl ⟫ t
-    ≡⟨ morph-comp T f g refl refl t ⟩
+      T ⟪ g ∙ f , trans (ctx-comp Γ f g γ) refl ⟫ t
+    ≡⟨ ty-comp T f g refl refl t ⟩
       strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t) ∎
     where open ≡-Reasoning
 
@@ -321,30 +319,30 @@ module ≅ᵗʸ-Reasoning where
 -- Substitution of types
 
 _[_] : Ty Γ → Δ ⇒ Γ → Ty Δ
-type (T [ σ ]) x δ = T ⟨ x , func σ δ ⟩
-morph (_[_] {Γ = Γ} T σ) f {δy}{δx} eq-yx t = T ⟪ f , proof ⟫ t
+T [ σ ] ⟨ x , δ ⟩ = T ⟨ x , func σ δ ⟩
+_⟪_,_⟫_ (_[_] {Γ = Γ} T σ) f {δy}{δx} eq-yx t = T ⟪ f , proof ⟫ t
   where
     proof : Γ ⟪ f ⟫ func σ δy ≡ func σ δx
     proof = trans (naturality σ δy) (cong (func σ) eq-yx)
-morph-cong (T [ σ ]) f = morph-cong T f
-morph-id (T [ σ ]) t = trans (morph-cong T refl)
-                             (morph-id T t)
-morph-comp (T [ σ ]) f g eq-zy eq-yx t = trans (morph-cong T refl)
-                                               (morph-comp T f g _ _ t)
+ty-cong (T [ σ ]) f = ty-cong T f
+ty-id (T [ σ ]) t = trans (ty-cong T refl)
+                          (ty-id T t)
+ty-comp (T [ σ ]) f g eq-zy eq-yx t = trans (ty-cong T refl)
+                                            (ty-comp T f g _ _ t)
 
 ty-subst-id : (T : Ty Γ) → T [ id-subst Γ ] ≅ᵗʸ T
 func (from (ty-subst-id T)) = id
-naturality (from (ty-subst-id T)) _ = morph-cong T refl
+naturality (from (ty-subst-id T)) _ = ty-cong T refl
 func (to (ty-subst-id T)) = id
-naturality (to (ty-subst-id T)) _ = morph-cong T refl
+naturality (to (ty-subst-id T)) _ = ty-cong T refl
 eq (isoˡ (ty-subst-id T)) _ = refl
 eq (isoʳ (ty-subst-id T)) _ = refl
 
 ty-subst-comp : (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
 func (from (ty-subst-comp T τ σ)) = id
-naturality (from (ty-subst-comp T τ σ)) _ = morph-cong T refl
+naturality (from (ty-subst-comp T τ σ)) _ = ty-cong T refl
 func (to (ty-subst-comp T τ σ)) = id
-naturality (to (ty-subst-comp T τ σ)) _ = morph-cong T refl
+naturality (to (ty-subst-comp T τ σ)) _ = ty-cong T refl
 eq (isoˡ (ty-subst-comp T τ σ)) _ = refl
 eq (isoʳ (ty-subst-comp T τ σ)) _ = refl
 
@@ -371,25 +369,25 @@ eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
 func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
-naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
+naturality (from (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
 func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (sym (eq σ=τ δ)) t
-naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = morph-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
+naturality (to (ty-subst-cong-subst σ=τ T)) {_}{_}{f} t = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
-  -- Here we cannot use morph-id T twice because the omitted equality proofs are not rel-id Γ _
+  -- Here we cannot use ty-id T twice because the omitted equality proofs are not ctx-id Γ _
   -- (i.e. T ⟪_⟫ t is not applied to the identity morphism in the category of elements of Γ).
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≡⟨ morph-cong-2-1 T hom-idˡ ⟩
-    T ⟪ hom-id , rel-id Γ _ ⟫ t
-  ≡⟨ morph-id T t ⟩
+  ≡⟨ ty-cong-2-1 T hom-idˡ ⟩
+    T ⟪ hom-id , ctx-id Γ _ ⟫ t
+  ≡⟨ ty-id T t ⟩
     t ∎
   where open ≡-Reasoning
 eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
-  ≡⟨ morph-cong-2-1 T hom-idˡ ⟩
+  ≡⟨ ty-cong-2-1 T hom-idˡ ⟩
     T ⟪ hom-id , _ ⟫ t
-  ≡⟨ morph-id T t ⟩
+  ≡⟨ ty-id T t ⟩
     t ∎
   where open ≡-Reasoning
 

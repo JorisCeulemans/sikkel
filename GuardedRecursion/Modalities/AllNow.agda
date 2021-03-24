@@ -18,10 +18,10 @@ private
 
 
 timeless-ctx : Ctx ★ → Ctx ω
-set (timeless-ctx Γ) _ = Γ ⟨ tt ⟩
-rel (timeless-ctx Γ) _ γ = γ
-rel-id (timeless-ctx Γ) _ = refl
-rel-comp (timeless-ctx Γ) _ _ _ = refl
+timeless-ctx Γ ⟨ _ ⟩ = Γ ⟨ tt ⟩
+timeless-ctx Γ ⟪ _ ⟫ γ = γ
+ctx-id (timeless-ctx Γ) _ = refl
+ctx-comp (timeless-ctx Γ) _ _ _ = refl
 
 timeless-subst : Δ ⇒ Γ → timeless-ctx Δ ⇒ timeless-ctx Γ
 func (timeless-subst σ) = func σ
@@ -44,24 +44,24 @@ const-subst-natural : (δ : Δ ⟨ tt ⟩) (σ : Δ ⇒ Γ) → timeless-subst �
 eq (const-subst-natural δ σ) _ = refl
 
 allnow-ty : Ty (timeless-ctx Γ) → Ty Γ
-type (allnow-ty T) tt γ = Tm ◇ (T [ const-subst γ ])
-morph (allnow-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
+allnow-ty T ⟨ tt , γ ⟩ = Tm ◇ (T [ const-subst γ ])
+_⟪_,_⟫_ (allnow-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
   where
     proof : T [ const-subst γ ] ≅ᵗʸ T [ const-subst γ' ]
-    proof = ty-subst-cong-subst (const-subst-cong (trans (sym (rel-id Γ γ)) eγ)) T
-morph-cong (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → morph-cong T refl })
-morph-id (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → trans (morph-cong T refl) (morph-id T _) })
-morph-comp (allnow-ty T) tt tt eγ-zy eγ-yx t = tm-≅-to-≡
-  (record { eq = λ _ → trans (morph-cong T (≤-irrelevant _ _)) (morph-comp T ≤-refl ≤-refl _ _ _) })
+    proof = ty-subst-cong-subst (const-subst-cong (trans (sym (ctx-id Γ γ)) eγ)) T
+ty-cong (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
+ty-id (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → trans (ty-cong T refl) (ty-id T _) })
+ty-comp (allnow-ty T) tt tt eγ-zy eγ-yx t = tm-≅-to-≡
+  (record { eq = λ _ → trans (ty-cong T (≤-irrelevant _ _)) (ty-comp T ≤-refl ≤-refl _ _ _) })
 
 module _ {T : Ty (timeless-ctx Γ)} where
   allnow-tm : Tm (timeless-ctx Γ) T → Tm Γ (allnow-ty T)
-  term (term (allnow-tm t) tt γ) n tt = t ⟨ n , γ ⟩'
-  Tm.naturality (term (allnow-tm t) tt γ) m≤n refl = Tm.naturality t m≤n refl
+  (allnow-tm t ⟨ tt , γ ⟩') ⟨ n , tt ⟩' = t ⟨ n , γ ⟩'
+  Tm.naturality (allnow-tm t ⟨ tt , γ ⟩') m≤n refl = Tm.naturality t m≤n refl
   Tm.naturality (allnow-tm t) tt refl = tm-≅-to-≡ (record { eq = λ _ → Tm.naturality t ≤-refl _ })
 
   unallnow-tm : Tm Γ (allnow-ty T) → Tm (timeless-ctx Γ) T
-  term (unallnow-tm t) n γ = t ⟨ tt , γ ⟩' ⟨ n , tt ⟩'
+  unallnow-tm t ⟨ n , γ ⟩' = t ⟨ tt , γ ⟩' ⟨ n , tt ⟩'
   Tm.naturality (unallnow-tm t) m≤n refl = Tm.naturality (t ⟨ tt , _ ⟩') m≤n refl
 
   allnow-ty-β : (t : Tm (timeless-ctx Γ) T) → unallnow-tm (allnow-tm t) ≅ᵗᵐ t
@@ -93,17 +93,17 @@ ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (co
 
 allnow-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} → (allnow-ty T) [ σ ] ≅ᵗʸ allnow-ty (T [ timeless-subst σ ])
 func (from (allnow-ty-natural σ {T})) = ι[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (from (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → morph-cong-2-2 T refl })
+CwF-Structure.naturality (from (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
 func (to (allnow-ty-natural σ {T})) = ι⁻¹[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (to (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → morph-cong-2-2 T refl })
+CwF-Structure.naturality (to (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
 eq (isoˡ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
 eq (isoʳ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} where
   allnow-tm-natural : (t : Tm (timeless-ctx Γ) T) →
                         (allnow-tm t) [ σ ]' ≅ᵗᵐ ι[ allnow-ty-natural σ ] allnow-tm (t [ timeless-subst σ ]')
-  eq (allnow-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (morph-id T _) })
+  eq (allnow-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (ty-id T _) })
 
   unallnow-tm-natural : (t : Tm Γ (allnow-ty T)) →
                           (unallnow-tm t) [ timeless-subst σ ]' ≅ᵗᵐ unallnow-tm (ι⁻¹[ allnow-ty-natural σ ] (t [ σ ]'))
-  eq (unallnow-tm-natural t) _ = sym (morph-id T _)
+  eq (unallnow-tm-natural t) _ = sym (ty-id T _)

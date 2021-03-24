@@ -29,11 +29,11 @@ private
 -- Definition of the extension of a context Γ with a type T.
 -- In MLTT, this would be written as Γ, x : T.
 _,,_ : (Γ : Ctx C) (T : Ty Γ) → Ctx C
-set (Γ ,, T) x = Σ[ γ ∈ Γ ⟨ x ⟩ ] (T ⟨ x , γ ⟩)
-rel (Γ ,, T) f [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
-rel-id (Γ ,, T) [ γ , t ] = to-Σ-eq (rel-id Γ γ) (strict-morph-id T t)
-rel-comp (Γ ,, T) f g [ γ , t ] = to-Σ-eq (rel-comp Γ f g γ)
-                                          (strict-morph-comp T f g t)
+(Γ ,, T) ⟨ x ⟩ = Σ[ γ ∈ Γ ⟨ x ⟩ ] (T ⟨ x , γ ⟩)
+(Γ ,, T) ⟪ f ⟫ [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
+ctx-id (Γ ,, T) [ γ , t ] = to-Σ-eq (ctx-id Γ γ) (strict-ty-id T t)
+ctx-comp (Γ ,, T) f g [ γ , t ] = to-Σ-eq (ctx-comp Γ f g γ)
+                                          (strict-ty-comp T f g t)
 
 π : Γ ,, T ⇒ Γ
 func π = proj₁
@@ -43,7 +43,7 @@ naturality π _ = refl
 -- written as Γ, x : T ⊢ x : T. Note that the type of the term is T [ π ] instead of
 -- T because the latter is not a type in context Γ ,, T.
 ξ : Tm (Γ ,, T) (T [ π ])
-term ξ _ = proj₂
+ξ ⟨ _ , [ _ , t ] ⟩' = t
 naturality ξ f refl = refl
 
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
@@ -63,7 +63,7 @@ naturality (to-ext-subst {Δ = Δ} T σ t) δ = to-Σ-eq (naturality σ δ) (
           (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
   ≡⟨ morph-transport T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
     T ⟪ _ , trans refl (naturality σ δ) ⟫ t ⟨ _ , δ ⟩'
-  ≡⟨ morph-cong T refl ⟩
+  ≡⟨ ty-cong T refl ⟩
     T ⟪ _ , _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ naturality t _ refl ⟩
     t ⟨ _ , Δ ⟪ _ ⟫ δ ⟩' ∎)
@@ -78,10 +78,10 @@ ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (
   begin
-    T ⟪ hom-id , trans (rel-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ morph-cong T refl ⟩
+    T ⟪ hom-id , trans (ctx-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
+  ≡⟨ ty-cong T refl ⟩
     T ⟪ hom-id , _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ morph-id T _ ⟩
+  ≡⟨ ty-id T _ ⟩
     t ⟨ _ , δ ⟩' ∎)
   where open ≡-Reasoning
 

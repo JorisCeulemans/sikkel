@@ -36,23 +36,23 @@ private
 -- using two Agda types and a relation
 
 PrimFromRel : (A B : Set) (R : REL A B 0ℓ) → Ty {C = ⋀} ◇
-type (PrimFromRel A B R) left  _ = A
-type (PrimFromRel A B R) right _ = B
-type (PrimFromRel A B R) relation _ = Σ[ p ∈ A × B ] uncurry R p
-morph (PrimFromRel A B R) left-id  _ = id
-morph (PrimFromRel A B R) right-id _ = id
-morph (PrimFromRel A B R) relation-id _ = id
-morph (PrimFromRel A B R) left-rel  _ = proj₁ ∘ proj₁
-morph (PrimFromRel A B R) right-rel _ = proj₂ ∘ proj₁
-morph-cong (PrimFromRel A B R) refl {eγ = refl}{eγ' = refl} = refl
-morph-id (PrimFromRel A B R) {x = left}  _ = refl
-morph-id (PrimFromRel A B R) {x = right} _ = refl
-morph-id (PrimFromRel A B R) {x = relation} _ = refl
-morph-comp (PrimFromRel A B R) left-id  g refl refl _ = refl
-morph-comp (PrimFromRel A B R) right-id g refl refl _ = refl
-morph-comp (PrimFromRel A B R) relation-id g refl refl _ = refl
-morph-comp (PrimFromRel A B R) left-rel  relation-id _ _ _ = refl
-morph-comp (PrimFromRel A B R) right-rel relation-id _ _ _ = refl
+PrimFromRel A B R ⟨ left ,  _ ⟩ = A
+PrimFromRel A B R ⟨ right , _ ⟩ = B
+PrimFromRel A B R ⟨ relation , _ ⟩ = Σ[ p ∈ A × B ] uncurry R p
+_⟪_,_⟫_ (PrimFromRel A B R) left-id  _ = id
+_⟪_,_⟫_ (PrimFromRel A B R) right-id _ = id
+_⟪_,_⟫_ (PrimFromRel A B R) relation-id _ = id
+_⟪_,_⟫_ (PrimFromRel A B R) left-rel  _ = proj₁ ∘ proj₁
+_⟪_,_⟫_ (PrimFromRel A B R) right-rel _ = proj₂ ∘ proj₁
+ty-cong (PrimFromRel A B R) refl {eγ = refl}{eγ' = refl} = refl
+ty-id (PrimFromRel A B R) {x = left}  _ = refl
+ty-id (PrimFromRel A B R) {x = right} _ = refl
+ty-id (PrimFromRel A B R) {x = relation} _ = refl
+ty-comp (PrimFromRel A B R) left-id  g refl refl _ = refl
+ty-comp (PrimFromRel A B R) right-id g refl refl _ = refl
+ty-comp (PrimFromRel A B R) relation-id g refl refl _ = refl
+ty-comp (PrimFromRel A B R) left-rel  relation-id _ _ _ = refl
+ty-comp (PrimFromRel A B R) right-rel relation-id _ _ _ = refl
 
 FromRel : (A B : Set) (R : REL A B 0ℓ) → ClosedType ⋀
 FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
@@ -62,9 +62,9 @@ instance
   natural-nul {{fromrel-natural}} σ = ty-subst-seq-cong (!◇ _ ∷ σ ◼) (!◇ _ ◼) (PrimFromRel _ _ _) (◇-terminal _ _ _)
 
 from-rel : {A B : Set} {R : REL A B 0ℓ} (a : A) (b : B) → R a b → Tm Γ (FromRel A B R)
-term (from-rel a b r) left  _ = a
-term (from-rel a b r) right _ = b
-term (from-rel a b r) relation _ = [ [ a , b ] , r ]
+from-rel a b r ⟨ left  , _ ⟩' = a
+from-rel a b r ⟨ right , _ ⟩' = b
+from-rel a b r ⟨ relation , _ ⟩' = [ [ a , b ] , r ]
 Tm.naturality (from-rel a b r) left-id  _ = refl
 Tm.naturality (from-rel a b r) right-id _ = refl
 Tm.naturality (from-rel a b r) relation-id _ = refl
@@ -80,9 +80,9 @@ from-rel1 : {A1 B1 : Set} {R1 : REL A1 B1 0ℓ}
             {A2 B2 : Set} {R2 : REL A2 B2 0ℓ}
             (f : A1 → A2) (g : B1 → B2) → (R1 ⟨→⟩ R2) f g →
             Tm (Γ ,, FromRel A1 B1 R1) (FromRel A2 B2 R2)
-term (from-rel1 f g h) left  [ _ , a ] = f a
-term (from-rel1 f g h) right [ _ , b ] = g b
-term (from-rel1 f g h) relation [ _ , [ [ a , b ] , r ] ] = [ [ f a , g b ] , h r ]
+from-rel1 f g h ⟨ left  , [ _ , a ] ⟩' = f a
+from-rel1 f g h ⟨ right , [ _ , b ] ⟩' = g b
+from-rel1 f g h ⟨ relation , [ _ , [ [ a , b ] , r ] ] ⟩' = [ [ f a , g b ] , h r ]
 Tm.naturality (from-rel1 f g h) left-id refl = refl
 Tm.naturality (from-rel1 f g h) right-id refl = refl
 Tm.naturality (from-rel1 f g h) relation-id refl = refl
@@ -94,9 +94,9 @@ from-rel2 : {A1 B1 : Set} {R1 : REL A1 B1 0ℓ}
             {A3 B3 : Set} {R3 : REL A3 B3 0ℓ}
             (f : A1 → A2 → A3) (g : B1 → B2 → B3) → (R1 ⟨→⟩ R2 ⟨→⟩ R3) f g →
             Tm (Γ ,, FromRel A1 B1 R1 ,, FromRel A2 B2 R2) (FromRel A3 B3 R3)
-term (from-rel2 f g h) left  [ [ _ , a1 ] , a2 ] = f a1 a2
-term (from-rel2 f g h) right [ [ _ , b1 ] , b2 ] = g b1 b2
-term (from-rel2 f g h) relation [ [ _ , [ [ a1 , b1 ] , r1 ] ] , [ [ a2 , b2 ] , r2 ] ] = [ [ f a1 a2 , g b1 b2 ] , h r1 r2 ]
+from-rel2 f g h ⟨ left  , [ [ _ , a1 ] , a2 ] ⟩' = f a1 a2
+from-rel2 f g h ⟨ right , [ [ _ , b1 ] , b2 ] ⟩' = g b1 b2
+from-rel2 f g h ⟨ relation , [ [ _ , [ [ a1 , b1 ] , r1 ] ] , [ [ a2 , b2 ] , r2 ] ] ⟩' = [ [ f a1 a2 , g b1 b2 ] , h r1 r2 ]
 Tm.naturality (from-rel2 f g h) left-id  refl = refl
 Tm.naturality (from-rel2 f g h) right-id refl = refl
 Tm.naturality (from-rel2 f g h) relation-id refl = refl
@@ -211,20 +211,20 @@ module _ (i : Tm ◇ ℤ) where
 -- Definition of 2 modalities from ⋀ to ★.
 
 just-left : Ctx ★ → Ctx ⋀
-set (just-left Γ) left = Γ ⟨ tt ⟩
-set (just-left Γ) right = ⊥
-set (just-left Γ) relation = ⊥
-rel (just-left Γ) left-id = id
-rel (just-left Γ) right-id = id
-rel (just-left Γ) relation-id = id
-rel (just-left Γ) left-rel = ⊥-elim
-rel (just-left Γ) right-rel = id
-rel-id (just-left Γ) {x = left} _ = refl
-rel-comp (just-left Γ) left-id g _ = refl
-rel-comp (just-left Γ) right-id g _ = refl
-rel-comp (just-left Γ) relation-id g _ = refl
-rel-comp (just-left Γ) left-rel relation-id _ = refl
-rel-comp (just-left Γ) right-rel relation-id _ = refl
+just-left Γ ⟨ left  ⟩ = Γ ⟨ tt ⟩
+just-left Γ ⟨ right ⟩ = ⊥
+just-left Γ ⟨ relation ⟩ = ⊥
+_⟪_⟫_ (just-left Γ) left-id = id
+_⟪_⟫_ (just-left Γ) right-id = id
+_⟪_⟫_ (just-left Γ) relation-id = id
+_⟪_⟫_ (just-left Γ) left-rel = ⊥-elim
+_⟪_⟫_ (just-left Γ) right-rel = id
+ctx-id (just-left Γ) {x = left} _ = refl
+ctx-comp (just-left Γ) left-id g _ = refl
+ctx-comp (just-left Γ) right-id g _ = refl
+ctx-comp (just-left Γ) relation-id g _ = refl
+ctx-comp (just-left Γ) left-rel relation-id _ = refl
+ctx-comp (just-left Γ) right-rel relation-id _ = refl
 
 just-left-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → just-left Δ ⇒ just-left Γ
 func (just-left-subst σ) {x = left}     = func σ
@@ -240,27 +240,27 @@ just-left-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒ 
 eq (just-left-subst-⊚ σ τ) {x = left} _ = refl
 
 forget-right-ty : {Γ : Ctx ★} → Ty (just-left Γ) → Ty Γ
-type (forget-right-ty T) tt γ = T ⟨ left , γ ⟩
-morph (forget-right-ty {Γ = Γ} T) tt eγ = T ⟪ left-id , trans (sym (rel-id Γ _)) eγ ⟫_
-morph-cong (forget-right-ty T) refl {eγ = refl} {eγ' = refl} = refl
-morph-id (forget-right-ty T) t = trans (morph-cong T refl) (morph-id T t)
-morph-comp (forget-right-ty T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
+forget-right-ty T ⟨ tt , γ ⟩ = T ⟨ left , γ ⟩
+forget-right-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ left-id , trans (sym (ctx-id Γ _)) eγ ⟫ t
+ty-cong (forget-right-ty T) refl {eγ = refl} {eγ' = refl} = refl
+ty-id (forget-right-ty T) t = trans (ty-cong T refl) (ty-id T t)
+ty-comp (forget-right-ty T) _ _ _ _ _ = sym (ty-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
   forget-right-tm : Tm (just-left Γ) T → Tm Γ (forget-right-ty T)
-  term (forget-right-tm t) _ γ = t ⟨ left , γ ⟩'
+  forget-right-tm t ⟨ _ , γ ⟩' = t ⟨ left , γ ⟩'
   Tm.naturality (forget-right-tm t) tt eγ = Tm.naturality t left-id _
 
   unforget-right-tm : Tm Γ (forget-right-ty T) → Tm (just-left Γ) T
-  term (unforget-right-tm t) left γ = t ⟨ tt , γ ⟩'
-  Tm.naturality (unforget-right-tm t) left-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
+  unforget-right-tm t ⟨ left , γ ⟩' = t ⟨ tt , γ ⟩'
+  Tm.naturality (unforget-right-tm t) left-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ _) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-left Γ)} where
   forget-right-ty-natural : (forget-right-ty T) [ σ ] ≅ᵗʸ forget-right-ty (T [ just-left-subst σ ])
   func (from forget-right-ty-natural) = id
-  CwF-Structure.naturality (from forget-right-ty-natural) _ = morph-cong T refl
+  CwF-Structure.naturality (from forget-right-ty-natural) _ = ty-cong T refl
   func (to forget-right-ty-natural) = id
-  CwF-Structure.naturality (to forget-right-ty-natural) _ = morph-cong T refl
+  CwF-Structure.naturality (to forget-right-ty-natural) _ = ty-cong T refl
   eq (isoˡ forget-right-ty-natural) _ = refl
   eq (isoʳ forget-right-ty-natural) _ = refl
 
@@ -321,20 +321,20 @@ forget-right = record
    }
 
 just-right : Ctx ★ → Ctx ⋀
-set (just-right Γ) left = ⊥
-set (just-right Γ) right = Γ ⟨ tt ⟩
-set (just-right Γ) relation = ⊥
-rel (just-right Γ) left-id = id
-rel (just-right Γ) right-id = id
-rel (just-right Γ) relation-id = id
-rel (just-right Γ) left-rel = id
-rel (just-right Γ) right-rel = ⊥-elim
-rel-id (just-right Γ) {x = right} _ = refl
-rel-comp (just-right Γ) left-id g _ = refl
-rel-comp (just-right Γ) right-id g _ = refl
-rel-comp (just-right Γ) relation-id g _ = refl
-rel-comp (just-right Γ) left-rel relation-id _ = refl
-rel-comp (just-right Γ) right-rel relation-id _ = refl
+just-right Γ ⟨ left  ⟩ = ⊥
+just-right Γ ⟨ right ⟩ = Γ ⟨ tt ⟩
+just-right Γ ⟨ relation ⟩ = ⊥
+_⟪_⟫_ (just-right Γ) left-id = id
+_⟪_⟫_ (just-right Γ) right-id = id
+_⟪_⟫_ (just-right Γ) relation-id = id
+_⟪_⟫_ (just-right Γ) left-rel = id
+_⟪_⟫_ (just-right Γ) right-rel = ⊥-elim
+ctx-id (just-right Γ) {x = right} _ = refl
+ctx-comp (just-right Γ) left-id g _ = refl
+ctx-comp (just-right Γ) right-id g _ = refl
+ctx-comp (just-right Γ) relation-id g _ = refl
+ctx-comp (just-right Γ) left-rel relation-id _ = refl
+ctx-comp (just-right Γ) right-rel relation-id _ = refl
 
 just-right-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → just-right Δ ⇒ just-right Γ
 func (just-right-subst σ) {x = left}     = ⊥-elim
@@ -350,27 +350,27 @@ just-right-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒
 eq (just-right-subst-⊚ σ τ) {x = right} _ = refl
 
 forget-left-ty : {Γ : Ctx ★} → Ty (just-right Γ) → Ty Γ
-type (forget-left-ty T) tt γ = T ⟨ right , γ ⟩
-morph (forget-left-ty {Γ = Γ} T) tt eγ = T ⟪ right-id , trans (sym (rel-id Γ _)) eγ ⟫_
-morph-cong (forget-left-ty T) refl {eγ = refl} {eγ' = refl} = refl
-morph-id (forget-left-ty T) t = trans (morph-cong T refl) (morph-id T t)
-morph-comp (forget-left-ty T) _ _ _ _ _ = sym (morph-cong-2-1 T refl)
+forget-left-ty T ⟨ tt , γ ⟩ = T ⟨ right , γ ⟩
+forget-left-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ right-id , trans (sym (ctx-id Γ _)) eγ ⟫ t
+ty-cong (forget-left-ty T) refl {eγ = refl} {eγ' = refl} = refl
+ty-id (forget-left-ty T) t = trans (ty-cong T refl) (ty-id T t)
+ty-comp (forget-left-ty T) _ _ _ _ _ = sym (ty-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
   forget-left-tm : Tm (just-right Γ) T → Tm Γ (forget-left-ty T)
-  term (forget-left-tm t) _ γ = t ⟨ right , γ ⟩'
+  forget-left-tm t ⟨ _ , γ ⟩' = t ⟨ right , γ ⟩'
   Tm.naturality (forget-left-tm t) tt eγ = Tm.naturality t right-id _
 
   unforget-left-tm : Tm Γ (forget-left-ty T) → Tm (just-right Γ) T
-  term (unforget-left-tm t) right γ = t ⟨ tt , γ ⟩'
-  Tm.naturality (unforget-left-tm t) right-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
+  unforget-left-tm t ⟨ right , γ ⟩' = t ⟨ tt , γ ⟩'
+  Tm.naturality (unforget-left-tm t) right-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ _) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-right Γ)} where
   forget-left-ty-natural : (forget-left-ty T) [ σ ] ≅ᵗʸ forget-left-ty (T [ just-right-subst σ ])
   func (from forget-left-ty-natural) = id
-  CwF-Structure.naturality (from forget-left-ty-natural) _ = morph-cong T refl
+  CwF-Structure.naturality (from forget-left-ty-natural) _ = ty-cong T refl
   func (to forget-left-ty-natural) = id
-  CwF-Structure.naturality (to forget-left-ty-natural) _ = morph-cong T refl
+  CwF-Structure.naturality (to forget-left-ty-natural) _ = ty-cong T refl
   eq (isoˡ forget-left-ty-natural) _ = refl
   eq (isoʳ forget-left-ty-natural) _ = refl
 

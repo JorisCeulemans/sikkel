@@ -36,19 +36,19 @@ ctx-m≤1+n : (Γ : Ctx ω) (m≤n : m ≤ n) (γ : Γ ⟨ suc n ⟩) →
 ctx-m≤1+n {m = m}{n = n} Γ m≤n γ =
   begin
     Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ)
-  ≡˘⟨ rel-comp Γ m≤n (n≤1+n n) γ ⟩
+  ≡˘⟨ ctx-comp Γ m≤n (n≤1+n n) γ ⟩
     Γ ⟪ ≤-trans m≤n (n≤1+n n) ⟫ γ
   ≡⟨ cong (Γ ⟪_⟫ γ) (≤-irrelevant _ _) ⟩
     Γ ⟪ ≤-trans (n≤1+n m)(s≤s m≤n) ⟫ γ
-  ≡⟨ rel-comp Γ (n≤1+n m) (s≤s m≤n) γ ⟩
+  ≡⟨ ctx-comp Γ (n≤1+n m) (s≤s m≤n) γ ⟩
     Γ ⟪ n≤1+n m ⟫ (Γ ⟪ s≤s m≤n ⟫ γ) ∎
   where open ≡-Reasoning
 
 ◄ : Ctx ω → Ctx ω
-set (◄ Γ) n = Γ ⟨ suc n ⟩
-rel (◄ Γ) m≤n = Γ ⟪ s≤s m≤n ⟫_
-rel-id (◄ Γ) = rel-id Γ
-rel-comp (◄ Γ) k≤m m≤n = rel-comp Γ (s≤s k≤m) (s≤s m≤n)
+◄ Γ ⟨ n ⟩ = Γ ⟨ suc n ⟩
+◄ Γ ⟪ m≤n ⟫ γ = Γ ⟪ s≤s m≤n ⟫ γ
+ctx-id (◄ Γ) = ctx-id Γ
+ctx-comp (◄ Γ) k≤m m≤n = ctx-comp Γ (s≤s k≤m) (s≤s m≤n)
 
 ◄-subst : (σ : Δ ⇒ Γ) → ◄ Δ ⇒ ◄ Γ
 func (◄-subst σ) {n} = func σ {suc n}
@@ -125,29 +125,29 @@ eq (◄-subst-⊚ τ σ) _ = refl
 -- The later modality and corresponding term formers
 
 ▻ : Ty (◄ Γ) → Ty Γ
-type (▻ T) zero _ = ⊤
-type (▻ T) (suc n) γ = T ⟨ n , γ ⟩
-morph (▻ T) z≤n _ _ = tt
-morph (▻ T) (s≤s m≤n) eγ = T ⟪ m≤n , eγ ⟫_
-morph-cong (▻ T) {f = z≤n} {f' = z≤n} e = refl
-morph-cong (▻ T) {f = s≤s m≤n} {f' = s≤s .m≤n} refl = morph-cong T refl
-morph-id (▻ T) {zero} _ = refl
-morph-id (▻ T) {suc n} = morph-id T
-morph-comp (▻ T) z≤n m≤n _ _ _ = refl
-morph-comp (▻ T) (s≤s k≤m) (s≤s m≤n) = morph-comp T k≤m m≤n
+▻ T ⟨ zero  , _ ⟩ = ⊤
+▻ T ⟨ suc n , γ ⟩ = T ⟨ n , γ ⟩
+▻ T ⟪ z≤n , _ ⟫ _ = tt
+▻ T ⟪ s≤s m≤n , eγ ⟫ t = T ⟪ m≤n , eγ ⟫ t
+ty-cong (▻ T) {f = z≤n} {f' = z≤n} e = refl
+ty-cong (▻ T) {f = s≤s m≤n} {f' = s≤s .m≤n} refl = ty-cong T refl
+ty-id (▻ T) {zero} _ = refl
+ty-id (▻ T) {suc n} = ty-id T
+ty-comp (▻ T) z≤n m≤n _ _ _ = refl
+ty-comp (▻ T) (s≤s k≤m) (s≤s m≤n) = ty-comp T k≤m m≤n
 
 ▻' : Ty Γ → Ty Γ
 ▻' {Γ = Γ} T = ▻ (T [ from-earlier Γ ])
 
 module _ {T : Ty (◄ Γ)} where
   next : Tm (◄ Γ) T → Tm Γ (▻ T)
-  term (next t) zero _ = tt
-  term (next t) (suc n) γ = t ⟨ n , γ ⟩'
+  next t ⟨ zero ,  _ ⟩' = tt
+  next t ⟨ suc n , γ ⟩' = t ⟨ n , γ ⟩'
   naturality (next t) z≤n γ = refl
   naturality (next t) (s≤s m≤n) eγ = naturality t m≤n eγ
 
   prev : Tm Γ (▻ T) → Tm (◄ Γ) T
-  term (prev t) n γ = t ⟨ suc n , γ ⟩'
+  prev t ⟨ n , γ ⟩' = t ⟨ suc n , γ ⟩'
   naturality (prev t) m≤n eγ = naturality t (s≤s m≤n) eγ
 
   prev-next : (t : Tm (◄ Γ) T) → prev (next t) ≅ᵗᵐ t
@@ -324,7 +324,7 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
   eq (löb-natural f) {zero} δ = $-cong (f ⟨ 0 , func σ δ ⟩') refl _ _
   eq (löb-natural f) {suc n} δ =
     begin
-      f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , rel-id Γ (func σ δ) ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ (func σ δ) ⟩')
+      f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , ctx-id Γ (func σ δ) ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ (func σ δ) ⟩')
     ≡⟨ $-cong (f ⟨ suc n , func σ δ ⟩') refl _ α ⟩
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ (func σ δ) ⟩')
     ≡˘⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_) (naturality (löb T f) ≤-refl β) ⟩

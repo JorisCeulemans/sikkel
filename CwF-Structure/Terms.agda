@@ -35,15 +35,12 @@ record Tm (Γ : Ctx C) (T : Ty Γ) : Set where
     term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
     naturality : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) →
                  T ⟪ f , eγ ⟫ (term y γy) ≡ term x γx
-open Tm public
+open Tm public renaming (term to infix 15 _⟨_,_⟩')
 
 private
   variable
     t t' : Tm Γ T
     s s' : Tm Γ S
-
-_⟨_,_⟩' : Tm Γ T → (x : Ob) → (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
-t ⟨ x , γ ⟩' = term t x γ
 
 
 --------------------------------------------------
@@ -97,7 +94,7 @@ tm-≅-to-≡ et = cong₂-d MkTm
 -- Reindexing maps (cf. Dybjer's internal type theory)
 
 convert-term : (T ↣ S) → Tm Γ T → Tm Γ S
-term (convert-term η t) x γ = func η (t ⟨ x , γ ⟩')
+convert-term η t ⟨ x , γ ⟩' = func η (t ⟨ x , γ ⟩')
 naturality (convert-term {T = T}{S = S} η t) f eγ =
   begin
     S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
@@ -141,7 +138,7 @@ eq (ι-trans T=S S=R r) γ = refl
 -- Substitution of terms
 
 _[_]' : Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])
-term (t [ σ ]') x δ = t ⟨ x , func σ δ ⟩'
+t [ σ ]' ⟨ x , δ ⟩' = t ⟨ x , func σ δ ⟩'
 naturality (t [ σ ]') f eγ = naturality t f _
 
 tm-subst-cong-tm : (σ : Δ ⇒ Γ) → t ≅ᵗᵐ s → t [ σ ]' ≅ᵗᵐ s [ σ ]'

@@ -24,10 +24,10 @@ record Ctx (C : Category) : Set₁ where
   field
     set : Ob → Set
     rel : ∀ {x y} → Hom x y → set y → set x
-    rel-id : ∀ {x} (γ : set x) → rel hom-id γ ≡ γ
-    rel-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) →
+    ctx-id : ∀ {x} (γ : set x) → rel hom-id γ ≡ γ
+    ctx-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) →
                rel (g ∙ f) γ ≡ rel f (rel g γ)
-open Ctx public
+open Ctx public renaming (set to _⟨_⟩; rel to _⟪_⟫_)
 
 module _ {C : Category} where
   infix 10 _⇒_
@@ -41,22 +41,16 @@ module _ {C : Category} where
       x y z : Ob
       Δ Γ Θ : Ctx C
 
-  _⟨_⟩ : Ctx C → Ob → Set
-  Γ ⟨ x ⟩ = set Γ x
-
-  _⟪_⟫_ : (Γ : Ctx C) (f : Hom x y) → Γ ⟨ y ⟩ → Γ ⟨ x ⟩
-  Γ ⟪ f ⟫ γ = rel Γ f γ
-
   -- The following proof is needed to define composition of morphisms in the category of elements
   -- of Γ and is used e.g. in the definition of types (in CwF-Structure.Types) and the definition
   -- of function types.
-  strong-rel-comp : (Γ : Ctx C) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
+  strong-ctx-comp : (Γ : Ctx C) {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
                     (eq-zy : Γ ⟪ g ⟫ γz ≡ γy) (eq-yx : Γ ⟪ f ⟫ γy ≡ γx) →
                     Γ ⟪ g ∙ f ⟫ γz ≡ γx
-  strong-rel-comp Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
+  strong-ctx-comp Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
     begin
       Γ ⟪ g ∙ f ⟫ γz
-    ≡⟨ rel-comp Γ f g γz ⟩
+    ≡⟨ ctx-comp Γ f g γz ⟩
       Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γz)
     ≡⟨ cong (Γ ⟪ f ⟫_) eq-zy ⟩
       Γ ⟪ f ⟫ γy
@@ -158,10 +152,10 @@ module _ {C : Category} where
   -- The empty context (i.e. terminal object in the category of contexts)
 
   ◇ : Ctx C
-  set ◇ _ = ⊤
-  rel ◇ _ _ = tt
-  rel-id ◇ _ = refl
-  rel-comp ◇ _ _ _ = refl
+  ◇ ⟨ _ ⟩ = ⊤
+  ◇ ⟪ _ ⟫ _ = tt
+  ctx-id ◇ _ = refl
+  ctx-comp ◇ _ _ _ = refl
 
   !◇ : (Γ : Ctx C) → Γ ⇒ ◇
   func (!◇ Γ) _ = tt

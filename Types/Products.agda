@@ -22,12 +22,12 @@ private
 
 
 _⊠_ : Ty Γ → Ty Γ → Ty Γ
-type (T ⊠ S) x γ = T ⟨ x , γ ⟩ × S ⟨ x , γ ⟩
-morph (T ⊠ S) f eγ [ t , s ] = [ T ⟪ f , eγ ⟫ t , S ⟪ f , eγ ⟫ s ]
-morph-cong (T ⊠ S) e = cong₂ [_,_] (morph-cong T e) (morph-cong S e)
-morph-id (T ⊠ S) [ t , s ] = cong₂ [_,_] (morph-id T t) (morph-id S s)
-morph-comp (T ⊠ S) f g eq-nm eq-mk [ t , s ] = cong₂ [_,_] (morph-comp T f g eq-nm eq-mk t)
-                                                            (morph-comp S f g eq-nm eq-mk s)
+T ⊠ S ⟨ x , γ ⟩ = T ⟨ x , γ ⟩ × S ⟨ x , γ ⟩
+T ⊠ S ⟪ f , eγ ⟫ [ t , s ] = [ T ⟪ f , eγ ⟫ t , S ⟪ f , eγ ⟫ s ]
+ty-cong (T ⊠ S) e = cong₂ [_,_] (ty-cong T e) (ty-cong S e)
+ty-id (T ⊠ S) [ t , s ] = cong₂ [_,_] (ty-id T t) (ty-id S s)
+ty-comp (T ⊠ S) f g eq-nm eq-mk [ t , s ] = cong₂ [_,_] (ty-comp T f g eq-nm eq-mk t)
+                                                        (ty-comp S f g eq-nm eq-mk s)
 
 ⊠-bimap : (T ↣ T') → (S ↣ S') → (T ⊠ S ↣ T' ⊠ S')
 func (⊠-bimap η φ) [ t , s ] = [ func η t , func φ s ]
@@ -40,15 +40,15 @@ eq (isoˡ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoˡ T=T') t) (e
 eq (isoʳ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoʳ T=T') t) (eq (isoʳ S=S') s)
 
 pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
-term (pair t s) x γ = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
+pair t s ⟨ x , γ ⟩' = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
 naturality (pair t s) f eγ = cong₂ [_,_] (naturality t f eγ) (naturality s f eγ)
 
 fst : Tm Γ (T ⊠ S) → Tm Γ T
-term (fst p) x γ = proj₁ (p ⟨ x , γ ⟩')
+fst p ⟨ x , γ ⟩' = proj₁ (p ⟨ x , γ ⟩')
 naturality (fst p) f eγ = cong proj₁ (naturality p f eγ)
 
 snd : Tm Γ (T ⊠ S) → Tm Γ S
-term (snd p) x γ = proj₂ (p ⟨ x , γ ⟩')
+snd p ⟨ x , γ ⟩' = proj₂ (p ⟨ x , γ ⟩')
 naturality (snd p) f eγ = cong proj₂ (naturality p f eγ)
 
 pair-cong : {t t' : Tm Γ T} {s s' : Tm Γ S} → t ≅ᵗᵐ t' → s ≅ᵗᵐ s' → pair t s ≅ᵗᵐ pair t' s'

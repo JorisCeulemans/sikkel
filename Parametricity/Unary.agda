@@ -36,17 +36,17 @@ private
 -- using an Agda type and a predicate
 
 PrimFromPred : (A : Set) → Pred A 0ℓ → Ty {C = 𝟚} ◇
-type (PrimFromPred A P) type-obj _ = A
-type (PrimFromPred A P) pred-obj _ = Σ[ a ∈ A ] P a
-morph (PrimFromPred A P) type-id _ = id
-morph (PrimFromPred A P) pred-id _ = id
-morph (PrimFromPred A P) type-pred _ = proj₁
-morph-cong (PrimFromPred A P) refl {eγ = refl} {eγ' = refl} = refl
-morph-id (PrimFromPred A P) {x = type-obj} _ = refl
-morph-id (PrimFromPred A P) {x = pred-obj} _ = refl
-morph-comp (PrimFromPred A P) type-id g refl refl _ = refl
-morph-comp (PrimFromPred A P) pred-id g refl refl _ = refl
-morph-comp (PrimFromPred A P) type-pred pred-id _ _ _ = refl
+PrimFromPred A P ⟨ type-obj , _ ⟩ = A
+PrimFromPred A P ⟨ pred-obj , _ ⟩ = Σ[ a ∈ A ] P a
+PrimFromPred A P ⟪ type-id , _ ⟫ a = a
+PrimFromPred A P ⟪ pred-id , _ ⟫ x = x
+PrimFromPred A P ⟪ type-pred , _ ⟫ [ a , p ] = a
+ty-cong (PrimFromPred A P) refl {eγ = refl} {eγ' = refl} = refl
+ty-id (PrimFromPred A P) {x = type-obj} _ = refl
+ty-id (PrimFromPred A P) {x = pred-obj} _ = refl
+ty-comp (PrimFromPred A P) type-id g refl refl _ = refl
+ty-comp (PrimFromPred A P) pred-id g refl refl _ = refl
+ty-comp (PrimFromPred A P) type-pred pred-id _ _ _ = refl
 
 FromPred : (A : Set) → Pred A 0ℓ → ClosedType 𝟚
 FromPred A P {Γ = Γ} = PrimFromPred A P [ !◇ Γ ]
@@ -56,8 +56,8 @@ instance
   natural-nul {{frompred-natural}} σ = ty-subst-seq-cong (!◇ _ ∷ σ ◼) (!◇ _ ◼) (PrimFromPred _ _) (◇-terminal _ _ _)
 
 from-pred : {A : Set} {P : Pred A 0ℓ} (a : A) → P a → Tm Γ (FromPred A P)
-term (from-pred a p) type-obj _ = a
-term (from-pred a p) pred-obj _ = [ a , p ]
+from-pred a p ⟨ type-obj , _ ⟩' = a
+from-pred a p ⟨ pred-obj , _ ⟩' = [ a , p ]
 Tm.naturality (from-pred a p) type-id _ = refl
 Tm.naturality (from-pred a p) pred-id _ = refl
 Tm.naturality (from-pred a p) type-pred _ = refl
@@ -65,8 +65,8 @@ Tm.naturality (from-pred a p) type-pred _ = refl
 from-pred1 : {A B : Set} {P : Pred A 0ℓ} {Q : Pred B 0ℓ}
              (f : A → B) → (P ⟨→⟩ Q) f →
              Tm (Γ ,, FromPred A P) (FromPred B Q)
-term (from-pred1 f g) type-obj [ _ , a ] = f a
-term (from-pred1 f g) pred-obj [ _ , [ a , p ] ] = [ f a , g p ]
+from-pred1 f g ⟨ type-obj , [ _ , a ] ⟩' = f a
+from-pred1 f g ⟨ pred-obj , [ _ , [ a , p ] ] ⟩' = [ f a , g p ]
 Tm.naturality (from-pred1 f g) type-id refl = refl
 Tm.naturality (from-pred1 f g) pred-id refl = refl
 Tm.naturality (from-pred1 f g) type-pred refl = refl
@@ -76,8 +76,8 @@ from-pred2 : {A : Set} {P : Pred A 0ℓ}
              {C : Set} {R : Pred C 0ℓ}
              (f : A → B → C) → (P ⟨→⟩ Q ⟨→⟩ R) f →
              Tm (Γ ,, FromPred A P ⊠ FromPred B Q) (FromPred C R)
-term (from-pred2 f g) type-obj [ _ , [ a , b ] ] = f a b
-term (from-pred2 f g) pred-obj [ _ , [ [ a , p ] , [ b , q ] ] ] = [ f a b , g p q ]
+from-pred2 f g ⟨ type-obj , [ _ , [ a , b ] ] ⟩' = f a b
+from-pred2 f g ⟨ pred-obj , [ _ , [ [ a , p ] , [ b , q ] ] ] ⟩' = [ f a b , g p q ]
 Tm.naturality (from-pred2 f g) type-id refl = refl
 Tm.naturality (from-pred2 f g) pred-id refl = refl
 Tm.naturality (from-pred2 f g) type-pred refl = refl
@@ -151,15 +151,15 @@ module _ (b : Tm ◇ BinaryBool) where
 -- Definition of a modality from 𝟚 to ★.
 
 always-false : Ctx ★ → Ctx 𝟚
-set (always-false Γ) type-obj = Γ ⟨ tt ⟩
-set (always-false Γ) pred-obj = ⊥
-rel (always-false Γ) type-id = id
-rel (always-false Γ) pred-id = id
-rel (always-false Γ) type-pred = ⊥-elim
-rel-id (always-false Γ) {x = type-obj} _ = refl
-rel-comp (always-false Γ) type-id g _ = refl
-rel-comp (always-false Γ) pred-id g _ = refl
-rel-comp (always-false Γ) type-pred pred-id _ = refl
+always-false Γ ⟨ type-obj ⟩ = Γ ⟨ tt ⟩
+always-false Γ ⟨ pred-obj ⟩ = ⊥
+always-false Γ ⟪ type-id ⟫ γ = γ
+always-false Γ ⟪ pred-id ⟫ x = x
+always-false Γ ⟪ type-pred ⟫ x = ⊥-elim x
+ctx-id (always-false Γ) {x = type-obj} _ = refl
+ctx-comp (always-false Γ) type-id g _ = refl
+ctx-comp (always-false Γ) pred-id g _ = refl
+ctx-comp (always-false Γ) type-pred pred-id _ = refl
 
 always-false-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → always-false Δ ⇒ always-false Γ
 func (always-false-subst σ) {x = type-obj} = func σ
@@ -174,27 +174,27 @@ always-false-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ �
 eq (always-false-subst-⊚ σ τ) {x = type-obj} _ = refl
 
 forget : {Γ : Ctx ★} → Ty (always-false Γ) → Ty Γ
-type (forget T) tt γ = T ⟨ type-obj , γ ⟩
-morph (forget {Γ = Γ} T) tt eγ = T ⟪ type-id , trans (sym (rel-id Γ _ )) eγ ⟫_
-morph-cong (forget T) refl {eγ = refl} {eγ' = refl} = refl
-morph-id (forget T) t = trans (morph-cong T refl) (morph-id T t)
-morph-comp (forget T) _ _ _ _ t = sym (morph-cong-2-1 T refl)
+forget T ⟨ tt , γ ⟩ = T ⟨ type-obj , γ ⟩
+forget {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ type-id , trans (sym (ctx-id Γ _ )) eγ ⟫ t
+ty-cong (forget T) refl {eγ = refl} {eγ' = refl} = refl
+ty-id (forget T) t = trans (ty-cong T refl) (ty-id T t)
+ty-comp (forget T) _ _ _ _ t = sym (ty-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (always-false Γ)} where
   forget-intro : Tm (always-false Γ) T → Tm Γ (forget T)
-  term (forget-intro t) tt γ = t ⟨ type-obj , γ ⟩'
+  forget-intro t ⟨ tt , γ ⟩' = t ⟨ type-obj , γ ⟩'
   Tm.naturality (forget-intro t) tt _ = Tm.naturality t type-id _
 
   forget-elim : Tm Γ (forget T) → Tm (always-false Γ) T
-  term (forget-elim t) type-obj γ = t ⟨ tt , γ ⟩'
-  Tm.naturality (forget-elim t) type-id eγ = trans (morph-cong T refl) (Tm.naturality t tt (trans (rel-id Γ _) eγ))
+  forget-elim t ⟨ type-obj , γ ⟩' = t ⟨ tt , γ ⟩'
+  Tm.naturality (forget-elim t) type-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ _) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (always-false Γ)} where
   forget-natural : (forget T) [ σ ] ≅ᵗʸ forget (T [ always-false-subst σ ])
   func (from forget-natural) = id
-  CwF-Structure.naturality (from forget-natural) _ = morph-cong T refl
+  CwF-Structure.naturality (from forget-natural) _ = ty-cong T refl
   func (to forget-natural) = id
-  CwF-Structure.naturality (to forget-natural) _ = morph-cong T refl
+  CwF-Structure.naturality (to forget-natural) _ = ty-cong T refl
   eq (isoˡ forget-natural) _ = refl
   eq (isoʳ forget-natural) _ = refl
 

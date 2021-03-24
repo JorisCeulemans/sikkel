@@ -22,22 +22,22 @@ open Functor
 
 
 ctx-lift : Ctx D → Ctx C
-set (ctx-lift Γ) c = Γ ⟨ ob F c ⟩
-rel (ctx-lift Γ) f = Γ ⟪ hom F f ⟫_
-rel-id (ctx-lift Γ) γ =
+ctx-lift Γ ⟨ c ⟩ = Γ ⟨ ob F c ⟩
+ctx-lift Γ ⟪ f ⟫ γ = Γ ⟪ hom F f ⟫ γ
+ctx-id (ctx-lift Γ) γ =
   begin
     Γ ⟪ hom F (hom-id C) ⟫ γ
   ≡⟨ cong (Γ ⟪_⟫ γ) (id-law F) ⟩
     Γ ⟪ hom-id D ⟫ γ
-  ≡⟨ rel-id Γ γ ⟩
+  ≡⟨ ctx-id Γ γ ⟩
     γ ∎
   where open ≡-Reasoning
-rel-comp (ctx-lift Γ) f g γ =
+ctx-comp (ctx-lift Γ) f g γ =
   begin
     Γ ⟪ hom F (g ∙[ C ] f) ⟫ γ
   ≡⟨ cong (Γ ⟪_⟫ γ) (comp-law F) ⟩
     Γ ⟪ hom F g ∙[ D ] hom F f ⟫ γ
-  ≡⟨ rel-comp Γ (hom F f) (hom F g) γ ⟩
+  ≡⟨ ctx-comp Γ (hom F f) (hom F g) γ ⟩
     Γ ⟪ hom F f ⟫ (Γ ⟪ hom F g ⟫ γ) ∎
   where open ≡-Reasoning
 
@@ -53,23 +53,23 @@ subst-lift-comp : {Δ : Ctx D} {Γ : Ctx D} {Θ : Ctx D} (τ : Γ ⇒ Θ) (σ : 
 eq (subst-lift-comp τ σ) _ = refl
 
 ty-lift : {Γ : Ctx D} → Ty Γ → Ty (ctx-lift Γ)
-type (ty-lift T) c γ = T ⟨ ob F c , γ ⟩
-morph (ty-lift T) f eγ t = T ⟪ hom F f , eγ ⟫ t
-morph-cong (ty-lift T) e = morph-cong T (cong (hom F) e)
-morph-id (ty-lift T) t =
+ty-lift T ⟨ c , γ ⟩ = T ⟨ ob F c , γ ⟩
+ty-lift T ⟪ f , eγ ⟫ t = T ⟪ hom F f , eγ ⟫ t
+ty-cong (ty-lift T) e = ty-cong T (cong (hom F) e)
+ty-id (ty-lift T) t =
   begin
     T ⟪ hom F (hom-id C) , _ ⟫ t
-  ≡⟨ morph-cong T (id-law F) ⟩
+  ≡⟨ ty-cong T (id-law F) ⟩
     T ⟪ hom-id D , _ ⟫ t
-  ≡⟨ morph-id T t ⟩
+  ≡⟨ ty-id T t ⟩
     t ∎
  where open ≡-Reasoning
-morph-comp (ty-lift T) f g eq-zy eq-yx t =
+ty-comp (ty-lift T) f g eq-zy eq-yx t =
   begin
     T ⟪ hom F (g ∙[ C ] f) , _ ⟫ t
-  ≡⟨ morph-cong T (comp-law F) ⟩
+  ≡⟨ ty-cong T (comp-law F) ⟩
     T ⟪ hom F g ∙[ D ] hom F f , _ ⟫ t
-  ≡⟨ morph-comp T (hom F f) (hom F g) eq-zy eq-yx t ⟩
+  ≡⟨ ty-comp T (hom F f) (hom F g) eq-zy eq-yx t ⟩
     T ⟪ hom F f , eq-yx ⟫ (T ⟪ hom F g , eq-zy ⟫ t) ∎
   where open ≡-Reasoning
 
@@ -83,7 +83,7 @@ eq (isoˡ (ty-lift-natural σ T)) _ = refl
 eq (isoʳ (ty-lift-natural σ T)) _ = refl
 
 tm-lift : {Γ : Ctx D} {T : Ty Γ} → Tm Γ T → Tm (ctx-lift Γ) (ty-lift T)
-term (tm-lift t) c γ = t ⟨ ob F c , γ ⟩'
+tm-lift t ⟨ c , γ ⟩' = t ⟨ ob F c , γ ⟩'
 naturality (tm-lift t) f eγ = naturality t (hom F f) eγ
 
 tm-lift-natural : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm Γ T) →
@@ -112,8 +112,8 @@ lift-ξ : (Γ : Ctx D) (T : Ty Γ) → tm-lift ξ [ to (lift-ctx-ext Γ T) ]' �
 eq (lift-ξ Γ T) [ γ , t ] = sym (
   begin
     T ⟪ hom F (hom-id C) , _ ⟫ t
-  ≡⟨ morph-cong T (id-law F) ⟩
+  ≡⟨ ty-cong T (id-law F) ⟩
     T ⟪ hom-id D , _ ⟫ t
-  ≡⟨ morph-id T t ⟩
+  ≡⟨ ty-id T t ⟩
     t ∎)
   where open ≡-Reasoning

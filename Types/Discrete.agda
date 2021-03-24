@@ -33,19 +33,19 @@ private
 -- General description of discrete types
 
 Discr : (A : Set) → Ty Γ
-type (Discr A) _ _ = A
-morph (Discr A) _ _ = id
-morph-cong (Discr A) _ = refl
-morph-id (Discr A) _ = refl
-morph-comp (Discr A) _ _ _ _ _ = refl
+Discr A ⟨ _ , _ ⟩ = A
+Discr A ⟪ _ , _ ⟫ a = a
+ty-cong (Discr A) _ = refl
+ty-id (Discr A) _ = refl
+ty-comp (Discr A) _ _ _ _ _ = refl
 
 discr : {A : Set} → A → Tm Γ (Discr A)
-term (discr a) _ _ = a
+discr a ⟨ _ , _ ⟩' = a
 naturality (discr a) _ _ = refl
 
 discr-func : {A B : Set} → (A → B) → Tm Γ (Discr A ⇛ Discr B)
-term (discr-func f) _ _ $⟨ _ , _ ⟩ a = f a
-naturality (term (discr-func f) _ _) _ _ _ = refl
+(discr-func f ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ a = f a
+naturality (discr-func f ⟨ _ , _ ⟩') _ _ _ = refl
 naturality (discr-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
 
 {-
@@ -91,8 +91,8 @@ unit-terminal : (η : T ↣ Unit') → η ≅ⁿ !unit
 eq (unit-terminal η) _ = refl
 
 unit-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
-term (unit-elim T t) _ _ $⟨ _ , _ ⟩ _ = t ⟨ _ , _ ⟩'
-naturality (term (unit-elim T t) _ _) _ eγ _ = sym (naturality t _ eγ)
+(unit-elim T t ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ _ = t ⟨ _ , _ ⟩'
+naturality (unit-elim T t ⟨ _ , _ ⟩') _ eγ _ = sym (naturality t _ eγ)
 naturality (unit-elim T t) f eγ = to-pshfun-eq λ _ _ _ → refl
 
 β-unit' : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
@@ -115,7 +115,7 @@ false' : Tm Γ Bool'
 false' = discr false
 
 if'_then'_else'_ : Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
-term (if' c then' t else' f) = λ x γ → if c ⟨ x , γ ⟩' then t ⟨ x , γ ⟩' else f ⟨ x , γ ⟩'
+(if' c then' t else' f) ⟨ x , γ ⟩' = if c ⟨ x , γ ⟩' then t ⟨ x , γ ⟩' else f ⟨ x , γ ⟩'
 naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ with c ⟨ x , γ' ⟩' | c ⟨ y , γ ⟩' | naturality c φ eγ
 naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | false | .false | refl = naturality f φ eγ
 naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | true  | .true  | refl = naturality t φ eγ
@@ -133,11 +133,11 @@ eq (η-bool' t) γ | false = refl
 eq (η-bool' t) γ | true  = refl
 
 _||_ : Tm Γ Bool' → Tm Γ Bool' → Tm Γ Bool'
-term (t || s) x γ = t ⟨ x , γ ⟩' ∨ s ⟨ x , γ ⟩'
+t || s ⟨ x , γ ⟩' = t ⟨ x , γ ⟩' ∨ s ⟨ x , γ ⟩'
 naturality (t || s) f eγ = cong₂ _∨_ (naturality t f eγ) (naturality s f eγ)
 
 _&&_ : Tm Γ Bool' → Tm Γ Bool' → Tm Γ Bool'
-term (t && s) x γ = t ⟨ x , γ ⟩' ∧ s ⟨ x , γ ⟩'
+t && s ⟨ x , γ ⟩' = t ⟨ x , γ ⟩' ∧ s ⟨ x , γ ⟩'
 naturality (t && s) f eγ = cong₂ _∧_ (naturality t f eγ) (naturality s f eγ)
 
 
