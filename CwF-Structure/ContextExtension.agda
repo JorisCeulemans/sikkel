@@ -76,14 +76,7 @@ eq (ctx-ext-subst-proj₁ σ t) δ = refl
 
 ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
-eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (
-  begin
-    T ⟪ hom-id , trans (ctx-id Γ) _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ ty-cong T refl ⟩
-    T ⟪ hom-id , _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ ty-id T ⟩
-    t ⟨ _ , δ ⟩' ∎)
-  where open ≡-Reasoning
+eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (strong-ty-id T)
 
 ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≅ˢ τ
 eq (ctx-ext-subst-η τ) δ = refl

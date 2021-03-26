@@ -44,8 +44,8 @@ PrimFromPred A P ⟪ type-pred , _ ⟫ [ a , p ] = a
 ty-cong (PrimFromPred A P) refl {eγ = refl} {eγ' = refl} = refl
 ty-id (PrimFromPred A P) {x = type-obj} = refl
 ty-id (PrimFromPred A P) {x = pred-obj} = refl
-ty-comp (PrimFromPred A P) {f = type-id} {eq-zy = refl} {eq-yx = refl} = refl
-ty-comp (PrimFromPred A P) {f = pred-id} {eq-zy = refl} {eq-yx = refl} = refl
+ty-comp (PrimFromPred A P) {f = type-id} {eγ-zy = refl} {eγ-yx = refl} = refl
+ty-comp (PrimFromPred A P) {f = pred-id} {eγ-zy = refl} {eγ-yx = refl} = refl
 ty-comp (PrimFromPred A P) {f = type-pred} {g = pred-id} = refl
 
 FromPred : (A : Set) → Pred A 0ℓ → ClosedType 𝟚
@@ -177,8 +177,8 @@ forget : {Γ : Ctx ★} → Ty (always-false Γ) → Ty Γ
 forget T ⟨ tt , γ ⟩ = T ⟨ type-obj , γ ⟩
 forget {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ type-id , trans (sym (ctx-id Γ)) eγ ⟫ t
 ty-cong (forget T) refl {eγ = refl} {eγ' = refl} = refl
-ty-id (forget T) = trans (ty-cong T refl) (ty-id T)
-ty-comp (forget T) = sym (ty-cong-2-1 T refl)
+ty-id (forget T) = strong-ty-id T
+ty-comp (forget T) = strong-ty-comp T
 
 module _ {Γ : Ctx ★} {T : Ty (always-false Γ)} where
   forget-intro : Tm (always-false Γ) T → Tm Γ (forget T)

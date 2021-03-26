@@ -49,8 +49,8 @@ _⟪_,_⟫_ (timeless-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ t
       ≡⟨ cong (Γ ⟪ z≤n ⟫_) eγ ⟩
         Γ ⟪ z≤n ⟫ γm ∎
 ty-cong (timeless-ty T) e = ty-cong T refl
-ty-id (timeless-ty T) = trans (ty-cong T refl) (ty-id T)
-ty-comp (timeless-ty T) = trans (ty-cong T refl) (ty-comp T)
+ty-id (timeless-ty T) = strong-ty-id T
+ty-comp (timeless-ty T) = strong-ty-comp T
 
 module _ {T : Ty (now Γ)} where
   timeless-tm : Tm (now Γ) T → Tm Γ (timeless-ty T)

@@ -226,14 +226,7 @@ module _
                    ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-proj₁ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ)) S' ] (
                    ι⁻¹[ ty-subst-comp S' π (ty-eq-to-ext-subst Γ T=T') ] (
                    b [ ty-eq-to-ext-subst Γ T=T' ]'))))
-  eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym(
-    begin
-      func (to S=S') (S' ⟪ hom-id , _ ⟫ b ⟨ _ , _ ⟩')
-    ≡⟨ cong (func (to S=S')) (ty-cong S' refl) ⟩
-      func (to S=S') (S' ⟪ hom-id , _ ⟫ b ⟨ _ , _ ⟩')
-    ≡⟨ cong (func (to S=S')) (ty-id S') ⟩
-      func (to S=S') (b ⟨ _ , _ ⟩') ∎))
-    where open ≡-Reasoning
+  eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym (cong (func (to S=S')) (strong-ty-id S')))
 
   app-ι : (f : Tm Γ (T' ⇛ S')) (t : Tm Γ T') → app (ι[ ⇛-cong T=T' S=S' ] f) (ι[ T=T' ] t) ≅ᵗᵐ ι[ S=S' ] (app f t)
   eq (app-ι f t) γ = cong (func (to S=S') ∘ f ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩_) (eq (isoʳ T=T') (t ⟨ _ , γ ⟩'))

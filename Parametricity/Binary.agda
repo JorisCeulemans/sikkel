@@ -48,9 +48,9 @@ ty-cong (PrimFromRel A B R) refl {eγ = refl}{eγ' = refl} = refl
 ty-id (PrimFromRel A B R) {x = left}  = refl
 ty-id (PrimFromRel A B R) {x = right} = refl
 ty-id (PrimFromRel A B R) {x = relation} = refl
-ty-comp (PrimFromRel A B R) {f = left-id}     {eq-zy = refl} {eq-yx = refl} = refl
-ty-comp (PrimFromRel A B R) {f = right-id}    {eq-zy = refl} {eq-yx = refl} = refl
-ty-comp (PrimFromRel A B R) {f = relation-id} {eq-zy = refl} {eq-yx = refl} = refl
+ty-comp (PrimFromRel A B R) {f = left-id}     {eγ-zy = refl} {eγ-yx = refl} = refl
+ty-comp (PrimFromRel A B R) {f = right-id}    {eγ-zy = refl} {eγ-yx = refl} = refl
+ty-comp (PrimFromRel A B R) {f = relation-id} {eγ-zy = refl} {eγ-yx = refl} = refl
 ty-comp (PrimFromRel A B R) {f = left-rel}  {g = relation-id} = refl
 ty-comp (PrimFromRel A B R) {f = right-rel} {g = relation-id} = refl
 
@@ -243,8 +243,8 @@ forget-right-ty : {Γ : Ctx ★} → Ty (just-left Γ) → Ty Γ
 forget-right-ty T ⟨ tt , γ ⟩ = T ⟨ left , γ ⟩
 forget-right-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ left-id , trans (sym (ctx-id Γ)) eγ ⟫ t
 ty-cong (forget-right-ty T) refl {eγ = refl} {eγ' = refl} = refl
-ty-id (forget-right-ty T) = trans (ty-cong T refl) (ty-id T)
-ty-comp (forget-right-ty T) = sym (ty-cong-2-1 T refl)
+ty-id (forget-right-ty T) = strong-ty-id T
+ty-comp (forget-right-ty T) = strong-ty-comp T
 
 module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
   forget-right-tm : Tm (just-left Γ) T → Tm Γ (forget-right-ty T)
@@ -353,8 +353,8 @@ forget-left-ty : {Γ : Ctx ★} → Ty (just-right Γ) → Ty Γ
 forget-left-ty T ⟨ tt , γ ⟩ = T ⟨ right , γ ⟩
 forget-left-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ right-id , trans (sym (ctx-id Γ)) eγ ⟫ t
 ty-cong (forget-left-ty T) refl {eγ = refl} {eγ' = refl} = refl
-ty-id (forget-left-ty T) = trans (ty-cong T refl) (ty-id T)
-ty-comp (forget-left-ty T) = sym (ty-cong-2-1 T refl)
+ty-id (forget-left-ty T) = strong-ty-id T
+ty-comp (forget-left-ty T) = strong-ty-comp T
 
 module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
   forget-left-tm : Tm (just-right Γ) T → Tm Γ (forget-left-ty T)

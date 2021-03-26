@@ -112,7 +112,7 @@ ty-id (GStream A) {t = v} =
   ≡⟨ first-≤-refl ⟩
     v ∎
   where open ≡-Reasoning
-ty-comp (GStream A) {f = k≤m} {g = m≤n} {eq-zy = eγ-nm} {eq-yx = eγ-mk} {t = v} =
+ty-comp (GStream A) {f = k≤m} {g = m≤n} {eγ-zy = eγ-nm} {eγ-yx = eγ-mk} {t = v} =
   begin
     map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s (≤-trans k≤m m≤n)) v)
   ≡⟨ cong (map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_)) first-≤-trans ⟩

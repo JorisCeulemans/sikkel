@@ -50,7 +50,7 @@ _⟪_,_⟫_ (allnow-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
     proof : T [ const-subst γ ] ≅ᵗʸ T [ const-subst γ' ]
     proof = ty-subst-cong-subst (const-subst-cong (trans (sym (ctx-id Γ)) eγ)) T
 ty-cong (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
-ty-id (allnow-ty T) = tm-≅-to-≡ (record { eq = λ _ → trans (ty-cong T refl) (ty-id T) })
+ty-id (allnow-ty T) = tm-≅-to-≡ (record { eq = λ _ → strong-ty-id T })
 ty-comp (allnow-ty T) = tm-≅-to-≡
   (record { eq = λ _ → trans (ty-cong T (≤-irrelevant _ _)) (ty-comp T) })
 

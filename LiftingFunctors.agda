@@ -64,13 +64,13 @@ ty-id (ty-lift T) {t = t} =
   ≡⟨ ty-id T ⟩
     t ∎
  where open ≡-Reasoning
-ty-comp (ty-lift T) {f = f} {g} {eq-zy = eq-zy} {eq-yx} {t} =
+ty-comp (ty-lift T) {f = f} {g} {eγ-zy = eγ-zy} {eγ-yx} {t} =
   begin
     T ⟪ hom F (g ∙[ C ] f) , _ ⟫ t
   ≡⟨ ty-cong T (comp-law F) ⟩
     T ⟪ hom F g ∙[ D ] hom F f , _ ⟫ t
   ≡⟨ ty-comp T ⟩
-    T ⟪ hom F f , eq-yx ⟫ (T ⟪ hom F g , eq-zy ⟫ t) ∎
+    T ⟪ hom F f , eγ-yx ⟫ (T ⟪ hom F g , eγ-zy ⟫ t) ∎
   where open ≡-Reasoning
 
 ty-lift-natural : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) (T : Ty Γ) →

@@ -70,11 +70,10 @@ allnow-timeless-ty : {Γ : Ctx ★} {T : Ty Γ} →
 func (from allnow-timeless-ty) tm = tm ⟨ 0 , tt ⟩'
 CwF-Structure.naturality (from (allnow-timeless-ty {T = T})) = ty-cong T refl
 func (to allnow-timeless-ty) t ⟨ _ , _ ⟩' = t
-Tm.naturality (func (to (allnow-timeless-ty {T = T})) t) _ _ = trans (ty-cong T refl) (ty-id T)
+Tm.naturality (func (to (allnow-timeless-ty {T = T})) t) _ _ = strong-ty-id T
 CwF-Structure.naturality (to (allnow-timeless-ty {T = T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
 eq (isoˡ (allnow-timeless-ty {T = T})) tm = tm-≅-to-≡ (record { eq = λ _ → trans (sym (Tm.naturality tm z≤n refl))
-                                                                                 (trans (ty-cong T refl)
-                                                                                        (ty-id T)) })
+                                                                                 (strong-ty-id T) })
 eq (isoʳ allnow-timeless-ty) _ = refl
 
 to-timeless-now-ctx : (Γ : Ctx ω) → (Γ ⇒ timeless-ctx (now Γ))
