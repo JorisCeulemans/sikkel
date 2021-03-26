@@ -37,7 +37,7 @@ example' σ τ = by-naturality
 -- Experiments interaction var + by-naturality tactics
 
 not' : Tm Γ Bool' → Tm Γ Bool'
-not' b ⟨ x , _ ⟩' = not (b ⟨ x , _ ⟩')
+not' b ⟨ x , γ ⟩' = not (b ⟨ x , γ ⟩')
 naturality (not' b) f eγ = cong not (naturality b f eγ)
 
 not-fun : Tm {C = C} ◇ (Bool' ⇛ Bool')

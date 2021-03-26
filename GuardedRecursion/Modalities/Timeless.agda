@@ -20,12 +20,12 @@ private
 now : Ctx ω → Ctx ★
 now Γ ⟨ _ ⟩ = Γ ⟨ 0 ⟩
 now Γ ⟪ _ ⟫ γ = γ
-ctx-id (now Γ) _ = refl
-ctx-comp (now Γ) _ _ _ = refl
+ctx-id (now Γ) = refl
+ctx-comp (now Γ) = refl
 
 now-subst : Δ ⇒ Γ → now Δ ⇒ now Γ
 func (now-subst σ) = func σ
-_⇒_.naturality (now-subst σ) _ = refl
+_⇒_.naturality (now-subst σ) = refl
 
 now-subst-id : now-subst (id-subst Γ) ≅ˢ id-subst (now Γ)
 eq now-subst-id _ = refl
@@ -44,13 +44,13 @@ _⟪_,_⟫_ (timeless-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ t
         Γ ⟪ z≤n ⟫ γn
       ≡⟨⟩
         Γ ⟪ ≤-trans z≤n m≤n ⟫ γn
-      ≡⟨ ctx-comp Γ z≤n m≤n γn ⟩
+      ≡⟨ ctx-comp Γ ⟩
         Γ ⟪ z≤n ⟫ (Γ ⟪ m≤n ⟫ γn)
       ≡⟨ cong (Γ ⟪ z≤n ⟫_) eγ ⟩
         Γ ⟪ z≤n ⟫ γm ∎
 ty-cong (timeless-ty T) e = ty-cong T refl
-ty-id (timeless-ty T) t = trans (ty-cong T refl) (ty-id T t)
-ty-comp (timeless-ty T) _ _ _ _ t = trans (ty-cong T refl) (ty-comp T tt tt _ _ t)
+ty-id (timeless-ty T) = trans (ty-cong T refl) (ty-id T)
+ty-comp (timeless-ty T) = trans (ty-cong T refl) (ty-comp T)
 
 module _ {T : Ty (now Γ)} where
   timeless-tm : Tm (now Γ) T → Tm Γ (timeless-ty T)
@@ -58,18 +58,18 @@ module _ {T : Ty (now Γ)} where
   Tm.naturality (timeless-tm t) _ _ = Tm.naturality t tt _
 
   untimeless-tm : Tm Γ (timeless-ty T) → Tm (now Γ) T
-  untimeless-tm t ⟨ _ , γ ⟩' = ctx-element-subst T (ctx-id Γ γ) (t ⟨ 0 , γ ⟩')
-  Tm.naturality (untimeless-tm t) tt refl = ty-id T _
+  untimeless-tm t ⟨ _ , γ ⟩' = ctx-element-subst T (ctx-id Γ) (t ⟨ 0 , γ ⟩')
+  Tm.naturality (untimeless-tm t) tt refl = ty-id T
 
   timeless-ty-η : (t : Tm Γ (timeless-ty T)) → timeless-tm (untimeless-tm t) ≅ᵗᵐ t
   eq (timeless-ty-η t) {n} γ =
     begin
-      T ⟪ tt , ctx-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
-    ≡˘⟨ cong (T ⟪ tt , ctx-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫_) (Tm.naturality t z≤n refl) ⟩
-      T ⟪ tt , ctx-id Γ (Γ ⟪ z≤n ⟫ γ) ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
+      T ⟪ tt , ctx-id Γ ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
+    ≡˘⟨ cong (T ⟪ tt , ctx-id Γ ⟫_) (Tm.naturality t z≤n refl) ⟩
+      T ⟪ tt , ctx-id Γ ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
     ≡⟨ ty-cong-2-1 T refl ⟩
       T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
-    ≡⟨ Tm.naturality t ≤-refl (ctx-id Γ γ) ⟩
+    ≡⟨ Tm.naturality t ≤-refl (ctx-id Γ) ⟩
       t ⟨ n , γ ⟩' ∎
     where open ≡-Reasoning
 
@@ -92,16 +92,16 @@ module _ {T : Ty (now Γ)} where
   eq (untimeless-tm-cong t=s) γ = cong (T ⟪ tt , _ ⟫_) (eq t=s γ)
 
 timeless-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ)} → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
-func (from (timeless-ty-natural σ {T})) = ctx-element-subst T (_⇒_.naturality σ _)
-CwF-Structure.naturality (from (timeless-ty-natural σ {T})) t = ty-cong-2-2 T refl
-func (to (timeless-ty-natural σ {T})) = ctx-element-subst T (sym (_⇒_.naturality σ _))
-CwF-Structure.naturality (to (timeless-ty-natural σ {T})) t = ty-cong-2-2 T refl
+func (from (timeless-ty-natural σ {T})) = ctx-element-subst T (_⇒_.naturality σ)
+CwF-Structure.naturality (from (timeless-ty-natural σ {T})) = ty-cong-2-2 T refl
+func (to (timeless-ty-natural σ {T})) = ctx-element-subst T (sym (_⇒_.naturality σ))
+CwF-Structure.naturality (to (timeless-ty-natural σ {T})) = ty-cong-2-2 T refl
 eq (isoˡ (timeless-ty-natural σ {T})) t =
   begin
     T ⟪ tt , _ ⟫ (T ⟪ tt , _ ⟫ t)
   ≡⟨ ty-cong-2-1 T refl ⟩
     T ⟪ tt , refl ⟫ t
-  ≡⟨ ty-id T t ⟩
+  ≡⟨ ty-id T ⟩
     t ∎
   where open ≡-Reasoning
 eq (isoʳ (timeless-ty-natural σ {T})) t =
@@ -109,7 +109,7 @@ eq (isoʳ (timeless-ty-natural σ {T})) t =
     T ⟪ tt , _ ⟫ (T ⟪ tt , _ ⟫ t)
   ≡⟨ ty-cong-2-1 T refl ⟩
     T ⟪ tt , refl ⟫ t
-  ≡⟨ ty-id T t ⟩
+  ≡⟨ ty-id T ⟩
     t ∎
   where open ≡-Reasoning
 

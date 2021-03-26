@@ -24,8 +24,8 @@ record Ctx (C : Category) : Set₁ where
   field
     set : Ob → Set
     rel : ∀ {x y} → Hom x y → set y → set x
-    ctx-id : ∀ {x} (γ : set x) → rel hom-id γ ≡ γ
-    ctx-comp : ∀ {x y z} (f : Hom x y) (g : Hom y z) (γ : set z) →
+    ctx-id : ∀ {x} {γ : set x} → rel hom-id γ ≡ γ
+    ctx-comp : ∀ {x y z} {f : Hom x y} {g : Hom y z} {γ : set z} →
                rel (g ∙ f) γ ≡ rel f (rel g γ)
 open Ctx public renaming (set to _⟨_⟩; rel to _⟪_⟫_)
 
@@ -50,7 +50,7 @@ module _ {C : Category} where
   strong-ctx-comp Γ {f}{g}{γz}{γy}{γx} eq-zy eq-yx =
     begin
       Γ ⟪ g ∙ f ⟫ γz
-    ≡⟨ ctx-comp Γ f g γz ⟩
+    ≡⟨ ctx-comp Γ ⟩
       Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γz)
     ≡⟨ cong (Γ ⟪ f ⟫_) eq-zy ⟩
       Γ ⟪ f ⟫ γy
@@ -64,22 +64,22 @@ module _ {C : Category} where
     no-eta-equality
     field
       func : ∀ {x} → Δ ⟨ x ⟩ → Γ ⟨ x ⟩
-      naturality : ∀ {x y} {f : Hom x y} (δ : Δ ⟨ y ⟩) → Γ ⟪ f ⟫ (func δ) ≡ func (Δ ⟪ f ⟫ δ)
+      naturality : ∀ {x y} {f : Hom x y} {δ : Δ ⟨ y ⟩} → Γ ⟪ f ⟫ (func δ) ≡ func (Δ ⟪ f ⟫ δ)
   open _⇒_ public
 
   id-subst : (Γ : Ctx C) → Γ ⇒ Γ
   func (id-subst Γ) = id
-  naturality (id-subst Γ) = λ _ → refl
+  naturality (id-subst Γ) = refl
 
   -- Composition of substitutions
   _⊚_ : Γ ⇒ Θ → Δ ⇒ Γ → Δ ⇒ Θ
   func (τ ⊚ σ) = func τ ∘ func σ
-  naturality (_⊚_ {Γ = Γ}{Θ = Θ}{Δ = Δ} τ σ) {f = f} δ =
+  naturality (_⊚_ {Γ = Γ}{Θ = Θ}{Δ = Δ} τ σ) {f = f} {δ = δ} =
     begin
       Θ ⟪ f ⟫ (func τ (func σ δ))
-    ≡⟨ naturality τ (func σ δ) ⟩
+    ≡⟨ naturality τ ⟩
       func τ (Γ ⟪ f ⟫ func σ δ)
-    ≡⟨ cong (func τ) (naturality σ δ) ⟩
+    ≡⟨ cong (func τ) (naturality σ) ⟩
       func τ (func σ (Δ ⟪ f ⟫ δ)) ∎
     where open ≡-Reasoning
 
@@ -154,12 +154,12 @@ module _ {C : Category} where
   ◇ : Ctx C
   ◇ ⟨ _ ⟩ = ⊤
   ◇ ⟪ _ ⟫ _ = tt
-  ctx-id ◇ _ = refl
-  ctx-comp ◇ _ _ _ = refl
+  ctx-id ◇ = refl
+  ctx-comp ◇ = refl
 
   !◇ : (Γ : Ctx C) → Γ ⇒ ◇
   func (!◇ Γ) _ = tt
-  naturality (!◇ Γ) _ = refl
+  naturality (!◇ Γ) = refl
 
   ◇-terminal : (Γ : Ctx C) (σ τ : Γ ⇒ ◇) → σ ≅ˢ τ
   eq (◇-terminal Γ σ τ) _ = refl

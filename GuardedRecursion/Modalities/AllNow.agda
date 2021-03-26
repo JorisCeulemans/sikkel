@@ -20,12 +20,12 @@ private
 timeless-ctx : Ctx ★ → Ctx ω
 timeless-ctx Γ ⟨ _ ⟩ = Γ ⟨ tt ⟩
 timeless-ctx Γ ⟪ _ ⟫ γ = γ
-ctx-id (timeless-ctx Γ) _ = refl
-ctx-comp (timeless-ctx Γ) _ _ _ = refl
+ctx-id (timeless-ctx Γ) = refl
+ctx-comp (timeless-ctx Γ) = refl
 
 timeless-subst : Δ ⇒ Γ → timeless-ctx Δ ⇒ timeless-ctx Γ
 func (timeless-subst σ) = func σ
-_⇒_.naturality (timeless-subst σ) _ = refl
+_⇒_.naturality (timeless-subst σ) = refl
 
 timeless-subst-id : timeless-subst (id-subst Γ) ≅ˢ id-subst (timeless-ctx Γ)
 eq timeless-subst-id _ = refl
@@ -35,7 +35,7 @@ eq (timeless-subst-⊚ σ τ) _ = refl
 
 const-subst : Γ ⟨ tt ⟩ → ◇ ⇒ timeless-ctx Γ
 func (const-subst γ) _ = γ
-_⇒_.naturality (const-subst γ) _ = refl
+_⇒_.naturality (const-subst γ) = refl
 
 const-subst-cong : {γ1 γ2 : Γ ⟨ tt ⟩} → γ1 ≡ γ2 → const-subst {Γ = Γ} γ1 ≅ˢ const-subst γ2
 eq (const-subst-cong eγ) tt = eγ
@@ -48,21 +48,21 @@ allnow-ty T ⟨ tt , γ ⟩ = Tm ◇ (T [ const-subst γ ])
 _⟪_,_⟫_ (allnow-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
   where
     proof : T [ const-subst γ ] ≅ᵗʸ T [ const-subst γ' ]
-    proof = ty-subst-cong-subst (const-subst-cong (trans (sym (ctx-id Γ γ)) eγ)) T
+    proof = ty-subst-cong-subst (const-subst-cong (trans (sym (ctx-id Γ)) eγ)) T
 ty-cong (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
-ty-id (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → trans (ty-cong T refl) (ty-id T _) })
-ty-comp (allnow-ty T) tt tt eγ-zy eγ-yx t = tm-≅-to-≡
-  (record { eq = λ _ → trans (ty-cong T (≤-irrelevant _ _)) (ty-comp T ≤-refl ≤-refl _ _ _) })
+ty-id (allnow-ty T) = tm-≅-to-≡ (record { eq = λ _ → trans (ty-cong T refl) (ty-id T) })
+ty-comp (allnow-ty T) = tm-≅-to-≡
+  (record { eq = λ _ → trans (ty-cong T (≤-irrelevant _ _)) (ty-comp T) })
 
 module _ {T : Ty (timeless-ctx Γ)} where
   allnow-tm : Tm (timeless-ctx Γ) T → Tm Γ (allnow-ty T)
   (allnow-tm t ⟨ tt , γ ⟩') ⟨ n , tt ⟩' = t ⟨ n , γ ⟩'
-  Tm.naturality (allnow-tm t ⟨ tt , γ ⟩') m≤n refl = Tm.naturality t m≤n refl
-  Tm.naturality (allnow-tm t) tt refl = tm-≅-to-≡ (record { eq = λ _ → Tm.naturality t ≤-refl _ })
+  Tm.naturality (allnow-tm t ⟨ tt , γ ⟩') f refl = Tm.naturality t f _
+  Tm.naturality (allnow-tm t) f eγ = tm-≅-to-≡ (record { eq = λ _ → Tm.naturality t ≤-refl _ })
 
   unallnow-tm : Tm Γ (allnow-ty T) → Tm (timeless-ctx Γ) T
   unallnow-tm t ⟨ n , γ ⟩' = t ⟨ tt , γ ⟩' ⟨ n , tt ⟩'
-  Tm.naturality (unallnow-tm t) m≤n refl = Tm.naturality (t ⟨ tt , _ ⟩') m≤n refl
+  Tm.naturality (unallnow-tm t) f refl = Tm.naturality (t ⟨ tt , _ ⟩') f refl
 
   allnow-ty-β : (t : Tm (timeless-ctx Γ) T) → unallnow-tm (allnow-tm t) ≅ᵗᵐ t
   eq (allnow-ty-β t) _ = refl
@@ -73,9 +73,9 @@ module _ {T : Ty (timeless-ctx Γ)} where
 allnow-ty-cong : {T : Ty (timeless-ctx Γ)} {S : Ty (timeless-ctx Γ)} →
                  T ≅ᵗʸ S → allnow-ty T ≅ᵗʸ allnow-ty S
 func (from (allnow-ty-cong T=S)) = ι⁻¹[ ty-subst-cong-ty (const-subst _) T=S ]_
-CwF-Structure.naturality (from (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (record { eq = λ _ → CwF-Structure.naturality (from T=S) _ })
+CwF-Structure.naturality (from (allnow-ty-cong T=S)) = tm-≅-to-≡ (record { eq = λ _ → CwF-Structure.naturality (from T=S) })
 func (to (allnow-ty-cong T=S)) = ι[ ty-subst-cong-ty (const-subst _) T=S ]_
-CwF-Structure.naturality (to (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (record { eq = λ _ → CwF-Structure.naturality (to T=S) _ })
+CwF-Structure.naturality (to (allnow-ty-cong T=S)) = tm-≅-to-≡ (record { eq = λ _ → CwF-Structure.naturality (to T=S) })
 eq (isoˡ (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symʳ (ty-subst-cong-ty (const-subst _) T=S) _)
 eq (isoʳ (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symˡ (ty-subst-cong-ty (const-subst _) T=S) _)
 
@@ -93,17 +93,17 @@ ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (co
 
 allnow-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} → (allnow-ty T) [ σ ] ≅ᵗʸ allnow-ty (T [ timeless-subst σ ])
 func (from (allnow-ty-natural σ {T})) = ι[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (from (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
+CwF-Structure.naturality (from (allnow-ty-natural σ {T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
 func (to (allnow-ty-natural σ {T})) = ι⁻¹[ ty-const-subst T σ _ ]_
-CwF-Structure.naturality (to (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
+CwF-Structure.naturality (to (allnow-ty-natural σ {T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
 eq (isoˡ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
 eq (isoʳ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} where
   allnow-tm-natural : (t : Tm (timeless-ctx Γ) T) →
                         (allnow-tm t) [ σ ]' ≅ᵗᵐ ι[ allnow-ty-natural σ ] allnow-tm (t [ timeless-subst σ ]')
-  eq (allnow-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (ty-id T _) })
+  eq (allnow-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (ty-id T) })
 
   unallnow-tm-natural : (t : Tm Γ (allnow-ty T)) →
                           (unallnow-tm t) [ timeless-subst σ ]' ≅ᵗᵐ unallnow-tm (ι⁻¹[ allnow-ty-natural σ ] (t [ σ ]'))
-  eq (unallnow-tm-natural t) _ = sym (ty-id T _)
+  eq (unallnow-tm-natural t) _ = sym (ty-id T)

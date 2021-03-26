@@ -26,16 +26,16 @@ T ⊞ S ⟪ f , eγ ⟫ inj₁ t = inj₁ (T ⟪ f , eγ ⟫ t)
 T ⊞ S ⟪ f , eγ ⟫ inj₂ s = inj₂ (S ⟪ f , eγ ⟫ s)
 ty-cong (T ⊞ S) e {t = inj₁ t} = cong inj₁ (ty-cong T e)
 ty-cong (T ⊞ S) e {t = inj₂ s} = cong inj₂ (ty-cong S e)
-ty-id (T ⊞ S) (inj₁ t) = cong inj₁ (ty-id T t)
-ty-id (T ⊞ S) (inj₂ s) = cong inj₂ (ty-id S s)
-ty-comp (T ⊞ S) f g eq-nm eq-mk (inj₁ t) = cong inj₁ (ty-comp T f g eq-nm eq-mk t)
-ty-comp (T ⊞ S) f g eq-nm eq-mk (inj₂ s) = cong inj₂ (ty-comp S f g eq-nm eq-mk s)
+ty-id (T ⊞ S) {t = inj₁ t} = cong inj₁ (ty-id T)
+ty-id (T ⊞ S) {t = inj₂ s} = cong inj₂ (ty-id S)
+ty-comp (T ⊞ S) {t = inj₁ t} = cong inj₁ (ty-comp T)
+ty-comp (T ⊞ S) {t = inj₂ s} = cong inj₂ (ty-comp S)
 
 ⊞-bimap : (T ↣ T') → (S ↣ S') → (T ⊞ S ↣ T' ⊞ S')
 func (⊞-bimap η φ) (inj₁ t) = inj₁ (func η t)
 func (⊞-bimap η φ) (inj₂ s) = inj₂ (func φ s)
-naturality (⊞-bimap η φ) (inj₁ t) = cong inj₁ (naturality η t)
-naturality (⊞-bimap η φ) (inj₂ s) = cong inj₂ (naturality φ s)
+naturality (⊞-bimap η φ) {t = inj₁ t} = cong inj₁ (naturality η)
+naturality (⊞-bimap η φ) {t = inj₂ s} = cong inj₂ (naturality φ)
 
 ⊞-cong : T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⊞ S ≅ᵗʸ T' ⊞ S'
 from (⊞-cong T=T' S=S') = ⊞-bimap (from T=T') (from S=S')
@@ -80,11 +80,11 @@ module _
 module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊞-natural : (T ⊞ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊞ (S [ σ ])
   func (from ⊞-natural) = id
-  naturality (from ⊞-natural) (inj₁ t) = refl
-  naturality (from ⊞-natural) (inj₂ s) = refl
+  naturality (from ⊞-natural) {t = inj₁ t} = refl
+  naturality (from ⊞-natural) {t = inj₂ s} = refl
   func (to ⊞-natural) = id
-  naturality (to ⊞-natural) (inj₁ t) = refl
-  naturality (to ⊞-natural) (inj₂ s) = refl
+  naturality (to ⊞-natural) {t = inj₁ t} = refl
+  naturality (to ⊞-natural) {t = inj₂ s} = refl
   eq (isoˡ ⊞-natural) _ = refl
   eq (isoʳ ⊞-natural) _ = refl
 
@@ -104,8 +104,8 @@ module _ {A : Ty Γ} {B : Ty Γ} (C : Ty Γ) where
   ⊞-elim : Tm Γ (A ⇛ C) → Tm Γ (B ⇛ C) → Tm Γ (A ⊞ B ⇛ C)
   (⊞-elim f g ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ inj₁ a = f €⟨ _ , _ ⟩ a
   (⊞-elim f g ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ inj₂ b = g €⟨ _ , _ ⟩ b
-  naturality (⊞-elim f g ⟨ _ , _ ⟩') _ _ (inj₁ a) = sym (€-natural f _ _ a)
-  naturality (⊞-elim f g ⟨ _ , _ ⟩') _ _ (inj₂ b) = sym (€-natural g _ _ b)
+  naturality (⊞-elim f g ⟨ _ , _ ⟩') {t = inj₁ a} = sym (€-natural f)
+  naturality (⊞-elim f g ⟨ _ , _ ⟩') {t = inj₂ b} = sym (€-natural g)
   naturality (⊞-elim f g) _ _ = to-pshfun-eq λ { _ _ (inj₁ a) → refl ; _ _ (inj₂ b) → refl }
 
   β-⊞-inl : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (a : Tm Γ A) →

@@ -59,8 +59,8 @@ instance
 expose-sum-term : {A : Ty {C = ★} ◇} {B : Ty ◇} →
                   Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B
 expose-sum-term {A = A}{B = B} p with p ⟨ tt , tt ⟩'
-... | inj₁ a = inj₁ (MkTm (λ { tt tt → a }) (λ { tt refl → ty-id A a }))
-... | inj₂ b = inj₂ (MkTm (λ { tt tt → b }) (λ { tt refl → ty-id B b }))
+... | inj₁ a = inj₁ (MkTm (λ { tt tt → a }) (λ { tt refl → ty-id A }))
+... | inj₂ b = inj₂ (MkTm (λ { tt tt → b }) (λ { tt refl → ty-id B }))
 
 instance
   translate-sum : {T : ClosedType ★} {{_ : Translatable T}}
@@ -74,14 +74,14 @@ instance
 -- A term in the empty context in mode ★ is nothing more than an Agda value.
 to-★-◇-term : {T : Ty {C = ★} ◇} → T ⟨ tt , tt ⟩ → Tm ◇ T
 to-★-◇-term t ⟨ _ , _ ⟩' = t
-Tm.naturality (to-★-◇-term {T = T} t) _ refl = ty-id T t
+Tm.naturality (to-★-◇-term {T = T} t) _ refl = ty-id T
 
 -- A function in the empty context in mode ★ is nothing more than an Agda function.
 func-★-◇ : {T : Ty {C = ★} ◇} {S : Ty {C = ★} ◇} →
            (Tm ◇ T → Tm ◇ S) → Tm ◇ (T ⇛ S)
 (func-★-◇ {T = T} f ⟨ _ , _ ⟩') $⟨ _ , refl ⟩ t = f (to-★-◇-term t) ⟨ tt , tt ⟩'
-PresheafFunc.naturality (func-★-◇ {T = T}{S = S} f ⟨ _ , _ ⟩') {ρ-xy = _} refl refl t =
-  trans (cong (λ x → f (to-★-◇-term x) ⟨ tt , tt ⟩') (ty-id T t)) (sym (ty-id S _))
+PresheafFunc.naturality (func-★-◇ {T = T}{S = S} f ⟨ _ , _ ⟩') {ρ-xy = _} {eγ-zy = refl} {refl} {t} =
+  trans (cong (λ x → f (to-★-◇-term x) ⟨ tt , tt ⟩') (ty-id T)) (sym (ty-id S))
 Tm.naturality (func-★-◇ f) _ refl = to-pshfun-eq (λ { _ refl _ → refl })
 
 instance

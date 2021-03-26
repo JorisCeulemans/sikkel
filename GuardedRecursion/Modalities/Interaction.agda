@@ -22,9 +22,9 @@ open import GuardedRecursion.Modalities.AllNow
 
 earlier-timeless-ctx : {Γ : Ctx ★} → ◄ (timeless-ctx Γ) ≅ᶜ timeless-ctx Γ
 func (from (earlier-timeless-ctx {Γ = Γ})) γ = γ
-_⇒_.naturality (from (earlier-timeless-ctx {Γ = Γ})) _ = refl
+_⇒_.naturality (from (earlier-timeless-ctx {Γ = Γ})) = refl
 func (to (earlier-timeless-ctx {Γ = Γ})) γ = γ
-_⇒_.naturality (to (earlier-timeless-ctx {Γ = Γ})) _ = refl
+_⇒_.naturality (to (earlier-timeless-ctx {Γ = Γ})) = refl
 eq (isoˡ (earlier-timeless-ctx {Γ = Γ})) _ = refl
 eq (isoʳ (earlier-timeless-ctx {Γ = Γ})) _ = refl
 
@@ -34,10 +34,10 @@ func (from allnow-later-ty) t ⟨ zero  , _ ⟩' = _ -- = tt
 func (from allnow-later-ty) t ⟨ suc n , _ ⟩' = t ⟨ n , tt ⟩'
 Tm.naturality (func (from (allnow-later-ty {T = T})) t) z≤n _ = refl
 Tm.naturality (func (from (allnow-later-ty {T = T})) t) (_≤_.s≤s m≤n) _ = trans (ty-cong T refl) (Tm.naturality t m≤n refl)
-CwF-Structure.naturality (from (allnow-later-ty {T = T})) t = tm-≅-to-≡ (record { eq =  λ { {zero} _ → refl ; {suc n} _ → ty-cong T refl } })
+CwF-Structure.naturality (from (allnow-later-ty {T = T})) = tm-≅-to-≡ (record { eq =  λ { {zero} _ → refl ; {suc n} _ → ty-cong T refl } })
 func (to (allnow-later-ty {T = T})) t ⟨ n , _ ⟩' = t ⟨ suc n , tt ⟩'
-Tm.naturality (func (to (allnow-later-ty {T = T})) t) m≤n _ = trans (ty-cong T refl) (Tm.naturality t (_≤_.s≤s m≤n) refl)
-CwF-Structure.naturality (to (allnow-later-ty {T = T})) t = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
+Tm.naturality (func (to (allnow-later-ty {T = T})) t) m≤n _ = trans (ty-cong T refl) (Tm.naturality t (s≤s m≤n) refl)
+CwF-Structure.naturality (to (allnow-later-ty {T = T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
 eq (isoˡ allnow-later-ty) t = tm-≅-to-≡ (record { eq = λ _ → refl })
 eq (isoʳ allnow-later-ty) t = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → refl } })
 
@@ -53,7 +53,7 @@ now-timeless-ctx : {Γ : Ctx ★} → now (timeless-ctx Γ) ≅ᶜ Γ
 func (from now-timeless-ctx) = id
 _⇒_.naturality (from (now-timeless-ctx {Γ = Γ})) {f = tt} = ctx-id Γ
 func (to now-timeless-ctx) = id
-_⇒_.naturality (to (now-timeless-ctx {Γ = Γ})) = sym ∘ ctx-id Γ
+_⇒_.naturality (to (now-timeless-ctx {Γ = Γ})) {f = tt} = sym (ctx-id Γ)
 eq (isoˡ now-timeless-ctx) _ = refl
 eq (isoʳ now-timeless-ctx) _ = refl
 
@@ -68,18 +68,18 @@ eq (now-timeless-natural σ) _ = refl
 allnow-timeless-ty : {Γ : Ctx ★} {T : Ty Γ} →
                      allnow-ty (timeless-ty (T [ from now-timeless-ctx ])) ≅ᵗʸ T
 func (from allnow-timeless-ty) tm = tm ⟨ 0 , tt ⟩'
-CwF-Structure.naturality (from (allnow-timeless-ty {T = T})) _ = ty-cong T refl
+CwF-Structure.naturality (from (allnow-timeless-ty {T = T})) = ty-cong T refl
 func (to allnow-timeless-ty) t ⟨ _ , _ ⟩' = t
-Tm.naturality (func (to (allnow-timeless-ty {T = T})) t) _ _ = trans (ty-cong T refl) (ty-id T _)
-CwF-Structure.naturality (to (allnow-timeless-ty {T = T})) t = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
+Tm.naturality (func (to (allnow-timeless-ty {T = T})) t) _ _ = trans (ty-cong T refl) (ty-id T)
+CwF-Structure.naturality (to (allnow-timeless-ty {T = T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
 eq (isoˡ (allnow-timeless-ty {T = T})) tm = tm-≅-to-≡ (record { eq = λ _ → trans (sym (Tm.naturality tm z≤n refl))
                                                                                  (trans (ty-cong T refl)
-                                                                                        (ty-id T _)) })
+                                                                                        (ty-id T)) })
 eq (isoʳ allnow-timeless-ty) _ = refl
 
 to-timeless-now-ctx : (Γ : Ctx ω) → (Γ ⇒ timeless-ctx (now Γ))
 func (to-timeless-now-ctx Γ) = Γ ⟪ z≤n ⟫_
-_⇒_.naturality (to-timeless-now-ctx Γ) = ctx-comp Γ z≤n _
+_⇒_.naturality (to-timeless-now-ctx Γ) = ctx-comp Γ
 
 from-timeless-allnow-ty : {Γ : Ctx ω} {T : Ty (timeless-ctx (now Γ))} →
                           Tm Γ (timeless-ty (allnow-ty T)) → Tm Γ (T [ to-timeless-now-ctx Γ ])

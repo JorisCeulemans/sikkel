@@ -25,13 +25,12 @@ _⊠_ : Ty Γ → Ty Γ → Ty Γ
 T ⊠ S ⟨ x , γ ⟩ = T ⟨ x , γ ⟩ × S ⟨ x , γ ⟩
 T ⊠ S ⟪ f , eγ ⟫ [ t , s ] = [ T ⟪ f , eγ ⟫ t , S ⟪ f , eγ ⟫ s ]
 ty-cong (T ⊠ S) e = cong₂ [_,_] (ty-cong T e) (ty-cong S e)
-ty-id (T ⊠ S) [ t , s ] = cong₂ [_,_] (ty-id T t) (ty-id S s)
-ty-comp (T ⊠ S) f g eq-nm eq-mk [ t , s ] = cong₂ [_,_] (ty-comp T f g eq-nm eq-mk t)
-                                                        (ty-comp S f g eq-nm eq-mk s)
+ty-id (T ⊠ S) = cong₂ [_,_] (ty-id T) (ty-id S)
+ty-comp (T ⊠ S) = cong₂ [_,_] (ty-comp T) (ty-comp S)
 
 ⊠-bimap : (T ↣ T') → (S ↣ S') → (T ⊠ S ↣ T' ⊠ S')
 func (⊠-bimap η φ) [ t , s ] = [ func η t , func φ s ]
-naturality (⊠-bimap η φ) [ t , s ] = cong₂ [_,_] (naturality η t) (naturality φ s)
+naturality (⊠-bimap η φ) = cong₂ [_,_] (naturality η) (naturality φ)
 
 ⊠-cong : T ≅ᵗʸ T' → S ≅ᵗʸ S' → T ⊠ S ≅ᵗʸ T' ⊠ S'
 from (⊠-cong T=T' S=S') = ⊠-bimap (from T=T') (from S=S')
@@ -76,9 +75,9 @@ module _
 module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊠-natural : (T ⊠ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊠ (S [ σ ])
   func (from ⊠-natural) = id
-  naturality (from ⊠-natural) _ = refl
+  naturality (from ⊠-natural) = refl
   func (to ⊠-natural) = id
-  naturality (to ⊠-natural) _ = refl
+  naturality (to ⊠-natural) = refl
   eq (isoˡ ⊠-natural) _ = refl
   eq (isoʳ ⊠-natural) _ = refl
 

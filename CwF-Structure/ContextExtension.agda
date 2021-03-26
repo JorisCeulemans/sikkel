@@ -31,20 +31,20 @@ private
 _,,_ : (Γ : Ctx C) (T : Ty Γ) → Ctx C
 (Γ ,, T) ⟨ x ⟩ = Σ[ γ ∈ Γ ⟨ x ⟩ ] (T ⟨ x , γ ⟩)
 (Γ ,, T) ⟪ f ⟫ [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
-ctx-id (Γ ,, T) [ γ , t ] = to-Σ-eq (ctx-id Γ γ) (strict-ty-id T t)
-ctx-comp (Γ ,, T) f g [ γ , t ] = to-Σ-eq (ctx-comp Γ f g γ)
-                                          (strict-ty-comp T f g t)
+ctx-id (Γ ,, T) = to-Σ-eq (ctx-id Γ) (strict-morph-id T)
+ctx-comp (Γ ,, T) = to-Σ-eq (ctx-comp Γ)
+                            (strict-morph-comp T)
 
 π : Γ ,, T ⇒ Γ
 func π = proj₁
-naturality π _ = refl
+naturality π = refl
 
 -- A term corresponding to the last variable in the context. In MLTT, this would be
 -- written as Γ, x : T ⊢ x : T. Note that the type of the term is T [ π ] instead of
 -- T because the latter is not a type in context Γ ,, T.
 ξ : Tm (Γ ,, T) (T [ π ])
 ξ ⟨ _ , [ _ , t ] ⟩' = t
-naturality ξ f refl = refl
+naturality ξ _ refl = refl
 
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
 -- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
@@ -57,12 +57,12 @@ ext-subst-to-term {T = T} τ = ι⁻¹[ ty-subst-comp T π τ ] (ξ [ τ ]')
 
 to-ext-subst : (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
 func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
-naturality (to-ext-subst {Δ = Δ} T σ t) δ = to-Σ-eq (naturality σ δ) (
+naturality (to-ext-subst {Δ = Δ} T σ t) {δ = δ} = to-Σ-eq (naturality σ) (
   begin
-    transport (λ x → T ⟨ _ , x ⟩) (naturality σ δ)
+    transport (λ x → T ⟨ _ , x ⟩) (naturality σ)
           (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
-  ≡⟨ morph-transport T refl (naturality σ δ) (t ⟨ _ , δ ⟩') ⟩
-    T ⟪ _ , trans refl (naturality σ δ) ⟫ t ⟨ _ , δ ⟩'
+  ≡⟨ morph-transport T ⟩
+    T ⟪ _ , trans refl (naturality σ) ⟫ t ⟨ _ , δ ⟩'
   ≡⟨ ty-cong T refl ⟩
     T ⟪ _ , _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ naturality t _ refl ⟩
@@ -78,10 +78,10 @@ ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (
   begin
-    T ⟪ hom-id , trans (ctx-id Γ (func σ δ)) _ ⟫ (t ⟨ _ , δ ⟩')
+    T ⟪ hom-id , trans (ctx-id Γ) _ ⟫ (t ⟨ _ , δ ⟩')
   ≡⟨ ty-cong T refl ⟩
     T ⟪ hom-id , _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ ty-id T _ ⟩
+  ≡⟨ ty-id T ⟩
     t ⟨ _ , δ ⟩' ∎)
   where open ≡-Reasoning
 

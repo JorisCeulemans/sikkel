@@ -36,8 +36,8 @@ Discr : (A : Set) → Ty Γ
 Discr A ⟨ _ , _ ⟩ = A
 Discr A ⟪ _ , _ ⟫ a = a
 ty-cong (Discr A) _ = refl
-ty-id (Discr A) _ = refl
-ty-comp (Discr A) _ _ _ _ _ = refl
+ty-id (Discr A) = refl
+ty-comp (Discr A) = refl
 
 discr : {A : Set} → A → Tm Γ (Discr A)
 discr a ⟨ _ , _ ⟩' = a
@@ -45,7 +45,7 @@ naturality (discr a) _ _ = refl
 
 discr-func : {A B : Set} → (A → B) → Tm Γ (Discr A ⇛ Discr B)
 (discr-func f ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ a = f a
-naturality (discr-func f ⟨ _ , _ ⟩') _ _ _ = refl
+naturality (discr-func f ⟨ _ , _ ⟩') = refl
 naturality (discr-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
 
 {-
@@ -64,9 +64,9 @@ eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
 
 Discr-natural : (A : Set) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
 func (from (Discr-natural A σ)) = id
-naturality (from (Discr-natural A σ)) _ = refl
+naturality (from (Discr-natural A σ)) = refl
 func (to (Discr-natural A σ)) = id
-naturality (to (Discr-natural A σ)) _ = refl
+naturality (to (Discr-natural A σ)) = refl
 eq (isoˡ (Discr-natural A σ)) _ = refl
 eq (isoʳ (Discr-natural A σ)) _ = refl
 
@@ -85,15 +85,15 @@ tt' = discr tt
 
 !unit : T ↣ Unit'
 func !unit _ = tt
-naturality !unit _ = refl
+naturality !unit = refl
 
 unit-terminal : (η : T ↣ Unit') → η ≅ⁿ !unit
 eq (unit-terminal η) _ = refl
 
 unit-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
 (unit-elim T t ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ _ = t ⟨ _ , _ ⟩'
-naturality (unit-elim T t ⟨ _ , _ ⟩') _ eγ _ = sym (naturality t _ eγ)
-naturality (unit-elim T t) f eγ = to-pshfun-eq λ _ _ _ → refl
+naturality (unit-elim T t ⟨ _ , _ ⟩') = sym (naturality t _ _)
+naturality (unit-elim T t) _ _ = to-pshfun-eq λ _ _ _ → refl
 
 β-unit' : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
 eq (β-unit' t) _ = refl
@@ -116,9 +116,9 @@ false' = discr false
 
 if'_then'_else'_ : Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
 (if' c then' t else' f) ⟨ x , γ ⟩' = if c ⟨ x , γ ⟩' then t ⟨ x , γ ⟩' else f ⟨ x , γ ⟩'
-naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ with c ⟨ x , γ' ⟩' | c ⟨ y , γ ⟩' | naturality c φ eγ
-naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | false | .false | refl = naturality f φ eγ
-naturality (if'_then'_else'_ c t f) {x} {y} φ {γ} {γ'} eγ | true  | .true  | refl = naturality t φ eγ
+naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ with c ⟨ x , γ' ⟩' | c ⟨ y , γ ⟩' | naturality c φ eγ
+naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | false | .false | refl = naturality f φ eγ
+naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | true  | .true  | refl = naturality t φ eγ
 
 module _ (t t' : Tm Γ T) where
   β-bool'-true : if' true' then' t else' t' ≅ᵗᵐ t
@@ -169,13 +169,13 @@ nat-elim {Γ = Γ} T t f = MkTm tm nat
     tm : (x : Ob) (γ : Γ ⟨ x ⟩) → (Nat' ⇛ T) ⟨ x , γ ⟩
     tm x γ $⟨ ρ , eγ ⟩ zero = t ⟨ _ , _ ⟩'
     tm x γ $⟨ ρ , eγ ⟩ suc n = f €⟨ _ , _ ⟩ (tm x γ $⟨ ρ , eγ ⟩ n)
-    naturality (tm z γ) eq-zy eq-yx zero = sym (naturality t _ eq-yx)
-    naturality (tm z γ) eq-zy eq-yx (suc n) =
+    naturality (tm z γ) {eγ-zy = eq-zy} {eq-yx} {zero} = sym (naturality t _ eq-yx)
+    naturality (tm z γ) {eγ-zy = eq-zy} {eq-yx} {suc n} =
       begin
         f €⟨ _ , _ ⟩ (tm z γ $⟨ _ , _ ⟩ n)
-      ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (tm z γ) eq-zy eq-yx n) ⟩
+      ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (tm z γ) {t = n}) ⟩
         f €⟨ _ , _ ⟩ (T ⟪ _ , eq-yx ⟫ tm z γ $⟨ _ , eq-zy ⟩ n)
-      ≡˘⟨ €-natural f _ eq-yx _ ⟩
+      ≡˘⟨ €-natural f ⟩
         T ⟪ _ , eq-yx ⟫ (f €⟨ _ , _ ⟩ (tm z γ $⟨ _ , eq-zy ⟩ n)) ∎
 
     helper : {y z : Ob} {ρ-yz : Hom y z} {γy : Γ ⟨ y ⟩} {γz : Γ ⟨ z ⟩} (eq-zy : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
@@ -184,9 +184,9 @@ nat-elim {Γ = Γ} T t f = MkTm tm nat
     helper eq-zy ρ-xy eq-yx zero    = refl
     helper eq-zy ρ-xy eq-yx (suc n) = cong (f €⟨ _ , _ ⟩_) (helper eq-zy ρ-xy eq-yx n)
 
-    nat : ∀ {y z} (ρ : Hom y z) {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ ⟫ γz ≡ γy) →
+    nat : ∀ {y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (ρ : Hom y z) (eγ : Γ ⟪ ρ ⟫ γz ≡ γy) →
           Nat' ⇛ T ⟪ ρ , eγ ⟫ (tm z γz) ≡ tm y γy
-    nat {y = y}{z = z} ρ-yz eq-zy = to-pshfun-eq (helper eq-zy)
+    nat _ eq-zy = to-pshfun-eq (helper eq-zy)
 
 module _ {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
   β-nat-zero : app (nat-elim T t f) zero' ≅ᵗᵐ t

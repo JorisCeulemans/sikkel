@@ -24,26 +24,26 @@ open Functor
 ctx-lift : Ctx D → Ctx C
 ctx-lift Γ ⟨ c ⟩ = Γ ⟨ ob F c ⟩
 ctx-lift Γ ⟪ f ⟫ γ = Γ ⟪ hom F f ⟫ γ
-ctx-id (ctx-lift Γ) γ =
+ctx-id (ctx-lift Γ) {γ = γ} =
   begin
     Γ ⟪ hom F (hom-id C) ⟫ γ
   ≡⟨ cong (Γ ⟪_⟫ γ) (id-law F) ⟩
     Γ ⟪ hom-id D ⟫ γ
-  ≡⟨ ctx-id Γ γ ⟩
+  ≡⟨ ctx-id Γ ⟩
     γ ∎
   where open ≡-Reasoning
-ctx-comp (ctx-lift Γ) f g γ =
+ctx-comp (ctx-lift Γ) {f = f} {g} {γ} =
   begin
     Γ ⟪ hom F (g ∙[ C ] f) ⟫ γ
   ≡⟨ cong (Γ ⟪_⟫ γ) (comp-law F) ⟩
     Γ ⟪ hom F g ∙[ D ] hom F f ⟫ γ
-  ≡⟨ ctx-comp Γ (hom F f) (hom F g) γ ⟩
+  ≡⟨ ctx-comp Γ ⟩
     Γ ⟪ hom F f ⟫ (Γ ⟪ hom F g ⟫ γ) ∎
   where open ≡-Reasoning
 
 subst-lift : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) → ctx-lift Δ ⇒ ctx-lift Γ
 func (subst-lift σ) {c} = func σ {ob F c}
-naturality (subst-lift σ) {f = f} δ = naturality σ {f = hom F f} δ
+naturality (subst-lift σ) {f = f} = naturality σ {f = hom F f}
 
 subst-lift-id : {Γ : Ctx D} → subst-lift (id-subst Γ) ≅ˢ id-subst (ctx-lift Γ)
 eq subst-lift-id _ = refl
@@ -56,29 +56,29 @@ ty-lift : {Γ : Ctx D} → Ty Γ → Ty (ctx-lift Γ)
 ty-lift T ⟨ c , γ ⟩ = T ⟨ ob F c , γ ⟩
 ty-lift T ⟪ f , eγ ⟫ t = T ⟪ hom F f , eγ ⟫ t
 ty-cong (ty-lift T) e = ty-cong T (cong (hom F) e)
-ty-id (ty-lift T) t =
+ty-id (ty-lift T) {t = t} =
   begin
     T ⟪ hom F (hom-id C) , _ ⟫ t
   ≡⟨ ty-cong T (id-law F) ⟩
     T ⟪ hom-id D , _ ⟫ t
-  ≡⟨ ty-id T t ⟩
+  ≡⟨ ty-id T ⟩
     t ∎
  where open ≡-Reasoning
-ty-comp (ty-lift T) f g eq-zy eq-yx t =
+ty-comp (ty-lift T) {f = f} {g} {eq-zy = eq-zy} {eq-yx} {t} =
   begin
     T ⟪ hom F (g ∙[ C ] f) , _ ⟫ t
   ≡⟨ ty-cong T (comp-law F) ⟩
     T ⟪ hom F g ∙[ D ] hom F f , _ ⟫ t
-  ≡⟨ ty-comp T (hom F f) (hom F g) eq-zy eq-yx t ⟩
+  ≡⟨ ty-comp T ⟩
     T ⟪ hom F f , eq-yx ⟫ (T ⟪ hom F g , eq-zy ⟫ t) ∎
   where open ≡-Reasoning
 
 ty-lift-natural : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) (T : Ty Γ) →
                   ty-lift (T [ σ ]) ≅ᵗʸ ty-lift T [ subst-lift σ ]
 func (from (ty-lift-natural σ T)) = id
-naturality (from (ty-lift-natural σ T)) _ = refl
+naturality (from (ty-lift-natural σ T)) = refl
 func (to (ty-lift-natural σ T)) = id
-naturality (to (ty-lift-natural σ T)) _ = refl
+naturality (to (ty-lift-natural σ T)) = refl
 eq (isoˡ (ty-lift-natural σ T)) _ = refl
 eq (isoʳ (ty-lift-natural σ T)) _ = refl
 
@@ -91,14 +91,14 @@ tm-lift-natural : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty Γ} (t : Tm
 eq (tm-lift-natural σ t) δ = refl
 
 lift-◇ : ctx-lift ◇ ≅ᶜ ◇
-from lift-◇ = MkSubst id (λ _ → refl)
-to lift-◇ = MkSubst id (λ _ → refl)
+from lift-◇ = MkSubst id refl
+to lift-◇ = MkSubst id refl
 eq (isoˡ lift-◇) _ = refl
 eq (isoʳ lift-◇) _ = refl
 
 lift-ctx-ext : (Γ : Ctx D) (T : Ty Γ) → ctx-lift (Γ ,, T) ≅ᶜ ctx-lift Γ ,, ty-lift T
-from (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
-to (lift-ctx-ext Γ T) = MkSubst id (λ _ → refl)
+from (lift-ctx-ext Γ T) = MkSubst id refl
+to (lift-ctx-ext Γ T) = MkSubst id refl
 eq (isoˡ (lift-ctx-ext Γ T)) _ = refl
 eq (isoʳ (lift-ctx-ext Γ T)) _ = refl
 
@@ -114,6 +114,6 @@ eq (lift-ξ Γ T) [ γ , t ] = sym (
     T ⟪ hom F (hom-id C) , _ ⟫ t
   ≡⟨ ty-cong T (id-law F) ⟩
     T ⟪ hom-id D , _ ⟫ t
-  ≡⟨ ty-id T t ⟩
+  ≡⟨ ty-id T ⟩
     t ∎)
   where open ≡-Reasoning

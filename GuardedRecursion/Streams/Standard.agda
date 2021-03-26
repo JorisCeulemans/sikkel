@@ -92,9 +92,9 @@ instance
           ≡ Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s')
       nat {m}{n} m≤n s' = begin
           Data.Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s')))
-        ≡⟨ trans (map-cong (ty-id A) _) (map-id _) ⟩
+        ≡⟨ trans (map-cong (λ _ → ty-id A) _) (map-id _) ⟩
           first-≤ m≤n (Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take n s'))
-        ≡˘⟨ map-first-≤ _ m≤n (take n s') ⟩
+        ≡˘⟨ map-first-≤ ⟩
           Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
         ≡⟨ cong (Data.Vec.map _) (take-first m≤n s') ⟩
           Data.Vec.map (λ a → now-timeless-ctx-intro {A = A} (translate-back a) ⟨ tt , tt ⟩') (take m s') ∎

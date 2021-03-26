@@ -33,7 +33,7 @@ record Tm (Γ : Ctx C) (T : Ty Γ) : Set where
 
   field
     term : (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩
-    naturality : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (eγ : Γ ⟪ f ⟫ γy ≡ γx) →
+    naturality : ∀ {x y} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} (f : Hom x y) (eγ : Γ ⟪ f ⟫ γy ≡ γx) →
                  T ⟪ f , eγ ⟫ (term y γy) ≡ term x γx
 open Tm public renaming (term to infix 15 _⟨_,_⟩')
 
@@ -87,7 +87,7 @@ module ≅ᵗᵐ-Reasoning where
 tm-≅-to-≡ : t ≅ᵗᵐ t' → t ≡ t'
 tm-≅-to-≡ et = cong₂-d MkTm
   (funext λ _ → funext λ γ → eq et γ)
-  (funextI (funextI (funext (λ _ → funextI (funextI (funext λ _ → uip _ _))))))
+  (funextI (funextI (funextI (funextI (funext λ _ → funext λ _ → uip _ _)))))
 
 
 --------------------------------------------------
@@ -98,9 +98,9 @@ convert-term η t ⟨ x , γ ⟩' = func η (t ⟨ x , γ ⟩')
 naturality (convert-term {T = T}{S = S} η t) f eγ =
   begin
     S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
-  ≡⟨ naturality η _ ⟩
+  ≡⟨ naturality η ⟩
     func η (T ⟪ f , eγ ⟫ (t ⟨ _ , _ ⟩'))
-  ≡⟨ cong (func η) (naturality t _ _) ⟩
+  ≡⟨ cong (func η) (naturality t f eγ) ⟩
     func η (t ⟨ _ , _ ⟩') ∎
   where open ≡-Reasoning
 

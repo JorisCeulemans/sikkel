@@ -45,14 +45,14 @@ _⟪_,_⟫_ (PrimFromRel A B R) relation-id _ = id
 _⟪_,_⟫_ (PrimFromRel A B R) left-rel  _ = proj₁ ∘ proj₁
 _⟪_,_⟫_ (PrimFromRel A B R) right-rel _ = proj₂ ∘ proj₁
 ty-cong (PrimFromRel A B R) refl {eγ = refl}{eγ' = refl} = refl
-ty-id (PrimFromRel A B R) {x = left}  _ = refl
-ty-id (PrimFromRel A B R) {x = right} _ = refl
-ty-id (PrimFromRel A B R) {x = relation} _ = refl
-ty-comp (PrimFromRel A B R) left-id  g refl refl _ = refl
-ty-comp (PrimFromRel A B R) right-id g refl refl _ = refl
-ty-comp (PrimFromRel A B R) relation-id g refl refl _ = refl
-ty-comp (PrimFromRel A B R) left-rel  relation-id _ _ _ = refl
-ty-comp (PrimFromRel A B R) right-rel relation-id _ _ _ = refl
+ty-id (PrimFromRel A B R) {x = left}  = refl
+ty-id (PrimFromRel A B R) {x = right} = refl
+ty-id (PrimFromRel A B R) {x = relation} = refl
+ty-comp (PrimFromRel A B R) {f = left-id}     {eq-zy = refl} {eq-yx = refl} = refl
+ty-comp (PrimFromRel A B R) {f = right-id}    {eq-zy = refl} {eq-yx = refl} = refl
+ty-comp (PrimFromRel A B R) {f = relation-id} {eq-zy = refl} {eq-yx = refl} = refl
+ty-comp (PrimFromRel A B R) {f = left-rel}  {g = relation-id} = refl
+ty-comp (PrimFromRel A B R) {f = right-rel} {g = relation-id} = refl
 
 FromRel : (A B : Set) (R : REL A B 0ℓ) → ClosedType ⋀
 FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
@@ -219,18 +219,18 @@ _⟪_⟫_ (just-left Γ) right-id = id
 _⟪_⟫_ (just-left Γ) relation-id = id
 _⟪_⟫_ (just-left Γ) left-rel = ⊥-elim
 _⟪_⟫_ (just-left Γ) right-rel = id
-ctx-id (just-left Γ) {x = left} _ = refl
-ctx-comp (just-left Γ) left-id g _ = refl
-ctx-comp (just-left Γ) right-id g _ = refl
-ctx-comp (just-left Γ) relation-id g _ = refl
-ctx-comp (just-left Γ) left-rel relation-id _ = refl
-ctx-comp (just-left Γ) right-rel relation-id _ = refl
+ctx-id (just-left Γ) {x = left} = refl
+ctx-comp (just-left Γ) {f = left-id} = refl
+ctx-comp (just-left Γ) {f = right-id} = refl
+ctx-comp (just-left Γ) {f = relation-id} = refl
+ctx-comp (just-left Γ) {f = left-rel} {g = relation-id} = refl
+ctx-comp (just-left Γ) {f = right-rel} {g = relation-id} = refl
 
 just-left-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → just-left Δ ⇒ just-left Γ
 func (just-left-subst σ) {x = left}     = func σ
 func (just-left-subst σ) {x = right}    = ⊥-elim
 func (just-left-subst σ) {x = relation} = ⊥-elim
-_⇒_.naturality (just-left-subst σ) {f = left-id} _ = refl
+_⇒_.naturality (just-left-subst σ) {f = left-id} = refl
 
 just-left-subst-id : {Γ : Ctx ★} → just-left-subst (id-subst Γ) ≅ˢ id-subst (just-left Γ)
 eq just-left-subst-id {x = left} _ = refl
@@ -241,10 +241,10 @@ eq (just-left-subst-⊚ σ τ) {x = left} _ = refl
 
 forget-right-ty : {Γ : Ctx ★} → Ty (just-left Γ) → Ty Γ
 forget-right-ty T ⟨ tt , γ ⟩ = T ⟨ left , γ ⟩
-forget-right-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ left-id , trans (sym (ctx-id Γ _)) eγ ⟫ t
+forget-right-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ left-id , trans (sym (ctx-id Γ)) eγ ⟫ t
 ty-cong (forget-right-ty T) refl {eγ = refl} {eγ' = refl} = refl
-ty-id (forget-right-ty T) t = trans (ty-cong T refl) (ty-id T t)
-ty-comp (forget-right-ty T) _ _ _ _ _ = sym (ty-cong-2-1 T refl)
+ty-id (forget-right-ty T) = trans (ty-cong T refl) (ty-id T)
+ty-comp (forget-right-ty T) = sym (ty-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
   forget-right-tm : Tm (just-left Γ) T → Tm Γ (forget-right-ty T)
@@ -253,14 +253,14 @@ module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
 
   unforget-right-tm : Tm Γ (forget-right-ty T) → Tm (just-left Γ) T
   unforget-right-tm t ⟨ left , γ ⟩' = t ⟨ tt , γ ⟩'
-  Tm.naturality (unforget-right-tm t) left-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ _) eγ))
+  Tm.naturality (unforget-right-tm t) left-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-left Γ)} where
   forget-right-ty-natural : (forget-right-ty T) [ σ ] ≅ᵗʸ forget-right-ty (T [ just-left-subst σ ])
   func (from forget-right-ty-natural) = id
-  CwF-Structure.naturality (from forget-right-ty-natural) _ = ty-cong T refl
+  CwF-Structure.naturality (from forget-right-ty-natural) = ty-cong T refl
   func (to forget-right-ty-natural) = id
-  CwF-Structure.naturality (to forget-right-ty-natural) _ = ty-cong T refl
+  CwF-Structure.naturality (to forget-right-ty-natural) = ty-cong T refl
   eq (isoˡ forget-right-ty-natural) _ = refl
   eq (isoʳ forget-right-ty-natural) _ = refl
 
@@ -329,18 +329,18 @@ _⟪_⟫_ (just-right Γ) right-id = id
 _⟪_⟫_ (just-right Γ) relation-id = id
 _⟪_⟫_ (just-right Γ) left-rel = id
 _⟪_⟫_ (just-right Γ) right-rel = ⊥-elim
-ctx-id (just-right Γ) {x = right} _ = refl
-ctx-comp (just-right Γ) left-id g _ = refl
-ctx-comp (just-right Γ) right-id g _ = refl
-ctx-comp (just-right Γ) relation-id g _ = refl
-ctx-comp (just-right Γ) left-rel relation-id _ = refl
-ctx-comp (just-right Γ) right-rel relation-id _ = refl
+ctx-id (just-right Γ) {x = right} = refl
+ctx-comp (just-right Γ) {f = left-id} = refl
+ctx-comp (just-right Γ) {f = right-id} = refl
+ctx-comp (just-right Γ) {f = relation-id} = refl
+ctx-comp (just-right Γ) {f = left-rel} {g = relation-id} = refl
+ctx-comp (just-right Γ) {f = right-rel} {g = relation-id} = refl
 
 just-right-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → just-right Δ ⇒ just-right Γ
 func (just-right-subst σ) {x = left}     = ⊥-elim
 func (just-right-subst σ) {x = right}    = func σ
 func (just-right-subst σ) {x = relation} = ⊥-elim
-_⇒_.naturality (just-right-subst σ) {f = right-id} _ = refl
+_⇒_.naturality (just-right-subst σ) {f = right-id} = refl
 
 just-right-subst-id : {Γ : Ctx ★} → just-right-subst (id-subst Γ) ≅ˢ id-subst (just-right Γ)
 eq just-right-subst-id {x = right} _ = refl
@@ -351,10 +351,10 @@ eq (just-right-subst-⊚ σ τ) {x = right} _ = refl
 
 forget-left-ty : {Γ : Ctx ★} → Ty (just-right Γ) → Ty Γ
 forget-left-ty T ⟨ tt , γ ⟩ = T ⟨ right , γ ⟩
-forget-left-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ right-id , trans (sym (ctx-id Γ _)) eγ ⟫ t
+forget-left-ty {Γ = Γ} T ⟪ tt , eγ ⟫ t = T ⟪ right-id , trans (sym (ctx-id Γ)) eγ ⟫ t
 ty-cong (forget-left-ty T) refl {eγ = refl} {eγ' = refl} = refl
-ty-id (forget-left-ty T) t = trans (ty-cong T refl) (ty-id T t)
-ty-comp (forget-left-ty T) _ _ _ _ _ = sym (ty-cong-2-1 T refl)
+ty-id (forget-left-ty T) = trans (ty-cong T refl) (ty-id T)
+ty-comp (forget-left-ty T) = sym (ty-cong-2-1 T refl)
 
 module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
   forget-left-tm : Tm (just-right Γ) T → Tm Γ (forget-left-ty T)
@@ -363,14 +363,14 @@ module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
 
   unforget-left-tm : Tm Γ (forget-left-ty T) → Tm (just-right Γ) T
   unforget-left-tm t ⟨ right , γ ⟩' = t ⟨ tt , γ ⟩'
-  Tm.naturality (unforget-left-tm t) right-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ _) eγ))
+  Tm.naturality (unforget-left-tm t) right-id eγ = trans (ty-cong T refl) (Tm.naturality t tt (trans (ctx-id Γ) eγ))
 
 module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-right Γ)} where
   forget-left-ty-natural : (forget-left-ty T) [ σ ] ≅ᵗʸ forget-left-ty (T [ just-right-subst σ ])
   func (from forget-left-ty-natural) = id
-  CwF-Structure.naturality (from forget-left-ty-natural) _ = ty-cong T refl
+  CwF-Structure.naturality (from forget-left-ty-natural) = ty-cong T refl
   func (to forget-left-ty-natural) = id
-  CwF-Structure.naturality (to forget-left-ty-natural) _ = ty-cong T refl
+  CwF-Structure.naturality (to forget-left-ty-natural) = ty-cong T refl
   eq (isoˡ forget-left-ty-natural) _ = refl
   eq (isoʳ forget-left-ty-natural) _ = refl
 
