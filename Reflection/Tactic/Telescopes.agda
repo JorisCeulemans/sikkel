@@ -82,7 +82,7 @@ construct-var-solution x hole = do
   ctx ← get-ctx goal
   telescope ← ctx-to-telescope ctx
   check-within-bounds x telescope
-  return (def (quote prim-var) (vArg telescope ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ []))
+  return (def (quote prim-var′) (vArg telescope ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ []))
 
 db-var-macro : Term → Term → TC ⊤
 db-var-macro x hole = do
