@@ -120,7 +120,6 @@ module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
       t
     ≅˘⟨ mod-η t ⟩
       mod-intro (mod-elim t)
-    ≅⟨ mod-intro-cong (η-unit' (mod-elim t)) ⟩
+    ≅⟨ mod-intro-cong (η-unit (mod-elim t)) ⟩
       mod-intro tt' ∎
     where open ≅ᵗᵐ-Reasoning
-

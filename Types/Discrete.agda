@@ -1,7 +1,7 @@
 --------------------------------------------------
 -- Discrete types
 --
--- Every Agda type can be turned into a type in any context.
+-- Every Agda type can be turned into a Sikkel type in any context.
 -- This lets us define the types of booleans, natural numbers, ...
 --------------------------------------------------
 
@@ -95,11 +95,11 @@ unit-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
 naturality (unit-elim T t ⟨ _ , _ ⟩') = sym (naturality t _ _)
 naturality (unit-elim T t) _ _ = to-pshfun-eq λ _ _ _ → refl
 
-β-unit' : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
-eq (β-unit' t) _ = refl
+β-unit : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
+eq (β-unit t) _ = refl
 
-η-unit' : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
-eq (η-unit' t) _ = refl
+η-unit : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
+eq (η-unit t) _ = refl
 
 
 --------------------------------------------------
@@ -121,16 +121,16 @@ naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | false | .false |
 naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | true  | .true  | refl = naturality t φ eγ
 
 module _ (t t' : Tm Γ T) where
-  β-bool'-true : if' true' then' t else' t' ≅ᵗᵐ t
-  eq β-bool'-true _ = refl
+  β-bool-true : if' true' then' t else' t' ≅ᵗᵐ t
+  eq β-bool-true _ = refl
 
-  β-bool'-false : if' false' then' t else' t' ≅ᵗᵐ t'
-  eq β-bool'-false _ = refl
+  β-bool-false : if' false' then' t else' t' ≅ᵗᵐ t'
+  eq β-bool-false _ = refl
 
-η-bool' : (t : Tm Γ Bool') → t ≅ᵗᵐ if' t then' true' else' false'
-eq (η-bool' t) γ with t ⟨ _ , γ ⟩'
-eq (η-bool' t) γ | false = refl
-eq (η-bool' t) γ | true  = refl
+η-bool : (t : Tm Γ Bool') → t ≅ᵗᵐ if' t then' true' else' false'
+eq (η-bool t) γ with t ⟨ _ , γ ⟩'
+eq (η-bool t) γ | false = refl
+eq (η-bool t) γ | true  = refl
 
 _||_ : Tm Γ Bool' → Tm Γ Bool' → Tm Γ Bool'
 t || s ⟨ x , γ ⟩' = t ⟨ x , γ ⟩' ∨ s ⟨ x , γ ⟩'
