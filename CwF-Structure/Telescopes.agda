@@ -62,7 +62,7 @@ lookupTel (suc x) (Ts ∷ T) = lookupTel x Ts
 ξs zero (Ts ∷ T) ⟨ _ , [ _ , v ] ⟩' = v
 naturality (ξs zero (Ts ∷ T)) f refl = refl
 ξs (suc x) (Ts ∷ T) ⟨ _ , [ vs , _ ] ⟩' = ξs x Ts ⟨ _ , vs ⟩'
-naturality (ξs (suc x) (Ts ∷ T)) f eγ = trans (cong (λ eq → lookupTel x Ts ⟪ f , eq ⟫ ξs x Ts ⟨ _ , _ ⟩') (cong₂ trans (trans-reflʳ (naturality (πs (suc x) Ts))) (cong-∘ eγ))) (naturality (ξs x Ts) f (cong proj₁ eγ))
+naturality (ξs (suc x) (Ts ∷ T)) f eγ = trans (ty-cong (lookupTel x Ts) refl) (naturality (ξs x Ts) f (cong proj₁ eγ))
 
 
 var-type′ : (Ts : Telescope Γ n) (x : Fin n) → Ty (Γ ++ Ts)
