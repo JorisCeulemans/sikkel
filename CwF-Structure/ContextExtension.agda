@@ -99,10 +99,7 @@ ty-eq-to-ext-subst : (Γ : Ctx C) {T : Ty Γ} {T' : Ty Γ} →
                      T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
 ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ ∈ T' ⟩
 
-{-
--- These functions are currently not used anywhere. We keep them in case we need them
--- in the future.
-π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ ℓ) →
+π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
 π-ext-comp-ty-subst {T = T} σ t S =
   S [ π ] [ ⟨ σ , t ∈ T ⟩ ]
@@ -112,6 +109,9 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
   S [ σ ] ∎
   where open ≅ᵗʸ-Reasoning
 
+{-
+-- This function is currently not used anywhere. We keep it in case we need it
+-- in the future.
 _⌈_⌋ : Tm (Γ ,, T) (S [ π ]) → Tm Γ T → Tm Γ S
 _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
   where
