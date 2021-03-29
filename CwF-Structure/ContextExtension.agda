@@ -6,8 +6,11 @@ open import Categories
 
 module CwF-Structure.ContextExtension {C : Category} where
 
+open import Data.Fin
+open import Data.Nat hiding (_⊔_)
+open import Data.Vec hiding ([_]; _++_)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Data.String
+open import Data.String hiding (_++_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
 
 open import Helpers
@@ -22,6 +25,7 @@ infixl 15 _,,_∈_
 
 private
   variable
+    n : ℕ
     Γ Δ Θ : Ctx C
     T S : Ty Γ
 
@@ -34,17 +38,50 @@ _,,_ : (Γ : Ctx C) (T : Ty Γ) → Ctx C
 ctx-id (Γ ,, T) = to-Σ-eq (ctx-id Γ) (strict-morph-id T)
 ctx-comp (Γ ,, T) = to-Σ-eq (ctx-comp Γ)
                             (strict-morph-comp T)
+--------------------------------------------------
+-- Definition of a telescope in a context of a certain length
+
+-- A value of Telescope Γ n ℓs is a list of types Ts = [] ∷ T1 ∷ T2 ∷ ... ∷ Tn so that
+-- T1 is valid in Γ, T2 is valid in Γ ,, T1 etc. and hence Γ ,, T1 ,, T2 ,, ... ,, Tn
+-- is a valid context written as Γ ++ Ts.
+data Telescope (Γ : Ctx C) : (n : ℕ) → Set₁
+_++_ : (Γ : Ctx C) {n : ℕ} → Telescope Γ n → Ctx C
+
+data Telescope Γ where
+  []  : Telescope Γ 0
+  _∷_ : ∀ {n} (Ts : Telescope Γ n) → Ty (Γ ++ Ts) → Telescope Γ (suc n)
+
+Γ ++ []       = Γ
+Γ ++ (Ts ∷ T) = (Γ ++ Ts) ,, T
+
+dropTel : (x : Fin (suc n)) → Telescope Γ n → Telescope Γ (n ℕ-ℕ x)
+dropTel zero Ts = Ts
+dropTel (suc x) (Ts ∷ T) = dropTel x Ts
+
+πs : (x : Fin (suc n)) → (Ts : Telescope Γ n) → Γ ++ Ts ⇒ Γ ++ dropTel x Ts
+func (πs zero Ts) v = v
+func (πs (suc x) (Ts ∷ T)) [ v , _ ] = func (πs x Ts) v
+naturality (πs zero Ts) = refl
+naturality (πs (suc x) (Ts ∷ T)) = naturality (πs x Ts)
 
 π : Γ ,, T ⇒ Γ
-func π = proj₁
-naturality π = refl
+π {T = T} = πs (suc zero) ([] ∷ T)
+
+lookupTel : (x : Fin n) → (Ts : Telescope Γ n) → Ty (Γ ++ dropTel (suc x) Ts)
+lookupTel zero (Ts ∷ T) = T
+lookupTel (suc x) (Ts ∷ T) = lookupTel x Ts
+
+ξs : (x : Fin n) → (Ts : Telescope Γ n) → Tm (Γ ++ Ts) (lookupTel x Ts [ πs (suc x) Ts ])
+ξs zero (Ts ∷ T) ⟨ _ , [ _ , v ] ⟩' = v
+naturality (ξs zero (Ts ∷ T)) f refl = refl
+ξs (suc x) (Ts ∷ T) ⟨ _ , [ vs , _ ] ⟩' = ξs x Ts ⟨ _ , vs ⟩'
+naturality (ξs (suc x) (Ts ∷ T)) f eγ = trans (ty-cong (lookupTel x Ts) refl) (naturality (ξs x Ts) f (cong proj₁ eγ))
 
 -- A term corresponding to the last variable in the context. In MLTT, this would be
 -- written as Γ, x : T ⊢ x : T. Note that the type of the term is T [ π ] instead of
 -- T because the latter is not a type in context Γ ,, T.
 ξ : Tm (Γ ,, T) (T [ π ])
-ξ ⟨ _ , [ _ , t ] ⟩' = t
-naturality ξ _ refl = refl
+ξ {T = T} = ξs zero ([] ∷ T)
 
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
 -- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
