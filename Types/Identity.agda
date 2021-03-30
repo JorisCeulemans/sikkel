@@ -39,8 +39,8 @@ Tm.naturality (refl' a) f eγ = uip _ _ -- also provable without uip
 
 subst' : {A : Ty Γ} (T : Ty (Γ ,, "x" ∈ A))
          {a b : Tm Γ A} → Tm Γ (Id a b) →
-         Tm Γ (T [ ⟨ id-subst Γ , ι[ ty-subst-id A ] a ∈ A ⟩ ]) →
-         Tm Γ (T [ ⟨ id-subst Γ , ι[ ty-subst-id A ] b ∈ A ⟩ ])
+         Tm Γ (T [ ⟨ id-subst Γ , a [ id-subst _ ]' ∈ A ⟩ ]) →
+         Tm Γ (T [ ⟨ id-subst Γ , b [ id-subst _ ]' ∈ A ⟩ ])
 subst' T a=b t ⟨ x , γ ⟩' = ctx-element-subst T (cong [ γ ,_] (a=b ⟨ x , γ ⟩')) (t ⟨ x , γ ⟩')
 Tm.naturality (subst' T a=b t) f eγ = trans (ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ)))
                                             (cong (ctx-element-subst T (cong _ _)) (Tm.naturality t f eγ))
@@ -64,4 +64,18 @@ eq (isoˡ (Id-cong A=B a=b a=b')) _ = uip _ _
 eq (isoʳ (Id-cong A=B a=b a=b')) _ = uip _ _
 
 sym' : {a b : Tm Γ A} → Tm Γ (Id a b) → Tm Γ (Id b a)
-sym' {a = a} {b = b} e = ι⁻¹[ ≅ᵗʸ-trans (Id-natural _) {!!} ] (subst' (Id ξ (a [ π ]')) e (ι[ Id-natural _ ] (ι[ ≅ᵗʸ-trans (Id-cong (π-ext-comp-ty-subst _ _ _)  {!!} {!!}) (Id-cong (ty-subst-id _) (tm-subst-id a) (tm-subst-id a)) ] refl' a)))
+sym' {Γ = Γ} {A = A} {a = a} {b = b} e =
+  ι⁻¹[ proof b ] (
+  subst' (Id ξ (a [ π ]'))
+         e
+         (ι[ proof a ] refl' a))
+  where
+    proof : (t : Tm Γ A) → (Id ξ (a [ π ]')) [ to-ext-subst A (id-subst Γ) (t [ id-subst Γ ]') ] ≅ᵗʸ Id t a
+    proof t = ≅ᵗʸ-trans (Id-natural _)
+                        (≅ᵗʸ-trans (Id-cong (≅ᵗʸ-trans (ty-subst-comp A _ _)
+                                                       (ty-subst-cong-subst (ctx-ext-subst-proj₁ _ _) A))
+                                            (ctx-ext-subst-β₂ _ _)
+                                            (≅ᵗᵐ-trans (tm-subst-comp a _ _)
+                                                       (≅ᵗᵐ-trans (ι-cong (ty-subst-comp _ _ _) (tm-subst-cong-subst a (ctx-ext-subst-proj₁ _ _)))
+                                                                  (≅ᵗᵐ-sym (ι-trans (ty-subst-comp _ _ _) (ty-subst-cong-subst _ _) (a [ id-subst _ ]'))))))
+                                   (Id-cong (ty-subst-id _) (tm-subst-id t) (tm-subst-id a)))

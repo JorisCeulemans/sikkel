@@ -78,6 +78,11 @@ ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (strong-ty-id T)
 
+-- Reformulation of ctx-ext-subst-proj₂
+ctx-ext-subst-β₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
+                   ξ [ ⟨ σ , t ∈ T ⟩ ]' ≅ᵗᵐ ι[ ≅ᵗʸ-trans (ty-subst-comp T π _) (ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T) ] t
+eq (ctx-ext-subst-β₂ {T = T} σ t) _ = sym (strong-ty-id T)
+
 ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≅ˢ τ
 eq (ctx-ext-subst-η τ) δ = refl
 
