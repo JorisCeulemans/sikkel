@@ -63,6 +63,9 @@ CwF-Structure.naturality (to (Id-cong A=B a=b a=b')) = uip _ _
 eq (isoˡ (Id-cong A=B a=b a=b')) _ = uip _ _
 eq (isoʳ (Id-cong A=B a=b a=b')) _ = uip _ _
 
+eq-reflect : {a b : Tm Γ A} → Tm Γ (Id a b) → a ≅ᵗᵐ b
+eq (eq-reflect e) {x = x} γ = e ⟨ x , γ ⟩'
+
 sym' : {a b : Tm Γ A} → Tm Γ (Id a b) → Tm Γ (Id b a)
 sym' {Γ = Γ} {A = A} {a = a} {b = b} e =
   ι⁻¹[ proof b ] (
