@@ -58,7 +58,7 @@ module _ {T : Ty (now Γ)} where
   Tm.naturality (timeless-tm t) _ _ = Tm.naturality t tt _
 
   untimeless-tm : Tm Γ (timeless-ty T) → Tm (now Γ) T
-  untimeless-tm t ⟨ _ , γ ⟩' = ctx-element-subst T (ctx-id Γ) (t ⟨ 0 , γ ⟩')
+  untimeless-tm t ⟨ _ , γ ⟩' = ty-ctx-subst T (ctx-id Γ) (t ⟨ 0 , γ ⟩')
   Tm.naturality (untimeless-tm t) tt refl = ty-id T
 
   timeless-ty-η : (t : Tm Γ (timeless-ty T)) → timeless-tm (untimeless-tm t) ≅ᵗᵐ t
@@ -92,9 +92,9 @@ module _ {T : Ty (now Γ)} where
   eq (untimeless-tm-cong t=s) γ = cong (T ⟪ tt , _ ⟫_) (eq t=s γ)
 
 timeless-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ)} → (timeless-ty T) [ σ ] ≅ᵗʸ timeless-ty (T [ now-subst σ ])
-func (from (timeless-ty-natural σ {T})) = ctx-element-subst T (_⇒_.naturality σ)
+func (from (timeless-ty-natural σ {T})) = ty-ctx-subst T (_⇒_.naturality σ)
 CwF-Structure.naturality (from (timeless-ty-natural σ {T})) = ty-cong-2-2 T refl
-func (to (timeless-ty-natural σ {T})) = ctx-element-subst T (sym (_⇒_.naturality σ))
+func (to (timeless-ty-natural σ {T})) = ty-ctx-subst T (sym (_⇒_.naturality σ))
 CwF-Structure.naturality (to (timeless-ty-natural σ {T})) = ty-cong-2-2 T refl
 eq (isoˡ (timeless-ty-natural σ {T})) t =
   begin

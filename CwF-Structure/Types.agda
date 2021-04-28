@@ -6,8 +6,9 @@ open import Categories
 
 module CwF-Structure.Types {C : Category} where
 
+open import Data.Product renaming (_,_ to [_,_])
 open import Function hiding (_⟨_⟩_; _↣_)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -97,51 +98,24 @@ ty-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
     T ⟪ f' , _ ⟫ T ⟪ g' , _ ⟫ t ∎
   where open ≡-Reasoning
 
-ctx-element-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
-ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (ctx-id Γ) eγ ⟫_
+ty-ctx-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
+ty-ctx-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (ctx-id Γ) eγ ⟫_
 
-ctx-element-subst-inverseˡ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ ⟩} →
-                            ctx-element-subst T (sym eγ) (ctx-element-subst T eγ t) ≡ t
-ctx-element-subst-inverseˡ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
+ty-ctx-subst-inverseˡ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ ⟩} →
+                        ty-ctx-subst T (sym eγ) (ty-ctx-subst T eγ t) ≡ t
+ty-ctx-subst-inverseˡ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
 
-ctx-element-subst-inverseʳ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ' ⟩} →
-                            ctx-element-subst T eγ (ctx-element-subst T (sym eγ) t) ≡ t
-ctx-element-subst-inverseʳ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
+ty-ctx-subst-inverseʳ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ' ⟩} →
+                        ty-ctx-subst T eγ (ty-ctx-subst T (sym eγ) t) ≡ t
+ty-ctx-subst-inverseʳ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
 
--- The following definitions are needed when defining context extension.
-morph-transport : (T : Ty Γ) {f : Hom x y}
-                  {γ1 : Γ ⟨ y ⟩} {γ2 γ3 : Γ ⟨ x ⟩}
-                  {eγ12 : Γ ⟪ f ⟫ γ1 ≡ γ2} {eγ23 : γ2 ≡ γ3}
-                  {t : T ⟨ y , γ1 ⟩} →
-                  transport (λ - → T ⟨ x , - ⟩) eγ23 (T ⟪ f , eγ12 ⟫ t) ≡ T ⟪ f , trans eγ12 eγ23 ⟫ t
-morph-transport T {eγ12 = refl} {eγ23 = refl} = refl
-
-module _ {Γ : Ctx C} (T : Ty Γ) where
-  strict-morph : (f : Hom x y) (γ : Γ ⟨ y ⟩) → T ⟨ y , γ ⟩ → T ⟨ x , Γ ⟪ f ⟫ γ ⟩
-  strict-morph f γ t = T ⟪ f , refl ⟫ t
-
-  strict-morph-id : {γ : Γ ⟨ y ⟩} {t : T ⟨ y , γ ⟩} →
-                    transport (λ - → T ⟨ y , - ⟩) (ctx-id Γ) (strict-morph hom-id γ t) ≡ t
-  strict-morph-id {y = y}{γ = γ}{t = t} =
-    begin
-      transport (λ - → T ⟨ y , - ⟩) (ctx-id Γ) (strict-morph hom-id γ t)
-    ≡⟨ morph-transport T ⟩
-      T ⟪ hom-id , ctx-id Γ ⟫ t
-    ≡⟨ ty-id T ⟩
-      t ∎
-    where open ≡-Reasoning
-
-  strict-morph-comp : {f : Hom x y} {g : Hom y z} {γ : Γ ⟨ z ⟩} {t : T ⟨ z , γ ⟩} →
-                      transport (λ - → T ⟨ x , - ⟩) (ctx-comp Γ) (strict-morph (g ∙ f) γ t) ≡
-                        strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t)
-  strict-morph-comp {x = x} {f = f} {g = g} {γ = γ} {t = t} =
-    begin
-      transport (λ - → T ⟨ x , - ⟩) (ctx-comp Γ) (strict-morph (g ∙ f) γ t)
-    ≡⟨ morph-transport T ⟩
-      T ⟪ g ∙ f , ctx-comp Γ ⟫ t
-    ≡⟨ strong-ty-comp T ⟩
-      strict-morph f (Γ ⟪ g ⟫ γ) (strict-morph g γ t) ∎
-    where open ≡-Reasoning
+-- The following definition is needed when defining context extension.
+to-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
+             {a b : A} (e : a ≡ b)
+             {γ : A → Γ ⟨ x ⟩}
+             {ta : T ⟨ x , γ a ⟩} {tb : T ⟨ x , γ b ⟩} → ty-ctx-subst T (cong γ e) ta ≡ tb →
+             [ a , ta ] ≡ [ b , tb ]
+to-Σ-ty-eq T {a = a} refl et = cong [ a ,_] (trans (sym (strong-ty-id T)) et)
 
 
 --------------------------------------------------
@@ -359,9 +333,9 @@ eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
-func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
+func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ty-ctx-subst T (eq σ=τ δ) t
 naturality (from (ty-subst-cong-subst σ=τ T)) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
-func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (sym (eq σ=τ δ)) t
+func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ty-ctx-subst T (sym (eq σ=τ δ)) t
 naturality (to (ty-subst-cong-subst σ=τ T)) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   -- Here we cannot use ty-id T twice because the omitted equality proofs are not ctx-id Γ _
