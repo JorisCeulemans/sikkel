@@ -9,7 +9,7 @@ module Types.Functions {C : Category} where
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.String
 open import Function using (_∘_)
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -108,9 +108,9 @@ lam {S = S} T b ⟨ z , γz ⟩' = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ 
                                      (λ {x = x}{y}{ρ-xy}{_}{γx}{γy}{eγ-zy}{eγ-yx}{t} →
   begin
     b ⟨ x , [ γx , T ⟪ ρ-xy , eγ-yx ⟫ t ] ⟩'
-  ≡⟨ sym (naturality b ρ-xy _) ⟩
-    S ⟪ ρ-xy , from-Σ-eq1 (to-Σ-eq eγ-yx _) ⟫ b ⟨ y , [ γy , t ] ⟩'
-  ≡⟨ cong (λ x → S ⟪ ρ-xy , x ⟫ _) (from-to-Σ-eq1 (morph-transport T)) ⟩
+  ≡˘⟨ naturality b ρ-xy (to-Σ-ty-eq T eγ-yx (ty-cong-2-1 T hom-idʳ)) ⟩
+    S ⟪ ρ-xy , _ ⟫ b ⟨ y , [ γy , t ] ⟩'
+  ≡⟨ ty-cong S refl ⟩
     S ⟪ ρ-xy , eγ-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎)
   where open ≡-Reasoning
 naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
@@ -321,10 +321,12 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
                   ι[ ⇛-natural ] (
                   lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π ∷ σ ⊹ ◼) (σ ∷ π ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
   eq (lam-natural b) δ = to-pshfun-eq (λ ρ {γ'} eγ t → sym (
-    let α = begin
-              transport (λ - → T ⟨ _ , - ⟩) _ (T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t)
-            ≡⟨ morph-transport T ⟩
-              T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
+    let α : Γ ⟪ hom-id ⟫ func σ (Δ ⟪ ρ ⟫ δ) ≡ γ'
+        α = trans (ctx-id Γ) (trans (sym (naturality σ)) eγ)
+        β = begin
+              T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
+            ≡⟨ ty-cong-2-1 T hom-idʳ ⟩
+              T ⟪ hom-id , α ⟫ T ⟪ hom-id , _ ⟫ t
             ≡⟨ ty-cong-2-1 T hom-idʳ ⟩
               T ⟪ hom-id , _ ⟫ t
             ≡⟨ ty-id T ⟩
@@ -333,7 +335,7 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
       S ⟪ hom-id , _ ⟫ S ⟪ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
     ≡⟨ ty-cong-2-1 S hom-idʳ ⟩
       S ⟪ hom-id , _ ⟫ b ⟨ _ , [ func σ (Δ ⟪ ρ ⟫ δ) , T ⟪ hom-id , _ ⟫ t ] ⟩'
-    ≡⟨ naturality b hom-id (to-Σ-eq (trans (ctx-id Γ) (trans (sym (naturality σ)) eγ)) α) ⟩
+    ≡⟨ naturality b hom-id (to-Σ-ty-eq T α β) ⟩
       b ⟨ _ , [ γ' , t ] ⟩' ∎))
     where open ≡-Reasoning
 
