@@ -241,9 +241,9 @@ module _ (σ : Δ ⇒ Γ) (T : Ty Γ) (S : Ty Γ) {δ : Δ ⟨ z ⟩} where
   naturality (pshfun-subst-from f) = trans ($-cong f refl) (naturality f)
 
   pshfun-subst-to : PresheafFunc (T [ σ ]) (S [ σ ]) z δ → PresheafFunc T S z (func σ δ)
-  _$⟨_,_⟩_ (pshfun-subst-to f) ρ-yz {γ'} eδ t = ctx-element-subst S proof (
+  _$⟨_,_⟩_ (pshfun-subst-to f) ρ-yz {γ'} eδ t = ty-ctx-subst S proof (
                                                  f $⟨ ρ-yz , refl ⟩
-                                                 ctx-element-subst T (sym proof) t)
+                                                 ty-ctx-subst T (sym proof) t)
     where
       proof : func σ (Δ ⟪ ρ-yz ⟫ δ) ≡ γ'
       proof = trans (sym (naturality σ)) eδ

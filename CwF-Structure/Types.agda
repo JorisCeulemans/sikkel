@@ -97,16 +97,16 @@ ty-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
     T ⟪ f' , _ ⟫ T ⟪ g' , _ ⟫ t ∎
   where open ≡-Reasoning
 
-ctx-element-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
-ctx-element-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (ctx-id Γ) eγ ⟫_
+ty-ctx-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
+ty-ctx-subst {Γ = Γ} T eγ = T ⟪ hom-id , trans (ctx-id Γ) eγ ⟫_
 
-ctx-element-subst-inverseˡ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ ⟩} →
-                            ctx-element-subst T (sym eγ) (ctx-element-subst T eγ t) ≡ t
-ctx-element-subst-inverseˡ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
+ty-ctx-subst-inverseˡ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ ⟩} →
+                        ty-ctx-subst T (sym eγ) (ty-ctx-subst T eγ t) ≡ t
+ty-ctx-subst-inverseˡ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
 
-ctx-element-subst-inverseʳ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ' ⟩} →
-                            ctx-element-subst T eγ (ctx-element-subst T (sym eγ) t) ≡ t
-ctx-element-subst-inverseʳ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
+ty-ctx-subst-inverseʳ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ' ⟩} →
+                        ty-ctx-subst T eγ (ty-ctx-subst T (sym eγ) t) ≡ t
+ty-ctx-subst-inverseʳ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
 
 -- The following definitions are needed when defining context extension.
 morph-transport : (T : Ty Γ) {f : Hom x y}
@@ -357,9 +357,9 @@ eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
-func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (eq σ=τ δ) t
+func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ty-ctx-subst T (eq σ=τ δ) t
 naturality (from (ty-subst-cong-subst σ=τ T)) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
-func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ctx-element-subst T (sym (eq σ=τ δ)) t
+func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ty-ctx-subst T (sym (eq σ=τ δ)) t
 naturality (to (ty-subst-cong-subst σ=τ T)) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
 eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   -- Here we cannot use ty-id T twice because the omitted equality proofs are not ctx-id Γ _
