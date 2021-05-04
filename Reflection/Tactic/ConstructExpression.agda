@@ -88,4 +88,3 @@ construct-expr (var x args) = default-construct-expr (var x) args
 construct-expr (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in construct-expr." ∷ []) >>
                                blockOnMeta m
 construct-expr ty = typeError (strErr "The naturality tactic does not work for the type" ∷ termErr ty ∷ [])
-
