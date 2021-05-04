@@ -20,22 +20,79 @@ private
     T T' S S' : Ty Γ
 
 
-to-Σ-type-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
-               {a b : A} (e : a ≡ b)
-               {x : Ob} {γ : A → Γ ⟨ x ⟩}
-               {ta : T ⟨ x , γ a ⟩} {tb : T ⟨ x , γ b ⟩} → ctx-element-subst T (cong γ e) ta ≡ tb →
-               [ a , ta ] ≡ [ b , tb ]
-to-Σ-type-eq T {a = a} refl et = cong [ a ,_] (trans (sym (strong-ty-id T)) et)
-
 Sigma : (T : Ty Γ) → Ty (Γ ,, T) → Ty Γ
 Sigma T S ⟨ x , γ ⟩ = Σ[ t ∈ T ⟨ x , γ ⟩ ] S ⟨ x , [ γ , t ] ⟩
-Sigma T S ⟪ f , e ⟫ [ t , s ] = [ T ⟪ f , e ⟫ t , S ⟪ f , to-Σ-type-eq T e (ty-cong-2-1 T hom-idʳ) ⟫ s ]
-ty-cong (Sigma T S) e = to-Σ-type-eq S (ty-cong T e) (ty-cong-2-1 S (trans hom-idʳ e))
-ty-id (Sigma T S) = to-Σ-type-eq S (ty-id T) (trans (ty-cong-2-1 S hom-idˡ) (ty-id S))
-ty-comp (Sigma T S) = to-Σ-type-eq S (ty-comp T) (ty-cong-2-2 S hom-idʳ)
+Sigma T S ⟪ f , e ⟫ [ t , s ] = [ T ⟪ f , e ⟫ t , S ⟪ f , to-Σ-ty-eq T e (ty-cong-2-1 T hom-idʳ) ⟫ s ]
+ty-cong (Sigma T S) e = to-Σ-ty-eq S (ty-cong T e) (ty-cong-2-1 S (trans hom-idʳ e))
+ty-id (Sigma T S) = to-Σ-ty-eq S (ty-id T) (trans (ty-cong-2-1 S hom-idˡ) (ty-id S))
+ty-comp (Sigma T S) = to-Σ-ty-eq S (ty-comp T) (ty-cong-2-2 S hom-idʳ)
 
-sigma-cong : T ≅ᵗʸ T' → (ιc[ {!!} ] S) ≅ᵗʸ S' → Sigma T S ≅ᵗʸ Sigma T' S'
-sigma-cong T=T' S=S' = {!!}
+{-
+sigma-cong : {T T' : Ty Γ} {S : Ty (Γ ,, T)} {S' : Ty (Γ ,, T')}
+             (e : T ≅ᵗʸ T') → ιc⁻¹[ ,,-cong e ] S ≅ᵗʸ S' → Sigma T S ≅ᵗʸ Sigma T' S'
+func (from (sigma-cong {S = S} T=T' S=S')) [ t , s ] = [ func (from T=T') t , func (from S=S') (ty-ctx-subst S ((cong [ _ ,_]) (sym (eq (isoˡ T=T') t))) s) ]
+naturality (from (sigma-cong {T' = T'} {S = S} {S' = S'} T=T' S=S')) {f = f} {eγ = eγ} {t = [ t , s ]} = to-Σ-ty-eq S' (naturality (from T=T')) (
+  begin
+    S' ⟪ hom-id , _ ⟫ S' ⟪ f , _ ⟫ func (from S=S') (S ⟪ hom-id , _ ⟫ s)
+  ≡⟨ ty-cong-2-1 S' hom-idʳ ⟩
+    S' ⟪ f , to-Σ-ty-eq T' eγ (trans (ty-cong-2-1 T' hom-idʳ) (naturality (from T=T'))) ⟫ func (from S=S') (S ⟪ hom-id , _ ⟫ s)
+  ≡⟨ naturality (from S=S') ⟩
+    func (from S=S') (S ⟪ f , _ ⟫ S ⟪ hom-id , _ ⟫ s)
+  ≡⟨ cong (func (from S=S')) (ty-cong-2-2 S (trans hom-idˡ (sym hom-idʳ))) ⟩
+    func (from S=S') (S ⟪ hom-id , _ ⟫ S ⟪ f , _ ⟫ s) ∎)
+  where open ≡-Reasoning
+func (to (sigma-cong T=T' S=S')) [ t' , s' ] = [ func (to T=T') t' , func (to S=S') s' ]
+naturality (to (sigma-cong {S = S} T=T' S=S')) = to-Σ-ty-eq S (naturality (to T=T')) (trans (ty-cong-2-1 S hom-idʳ) (naturality (to S=S')))
+eq (isoˡ (sigma-cong {S = S} T=T' S=S')) [ t , s ] = to-Σ-ty-eq S (eq (isoˡ T=T') t) (
+  begin
+    S ⟪ hom-id , _ ⟫ func (to S=S') (func (from S=S') (S ⟪ hom-id , _ ⟫ s))
+  ≡⟨ cong (S ⟪ hom-id , _ ⟫_) (eq (isoˡ S=S') _) ⟩
+    S ⟪ hom-id , _ ⟫ S ⟪ hom-id , _ ⟫ s
+  ≡⟨ ty-cong-2-1 S hom-idʳ ⟩
+    S ⟪ hom-id , _ ⟫ s
+  ≡⟨ ty-id S ⟩
+    s ∎)
+  where open ≡-Reasoning
+eq (isoʳ (sigma-cong {Γ = Γ} {T' = T'} {S = S} {S' = S'} T=T' S=S')) [ t' , s' ] = to-Σ-ty-eq S' (eq (isoʳ T=T') t') (
+  begin
+    S' ⟪ hom-id , _ ⟫ func (from S=S') (S ⟪ hom-id , _ ⟫ func (to S=S') s')
+  ≡⟨ cong (λ x → S' ⟪ hom-id , _ ⟫ func (from S=S') x) (ty-cong S refl) ⟩
+    S' ⟪ hom-id , _ ⟫ func (from S=S') (S ⟪ hom-id , _ ⟫ func (to S=S') s')
+  ≡˘⟨ cong (S' ⟪ hom-id , _ ⟫_) (naturality (from S=S')) ⟩
+    S' ⟪ hom-id , _ ⟫ S' ⟪ hom-id , to-Σ-ty-eq T' (ctx-id Γ) (trans (ty-cong-2-1 T' hom-idʳ) (trans (strong-ty-id T') (sym (eq (isoʳ T=T') t')))) ⟫ func (from S=S') (func (to S=S') s')
+  ≡⟨ ty-cong-2-1 S' hom-idʳ ⟩
+    S' ⟪ hom-id , _ ⟫ func (from S=S') (func (to S=S') s')
+  ≡⟨ ty-id S' ⟩
+    func (from S=S') (func (to S=S') s')
+  ≡⟨ eq (isoʳ S=S') s' ⟩
+    s' ∎)
+  where open ≡-Reasoning
+-}
+
+sigma-natural : (σ : Δ ⇒ Γ) {T : Ty Γ} {S : Ty (Γ ,, T)} → Sigma T S [ σ ] ≅ᵗʸ Sigma (T [ σ ]) (S [ σ ⊹ ])
+func (from (sigma-natural σ)) p = p
+naturality (from (sigma-natural σ {S = S})) = (cong [ _ ,_]) (ty-cong S refl)
+func (to (sigma-natural σ)) p = p
+naturality (to (sigma-natural σ {S = S})) = (cong [ _ ,_]) (ty-cong S refl)
+eq (isoˡ (sigma-natural σ)) _ = refl
+eq (isoʳ (sigma-natural σ)) _ = refl
+
+tm-subst : Tm Γ T → (Γ ⇒ Γ ,, T)
+tm-subst {Γ = Γ} {T = T} t = ⟨ id-subst Γ , t [ id-subst Γ ]' ∈ T ⟩
+
+pair : (t : Tm Γ T) → Tm Γ (S [ tm-subst t ]) → Tm Γ (Sigma T S)
+pair t s ⟨ x , γ ⟩' = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
+naturality (pair {S = S} t s) f eγ = to-Σ-ty-eq S (naturality t f eγ)
+                                                  (trans (ty-cong-2-1 S hom-idʳ) (naturality s f eγ))
+
+fst : Tm Γ (Sigma T S) → Tm Γ T
+fst p ⟨ x , γ ⟩' = proj₁ (p ⟨ x , γ ⟩')
+naturality (fst p) f eγ = cong proj₁ (naturality p f eγ)
+
+snd : (p : Tm Γ (Sigma T S)) → Tm Γ (S [ tm-subst (fst p) ])
+snd p ⟨ x , γ ⟩' = proj₂ (p ⟨ x , γ ⟩')
+naturality (snd {S = S} p) f eγ = trans (sym (ty-cong-2-1 S hom-idʳ))
+                                        (proj₂ (from-Σ-ty-eq S (naturality p f eγ)))
 
 {-
 ⊠-bimap : (T ↣ T') → (S ↣ S') → (T ⊠ S ↣ T' ⊠ S')

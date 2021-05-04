@@ -117,6 +117,13 @@ to-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
              [ a , ta ] ≡ [ b , tb ]
 to-Σ-ty-eq T {a = a} refl et = cong [ a ,_] (trans (sym (strong-ty-id T)) et)
 
+from-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
+               {a b : A} {γ : A → Γ ⟨ x ⟩}
+               {ta : T ⟨ x , γ a ⟩} {tb : T ⟨ x , γ b ⟩} →
+               [ a , ta ] ≡ [ b , tb ] →
+               Σ[ e ∈ a ≡ b ] ty-ctx-subst T (cong γ e) ta ≡ tb
+from-Σ-ty-eq T refl = [ refl , strong-ty-id T ]
+
 
 --------------------------------------------------
 -- Natural transformations between types

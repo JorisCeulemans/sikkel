@@ -41,9 +41,9 @@ subst' : {A : Ty Γ} (T : Ty (Γ ,, "x" ∈ A))
          {a b : Tm Γ A} → Tm Γ (Id a b) →
          Tm Γ (T [ ⟨ id-subst Γ , a [ id-subst _ ]' ∈ A ⟩ ]) →
          Tm Γ (T [ ⟨ id-subst Γ , b [ id-subst _ ]' ∈ A ⟩ ])
-subst' T a=b t ⟨ x , γ ⟩' = ctx-element-subst T (cong [ γ ,_] (a=b ⟨ x , γ ⟩')) (t ⟨ x , γ ⟩')
+subst' T a=b t ⟨ x , γ ⟩' = ty-ctx-subst T (cong [ γ ,_] (a=b ⟨ x , γ ⟩')) (t ⟨ x , γ ⟩')
 Tm.naturality (subst' T a=b t) f eγ = trans (ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ)))
-                                            (cong (ctx-element-subst T (cong _ _)) (Tm.naturality t f eγ))
+                                            (cong (ty-ctx-subst T (cong _ _)) (Tm.naturality t f eγ))
 
 Id-natural : (σ : Δ ⇒ Γ) {a b : Tm Γ A} → (Id a b) [ σ ] ≅ᵗʸ Id (a [ σ ]') (b [ σ ]')
 func (from (Id-natural σ {a = a} {b = b})) e = e

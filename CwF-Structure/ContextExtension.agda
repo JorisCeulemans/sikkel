@@ -12,6 +12,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
+open import CwF-Structure.ContextEquivalence
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 
@@ -119,6 +120,17 @@ _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
         ≅⟨ ty-subst-id S ⟩
       S ∎
 -}
+
+-- Extending a context with two equivalent types leads to equivalent contexts.
+,,-map : T ↣ S → Γ ,, T ⇒ Γ ,, S
+func (,,-map η) [ γ , t ] = [ γ , func η t ]
+naturality (,,-map η) = cong [ _ ,_] (naturality η)
+
+,,-cong : T ≅ᵗʸ S → Γ ,, T ≅ᶜ Γ ,, S
+from (,,-cong T=S) = ,,-map (from T=S)
+to (,,-cong T=S) = ,,-map (to T=S)
+eq (isoˡ (,,-cong T=S)) [ γ , t ] = cong [ γ ,_] (eq (isoˡ T=S) t)
+eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
 
 -- Context extension which includes a variable name
 _,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C
