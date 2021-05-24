@@ -20,8 +20,9 @@ open import Modalities
 open import GuardedRecursion.Modalities
 open import GuardedRecursion.Streams.Guarded
 open import Reflection.Naturality.TypeOperations
-open import Reflection.Tactic.Lambda
-open import Reflection.Tactic.LobInduction
+open import Reflection.Naturality.NewSolver -- needed for the instance constructor tt to be available
+open import Reflection.Tactic.NewSolver.Lambda
+open import Reflection.Tactic.NewSolver.LobInduction
 
 private
   variable
