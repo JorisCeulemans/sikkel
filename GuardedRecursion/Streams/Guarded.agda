@@ -234,3 +234,6 @@ instance
   gstream-un : IsUnaryNatural GStream
   natural-un {{gstream-un}} σ = gstream-natural σ
   cong-un {{gstream-un}} = gstream-cong
+
+  gstream-closed : {A : ClosedType ★} → {{IsClosedNatural A}} → IsClosedNatural (GStream A)
+  closed-natural {{gstream-closed}} σ = ≅ᵗʸ-trans (gstream-natural σ) (gstream-cong (natural-nul (now-subst σ)))

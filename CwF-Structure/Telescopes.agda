@@ -88,13 +88,16 @@ prim-var (Ts ∷ T) (suc x) = (prim-var Ts x) [ π ]'
 --------------------------------------------------
 -- Using a telescope to define weakening of types and terms.
 
+max-πs : (Ts : Telescope Γ n) → Γ ++ Ts ⇒ Γ
+max-πs []       = id-subst _
+max-πs ([] ∷ _) = π
+max-πs ((Ts ∷ T) ∷ _) = max-πs (Ts ∷ T) ⊚ π
+
 weaken-type : {Γ : Ctx C} {n : ℕ} (Ts : Telescope Γ n) →
               Ty Γ → Ty (Γ ++ Ts)
-weaken-type []       S = S
-weaken-type (Ts ∷ T) S = (weaken-type Ts S) [ π ]
+weaken-type Ts S = S [ max-πs Ts ]
 
 -- Not for direct use. See Reflection.Tactic.Telescopes.
 weaken-term : {Γ : Ctx C} {n : ℕ} (Ts : Telescope Γ n) {S : Ty Γ} →
               Tm Γ S → Tm (Γ ++ Ts) (weaken-type Ts S)
-weaken-term []       s = s
-weaken-term (Ts ∷ T) s = (weaken-term Ts s) [ π ]'
+weaken-term Ts s = s [ max-πs Ts ]'

@@ -16,6 +16,7 @@ open import CwF-Structure.Contexts
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
+open import CwF-Structure.ClosedTypes
 open import Reflection.SubstitutionSequence
 
 open Category C
@@ -28,6 +29,7 @@ private
 
 infixr 12 _⇛_
 infixr 4 lam[_∈_]_
+infixr 4 lamι[_∈_]_
 
 {-
 open import Axiom.UniquenessOfIdentityProofs
@@ -118,6 +120,14 @@ naturality (lam T b) _ _ = to-pshfun-eq (λ _ _ _ → refl)
 -- Version of lambda abstraction that allows to name the bound variable.
 lam[_∈_]_ : (v : String) (T : Ty Γ) → Tm (Γ ,, v ∈ T) (S [ π ]) → Tm Γ (T ⇛ S)
 lam[_∈_]_ v = lam
+
+-- More convenient versions of lambda abstraction for codomains that are closed types.
+lamι : (T : Ty Γ) {S : ClosedType C} {{_ : IsClosedNatural S}} → Tm (Γ ,, T) S → Tm Γ (T ⇛ S)
+lamι T b = lam T (ι[ closed-natural π ] b)
+
+lamι[_∈_]_ : (v : String) (T : Ty Γ) {S : ClosedType C} {{_ : IsClosedNatural S}} →
+             Tm (Γ ,, v ∈ T) S → Tm Γ (T ⇛ S)
+lamι[_∈_]_ v = lamι
 
 -- An operator used to define function application.
 _€⟨_,_⟩_ : Tm Γ (T ⇛ S) → (x : Ob) (γ : Γ ⟨ x ⟩) → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩

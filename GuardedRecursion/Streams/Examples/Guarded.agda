@@ -20,8 +20,8 @@ open import Modalities
 open import GuardedRecursion.Modalities
 open import GuardedRecursion.Streams.Guarded
 open import Reflection.Naturality.TypeOperations
-open import Reflection.Tactic.Lambda
-open import Reflection.Tactic.LobInduction
+-- open import Reflection.Tactic.Lambda
+-- open import Reflection.Tactic.LobInduction
 
 private
   variable
@@ -30,15 +30,15 @@ private
 
 --------------------------------------------------
 -- Example from the introduction and section 3.1 of the ICFP submission
-
+{-
 g-map : {A B : ClosedType ★} → {{IsClosedNatural A}} → {{IsClosedNatural B}} →
         Tm Γ (timeless-ty (A ⇛ B) ⇛ GStream A ⇛ GStream B)
 g-map {A = A}{B} =
   lamι[ "f" ∈ timeless-ty (A ⇛ B) ]
     löbι[ "m" ∈▻' (GStream A ⇛ GStream B) ]
       lamι[ "s" ∈ GStream A ]
-        g-cons $ varι "f" ⊛⟨ timeless ⟩ (g-head $ varι "s")
-               $ varι "m" ⊛' (g-tail $ varι "s")
+        {!g-cons $ varι "f" ⊛⟨ timeless ⟩ (g-head $ varι "s")
+               $ varι "m" ⊛' (g-tail $ varι "s")!}
 
 g-nats : Tm Γ (GStream Nat')
 g-nats = löbι[ "s" ∈▻' GStream Nat' ] g-cons $ timeless-tm zero'
@@ -51,12 +51,12 @@ g-nats = löbι[ "s" ∈▻' GStream Nat' ] g-cons $ timeless-tm zero'
 --   The Guarded Lambda-Calculus: Programming and Reasoning with Guarded Recursion for Coinductive Types.
 --   Logical Methods of Computer Science (LMCS), 12(3), 2016.
 --   https://doi.org/10.2168/LMCS-12(3:7)2016
-
+-}
 module _ {A : ClosedType ★} {{_ : IsClosedNatural A}} where
   
   g-snd : Tm Γ (GStream A ⇛ ▻' (timeless-ty A))
-  g-snd = lamι[ "s" ∈ GStream A ] g-head ⟨$⟩' (g-tail $ varι "s")
-
+  g-snd = lamι[_∈_]_ "s" (GStream A) {S = ▻' (timeless-ty A)} (g-head ⟨$⟩' (g-tail $ varι "s"))
+{-
   g-thrd : Tm Γ (GStream A ⇛ ▻' (▻' (timeless-ty A)))
   g-thrd = lamι[ "s" ∈ GStream A ] g-snd ⟨$⟩' (g-tail $ varι "s")
 
@@ -227,3 +227,4 @@ g-flipFst : {A : ClosedType ★} → {{IsClosedNatural A}} →
 g-flipFst {A = A}= lamι[ "s" ∈ GStream A ]
                      g-cons ⟨$⟩' (g-snd $ varι "s") ⊛' next' (
                      g-cons ⟨$⟩' next' (g-head $ varι "s") ⊛' (g-tail ⟨$⟩' (g-tail $ varι "s")))
+-}
