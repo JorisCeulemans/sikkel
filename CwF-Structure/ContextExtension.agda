@@ -8,7 +8,7 @@ module CwF-Structure.ContextExtension {C : Category} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.String
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality) renaming (subst to transport)
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
@@ -30,10 +30,9 @@ private
 -- In MLTT, this would be written as Γ, x : T.
 _,,_ : (Γ : Ctx C) (T : Ty Γ) → Ctx C
 (Γ ,, T) ⟨ x ⟩ = Σ[ γ ∈ Γ ⟨ x ⟩ ] (T ⟨ x , γ ⟩)
-(Γ ,, T) ⟪ f ⟫ [ γ , t ] = [ Γ ⟪ f ⟫ γ , strict-morph T f γ t ]
-ctx-id (Γ ,, T) = to-Σ-eq (ctx-id Γ) (strict-morph-id T)
-ctx-comp (Γ ,, T) = to-Σ-eq (ctx-comp Γ)
-                            (strict-morph-comp T)
+(Γ ,, T) ⟪ f ⟫ [ γ , t ] = [ Γ ⟪ f ⟫ γ , T ⟪ f , refl ⟫ t ]
+ctx-id (Γ ,, T) = to-Σ-ty-eq T (ctx-id Γ) (trans (ty-cong-2-1 T hom-idˡ) (ty-id T))
+ctx-comp (Γ ,, T) = to-Σ-ty-eq T (ctx-comp Γ) (ty-cong-2-2 T hom-idʳ)
 
 π : Γ ,, T ⇒ Γ
 func π = proj₁
@@ -57,17 +56,8 @@ ext-subst-to-term {T = T} τ = ι⁻¹[ ty-subst-comp T π τ ] (ξ [ τ ]')
 
 to-ext-subst : (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
 func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
-naturality (to-ext-subst {Δ = Δ} T σ t) {δ = δ} = to-Σ-eq (naturality σ) (
-  begin
-    transport (λ x → T ⟨ _ , x ⟩) (naturality σ)
-          (T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩')
-  ≡⟨ morph-transport T ⟩
-    T ⟪ _ , trans refl (naturality σ) ⟫ t ⟨ _ , δ ⟩'
-  ≡⟨ ty-cong T refl ⟩
-    T ⟪ _ , _ ⟫ (t ⟨ _ , δ ⟩')
-  ≡⟨ naturality t _ refl ⟩
-    t ⟨ _ , Δ ⟪ _ ⟫ δ ⟩' ∎)
-  where open ≡-Reasoning
+naturality (to-ext-subst {Δ = Δ} T σ t) {δ = δ} = to-Σ-ty-eq T (naturality σ)
+                                                               (trans (ty-cong-2-1 T hom-idʳ) (naturality t _ refl))
 
 syntax to-ext-subst T σ t = ⟨ σ , t ∈ T ⟩
 
@@ -102,7 +92,7 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
 {-
 -- These functions are currently not used anywhere. We keep them in case we need them
 -- in the future.
-π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ ℓ) →
+π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
 π-ext-comp-ty-subst {T = T} σ t S =
   S [ π ] [ ⟨ σ , t ∈ T ⟩ ]

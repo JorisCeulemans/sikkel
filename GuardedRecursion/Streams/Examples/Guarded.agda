@@ -142,13 +142,12 @@ module _
 -- Implementation of the examples on page 12 of the paper by Clouston et al. cited above.
 
 -- In the next two definitions of guarded streams, we will need a modal version of
--- the eliminator for booleans. This version works with the timeless modality, but in
--- principle it could be implemented for any modality from that departs from ★.
-modal-if'_then'_else'_ : {T : Ty Γ} → Tm (now Γ) Bool' → Tm Γ T → Tm Γ T → Tm Γ T
-modal-if' c then' t else' f ⟨ n , γ ⟩' = if timeless-tm c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
-naturality (modal-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ with timeless-tm c ⟨ m , γ' ⟩' | timeless-tm c ⟨ n , γ ⟩' | naturality (timeless-tm c) m≤n eγ
-naturality (modal-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ | false | .false | refl = naturality f m≤n eγ
-naturality (modal-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ | true  | .true  | refl = naturality t m≤n eγ
+-- the eliminator for booleans. This version works with the timeless modality.
+timeless-if'_then'_else'_ : {T : Ty Γ} → Tm Γ (timeless-ty Bool') → Tm Γ T → Tm Γ T → Tm Γ T
+timeless-if' c then' t else' f ⟨ n , γ ⟩' = if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
+naturality (timeless-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | naturality c m≤n eγ
+naturality (timeless-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ | false | .false | refl = naturality f m≤n eγ
+naturality (timeless-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ | true  | .true  | refl = naturality t m≤n eγ
 
 thue-morse : Tm Γ (GStream Bool')
 thue-morse = löbι[ "t-m" ∈▻' GStream Bool' ]
@@ -159,7 +158,7 @@ thue-morse = löbι[ "t-m" ∈▻' GStream Bool' ]
     h : Tm Δ (GStream Bool' ⇛ GStream Bool')
     h = löbι[ "g" ∈▻' GStream Bool' ⇛ GStream Bool' ]
           lamι[ "s" ∈ GStream Bool' ] (
-            modal-if' untimeless-tm (g-head $ varι "s")
+            timeless-if' (g-head $ varι "s")
             then' (g-cons $ timeless-tm true'  $ next' (g-cons $ timeless-tm false' $ varι "g" ⊛' (g-tail $ varι "s")))
             else' (g-cons $ timeless-tm false' $ next' (g-cons $ timeless-tm true'  $ varι "g" ⊛' (g-tail $ varι "s"))))
 
@@ -172,7 +171,7 @@ fibonacci-word = löbι[ "fw" ∈▻' GStream Bool' ]
     f : Tm Δ (GStream Bool' ⇛ GStream Bool')
     f = löbι[ "g" ∈▻' GStream Bool' ⇛ GStream Bool' ]
           lamι[ "s" ∈ GStream Bool' ] (
-            modal-if' untimeless-tm (g-head $ varι "s")
+            timeless-if' (g-head $ varι "s")
             then' (g-cons $ timeless-tm false' $ varι "g" ⊛' (g-tail $ varι "s"))
             else' (g-cons $ timeless-tm false' $ next' (g-cons $ timeless-tm true'  $ varι "g" ⊛' (g-tail $ varι "s"))))
 

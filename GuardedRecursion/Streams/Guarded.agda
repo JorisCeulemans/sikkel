@@ -161,16 +161,16 @@ module _ {A : Ty (now Γ)} where
 
   prim-g-cons : Tm (Γ ,, timeless-ty A ,, (▻' (GStream A)) [ π ]) (((GStream A) [ π ]) [ π ])
   prim-g-cons ⟨ zero ,    [ [ γn , a ] , t ] ⟩' = a ∷ []
-  prim-g-cons ⟨ (suc n) , [ [ γn , a ] , t ] ⟩' = a ∷ map (ctx-element-subst A (sym (ctx-comp Γ))) t
+  prim-g-cons ⟨ (suc n) , [ [ γn , a ] , t ] ⟩' = a ∷ map (ty-ctx-subst A (sym (ctx-comp Γ))) t
   naturality prim-g-cons {y = zero}  z≤n       refl = refl
   naturality prim-g-cons {y = suc n} z≤n       refl = refl
   naturality prim-g-cons             (s≤s m≤n) refl = cong (timeless-ty A ⟪ s≤s m≤n , refl ⟫ _ ∷_) (sym (
     begin
-      map (ctx-element-subst A _) (map (timeless-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s m≤n) _))
+      map (ty-ctx-subst A _) (map (timeless-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s m≤n) _))
     ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
-      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (map (ctx-element-subst A _) (first-≤ (s≤s m≤n) _))
+      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (map (ty-ctx-subst A _) (first-≤ (s≤s m≤n) _))
     ≡⟨ cong (map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_)) map-first-≤ ⟩
-      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (first-≤ (s≤s m≤n) (map (ctx-element-subst A _) _)) ∎))
+      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (first-≤ (s≤s m≤n) (map (ty-ctx-subst A _) _)) ∎))
     where open ≡-Reasoning
 
   g-cons : Tm Γ (timeless-ty A ⇛ ▻' (GStream A) ⇛ GStream A)
@@ -179,26 +179,26 @@ module _ {A : Ty (now Γ)} where
                    prim-g-cons)
 
   gstream-natural : (σ : Δ ⇒ Γ) → (GStream A) [ σ ] ≅ᵗʸ GStream (A [ now-subst σ ])
-  func (from (gstream-natural σ)) = map (ctx-element-subst A (naturality σ))
+  func (from (gstream-natural σ)) = map (ty-ctx-subst A (naturality σ))
   naturality (from (gstream-natural σ)) {t = v} =
     begin
       map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (A ⟪ tt , _ ⟫_) v))
     ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟩
       map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v))
     ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
-      map (ctx-element-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
+      map (ty-ctx-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
     where open ≡-Reasoning
-  func (to (gstream-natural σ)) = map (ctx-element-subst A (sym (naturality σ)))
+  func (to (gstream-natural σ)) = map (ty-ctx-subst A (sym (naturality σ)))
   naturality (to (gstream-natural σ)) {t = v} =
     begin
       map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (A ⟪ tt , _ ⟫_) v))
     ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟩
       map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v))
     ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
-      map (ctx-element-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
+      map (ty-ctx-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
     where open ≡-Reasoning
-  eq (isoˡ (gstream-natural σ)) _ = map-inverse (λ _ → ctx-element-subst-inverseˡ A)
-  eq (isoʳ (gstream-natural σ)) _ = map-inverse (λ _ → ctx-element-subst-inverseʳ A)
+  eq (isoˡ (gstream-natural σ)) _ = map-inverse (λ _ → ty-ctx-subst-inverseˡ A)
+  eq (isoʳ (gstream-natural σ)) _ = map-inverse (λ _ → ty-ctx-subst-inverseʳ A)
 
 gstream-cong : {A : Ty (now Γ)} {A' : Ty (now Γ)} →
                A ≅ᵗʸ A' → GStream A ≅ᵗʸ GStream A'
