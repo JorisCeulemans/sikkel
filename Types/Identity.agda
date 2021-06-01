@@ -102,6 +102,9 @@ module Alternative2 {A : Ty Γ} where
   Tm.naturality (J T t) {γy = [ [ [ γy , ay ] , .ay ] , refl ]} {γx = [ [ [ γx , ax ] , .ax ] , refl ]} f e =
     trans (ty-cong T refl) (Tm.naturality t f (cong (proj₁ ∘ proj₁) e))
 
+  J-β : {T : Ty (Γ ,, A ,, A [ π ] ,, Id)} (t : Tm (Γ ,, A) (T [ refl' ])) → J T t [ refl' ]' ≅ᵗᵐ t
+  eq (J-β t) _ = refl
+
   contraction : Γ ,, A ⇒ Γ ,, A ,, A [ π ]
   func contraction [ γ , a ] = [ [ γ , a ] , a ]
   _⇒_.naturality contraction = refl
@@ -121,3 +124,47 @@ module Alternative2 {A : Ty Γ} where
       
       proof2 : (Id [ exchange ⊚ π ]) [ refl' ] ≅ᵗʸ (Id [ π ]) [ refl' ]
       proof2 = ≅ᵗʸ-trans (ty-subst-comp Id (exchange ⊚ π) refl') (≅ᵗʸ-trans (ty-subst-cong-subst proof Id) (≅ᵗʸ-sym (ty-subst-comp Id π refl')))
+
+open import Types.Discrete
+open import Types.Instances
+open import Data.Bool
+open import Reflection.Tactic.Naturality
+open Alternative2
+
+_/var0 : {T : Ty Γ} → Tm Γ T → (Γ ⇒ Γ ,, T)
+t /var0 = term-to-subst t
+
+bool-ind : (T : Ty (Γ ,, "x" ∈ Bool')) → Tm Γ (T [ true' /var0 ]) → Tm Γ (T [ false' /var0 ]) → Tm (Γ ,, Bool') T
+bool-ind T t f ⟨ x , [ γ , false ] ⟩' = f ⟨ x , γ ⟩'
+bool-ind T t f ⟨ x , [ γ , true  ] ⟩' = t ⟨ x , γ ⟩'
+Tm.naturality (bool-ind T t f) {γy = [ γy , false ]} {γx = [ γx , false ]} ρ eγ = trans (ty-cong T refl) (Tm.naturality f ρ (cong proj₁ eγ))
+Tm.naturality (bool-ind T t f) {γy = [ γy , true  ]} {γx = [ γx , true  ]} ρ eγ = trans (ty-cong T refl) (Tm.naturality t ρ (cong proj₁ eγ))
+
+not' : Tm Γ Bool' → Tm Γ Bool'
+not' b = if' b then' false' else' true'
+
+not-involutive : {Γ : Ctx C} → Tm (Γ ,, Bool') (Id [ (ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ])
+not-involutive = bool-ind _ case-true case-false
+  where
+    sublemma : ((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ⊚ (true' /var0) ≅ˢ π ⊚ (refl' ⊚ (true' /var0))
+    eq sublemma γ = refl
+
+    open import Reflection.SubstitutionSequence
+    lemma : (Id [ (ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ true' /var0 ]
+            ≅ᵗʸ Id [ π ] [ refl' ⊚ (true' /var0) ]
+    lemma = ty-subst-seq-cong (((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ∷ (true' /var0) ◼) (π ∷ (refl' ⊚ (true' /var0)) ◼) Id
+                              sublemma
+
+    case-true : Tm _ ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ true' /var0 ])
+    case-true = ι[ lemma ] (ξ [ refl' ⊚ (true' /var0) ]')
+
+    sublemma' : ((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ⊚ (false' /var0) ≅ˢ π ⊚ (refl' ⊚ (false' /var0))
+    eq sublemma' γ = refl
+
+    lemma' : (Id [ (ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ false' /var0 ]
+            ≅ᵗʸ Id [ π ] [ refl' ⊚ (false' /var0) ]
+    lemma' = ty-subst-seq-cong (((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ∷ (false' /var0) ◼) (π ∷ (refl' ⊚ (false' /var0)) ◼) Id
+                              sublemma'
+
+    case-false : Tm _ ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ false' /var0 ])
+    case-false = ι[ lemma' ] (ξ [ refl' ⊚ (false' /var0) ]')
