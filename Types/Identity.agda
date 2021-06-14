@@ -146,25 +146,17 @@ not' b = if' b then' false' else' true'
 not-involutive : {Γ : Ctx C} → Tm (Γ ,, Bool') (Id [ (ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ])
 not-involutive = bool-ind _ case-true case-false
   where
-    sublemma : ((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ⊚ (true' /var0) ≅ˢ π ⊚ (refl' ⊚ (true' /var0))
-    eq sublemma γ = refl
-
     open import Reflection.SubstitutionSequence
-    lemma : (Id [ (ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ true' /var0 ]
-            ≅ᵗʸ Id [ π ] [ refl' ⊚ (true' /var0) ]
-    lemma = ty-subst-seq-cong (((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ∷ (true' /var0) ◼) (π ∷ (refl' ⊚ (true' /var0)) ◼) Id
-                              sublemma
-
     case-true : Tm _ ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ true' /var0 ])
-    case-true = ι[ lemma ] (ξ [ refl' ⊚ (true' /var0) ]')
-
-    sublemma' : ((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ⊚ (false' /var0) ≅ˢ π ⊚ (refl' ⊚ (false' /var0))
-    eq sublemma' γ = refl
-
-    lemma' : (Id [ (ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ false' /var0 ]
-            ≅ᵗʸ Id [ π ] [ refl' ⊚ (false' /var0) ]
-    lemma' = ty-subst-seq-cong (((ι[ by-naturality ] not' (not' (db-varι 0))) /var0) ∷ (false' /var0) ◼) (π ∷ (refl' ⊚ (false' /var0)) ◼) Id
-                              sublemma'
+    case-true = ι[ ty-subst-seq-cong ((_ /var0) ∷ (true' /var0) ◼)
+                                     (π ∷ (refl' ⊚ (true' /var0)) ◼)
+                                     Id
+                                     (record { eq = λ _ → refl }) ]
+                (ξ [ refl' ⊚ (true' /var0) ]')
 
     case-false : Tm _ ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ false' /var0 ])
-    case-false = ι[ lemma' ] (ξ [ refl' ⊚ (false' /var0) ]')
+    case-false = ι[ ty-subst-seq-cong ((_ /var0) ∷ (false' /var0) ◼)
+                                      (π ∷ (refl' ⊚ (false' /var0)) ◼)
+                                      Id
+                                      (record { eq = λ _ → refl }) ]
+                 (ξ [ refl' ⊚ (false' /var0) ]')
