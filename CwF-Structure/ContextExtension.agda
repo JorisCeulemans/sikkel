@@ -122,7 +122,7 @@ _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
 -}
 
 -- Extending a context with two equivalent types leads to equivalent contexts.
-,,-map : T ↣ S → Γ ,, T ⇒ Γ ,, S
+,,-map : (T ↣ S) → (Γ ,, T ⇒ Γ ,, S)
 func (,,-map η) [ γ , t ] = [ γ , func η t ]
 naturality (,,-map η) = cong [ _ ,_] (naturality η)
 

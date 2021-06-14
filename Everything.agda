@@ -1,3 +1,5 @@
+module Everything where
+
 import Helpers
 import Categories
 import CwF-Structure
