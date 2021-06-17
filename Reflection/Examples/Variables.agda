@@ -6,8 +6,6 @@ open import Categories
 
 module Reflection.Examples.Variables {C : Category} where
 
-open import Relation.Binary.PropositionalEquality using (refl)
-
 open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
@@ -36,10 +34,3 @@ test6 = var "x"
 
 id2 : {Γ : Ctx C} {T : Ty Γ} → Tm Γ (T ⇛ T)
 id2 {Γ = Γ}{T = T} = lam[ "x" ∈ T ] var "x"
-
-open import Reflection.Naturality.NewSolver
-open import Reflection.Tactic.NewSolver.Lambda
-open import Types.Instances
-
-idbool : {Γ : Ctx C} → Tm Γ (Bool' ⇛ Bool')
-idbool = lamι[ "x" ∈ Bool' ] varι "x"

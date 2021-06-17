@@ -3,7 +3,7 @@
 -- using nullary, unary and binary natural operators.
 --------------------------------------------------
 
-module Reflection.Tactic.NewSolver.ConstructExpression where
+module Experimental.UntypedNaturalitySolver.Tactic.ConstructExpression where
 
 open import Data.Bool using (Bool; true; false)
 open import Data.Fin using (Fin; zero; suc; #_; toℕ)
@@ -19,7 +19,7 @@ open import CwF-Structure.Types
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
 open import CwF-Structure.Telescopes
-open import Reflection.Naturality.NewSolver renaming (reduce to nat-reduce)
+open import Experimental.UntypedNaturalitySolver.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.Util
 
 

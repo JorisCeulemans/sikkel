@@ -2,7 +2,7 @@
 -- Definition of the tactic by-naturality
 --------------------------------------------------
 
-module Reflection.Tactic.NewSolver.Naturality where
+module Experimental.UntypedNaturalitySolver.Tactic.Naturality where
 
 open import Data.List
 open import Data.Maybe using (Maybe; nothing; just)
@@ -12,8 +12,8 @@ open import Reflection
 open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure
-open import Reflection.Naturality.NewSolver renaming (reduce to nat-reduce) hiding (⊤)
-open import Reflection.Tactic.NewSolver.ConstructExpression
+open import Experimental.UntypedNaturalitySolver.Solver renaming (reduce to nat-reduce) hiding (⊤)
+open import Experimental.UntypedNaturalitySolver.Tactic.ConstructExpression
 
 get-equality-sides : Type → Maybe (Term × Term)
 get-equality-sides (def (quote _≅ᵗʸ_) xs) = go xs

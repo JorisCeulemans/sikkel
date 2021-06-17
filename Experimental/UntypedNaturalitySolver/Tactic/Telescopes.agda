@@ -4,7 +4,7 @@
 -- without having to specify the telescope.
 --------------------------------------------------
 
-module Reflection.Tactic.NewSolver.Telescopes where
+module Experimental.UntypedNaturalitySolver.Tactic.Telescopes where
 
 open import Data.Bool hiding (_<?_)
 open import Data.Fin using (#_)
@@ -19,9 +19,10 @@ open import Relation.Nullary.Decidable using (⌊_⌋)
 open import CwF-Structure.Terms
 open import CwF-Structure.ContextExtension
 open import CwF-Structure.Telescopes hiding (_++_)
-open import Reflection.Naturality.NewSolver renaming (reduce to nat-reduce) hiding (⊤)
-open import Reflection.Tactic.NewSolver.ConstructExpression
+open import Experimental.UntypedNaturalitySolver.Solver renaming (reduce to nat-reduce) hiding (⊤)
+open import Experimental.UntypedNaturalitySolver.Tactic.ConstructExpression
 open import Reflection.Tactic.Util
+
 
 --------------------------------------------------
 -- Definition of a function that automatically transforms the current

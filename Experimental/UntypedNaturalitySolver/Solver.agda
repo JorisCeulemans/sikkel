@@ -1,4 +1,4 @@
-module Reflection.Naturality.NewSolver where
+module Experimental.UntypedNaturalitySolver.Solver where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong) renaming (subst to transp)
 

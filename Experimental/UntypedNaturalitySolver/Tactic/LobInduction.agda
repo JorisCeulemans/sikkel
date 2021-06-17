@@ -2,7 +2,7 @@
 -- Löb induction with automatic reduction of type
 --------------------------------------------------
 
-module Reflection.Tactic.NewSolver.LobInduction where
+module Experimental.UntypedNaturalitySolver.Tactic.LobInduction where
 
 open import Data.List hiding ([_])
 open import Data.Product
@@ -13,8 +13,8 @@ open import Reflection
 open import Categories
 open import CwF-Structure
 open import GuardedRecursion.Modalities.Later
-open import Reflection.Naturality.NewSolver renaming (reduce to nat-reduce) hiding (⊤)
-open import Reflection.Tactic.NewSolver.ConstructExpression
+open import Experimental.UntypedNaturalitySolver.Solver renaming (reduce to nat-reduce) hiding (⊤)
+open import Experimental.UntypedNaturalitySolver.Tactic.ConstructExpression
 
 infixr 4 löbι[_∈▻'_]_
 

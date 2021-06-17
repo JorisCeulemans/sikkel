@@ -4,7 +4,7 @@
 
 open import Categories
 
-module Reflection.Examples.NewNaturality {C : Category} where
+module Experimental.UntypedNaturalitySolver.Examples.Naturality {C : Category} where
 
 open import Data.Bool
 open import Level
@@ -15,8 +15,8 @@ open import Types.Discrete
 open import Types.Functions
 open import Types.Products
 open import Types.Instances
-open import Reflection.Naturality.NewSolver
-open import Reflection.Tactic.NewSolver.Naturality
+open import Experimental.UntypedNaturalitySolver.Solver
+open import Experimental.UntypedNaturalitySolver.Tactic.Naturality
 
 private
   variable

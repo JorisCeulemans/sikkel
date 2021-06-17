@@ -3,7 +3,7 @@
 -- naturality reduction on its body type
 --------------------------------------------------
 
-module Reflection.Tactic.NewSolver.Lambda where
+module Experimental.UntypedNaturalitySolver.Tactic.Lambda where
 
 open import Data.List hiding ([_])
 open import Data.Product
@@ -13,8 +13,8 @@ open import Reflection hiding (lam)
 
 open import CwF-Structure
 open import Types.Functions
-open import Reflection.Naturality.NewSolver renaming (reduce to nat-reduce) hiding (⊤)
-open import Reflection.Tactic.NewSolver.ConstructExpression
+open import Experimental.UntypedNaturalitySolver.Solver renaming (reduce to nat-reduce) hiding (⊤)
+open import Experimental.UntypedNaturalitySolver.Tactic.ConstructExpression
 
 infixr 4 lamι[_∈_]_
 
