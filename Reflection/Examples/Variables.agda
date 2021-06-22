@@ -6,6 +6,8 @@ open import Categories
 
 module Reflection.Examples.Variables {C : Category} where
 
+open import Data.Fin
+
 open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
@@ -14,10 +16,10 @@ open import Types.Functions
 test : Tm {C = C} (◇ ,, Bool') (Bool' [ π ])
 test = db-var 0
 
-test2 : Tm {C = C} (◇ ,, Bool' ,, (Nat' ⇛ Nat')) ((Nat' ⇛ Nat') [ π ])
+test2 : Tm {C = C} (◇ ,, Bool' ,, (Nat' ⇛ Nat')) ((Nat' ⇛ Nat') [ _ ])
 test2 = db-var 0
 
-test3 : Tm {C = C} (◇ ,, Bool' ,, Nat') (Bool' [ π ⊚ π ]) -- ((Bool' [ π ]) [ π ])
+test3 : Tm {C = C} (◇ ,, Bool' ,, Nat') (Bool' [ _ ])
 test3 = db-var 1
 
 id : {Γ : Ctx C} {T : Ty Γ} → Tm Γ (T ⇛ T)
@@ -26,10 +28,10 @@ id {Γ = Γ}{T = T} = lam T (db-var 0)
 test4 : Tm {C = C} (◇ ,, "x" ∈ Bool') (Bool' [ π ])
 test4 = var "x"
 
-test5 : Tm {C = C} (◇ ,, "x" ∈ Bool' ,, "y" ∈ (Nat' ⇛ Nat')) ((Nat' ⇛ Nat') [ π ])
+test5 : Tm {C = C} (◇ ,, "x" ∈ Bool' ,, "y" ∈ (Nat' ⇛ Nat')) ((Nat' ⇛ Nat') [ _ ])
 test5 = var "y"
 
-test6 : Tm {C = C} (◇ ,, "x" ∈ Bool' ,, "y" ∈ Nat') (Bool' [ π ⊚ π ])
+test6 : Tm {C = C} (◇ ,, "x" ∈ Bool' ,, "y" ∈ Nat') (Bool' [ _ ])
 test6 = var "x"
 
 id2 : {Γ : Ctx C} {T : Ty Γ} → Tm Γ (T ⇛ T)

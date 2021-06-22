@@ -17,8 +17,8 @@ open import Reflection.TypeChecking.Monad.Syntax
 open import Relation.Nullary.Decidable using (⌊_⌋)
 
 open import CwF-Structure.Terms
-open import CwF-Structure.ContextExtension
-open import CwF-Structure.Telescopes hiding (_++_)
+open import CwF-Structure.ContextExtension hiding (_++_)
+open import CwF-Structure.Telescopes
 open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 open import Reflection.Tactic.Util
