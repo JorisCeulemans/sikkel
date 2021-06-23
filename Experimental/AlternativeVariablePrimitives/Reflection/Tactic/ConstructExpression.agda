@@ -3,7 +3,7 @@
 -- using nullary, unary and binary natural operators.
 --------------------------------------------------
 
-module Reflection.Tactic.ConstructExpression where
+module Experimental.AlternativeVariablePrimitives.Reflection.Tactic.ConstructExpression where
 
 open import Data.Bool using (Bool; true; false)
 open import Data.Fin using (Fin; zero; suc; #_; toℕ)
@@ -16,8 +16,8 @@ open import Reflection.Argument using (_⟨∷⟩_; unArg)
 
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
-open import CwF-Structure.ContextExtension
-open import CwF-Structure.Telescopes
+open import Experimental.AlternativeVariablePrimitives.ContextExtension
+open import Experimental.AlternativeVariablePrimitives.Telescopes
 open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.Util
 
@@ -48,6 +48,10 @@ weaken-expr : Term → ℕ → Term
 weaken-expr expr zero    = expr
 weaken-expr expr (suc n) = con (quote sub) (weaken-expr expr n ⟨∷⟩ def (quote π) [] ⟨∷⟩ [])
 
+weaken-expr′ : Term → Term → Term → Term
+weaken-expr′ expr tel x    = con (quote sub) (expr ⟨∷⟩ def (quote πs) ( con (quote Data.Fin.suc) (x ⟨∷⟩ []) ⟨∷⟩ tel ⟨∷⟩ [] ) ⟨∷⟩ [])
+
+
 default-construct-expr : (List (Arg Term) → Term) → List (Arg Term) → TC Term
 construct-expr : Term → TC Term
 
@@ -73,6 +77,14 @@ construct-expr (def (quote var-type) args) = do  -- Look up the type in the tele
   t-type ← telescope-lookup t-telescope {len-telescope} var-num
   expr-type ← construct-expr t-type
   return (weaken-expr expr-type (suc (toℕ var-num)))
+construct-expr (def (quote var-type′) args) = do  -- Look up the type in the telescope.
+  t-telescope ← get-visible-arg 0 args
+  len-telescope ← get-arg 2 args >>= unquoteTC
+  var-num-term ← get-visible-arg 1 args
+  var-num ← unquoteTC var-num-term
+  t-type ← telescope-lookup t-telescope {len-telescope} var-num
+  expr-type ← construct-expr t-type
+  return (weaken-expr′ expr-type t-telescope var-num-term)
 construct-expr (def (quote weaken-type) args) = do  -- The type is given as argument 1 to weaken-type (but sufficiently π substitutions must still be applied).
   expr-not-weakened-type ← get-visible-arg 1 args >>= construct-expr
   weaken-nr ← get-arg 2 args >>= unquoteTC  -- Number of times π is applied
@@ -88,3 +100,4 @@ construct-expr (var x args) = default-construct-expr (var x) args
 construct-expr (meta m args) = debugPrint "vtac" 5 (strErr "Blocking on meta" ∷ termErr (meta m args) ∷ strErr "in construct-expr." ∷ []) >>
                                blockOnMeta m
 construct-expr ty = typeError (strErr "The naturality tactic does not work for the type" ∷ termErr ty ∷ [])
+

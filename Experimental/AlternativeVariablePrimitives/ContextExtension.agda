@@ -4,15 +4,17 @@
 
 open import Categories
 
-module CwF-Structure.ContextExtension {C : Category} where
+module Experimental.AlternativeVariablePrimitives.ContextExtension {C : Category} where
 
+open import Data.Fin
+open import Data.Nat hiding (_⊔_)
+open import Data.Vec hiding ([_]; _++_)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
-open import Data.String
+open import Data.String hiding (_++_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Helpers
 open import CwF-Structure.Contexts
-open import CwF-Structure.ContextEquivalence
 open import CwF-Structure.Types
 open import CwF-Structure.Terms
 
@@ -23,6 +25,7 @@ infixl 15 _,,_∈_
 
 private
   variable
+    n : ℕ
     Γ Δ Θ : Ctx C
     T S : Ty Γ
 
@@ -35,16 +38,51 @@ _,,_ : (Γ : Ctx C) (T : Ty Γ) → Ctx C
 ctx-id (Γ ,, T) = to-Σ-ty-eq T (ctx-id Γ) (trans (ty-cong-2-1 T hom-idˡ) (ty-id T))
 ctx-comp (Γ ,, T) = to-Σ-ty-eq T (ctx-comp Γ) (ty-cong-2-2 T hom-idʳ)
 
+
+--------------------------------------------------
+-- Definition of a telescope in a context of a certain length
+
+-- A value of Telescope Γ n ℓs is a list of types Ts = [] ∷ T1 ∷ T2 ∷ ... ∷ Tn so that
+-- T1 is valid in Γ, T2 is valid in Γ ,, T1 etc. and hence Γ ,, T1 ,, T2 ,, ... ,, Tn
+-- is a valid context written as Γ ++ Ts.
+data Telescope (Γ : Ctx C) : (n : ℕ) → Set₁
+_++_ : (Γ : Ctx C) {n : ℕ} → Telescope Γ n → Ctx C
+
+data Telescope Γ where
+  []  : Telescope Γ 0
+  _∷_ : ∀ {n} (Ts : Telescope Γ n) → Ty (Γ ++ Ts) → Telescope Γ (suc n)
+
+Γ ++ []       = Γ
+Γ ++ (Ts ∷ T) = (Γ ++ Ts) ,, T
+
+dropTel : (x : Fin (suc n)) → Telescope Γ n → Telescope Γ (n ℕ-ℕ x)
+dropTel zero Ts = Ts
+dropTel (suc x) (Ts ∷ T) = dropTel x Ts
+
+πs : (x : Fin (suc n)) → (Ts : Telescope Γ n) → Γ ++ Ts ⇒ Γ ++ dropTel x Ts
+func (πs zero Ts) v = v
+func (πs (suc x) (Ts ∷ T)) [ v , _ ] = func (πs x Ts) v
+naturality (πs zero Ts) = refl
+naturality (πs (suc x) (Ts ∷ T)) = naturality (πs x Ts)
+
 π : Γ ,, T ⇒ Γ
-func π = proj₁
-naturality π = refl
+π {T = T} = πs (suc zero) ([] ∷ T)
+
+lookupTel : (x : Fin n) → (Ts : Telescope Γ n) → Ty (Γ ++ dropTel (suc x) Ts)
+lookupTel zero (Ts ∷ T) = T
+lookupTel (suc x) (Ts ∷ T) = lookupTel x Ts
+
+ξs : (x : Fin n) → (Ts : Telescope Γ n) → Tm (Γ ++ Ts) (lookupTel x Ts [ πs (suc x) Ts ])
+ξs zero (Ts ∷ T) ⟨ _ , [ _ , v ] ⟩' = v
+naturality (ξs zero (Ts ∷ T)) f refl = refl
+ξs (suc x) (Ts ∷ T) ⟨ _ , [ vs , _ ] ⟩' = ξs x Ts ⟨ _ , vs ⟩'
+naturality (ξs (suc x) (Ts ∷ T)) f eγ = trans (ty-cong (lookupTel x Ts) refl) (naturality (ξs x Ts) f (cong proj₁ eγ))
 
 -- A term corresponding to the last variable in the context. In MLTT, this would be
 -- written as Γ, x : T ⊢ x : T. Note that the type of the term is T [ π ] instead of
 -- T because the latter is not a type in context Γ ,, T.
 ξ : Tm (Γ ,, T) (T [ π ])
-ξ ⟨ _ , [ _ , t ] ⟩' = t
-naturality ξ _ refl = refl
+ξ {T = T} = ξs zero ([] ∷ T)
 
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
 -- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
@@ -69,11 +107,6 @@ ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (strong-ty-id T)
 
--- Reformulation of ctx-ext-subst-proj₂
-ctx-ext-subst-β₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
-                   ξ [ ⟨ σ , t ∈ T ⟩ ]' ≅ᵗᵐ ι[ ≅ᵗʸ-trans (ty-subst-comp T π _) (ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T) ] t
-eq (ctx-ext-subst-β₂ {T = T} σ t) _ = sym (strong-ty-id T)
-
 ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≅ˢ τ
 eq (ctx-ext-subst-η τ) δ = refl
 
@@ -95,6 +128,9 @@ ty-eq-to-ext-subst : (Γ : Ctx C) {T : Ty Γ} {T' : Ty Γ} →
                      T ≅ᵗʸ T' → Γ ,, T ⇒ Γ ,, T'
 ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ ∈ T' ⟩
 
+{-
+-- These functions are currently not used anywhere. We keep them in case we need them
+-- in the future.
 π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
 π-ext-comp-ty-subst {T = T} σ t S =
@@ -105,9 +141,6 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
   S [ σ ] ∎
   where open ≅ᵗʸ-Reasoning
 
-{-
--- This function is currently not used anywhere. We keep it in case we need it
--- in the future.
 _⌈_⌋ : Tm (Γ ,, T) (S [ π ]) → Tm Γ T → Tm Γ S
 _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
   where
@@ -120,17 +153,6 @@ _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
         ≅⟨ ty-subst-id S ⟩
       S ∎
 -}
-
--- Extending a context with two equivalent types leads to equivalent contexts.
-,,-map : (T ↣ S) → (Γ ,, T ⇒ Γ ,, S)
-func (,,-map η) [ γ , t ] = [ γ , func η t ]
-naturality (,,-map η) = cong [ _ ,_] (naturality η)
-
-,,-cong : T ≅ᵗʸ S → Γ ,, T ≅ᶜ Γ ,, S
-from (,,-cong T=S) = ,,-map (from T=S)
-to (,,-cong T=S) = ,,-map (to T=S)
-eq (isoˡ (,,-cong T=S)) [ γ , t ] = cong [ γ ,_] (eq (isoˡ T=S) t)
-eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
 
 -- Context extension which includes a variable name
 _,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C

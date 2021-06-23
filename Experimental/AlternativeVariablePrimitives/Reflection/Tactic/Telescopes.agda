@@ -4,7 +4,7 @@
 -- without having to specify the telescope.
 --------------------------------------------------
 
-module Reflection.Tactic.Telescopes where
+module Experimental.AlternativeVariablePrimitives.Reflection.Tactic.Telescopes where
 
 open import Data.Bool hiding (_<?_)
 open import Data.Fin using (#_)
@@ -17,8 +17,8 @@ open import Reflection.TypeChecking.Monad.Syntax
 open import Relation.Nullary.Decidable using (⌊_⌋)
 
 open import CwF-Structure.Terms
-open import CwF-Structure.ContextExtension
-open import CwF-Structure.Telescopes hiding (_++_)
+open import Experimental.AlternativeVariablePrimitives.ContextExtension hiding (_++_)
+open import Experimental.AlternativeVariablePrimitives.Telescopes
 open import Reflection.Naturality.Solver renaming (reduce to nat-reduce)
 open import Reflection.Tactic.ConstructExpression
 open import Reflection.Tactic.Util
@@ -82,7 +82,7 @@ construct-var-solution x hole = do
   ctx ← get-ctx goal
   telescope ← ctx-to-telescope ctx
   check-within-bounds x telescope
-  return (def (quote prim-var) (vArg telescope ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ []))
+  return (def (quote prim-var′) (vArg telescope ∷ vArg (def (quote #_) (vArg x ∷ [])) ∷ []))
 
 db-var-macro : Term → Term → TC ⊤
 db-var-macro x hole = do
