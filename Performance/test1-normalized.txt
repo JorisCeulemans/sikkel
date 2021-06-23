@@ -1,0 +1,19 @@
+lam {C₁} {◇ {C₁}} {Discr {C₁} {◇ {C₁}} Bool}
+(Discr {C₁} {◇ {C₁}} Bool)
+(convert-term {C₁} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)}
+ {Discr {C₁} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)} Bool}
+ {_[_] {C₁} {◇ {C₁}} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)}
+  (Discr {C₁} {◇ {C₁}} Bool)
+  (π {C₁} {◇ {C₁}} {Discr {C₁} {◇ {C₁}} Bool})}
+ (to
+  (Discr-natural {C₁} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)}
+   {◇ {C₁}} Bool (π {C₁} {◇ {C₁}} {Discr {C₁} {◇ {C₁}} Bool})))
+ (convert-term {C₁} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)}
+  {_[_] {C₁} {◇ {C₁}} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)}
+   (Discr {C₁} {◇ {C₁}} Bool)
+   (π {C₁} {◇ {C₁}} {Discr {C₁} {◇ {C₁}} Bool})}
+  {Discr {C₁} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)} Bool}
+  (from
+   (Discr-natural {C₁} {_,,_ {C₁} (◇ {C₁}) (Discr {C₁} {◇ {C₁}} Bool)}
+    {◇ {C₁}} Bool (π {C₁} {◇ {C₁}} {Discr {C₁} {◇ {C₁}} Bool})))
+  (ξ {C₁} {◇ {C₁}} {Discr {C₁} {◇ {C₁}} Bool})))

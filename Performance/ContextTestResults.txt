@@ -1,0 +1,14 @@
+agda -vprofile.definitions:10 Performance/ContextTest.agda
+
+Checking Performance.ContextTest (/home/joris/Repositories/sikkel/Performance/ContextTest.agda).
+Total                         35,775ms 
+Miscellaneous                 15,274ms 
+Performance.ContextTest.test8 10,562ms 
+Performance.ContextTest.test7  5,303ms 
+Performance.ContextTest.test6  2,540ms 
+Performance.ContextTest.test5  1,177ms 
+Performance.ContextTest.test4    546ms 
+Performance.ContextTest.test3    241ms 
+Performance.ContextTest.test2     96ms 
+Performance.ContextTest.test1     32ms 
+
