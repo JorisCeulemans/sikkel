@@ -2,7 +2,7 @@
 -- Definition of guarded streams in mode ω
 --------------------------------------------------
 
-module GuardedRecursion.Streams.Guarded where
+module Experimental.NaturalityInstances.GuardedRecursion.Streams.Guarded where
 
 open import Data.Nat hiding (_⊔_)
 open import Data.Nat.Properties
@@ -17,8 +17,8 @@ open import Level renaming (zero to lzero; suc to lsuc)
 open import Categories
 open import Helpers
 open import CwF-Structure
-open import Types.Functions
-open import GuardedRecursion.Modalities
+open import Experimental.NaturalityInstances.Types.Functions
+open import Experimental.NaturalityInstances.GuardedRecursion.Modalities
 open import Reflection.Naturality.TypeOperations
 
 private
@@ -234,3 +234,6 @@ instance
   gstream-un : IsUnaryNatural GStream
   natural-un {{gstream-un}} σ = gstream-natural σ
   cong-un {{gstream-un}} = gstream-cong
+
+  gstream-closed : {A : ClosedType ★} → {{IsClosedNatural A}} → IsClosedNatural (GStream A)
+  closed-natural {{gstream-closed}} σ = ≅ᵗʸ-trans (gstream-natural σ) (gstream-cong (natural-nul (now-subst σ)))
