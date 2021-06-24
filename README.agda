@@ -8,7 +8,7 @@ module README where
   This is the readme for the Sikkel library, as presented in the ICFP submission
   Sikkel: Multimode Simple Type Theory as an Agda Library.
 
-  We use Agda 2.6.1 and the Agda standard library (version 1.5).
+  We use Agda 2.6.2 and the Agda standard library (version 1.7).
   We will first give an overview of the paper with references to the relevant code.
   Subsequently we discuss code that does not appear in the paper.
 -}

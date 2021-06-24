@@ -1,3 +1,4 @@
 name: sikkel
 include: .
 depend: standard-library
+flags: --guardedness
