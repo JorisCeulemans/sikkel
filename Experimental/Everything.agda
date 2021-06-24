@@ -17,3 +17,11 @@ import Experimental.AlternativeVariablePrimitives.ContextExtension
 import Experimental.AlternativeVariablePrimitives.Telescopes
 import Experimental.AlternativeVariablePrimitives.Reflection.Tactic.ConstructExpression
 import Experimental.AlternativeVariablePrimitives.Reflection.Tactic.Telescopes
+
+import Experimental.NaturalityInstances.CwF-Structure.Telescopes
+import Experimental.NaturalityInstances.GuardedRecursion.Modalities
+import Experimental.NaturalityInstances.GuardedRecursion.Modalities.Later
+import Experimental.NaturalityInstances.GuardedRecursion.Modalities.Instances
+import Experimental.NaturalityInstances.GuardedRecursion.Streams.Guarded
+import Experimental.NaturalityInstances.GuardedRecursion.Streams.Examples.Guarded
+import Experimental.NaturalityInstances.Types.Functions
