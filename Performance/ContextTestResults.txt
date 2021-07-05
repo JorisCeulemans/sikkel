@@ -1,14 +1,16 @@
+Agda 2.6.2 -- std-lib 1.7
+
 agda -vprofile.definitions:10 Performance/ContextTest.agda
 
 Checking Performance.ContextTest (/home/joris/Repositories/sikkel/Performance/ContextTest.agda).
-Total                         35,775ms 
-Miscellaneous                 15,274ms 
-Performance.ContextTest.test8 10,562ms 
-Performance.ContextTest.test7  5,303ms 
-Performance.ContextTest.test6  2,540ms 
-Performance.ContextTest.test5  1,177ms 
-Performance.ContextTest.test4    546ms 
-Performance.ContextTest.test3    241ms 
-Performance.ContextTest.test2     96ms 
-Performance.ContextTest.test1     32ms 
+Total                         49,212ms 
+Miscellaneous                 21,380ms 
+Performance.ContextTest.test8 14,346ms 
+Performance.ContextTest.test7  7,199ms 
+Performance.ContextTest.test6  3,522ms 
+Performance.ContextTest.test5  1,500ms 
+Performance.ContextTest.test4    793ms 
+Performance.ContextTest.test3    306ms 
+Performance.ContextTest.test2    116ms 
+Performance.ContextTest.test1     46ms 
 
