@@ -77,7 +77,7 @@ check-within-bounds t-index t-telescope = do
 
 construct-var-solution : Term → Term → TC Term
 construct-var-solution x hole = do
-  goal ← inferType hole
+  goal ← inferType hole >>= reduce
   debugPrint "vtac" 5 (strErr "var macro called, goal:" ∷ termErr goal ∷ [])
   ctx ← get-ctx goal
   telescope ← ctx-to-telescope ctx
@@ -135,14 +135,14 @@ get-deBruijn-index _ v = typeError (strErr ("Could not find a variable with name
 
 var-macro : String → Term → TC ⊤
 var-macro v hole = do
-  goal ← inferType hole
+  goal ← inferType hole >>= reduce
   ctx ← get-ctx goal
   i ← get-deBruijn-index ctx v >>= quoteTC
   db-var-macro i hole
 
 varι-macro : String → Term → TC ⊤
 varι-macro v hole = do
-  goal ← inferType hole
+  goal ← inferType hole >>= reduce
   ctx ← get-ctx goal
   i ← get-deBruijn-index ctx v >>= quoteTC
   db-varι-macro i hole
@@ -172,7 +172,7 @@ bounded-ctx-to-telescope (suc n) _ = typeError (strErr "Weakening this far is no
 
 construct-weaken-solution : ℕ → Term → Term → TC Term
 construct-weaken-solution n term hole = do
-  goal ← inferType hole
+  goal ← inferType hole >>= reduce
   debugPrint "vtac" 5 (strErr "↑ macro called, goal:" ∷ termErr goal ∷ [])
   extended-ctx ← get-ctx goal
   ty-seq ← bounded-ctx-to-telescope n extended-ctx
