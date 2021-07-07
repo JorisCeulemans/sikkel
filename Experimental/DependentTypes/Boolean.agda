@@ -34,14 +34,14 @@ not-involutive : {Γ : Ctx C} → Tm (Γ ,, Bool') (Id [ (ι[ by-naturality ] no
 not-involutive = bool-ind _ case-true case-false
   where
     open import Reflection.SubstitutionSequence
-    case-true : Tm _ ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ true' /var0 ])
+    case-true : Tm _ _ -- ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ true' /var0 ])
     case-true = ι[ ty-subst-seq-cong ((_ /var0) ∷ (true' /var0) ◼)
                                      (π ∷ (refl' ⊚ (true' /var0)) ◼)
                                      Id
                                      (record { eq = λ _ → refl }) ]
                 (ξ [ refl' ⊚ (true' /var0) ]')
 
-    case-false : Tm _ ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ false' /var0 ])
+    case-false : Tm _ _ -- ((Id [(ι[ by-naturality ] not' (not' (db-varι 0))) /var0 ]) [ false' /var0 ])
     case-false = ι[ ty-subst-seq-cong ((_ /var0) ∷ (false' /var0) ◼)
                                       (π ∷ (refl' ⊚ (false' /var0)) ◼)
                                       Id

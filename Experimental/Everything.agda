@@ -25,3 +25,6 @@ import Experimental.NaturalityInstances.GuardedRecursion.Modalities.Instances
 import Experimental.NaturalityInstances.GuardedRecursion.Streams.Guarded
 import Experimental.NaturalityInstances.GuardedRecursion.Streams.Examples.Guarded
 import Experimental.NaturalityInstances.Types.Functions
+
+import Experimental.DeepEmbedding.TypeChecker
+import Experimental.DeepEmbedding.PerformanceTest
