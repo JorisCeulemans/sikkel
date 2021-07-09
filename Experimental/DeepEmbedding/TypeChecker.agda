@@ -20,9 +20,12 @@ private
     n : ℕ
 
 
+-- Needed for the do-notation below to desugar properly (this operator is
+--   not exported by Data.Maybe).
 _>>_ : ∀ {ℓa ℓb} {A : Set ℓa} {B : Set ℓb} → Maybe A → Maybe B → Maybe B
 just _  >> x = x
 nothing >> x = nothing
+
 
 --------------------------------------------------
 -- Expressions representing types, contexts and terms
@@ -60,9 +63,9 @@ e-bool ≟ e-bool = yes refl
 e-bool ≟ (_ e→ _) = no (λ ())
 (_ e→ _) ≟ e-bool = no (λ ())
 (T1 e→ T2) ≟ (T3 e→ T4) with T1 ≟ T3 | T2 ≟ T4
-((T1 e→ T2) ≟ (T1 e→ T2)) | yes refl | yes refl = yes refl
-((T1 e→ T2) ≟ (T1 e→ T4)) | yes refl | no ne = no (λ e → ne (e→injʳ e))
-((T1 e→ T2) ≟ (T3 e→ T4)) | no ne    | _ = no (λ e → ne (e→injˡ e))
+(T1 e→ T2) ≟ (T1 e→ T2) | yes refl | yes refl = yes refl
+(T1 e→ T2) ≟ (T1 e→ T4) | yes refl | no ne = no (λ e → ne (e→injʳ e))
+(T1 e→ T2) ≟ (T3 e→ T4) | no ne    | _ = no (λ e → ne (e→injˡ e))
 
 
 --------------------------------------------------
@@ -123,27 +126,27 @@ open import Reflection.Tactic.Naturality
 ⟦ e-var zero    ⟧tm-in (Γ , T) = ι⁻¹[ closed-natural {{⟦⟧ty-natural {T}}} π ] ξ
 ⟦ e-var (suc x) ⟧tm-in (Γ , T) = ι⁻¹[ closed-natural {{⟦⟧ty-natural {lookup-ctx x Γ}}} π ] ((⟦ e-var x ⟧tm-in Γ) [ π ]')
 ⟦ e-lam T b ⟧tm-in Γ with infer-type b (Γ , T) | ⟦ b ⟧tm-in (Γ , T)
-(⟦ e-lam T b ⟧tm-in Γ) | just S | ⟦b⟧ = lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural {S}}} π ] ⟦b⟧)
-(⟦ e-lam T b ⟧tm-in Γ) | nothing | _ = tt
+⟦ e-lam T b ⟧tm-in Γ | just S | ⟦b⟧ = lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural {S}}} π ] ⟦b⟧)
+⟦ e-lam T b ⟧tm-in Γ | nothing | _ = tt
 ⟦ e-app t1 t2 ⟧tm-in Γ with infer-type t1 Γ | ⟦ t1 ⟧tm-in Γ
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ with get-dom-cod T1 | inspect get-dom-cod T1
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] with infer-type t2 Γ | ⟦ t2 ⟧tm-in Γ
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ with dom ≟ T2
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ | yes refl = app (subst (λ - → Tm ⟦ Γ ⟧ctx ⟦ - ⟧ty) (get-dom-cod-sound e) ⟦t1⟧) ⟦t2⟧
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] |  just T2 | ⟦t2⟧ | no ne = tt
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] |  nothing | _ = tt
-(⟦ e-app t1 t2 ⟧tm-in Γ) | just T1 | ⟦t1⟧ | nothing | _ = tt
-(⟦ e-app t1 t2 ⟧tm-in Γ) | nothing | _ = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ with get-dom-cod T1 | inspect get-dom-cod T1
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] with infer-type t2 Γ | ⟦ t2 ⟧tm-in Γ
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ with dom ≟ T2
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ | yes refl = app (subst (λ - → Tm ⟦ Γ ⟧ctx ⟦ - ⟧ty) (get-dom-cod-sound e) ⟦t1⟧) ⟦t2⟧
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ | no ne = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | nothing | _ = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | nothing | _ = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | nothing | _ = tt
 ⟦ e-true ⟧tm-in Γ = true'
 ⟦ e-false ⟧tm-in Γ = false'
 ⟦ e-if t-c t-t t-f ⟧tm-in Γ with infer-type t-c Γ | ⟦ t-c ⟧tm-in Γ
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just T-c     | ⟦t-c⟧ with T-c ≟ e-bool
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl with infer-type t-t Γ | ⟦ t-t ⟧tm-in Γ
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ with infer-type t-f Γ | ⟦ t-f ⟧tm-in Γ
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | just T-f | ⟦t-f⟧ with T-t ≟ T-f
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | just T-f | ⟦t-f⟧ | yes refl = if' ⟦t-c⟧ then' ⟦t-t⟧ else' ⟦t-f⟧
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | just T-f | ⟦t-f⟧ | no _ = tt
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | nothing  | ⟦t-f⟧ = tt
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just .e-bool | ⟦t-c⟧ | yes refl | nothing  | ⟦t-t⟧ = tt
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | just T-c     | ⟦t-c⟧ | no _ = tt
-(⟦ e-if t-c t-t t-f ⟧tm-in Γ) | nothing      | ⟦t-c⟧ = tt
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just T-c     | ⟦t-c⟧ with T-c ≟ e-bool
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl with infer-type t-t Γ | ⟦ t-t ⟧tm-in Γ
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ with infer-type t-f Γ | ⟦ t-f ⟧tm-in Γ
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | just T-f | ⟦t-f⟧ with T-t ≟ T-f
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | just T-f | ⟦t-f⟧ | yes refl = if' ⟦t-c⟧ then' ⟦t-t⟧ else' ⟦t-f⟧
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | just T-f | ⟦t-f⟧ | no _ = tt
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl | just T-t | ⟦t-t⟧ | nothing  | ⟦t-f⟧ = tt
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just .e-bool | ⟦t-c⟧ | yes refl | nothing  | ⟦t-t⟧ = tt
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | just T-c     | ⟦t-c⟧ | no _ = tt
+⟦ e-if t-c t-t t-f ⟧tm-in Γ | nothing      | ⟦t-c⟧ = tt
