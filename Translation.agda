@@ -98,13 +98,13 @@ instance
 
 private
   -- Definition of addition in Sikkel using the recursion principle for Nat'.
-  nat-sum : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
-  nat-sum = nat-elim (Nat' ⇛ Nat')
-                     (lamι[ "n" ∈ Nat' ] varι "n")
-                     (lamι[ "f" ∈ Nat' ⇛ Nat' ] lamι[ "n" ∈ Nat' ] suc' $ (varι "f" $ varι "n"))
+  nat-sum' : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
+  nat-sum' = nat-elim (Nat' ⇛ Nat')
+                      (lamι[ "n" ∈ Nat' ] varι "n")
+                      (lamι[ "f" ∈ Nat' ⇛ Nat' ] lamι[ "n" ∈ Nat' ] suc' $ (varι "f" $ varι "n"))
 
   _+'_ : ℕ → ℕ → ℕ
-  _+'_ = translate-term nat-sum
+  _+'_ = translate-term nat-sum'
 
   test : 6 +' 3 ≡ 9
   test = refl

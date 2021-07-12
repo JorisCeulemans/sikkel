@@ -207,13 +207,6 @@ g-zipWith {A = A}{B}{C} f =
         g-cons $ ↑ι⟨ 3 ⟩ f ⊛⟨ timeless ⟩ (g-head $ varι "as") ⊛⟨ timeless ⟩ (g-head $ varι "bs")
                $ varι "g" ⊛' (g-tail $ varι "as") ⊛' (g-tail $ varι "bs")
 
-prim-nat-sum : {Γ : Ctx ★} → Tm Γ Nat' → Tm Γ Nat' → Tm Γ Nat'
-prim-nat-sum t s ⟨ n , γ ⟩' = t ⟨ n , γ ⟩' + s ⟨ n , γ ⟩'
-naturality (prim-nat-sum t s) m≤n eγ = cong₂ _+_ (naturality t m≤n eγ) (naturality s m≤n eγ)
-
-nat-sum : {Γ : Ctx ★} → Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
-nat-sum = lamι[ "m" ∈ Nat' ] lamι[ "n" ∈ Nat' ] prim-nat-sum (varι "m") (varι "n")
-
 -- The stream of fibonacci numbers.
 g-fibs : Tm Γ (GStream Nat')
 g-fibs = löbι[ "s" ∈▻' GStream Nat' ]

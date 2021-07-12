@@ -48,6 +48,12 @@ discr-func : {A B : Set} → (A → B) → Tm Γ (Discr A ⇛ Discr B)
 naturality (discr-func f ⟨ _ , _ ⟩') = refl
 naturality (discr-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
 
+discr-func₂ : {A B C : Set} → (A → B → C) → Tm Γ (Discr A ⇛ Discr B ⇛ Discr C)
+(discr-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ a) $⟨ _ , _ ⟩ b = f a b
+naturality (discr-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ _) = refl
+naturality (discr-func₂ f ⟨ _ , _ ⟩') = to-pshfun-eq (λ _ _ _ → refl)
+naturality (discr-func₂ f) _ _ = to-pshfun-eq (λ _ _ _ → refl)
+
 {-
 -- The following works if C = ω. In general, it will work if C has a
 -- terminal or initial object. These results are however never used,
@@ -202,3 +208,9 @@ eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
     go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc' €⟨ _ , γ ⟩ n
     go zero    = refl
     go (suc n) = cong suc (go n)
+
+-- The following function could be defined inside Sikkel by using nat-elim.
+-- However, with the following definition the extraction mechanism will produce Agda programs
+-- that make use of Agda's `_+_` instead of a custom Sikkel definition, which leads to better performance.
+nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
+nat-sum = discr-func₂ _+_
