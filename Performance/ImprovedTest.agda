@@ -6,13 +6,16 @@ open import Categories
 open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
+open import Types.Instances
 open import Modalities
 open import GuardedRecursion.Modalities
 open import GuardedRecursion.Streams.Guarded
+open import Reflection.Naturality.Solver
 
 
 -- Obtained from Experimental.DeepEmbedding.PerformanceTest by normalizing `⟦test8⟧sikkel`.
 -- Typechecking here is considerably faster than for `test8` of Performance.ContextTest.
+-- typechecked 12-07-2021: 344ms
 test8' : Tm {C = ★} ◇ (Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool')
 test8' = lam (Discr Bool)
   (convert-term
@@ -93,10 +96,29 @@ test8' = lam (Discr Bool)
                 (convert-term (to (Discr-natural Bool π))
                  (convert-term (from (Discr-natural Bool π)) ξ))))))))))))))))
 
+-- Manually implemented version of `test8` from Performance.ContextTest.
+-- Apparently the naturality solver itself (without the tactics to invoke it) is not the cause of the performance problems.
+-- typechecked 12-07-2021: 403ms
+test8'' : Tm {C = ★} ◇ (Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool' ⇛ Bool')
+test8'' =
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool')
+                             (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (nul Bool')))))))) π) ]
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool')
+                             (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (nul Bool'))))))) π) ]
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool')
+                             (bin _⇛_ (nul Bool') (nul Bool')))))) π) ]
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (nul Bool'))))) π) ]
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (nul Bool')))) π) ]
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (bin _⇛_ (nul Bool') (nul Bool'))) π) ]
+  lam Bool' (ι[ reduce-sound (sub (bin _⇛_ (nul Bool') (nul Bool')) π) ]
+  lam Bool' (ι[ reduce-sound (sub (nul Bool') π) ]
+  (ι⁻¹[ reduce-sound (sub (nul Bool') π) ] ξ)))))))))
+
 
 -- Manually implemented alternative version of `g-map` from GuardedRecursion.Streams.Examples.Guarded.
 -- This one typechecks considerably faster. Although this term is not exactly equal to the normalized version
 -- of `g-map`, this makes me suspect that Sikkel's tactics themselves are the cause of the performance issues.
+-- typechecked 12-07-2021: 913ms
 g-map' : {Γ : Ctx ω} {A B : ClosedType ★} → {{IsClosedNatural A}} → {{IsClosedNatural B}} →
          Tm Γ (timeless-ty (A ⇛ B) ⇛ GStream A ⇛ GStream B)
 g-map' {A = A}{B} =
