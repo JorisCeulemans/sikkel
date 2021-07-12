@@ -1,6 +1,6 @@
 open import Categories
 
-module Experimental.DeepEmbedding.TypeChecker {C : Category} where
+module Experimental.DeepEmbedding.Simple.TypeChecker {C : Category} where
 
 open import Data.Fin hiding (_+_; _≟_)
 open import Data.Maybe

@@ -1,4 +1,4 @@
-module Experimental.DeepEmbedding.PerformanceTest where
+module Experimental.DeepEmbedding.Simple.PerformanceTest where
 
 open import Data.Bool
 open import Data.Fin
@@ -8,7 +8,7 @@ open import Categories
 open import CwF-Structure
 open import Types.Discrete
 open import Types.Functions
-open import Experimental.DeepEmbedding.TypeChecker {C = ★}
+open import Experimental.DeepEmbedding.Simple.TypeChecker {C = ★}
 open import Translation
 
 test1 : TmExpr 0
