@@ -27,7 +27,7 @@ nothing >> x = nothing
 --------------------------------------------------
 -- Expressions representing types, contexts and terms
 
-infixr 4 _e→_
+infixr 5 _e→_
 data TyExpr : Set where
   e-Nat : TyExpr
   _e→_ : TyExpr → TyExpr → TyExpr
@@ -48,14 +48,23 @@ data TmExpr : Set where
   e-löb : TyExpr → TmExpr → TmExpr
   e-cons e-head e-tail : TmExpr
 
-get-dom-cod : (T : TyExpr) → Maybe (TyExpr × TyExpr)
-get-dom-cod e-Nat = nothing
-get-dom-cod (T1 e→ T2) = just (T1 , T2)
-get-dom-cod (e▻' T) = nothing
-get-dom-cod e-GStreamN = nothing
 
-get-dom-cod-sound : {T T1 T2 : TyExpr} → get-dom-cod T ≡ just (T1 , T2) → T ≡ (T1 e→ T2)
-get-dom-cod-sound {T1 e→ T2} refl = refl
+-- Deciding whether a type expression is a function type.
+
+record IsFuncTyExpr (T : TyExpr) : Set where
+  constructor func-ty
+  field
+    dom cod : TyExpr
+    is-func : T ≡ dom e→ cod
+
+is-func-ty : (T : TyExpr) → Maybe (IsFuncTyExpr T)
+is-func-ty e-Nat = nothing
+is-func-ty (T1 e→ T2) = just (func-ty T1 T2 refl)
+is-func-ty (e▻' T) = nothing
+is-func-ty e-GStreamN = nothing
+
+
+-- Decidable equality for type expressions.
 
 e→injˡ : {T T' S S' : TyExpr} → (T e→ S) ≡ (T' e→ S') → T ≡ T'
 e→injˡ refl = refl
@@ -126,7 +135,7 @@ infer-type (e-lam T b) Γ =  do
   just (T e→ codomain)
 infer-type (e-app t1 t2) Γ = do
   T1 ← infer-type t1 Γ
-  dom , cod ← get-dom-cod T1
+  func-ty dom cod _ ← is-func-ty T1
   T2 ← infer-type t2 Γ
   decToMaybe (dom ≟ T2)
   just cod
@@ -166,13 +175,13 @@ open import Reflection.Tactic.Lambda
 ⟦ e-lam T b ⟧tm-in Γ | just S  | ⟦b⟧ = lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural {S}}} π ] ⟦b⟧)
 ⟦ e-lam T b ⟧tm-in Γ | nothing | ⟦b⟧ = tt
 ⟦ e-app t1 t2 ⟧tm-in Γ with infer-type t1 Γ | ⟦ t1 ⟧tm-in Γ
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ with get-dom-cod T1 | inspect get-dom-cod T1
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] with infer-type t2 Γ | ⟦ t2 ⟧tm-in Γ
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ with dom ≟ T2
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ | yes refl = app (subst (λ - → Tm ⟦ Γ ⟧ctx ⟦ - ⟧ty) (get-dom-cod-sound e) ⟦t1⟧) ⟦t2⟧
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | just T2 | ⟦t2⟧ | no ne = tt
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | just (dom , cod) | [ e ] | nothing | _ = tt
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1 | ⟦t1⟧ | nothing | _ = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1             | ⟦t1⟧ with is-func-ty T1
+⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) with infer-type t2 Γ | ⟦ t2 ⟧tm-in Γ
+⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | just T2 | ⟦t2⟧ with dom ≟ T2
+⟦ e-app t1 t2 ⟧tm-in Γ | just .(T2  e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | just T2 | ⟦t2⟧ | yes refl = app ⟦t1⟧ ⟦t2⟧
+⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | just T2 | ⟦t2⟧ | no ne = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | nothing | _ = tt
+⟦ e-app t1 t2 ⟧tm-in Γ | just T1             | ⟦t1⟧ | nothing = tt
 ⟦ e-app t1 t2 ⟧tm-in Γ | nothing | _ = tt
 ⟦ e-lit n ⟧tm-in Γ = discr n
 ⟦ e-suc ⟧tm-in Γ = suc'
