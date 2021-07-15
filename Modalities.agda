@@ -65,45 +65,45 @@ module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
 
     -- Modalities preserve products (up to isomorphism).
     from-mod-⊠ : Tm Γ (mod (T ⊠ S)) → Tm Γ (mod T ⊠ mod S)
-    from-mod-⊠ p = pair (mod-intro (fst (mod-elim p))) (mod-intro (snd (mod-elim p)))
+    from-mod-⊠ p = prim-pair (mod-intro (prim-fst (mod-elim p))) (mod-intro (prim-snd (mod-elim p)))
 
     to-mod-⊠ : Tm Γ (mod T ⊠ mod S) → Tm Γ (mod (T ⊠ S))
-    to-mod-⊠ p = mod-intro (pair (mod-elim (fst p)) (mod-elim (snd p)))
+    to-mod-⊠ p = mod-intro (prim-pair (mod-elim (prim-fst p)) (mod-elim (prim-snd p)))
 
     from-to-mod-⊠ : (p : Tm Γ (mod T ⊠ mod S)) → from-mod-⊠ (to-mod-⊠ p) ≅ᵗᵐ p
-    from-to-mod-⊠ p = let p' = pair (mod-elim (fst p)) (mod-elim (snd p)) in
+    from-to-mod-⊠ p = let p' = prim-pair (mod-elim (prim-fst p)) (mod-elim (prim-snd p)) in
       begin
-        pair (mod-intro (fst (mod-elim (mod-intro p'))))
-             (mod-intro (snd (mod-elim (mod-intro p'))))
-      ≅⟨ pair-cong (mod-intro-cong (fst-cong (mod-β p')))
-                   (mod-intro-cong (snd-cong (mod-β p'))) ⟩
-        pair (mod-intro (fst p'))
-             (mod-intro (snd p'))
-      ≅⟨ pair-cong (mod-intro-cong (β-⊠-fst _ (mod-elim (snd p))))
-                   (mod-intro-cong (β-⊠-snd (mod-elim (fst p)) _)) ⟩
-        pair (mod-intro (mod-elim (fst p)))
-             (mod-intro (mod-elim (snd p)))
-      ≅⟨ pair-cong (mod-η (fst p)) (mod-η (snd p)) ⟩
-        pair (fst p)
-             (snd p)
+        prim-pair (mod-intro (prim-fst (mod-elim (mod-intro p'))))
+             (mod-intro (prim-snd (mod-elim (mod-intro p'))))
+      ≅⟨ prim-pair-cong (mod-intro-cong (prim-fst-cong (mod-β p')))
+                   (mod-intro-cong (prim-snd-cong (mod-β p'))) ⟩
+        prim-pair (mod-intro (prim-fst p'))
+             (mod-intro (prim-snd p'))
+      ≅⟨ prim-pair-cong (mod-intro-cong (β-⊠-prim-fst _ (mod-elim (prim-snd p))))
+                   (mod-intro-cong (β-⊠-prim-snd (mod-elim (prim-fst p)) _)) ⟩
+        prim-pair (mod-intro (mod-elim (prim-fst p)))
+             (mod-intro (mod-elim (prim-snd p)))
+      ≅⟨ prim-pair-cong (mod-η (prim-fst p)) (mod-η (prim-snd p)) ⟩
+        prim-pair (prim-fst p)
+             (prim-snd p)
       ≅˘⟨ η-⊠ p ⟩
         p ∎
       where open ≅ᵗᵐ-Reasoning
 
     to-from-mod-⊠ : (p : Tm Γ (mod (T ⊠ S))) → to-mod-⊠ (from-mod-⊠ p) ≅ᵗᵐ p
     to-from-mod-⊠ p =
-      let t = mod-intro (fst (mod-elim p))
-          s = mod-intro (snd (mod-elim p))
+      let t = mod-intro (prim-fst (mod-elim p))
+          s = mod-intro (prim-snd (mod-elim p))
       in begin
-        mod-intro (pair (mod-elim (fst (pair t s)))
-                        (mod-elim (snd (pair t s))))
-      ≅⟨ mod-intro-cong (pair-cong (mod-elim-cong (β-⊠-fst t s))
-                                   (mod-elim-cong (β-⊠-snd t s))) ⟩
-        mod-intro (pair (mod-elim t)
+        mod-intro (prim-pair (mod-elim (prim-fst (prim-pair t s)))
+                        (mod-elim (prim-snd (prim-pair t s))))
+      ≅⟨ mod-intro-cong (prim-pair-cong (mod-elim-cong (β-⊠-prim-fst t s))
+                                   (mod-elim-cong (β-⊠-prim-snd t s))) ⟩
+        mod-intro (prim-pair (mod-elim t)
                         (mod-elim s))
-      ≅⟨ mod-intro-cong (pair-cong (mod-β _) (mod-β _)) ⟩
-        mod-intro (pair (fst (mod-elim p))
-                        (snd (mod-elim p)))
+      ≅⟨ mod-intro-cong (prim-pair-cong (mod-β _) (mod-β _)) ⟩
+        mod-intro (prim-pair (prim-fst (mod-elim p))
+                        (prim-snd (mod-elim p)))
       ≅˘⟨ mod-intro-cong (η-⊠ (mod-elim p)) ⟩
         mod-intro (mod-elim p)
       ≅⟨ mod-η p ⟩

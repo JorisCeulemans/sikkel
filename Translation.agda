@@ -53,8 +53,8 @@ instance
                    {S : ClosedType ★} {{_ : Translatable S}} →
                    Translatable (T ⊠ S)
   translated-type {{translate-prod {T = T} {S = S}}} = translate-type T × translate-type S
-  translate-term  {{translate-prod {T = T} {S = S}}} p = [ translate-term (fst p) , translate-term (snd p) ]
-  translate-back  {{translate-prod {T = T} {S = S}}} [ t , s ] = pair (translate-back t) (translate-back s)
+  translate-term  {{translate-prod {T = T} {S = S}}} p = [ translate-term (fst $ p) , translate-term (snd $ p) ]
+  translate-back  {{translate-prod {T = T} {S = S}}} [ t , s ] = pair $ translate-back t $ translate-back s
 
 expose-sum-term : {A : Ty {C = ★} ◇} {B : Ty ◇} →
                   Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B

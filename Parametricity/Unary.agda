@@ -100,7 +100,7 @@ record BoolStructure (B : ClosedType 𝟚) {{_ : IsClosedNatural B}} : Set₁ wh
 open BoolStructure {{...}}
 
 or : (B : ClosedType 𝟚) {{_ : IsClosedNatural B}} {{_ : BoolStructure B}} → Tm Γ (B ⇛ B ⇛ B)
-or B = lamι[ "b1" ∈ B ] lamι[ "b2" ∈ B ] not $ (and $ pair (not $ varι "b1") (not $ varι "b2"))
+or B = lamι[ "b1" ∈ B ] lamι[ "b2" ∈ B ] not $ (and $ (pair $ (not $ varι "b1") $ (not $ varι "b2")))
 
 -- Representing booleans as natural numbers (0 = false, 1 = true)
 data IsBit : Pred ℕ 0ℓ where

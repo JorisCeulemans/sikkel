@@ -126,16 +126,16 @@ module _
     löbι[ "g" ∈▻' (((timeless-ty A ⊠ ▻' T) ⇛ T) ⇛ GStream A ⇛ T) ]
       lamι[ "f" ∈ (timeless-ty A ⊠ ▻' T) ⇛ T ]
         lamι[ "s" ∈ GStream A ]
-          varι "f" $ pair (g-head $ varι "s")
-                          (varι "g" ⊛' next' (varι "f") ⊛' (g-tail $ varι "s"))
+          varι "f" $ (pair $ (g-head $ varι "s")
+                           $ (varι "g" ⊛' next' (varι "f") ⊛' (g-tail $ varι "s")))
 
   g-final : Tm Γ ((T ⇛ (timeless-ty A ⊠ ▻' T)) ⇛ T ⇛ GStream A)
   g-final =
     löbι[ "g" ∈▻' ((T ⇛ (timeless-ty A ⊠ ▻' T)) ⇛ T ⇛ GStream A) ]
       lamι[ "f" ∈ T ⇛ (timeless-ty A ⊠ ▻' T) ]
         lamι[ "x" ∈ T ]
-          g-cons $ fst (varι "f" $ varι "x")
-                 $ varι "g" ⊛' next' (varι "f") ⊛' snd (varι "f" $ varι "x")
+          g-cons $ (fst $ (varι "f" $ varι "x"))
+                 $ varι "g" ⊛' next' (varι "f") ⊛' (snd $ (varι "f" $ varι "x"))
 
 
 --------------------------------------------------
