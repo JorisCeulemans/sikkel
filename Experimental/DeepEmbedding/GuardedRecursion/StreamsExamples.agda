@@ -18,6 +18,7 @@ open import Translation
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker
 
 
+infixl 5 _⊛timeless_
 _⊛timeless_ : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
 f ⊛timeless t = e-mod-intro e-timeless (e-app (e-mod-elim e-timeless f) (e-mod-elim e-timeless t))
 
@@ -93,6 +94,110 @@ g-zeros = e-löb e-GStreamN (e-app (e-app e-cons (e-mod-intro e-timeless (e-lit 
 ⟦g-zeros⟧sikkel = ⟦ g-zeros ⟧tm-in e-◇
 
 {-
+g-iterate' : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
+            Tm Γ (timeless-ty (A ⇛ A) ⇛ timeless-ty A ⇛ GStream A)
+g-iterate' {A = A} =
+  lamι[ "f" ∈ timeless-ty (A ⇛ A) ]
+    löbι[ "g" ∈▻' (timeless-ty A ⇛ GStream A) ]
+      lamι[ "x" ∈ timeless-ty A ]
+        g-cons $ varι "x"
+               $ varι "g" ⊛' next' (varι "f" ⊛⟨ timeless ⟩ varι "x")
+-}
+
+g-iterate' : TmExpr e-ω
+g-iterate' =
+  e-lam (e-mod e-timeless (e-Nat e→ e-Nat)) (
+    e-löb ((e-mod e-timeless e-Nat) e→ e-GStreamN) (
+      e-lam (e-mod e-timeless e-Nat) (
+        e-app (e-app e-cons
+                     (e-var 0))
+              (e-⊛' (e-var 1) (e-next' (e-var 2 ⊛timeless e-var 0))))))
+
+⟦g-iterate'⟧sikkel : Tm ◇ (timeless-ty (Nat' ⇛ Nat') ⇛ timeless-ty Nat' ⇛ GStream Nat')
+⟦g-iterate'⟧sikkel = ⟦ g-iterate' ⟧tm-in e-◇
+
+{-
+g-iterate : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
+             Tm Γ (▻' (timeless-ty (A ⇛ A)) ⇛ timeless-ty A ⇛ GStream A)
+g-iterate {A = A} =
+  lamι[ "f" ∈ ▻' (timeless-ty (A ⇛ A)) ]
+    lamι[ "a" ∈ timeless-ty A ]
+      löbι[ "s" ∈▻' GStream A ]
+        g-cons $ varι "a"
+               $ g-map ⟨$⟩' varι "f" ⊛' varι "s"
+-}
+
+g-iterate : TmExpr e-ω
+g-iterate =
+  e-lam (e-▻' (e-mod e-timeless (e-Nat e→ e-Nat))) (
+    e-lam (e-mod e-timeless e-Nat) (
+      e-löb e-GStreamN (
+        e-app (e-app e-cons
+                     (e-var 1))
+              (e-⊛' (g-map e-⟨$⟩' e-var 2) (e-var 0)))))
+
+⟦g-iterate⟧sikkel : Tm ◇ (▻' (timeless-ty (Nat' ⇛ Nat')) ⇛ timeless-ty Nat' ⇛ GStream Nat')
+⟦g-iterate⟧sikkel = ⟦ g-iterate ⟧tm-in e-◇
+
+{-
+g-nats' : Tm Γ (GStream Nat')
+g-nats' = g-iterate $ next' (timeless-tm suc') $ timeless-tm zero'
+-}
+
+g-nats' : TmExpr e-ω
+g-nats' = e-app (e-app g-iterate (e-next' (e-mod-intro e-timeless e-suc))) (e-mod-intro e-timeless (e-lit 0))
+
+⟦g-nats'⟧sikkel : Tm ◇ (GStream Nat')
+⟦g-nats'⟧sikkel = ⟦ g-nats' ⟧tm-in e-◇
+
+{-
+g-interleave : {A : ClosedType ★} {{_ : IsClosedNatural A}} →
+               Tm Γ (GStream A ⇛ ▻' (GStream A) ⇛ GStream A)
+g-interleave {A = A} =
+  löbι[ "g" ∈▻' (GStream A ⇛ ▻' (GStream A) ⇛ GStream A) ]
+    lamι[ "s" ∈ GStream A ]
+      lamι[ "t" ∈ ▻' (GStream A) ]
+        g-cons $ (g-head $ varι "s")
+               $ varι "g" ⊛' varι "t" ⊛' next' (g-tail $ varι "s")
+
+g-toggle : Tm Γ (GStream Nat')
+g-toggle = löbι[ "s" ∈▻' GStream Nat' ]
+             g-cons $ timeless-tm one'
+                    $ next' (g-cons $ timeless-tm zero' $ varι "s")
+
+g-paperfolds : Tm Γ (GStream Nat')
+g-paperfolds = löbι[ "s" ∈▻' GStream Nat' ] g-interleave $ g-toggle $ varι "s"
+-}
+
+g-interleave : TmExpr e-ω
+g-interleave =
+  e-löb (e-GStreamN e→ (e-▻' e-GStreamN) e→ e-GStreamN) (
+    e-lam e-GStreamN (
+      e-lam (e-▻' e-GStreamN) (
+        e-app (e-app e-cons
+                     (e-app e-head (e-var 1)))
+              (e-⊛' (e-⊛' (e-var 2) (e-var 0)) (e-next' (e-app e-tail (e-var 1)))))))
+
+g-toggle : TmExpr e-ω
+g-toggle = e-löb e-GStreamN (e-app (e-app e-cons
+                                          (e-mod-intro e-timeless (e-lit 1)))
+                                   (e-next' (e-app (e-app e-cons
+                                                          (e-mod-intro e-timeless (e-lit 0)))
+                                                   (e-var 0))))
+
+g-paperfolds : TmExpr e-ω
+g-paperfolds = e-löb e-GStreamN (e-app (e-app g-interleave g-toggle) (e-var 0))
+
+⟦g-interleave⟧sikkel : Tm ◇ (GStream Nat' ⇛ ▻' (GStream Nat') ⇛ GStream Nat')
+⟦g-interleave⟧sikkel = ⟦ g-interleave ⟧tm-in e-◇
+
+⟦g-toggle⟧sikkel : Tm ◇ (GStream Nat')
+⟦g-toggle⟧sikkel = ⟦ g-toggle ⟧tm-in e-◇
+
+⟦g-paperfolds⟧sikkel : Tm ◇ (GStream Nat')
+⟦g-paperfolds⟧sikkel = ⟦ g-paperfolds ⟧tm-in e-◇
+
+{-
 g-initial : Tm Γ (((timeless-ty A ⊠ ▻' T) ⇛ T) ⇛ GStream A ⇛ T)
 g-initial =
   löbι[ "g" ∈▻' (((timeless-ty A ⊠ ▻' T) ⇛ T) ⇛ GStream A ⇛ T) ]
@@ -161,6 +266,31 @@ g-mergef =
 
 ⟦g-mergef⟧sikkel : Tm ◇ ((timeless-ty Nat' ⇛ timeless-ty Nat' ⇛ ▻' (GStream Nat') ⇛ GStream Nat') ⇛ GStream Nat' ⇛ GStream Nat' ⇛ GStream Nat')
 ⟦g-mergef⟧sikkel = ⟦ g-mergef ⟧tm-in e-◇
+
+{-
+g-zipWith : {A B C : ClosedType ★} → {{IsClosedNatural A}} → {{IsClosedNatural B}} → {{IsClosedNatural C}} →
+            Tm Γ (timeless-ty (A ⇛ B ⇛ C)) → Tm Γ (GStream A ⇛ GStream B ⇛ GStream C)
+g-zipWith {A = A}{B}{C} f =
+  löbι[ "g" ∈▻' (GStream A ⇛ GStream B ⇛ GStream C) ]
+    lamι[ "as" ∈ GStream A ]
+      lamι[ "bs" ∈ GStream B ]
+        g-cons $ ↑ι⟨ 3 ⟩ f ⊛⟨ timeless ⟩ (g-head $ varι "as") ⊛⟨ timeless ⟩ (g-head $ varι "bs")
+               $ varι "g" ⊛' (g-tail $ varι "as") ⊛' (g-tail $ varι "bs")
+-}
+
+g-zipWith : TmExpr e-ω
+g-zipWith =
+  e-lam (e-mod e-timeless (e-Nat e→ e-Nat e→ e-Nat)) (
+    e-löb (e-GStreamN e→ e-GStreamN e→ e-GStreamN) (
+      e-lam e-GStreamN (
+        e-lam e-GStreamN (
+          e-app (e-app e-cons
+                       (e-var 3 ⊛timeless e-app e-head (e-var 1) ⊛timeless e-app e-head (e-var 0)))
+                (e-⊛' (e-⊛' (e-var 2) (e-app e-tail (e-var 1))) (e-app e-tail (e-var 0)))))))
+
+⟦g-zipWith⟧sikkel : Tm ◇ (timeless-ty (Nat' ⇛ Nat' ⇛ Nat') ⇛ GStream Nat' ⇛ GStream Nat' ⇛ GStream Nat')
+⟦g-zipWith⟧sikkel = ⟦ g-zipWith ⟧tm-in e-◇
+
 
 
 e-Stream : TyExpr e-★
