@@ -1,15 +1,22 @@
-module Experimental.DeepEmbedding.GuardedRecursion.GuardedStreamsExamples where
+module Experimental.DeepEmbedding.GuardedRecursion.StreamsExamples where
+
+open import Data.Nat
+open import Data.Unit
+open import Data.Vec hiding (take)
+open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure
 open import Types.Functions
 open import Types.Discrete
 open import Types.Products
+open import Types.Instances
 open import GuardedRecursion.Modalities
 open import GuardedRecursion.Streams.Guarded
+open import GuardedRecursion.Streams.Standard
+open import Translation
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker
 
-open import Data.Unit
 
 _⊛timeless_ : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
 f ⊛timeless t = e-mod-intro e-timeless (e-app (e-mod-elim e-timeless f) (e-mod-elim e-timeless t))
@@ -154,3 +161,19 @@ g-mergef =
 
 ⟦g-mergef⟧sikkel : Tm ◇ ((timeless-ty Nat' ⇛ timeless-ty Nat' ⇛ ▻' (GStream Nat') ⇛ GStream Nat') ⇛ GStream Nat' ⇛ GStream Nat' ⇛ GStream Nat')
 ⟦g-mergef⟧sikkel = ⟦ g-mergef ⟧tm-in e-◇
+
+
+e-Stream : TyExpr e-★
+e-Stream = e-mod e-allnow e-GStreamN
+
+e-nats : TmExpr e-★
+e-nats = e-mod-intro e-allnow g-nats
+
+⟦e-nats⟧sikkel : Tm ◇ (Stream' Nat')
+⟦e-nats⟧sikkel = ⟦ e-nats ⟧tm-in e-◇
+
+⟦e-nats⟧agda : Stream ℕ
+⟦e-nats⟧agda = translate-term ⟦e-nats⟧sikkel
+
+e-nats-test : take 10 ⟦e-nats⟧agda ≡ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ []
+e-nats-test = refl

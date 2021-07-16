@@ -39,6 +39,7 @@ private
 
 data ModalityExpr : ModeExpr → ModeExpr → Set where
   e-timeless : ModalityExpr e-★ e-ω
+  e-allnow : ModalityExpr e-ω e-★
 
 infixr 5 _e→_
 data TyExpr : ModeExpr → Set where
@@ -155,6 +156,7 @@ e-ω ≟mode e-ω = yes refl
 
 _≟modality_ : (μ ρ : ModalityExpr m m') → Dec (μ ≡ ρ)
 e-timeless ≟modality e-timeless = yes refl
+e-allnow ≟modality e-allnow = yes refl
 
 _≟ty_ : (T1 T2 : TyExpr m) → Dec (T1 ≡ T2)
 e-Nat ≟ty e-Nat = yes refl
@@ -217,6 +219,7 @@ e-GStreamN ≟ty e-GStreamN = yes refl
 
 ⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
 ⟦ e-timeless ⟧modality = timeless
+⟦ e-allnow ⟧modality = allnow
 
 ⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
 ⟦ e-Nat ⟧ty = Nat'

@@ -29,4 +29,4 @@ import Experimental.NaturalityInstances.Types.Functions
 import Experimental.DeepEmbedding.Simple.TypeChecker
 import Experimental.DeepEmbedding.Simple.PerformanceTest
 import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker
-import Experimental.DeepEmbedding.GuardedRecursion.GuardedStreamsExamples
+import Experimental.DeepEmbedding.GuardedRecursion.StreamsExamples
