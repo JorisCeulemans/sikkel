@@ -2,7 +2,7 @@ module Experimental.DeepEmbedding.GuardedRecursion.TypeChecker where
 
 open import Data.Maybe
 open import Data.Nat hiding (_≟_)
-open import Data.Product
+open import Data.Product hiding (map)
 open import Data.Unit hiding (_≟_)
 open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality
@@ -17,14 +17,6 @@ open import Types.Products
 open import Types.Instances
 open import GuardedRecursion.Modalities
 open import GuardedRecursion.Streams.Guarded
-
-
--- Needed for the do-notation below to desugar properly (this operator is
---   not exported by Data.Maybe).
-infixl 1 _>>_
-_>>_ : ∀ {ℓa ℓb} {A : Set ℓa} {B : Set ℓb} → Maybe A → Maybe B → Maybe B
-just _  >> x = x
-nothing >> x = nothing
 
 
 --------------------------------------------------
@@ -245,158 +237,83 @@ e-GStreamN ≟ty e-GStreamN = yes refl
 
 --------------------------------------------------
 -- Definition of a typechecker for the deeply embedded language
+--   and interpretaion of well-typed terms in a presheaf model
 
-lookup-ctx : ℕ → CtxExpr m → Maybe (TyExpr m)
-lookup-ctx x       e-◇ = nothing
-lookup-ctx zero    (Γ , T) = just T
-lookup-ctx (suc x) (Γ , T) = lookup-ctx x Γ
-lookup-ctx x       (Γ ,lock⟨ μ ⟩) = nothing
+record InferInterpretResult (Γ : CtxExpr m) : Set where
+  constructor _,_
+  field
+    type : TyExpr m
+    interpretation : Tm ⟦ Γ ⟧ctx ⟦ type ⟧ty
+
+infer-interpret-var : ℕ → (Γ : CtxExpr m) → Maybe (InferInterpretResult Γ)
+infer-interpret-var x       e-◇ = nothing
+infer-interpret-var zero    (Γ , T) = just (T , ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] ξ)
+infer-interpret-var (suc x) (Γ , T) = do
+  S , ⟦x⟧ ← infer-interpret-var x Γ
+  just (S , ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} π ] (⟦x⟧ [ π ]'))
+infer-interpret-var x       (Γ ,lock⟨ μ ⟩) = nothing
+
+infer-interpret : TmExpr m → (Γ : CtxExpr m) → Maybe (InferInterpretResult Γ)
+infer-interpret (e-var x) Γ = infer-interpret-var x Γ
+infer-interpret (e-lam T b) Γ = do
+  S , ⟦b⟧ ← infer-interpret b (Γ , T)
+  just (T e→ S , lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧))
+infer-interpret (e-app t1 t2) Γ = do
+  T1 , ⟦t1⟧ ← infer-interpret t1 Γ
+  func-ty dom cod refl ← is-func-ty T1
+  T2 , ⟦t2⟧ ← infer-interpret t2 Γ
+  refl ← decToMaybe (dom ≟ty T2)
+  just (cod , app ⟦t1⟧ ⟦t2⟧)
+infer-interpret (e-lit n) Γ = just (e-Nat , discr n)
+infer-interpret e-suc Γ = just (e-Nat e→ e-Nat , suc')
+infer-interpret e-plus Γ = just (e-Nat e→ e-Nat e→ e-Nat , nat-sum)
+infer-interpret (e-pair t s) Γ = do
+  T , ⟦t⟧ ← infer-interpret t Γ
+  S , ⟦s⟧ ← infer-interpret s Γ
+  just (T e-⊠ S , pair $ ⟦t⟧ $ ⟦s⟧)
+infer-interpret (e-fst p) Γ = do
+  P , ⟦p⟧ ← infer-interpret p Γ
+  prod-ty T S refl ← is-prod-ty P
+  just (T , fst $ ⟦p⟧)
+infer-interpret (e-snd p) Γ = do
+  P , ⟦p⟧ ← infer-interpret p Γ
+  prod-ty T S refl ← is-prod-ty P
+  just (S , snd $ ⟦p⟧)
+infer-interpret (e-mod-intro μ t) Γ = do
+  T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
+  just (e-mod μ T , mod-intro ⟦ μ ⟧modality ⟦t⟧)
+infer-interpret (e-mod-elim {m} {mμ} μ t) Γ = do
+  modal-ctx {mρ} Γ' ρ refl ← is-modal-ctx Γ
+  refl ← decToMaybe (mμ ≟mode mρ)
+  refl ← decToMaybe (μ ≟modality ρ)
+  S , ⟦t⟧ ← infer-interpret t Γ'
+  modal-ty {mκ} T κ refl ← is-modal-ty S
+  refl ← decToMaybe (m ≟mode mκ)
+  refl ← decToMaybe (μ ≟modality κ)
+  just (T , mod-elim ⟦ μ ⟧modality ⟦t⟧)
+infer-interpret (e-next' t) Γ = do
+  T , ⟦t⟧ ← infer-interpret t Γ
+  just (e-▻' T , next' ⟦t⟧)
+infer-interpret (e-⊛' f t) Γ = do
+  T-f , ⟦f⟧ ← infer-interpret f Γ
+  later-ty S refl ← is-later-ty T-f
+  func-ty dom cod refl ← is-func-ty S
+  T-t , ⟦t⟧ ← infer-interpret t Γ
+  later-ty R refl ← is-later-ty T-t
+  refl ← decToMaybe (R ≟ty dom)
+  just (e-▻' cod , ⟦f⟧ ⊛' ⟦t⟧)
+infer-interpret (e-löb T t) Γ = do
+  S , ⟦t⟧ ← infer-interpret t (Γ , e-▻' T)
+  refl ← decToMaybe (T ≟ty S)
+  just (T , löb' ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural T}} π ] ⟦t⟧))
+infer-interpret e-cons Γ = just ((e-mod e-timeless e-Nat) e→ (e-▻' e-GStreamN) e→ e-GStreamN , g-cons)
+infer-interpret e-head Γ = just (e-GStreamN e→ (e-mod e-timeless e-Nat) , g-head)
+infer-interpret e-tail Γ = just (e-GStreamN e→ (e-▻' e-GStreamN) , g-tail)
 
 infer-type : TmExpr m → CtxExpr m → Maybe (TyExpr m)
-infer-type (e-var x) Γ = lookup-ctx x Γ
-infer-type (e-lam T b) Γ =  do
-  codomain ← infer-type b (Γ , T)
-  just (T e→ codomain)
-infer-type (e-app t1 t2) Γ = do
-  T1 ← infer-type t1 Γ
-  func-ty dom cod _ ← is-func-ty T1
-  T2 ← infer-type t2 Γ
-  decToMaybe (dom ≟ty T2)
-  just cod
-infer-type (e-lit n) Γ = just e-Nat
-infer-type e-suc Γ = just (e-Nat e→ e-Nat)
-infer-type e-plus Γ = just (e-Nat e→ e-Nat e→ e-Nat)
-infer-type (e-pair t s) Γ = do
-  T ← infer-type t Γ
-  S ← infer-type s Γ
-  just (T e-⊠ S)
-infer-type (e-fst p) Γ = do
-  P ← infer-type p Γ
-  prod-ty T S _ ← is-prod-ty P
-  just T
-infer-type (e-snd p) Γ = do
-  P ← infer-type p Γ
-  prod-ty T S _ ← is-prod-ty P
-  just S
-infer-type (e-mod-intro μ t) Γ = do
-  T ← infer-type t (Γ ,lock⟨ μ ⟩)
-  just (e-mod μ T)
-infer-type (e-mod-elim {m} {mμ} μ t) Γ = do
-  modal-ctx {mρ} Γ' ρ _ ← is-modal-ctx Γ
-  refl ← decToMaybe (mμ ≟mode mρ)
-  decToMaybe (μ ≟modality ρ)
-  S ← infer-type t Γ'
-  modal-ty {mκ} T κ _ ← is-modal-ty S
-  refl ← decToMaybe (m ≟mode mκ)
-  decToMaybe (μ ≟modality κ)
-  just T
-infer-type (e-next' t) Γ = do
-  T ← infer-type t Γ
-  just (e-▻' T)
-infer-type (e-⊛' f t) Γ = do
-  T-f ← infer-type f Γ
-  later-ty S _ ← is-later-ty T-f
-  func-ty dom cod _ ← is-func-ty S
-  T-t ← infer-type t Γ
-  later-ty R _ ← is-later-ty T-t
-  decToMaybe (R ≟ty dom)
-  just (e-▻' cod)
-infer-type (e-löb T t) Γ = do
-  S ← infer-type t (Γ , e-▻' T)
-  decToMaybe (T ≟ty S)
-  just T
-infer-type e-cons Γ = just ((e-mod e-timeless e-Nat) e→ (e-▻' e-GStreamN) e→ e-GStreamN)
-infer-type e-head Γ = just (e-GStreamN e→ (e-mod e-timeless e-Nat))
-infer-type e-tail Γ = just (e-GStreamN e→ (e-▻' e-GStreamN))
+infer-type t Γ = map InferInterpretResult.type (infer-interpret t Γ)
 
-
---------------------------------------------------
--- Interpretation of terms that are accepted by the typechecker
--- in a presheaf model
-
-semantic-type : TmExpr m → CtxExpr m → Set
-semantic-type t Γ = maybe′ (λ T → Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty) ⊤ (infer-type t Γ)
-
-interpret-var : (x : ℕ) (Γ : CtxExpr m) → semantic-type (e-var x) Γ
-interpret-var x e-◇ = tt
-interpret-var zero (Γ , T) = ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] ξ
-interpret-var (suc x) (Γ , T) with lookup-ctx x Γ | interpret-var x Γ
-interpret-var (suc x) (Γ , T) | just S  | ⟦x⟧ = ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} π ] (⟦x⟧ [ π ]')
-interpret-var (suc x) (Γ , T) | nothing | ⟦x⟧ = tt
-interpret-var x (Γ ,lock⟨ μ ⟩) = tt
-
-open import Reflection.Tactic.Lambda
-⟦_⟧tm-in_ : (t : TmExpr m) (Γ : CtxExpr m) → semantic-type t Γ
-⟦ e-var x ⟧tm-in Γ = interpret-var x Γ
-⟦ e-lam T b ⟧tm-in Γ with infer-type b (Γ , T) | ⟦ b ⟧tm-in (Γ , T)
-⟦ e-lam T b ⟧tm-in Γ | just S  | ⟦b⟧ = lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧)
-⟦ e-lam T b ⟧tm-in Γ | nothing | ⟦b⟧ = tt
-⟦ e-app t1 t2 ⟧tm-in Γ with infer-type t1 Γ | ⟦ t1 ⟧tm-in Γ
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1             | ⟦t1⟧ with is-func-ty T1
-⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) with infer-type t2 Γ | ⟦ t2 ⟧tm-in Γ
-⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | just T2 | ⟦t2⟧ with dom ≟ty T2
-⟦ e-app t1 t2 ⟧tm-in Γ | just .(T2  e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | just T2 | ⟦t2⟧ | yes refl = app ⟦t1⟧ ⟦t2⟧
-⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | just T2 | ⟦t2⟧ | no ne = tt
-⟦ e-app t1 t2 ⟧tm-in Γ | just .(dom e→ cod) | ⟦t1⟧ | just (func-ty dom cod refl) | nothing | _ = tt
-⟦ e-app t1 t2 ⟧tm-in Γ | just T1             | ⟦t1⟧ | nothing = tt
-⟦ e-app t1 t2 ⟧tm-in Γ | nothing | _ = tt
-⟦ e-lit n ⟧tm-in Γ = discr n
-⟦ e-suc ⟧tm-in Γ = suc'
-⟦ e-plus ⟧tm-in Γ = nat-sum
-⟦ e-pair t s ⟧tm-in Γ with infer-type t Γ | ⟦ t ⟧tm-in Γ
-⟦ e-pair t s ⟧tm-in Γ | just T  | ⟦t⟧ with infer-type s Γ | ⟦ s ⟧tm-in Γ
-⟦ e-pair t s ⟧tm-in Γ | just T  | ⟦t⟧ | just S  | ⟦s⟧ = pair $ ⟦t⟧ $ ⟦s⟧
-⟦ e-pair t s ⟧tm-in Γ | just T  | ⟦t⟧ | nothing | ⟦s⟧ = tt
-⟦ e-pair t s ⟧tm-in Γ | nothing | ⟦t⟧ = tt
-⟦ e-fst p ⟧tm-in Γ with infer-type p Γ | ⟦ p ⟧tm-in Γ
-⟦ e-fst p ⟧tm-in Γ | just P         | ⟦p⟧ with is-prod-ty P
-⟦ e-fst p ⟧tm-in Γ | just (T e-⊠ S) | ⟦p⟧ | just (prod-ty T S refl) = fst $ ⟦p⟧
-⟦ e-fst p ⟧tm-in Γ | just P         | ⟦p⟧ | nothing = tt
-⟦ e-fst p ⟧tm-in Γ | nothing        | ⟦p⟧ = tt
-⟦ e-snd p ⟧tm-in Γ with infer-type p Γ | ⟦ p ⟧tm-in Γ
-⟦ e-snd p ⟧tm-in Γ | just P         | ⟦p⟧ with is-prod-ty P
-⟦ e-snd p ⟧tm-in Γ | just (T e-⊠ S) | ⟦p⟧ | just (prod-ty T S refl) = snd $ ⟦p⟧
-⟦ e-snd p ⟧tm-in Γ | just P         | ⟦p⟧ | nothing = tt
-⟦ e-snd p ⟧tm-in Γ | nothing        | ⟦p⟧ = tt
-⟦ e-mod-intro μ t ⟧tm-in Γ with infer-type t (Γ ,lock⟨ μ ⟩) | ⟦ t ⟧tm-in (Γ ,lock⟨ μ ⟩)
-⟦ e-mod-intro μ t ⟧tm-in Γ | just T  | ⟦t⟧ = mod-intro ⟦ μ ⟧modality ⟦t⟧
-⟦ e-mod-intro μ t ⟧tm-in Γ | nothing | ⟦t⟧ = tt
-⟦ e-mod-elim μ t ⟧tm-in Γ with is-modal-ctx Γ
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ ρ ⟩) | just (modal-ctx {mρ} Γ' ρ refl) with mμ ≟mode mρ
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ ρ ⟩) | just (modal-ctx {mμ} Γ' ρ refl) | yes refl with μ ≟modality ρ
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl with infer-type t Γ' | ⟦ t ⟧tm-in Γ'
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just S             | ⟦t⟧ with is-modal-ty S
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just .(e-mod κ T)  | ⟦t⟧ | just (modal-ty {mκ} T κ refl) with m ≟mode mκ
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just .(e-mod κ T)  | ⟦t⟧ | just (modal-ty {m} T κ refl) | yes refl with μ ≟modality κ
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just .(e-mod μ T)  | ⟦t⟧ | just (modal-ty {m} T μ refl) | yes refl | yes refl = mod-elim ⟦ μ ⟧modality ⟦t⟧
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just .(e-mod κ T)  | ⟦t⟧ | just (modal-ty {m} T κ refl) | yes refl | no _ = tt
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just .(e-mod κ T)  | ⟦t⟧ | just (modal-ty {mκ} T κ refl) | no ne = tt
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | just S             | ⟦t⟧ | nothing = tt
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ μ ⟩) | just (modal-ctx {mμ} Γ' μ refl) | yes refl | yes refl | nothing            | ⟦t⟧ = tt
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ ρ ⟩) | just (modal-ctx {mμ} Γ' ρ refl) | yes refl | no _ = tt
-⟦ e-mod-elim {m} {mμ} μ t ⟧tm-in .(Γ' ,lock⟨ ρ ⟩) | just (modal-ctx {mρ} Γ' ρ refl) | no _ = tt
-⟦ e-mod-elim μ t ⟧tm-in Γ                        | nothing = tt
-⟦ e-next' t ⟧tm-in Γ with infer-type t Γ | ⟦ t ⟧tm-in Γ
-⟦ e-next' t ⟧tm-in Γ | just T  | ⟦t⟧ = next' ⟦t⟧
-⟦ e-next' t ⟧tm-in Γ | nothing | ⟦t⟧ = tt
-⟦ e-⊛' f t ⟧tm-in Γ with infer-type f Γ | ⟦ f ⟧tm-in Γ
-⟦ e-⊛' f t ⟧tm-in Γ | just T-f                  | ⟦f⟧ with is-later-ty T-f
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' S)             | ⟦f⟧ | just (later-ty S refl) with is-func-ty S
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (dom e→ cod))  | ⟦f⟧ | just (later-ty (dom e→ cod) refl) | just (func-ty dom cod refl) with infer-type t Γ | ⟦ t ⟧tm-in Γ
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (dom e→ cod))  | ⟦f⟧ | just (later-ty (dom e→ cod) refl) | just (func-ty dom cod refl) | just T-t      | ⟦t⟧ with is-later-ty T-t
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (dom e→ cod))  | ⟦f⟧ | just (later-ty (dom e→ cod) refl) | just (func-ty dom cod refl) | just (e-▻' R) | ⟦t⟧ | just (later-ty R refl) with R ≟ty dom
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (R   e→ cod))  | ⟦f⟧ | just (later-ty (R   e→ cod) refl) | just (func-ty R   cod refl) | just (e-▻' R) | ⟦t⟧ | just (later-ty R refl) | yes refl = ⟦f⟧ ⊛' ⟦t⟧
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (dom e→ cod))  | ⟦f⟧ | just (later-ty (dom e→ cod) refl) | just (func-ty dom cod refl) | just (e-▻' R) | ⟦t⟧ | just (later-ty R refl) | no _ = tt
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (dom e→ cod))  | ⟦f⟧ | just (later-ty (dom e→ cod) refl) | just (func-ty dom cod refl) | just T-t      | ⟦t⟧ | nothing = tt
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' (dom e→ cod))  | ⟦f⟧ | just (later-ty (dom e→ cod) refl) | just (func-ty dom cod refl) | nothing       | ⟦t⟧ = tt
-⟦ e-⊛' f t ⟧tm-in Γ | just (e-▻' S)             | ⟦f⟧ | just (later-ty S refl) | nothing = tt
-⟦ e-⊛' f t ⟧tm-in Γ | just T-f                  | ⟦f⟧ | nothing = tt
-⟦ e-⊛' f t ⟧tm-in Γ | nothing                   | ⟦f⟧ = tt
-⟦ e-löb T t ⟧tm-in Γ with infer-type t (Γ , e-▻' T) | ⟦ t ⟧tm-in (Γ , e-▻' T)
-⟦ e-löb T t ⟧tm-in Γ | just S  | ⟦t⟧ with T ≟ty S
-⟦ e-löb T t ⟧tm-in Γ | just .T | ⟦t⟧ | yes refl = löb' ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural T}} π ] ⟦t⟧)
-⟦ e-löb T t ⟧tm-in Γ | just S  | ⟦t⟧ | no ne = tt
-⟦ e-löb T t ⟧tm-in Γ | nothing | ⟦t⟧ = tt
-⟦ e-cons ⟧tm-in Γ = g-cons
-⟦ e-head ⟧tm-in Γ = g-head
-⟦ e-tail ⟧tm-in Γ = g-tail
+⟦_⟧tm-in_ : (t : TmExpr m) (Γ : CtxExpr m) → maybe′ (λ T → Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty) ⊤ (infer-type t Γ)
+⟦ t ⟧tm-in Γ with infer-interpret t Γ
+⟦ t ⟧tm-in Γ | just (T , ⟦t⟧) = ⟦t⟧
+⟦ t ⟧tm-in Γ | nothing = tt
