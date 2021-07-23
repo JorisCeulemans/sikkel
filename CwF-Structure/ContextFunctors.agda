@@ -22,6 +22,18 @@ record IsCtxFunctor {C}{D} (Φ : CtxOp C D) : Set₁ where
                  (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                  ctx-map (τ ⊚ σ) ≅ˢ ctx-map τ ⊚ ctx-map σ
 
+  ctx-map-inverse : {Δ Γ : Ctx C} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} →
+                    τ ⊚ σ ≅ˢ id-subst Δ → ctx-map τ ⊚ ctx-map σ ≅ˢ id-subst (Φ Δ)
+  ctx-map-inverse {Δ = Δ} {σ = σ} {τ = τ} e = begin
+    ctx-map τ ⊚ ctx-map σ
+      ≅˘⟨ ctx-map-⊚ τ σ ⟩
+    ctx-map (τ ⊚ σ)
+      ≅⟨ ctx-map-cong e ⟩
+    ctx-map (id-subst Δ)
+      ≅⟨ ctx-map-id ⟩
+    id-subst (Φ Δ) ∎
+    where open ≅ˢ-Reasoning
+
 open IsCtxFunctor {{...}} public
 
 instance

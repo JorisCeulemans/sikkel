@@ -26,11 +26,15 @@ data ModeExpr : Set where
 
 private
   variable
-    m m' : ModeExpr
+    m m' m'' : ModeExpr
 
 data ModalityExpr : ModeExpr → ModeExpr → Set where
+  e-𝟙 : ModalityExpr m m
+  _e-ⓜ_ : ModalityExpr m' m'' → ModalityExpr m m' → ModalityExpr m m''
   e-timeless : ModalityExpr e-★ e-ω
   e-allnow : ModalityExpr e-ω e-★
+  e-later : ModalityExpr e-ω e-ω
+
 
 infixr 5 _e→_
 data TyExpr : ModeExpr → Set where
@@ -146,8 +150,11 @@ e-ω ≟mode e-ω = just refl
 _ ≟mode _ = nothing
 
 _≟modality_ : (μ ρ : ModalityExpr m m') → Maybe (μ ≡ ρ)
+e-𝟙 ≟modality e-𝟙 = just refl
 e-timeless ≟modality e-timeless = just refl
 e-allnow ≟modality e-allnow = just refl
+e-later ≟modality e-later = just refl
+_ ≟modality _ = nothing
 
 _≟ty_ : (T1 T2 : TyExpr m) → Maybe (T1 ≡ T2)
 e-Nat ≟ty e-Nat = just refl
@@ -180,8 +187,11 @@ _ ≟ty _ = nothing
 ⟦ e-ω ⟧mode = ω
 
 ⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
+⟦ e-𝟙 ⟧modality = 𝟙
+⟦ μ e-ⓜ ρ ⟧modality = ⟦ μ ⟧modality ⓜ ⟦ ρ ⟧modality
 ⟦ e-timeless ⟧modality = timeless
 ⟦ e-allnow ⟧modality = allnow
+⟦ e-later ⟧modality = later
 
 ⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
 ⟦ e-Nat ⟧ty = Nat'
