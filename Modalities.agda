@@ -26,21 +26,47 @@ record Modality (C D : Category) : Set₁ where
     mod-intro : {Γ : Ctx D} {T : Ty (ctx-op Γ)} → Tm (ctx-op Γ) T → Tm Γ (mod T)
     mod-intro-cong : {Γ : Ctx D} {T : Ty (ctx-op Γ)} {t t' : Tm (ctx-op Γ) T} →
                      t ≅ᵗᵐ t' → mod-intro t ≅ᵗᵐ mod-intro t'
-    mod-intro-natural : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (ctx-op Γ)} (t : Tm (ctx-op Γ) T) →
-                        mod-intro t [ σ ]' ≅ᵗᵐ ι[ mod-natural σ ] mod-intro (t [ ctx-map σ ]')
+    mod-intro-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (ctx-op Γ)} (t : Tm (ctx-op Γ) T) →
+                        (mod-intro t) [ σ ]' ≅ᵗᵐ ι[ mod-natural σ ] mod-intro (t [ ctx-map σ ]')
+    mod-intro-ι : {Γ : Ctx D} {T S : Ty (ctx-op Γ)} (T=S : T ≅ᵗʸ S) (t : Tm (ctx-op Γ) S) →
+                  ι[ mod-cong T=S ] mod-intro t ≅ᵗᵐ mod-intro (ι[ T=S ] t)
 
     mod-elim : {Γ : Ctx D} {T : Ty (ctx-op Γ)} → Tm Γ (mod T) → Tm (ctx-op Γ) T
     mod-elim-cong : {Γ : Ctx D} {T : Ty (ctx-op Γ)} {t t' : Tm Γ (mod T)} →
                     t ≅ᵗᵐ t' → mod-elim t ≅ᵗᵐ mod-elim t'
-    -- Naturality of mod-elim can in fact be proved from mod-intro-natural and the β and η laws.
-    -- It is, however, often easier to prove it directly.
-    mod-elim-natural : {Δ : Ctx D} {Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (ctx-op Γ)} (t : Tm Γ (mod T)) →
-                       mod-elim t [ ctx-map σ ]' ≅ᵗᵐ mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]'))
+    -- Naturality of mod-elim and the fact that it commutes with ι can be proved
+    -- from mod-intro-natural, mod-intro-ι  and the β and η laws (see below).
 
     mod-β : {Γ : Ctx D} {T : Ty (ctx-op Γ)} (t : Tm (ctx-op Γ) T) →
             mod-elim (mod-intro t) ≅ᵗᵐ t
     mod-η : {Γ : Ctx D} {T : Ty (ctx-op Γ)} (t : Tm Γ (mod T)) →
             mod-intro (mod-elim t) ≅ᵗᵐ t
+
+  mod-elim-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (ctx-op Γ)} (t : Tm Γ (mod T)) →
+                     (mod-elim t) [ ctx-map σ ]' ≅ᵗᵐ mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]'))
+  mod-elim-natural σ t = begin
+    (mod-elim t) [ ctx-map σ ]'
+      ≅˘⟨ mod-β _ ⟩
+    mod-elim (mod-intro ((mod-elim t) [ ctx-map σ ]'))
+      ≅˘⟨ mod-elim-cong (ι-symˡ (mod-natural σ) _) ⟩
+    mod-elim (ι⁻¹[ mod-natural σ ] (ι[ mod-natural σ ] (mod-intro ((mod-elim t) [ ctx-map σ ]'))))
+      ≅˘⟨ mod-elim-cong (ι⁻¹-cong (mod-natural σ) (mod-intro-natural σ (mod-elim t))) ⟩
+    mod-elim (ι⁻¹[ mod-natural σ ] (mod-intro (mod-elim t) [ σ ]'))
+      ≅⟨ mod-elim-cong (ι⁻¹-cong (mod-natural σ) (tm-subst-cong-tm σ (mod-η t))) ⟩
+    mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]')) ∎
+    where open ≅ᵗᵐ-Reasoning
+  mod-elim-ι : {Γ : Ctx D} {T S : Ty (ctx-op Γ)} (T=S : T ≅ᵗʸ S) (t : Tm Γ (mod S)) →
+               ι[ T=S ] mod-elim t ≅ᵗᵐ mod-elim (ι[ mod-cong T=S ] t)
+  mod-elim-ι {T = T} {S = S} T=S t = begin
+    ι[ T=S ] mod-elim t
+      ≅˘⟨ mod-β _ ⟩
+    mod-elim (mod-intro (ι[ T=S ] mod-elim t))
+      ≅˘⟨ mod-elim-cong (mod-intro-ι _ _) ⟩
+    mod-elim (ι[ mod-cong T=S ] mod-intro (mod-elim t))
+      ≅⟨ mod-elim-cong (ι-cong (mod-cong T=S) (mod-η t)) ⟩
+    mod-elim (ι[ mod-cong T=S ] t) ∎
+    where open ≅ᵗᵐ-Reasoning
+
 
 
 module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
@@ -123,3 +149,29 @@ module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
     ≅⟨ mod-intro-cong (η-unit (mod-elim t)) ⟩
       mod-intro tt' ∎
     where open ≅ᵗᵐ-Reasoning
+
+open Modality
+_ⓜ_ : {C1 C2 C3 : Category} → Modality C2 C3 → Modality C1 C2 → Modality C1 C3
+ctx-op (μ ⓜ ρ) Γ = ctx-op ρ (ctx-op μ Γ)
+ctx-op-functor (μ ⓜ ρ) = ctx-op-functor ρ ⓕ ctx-op-functor μ
+mod (μ ⓜ ρ) T = mod μ (mod ρ T)
+mod-cong (μ ⓜ ρ) e = mod-cong μ (mod-cong ρ e)
+mod-natural (μ ⓜ ρ) σ = ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ _))
+mod-intro (μ ⓜ ρ) t = mod-intro μ (mod-intro ρ t)
+mod-intro-cong (μ ⓜ ρ) e = mod-intro-cong μ (mod-intro-cong ρ e)
+mod-intro-natural (μ ⓜ ρ) σ t = begin
+  (mod-intro μ (mod-intro ρ t)) [ σ ]'
+    ≅⟨ mod-intro-natural μ σ (mod-intro ρ t) ⟩
+  ι[ mod-natural μ σ ] mod-intro μ ((mod-intro ρ t) [ ctx-map σ ]')
+    ≅⟨ ι-cong (mod-natural μ σ) (mod-intro-cong μ (mod-intro-natural ρ (ctx-map σ) t)) ⟩
+  ι[ mod-natural μ σ ] mod-intro μ (ι[ mod-natural ρ _ ] mod-intro ρ (t [ ctx-map (ctx-map {Φ = ctx-op μ} σ) ]'))
+    ≅˘⟨ ι-cong (mod-natural μ σ) (mod-intro-ι μ _ _) ⟩
+  ι[ mod-natural μ σ ] (ι[ mod-cong μ (mod-natural ρ _) ] mod-intro μ (mod-intro ρ (t [ ctx-map (ctx-map {Φ = ctx-op μ} σ) ]')))
+    ≅˘⟨ ι-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ _)) _ ⟩
+  ι[ ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ (ctx-map σ))) ] mod-intro μ (mod-intro ρ (t [ ctx-map (ctx-map {Φ = ctx-op μ}  σ) ]')) ∎
+  where open ≅ᵗᵐ-Reasoning
+mod-intro-ι (μ ⓜ ρ) T=S t = ≅ᵗᵐ-trans (mod-intro-ι μ _ _) (mod-intro-cong μ (mod-intro-ι ρ _ _))
+mod-elim (μ ⓜ ρ) t = mod-elim ρ (mod-elim μ t)
+mod-elim-cong (μ ⓜ ρ) e = mod-elim-cong ρ (mod-elim-cong μ e)
+mod-β (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-elim-cong ρ (mod-β μ _)) (mod-β ρ t)
+mod-η (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-intro-cong μ (mod-η ρ _)) (mod-η μ t)

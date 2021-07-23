@@ -27,6 +27,9 @@ timeless-subst : Δ ⇒ Γ → timeless-ctx Δ ⇒ timeless-ctx Γ
 func (timeless-subst σ) = func σ
 _⇒_.naturality (timeless-subst σ) = refl
 
+timeless-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → timeless-subst σ ≅ˢ timeless-subst τ
+eq (timeless-subst-cong σ=τ) δ = eq σ=τ δ
+
 timeless-subst-id : timeless-subst (id-subst Γ) ≅ˢ id-subst (timeless-ctx Γ)
 eq timeless-subst-id _ = refl
 
@@ -85,6 +88,13 @@ module _ {T : Ty (timeless-ctx Γ)} where
 
   unallnow-tm-cong : {t s : Tm Γ (allnow-ty T)} → t ≅ᵗᵐ s → unallnow-tm t ≅ᵗᵐ unallnow-tm s
   eq (unallnow-tm-cong t=s) γ = cong (λ - → - ⟨ _ , tt ⟩') (eq t=s γ)
+
+module _ {T S : Ty (timeless-ctx Γ)} (T=S : T ≅ᵗʸ S) where
+  allnow-tm-ι : (s : Tm (timeless-ctx Γ) S) → ι[ allnow-ty-cong T=S ] allnow-tm s ≅ᵗᵐ allnow-tm (ι[ T=S ] s)
+  eq (allnow-tm-ι s) γ = tm-≅-to-≡ (record { eq = λ _ → refl })
+
+  unallnow-tm-ι : (s : Tm Γ (allnow-ty S)) → ι[ T=S ] unallnow-tm s ≅ᵗᵐ unallnow-tm (ι[ allnow-ty-cong T=S ] s)
+  eq (unallnow-tm-ι s) _ = refl
 
 ty-const-subst : (T : Ty (timeless-ctx Γ)) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
                  (T [ timeless-subst σ ]) [ const-subst δ ] ≅ᵗʸ T [ const-subst (func σ δ) ]

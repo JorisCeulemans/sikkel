@@ -161,15 +161,19 @@ ctx-comp (always-false Γ) {f = type-id} = refl
 ctx-comp (always-false Γ) {f = pred-id} = refl
 ctx-comp (always-false Γ) {f = type-pred} {g = pred-id} = refl
 
-always-false-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → always-false Δ ⇒ always-false Γ
+always-false-subst : {Δ Γ : Ctx ★} → Δ ⇒ Γ → always-false Δ ⇒ always-false Γ
 func (always-false-subst σ) {x = type-obj} = func σ
 func (always-false-subst σ) {x = pred-obj} = ⊥-elim
 _⇒_.naturality (always-false-subst σ) {f = type-id} = refl
 
+always-false-subst-cong : {Δ Γ : Ctx ★} {σ τ : Δ ⇒ Γ} →
+                          σ ≅ˢ τ → always-false-subst σ ≅ˢ always-false-subst τ
+eq (always-false-subst-cong σ=τ) {x = type-obj} δ = eq σ=τ δ
+
 always-false-subst-id : {Γ : Ctx ★} → always-false-subst (id-subst Γ) ≅ˢ id-subst (always-false Γ)
 eq always-false-subst-id {x = type-obj} _ = refl
 
-always-false-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
+always-false-subst-⊚ : {Δ Γ Θ : Ctx ★} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
                        always-false-subst (σ ⊚ τ) ≅ˢ always-false-subst σ ⊚ always-false-subst τ
 eq (always-false-subst-⊚ σ τ) {x = type-obj} _ = refl
 
@@ -228,9 +232,17 @@ module _ {Γ : Ctx ★} {T : Ty (always-false Γ)} where
   forget-η : (t : Tm Γ (forget T)) → forget-intro (forget-elim t) ≅ᵗᵐ t
   eq (forget-η t) _ = refl
 
+module _ {Γ : Ctx ★} {T S : Ty (always-false Γ)} (T=S : T ≅ᵗʸ S) where
+  forget-intro-ι : (s : Tm (always-false Γ) S) → ι[ forget-cong T=S ] forget-intro s ≅ᵗᵐ forget-intro (ι[ T=S ] s)
+  eq (forget-intro-ι s) _ = refl
+
+  forget-elim-ι : (s : Tm Γ (forget S)) → ι[ T=S ] forget-elim s ≅ᵗᵐ forget-elim (ι[ forget-cong T=S ] s)
+  eq (forget-elim-ι s) {x = type-obj} _ = refl
+
 instance
   always-false-functor : IsCtxFunctor always-false
   ctx-map {{always-false-functor}} = always-false-subst
+  ctx-map-cong {{always-false-functor}} = always-false-subst-cong
   ctx-map-id {{always-false-functor}} = always-false-subst-id
   ctx-map-⊚ {{always-false-functor}} = always-false-subst-⊚
 
@@ -247,9 +259,9 @@ forget-mod = record
    ; mod-intro = forget-intro
    ; mod-intro-cong = forget-intro-cong
    ; mod-intro-natural = forget-intro-natural
+   ; mod-intro-ι = forget-intro-ι
    ; mod-elim = forget-elim
    ; mod-elim-cong = forget-elim-cong
-   ; mod-elim-natural = forget-elim-natural
    ; mod-β = forget-β
    ; mod-η = forget-η
    }

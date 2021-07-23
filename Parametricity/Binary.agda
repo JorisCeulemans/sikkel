@@ -226,16 +226,19 @@ ctx-comp (just-left Γ) {f = relation-id} = refl
 ctx-comp (just-left Γ) {f = left-rel} {g = relation-id} = refl
 ctx-comp (just-left Γ) {f = right-rel} {g = relation-id} = refl
 
-just-left-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → just-left Δ ⇒ just-left Γ
+just-left-subst : {Δ Γ : Ctx ★} → Δ ⇒ Γ → just-left Δ ⇒ just-left Γ
 func (just-left-subst σ) {x = left}     = func σ
 func (just-left-subst σ) {x = right}    = ⊥-elim
 func (just-left-subst σ) {x = relation} = ⊥-elim
 _⇒_.naturality (just-left-subst σ) {f = left-id} = refl
 
+just-left-subst-cong : {Δ Γ : Ctx ★} {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → just-left-subst σ ≅ˢ just-left-subst τ
+eq (just-left-subst-cong σ=τ) {x = left} δ = eq σ=τ δ
+
 just-left-subst-id : {Γ : Ctx ★} → just-left-subst (id-subst Γ) ≅ˢ id-subst (just-left Γ)
 eq just-left-subst-id {x = left} _ = refl
 
-just-left-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
+just-left-subst-⊚ : {Δ Γ Θ : Ctx ★} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
                     just-left-subst (σ ⊚ τ) ≅ˢ just-left-subst σ ⊚ just-left-subst τ
 eq (just-left-subst-⊚ σ τ) {x = left} _ = refl
 
@@ -294,11 +297,19 @@ module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
   forget-right-η : (t : Tm Γ (forget-right-ty T)) → forget-right-tm (unforget-right-tm t) ≅ᵗᵐ t
   eq (forget-right-η t) _ = refl
 
+module _ {Γ : Ctx ★} {T S : Ty (just-left Γ)} (T=S : T ≅ᵗʸ S) where
+  forget-right-tm-ι : (s : Tm (just-left Γ) S) → ι[ forget-right-ty-cong T=S ] forget-right-tm s ≅ᵗᵐ forget-right-tm (ι[ T=S ] s)
+  eq (forget-right-tm-ι s) _ = refl
+
+  unforget-right-tm-ι : (s : Tm Γ (forget-right-ty S)) → ι[ T=S ] unforget-right-tm s ≅ᵗᵐ unforget-right-tm (ι[ forget-right-ty-cong T=S ] s)
+  eq (unforget-right-tm-ι s) {x = left} _ = refl
+
 instance
   just-left-functor : IsCtxFunctor just-left
-  IsCtxFunctor.ctx-map just-left-functor = just-left-subst
-  IsCtxFunctor.ctx-map-id just-left-functor = just-left-subst-id
-  IsCtxFunctor.ctx-map-⊚ just-left-functor = just-left-subst-⊚
+  ctx-map {{just-left-functor}} = just-left-subst
+  ctx-map-cong {{just-left-functor}} = just-left-subst-cong
+  ctx-map-id {{just-left-functor}} = just-left-subst-id
+  ctx-map-⊚ {{just-left-functor}} = just-left-subst-⊚
 
   forget-right-unarynat : IsUnaryNatural forget-right-ty
   IsUnaryNatural.natural-un forget-right-unarynat = forget-right-ty-natural
@@ -313,9 +324,9 @@ forget-right = record
    ; mod-intro = forget-right-tm
    ; mod-intro-cong = forget-right-tm-cong
    ; mod-intro-natural = forget-right-tm-natural
+   ; mod-intro-ι = forget-right-tm-ι
    ; mod-elim = unforget-right-tm
    ; mod-elim-cong = unforget-right-tm-cong
-   ; mod-elim-natural = unforget-right-tm-natural
    ; mod-β = forget-right-β
    ; mod-η = forget-right-η
    }
@@ -336,16 +347,19 @@ ctx-comp (just-right Γ) {f = relation-id} = refl
 ctx-comp (just-right Γ) {f = left-rel} {g = relation-id} = refl
 ctx-comp (just-right Γ) {f = right-rel} {g = relation-id} = refl
 
-just-right-subst : {Δ : Ctx ★} {Γ : Ctx ★} → Δ ⇒ Γ → just-right Δ ⇒ just-right Γ
+just-right-subst : {Δ Γ : Ctx ★} → Δ ⇒ Γ → just-right Δ ⇒ just-right Γ
 func (just-right-subst σ) {x = left}     = ⊥-elim
 func (just-right-subst σ) {x = right}    = func σ
 func (just-right-subst σ) {x = relation} = ⊥-elim
 _⇒_.naturality (just-right-subst σ) {f = right-id} = refl
 
+just-right-subst-cong : {Δ Γ : Ctx ★} {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → just-right-subst σ ≅ˢ just-right-subst τ
+eq (just-right-subst-cong σ=τ) {x = right} δ = eq σ=τ δ
+
 just-right-subst-id : {Γ : Ctx ★} → just-right-subst (id-subst Γ) ≅ˢ id-subst (just-right Γ)
 eq just-right-subst-id {x = right} _ = refl
 
-just-right-subst-⊚ : {Δ : Ctx ★} {Γ : Ctx ★} {Θ : Ctx ★} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
+just-right-subst-⊚ : {Δ Γ Θ : Ctx ★} (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) →
                      just-right-subst (σ ⊚ τ) ≅ˢ just-right-subst σ ⊚ just-right-subst τ
 eq (just-right-subst-⊚ σ τ) {x = right} _ = refl
 
@@ -404,11 +418,19 @@ module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
   forget-left-η : (t : Tm Γ (forget-left-ty T)) → forget-left-tm (unforget-left-tm t) ≅ᵗᵐ t
   eq (forget-left-η t) _ = refl
 
+module _ {Γ : Ctx ★} {T S : Ty (just-right Γ)} (T=S : T ≅ᵗʸ S) where
+  forget-left-tm-ι : (s : Tm (just-right Γ) S) → ι[ forget-left-ty-cong T=S ] forget-left-tm s ≅ᵗᵐ forget-left-tm (ι[ T=S ] s)
+  eq (forget-left-tm-ι s) _ = refl
+
+  unforget-left-tm-ι : (s : Tm Γ (forget-left-ty S)) → ι[ T=S ] unforget-left-tm s ≅ᵗᵐ unforget-left-tm (ι[ forget-left-ty-cong T=S ] s)
+  eq (unforget-left-tm-ι s) {x = right} _ = refl
+
 instance
   just-right-functor : IsCtxFunctor just-right
-  IsCtxFunctor.ctx-map just-right-functor = just-right-subst
-  IsCtxFunctor.ctx-map-id just-right-functor = just-right-subst-id
-  IsCtxFunctor.ctx-map-⊚ just-right-functor = just-right-subst-⊚
+  ctx-map {{just-right-functor}} = just-right-subst
+  ctx-map-cong {{just-right-functor}} = just-right-subst-cong
+  ctx-map-id {{just-right-functor}} = just-right-subst-id
+  ctx-map-⊚ {{just-right-functor}} = just-right-subst-⊚
 
   forget-left-unarynat : IsUnaryNatural forget-left-ty
   IsUnaryNatural.natural-un forget-left-unarynat = forget-left-ty-natural
@@ -423,9 +445,9 @@ forget-left = record
    ; mod-intro = forget-left-tm
    ; mod-intro-cong = forget-left-tm-cong
    ; mod-intro-natural = forget-left-tm-natural
+   ; mod-intro-ι = forget-left-tm-ι
    ; mod-elim = unforget-left-tm
    ; mod-elim-cong = unforget-left-tm-cong
-   ; mod-elim-natural = unforget-left-tm-natural
    ; mod-β = forget-left-β
    ; mod-η = forget-left-η
    }

@@ -19,6 +19,7 @@ instance
 
   ◄-functor : IsCtxFunctor ◄
   ctx-map {{◄-functor}} = ◄-subst
+  ctx-map-cong {{◄-functor}} = ◄-subst-cong
   ctx-map-id {{◄-functor}} = ◄-subst-id
   ctx-map-⊚ {{◄-functor}} = ◄-subst-⊚
 
@@ -28,6 +29,7 @@ instance
 
   now-functor : IsCtxFunctor now
   IsCtxFunctor.ctx-map now-functor = now-subst
+  IsCtxFunctor.ctx-map-cong now-functor = now-subst-cong
   IsCtxFunctor.ctx-map-id now-functor = now-subst-id
   IsCtxFunctor.ctx-map-⊚ now-functor = now-subst-⊚
 
@@ -37,6 +39,7 @@ instance
 
   timeless-ctx-functor : IsCtxFunctor timeless-ctx
   IsCtxFunctor.ctx-map timeless-ctx-functor = timeless-subst
+  IsCtxFunctor.ctx-map-cong timeless-ctx-functor = timeless-subst-cong
   IsCtxFunctor.ctx-map-id timeless-ctx-functor = timeless-subst-id
   IsCtxFunctor.ctx-map-⊚ timeless-ctx-functor = timeless-subst-⊚
 
