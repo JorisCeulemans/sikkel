@@ -7,7 +7,6 @@ open import Data.Maybe
 open import Data.Nat hiding (_≟_)
 open import Data.Product hiding (map)
 open import Data.Unit hiding (_≟_)
-open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure
@@ -52,22 +51,15 @@ is-func-ty e-bool = nothing
 is-func-ty (T1 e→ T2) = just (func-ty T1 T2 refl)
 
 
--- Decidable equality for type expressions.
+-- Checking equality of type expressions.
 
-e→injˡ : {T T' S S' : TyExpr} → (T e→ S) ≡ (T' e→ S') → T ≡ T'
-e→injˡ refl = refl
-
-e→injʳ : {T T' S S' : TyExpr} → (T e→ S) ≡ (T' e→ S') → S ≡ S'
-e→injʳ refl = refl
-
-_≟_ : (T1 T2 : TyExpr) → Dec (T1 ≡ T2)
-e-bool ≟ e-bool = yes refl
-e-bool ≟ (_ e→ _) = no (λ ())
-(_ e→ _) ≟ e-bool = no (λ ())
+_≟_ : (T1 T2 : TyExpr) → Maybe (T1 ≡ T2)
+e-bool ≟ e-bool = just refl
 (T1 e→ T2) ≟ (T3 e→ T4) with T1 ≟ T3 | T2 ≟ T4
-(T1 e→ T2) ≟ (T1 e→ T2) | yes refl | yes refl = yes refl
-(T1 e→ T2) ≟ (T1 e→ T4) | yes refl | no ne = no (λ e → ne (e→injʳ e))
-(T1 e→ T2) ≟ (T3 e→ T4) | no ne    | _ = no (λ e → ne (e→injˡ e))
+(T1 e→ T2) ≟ (T1 e→ T2) | just refl | just refl = just refl
+(T1 e→ T2) ≟ (T1 e→ T4) | just refl | nothing = nothing
+(T1 e→ T2) ≟ (T3 e→ T4) | nothing   | _ = nothing
+_ ≟ _ = nothing
 
 
 --------------------------------------------------
@@ -112,16 +104,16 @@ infer-interpret (e-app t1 t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
   func-ty dom cod refl ← is-func-ty T1
   T2 , ⟦t2⟧ ← infer-interpret t2 Γ
-  refl ← decToMaybe (dom ≟ T2)
+  refl ← dom ≟ T2
   just (cod , app ⟦t1⟧ ⟦t2⟧)
 infer-interpret e-true Γ = just (e-bool , true')
 infer-interpret e-false Γ = just (e-bool , false')
 infer-interpret (e-if t-c t-t t-f) Γ = do
   T-c , ⟦t-c⟧ ← infer-interpret t-c Γ
-  refl ← decToMaybe (T-c ≟ e-bool)
+  refl ← T-c ≟ e-bool
   T-t , ⟦t-t⟧ ← infer-interpret t-t Γ
   T-f , ⟦t-f⟧ ← infer-interpret t-f Γ
-  refl ← decToMaybe (T-t ≟ T-f)
+  refl ← T-t ≟ T-f
   just (T-t , if' ⟦t-c⟧ then' ⟦t-t⟧ else' ⟦t-f⟧)
 
 infer-type : TmExpr n → CtxExpr n → Maybe TyExpr
