@@ -4,6 +4,7 @@
 
 module GuardedRecursion.Modalities.Timeless where
 
+open import Data.Bool
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n)
 open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
@@ -11,6 +12,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Categories
 open import CwF-Structure
+open import Types.Discrete
 
 private
   variable
@@ -131,3 +133,10 @@ module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
   untimeless-tm-natural : (t : Tm Γ (timeless-ty T)) →
                           (untimeless-tm t) [ now-subst σ ]' ≅ᵗᵐ untimeless-tm (ι⁻¹[ timeless-ty-natural σ ] (t [ σ ]'))
   eq (untimeless-tm-natural t) δ = sym (ty-cong-2-1 T refl)
+
+-- A modal version of the eliminator for booleans for the timeless modality.
+timeless-if'_then'_else'_ : {T : Ty Γ} → Tm Γ (timeless-ty Bool') → Tm Γ T → Tm Γ T → Tm Γ T
+timeless-if' c then' t else' f ⟨ n , γ ⟩' = if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
+Tm.naturality (timeless-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | Tm.naturality c m≤n eγ
+Tm.naturality (timeless-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ | false | .false | refl = Tm.naturality f m≤n eγ
+Tm.naturality (timeless-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ | true  | .true  | refl = Tm.naturality t m≤n eγ

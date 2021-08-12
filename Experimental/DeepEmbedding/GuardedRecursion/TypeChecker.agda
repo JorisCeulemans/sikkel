@@ -39,17 +39,19 @@ data ModalityExpr : ModeExpr → ModeExpr → Set where
 infixr 5 _e→_
 data TyExpr : ModeExpr → Set where
   e-Nat : TyExpr m
+  e-Bool : TyExpr m
   _e→_ : TyExpr m → TyExpr m → TyExpr m
   _e-⊠_ : TyExpr m → TyExpr m → TyExpr m
   e-mod : ModalityExpr m' m → TyExpr m' → TyExpr m
   e-▻' : TyExpr e-ω → TyExpr e-ω
-  e-GStreamN : TyExpr e-ω
+  e-GStream : TyExpr e-★ → TyExpr e-ω
 
 data CtxExpr (m : ModeExpr) : Set where
   e-◇ : CtxExpr m
   _,_ : (Γ : CtxExpr m) (T : TyExpr m) → CtxExpr m
   _,lock⟨_⟩ : (Γ : CtxExpr m') → ModalityExpr m m' → CtxExpr m
 
+infixl 5 _e-⊛'_
 data TmExpr : ModeExpr → Set where
   e-ann_∈_ : TmExpr m → TyExpr m → TmExpr m   -- term with type annotation
   e-var : ℕ → TmExpr m
@@ -57,14 +59,17 @@ data TmExpr : ModeExpr → Set where
   e-app : TmExpr m → TmExpr m → TmExpr m
   e-lit : ℕ → TmExpr m
   e-suc e-plus : TmExpr m
+  e-true e-false : TmExpr m
+  e-if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
+  e-timeless-if : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
   e-pair : TmExpr m → TmExpr m → TmExpr m
   e-fst e-snd : TmExpr m → TmExpr m
   e-mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
   e-mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
   e-next' : TmExpr e-ω → TmExpr e-ω
-  e-⊛' : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
+  _e-⊛'_ : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
   e-löb : TyExpr e-ω → TmExpr e-ω → TmExpr e-ω
-  e-cons e-head e-tail : TmExpr e-ω
+  e-cons e-head e-tail : TyExpr e-★ → TmExpr e-ω
 
 
 -- Deciding whether a type expression is a function type, a product type or
@@ -78,11 +83,12 @@ record IsFuncTyExpr (T : TyExpr m) : Set where
 
 is-func-ty : (T : TyExpr m) → Maybe (IsFuncTyExpr T)
 is-func-ty e-Nat = nothing
+is-func-ty e-Bool = nothing
 is-func-ty (T1 e→ T2) = just (func-ty T1 T2 refl)
 is-func-ty (T1 e-⊠ T2) = nothing
 is-func-ty (e-mod μ T) = nothing
 is-func-ty (e-▻' T) = nothing
-is-func-ty e-GStreamN = nothing
+is-func-ty (e-GStream T) = nothing
 
 record IsProdTyExpr (T : TyExpr m) : Set where
   constructor prod-ty
@@ -92,11 +98,12 @@ record IsProdTyExpr (T : TyExpr m) : Set where
 
 is-prod-ty : (T : TyExpr m) → Maybe (IsProdTyExpr T)
 is-prod-ty e-Nat = nothing
+is-prod-ty e-Bool = nothing
 is-prod-ty (T1 e→ T2) = nothing
 is-prod-ty (T1 e-⊠ T2) = just (prod-ty T1 T2 refl)
 is-prod-ty (e-mod μ T) = nothing
 is-prod-ty (e-▻' T) = nothing
-is-prod-ty e-GStreamN = nothing
+is-prod-ty (e-GStream T) = nothing
 
 record IsModalTyExpr (T : TyExpr m) : Set where
   constructor modal-ty
@@ -108,11 +115,12 @@ record IsModalTyExpr (T : TyExpr m) : Set where
 
 is-modal-ty : (T : TyExpr m) → Maybe (IsModalTyExpr T)
 is-modal-ty e-Nat = nothing
+is-modal-ty e-Bool = nothing
 is-modal-ty (T1 e→ T2) = nothing
 is-modal-ty (T1 e-⊠ T2) = nothing
 is-modal-ty (e-mod μ T) = just (modal-ty T μ refl)
 is-modal-ty (e-▻' T) = nothing
-is-modal-ty e-GStreamN = nothing
+is-modal-ty (e-GStream T) = nothing
 
 record IsLaterTyExpr (T : TyExpr e-ω) : Set where
   constructor later-ty
@@ -122,11 +130,12 @@ record IsLaterTyExpr (T : TyExpr e-ω) : Set where
 
 is-later-ty : (T : TyExpr e-ω) → Maybe (IsLaterTyExpr T)
 is-later-ty e-Nat = nothing
+is-later-ty e-Bool = nothing
 is-later-ty (T1 e→ T2) = nothing
 is-later-ty (T1 e-⊠ T2) = nothing
 is-later-ty (e-mod μ T) = nothing
 is-later-ty (e-▻' T) = just (later-ty T refl)
-is-later-ty e-GStreamN = nothing
+is-later-ty (e-GStream T) = nothing
 
 record IsModalCtxExpr (Γ : CtxExpr m) : Set where
   constructor modal-ctx
@@ -158,24 +167,21 @@ _ ≟modality _ = nothing
 
 _≟ty_ : (T1 T2 : TyExpr m) → Maybe (T1 ≡ T2)
 e-Nat ≟ty e-Nat = just refl
-(T1 e→ T2) ≟ty (T3 e→ T4) with T1 ≟ty T3 | T2 ≟ty T4
-(T1 e→ T2) ≟ty (T1 e→ T2) | just refl | just refl = just refl
-(T1 e→ T2) ≟ty (T1 e→ T4) | just refl | nothing = nothing
-(T1 e→ T2) ≟ty (T3 e→ T4) | nothing   | _ = nothing
-(T1 e-⊠ T2) ≟ty (T3 e-⊠ T4) with T1 ≟ty T3 | T2 ≟ty T4
-(T1 e-⊠ T2) ≟ty (T1 e-⊠ T2) | just refl | just refl = just refl
-(T1 e-⊠ T2) ≟ty (T1 e-⊠ T4) | just refl | nothing = nothing
-(T1 e-⊠ T2) ≟ty (T3 e-⊠ T4) | nothing   | _ = nothing
-(e-mod {m1} μ1 T1) ≟ty (e-mod {m2} μ2 T2) with m1 ≟mode m2
-(e-mod {m1} μ1 T1) ≟ty (e-mod {.m1} μ2  T2)  | just refl with μ1 ≟modality μ2 | T1 ≟ty T2
-(e-mod {m1} μ1 T1) ≟ty (e-mod {.m1} .μ1 .T1) | just refl | just refl | just refl = just refl
-(e-mod {m1} μ1 T1) ≟ty (e-mod {.m1} .μ1 T2)  | just refl | just refl | nothing = nothing
-(e-mod {m1} μ1 T1) ≟ty (e-mod {.m1} μ2  T2)  | just refl | nothing   | _ = nothing
-(e-mod {m1} μ1 T1) ≟ty (e-mod {m2}  μ2  T2)  | nothing = nothing
-(e-▻' T) ≟ty (e-▻' S) with T ≟ty S
-(e-▻' T) ≟ty (e-▻' .T) | just refl = just refl
-(e-▻' T) ≟ty (e-▻' S)  | nothing = nothing
-e-GStreamN ≟ty e-GStreamN = just refl
+(T1 e→ T2) ≟ty (T3 e→ T4) = do
+  refl ← T1 ≟ty T3
+  refl ← T2 ≟ty T4
+  just refl
+(T1 e-⊠ T2) ≟ty (T3 e-⊠ T4) = do
+  refl ← T1 ≟ty T3
+  refl ← T2 ≟ty T4
+  just refl
+(e-mod {m1} μ1 T1) ≟ty (e-mod {m2} μ2 T2) = do
+  refl ← m1 ≟mode m2
+  refl ← μ1 ≟modality μ2
+  refl ← T1 ≟ty T2
+  just refl
+(e-▻' T) ≟ty (e-▻' S) = map (cong e-▻') (T ≟ty S)
+(e-GStream T) ≟ty (e-GStream S) = map (cong e-GStream) (T ≟ty S)
 _ ≟ty _ = nothing
 
 
@@ -195,11 +201,12 @@ _ ≟ty _ = nothing
 
 ⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
 ⟦ e-Nat ⟧ty = Nat'
+⟦ e-Bool ⟧ty = Bool'
 ⟦ T1 e→ T2 ⟧ty = ⟦ T1 ⟧ty ⇛ ⟦ T2 ⟧ty
 ⟦ T1 e-⊠ T2 ⟧ty = ⟦ T1 ⟧ty ⊠ ⟦ T2 ⟧ty
 ⟦ e-mod μ T ⟧ty = mod ⟦ μ ⟧modality ⟦ T ⟧ty
 ⟦ e-▻' T ⟧ty = ▻' ⟦ T ⟧ty
-⟦ e-GStreamN ⟧ty = GStream Nat'
+⟦ e-GStream T ⟧ty = GStream ⟦ T ⟧ty
 
 ⟦_⟧ctx : CtxExpr m → Ctx ⟦ m ⟧mode
 ⟦ e-◇ ⟧ctx = ◇
@@ -208,11 +215,12 @@ _ ≟ty _ = nothing
 
 ⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
 ⟦⟧ty-natural e-Nat = discr-closed
+⟦⟧ty-natural e-Bool = discr-closed
 ⟦⟧ty-natural (T1 e→ T2) = fun-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
 ⟦⟧ty-natural (T1 e-⊠ T2) = prod-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
 ⟦⟧ty-natural (e-mod μ T) = record { closed-natural = λ σ → ≅ᵗʸ-trans (mod-natural ⟦ μ ⟧modality σ) (mod-cong ⟦ μ ⟧modality (closed-natural {{⟦⟧ty-natural T}} _)) }
 ⟦⟧ty-natural (e-▻' T) = ▻'-closed {{⟦⟧ty-natural T}}
-⟦⟧ty-natural e-GStreamN = gstream-closed
+⟦⟧ty-natural (e-GStream T) = gstream-closed {{⟦⟧ty-natural T}}
 
 
 --------------------------------------------------
@@ -251,6 +259,25 @@ infer-interpret (e-app t1 t2) Γ = do
 infer-interpret (e-lit n) Γ = just (e-Nat , discr n)
 infer-interpret e-suc Γ = just (e-Nat e→ e-Nat , suc')
 infer-interpret e-plus Γ = just (e-Nat e→ e-Nat e→ e-Nat , nat-sum)
+infer-interpret e-true Γ = just (e-Bool , true')
+infer-interpret e-false Γ = just (e-Bool , false')
+infer-interpret (e-if c t f) Γ = do
+  C , ⟦c⟧ ← infer-interpret c Γ
+  refl ← C ≟ty e-Bool
+  T , ⟦t⟧ ← infer-interpret t Γ
+  F , ⟦f⟧ ← infer-interpret f Γ
+  refl ← T ≟ty F
+  just (T , if' ⟦c⟧ then' ⟦t⟧ else' ⟦f⟧)
+infer-interpret (e-timeless-if c t f) Γ = do
+  C , ⟦c⟧ ← infer-interpret c Γ
+  modal-ty {m} B μ refl ← is-modal-ty C
+  refl ← m ≟mode e-★
+  refl ← μ ≟modality e-timeless
+  refl ← B ≟ty e-Bool
+  T , ⟦t⟧ ← infer-interpret t Γ
+  F , ⟦f⟧ ← infer-interpret f Γ
+  refl ← T ≟ty F
+  just (T , timeless-if' ⟦c⟧ then' ⟦t⟧ else' ⟦f⟧)
 infer-interpret (e-pair t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   S , ⟦s⟧ ← infer-interpret s Γ
@@ -278,7 +305,7 @@ infer-interpret (e-mod-elim {m} {mμ} μ t) Γ = do
 infer-interpret (e-next' t) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   just (e-▻' T , next' ⟦t⟧)
-infer-interpret (e-⊛' f t) Γ = do
+infer-interpret (f e-⊛' t) Γ = do
   T-f , ⟦f⟧ ← infer-interpret f Γ
   later-ty S refl ← is-later-ty T-f
   func-ty dom cod refl ← is-func-ty S
@@ -290,9 +317,9 @@ infer-interpret (e-löb T t) Γ = do
   S , ⟦t⟧ ← infer-interpret t (Γ , e-▻' T)
   refl ← T ≟ty S
   just (T , löb' ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural T}} π ] ⟦t⟧))
-infer-interpret e-cons Γ = just ((e-mod e-timeless e-Nat) e→ (e-▻' e-GStreamN) e→ e-GStreamN , g-cons)
-infer-interpret e-head Γ = just (e-GStreamN e→ (e-mod e-timeless e-Nat) , g-head)
-infer-interpret e-tail Γ = just (e-GStreamN e→ (e-▻' e-GStreamN) , g-tail)
+infer-interpret (e-cons T) Γ = just (e-mod e-timeless T e→ e-▻' (e-GStream T) e→ e-GStream T , g-cons)
+infer-interpret (e-head T) Γ = just (e-GStream T e→ e-mod e-timeless T , g-head)
+infer-interpret (e-tail T) Γ = just (e-GStream T e→ e-▻' (e-GStream T) , g-tail)
 
 infer-type : TmExpr m → CtxExpr m → Maybe (TyExpr m)
 infer-type t Γ = map InferInterpretResult.type (infer-interpret t Γ)
