@@ -13,7 +13,6 @@ open import Function using (id; _∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Categories
-open import Helpers
 open import CwF-Structure
 open import Types.Functions
 open import Reflection.SubstitutionSequence

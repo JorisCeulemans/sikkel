@@ -13,6 +13,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Categories
 open import CwF-Structure
+open import Modalities
 open import Types.Functions
 open import Types.Instances
 open import GuardedRecursion.Streams.Guarded
@@ -33,20 +34,17 @@ Stream' : ClosedType ★ → ClosedType ★
 Stream' A = allnow-ty (GStream A)
 
 module _ {A : ClosedType ★} {{_ : IsClosedNatural A}} where
-  allnow-timeless-ty-nul : {Γ : Ctx ★} → allnow-ty (timeless-ty A) ≅ᵗʸ A {Γ = Γ}
-  allnow-timeless-ty-nul = ≅ᵗʸ-trans by-naturality allnow-timeless-ty
-
   head' : Tm Γ (Stream' A ⇛ A)
-  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ allnow-timeless-ty-nul ] allnow-tm (g-head $ unallnow-tm (varι "s"))
+  head' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ eq-mod-closed allnow-timeless A ] allnow-tm (g-head $ unallnow-tm (varι "s"))
 
   tail' : Tm Γ (Stream' A ⇛ Stream' A)
-  tail' = lamι[ "s" ∈ Stream' A ] ι[ allnow-later'-ty ] allnow-tm (g-tail $ unallnow-tm (varι "s"))
+  tail' = lamι[ "s" ∈ Stream' A ] ι⁻¹[ allnow-later'-ty (GStream A) ] allnow-tm (g-tail $ unallnow-tm (varι "s"))
 
   cons' : Tm Γ (A ⇛ Stream' A ⇛ Stream' A)
   cons' = lamι[ "x" ∈ A ]
             lamι[ "xs" ∈ Stream' A ]
-              allnow-tm (g-cons $ unallnow-tm (ι[ allnow-timeless-ty-nul ] varι "x")
-                                $ unallnow-tm (ι⁻¹[ allnow-later'-ty ] varι "xs"))
+              allnow-tm (g-cons $ unallnow-tm (ι[ eq-mod-closed allnow-timeless A ] varι "x")
+                                $ unallnow-tm (ι[ allnow-later'-ty (GStream A) ] varι "xs"))
 
 
 --------------------------------------------------

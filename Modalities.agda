@@ -224,6 +224,15 @@ record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
     mod ρ T ∎
     where open ≅ᵗʸ-Reasoning
 
+  eq-mod-closed : (A : ClosedType C) {{_ : IsClosedNatural A}} {Γ : Ctx D} → mod μ {Γ} A ≅ᵗʸ mod ρ A
+  eq-mod-closed A = begin
+    mod μ A
+      ≅⟨ eq-mod-tyʳ A ⟩
+    mod ρ (A [ to (eq-ctx-op _) ])
+      ≅⟨ mod-cong ρ (closed-natural (to (eq-ctx-op _))) ⟩
+    mod ρ A ∎
+    where open ≅ᵗʸ-Reasoning
+
 open _≅ᵐ_ public
 
 ≅ᵐ-refl : ∀ {C D} → {μ : Modality C D} → μ ≅ᵐ μ
