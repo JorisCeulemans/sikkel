@@ -1,5 +1,6 @@
 module Experimental.DeepEmbedding.GuardedRecursion.StreamsExamples where
 
+open import Data.Bool
 open import Data.Nat
 open import Data.Unit
 open import Data.Vec hiding (take)
@@ -222,13 +223,13 @@ g-initial =
 
 g-initial : TmExpr e-ω
 g-initial =
-  e-löb ((((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Nat)) e→ e-Nat) e→ e-GStream e-Nat e→ e-Nat) (
-    e-lam ((((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Nat)) e→ e-Nat)) (
+  e-löb ((((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool)) e→ e-Bool) e→ e-GStream e-Nat e→ e-Bool) (
+    e-lam ((((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool)) e→ e-Bool)) (
       e-lam (e-GStream e-Nat) (
         e-app (e-var 1) (e-pair (e-app e-headN (e-var 0))
                                 (e-var 2 e-⊛' e-next' (e-var 1) e-⊛' e-app e-tailN (e-var 0))))))
 
-⟦g-initial⟧sikkel : Tm ◇ (((timeless-ty Nat' ⊠ ▻' Nat') ⇛ Nat') ⇛ GStream Nat' ⇛ Nat')
+⟦g-initial⟧sikkel : Tm ◇ (((timeless-ty Nat' ⊠ ▻' Bool') ⇛ Bool') ⇛ GStream Nat' ⇛ Bool')
 ⟦g-initial⟧sikkel = ⟦ g-initial ⟧tm-in e-◇
 
 {-
@@ -243,15 +244,91 @@ g-final =
 
 g-final : TmExpr e-ω
 g-final =
-  e-löb ((e-Nat e→ ((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Nat))) e→ e-Nat e→ e-GStream e-Nat) (
-    e-lam (e-Nat e→ ((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Nat))) (
-      e-lam e-Nat (
+  e-löb ((e-Bool e→ ((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool))) e→ e-Bool e→ e-GStream e-Nat) (
+    e-lam (e-Bool e→ ((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool))) (
+      e-lam e-Bool (
         e-app (e-app e-consN
                      (e-fst (e-app (e-var 1) (e-var 0))))
               (e-var 2 e-⊛' e-next' (e-var 1) e-⊛' e-snd (e-app (e-var 1) (e-var 0))))))
 
-⟦g-final⟧sikkel : Tm ◇ ((Nat' ⇛ (timeless-ty Nat' ⊠ ▻' Nat')) ⇛ Nat' ⇛ GStream Nat')
+⟦g-final⟧sikkel : Tm ◇ ((Bool' ⇛ (timeless-ty Nat' ⊠ ▻' Bool')) ⇛ Bool' ⇛ GStream Nat')
 ⟦g-final⟧sikkel = ⟦ g-final ⟧tm-in e-◇
+
+{-
+thue-morse : Tm Γ (GStream Bool')
+thue-morse = löbι[ "t-m" ∈▻' GStream Bool' ]
+  g-cons $ timeless-tm false' $ (
+  g-cons $ timeless-tm true') ⟨$⟩' (
+  lift▻' (lift▻' h) $ (g-tail ⟨$⟩' (lift▻' h $ varι "t-m")))
+  where
+    h : Tm Δ (GStream Bool' ⇛ GStream Bool')
+    h = löbι[ "g" ∈▻' GStream Bool' ⇛ GStream Bool' ]
+          lamι[ "s" ∈ GStream Bool' ] (
+            timeless-if' (g-head $ varι "s")
+            then' (g-cons $ timeless-tm true'  $ next' (g-cons $ timeless-tm false' $ varι "g" ⊛' (g-tail $ varι "s")))
+            else' (g-cons $ timeless-tm false' $ next' (g-cons $ timeless-tm true'  $ varι "g" ⊛' (g-tail $ varι "s"))))
+-}
+
+e-consB = e-cons e-Bool
+e-headB = e-head e-Bool
+e-tailB = e-tail e-Bool
+
+g-thue-morse : TmExpr e-ω
+g-thue-morse =
+  e-löb (e-GStream e-Bool) (
+    e-app (e-app e-consB (e-mod-intro e-timeless e-false))
+          (e-app e-consB (e-mod-intro e-timeless e-true)
+            e-⟨$⟩' e-app (e-lift▻' (e-▻' (e-GStream e-Bool)) (e-lift▻' (e-GStream e-Bool) h))
+                         (e-tailB e-⟨$⟩' e-app (e-lift▻' (e-GStream e-Bool) h) (e-var 0))))
+  where
+    h : TmExpr e-ω
+    h =
+      e-löb (e-GStream e-Bool e→ e-GStream e-Bool) (
+        e-lam (e-GStream e-Bool) (
+          e-timeless-if (e-app e-headB (e-var 0))
+                        (e-app (e-app e-consB (e-mod-intro e-timeless e-true))
+                               (e-next' (e-app (e-app e-consB (e-mod-intro e-timeless e-false)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))))
+                        (e-app (e-app e-consB (e-mod-intro e-timeless e-false))
+                               (e-next' (e-app (e-app e-consB (e-mod-intro e-timeless e-true)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))))))
+
+⟦g-thue-morse⟧sikkel : Tm ◇ (GStream Bool')
+⟦g-thue-morse⟧sikkel = ⟦ g-thue-morse ⟧tm-in e-◇
+
+{-
+fibonacci-word : Tm Γ (GStream Bool')
+fibonacci-word = löbι[ "fw" ∈▻' GStream Bool' ]
+  g-cons $ timeless-tm false' $ (
+  g-cons $ timeless-tm true') ⟨$⟩' (
+  lift▻' (lift▻' f) $ (g-tail ⟨$⟩' (lift▻' f $ varι "fw")))
+  where
+    f : Tm Δ (GStream Bool' ⇛ GStream Bool')
+    f = löbι[ "g" ∈▻' GStream Bool' ⇛ GStream Bool' ]
+          lamι[ "s" ∈ GStream Bool' ] (
+            timeless-if' (g-head $ varι "s")
+            then' (g-cons $ timeless-tm false' $ varι "g" ⊛' (g-tail $ varι "s"))
+            else' (g-cons $ timeless-tm false' $ next' (g-cons $ timeless-tm true' $ varι "g" ⊛' (g-tail $ varι "s"))))
+-}
+
+g-fibonacci-word : TmExpr e-ω
+g-fibonacci-word =
+  e-löb (e-GStream e-Bool) (
+    e-app (e-app e-consB (e-mod-intro e-timeless e-false))
+          (e-app e-consB (e-mod-intro e-timeless e-true)
+            e-⟨$⟩'
+              e-app (e-lift▻' (e-▻' (e-GStream e-Bool)) (e-lift▻' (e-GStream e-Bool) f))
+                    (e-tailB e-⟨$⟩' e-app (e-lift▻' (e-GStream e-Bool) f) (e-var 0))))
+  where
+    f : TmExpr e-ω
+    f =
+      e-löb (e-GStream e-Bool e→ e-GStream e-Bool) (
+        e-lam (e-GStream e-Bool) (
+          e-timeless-if (e-app e-headB (e-var 0))
+                        (e-app (e-app e-consB (e-mod-intro e-timeless e-false)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))
+                        (e-app (e-app e-consB (e-mod-intro e-timeless e-false)) (e-next'
+                          (e-app (e-app e-consB (e-mod-intro e-timeless e-true)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))))))
+
+⟦g-fibonacci-word⟧sikkel : Tm ◇ (GStream Bool')
+⟦g-fibonacci-word⟧sikkel = ⟦ g-fibonacci-word ⟧tm-in e-◇
 
 {-
 g-mergef : {A B C : ClosedType ★} → {{IsClosedNatural A}} → {{IsClosedNatural B}} → {{IsClosedNatural C}} →
@@ -326,6 +403,22 @@ g-fibs =
 ⟦g-fibs⟧sikkel : Tm ◇ (GStream Nat')
 ⟦g-fibs⟧sikkel = ⟦ g-fibs ⟧tm-in e-◇
 
+{-
+g-flipFst : {A : ClosedType ★} → {{IsClosedNatural A}} →
+            Tm Γ (GStream A ⇛ ▻' (GStream A))
+g-flipFst {A = A}= lamι[ "s" ∈ GStream A ]
+                     g-cons ⟨$⟩' (g-snd $ varι "s") ⊛' next' (
+                     g-cons ⟨$⟩' next' (g-head $ varι "s") ⊛' (g-tail ⟨$⟩' (g-tail $ varι "s")))
+-}
+
+g-flipFst : TmExpr e-ω
+g-flipFst =
+  e-lam (e-GStream e-Nat) (
+    e-consN e-⟨$⟩' e-app g-snd (e-var 0) e-⊛' e-next' (
+    e-consN e-⟨$⟩' e-next' (e-app e-headN (e-var 0)) e-⊛' (e-tailN e-⟨$⟩' e-app e-tailN (e-var 0))))
+
+⟦g-flipFst⟧sikkel : Tm ◇ (GStream Nat' ⇛ ▻' (GStream Nat'))
+⟦g-flipFst⟧sikkel = ⟦ g-flipFst ⟧tm-in e-◇
 
 
 e-Stream : TyExpr e-★
@@ -354,6 +447,30 @@ e-paperfolds = e-mod-intro e-allnow g-paperfolds
 
 e-paperfolds-test : take 10 ⟦e-paperfolds⟧agda ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
 e-paperfolds-test = refl
+
+e-thue-morse : TmExpr e-★
+e-thue-morse = e-mod-intro e-allnow g-thue-morse
+
+⟦e-thue-morse⟧sikkel : Tm ◇ (Stream' Bool')
+⟦e-thue-morse⟧sikkel = ⟦ e-thue-morse ⟧tm-in e-◇
+
+⟦e-thue-morse⟧agda : Stream Bool
+⟦e-thue-morse⟧agda = translate-term ⟦e-thue-morse⟧sikkel
+
+e-thue-morse-test : take 10 ⟦e-thue-morse⟧agda ≡ false ∷ true ∷ true ∷ false ∷ true ∷ false ∷ false ∷ true ∷ true ∷ false ∷ []
+e-thue-morse-test = refl
+
+e-fibonacci-word : TmExpr e-★
+e-fibonacci-word = e-mod-intro e-allnow g-fibonacci-word
+
+⟦e-fibonacci-word⟧sikkel : Tm ◇ (Stream' Bool')
+⟦e-fibonacci-word⟧sikkel = ⟦ e-fibonacci-word ⟧tm-in e-◇
+
+⟦e-fibonacci-word⟧agda : Stream Bool
+⟦e-fibonacci-word⟧agda = translate-term ⟦e-fibonacci-word⟧sikkel
+
+e-fibonacci-word-test : take 10 ⟦e-fibonacci-word⟧agda ≡ false ∷ true ∷ false ∷ false ∷ true ∷ false ∷ true ∷ false ∷ false ∷ true ∷ []
+e-fibonacci-word-test = refl
 
 e-fibs : TmExpr e-★
 e-fibs = e-mod-intro e-allnow g-fibs

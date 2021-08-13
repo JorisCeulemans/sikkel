@@ -108,8 +108,8 @@ show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ ".lock⟨ " ++ show-modality μ +
 TCM : Set → Set
 TCM A = String ⊎ A
 
-type-error : {A : Set} → String → TCM A
-type-error = inj₁
+-- type-error : {A : Set} → String → TCM A
+pattern type-error x = inj₁ x
 
 map : ∀ {A B} → (A → B) → TCM A → TCM B
 map = Data.Sum.map₂
@@ -194,6 +194,7 @@ e-later ≟modality e-later = return refl
 
 _≟ty_ : (T1 T2 : TyExpr m) → TCM (T1 ≡ T2)
 e-Nat ≟ty e-Nat = return refl
+e-Bool ≟ty e-Bool = return refl
 (T1 e→ T2) ≟ty (T3 e→ T4) = do
   refl ← T1 ≟ty T3
   refl ← T2 ≟ty T4
