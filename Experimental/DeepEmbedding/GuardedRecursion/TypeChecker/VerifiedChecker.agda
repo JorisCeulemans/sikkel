@@ -9,67 +9,28 @@ open import Data.Nat
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
-open import Categories
 open import CwF-Structure
 open import Modalities
 open Modality
 open import Types.Discrete
 open import Types.Functions
 open import Types.Products
-open import Types.Instances
 open import GuardedRecursion.Modalities
 open import GuardedRecursion.Streams.Guarded
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Syntax
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Monad
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Equality
+open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.TypeInterpretation
 
 private
   variable
-    m m' : ModeExpr
+    m : ModeExpr
 
 
---------------------------------------------------
--- Interpretation of modes, modalities, types and contexts in a presheaf model
-
-⟦_⟧mode : ModeExpr → Category
-⟦ e-★ ⟧mode = ★
-⟦ e-ω ⟧mode = ω
-
-⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
-⟦ e-𝟙 ⟧modality = 𝟙
-⟦ μ e-ⓜ ρ ⟧modality = ⟦ μ ⟧modality ⓜ ⟦ ρ ⟧modality
-⟦ e-timeless ⟧modality = timeless
-⟦ e-allnow ⟧modality = allnow
-⟦ e-later ⟧modality = later
-
-⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
-⟦ e-Nat ⟧ty = Nat'
-⟦ e-Bool ⟧ty = Bool'
-⟦ T1 e→ T2 ⟧ty = ⟦ T1 ⟧ty ⇛ ⟦ T2 ⟧ty
-⟦ T1 e-⊠ T2 ⟧ty = ⟦ T1 ⟧ty ⊠ ⟦ T2 ⟧ty
-⟦ e-mod μ T ⟧ty = mod ⟦ μ ⟧modality ⟦ T ⟧ty
-⟦ e-▻' T ⟧ty = ▻' ⟦ T ⟧ty
-⟦ e-GStream T ⟧ty = GStream ⟦ T ⟧ty
-
-⟦_⟧ctx : CtxExpr m → Ctx ⟦ m ⟧mode
-⟦ e-◇ ⟧ctx = ◇
-⟦ Γ , T ⟧ctx = ⟦ Γ ⟧ctx ,, ⟦ T ⟧ty
-⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = ctx-op ⟦ μ ⟧modality ⟦ Γ ⟧ctx
-
-⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
-⟦⟧ty-natural e-Nat = discr-closed
-⟦⟧ty-natural e-Bool = discr-closed
-⟦⟧ty-natural (T1 e→ T2) = fun-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
-⟦⟧ty-natural (T1 e-⊠ T2) = prod-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
-⟦⟧ty-natural (e-mod μ T) = record { closed-natural = λ σ → ≅ᵗʸ-trans (mod-natural ⟦ μ ⟧modality σ) (mod-cong ⟦ μ ⟧modality (closed-natural {{⟦⟧ty-natural T}} _)) }
-⟦⟧ty-natural (e-▻' T) = ▻'-closed {{⟦⟧ty-natural T}}
-⟦⟧ty-natural (e-GStream T) = gstream-closed {{⟦⟧ty-natural T}}
-
-
---------------------------------------------------
--- Implementation of the verified type checker.
-
+-- The verified typechecker defined below accepts a term and a context and will,
+--   if successful, produce the type of that term and an interpretation of that
+--   term in a presheaf model.
 infix 1 _,_
 record InferInterpretResult (Γ : CtxExpr m) : Set where
   constructor _,_
@@ -171,4 +132,4 @@ infer-type t Γ = map InferInterpretResult.type (infer-interpret t Γ)
 ⟦_⟧tm-in_ : (t : TmExpr m) (Γ : CtxExpr m) → tcm-elim (λ _ → ⊤) (λ T → Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty) (infer-type t Γ)
 ⟦ t ⟧tm-in Γ with infer-interpret t Γ
 ⟦ t ⟧tm-in Γ | type-error _ = tt
-⟦ t ⟧tm-in Γ | ok (T , ⟦t⟧)  = ⟦t⟧
+⟦ t ⟧tm-in Γ | ok (T , ⟦t⟧) = ⟦t⟧

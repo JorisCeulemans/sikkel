@@ -30,19 +30,11 @@ e-later ≟modality e-later = return refl
 _≟ty_ : (T1 T2 : TyExpr m) → TCM (T1 ≡ T2)
 e-Nat ≟ty e-Nat = return refl
 e-Bool ≟ty e-Bool = return refl
-(T1 e→ T2) ≟ty (T3 e→ T4) = do
-  refl ← T1 ≟ty T3
-  refl ← T2 ≟ty T4
-  return refl
-(T1 e-⊠ T2) ≟ty (T3 e-⊠ T4) = do
-  refl ← T1 ≟ty T3
-  refl ← T2 ≟ty T4
-  return refl
+(T1 e→ T2) ≟ty (T3 e→ T4) = (cong₂ _e→_) <$> (T1 ≟ty T3) ⊛ (T2 ≟ty T4)
+(T1 e-⊠ T2) ≟ty (T3 e-⊠ T4) = (cong₂ _e-⊠_) <$> (T1 ≟ty T3) ⊛ (T2 ≟ty T4)
 (e-mod {m1} μ1 T1) ≟ty (e-mod {m2} μ2 T2) = do
   refl ← m1 ≟mode m2
-  refl ← μ1 ≟modality μ2
-  refl ← T1 ≟ty T2
-  return refl
-(e-▻' T) ≟ty (e-▻' S) = map (cong e-▻') (T ≟ty S)
-(e-GStream T) ≟ty (e-GStream S) = map (cong e-GStream) (T ≟ty S)
+  cong₂ e-mod <$> (μ1 ≟modality μ2) ⊛ (T1 ≟ty T2)
+(e-▻' T) ≟ty (e-▻' S) = (cong e-▻') <$> (T ≟ty S)
+(e-GStream T) ≟ty (e-GStream S) = (cong e-GStream) <$> (T ≟ty S)
 T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
