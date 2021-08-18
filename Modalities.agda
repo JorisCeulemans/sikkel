@@ -21,10 +21,10 @@ infixl 20 _ⓜ_
 
 -- A modality is defined as a dependent right adjoint.
 record Modality (C D : Category) : Set₁ where
+  no-eta-equality
   field
     ctx-op : CtxOp D C
     {{ctx-op-functor}} : IsCtxFunctor ctx-op
-
     mod : {Γ : Ctx D} → Ty (ctx-op Γ) → Ty Γ
     mod-cong : {Γ : Ctx D} {T S : Ty (ctx-op Γ)} →
                T ≅ᵗʸ S → mod T ≅ᵗʸ mod S
@@ -63,6 +63,7 @@ record Modality (C D : Category) : Set₁ where
       ≅⟨ mod-elim-cong (ι⁻¹-cong (mod-natural σ) (tm-subst-cong-tm σ (mod-η t))) ⟩
     mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]')) ∎
     where open ≅ᵗᵐ-Reasoning
+
   mod-elim-ι : {Γ : Ctx D} {T S : Ty (ctx-op Γ)} (T=S : T ≅ᵗʸ S) (t : Tm Γ (mod S)) →
                ι[ T=S ] mod-elim t ≅ᵗᵐ mod-elim (ι[ mod-cong T=S ] t)
   mod-elim-ι {T = T} {S = S} T=S t = begin
@@ -75,6 +76,8 @@ record Modality (C D : Category) : Set₁ where
     mod-elim (ι[ mod-cong T=S ] t) ∎
     where open ≅ᵗᵐ-Reasoning
 
+  ctx-op-map : {Δ Γ : Ctx D} → (Δ ⇒ Γ) → (ctx-op Δ ⇒ ctx-op Γ)
+  ctx-op-map = ctx-map
 
 
 module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
@@ -188,13 +191,13 @@ mod-intro-cong (μ ⓜ ρ) e = mod-intro-cong μ (mod-intro-cong ρ e)
 mod-intro-natural (μ ⓜ ρ) σ t = begin
   (mod-intro μ (mod-intro ρ t)) [ σ ]'
     ≅⟨ mod-intro-natural μ σ (mod-intro ρ t) ⟩
-  ι[ mod-natural μ σ ] mod-intro μ ((mod-intro ρ t) [ ctx-map σ ]')
-    ≅⟨ ι-cong (mod-natural μ σ) (mod-intro-cong μ (mod-intro-natural ρ (ctx-map σ) t)) ⟩
-  ι[ mod-natural μ σ ] mod-intro μ (ι[ mod-natural ρ _ ] mod-intro ρ (t [ ctx-map (ctx-map {Φ = ctx-op μ} σ) ]'))
+  ι[ mod-natural μ σ ] mod-intro μ ((mod-intro ρ t) [ ctx-op-map μ σ ]')
+    ≅⟨ ι-cong (mod-natural μ σ) (mod-intro-cong μ (mod-intro-natural ρ (ctx-op-map μ σ) t)) ⟩
+  ι[ mod-natural μ σ ] mod-intro μ (ι[ mod-natural ρ _ ] mod-intro ρ (t [ ctx-op-map ρ (ctx-op-map μ σ) ]'))
     ≅˘⟨ ι-cong (mod-natural μ σ) (mod-intro-ι μ _ _) ⟩
-  ι[ mod-natural μ σ ] (ι[ mod-cong μ (mod-natural ρ _) ] mod-intro μ (mod-intro ρ (t [ ctx-map (ctx-map {Φ = ctx-op μ} σ) ]')))
+  ι[ mod-natural μ σ ] (ι[ mod-cong μ (mod-natural ρ _) ] mod-intro μ (mod-intro ρ (t [ ctx-op-map ρ (ctx-op-map μ σ) ]')))
     ≅˘⟨ ι-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ _)) _ ⟩
-  ι[ ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ (ctx-map σ))) ] mod-intro μ (mod-intro ρ (t [ ctx-map (ctx-map {Φ = ctx-op μ}  σ) ]')) ∎
+  ι[ ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ (ctx-op-map μ σ))) ] mod-intro μ (mod-intro ρ (t [ ctx-op-map ρ (ctx-op-map μ σ) ]')) ∎
   where open ≅ᵗᵐ-Reasoning
 mod-intro-ι (μ ⓜ ρ) T=S t = ≅ᵗᵐ-trans (mod-intro-ι μ _ _) (mod-intro-cong μ (mod-intro-ι ρ _ _))
 mod-elim (μ ⓜ ρ) t = mod-elim ρ (mod-elim μ t)
@@ -274,16 +277,16 @@ eq-ctx-op (ⓜ-congˡ ρ μ=μ') Γ = eq-ctx-op μ=μ' (ctx-op ρ Γ)
 eq-mod-tyʳ (ⓜ-congˡ ρ μ=μ') T = mod-cong ρ (eq-mod-tyʳ μ=μ' T)
 
 ⓜ-congʳ : {ρ ρ' : Modality D E} (μ : Modality C D) → ρ ≅ᵐ ρ' → ρ ⓜ μ ≅ᵐ ρ' ⓜ μ
-from (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-map (from (eq-ctx-op ρ=ρ' Γ))
-to (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-map (to (eq-ctx-op ρ=ρ' Γ))
-isoˡ (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-map-inverse (isoˡ (eq-ctx-op ρ=ρ' Γ))
-isoʳ (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-map-inverse (isoʳ (eq-ctx-op ρ=ρ' Γ))
+from (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-op-map μ (from (eq-ctx-op ρ=ρ' Γ))
+to (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-op-map μ (to (eq-ctx-op ρ=ρ' Γ))
+isoˡ (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-map-inverse {{ctx-op-functor μ}} (isoˡ (eq-ctx-op ρ=ρ' Γ))
+isoʳ (eq-ctx-op (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-map-inverse {{ctx-op-functor μ}} (isoʳ (eq-ctx-op ρ=ρ' Γ))
 eq-mod-tyʳ (ⓜ-congʳ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T = begin
   mod ρ (mod μ T)
     ≅⟨ eq-mod-tyʳ ρ=ρ' (mod μ T) ⟩
   mod ρ' ((mod μ T) [ to (eq-ctx-op ρ=ρ' Γ) ])
     ≅⟨ mod-cong ρ' (mod-natural μ (to (eq-ctx-op ρ=ρ' Γ))) ⟩
-  mod ρ' (mod μ (T [ ctx-map (to (eq-ctx-op ρ=ρ' Γ)) ])) ∎
+  mod ρ' (mod μ (T [ ctx-op-map μ (to (eq-ctx-op ρ=ρ' Γ)) ])) ∎
   where open ≅ᵗʸ-Reasoning
 
 module ≅ᵐ-Reasoning where

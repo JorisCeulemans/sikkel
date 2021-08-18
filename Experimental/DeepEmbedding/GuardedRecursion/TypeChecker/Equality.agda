@@ -103,15 +103,13 @@ flatten e-later = se-later ∷ []
 s++-sound : (μs : SModalitySequence m'' m') (ρs : SModalitySequence m m'') →
             ⟦ μs s++ ρs ⟧smod-seq ≅ᵐ ⟦ μs ⟧smod-seq ⓜ ⟦ ρs ⟧smod-seq
 s++-sound [] ρs = ≅ᵐ-sym (𝟙-identityˡ _)
-s++-sound (μ ∷ μs) ρs = ≅ᵐ-trans (ⓜ-congˡ ⟦ μ ⟧smod (s++-sound μs ρs)) (≅ᵐ-sym (ⓜ-assoc ⟦ μ ⟧smod ⟦ μs ⟧smod-seq ⟦ ρs ⟧smod-seq))
-{-begin
+s++-sound (μ ∷ μs) ρs = begin
   ⟦ μ ⟧smod ⓜ ⟦ μs s++ ρs ⟧smod-seq
     ≅⟨ ⓜ-congˡ ⟦ μ ⟧smod (s++-sound μs ρs) ⟩
   ⟦ μ ⟧smod ⓜ (⟦ μs ⟧smod-seq ⓜ ⟦ ρs ⟧smod-seq)
     ≅˘⟨ ⓜ-assoc ⟦ μ ⟧smod ⟦ μs ⟧smod-seq ⟦ ρs ⟧smod-seq ⟩
   (⟦ μ ⟧smod ⓜ ⟦ μs ⟧smod-seq) ⓜ ⟦ ρs ⟧smod-seq ∎
   where open ≅ᵐ-Reasoning
--}
 
 flatten-sound : (μ : ModalityExpr m m') → ⟦ interpret-smod-sequence (flatten μ) ⟧modality ≅ᵐ ⟦ μ ⟧modality
 flatten-sound e-𝟙 = 𝟙-identityʳ 𝟙
@@ -132,18 +130,18 @@ reduce-smod-seq-cons μ         μs = μ ∷ μs
 reduce-smod-seq : SModalitySequence m m' → SModalitySequence m m'
 reduce-smod-seq [] = []
 reduce-smod-seq (μ ∷ μs) = reduce-smod-seq-cons μ (reduce-smod-seq μs)
-{-
+
 reduce-smod-seq-cons-sound : (μ : SModalityExpr m'' m') (μs : SModalitySequence m m'') →
                              ⟦ reduce-smod-seq-cons μ μs ⟧smod-seq ≅ᵐ ⟦ μ ⟧smod ⓜ ⟦ μs ⟧smod-seq
 reduce-smod-seq-cons-sound se-𝟙      μs = ≅ᵐ-sym (𝟙-identityˡ ⟦ μs ⟧smod-seq)
-reduce-smod-seq-cons-sound se-allnow (se-timeless ∷ μs) = ≅ᵐ-sym (≅ᵐ-trans (≅ᵐ-trans (≅ᵐ-sym {!ⓜ-assoc allnow timeless ⟦ μs ⟧smod-seq!})
+reduce-smod-seq-cons-sound se-allnow (se-timeless ∷ μs) = ≅ᵐ-sym (≅ᵐ-trans (≅ᵐ-trans (≅ᵐ-sym (ⓜ-assoc allnow timeless ⟦ μs ⟧smod-seq))
                                                                                      (ⓜ-congʳ ⟦ μs ⟧smod-seq allnow-timeless))
                                                                            (𝟙-identityˡ ⟦ μs ⟧smod-seq))
-reduce-smod-seq-cons-sound se-allnow (se-later    ∷ μs) = {!≅ᵐ-trans (≅ᵐ-trans (reduce-smod-seq-cons-sound se-allnow μs)
+reduce-smod-seq-cons-sound se-allnow (se-later    ∷ μs) = ≅ᵐ-trans (≅ᵐ-trans (reduce-smod-seq-cons-sound se-allnow μs)
                                                                              (ⓜ-congʳ ⟦ μs ⟧smod-seq (≅ᵐ-sym allnow-later)))
-                                                                   (ⓜ-assoc allnow later ⟦ μs ⟧smod-seq)!}
+                                                                   (ⓜ-assoc allnow later ⟦ μs ⟧smod-seq)
 reduce-smod-seq-cons-sound se-allnow [] = ≅ᵐ-refl
-reduce-smod-seq-cons-sound se-allnow (se-𝟙 ∷ μs) = {!≅ᵐ-refl!}
+reduce-smod-seq-cons-sound se-allnow (se-𝟙 ∷ μs) = ≅ᵐ-refl
 reduce-smod-seq-cons-sound se-timeless μs = ≅ᵐ-refl
 reduce-smod-seq-cons-sound se-later μs = ≅ᵐ-refl
 
@@ -151,4 +149,3 @@ reduce-smod-seq-sound : (μs : SModalitySequence m m') → ⟦ reduce-smod-seq �
 reduce-smod-seq-sound [] = ≅ᵐ-refl
 reduce-smod-seq-sound (μ ∷ μs) = ≅ᵐ-trans (reduce-smod-seq-cons-sound μ (reduce-smod-seq μs))
                                           (ⓜ-congˡ ⟦ μ ⟧smod (reduce-smod-seq-sound μs))
--}
