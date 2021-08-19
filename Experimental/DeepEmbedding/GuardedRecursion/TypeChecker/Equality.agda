@@ -8,7 +8,9 @@ open import Data.String
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
+open import CwF-Structure using (_≅ᵗʸ_; ≅ᵗʸ-refl; ≅ᵗʸ-trans)
 open import Modalities
+open Modality
 open import GuardedRecursion.Modalities using (later; timeless; allnow; allnow-timeless; allnow-later)
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Syntax
@@ -199,3 +201,21 @@ reduce-compare μ ρ =
 -- The final procedure will test if two modalities are literally equal before reducing them.
 ⟦_⟧≅mod?⟦_⟧ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
 ⟦ μ ⟧≅mod?⟦ ρ ⟧ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare μ ρ
+
+
+--------------------------------------------------
+-- Deciding whether two types' interpretations are equivalent
+
+-- Currently we check whether two types are literally identical, except in the
+--   case of modal types, where we run the modality solver implemented above.
+
+⟦⟧ty-cong : (T S : TyExpr m) → T ≡ S → ∀ {Γ} →  ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
+⟦⟧ty-cong T .T refl = ≅ᵗʸ-refl
+
+⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+⟦ e-mod {m} μ T ⟧≅ty?⟦ e-mod {m'} ρ S ⟧ = do
+  refl ← m ≟mode m'
+  T=S ← ⟦ T ⟧≅ty?⟦ S ⟧
+  μ=ρ ← ⟦ μ ⟧≅mod?⟦ ρ ⟧
+  return (≅ᵗʸ-trans (mod-cong ⟦ μ ⟧modality T=S) (eq-mod-closed μ=ρ ⟦ S ⟧ty {{⟦⟧ty-natural S}}))
+⟦ T ⟧≅ty?⟦ S ⟧ = ⟦⟧ty-cong T S <$> (T ≟ty S)

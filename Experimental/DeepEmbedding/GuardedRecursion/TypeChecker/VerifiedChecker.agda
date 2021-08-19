@@ -49,8 +49,8 @@ infer-interpret-var x       (Γ ,lock⟨ μ ⟩) = type-error "Impossible to dir
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret (e-ann t ∈ T) Γ = do
   T' , ⟦t⟧ ← infer-interpret t Γ
-  refl ← T ≟ty T'
-  return (T , ⟦t⟧)
+  T=T' ← ⟦ T ⟧≅ty?⟦ T' ⟧
+  return (T , ι[ T=T' ] ⟦t⟧)
 infer-interpret (e-var x) Γ = infer-interpret-var x Γ
 infer-interpret (e-lam T b) Γ = do
   S , ⟦b⟧ ← infer-interpret b (Γ , T)
@@ -59,8 +59,8 @@ infer-interpret (e-app t1 t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
   func-ty dom cod refl ← is-func-ty T1
   T2 , ⟦t2⟧ ← infer-interpret t2 Γ
-  refl ← dom ≟ty T2
-  return (cod , app ⟦t1⟧ ⟦t2⟧)
+  dom=T2 ← ⟦ dom ⟧≅ty?⟦ T2 ⟧
+  return (cod , app ⟦t1⟧ (ι[ dom=T2 ] ⟦t2⟧))
 infer-interpret (e-lit n) Γ = return (e-Nat , discr n)
 infer-interpret e-suc Γ = return (e-Nat e→ e-Nat , suc')
 infer-interpret e-plus Γ = return (e-Nat e→ e-Nat e→ e-Nat , nat-sum)
@@ -68,21 +68,22 @@ infer-interpret e-true Γ = return (e-Bool , true')
 infer-interpret e-false Γ = return (e-Bool , false')
 infer-interpret (e-if c t f) Γ = do
   C , ⟦c⟧ ← infer-interpret c Γ
-  refl ← C ≟ty e-Bool
+  Bool=C ← ⟦ e-Bool ⟧≅ty?⟦ C ⟧
   T , ⟦t⟧ ← infer-interpret t Γ
   F , ⟦f⟧ ← infer-interpret f Γ
-  refl ← T ≟ty F
-  return (T , if' ⟦c⟧ then' ⟦t⟧ else' ⟦f⟧)
+  T=F ← ⟦ T ⟧≅ty?⟦ F ⟧
+  return (T , if' (ι[ Bool=C ] ⟦c⟧) then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
 infer-interpret (e-timeless-if c t f) Γ = do
   C , ⟦c⟧ ← infer-interpret c Γ
   modal-ty {m} B μ refl ← is-modal-ty C
   refl ← m ≟mode e-★
-  refl ← μ ≟modality e-timeless
-  refl ← B ≟ty e-Bool
+  timeless=μ ← ⟦ e-timeless ⟧≅mod?⟦ μ ⟧
+  Bool=B ← ⟦ e-Bool ⟧≅ty?⟦ B ⟧
   T , ⟦t⟧ ← infer-interpret t Γ
   F , ⟦f⟧ ← infer-interpret f Γ
-  refl ← T ≟ty F
-  return (T , timeless-if' ⟦c⟧ then' ⟦t⟧ else' ⟦f⟧)
+  T=F ← ⟦ T ⟧≅ty?⟦ F ⟧
+  return (T , timeless-if' (ι[ ≅ᵗʸ-trans (timeless-ty-cong Bool=B) (eq-mod-closed timeless=μ ⟦ B ⟧ty {{⟦⟧ty-natural B}}) ] ⟦c⟧)
+              then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
 infer-interpret (e-pair t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   S , ⟦s⟧ ← infer-interpret s Γ
@@ -101,12 +102,12 @@ infer-interpret (e-mod-intro μ t) Γ = do
 infer-interpret (e-mod-elim {m} {mμ} μ t) Γ = do
   modal-ctx {mρ} Γ' ρ refl ← is-modal-ctx Γ
   refl ← mμ ≟mode mρ
-  refl ← μ ≟modality ρ
+  ρ=μ ← ⟦ ρ ⟧≅mod?⟦ μ ⟧
   S , ⟦t⟧ ← infer-interpret t Γ'
   modal-ty {mκ} T κ refl ← is-modal-ty S
   refl ← m ≟mode mκ
-  refl ← μ ≟modality κ
-  return (T , mod-elim ⟦ μ ⟧modality ⟦t⟧)
+  μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
+  return (T , mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧))
 infer-interpret (e-next' t) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   return (e-▻' T , next' ⟦t⟧)
@@ -116,12 +117,12 @@ infer-interpret (f e-⊛' t) Γ = do
   func-ty dom cod refl ← is-func-ty S
   T-t , ⟦t⟧ ← infer-interpret t Γ
   later-ty R refl ← is-later-ty T-t
-  refl ← R ≟ty dom
-  return (e-▻' cod , ⟦f⟧ ⊛' ⟦t⟧)
+  dom=R ← ⟦ dom ⟧≅ty?⟦ R ⟧
+  return (e-▻' cod , ⟦f⟧ ⊛' (ι[ ▻'-cong dom=R ] ⟦t⟧))
 infer-interpret (e-löb T t) Γ = do
   S , ⟦t⟧ ← infer-interpret t (Γ , e-▻' T)
-  refl ← T ≟ty S
-  return (T , löb' ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural T}} π ] ⟦t⟧))
+  T=S ← ⟦ T ⟧≅ty?⟦ S ⟧
+  return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ] ⟦t⟧))
 infer-interpret (e-cons T) Γ = return (e-mod e-timeless T e→ e-▻' (e-GStream T) e→ e-GStream T , g-cons)
 infer-interpret (e-head T) Γ = return (e-GStream T e→ e-mod e-timeless T , g-head)
 infer-interpret (e-tail T) Γ = return (e-GStream T e→ e-▻' (e-GStream T) , g-tail)
