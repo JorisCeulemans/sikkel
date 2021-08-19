@@ -21,6 +21,7 @@ private
   variable
     m m' m'' : ModeExpr
 
+infixl 5 _e-ⓜ_
 data ModalityExpr : ModeExpr → ModeExpr → Set where
   e-𝟙 : ModalityExpr m m
   _e-ⓜ_ : ModalityExpr m' m'' → ModalityExpr m m' → ModalityExpr m m''

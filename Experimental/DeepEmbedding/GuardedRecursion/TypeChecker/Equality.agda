@@ -63,13 +63,11 @@ T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-ty
 -- A value of type S(imple)ModalityExpr represents a modality expression that does
 -- not include composition.
 data SModalityExpr : ModeExpr → ModeExpr → Set where
-  se-𝟙 : SModalityExpr m m
   se-timeless : SModalityExpr e-★ e-ω
   se-allnow : SModalityExpr e-ω e-★
   se-later : SModalityExpr e-ω e-ω
 
 interpret-smod-expr : SModalityExpr m m' → ModalityExpr m m'
-interpret-smod-expr se-𝟙 = e-𝟙
 interpret-smod-expr se-timeless = e-timeless
 interpret-smod-expr se-allnow = e-allnow
 interpret-smod-expr se-later = e-later
@@ -94,7 +92,7 @@ _s++_ : SModalitySequence m'' m' → SModalitySequence m m'' → SModalitySequen
 (μ ∷ μs) s++ ρs = μ ∷ (μs s++ ρs)
 
 flatten : ModalityExpr m m' → SModalitySequence m m'
-flatten e-𝟙 = se-𝟙 ∷ []
+flatten e-𝟙 = []
 flatten (μ e-ⓜ ρ) = flatten μ s++ flatten ρ
 flatten e-timeless = se-timeless ∷ []
 flatten e-allnow = se-allnow ∷ []
@@ -111,18 +109,23 @@ s++-sound (μ ∷ μs) ρs = begin
   (⟦ μ ⟧smod ⓜ ⟦ μs ⟧smod-seq) ⓜ ⟦ ρs ⟧smod-seq ∎
   where open ≅ᵐ-Reasoning
 
-flatten-sound : (μ : ModalityExpr m m') → ⟦ interpret-smod-sequence (flatten μ) ⟧modality ≅ᵐ ⟦ μ ⟧modality
-flatten-sound e-𝟙 = 𝟙-identityʳ 𝟙
-flatten-sound (μ e-ⓜ ρ) = ≅ᵐ-trans (≅ᵐ-trans (s++-sound (flatten μ) (flatten ρ))
-                                             (ⓜ-congʳ ⟦ flatten ρ ⟧smod-seq (flatten-sound μ)))
-                                   (ⓜ-congˡ ⟦ μ ⟧modality (flatten-sound ρ))
+flatten-sound : (μ : ModalityExpr m m') → ⟦ flatten μ ⟧smod-seq ≅ᵐ ⟦ μ ⟧modality
+flatten-sound e-𝟙 = ≅ᵐ-refl
+flatten-sound (μ e-ⓜ ρ) = begin
+  ⟦ flatten μ s++ flatten ρ ⟧smod-seq
+    ≅⟨ s++-sound (flatten μ) (flatten ρ) ⟩
+  ⟦ flatten μ ⟧smod-seq ⓜ ⟦ flatten ρ ⟧smod-seq
+    ≅⟨ ⓜ-congʳ ⟦ flatten ρ ⟧smod-seq (flatten-sound μ) ⟩
+  ⟦ μ ⟧modality ⓜ ⟦ flatten ρ ⟧smod-seq
+    ≅⟨ ⓜ-congˡ ⟦ μ ⟧modality (flatten-sound ρ) ⟩
+  ⟦ μ ⟧modality ⓜ ⟦ ρ ⟧modality ∎
+  where open ≅ᵐ-Reasoning
 flatten-sound e-timeless = 𝟙-identityʳ timeless
 flatten-sound e-allnow = 𝟙-identityʳ allnow
 flatten-sound e-later = 𝟙-identityʳ later
 
 -- Step 2: reducing the sequence using specific equalities
 reduce-smod-seq-cons : SModalityExpr m'' m' → SModalitySequence m m'' → SModalitySequence m m'
-reduce-smod-seq-cons se-𝟙      μs = μs
 reduce-smod-seq-cons se-allnow (se-timeless ∷ μs) = μs
 reduce-smod-seq-cons se-allnow (se-later    ∷ μs) = reduce-smod-seq-cons se-allnow μs
 reduce-smod-seq-cons μ         μs = μ ∷ μs
@@ -133,15 +136,25 @@ reduce-smod-seq (μ ∷ μs) = reduce-smod-seq-cons μ (reduce-smod-seq μs)
 
 reduce-smod-seq-cons-sound : (μ : SModalityExpr m'' m') (μs : SModalitySequence m m'') →
                              ⟦ reduce-smod-seq-cons μ μs ⟧smod-seq ≅ᵐ ⟦ μ ⟧smod ⓜ ⟦ μs ⟧smod-seq
-reduce-smod-seq-cons-sound se-𝟙      μs = ≅ᵐ-sym (𝟙-identityˡ ⟦ μs ⟧smod-seq)
-reduce-smod-seq-cons-sound se-allnow (se-timeless ∷ μs) = ≅ᵐ-sym (≅ᵐ-trans (≅ᵐ-trans (≅ᵐ-sym (ⓜ-assoc allnow timeless ⟦ μs ⟧smod-seq))
-                                                                                     (ⓜ-congʳ ⟦ μs ⟧smod-seq allnow-timeless))
-                                                                           (𝟙-identityˡ ⟦ μs ⟧smod-seq))
-reduce-smod-seq-cons-sound se-allnow (se-later    ∷ μs) = ≅ᵐ-trans (≅ᵐ-trans (reduce-smod-seq-cons-sound se-allnow μs)
-                                                                             (ⓜ-congʳ ⟦ μs ⟧smod-seq (≅ᵐ-sym allnow-later)))
-                                                                   (ⓜ-assoc allnow later ⟦ μs ⟧smod-seq)
+reduce-smod-seq-cons-sound se-allnow (se-timeless ∷ μs) = begin
+  ⟦ μs ⟧smod-seq
+    ≅˘⟨ 𝟙-identityˡ ⟦ μs ⟧smod-seq ⟩
+  𝟙 ⓜ ⟦ μs ⟧smod-seq
+    ≅˘⟨ ⓜ-congʳ ⟦ μs ⟧smod-seq allnow-timeless ⟩
+  (allnow ⓜ timeless) ⓜ ⟦ μs ⟧smod-seq
+    ≅⟨ ⓜ-assoc _ _ _ ⟩
+  allnow ⓜ (timeless ⓜ ⟦ μs ⟧smod-seq) ∎
+  where open ≅ᵐ-Reasoning
+reduce-smod-seq-cons-sound se-allnow (se-later    ∷ μs) = begin
+  ⟦ reduce-smod-seq-cons se-allnow μs ⟧smod-seq
+    ≅⟨ reduce-smod-seq-cons-sound se-allnow μs ⟩
+  allnow ⓜ ⟦ μs ⟧smod-seq
+    ≅˘⟨ ⓜ-congʳ ⟦ μs ⟧smod-seq allnow-later ⟩
+  (allnow ⓜ later) ⓜ ⟦ μs ⟧smod-seq
+    ≅⟨ ⓜ-assoc _ _ _ ⟩
+  allnow ⓜ (later ⓜ ⟦ μs ⟧smod-seq) ∎
+  where open ≅ᵐ-Reasoning
 reduce-smod-seq-cons-sound se-allnow [] = ≅ᵐ-refl
-reduce-smod-seq-cons-sound se-allnow (se-𝟙 ∷ μs) = ≅ᵐ-refl
 reduce-smod-seq-cons-sound se-timeless μs = ≅ᵐ-refl
 reduce-smod-seq-cons-sound se-later μs = ≅ᵐ-refl
 
