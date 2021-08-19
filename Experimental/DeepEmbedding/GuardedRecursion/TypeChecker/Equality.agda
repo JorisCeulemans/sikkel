@@ -8,10 +8,13 @@ open import Data.String
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
-open import CwF-Structure using (_≅ᵗʸ_; ≅ᵗʸ-refl; ≅ᵗʸ-trans)
+open import CwF-Structure using (_≅ᵗʸ_; ≅ᵗʸ-refl; ≅ᵗʸ-trans; ≅ᵗʸ-sym)
+open import Types.Functions
+open import Types.Products
 open import Modalities
 open Modality
-open import GuardedRecursion.Modalities using (later; timeless; allnow; allnow-timeless; allnow-later)
+open import GuardedRecursion.Modalities using (later; timeless; allnow; allnow-timeless; allnow-later; ▻'-cong)
+open import GuardedRecursion.Streams.Guarded
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Syntax
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Monad
@@ -190,8 +193,8 @@ modality-reflect μ ρ e = ≅ᵐ-trans (≅ᵐ-trans (≅ᵐ-sym (reduce-modali
                                             (⟦⟧modality-cong e))
                                   (reduce-modality-expr-sound ρ)
 
-reduce-compare : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
-reduce-compare μ ρ =
+reduce-compare-mod : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+reduce-compare-mod μ ρ =
   let μ' = reduce-modality-expr μ
       ρ' = reduce-modality-expr ρ
   in with-error-msg ("Modality " ++ show-modality μ ++ " is not equal to " ++ show-modality ρ ++ ", reduced the equality to " ++
@@ -200,18 +203,92 @@ reduce-compare μ ρ =
 
 -- The final procedure will test if two modalities are literally equal before reducing them.
 ⟦_⟧≅mod?⟦_⟧ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
-⟦ μ ⟧≅mod?⟦ ρ ⟧ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare μ ρ
+⟦ μ ⟧≅mod?⟦ ρ ⟧ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare-mod μ ρ
 
 
 --------------------------------------------------
 -- Deciding whether two types' interpretations are equivalent
 
--- Currently we check whether two types are literally identical, except in the
---   case of modal types, where we run the modality solver implemented above.
+apply-mod-reduced : ModalityExpr m m' → TyExpr m → TyExpr m'
+apply-mod-reduced e-𝟙 T = T
+apply-mod-reduced μ   (e-mod ρ T) = apply-mod-reduced (reduce-modality-expr (μ e-ⓜ ρ)) T
+apply-mod-reduced μ   T = e-mod μ T
+
+reduce-ty-expr : TyExpr m → TyExpr m
+reduce-ty-expr e-Nat = e-Nat
+reduce-ty-expr e-Bool = e-Bool
+reduce-ty-expr (T1 e→ T2) = reduce-ty-expr T1 e→ reduce-ty-expr T2
+reduce-ty-expr (T1 e-⊠ T2) = reduce-ty-expr T1 e-⊠ reduce-ty-expr T2
+reduce-ty-expr (e-mod μ T) = apply-mod-reduced (reduce-modality-expr μ) (reduce-ty-expr T)
+reduce-ty-expr (e-▻' T) = e-▻' (reduce-ty-expr T)
+reduce-ty-expr (e-GStream T) = e-GStream (reduce-ty-expr T)
+
+-- There is a lot of repetition here. I hope this proof can be simplified.
+apply-mod-reduced-sound : ∀ (μ : ModalityExpr m m') (T : TyExpr m) {Γ} →
+                          ⟦ apply-mod-reduced μ T ⟧ty {Γ} ≅ᵗʸ mod ⟦ μ ⟧modality ⟦ T ⟧ty
+apply-mod-reduced-sound e-𝟙 T = ≅ᵗʸ-refl
+apply-mod-reduced-sound (μ e-ⓜ ρ) e-Nat = ≅ᵗʸ-refl
+apply-mod-reduced-sound (μ e-ⓜ ρ) e-Bool = ≅ᵗʸ-refl
+apply-mod-reduced-sound (μ e-ⓜ ρ) (T1 e→ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound (μ e-ⓜ ρ) (T1 e-⊠ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound (μ e-ⓜ ρ) (e-mod κ T) = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (μ e-ⓜ ρ e-ⓜ κ)) T)
+                                                           (eq-mod-closed (reduce-modality-expr-sound (μ e-ⓜ ρ e-ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+apply-mod-reduced-sound (μ e-ⓜ ρ) (e-▻' T) = ≅ᵗʸ-refl
+apply-mod-reduced-sound (μ e-ⓜ ρ) (e-GStream T) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-timeless e-Nat = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-timeless e-Bool = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-timeless (T1 e→ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-timeless (T1 e-⊠ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-timeless (e-mod κ T) = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (e-timeless e-ⓜ κ)) T)
+                                                           (eq-mod-closed (reduce-modality-expr-sound (e-timeless e-ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+apply-mod-reduced-sound e-allnow e-Nat = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-allnow e-Bool = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-allnow (T1 e→ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-allnow (T1 e-⊠ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-allnow (e-mod κ T) = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (e-allnow e-ⓜ κ)) T)
+                                                           (eq-mod-closed (reduce-modality-expr-sound (e-allnow e-ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+apply-mod-reduced-sound e-allnow (e-▻' T) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-allnow (e-GStream T) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-later e-Nat = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-later e-Bool = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-later (T1 e→ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-later (T1 e-⊠ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-later (e-mod κ T) = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (e-later e-ⓜ κ)) T)
+                                                           (eq-mod-closed (reduce-modality-expr-sound (e-later e-ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+apply-mod-reduced-sound e-later (e-▻' T) = ≅ᵗʸ-refl
+apply-mod-reduced-sound e-later (e-GStream T) = ≅ᵗʸ-refl
+
+reduce-ty-expr-sound : (T : TyExpr m) → ∀ {Γ} →  ⟦ reduce-ty-expr T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
+reduce-ty-expr-sound e-Nat = ≅ᵗʸ-refl
+reduce-ty-expr-sound e-Bool = ≅ᵗʸ-refl
+reduce-ty-expr-sound (T1 e→ T2) = ⇛-cong (reduce-ty-expr-sound T1) (reduce-ty-expr-sound T2)
+reduce-ty-expr-sound (T1 e-⊠ T2) = ⊠-cong (reduce-ty-expr-sound T1) (reduce-ty-expr-sound T2)
+reduce-ty-expr-sound (e-mod μ T) = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr μ) (reduce-ty-expr T))
+                                             (≅ᵗʸ-trans (eq-mod-closed (reduce-modality-expr-sound μ) ⟦ reduce-ty-expr T ⟧ty {{⟦⟧ty-natural (reduce-ty-expr T)}})
+                                                        (mod-cong ⟦ μ ⟧modality (reduce-ty-expr-sound T)))
+reduce-ty-expr-sound (e-▻' T) = ▻'-cong (reduce-ty-expr-sound T)
+reduce-ty-expr-sound (e-GStream T) = gstream-cong (reduce-ty-expr-sound T)
 
 ⟦⟧ty-cong : (T S : TyExpr m) → T ≡ S → ∀ {Γ} →  ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
 ⟦⟧ty-cong T .T refl = ≅ᵗʸ-refl
 
+ty-reflect : (T S : TyExpr m) → reduce-ty-expr T ≡ reduce-ty-expr S → ∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
+ty-reflect T S e = ≅ᵗʸ-trans (≅ᵗʸ-trans (≅ᵗʸ-sym (reduce-ty-expr-sound T))
+                                        (⟦⟧ty-cong _ _ e))
+                             (reduce-ty-expr-sound S)
+
+reduce-compare-ty : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+reduce-compare-ty T S =
+  let T' = reduce-ty-expr T
+      S' = reduce-ty-expr S
+  in with-error-msg ("Type " ++ show-type T ++ " is not equal to " ++ show-type S ++ ", reduced the equality to " ++
+                      show-type T' ++ " =?= " ++ show-type S') (
+    (T' ≟ty S') >>= λ T'=S' → return (ty-reflect T S T'=S'))
+
+⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+⟦ T ⟧≅ty?⟦ S ⟧ = (⟦⟧ty-cong T S <$> (T ≟ty S)) <∣> reduce-compare-ty T S
+
+{-
 ⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
 ⟦ e-mod {m} μ T ⟧≅ty?⟦ e-mod {m'} ρ S ⟧ = do
   refl ← m ≟mode m'
@@ -219,3 +296,4 @@ reduce-compare μ ρ =
   μ=ρ ← ⟦ μ ⟧≅mod?⟦ ρ ⟧
   return (≅ᵗʸ-trans (mod-cong ⟦ μ ⟧modality T=S) (eq-mod-closed μ=ρ ⟦ S ⟧ty {{⟦⟧ty-natural S}}))
 ⟦ T ⟧≅ty?⟦ S ⟧ = ⟦⟧ty-cong T S <$> (T ≟ty S)
+-}

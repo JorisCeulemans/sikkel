@@ -21,12 +21,10 @@ allnow-timeless-test-expr = e-ann (e-mod-intro (e-allnow e-ⓜ e-timeless) (e-li
 allnow-timeless-test : Tm {C = ★} ◇ (mod 𝟙 Nat')
 allnow-timeless-test = ⟦ allnow-timeless-test-expr ⟧tm-in e-◇
 
-
--- This test currently fails because the verified typechecker does not yet support
---   type equalities such as `mod μ (mod ρ T) ≅ᵗʸ mod (μ ⓜ ρ) T` or
---   `mod 𝟙 T ≅ᵗʸ T`.
+-- This example shows that the typechecker now also supports type equalities
+--   such as `mod μ (mod ρ T) ≅ᵗʸ mod (μ ⓜ ρ) T`.
 combined-test-expr : TmExpr e-★
 combined-test-expr = e-ann (e-mod-intro e-allnow (e-mod-intro e-timeless (e-lit 0))) ∈ e-Nat
 
 combined-test : Tm {C = ★} ◇ Nat'
-combined-test = {!⟦ combined-test-expr ⟧tm-in e-◇!}
+combined-test = ⟦ combined-test-expr ⟧tm-in e-◇
