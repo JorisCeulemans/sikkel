@@ -127,7 +127,7 @@ infer-interpret (e-head T) Γ = return (e-GStream T e→ e-mod e-timeless T , g-
 infer-interpret (e-tail T) Γ = return (e-GStream T e→ e-▻' (e-GStream T) , g-tail)
 
 infer-type : TmExpr m → CtxExpr m → TCM (TyExpr m)
-infer-type t Γ = map InferInterpretResult.type (infer-interpret t Γ)
+infer-type t Γ = InferInterpretResult.type <$> infer-interpret t Γ
 
 ⟦_⟧tm-in_ : (t : TmExpr m) (Γ : CtxExpr m) → tcm-elim (λ _ → ⊤) (λ T → Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty) (infer-type t Γ)
 ⟦ t ⟧tm-in Γ with infer-interpret t Γ

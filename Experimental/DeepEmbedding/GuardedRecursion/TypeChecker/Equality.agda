@@ -5,6 +5,7 @@
 module Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Equality where
 
 open import Data.String
+open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
 open import Modalities
@@ -35,6 +36,9 @@ e-𝟙 ≟modality e-𝟙 = return refl
 e-timeless ≟modality e-timeless = return refl
 e-allnow ≟modality e-allnow = return refl
 e-later ≟modality e-later = return refl
+(_e-ⓜ_ {m} μ ρ) ≟modality (_e-ⓜ_ {m'} μ' ρ') = do
+  refl ← m ≟mode m'
+  cong₂ _e-ⓜ_ <$> (μ ≟modality μ') ⊛ (ρ ≟modality ρ')
 μ ≟modality ρ = type-error ("Modality " ++ show-modality μ ++ " is not equal to " ++ show-modality ρ)
 
 _≟ty_ : (T1 T2 : TyExpr m) → TCM (T1 ≡ T2)
@@ -160,5 +164,38 @@ reduce-smod-seq-cons-sound se-later μs = ≅ᵐ-refl
 
 reduce-smod-seq-sound : (μs : SModalitySequence m m') → ⟦ reduce-smod-seq μs ⟧smod-seq ≅ᵐ ⟦ μs ⟧smod-seq
 reduce-smod-seq-sound [] = ≅ᵐ-refl
-reduce-smod-seq-sound (μ ∷ μs) = ≅ᵐ-trans (reduce-smod-seq-cons-sound μ (reduce-smod-seq μs))
-                                          (ⓜ-congˡ ⟦ μ ⟧smod (reduce-smod-seq-sound μs))
+reduce-smod-seq-sound (μ ∷ μs) = begin
+  ⟦ reduce-smod-seq-cons μ (reduce-smod-seq μs) ⟧smod-seq
+    ≅⟨ reduce-smod-seq-cons-sound μ (reduce-smod-seq μs) ⟩
+  ⟦ μ ⟧smod ⓜ ⟦ reduce-smod-seq μs ⟧smod-seq
+    ≅⟨ ⓜ-congˡ ⟦ μ ⟧smod (reduce-smod-seq-sound μs) ⟩
+  ⟦ μ ⟧smod ⓜ ⟦ μs ⟧smod-seq ∎
+  where open ≅ᵐ-Reasoning
+
+reduce-modality-expr : ModalityExpr m m' → ModalityExpr m m'
+reduce-modality-expr = interpret-smod-sequence ∘ reduce-smod-seq ∘ flatten
+
+reduce-modality-expr-sound : (μ : ModalityExpr m m') → ⟦ reduce-modality-expr μ ⟧modality ≅ᵐ ⟦ μ ⟧modality
+reduce-modality-expr-sound μ = ≅ᵐ-trans (reduce-smod-seq-sound (flatten μ)) (flatten-sound μ)
+
+-- Finally: the actual new decision procedure for modalities
+⟦⟧modality-cong : {μ ρ : ModalityExpr m m'} → μ ≡ ρ → ⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality
+⟦⟧modality-cong refl = ≅ᵐ-refl
+
+modality-reflect : (μ ρ : ModalityExpr m m') → reduce-modality-expr μ ≡ reduce-modality-expr ρ →
+                   ⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality
+modality-reflect μ ρ e = ≅ᵐ-trans (≅ᵐ-trans (≅ᵐ-sym (reduce-modality-expr-sound μ))
+                                            (⟦⟧modality-cong e))
+                                  (reduce-modality-expr-sound ρ)
+
+reduce-compare : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+reduce-compare μ ρ =
+  let μ' = reduce-modality-expr μ
+      ρ' = reduce-modality-expr ρ
+  in with-error-msg ("Modality " ++ show-modality μ ++ " is not equal to " ++ show-modality ρ ++ ", reduced the equality to " ++
+                      show-modality μ' ++ " =?= " ++ show-modality ρ') (
+    (μ' ≟modality ρ') >>= λ μ'=ρ' → return (modality-reflect μ ρ μ'=ρ'))
+
+-- The final procedure will test if two modalities are literally equal before reducing them.
+⟦_⟧≅mod?⟦_⟧ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+⟦ μ ⟧≅mod?⟦ ρ ⟧ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare μ ρ
