@@ -123,9 +123,9 @@ infer-interpret (e-löb T t) Γ = do
   S , ⟦t⟧ ← infer-interpret t (Γ , e-▻' T)
   T=S ← ⟦ T ⟧≅ty?⟦ S ⟧
   return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ] ⟦t⟧))
-infer-interpret (e-cons T) Γ = return (e-mod e-timeless T e→ e-▻' (e-GStream T) e→ e-GStream T , g-cons)
-infer-interpret (e-head T) Γ = return (e-GStream T e→ e-mod e-timeless T , g-head)
-infer-interpret (e-tail T) Γ = return (e-GStream T e→ e-▻' (e-GStream T) , g-tail)
+infer-interpret (e-gcons T) Γ = return (e-mod e-timeless T e→ e-▻' (e-GStream T) e→ e-GStream T , g-cons)
+infer-interpret (e-ghead T) Γ = return (e-GStream T e→ e-mod e-timeless T , g-head)
+infer-interpret (e-gtail T) Γ = return (e-GStream T e→ e-▻' (e-GStream T) , g-tail)
 
 infer-type : TmExpr m → CtxExpr m → TCM (TyExpr m)
 infer-type t Γ = InferInterpretResult.type <$> infer-interpret t Γ

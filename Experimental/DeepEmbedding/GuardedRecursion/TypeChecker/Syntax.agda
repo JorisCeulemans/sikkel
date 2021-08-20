@@ -63,7 +63,7 @@ data TmExpr : ModeExpr → Set where
   e-next' : TmExpr e-ω → TmExpr e-ω
   _e-⊛'_ : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
   e-löb : TyExpr e-ω → TmExpr e-ω → TmExpr e-ω
-  e-cons e-head e-tail : TyExpr e-★ → TmExpr e-ω
+  e-gcons e-ghead e-gtail : TyExpr e-★ → TmExpr e-ω
 
 
 --------------------------------------------------

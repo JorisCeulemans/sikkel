@@ -19,9 +19,9 @@ open import Translation
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker
 
 
-e-consN = e-cons e-Nat
-e-headN = e-head e-Nat
-e-tailN = e-tail e-Nat
+e-gconsN = e-gcons e-Nat
+e-gheadN = e-ghead e-Nat
+e-gtailN = e-gtail e-Nat
 
 infixl 5 _⊛timeless_
 _⊛timeless_ : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
@@ -55,9 +55,9 @@ g-map =
   e-lam (e-mod e-timeless (e-Nat e→ e-Nat)) (
     e-löb (e-GStream e-Nat e→ e-GStream e-Nat) (
       e-lam (e-GStream e-Nat) (
-        e-app (e-app e-consN
-                     (e-var 2 ⊛timeless e-app e-headN (e-var 0)))
-              (e-var 1 e-⊛' e-app e-tailN (e-var 0)))))
+        e-app (e-app e-gconsN
+                     (e-var 2 ⊛timeless e-app e-gheadN (e-var 0)))
+              (e-var 1 e-⊛' e-app e-gtailN (e-var 0)))))
 
 ⟦g-map⟧sikkel : Tm ◇ (timeless-ty (Nat' ⇛ Nat') ⇛ GStream Nat' ⇛ GStream Nat')
 ⟦g-map⟧sikkel = ⟦ g-map ⟧tm-in e-◇
@@ -71,7 +71,7 @@ g-nats = löbι[ "s" ∈▻' GStream Nat' ] g-cons $ timeless-tm zero'
 g-nats : TmExpr e-ω
 g-nats =
   e-löb (e-GStream e-Nat) (
-    e-app (e-app e-consN
+    e-app (e-app e-gconsN
                  (e-mod-intro e-timeless (e-lit 0)))
           (e-app g-map (e-mod-intro e-timeless e-suc) e-⟨$⟩' e-var 0))
 
@@ -90,13 +90,13 @@ g-zeros = löbι[ "s" ∈▻' GStream Nat' ] g-cons $ timeless-tm zero' $ varι 
 -}
 
 g-snd : TmExpr e-ω
-g-snd = e-lam (e-GStream e-Nat) (e-headN e-⟨$⟩' e-app e-tailN (e-var 0))
+g-snd = e-lam (e-GStream e-Nat) (e-gheadN e-⟨$⟩' e-app e-gtailN (e-var 0))
 
 g-thrd : TmExpr e-ω
-g-thrd = e-lam (e-GStream e-Nat) (g-snd e-⟨$⟩' e-app e-tailN (e-var 0))
+g-thrd = e-lam (e-GStream e-Nat) (g-snd e-⟨$⟩' e-app e-gtailN (e-var 0))
 
 g-zeros : TmExpr e-ω
-g-zeros = e-löb (e-GStream e-Nat) (e-app (e-app e-consN (e-mod-intro e-timeless (e-lit 0))) (e-var 0))
+g-zeros = e-löb (e-GStream e-Nat) (e-app (e-app e-gconsN (e-mod-intro e-timeless (e-lit 0))) (e-var 0))
 
 ⟦g-snd⟧sikkel : Tm ◇ (GStream Nat' ⇛ ▻' (timeless-ty Nat'))
 ⟦g-snd⟧sikkel = ⟦ g-snd ⟧tm-in e-◇
@@ -123,7 +123,7 @@ g-iterate' =
   e-lam (e-mod e-timeless (e-Nat e→ e-Nat)) (
     e-löb ((e-mod e-timeless e-Nat) e→ e-GStream e-Nat) (
       e-lam (e-mod e-timeless e-Nat) (
-        e-app (e-app e-consN
+        e-app (e-app e-gconsN
                      (e-var 0))
               ((e-var 1) e-⊛' (e-next' (e-var 2 ⊛timeless e-var 0))))))
 
@@ -146,7 +146,7 @@ g-iterate =
   e-lam (e-▻' (e-mod e-timeless (e-Nat e→ e-Nat))) (
     e-lam (e-mod e-timeless e-Nat) (
       e-löb (e-GStream e-Nat) (
-        e-app (e-app e-consN
+        e-app (e-app e-gconsN
                      (e-var 1))
               (g-map e-⟨$⟩' e-var 2 e-⊛' e-var 0))))
 
@@ -188,14 +188,14 @@ g-interleave =
   e-löb (e-GStream e-Nat e→ (e-▻' (e-GStream e-Nat)) e→ e-GStream e-Nat) (
     e-lam (e-GStream e-Nat) (
       e-lam (e-▻' (e-GStream e-Nat)) (
-        e-app (e-app e-consN
-                     (e-app e-headN (e-var 1)))
-              (e-var 2 e-⊛' e-var 0 e-⊛' e-next' (e-app e-tailN (e-var 1))))))
+        e-app (e-app e-gconsN
+                     (e-app e-gheadN (e-var 1)))
+              (e-var 2 e-⊛' e-var 0 e-⊛' e-next' (e-app e-gtailN (e-var 1))))))
 
 g-toggle : TmExpr e-ω
-g-toggle = e-löb (e-GStream e-Nat) (e-app (e-app e-consN
+g-toggle = e-löb (e-GStream e-Nat) (e-app (e-app e-gconsN
                                           (e-mod-intro e-timeless (e-lit 1)))
-                                   (e-next' (e-app (e-app e-consN
+                                   (e-next' (e-app (e-app e-gconsN
                                                           (e-mod-intro e-timeless (e-lit 0)))
                                                    (e-var 0))))
 
@@ -226,8 +226,8 @@ g-initial =
   e-löb ((((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool)) e→ e-Bool) e→ e-GStream e-Nat e→ e-Bool) (
     e-lam ((((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool)) e→ e-Bool)) (
       e-lam (e-GStream e-Nat) (
-        e-app (e-var 1) (e-pair (e-app e-headN (e-var 0))
-                                (e-var 2 e-⊛' e-next' (e-var 1) e-⊛' e-app e-tailN (e-var 0))))))
+        e-app (e-var 1) (e-pair (e-app e-gheadN (e-var 0))
+                                (e-var 2 e-⊛' e-next' (e-var 1) e-⊛' e-app e-gtailN (e-var 0))))))
 
 ⟦g-initial⟧sikkel : Tm ◇ (((timeless-ty Nat' ⊠ ▻' Bool') ⇛ Bool') ⇛ GStream Nat' ⇛ Bool')
 ⟦g-initial⟧sikkel = ⟦ g-initial ⟧tm-in e-◇
@@ -247,7 +247,7 @@ g-final =
   e-löb ((e-Bool e→ ((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool))) e→ e-Bool e→ e-GStream e-Nat) (
     e-lam (e-Bool e→ ((e-mod e-timeless e-Nat) e-⊠ (e-▻' e-Bool))) (
       e-lam e-Bool (
-        e-app (e-app e-consN
+        e-app (e-app e-gconsN
                      (e-fst (e-app (e-var 1) (e-var 0))))
               (e-var 2 e-⊛' e-next' (e-var 1) e-⊛' e-snd (e-app (e-var 1) (e-var 0))))))
 
@@ -269,27 +269,27 @@ thue-morse = löbι[ "t-m" ∈▻' GStream Bool' ]
             else' (g-cons $ timeless-tm false' $ next' (g-cons $ timeless-tm true'  $ varι "g" ⊛' (g-tail $ varι "s"))))
 -}
 
-e-consB = e-cons e-Bool
-e-headB = e-head e-Bool
-e-tailB = e-tail e-Bool
+e-gconsB = e-gcons e-Bool
+e-gheadB = e-ghead e-Bool
+e-gtailB = e-gtail e-Bool
 
 g-thue-morse : TmExpr e-ω
 g-thue-morse =
   e-löb (e-GStream e-Bool) (
-    e-app (e-app e-consB (e-mod-intro e-timeless e-false))
-          (e-app e-consB (e-mod-intro e-timeless e-true)
+    e-app (e-app e-gconsB (e-mod-intro e-timeless e-false))
+          (e-app e-gconsB (e-mod-intro e-timeless e-true)
             e-⟨$⟩' e-app (e-lift▻' (e-▻' (e-GStream e-Bool)) (e-lift▻' (e-GStream e-Bool) h))
-                         (e-tailB e-⟨$⟩' e-app (e-lift▻' (e-GStream e-Bool) h) (e-var 0))))
+                         (e-gtailB e-⟨$⟩' e-app (e-lift▻' (e-GStream e-Bool) h) (e-var 0))))
   where
     h : TmExpr e-ω
     h =
       e-löb (e-GStream e-Bool e→ e-GStream e-Bool) (
         e-lam (e-GStream e-Bool) (
-          e-timeless-if (e-app e-headB (e-var 0))
-                        (e-app (e-app e-consB (e-mod-intro e-timeless e-true))
-                               (e-next' (e-app (e-app e-consB (e-mod-intro e-timeless e-false)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))))
-                        (e-app (e-app e-consB (e-mod-intro e-timeless e-false))
-                               (e-next' (e-app (e-app e-consB (e-mod-intro e-timeless e-true)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))))))
+          e-timeless-if (e-app e-gheadB (e-var 0))
+                        (e-app (e-app e-gconsB (e-mod-intro e-timeless e-true))
+                               (e-next' (e-app (e-app e-gconsB (e-mod-intro e-timeless e-false)) (e-var 1 e-⊛' e-app e-gtailB (e-var 0)))))
+                        (e-app (e-app e-gconsB (e-mod-intro e-timeless e-false))
+                               (e-next' (e-app (e-app e-gconsB (e-mod-intro e-timeless e-true)) (e-var 1 e-⊛' e-app e-gtailB (e-var 0)))))))
 
 ⟦g-thue-morse⟧sikkel : Tm ◇ (GStream Bool')
 ⟦g-thue-morse⟧sikkel = ⟦ g-thue-morse ⟧tm-in e-◇
@@ -312,20 +312,20 @@ fibonacci-word = löbι[ "fw" ∈▻' GStream Bool' ]
 g-fibonacci-word : TmExpr e-ω
 g-fibonacci-word =
   e-löb (e-GStream e-Bool) (
-    e-app (e-app e-consB (e-mod-intro e-timeless e-false))
-          (e-app e-consB (e-mod-intro e-timeless e-true)
+    e-app (e-app e-gconsB (e-mod-intro e-timeless e-false))
+          (e-app e-gconsB (e-mod-intro e-timeless e-true)
             e-⟨$⟩'
               e-app (e-lift▻' (e-▻' (e-GStream e-Bool)) (e-lift▻' (e-GStream e-Bool) f))
-                    (e-tailB e-⟨$⟩' e-app (e-lift▻' (e-GStream e-Bool) f) (e-var 0))))
+                    (e-gtailB e-⟨$⟩' e-app (e-lift▻' (e-GStream e-Bool) f) (e-var 0))))
   where
     f : TmExpr e-ω
     f =
       e-löb (e-GStream e-Bool e→ e-GStream e-Bool) (
         e-lam (e-GStream e-Bool) (
-          e-timeless-if (e-app e-headB (e-var 0))
-                        (e-app (e-app e-consB (e-mod-intro e-timeless e-false)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))
-                        (e-app (e-app e-consB (e-mod-intro e-timeless e-false)) (e-next'
-                          (e-app (e-app e-consB (e-mod-intro e-timeless e-true)) (e-var 1 e-⊛' e-app e-tailB (e-var 0)))))))
+          e-timeless-if (e-app e-gheadB (e-var 0))
+                        (e-app (e-app e-gconsB (e-mod-intro e-timeless e-false)) (e-var 1 e-⊛' e-app e-gtailB (e-var 0)))
+                        (e-app (e-app e-gconsB (e-mod-intro e-timeless e-false)) (e-next'
+                          (e-app (e-app e-gconsB (e-mod-intro e-timeless e-true)) (e-var 1 e-⊛' e-app e-gtailB (e-var 0)))))))
 
 ⟦g-fibonacci-word⟧sikkel : Tm ◇ (GStream Bool')
 ⟦g-fibonacci-word⟧sikkel = ⟦ g-fibonacci-word ⟧tm-in e-◇
@@ -350,9 +350,9 @@ g-mergef =
       e-lam (e-GStream e-Nat) (
         e-lam (e-GStream e-Nat) (
           e-app (e-app (e-app (e-var 3)
-                              (e-app e-headN (e-var 1)))
-                       (e-app e-headN (e-var 0)))
-                (e-var 2 e-⊛' e-app e-tailN (e-var 1) e-⊛' e-app e-tailN (e-var 0))))))
+                              (e-app e-gheadN (e-var 1)))
+                       (e-app e-gheadN (e-var 0)))
+                (e-var 2 e-⊛' e-app e-gtailN (e-var 1) e-⊛' e-app e-gtailN (e-var 0))))))
 
 ⟦g-mergef⟧sikkel : Tm ◇ ((timeless-ty Nat' ⇛ timeless-ty Nat' ⇛ ▻' (GStream Nat') ⇛ GStream Nat') ⇛ GStream Nat' ⇛ GStream Nat' ⇛ GStream Nat')
 ⟦g-mergef⟧sikkel = ⟦ g-mergef ⟧tm-in e-◇
@@ -374,9 +374,9 @@ g-zipWith =
     e-löb (e-GStream e-Nat e→ e-GStream e-Nat e→ e-GStream e-Nat) (
       e-lam (e-GStream e-Nat) (
         e-lam (e-GStream e-Nat) (
-          e-app (e-app e-consN
-                       (e-var 3 ⊛timeless e-app e-headN (e-var 1) ⊛timeless e-app e-headN (e-var 0)))
-                (e-var 2 e-⊛' e-app e-tailN (e-var 1) e-⊛' e-app e-tailN (e-var 0))))))
+          e-app (e-app e-gconsN
+                       (e-var 3 ⊛timeless e-app e-gheadN (e-var 1) ⊛timeless e-app e-gheadN (e-var 0)))
+                (e-var 2 e-⊛' e-app e-gtailN (e-var 1) e-⊛' e-app e-gtailN (e-var 0))))))
 
 ⟦g-zipWith⟧sikkel : Tm ◇ (timeless-ty (Nat' ⇛ Nat' ⇛ Nat') ⇛ GStream Nat' ⇛ GStream Nat' ⇛ GStream Nat')
 ⟦g-zipWith⟧sikkel = ⟦ g-zipWith ⟧tm-in e-◇
@@ -392,13 +392,13 @@ g-fibs = löbι[ "s" ∈▻' GStream Nat' ]
 g-fibs : TmExpr e-ω
 g-fibs =
   e-löb (e-GStream e-Nat) (
-    e-app (e-app e-consN
+    e-app (e-app e-gconsN
                  (e-mod-intro e-timeless (e-lit 1)))
-          (e-app e-consN (e-mod-intro e-timeless (e-lit 1))
+          (e-app e-gconsN (e-mod-intro e-timeless (e-lit 1))
             e-⟨$⟩'
               (e-app (e-lift2▻' (e-GStream e-Nat) (e-GStream e-Nat) (e-app g-zipWith (e-mod-intro e-timeless e-plus))) (e-var 0)
                 e-⟨$⟩'
-                  (e-tailN e-⟨$⟩' e-var 0))))
+                  (e-gtailN e-⟨$⟩' e-var 0))))
 
 ⟦g-fibs⟧sikkel : Tm ◇ (GStream Nat')
 ⟦g-fibs⟧sikkel = ⟦ g-fibs ⟧tm-in e-◇
@@ -414,15 +414,15 @@ g-flipFst {A = A}= lamι[ "s" ∈ GStream A ]
 g-flipFst : TmExpr e-ω
 g-flipFst =
   e-lam (e-GStream e-Nat) (
-    e-consN e-⟨$⟩' e-app g-snd (e-var 0) e-⊛' e-next' (
-    e-consN e-⟨$⟩' e-next' (e-app e-headN (e-var 0)) e-⊛' (e-tailN e-⟨$⟩' e-app e-tailN (e-var 0))))
+    e-gconsN e-⟨$⟩' e-app g-snd (e-var 0) e-⊛' e-next' (
+    e-gconsN e-⟨$⟩' e-next' (e-app e-gheadN (e-var 0)) e-⊛' (e-gtailN e-⟨$⟩' e-app e-gtailN (e-var 0))))
 
 ⟦g-flipFst⟧sikkel : Tm ◇ (GStream Nat' ⇛ ▻' (GStream Nat'))
 ⟦g-flipFst⟧sikkel = ⟦ g-flipFst ⟧tm-in e-◇
 
 
-e-Stream : TyExpr e-★
-e-Stream = e-mod e-allnow (e-GStream e-Nat)
+e-Stream : TyExpr e-★ → TyExpr e-★
+e-Stream A = e-mod e-allnow (e-GStream A)
 
 e-nats : TmExpr e-★
 e-nats = e-mod-intro e-allnow g-nats
@@ -483,3 +483,19 @@ e-fibs = e-mod-intro e-allnow g-fibs
 
 e-fibs-test : take 10 ⟦e-fibs⟧agda ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
 e-fibs-test = refl
+
+
+e-head : TyExpr e-★ → TmExpr e-★
+e-head A =
+  e-ann
+    e-lam (e-Stream A) (e-mod-intro e-allnow (e-app (e-ghead A) (e-mod-elim e-allnow (e-var 0))))
+    ∈ (e-Stream A e→ A)
+
+head-nats : TmExpr e-★
+head-nats = e-app (e-head e-Nat) e-nats
+
+⟦head-nats⟧agda : ℕ
+⟦head-nats⟧agda = translate-term (⟦ head-nats ⟧tm-in e-◇)
+
+head-nats-test : ⟦head-nats⟧agda ≡ 0
+head-nats-test = refl
