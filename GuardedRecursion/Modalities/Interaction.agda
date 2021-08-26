@@ -20,6 +20,14 @@ open import GuardedRecursion.Modalities.Bundles
 
 
 --------------------------------------------------
+-- Interaction between the later and unit modalities
+
+𝟙≤later : TwoCell 𝟙 later
+transf-op (transf 𝟙≤later) = from-earlier
+CtxNatTransf.naturality (transf 𝟙≤later) = from-earlier-natural
+
+
+--------------------------------------------------
 -- Interaction between the allnow and later modalities
 
 earlier-timeless-ctx : (Γ : Ctx ★) → ◄ (timeless-ctx Γ) ≅ᶜ timeless-ctx Γ
@@ -87,6 +95,14 @@ now-timeless-ctx-intro t = untimeless-tm (unallnow-tm (ι[ eq-mod-closed allnow-
 to-timeless-now-ctx : (Γ : Ctx ω) → (Γ ⇒ timeless-ctx (now Γ))
 func (to-timeless-now-ctx Γ) = Γ ⟪ z≤n ⟫_
 _⇒_.naturality (to-timeless-now-ctx Γ) = ctx-comp Γ
+
+to-timeless-now-ctx-natural : {Δ Γ : Ctx ω} (σ : Δ ⇒ Γ) →
+                              to-timeless-now-ctx Γ ⊚ σ ≅ˢ ctx-fmap (timeless-ctx-functor ⓕ now-functor) σ ⊚ to-timeless-now-ctx Δ
+eq (to-timeless-now-ctx-natural σ) δ = _⇒_.naturality σ
+
+timeless∘allnow≤𝟙 : TwoCell (timeless ⓜ allnow) 𝟙
+transf-op (transf timeless∘allnow≤𝟙) = to-timeless-now-ctx
+CtxNatTransf.naturality (transf timeless∘allnow≤𝟙) = to-timeless-now-ctx-natural
 
 from-timeless-allnow-ty : {Γ : Ctx ω} {T : Ty (timeless-ctx (now Γ))} →
                           Tm Γ (timeless-ty (allnow-ty T)) → Tm Γ (T [ to-timeless-now-ctx Γ ])

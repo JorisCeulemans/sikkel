@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Definition of a modality
+-- Definition and properties of modalities
 --------------------------------------------------
 
 module Modalities where
@@ -19,7 +19,9 @@ infix 1 _≅ᵐ_
 infixl 20 _ⓜ_
 
 
--- A modality is defined as a dependent right adjoint.
+--------------------------------------------------
+-- Definition of a modality as a dependent right adjoint
+
 record Modality (C D : Category) : Set₁ where
   no-eta-equality
   field
@@ -95,6 +97,9 @@ _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 mod-closed : {μ : Modality C D} {T : ClosedType C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
 IsClosedNatural.closed-natural (mod-closed {μ = μ}) σ = ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (closed-natural (ctx-fmap (ctx-functor μ) σ)))
 
+
+--------------------------------------------------
+-- Properties of modalities with respect to functions, products, ...
 
 module _ (μ : Modality C D) {Γ : Ctx D} where
 
@@ -176,9 +181,12 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
     where open ≅ᵗᵐ-Reasoning
 
 
+--------------------------------------------------
+-- Constructing new modalities
+
 -- The unit modality
 𝟙 : {C : Category} → Modality C C
-ctx-functor 𝟙 = id-functor
+ctx-functor 𝟙 = id-ctx-functor
 ⟨ 𝟙 ∣ T ⟩ = T
 mod-cong 𝟙 T=S = T=S
 mod-natural 𝟙 σ = ≅ᵗʸ-refl
@@ -216,7 +224,10 @@ mod-elim-cong (μ ⓜ ρ) e = mod-elim-cong ρ (mod-elim-cong μ e)
 mod-β (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-elim-cong ρ (mod-β μ _)) (mod-β ρ t)
 mod-η (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-intro-cong μ (mod-η ρ _)) (mod-η μ t)
 
+
+--------------------------------------------------
 -- Equivalence of modalities
+
 record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
   field
     eq-lock : (Γ : Ctx D) → Γ ,lock⟨ μ ⟩ ≅ᶜ Γ ,lock⟨ ρ ⟩
@@ -322,3 +333,27 @@ module ≅ᵐ-Reasoning where
 
   syntax step-≅  μ ρ≅κ μ≅ρ = μ ≅⟨  μ≅ρ ⟩ ρ≅κ
   syntax step-≅˘ μ ρ≅κ ρ≅μ = μ ≅˘⟨ ρ≅μ ⟩ ρ≅κ
+
+
+--------------------------------------------------
+-- Two-cells between modalities as natural transformations
+--   between the underlying context functors
+
+-- TwoCell is defined as a record type so that Agda can better infer the two endpoint
+--   modalities, e.g. in coe-ty.
+record TwoCell (μ ρ : Modality C D) : Set₁ where
+  constructor two-cell
+  field
+    transf : CtxNatTransf (ctx-functor ρ) (ctx-functor μ)
+
+open TwoCell public
+
+module _ {μ ρ : Modality C D} (α : TwoCell μ ρ) where
+  coe-ty : {Γ : Ctx D} → Ty (Γ ,lock⟨ μ ⟩) → Ty (Γ ,lock⟨ ρ ⟩)
+  coe-ty {Γ} T = T [ transf-op (transf α) Γ ]
+
+  coe : {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ coe-ty T ⟩
+  coe t = mod-intro ρ ((mod-elim μ t) [ transf-op (transf α) _ ]')
+
+  coe-closed : {T : ClosedType C} {{_ : IsClosedNatural T}} {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
+  coe-closed t = ι⁻¹[ mod-cong ρ (closed-natural (transf-op (transf α) _)) ] coe t

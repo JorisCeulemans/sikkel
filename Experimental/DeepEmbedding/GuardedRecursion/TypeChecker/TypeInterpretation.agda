@@ -5,7 +5,7 @@
 module Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.TypeInterpretation where
 
 open import Categories as M hiding (★; ω)
-open import CwF-Structure as M hiding (◇; _,,_; var)
+open import CwF-Structure as M hiding (◇; _,,_; var; _ⓣ-vert_; _ⓣ-hor_)
 open import Types.Discrete as M hiding (Nat'; Bool')
 open import Types.Functions as M hiding (_⇛_; lam; app)
 open import Types.Products as M hiding (_⊠_; pair; fst; snd)
@@ -31,6 +31,13 @@ private
 ⟦ timeless ⟧modality = M.timeless
 ⟦ allnow ⟧modality = M.allnow
 ⟦ later ⟧modality = M.later
+
+⟦_⟧two-cell : {μ ρ : ModalityExpr m m'} → TwoCellExpr μ ρ → TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality
+⟦ id-cell _ ⟧two-cell = two-cell (id-ctx-transf _)
+⟦ α ⓣ-vert β ⟧two-cell = two-cell (transf ⟦ β ⟧two-cell M.ⓣ-vert transf ⟦ α ⟧two-cell)
+⟦ α ⓣ-hor β ⟧two-cell = two-cell (transf ⟦ β ⟧two-cell M.ⓣ-hor transf ⟦ α ⟧two-cell)
+⟦ 𝟙≤later ⟧two-cell = M.𝟙≤later
+⟦ timeless∘allnow≤𝟙 ⟧two-cell = M.timeless∘allnow≤𝟙
 
 ⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
 ⟦ Nat' ⟧ty = M.Nat'

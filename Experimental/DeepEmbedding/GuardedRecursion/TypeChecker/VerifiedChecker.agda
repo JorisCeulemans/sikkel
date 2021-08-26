@@ -10,7 +10,7 @@ open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
 open import CwF-Structure as M hiding (◇; _,,_; var)
-open import Modalities as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim)
+open import Modalities as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim; coe)
 open import Types.Discrete as M hiding (Nat'; Bool')
 open import Types.Functions as M hiding (_⇛_; lam; app)
 open import Types.Products as M hiding (_⊠_; pair; fst; snd)
@@ -107,6 +107,12 @@ infer-interpret (mod-elim {m} {mμ} μ t) Γ = do
   refl ← m ≟mode mκ
   μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
   return (T , M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧))
+infer-interpret (coe {mμ} μ ρ α t) Γ = do
+  T , ⟦t⟧ ← infer-interpret t Γ
+  modal-ty {mκ} A κ refl ← is-modal-ty T
+  refl ← mμ ≟mode mκ
+  μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
+  return (⟨ ρ ∣ A ⟩ , coe-closed ⟦ α ⟧two-cell {{⟦⟧ty-natural A}} (ι[ eq-mod-closed μ=κ ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
 infer-interpret (next' t) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   return (▻' T , M.next' ⟦t⟧)

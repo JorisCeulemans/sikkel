@@ -29,6 +29,14 @@ data ModalityExpr : ModeExpr → ModeExpr → Set where
   allnow : ModalityExpr ω ★
   later : ModalityExpr ω ω
 
+data TwoCellExpr : ModalityExpr m m' → ModalityExpr m m' → Set where
+  id-cell : (μ : ModalityExpr m m') → TwoCellExpr μ μ
+  _ⓣ-vert_ : {μ ρ κ : ModalityExpr m m'} → TwoCellExpr ρ κ → TwoCellExpr μ ρ → TwoCellExpr μ κ
+  _ⓣ-hor_ : {μ μ' : ModalityExpr m' m''} {ρ ρ' : ModalityExpr m m'} →
+            TwoCellExpr μ μ' → TwoCellExpr ρ ρ' → TwoCellExpr (μ ⓜ ρ) (μ' ⓜ ρ')
+  𝟙≤later : TwoCellExpr 𝟙 later
+  timeless∘allnow≤𝟙 : TwoCellExpr (timeless ⓜ allnow) 𝟙
+
 infixr 6 _⇛_
 infixl 5 _⊠_
 data TyExpr : ModeExpr → Set where
@@ -61,10 +69,13 @@ data TmExpr : ModeExpr → Set where
   fst snd : TmExpr m → TmExpr m
   mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
   mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
+  coe : (μ ρ : ModalityExpr m m') → TwoCellExpr μ ρ → TmExpr m' → TmExpr m'
   next' : TmExpr ω → TmExpr ω
   _⊛'_ : TmExpr ω → TmExpr ω → TmExpr ω
   löb : TyExpr ω → TmExpr ω → TmExpr ω
   g-cons g-head g-tail : TyExpr ★ → TmExpr ω
+
+syntax coe μ ρ α t = coe[ α ∈ μ ⇒ ρ ] t
 
 
 --------------------------------------------------

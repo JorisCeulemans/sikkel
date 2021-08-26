@@ -76,9 +76,9 @@ record CtxFunctor (C D : Category) : Set₁ where
 
 open CtxFunctor public
 
-id-functor : CtxFunctor C C
-ctx-op id-functor = λ Γ → Γ
-is-functor id-functor = id-is-ctx-functor
+id-ctx-functor : CtxFunctor C C
+ctx-op id-ctx-functor = λ Γ → Γ
+is-functor id-ctx-functor = id-is-ctx-functor
 
 _ⓕ_ : ∀ {C1 C2 C3} → CtxFunctor C2 C3 → CtxFunctor C1 C2 → CtxFunctor C1 C3
 ctx-op (Φ ⓕ Ψ) = λ Γ → ctx-op Φ (ctx-op Ψ Γ)
