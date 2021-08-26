@@ -12,7 +12,7 @@ open import CwF-Structure as M hiding (◇; _,,_; var; _++_)
 open import Types.Functions as M hiding (_⇛_; lam; app)
 open import Types.Products as M hiding (_⊠_; pair; fst; snd)
 open import Modalities as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim)
-open import GuardedRecursion.Modalities as M hiding (timeless; allnow; later; _⊛_; ▻'; next'; _⊛'_; löb)
+open import GuardedRecursion.Modalities as M hiding (timeless; allnow; later; _⊛_; löb)
 open import GuardedRecursion.Streams.Guarded as M hiding (GStream; g-cons; g-head; g-tail)
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Syntax
@@ -53,7 +53,6 @@ Bool' ≟ty Bool' = return refl
 (⟨_∣_⟩ {m1} μ1 T1) ≟ty (⟨_∣_⟩ {m2} μ2 T2) = do
   refl ← m1 ≟mode m2
   cong₂ ⟨_∣_⟩ <$> (μ1 ≟modality μ2) ⊛ (T1 ≟ty T2)
-(▻' T) ≟ty (▻' S) = (cong ▻') <$> (T ≟ty S)
 (GStream T) ≟ty (GStream S) = (cong GStream) <$> (T ≟ty S)
 T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
 
@@ -237,7 +236,6 @@ reduce-ty-expr (T1 ⇛ T2) = reduce-ty-expr T1 ⇛ reduce-ty-expr T2
 reduce-ty-expr (T1 ⊠ T2) = reduce-ty-expr T1 ⊠ reduce-ty-expr T2
 reduce-ty-expr ⟨ μ ∣ T ⟩ = apply-mod-reduced (reduce-modality-expr μ) -- we have to apply reduce-modality-expr here to see if μ reduces to 𝟙
                                              (reduce-ty-expr T)
-reduce-ty-expr (▻' T) = ▻' (reduce-ty-expr T)
 reduce-ty-expr (GStream T) = GStream (reduce-ty-expr T)
 
 apply-mod-reduced-sound : ∀ (μ : ModalityExpr m m') (T : TyExpr m) {Γ} →
@@ -249,7 +247,6 @@ apply-mod-reduced-sound (μ ⓜ ρ) (T1 ⇛ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound (μ ⓜ ρ) (T1 ⊠ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound (μ ⓜ ρ) ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (μ ⓜ ρ ⓜ κ)) T)
                                                       (eq-mod-closed (reduce-modality-expr-sound (μ ⓜ ρ ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound (μ ⓜ ρ) (▻' T) = ≅ᵗʸ-refl
 apply-mod-reduced-sound (μ ⓜ ρ) (GStream T) = ≅ᵗʸ-refl
 apply-mod-reduced-sound timeless Nat' = ≅ᵗʸ-refl
 apply-mod-reduced-sound timeless Bool' = ≅ᵗʸ-refl
@@ -263,7 +260,6 @@ apply-mod-reduced-sound allnow (T1 ⇛ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound allnow (T1 ⊠ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound allnow ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (allnow ⓜ κ)) T)
                                                      (eq-mod-closed (reduce-modality-expr-sound (allnow ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound allnow (▻' T) = ≅ᵗʸ-refl
 apply-mod-reduced-sound allnow (GStream T) = ≅ᵗʸ-refl
 apply-mod-reduced-sound later Nat' = ≅ᵗʸ-refl
 apply-mod-reduced-sound later Bool' = ≅ᵗʸ-refl
@@ -271,7 +267,6 @@ apply-mod-reduced-sound later (T1 ⇛ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound later (T1 ⊠ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound later ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (later ⓜ κ)) T)
                                                     (eq-mod-closed (reduce-modality-expr-sound (later ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound later (▻' T) = ≅ᵗʸ-refl
 apply-mod-reduced-sound later (GStream T) = ≅ᵗʸ-refl
 
 reduce-ty-expr-sound : (T : TyExpr m) → ∀ {Γ} →  ⟦ reduce-ty-expr T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
@@ -282,7 +277,6 @@ reduce-ty-expr-sound (T1 ⊠ T2) = ⊠-cong (reduce-ty-expr-sound T1) (reduce-ty
 reduce-ty-expr-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr μ) (reduce-ty-expr T))
                                            (≅ᵗʸ-trans (eq-mod-closed (reduce-modality-expr-sound μ) ⟦ reduce-ty-expr T ⟧ty {{⟦⟧ty-natural (reduce-ty-expr T)}})
                                                       (mod-cong ⟦ μ ⟧modality (reduce-ty-expr-sound T)))
-reduce-ty-expr-sound (▻' T) = ▻'-cong (reduce-ty-expr-sound T)
 reduce-ty-expr-sound (GStream T) = gstream-cong (reduce-ty-expr-sound T)
 
 ⟦⟧ty-cong : (T S : TyExpr m) → T ≡ S → ∀ {Γ} →  ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty

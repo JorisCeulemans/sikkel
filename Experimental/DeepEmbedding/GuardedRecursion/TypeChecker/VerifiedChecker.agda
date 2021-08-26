@@ -6,15 +6,17 @@
 module Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.VerifiedChecker where
 
 open import Data.Nat
+open import Data.Nat.Show renaming (show to showℕ)
+open import Data.String
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
-open import CwF-Structure as M hiding (◇; _,,_; var)
+open import CwF-Structure as M hiding (◇; _,,_; var; _++_)
 open import Modalities as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim; coe)
 open import Types.Discrete as M hiding (Nat'; Bool')
 open import Types.Functions as M hiding (_⇛_; lam; app)
 open import Types.Products as M hiding (_⊠_; pair; fst; snd)
-open import GuardedRecursion.Modalities as M hiding (timeless; allnow; later; ▻'; next'; _⊛'_; löb)
+open import GuardedRecursion.Modalities as M hiding (timeless; allnow; later; ▻; löb)
 open import GuardedRecursion.Streams.Guarded as M hiding (GStream; g-cons; g-head; g-tail)
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Syntax
@@ -43,7 +45,13 @@ infer-interpret-var zero    (Γ , T) = return (T , ι⁻¹[ closed-natural {{⟦
 infer-interpret-var (suc x) (Γ , T) = do
   S , ⟦x⟧ ← infer-interpret-var x Γ
   return (S , ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} π ] (⟦x⟧ [ π ]'))
-infer-interpret-var x       (Γ ,lock⟨ μ ⟩) = type-error "Impossible to directly use a variable from a locked context."
+infer-interpret-var x       (Γ ,lock⟨ 𝟙 ⟩) = do
+  T , ⟦x⟧ ← infer-interpret-var x Γ
+  return (T , ⟦x⟧)
+infer-interpret-var x       (Γ ,lock⟨ μ ⟩) = type-error ("Impossible to directly use the variable "
+                                                        ++ showℕ x
+                                                        ++ " from the locked context "
+                                                        ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ ".")
 
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret (ann t ∈ T) Γ = do
@@ -113,24 +121,17 @@ infer-interpret (coe {mμ} μ ρ α t) Γ = do
   refl ← mμ ≟mode mκ
   μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
   return (⟨ ρ ∣ A ⟩ , coe-closed ⟦ α ⟧two-cell {{⟦⟧ty-natural A}} (ι[ eq-mod-closed μ=κ ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
-infer-interpret (next' t) Γ = do
-  T , ⟦t⟧ ← infer-interpret t Γ
-  return (▻' T , M.next' ⟦t⟧)
-infer-interpret (f ⊛' t) Γ = do
-  T-f , ⟦f⟧ ← infer-interpret f Γ
-  later-ty S refl ← is-later-ty T-f
-  func-ty dom cod refl ← is-func-ty S
-  T-t , ⟦t⟧ ← infer-interpret t Γ
-  later-ty R refl ← is-later-ty T-t
-  dom=R ← ⟦ dom ⟧≅ty?⟦ R ⟧
-  return (▻' cod , ⟦f⟧ M.⊛' (ι[ ▻'-cong dom=R ] ⟦t⟧))
 infer-interpret (löb T t) Γ = do
-  S , ⟦t⟧ ← infer-interpret t (Γ , ▻' T)
+  S , ⟦t⟧ ← infer-interpret t (Γ , ▻ T)
   T=S ← ⟦ T ⟧≅ty?⟦ S ⟧
-  return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ] ⟦t⟧))
-infer-interpret (g-cons T) Γ = return (⟨ timeless ∣ T ⟩ ⇛ ▻' (GStream T) ⇛ GStream T , M.g-cons)
+  return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ]
+                           (ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} _ ]
+                           (ιc[ ,,-cong (▻-cong (closed-natural {{⟦⟧ty-natural T}} (from-earlier _))) ]' ⟦t⟧))))
+infer-interpret (g-cons T) Γ = return (⟨ timeless ∣ T ⟩ ⇛ ▻ (GStream T) ⇛ GStream T
+                                      , ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (⇛-cong (▻-cong (closed-natural {{⟦⟧ty-natural (GStream T)}} _)) ≅ᵗʸ-refl) ] M.g-cons)
 infer-interpret (g-head T) Γ = return (GStream T ⇛ ⟨ timeless ∣ T ⟩ , M.g-head)
-infer-interpret (g-tail T) Γ = return (GStream T ⇛ ▻' (GStream T) , M.g-tail)
+infer-interpret (g-tail T) Γ = return (GStream T ⇛ ▻ (GStream T)
+                                      , ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (▻-cong (closed-natural {{⟦⟧ty-natural (GStream T)}} _)) ] M.g-tail)
 
 infer-type : TmExpr m → CtxExpr m → TCM (TyExpr m)
 infer-type t Γ = InferInterpretResult.type <$> infer-interpret t Γ

@@ -32,8 +32,10 @@ data ModalityExpr : ModeExpr → ModeExpr → Set where
 data TwoCellExpr : ModalityExpr m m' → ModalityExpr m m' → Set where
   id-cell : (μ : ModalityExpr m m') → TwoCellExpr μ μ
   _ⓣ-vert_ : {μ ρ κ : ModalityExpr m m'} → TwoCellExpr ρ κ → TwoCellExpr μ ρ → TwoCellExpr μ κ
+    -- ^ Vertical composition of 2-cells.
   _ⓣ-hor_ : {μ μ' : ModalityExpr m' m''} {ρ ρ' : ModalityExpr m m'} →
             TwoCellExpr μ μ' → TwoCellExpr ρ ρ' → TwoCellExpr (μ ⓜ ρ) (μ' ⓜ ρ')
+    -- ^ Horizontal composition of 2-cells.
   𝟙≤later : TwoCellExpr 𝟙 later
   timeless∘allnow≤𝟙 : TwoCellExpr (timeless ⓜ allnow) 𝟙
 
@@ -45,15 +47,16 @@ data TyExpr : ModeExpr → Set where
   _⇛_ : TyExpr m → TyExpr m → TyExpr m
   _⊠_ : TyExpr m → TyExpr m → TyExpr m
   ⟨_∣_⟩ : ModalityExpr m' m → TyExpr m' → TyExpr m
-  ▻' : TyExpr ω → TyExpr ω
   GStream : TyExpr ★ → TyExpr ω
+
+▻ : TyExpr ω → TyExpr ω
+▻ T = ⟨ later ∣ T ⟩
 
 data CtxExpr (m : ModeExpr) : Set where
   ◇ : CtxExpr m
   _,_ : (Γ : CtxExpr m) (T : TyExpr m) → CtxExpr m
   _,lock⟨_⟩ : (Γ : CtxExpr m') → ModalityExpr m m' → CtxExpr m
 
-infixl 5 _⊛'_
 infixl 50 _∙_
 data TmExpr : ModeExpr → Set where
   ann_∈_ : TmExpr m → TyExpr m → TmExpr m   -- term with a type annotation
@@ -70,8 +73,6 @@ data TmExpr : ModeExpr → Set where
   mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
   mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
   coe : (μ ρ : ModalityExpr m m') → TwoCellExpr μ ρ → TmExpr m' → TmExpr m'
-  next' : TmExpr ω → TmExpr ω
-  _⊛'_ : TmExpr ω → TmExpr ω → TmExpr ω
   löb : TyExpr ω → TmExpr ω → TmExpr ω
   g-cons g-head g-tail : TyExpr ★ → TmExpr ω
 
@@ -99,13 +100,12 @@ show-type Bool' = "Bool"
 show-type (T1 ⇛ T2) = show-type T1 ++ " → " ++ show-type T2
 show-type (T1 ⊠ T2) = show-type T1 ++ " ⊠ " ++ show-type T2
 show-type ⟨ μ ∣ T ⟩ = "⟨ " ++ show-modality μ ++ " | " ++ show-type T ++ " ⟩"
-show-type (▻' T) = "▻' " ++ show-type T
 show-type (GStream T) = "GStream " ++ show-type T
 
 show-ctx : CtxExpr m → String
 show-ctx ◇ = "◇"
-show-ctx (Γ , T) = show-ctx Γ ++ " . " ++ show-type T
-show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ ".lock⟨ " ++ show-modality μ ++ " ⟩"
+show-ctx (Γ , T) = show-ctx Γ ++ " , " ++ show-type T
+show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ " .lock⟨ " ++ show-modality μ ++ " ⟩"
 
 
 --------------------------------------------------
@@ -143,16 +143,6 @@ record IsModalTyExpr (T : TyExpr m) : Set where
 is-modal-ty : (T : TyExpr m) → TCM (IsModalTyExpr T)
 is-modal-ty ⟨ μ ∣ T ⟩ = return (modal-ty T μ refl)
 is-modal-ty T = type-error ("Expected a modal type but received instead: " ++ show-type T)
-
-record IsLaterTyExpr (T : TyExpr ω) : Set where
-  constructor later-ty
-  field
-    S : TyExpr ω
-    is-later : T ≡ ▻' S
-
-is-later-ty : (T : TyExpr ω) → TCM (IsLaterTyExpr T)
-is-later-ty (▻' T) = return (later-ty T refl)
-is-later-ty T = type-error ("Expected a type of the form ▻' T but received instead: " ++ show-type T)
 
 record IsModalCtxExpr (Γ : CtxExpr m) : Set where
   constructor modal-ctx
