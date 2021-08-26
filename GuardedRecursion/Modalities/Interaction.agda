@@ -43,7 +43,7 @@ eq (isoˡ (allnow-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ { {zero} _ 
 eq (isoʳ (allnow-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ _ → refl })
 
 allnow-later : allnow ⓜ later ≅ᵐ allnow
-eq-ctx-op allnow-later = earlier-timeless-ctx
+eq-lock allnow-later = earlier-timeless-ctx
 eq-mod-tyʳ allnow-later = allnow-later-tyʳ
 
 allnow-later'-ty : {Γ : Ctx ★} (T : Ty (timeless-ctx Γ)) →
@@ -77,7 +77,7 @@ eq (isoˡ (allnow-timeless-tyʳ T)) tm = tm-≅-to-≡ (record { eq = λ _ → t
 eq (isoʳ (allnow-timeless-tyʳ T)) _ = refl
 
 allnow-timeless : allnow ⓜ timeless ≅ᵐ 𝟙
-eq-ctx-op allnow-timeless = now-timeless-ctx
+eq-lock allnow-timeless = now-timeless-ctx
 eq-mod-tyʳ allnow-timeless = allnow-timeless-tyʳ
 
 now-timeless-ctx-intro : {A : ClosedType ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →

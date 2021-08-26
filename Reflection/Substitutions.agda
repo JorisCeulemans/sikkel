@@ -65,7 +65,7 @@ flatten (e1 ⊚' e2) = flatten e1 ++ flatten e2
 
 reduce-sound : (σs : ValSeq Δ Γ) → ⟦ reduce σs ⟧vs ≅ˢ ⟦ σs ⟧vs
 reduce-sound []           = ≅ˢ-refl
-reduce-sound (var σ ∷ σs) = ⊚-congˡ σ (reduce-sound σs)
+reduce-sound (var σ ∷ σs) = ⊚-congˡ (reduce-sound σs)
 reduce-sound (id'   ∷ σs) = ≅ˢ-trans (reduce-sound σs) (≅ˢ-sym (⊚-id-substˡ ⟦ σs ⟧vs))
 reduce-sound (!◇'   ∷ σs) = ◇-terminal _ _ _
 
@@ -74,9 +74,9 @@ concat-denote []       τs = ≅ˢ-sym (⊚-id-substˡ ⟦ τs ⟧vs)
 concat-denote (σ ∷ σs) τs =
   begin
     ⟦ σ ⟧v ⊚ ⟦ σs ++ τs ⟧vs
-  ≅⟨ ⊚-congˡ ⟦ σ ⟧v (concat-denote σs τs) ⟩
+  ≅⟨ ⊚-congˡ (concat-denote σs τs) ⟩
     ⟦ σ ⟧v ⊚ (⟦ σs ⟧vs ⊚ ⟦ τs ⟧vs)
-  ≅˘⟨ ⊚-assoc ⟦ σ ⟧v ⟦ σs ⟧vs ⟦ τs ⟧vs ⟩
+  ≅˘⟨ ⊚-assoc ⟩
     (⟦ σ ⟧v ⊚ ⟦ σs ⟧vs) ⊚ ⟦ τs ⟧vs ∎
   where open ≅ˢ-Reasoning
 
@@ -87,9 +87,9 @@ flatten-sound (e1 ⊚' e2) =
     ⟦ flatten e1 ++ flatten e2 ⟧vs
   ≅⟨ concat-denote (flatten e1) (flatten e2) ⟩
     ⟦ flatten e1 ⟧vs ⊚ ⟦ flatten e2 ⟧vs
-  ≅⟨ ⊚-congʳ _ (flatten-sound e1) ⟩
+  ≅⟨ ⊚-congʳ (flatten-sound e1) ⟩
     ⟦ e1 ⟧e ⊚ ⟦ flatten e2 ⟧vs
-  ≅⟨ ⊚-congˡ _ (flatten-sound e2) ⟩
+  ≅⟨ ⊚-congˡ (flatten-sound e2) ⟩
     ⟦ e1 ⟧e ⊚ ⟦ e2 ⟧e ∎
   where open ≅ˢ-Reasoning
 

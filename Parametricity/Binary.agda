@@ -305,31 +305,33 @@ module _ {Γ : Ctx ★} {T S : Ty (just-left Γ)} (T=S : T ≅ᵗʸ S) where
   eq (unforget-right-tm-ι s) {x = left} _ = refl
 
 instance
-  just-left-functor : IsCtxFunctor just-left
-  ctx-map {{just-left-functor}} = just-left-subst
-  ctx-map-cong {{just-left-functor}} = just-left-subst-cong
-  ctx-map-id {{just-left-functor}} = just-left-subst-id
-  ctx-map-⊚ {{just-left-functor}} = just-left-subst-⊚
+  just-left-is-functor : IsCtxFunctor just-left
+  ctx-map {{just-left-is-functor}} = just-left-subst
+  ctx-map-cong {{just-left-is-functor}} = just-left-subst-cong
+  ctx-map-id {{just-left-is-functor}} = just-left-subst-id
+  ctx-map-⊚ {{just-left-is-functor}} = just-left-subst-⊚
 
   forget-right-unarynat : IsUnaryNatural forget-right-ty
   IsUnaryNatural.natural-un forget-right-unarynat = forget-right-ty-natural
   IsUnaryNatural.cong-un forget-right-unarynat = forget-right-ty-cong
 
+just-left-functor : CtxFunctor ★ ⋀
+ctx-op just-left-functor = just-left
+is-functor just-left-functor = just-left-is-functor
+
 forget-right : Modality ⋀ ★
-forget-right = record
-   { ctx-op = just-left
-   ; mod = forget-right-ty
-   ; mod-cong = forget-right-ty-cong
-   ; mod-natural = forget-right-ty-natural
-   ; mod-intro = forget-right-tm
-   ; mod-intro-cong = forget-right-tm-cong
-   ; mod-intro-natural = forget-right-tm-natural
-   ; mod-intro-ι = forget-right-tm-ι
-   ; mod-elim = unforget-right-tm
-   ; mod-elim-cong = unforget-right-tm-cong
-   ; mod-β = forget-right-β
-   ; mod-η = forget-right-η
-   }
+ctx-functor forget-right = just-left-functor
+⟨_∣_⟩ forget-right = forget-right-ty
+mod-cong forget-right = forget-right-ty-cong
+mod-natural forget-right = forget-right-ty-natural
+mod-intro forget-right = forget-right-tm
+mod-intro-cong forget-right = forget-right-tm-cong
+mod-intro-natural forget-right = forget-right-tm-natural
+mod-intro-ι forget-right = forget-right-tm-ι
+mod-elim forget-right = unforget-right-tm
+mod-elim-cong forget-right = unforget-right-tm-cong
+mod-β forget-right = forget-right-β
+mod-η forget-right = forget-right-η
 
 just-right : Ctx ★ → Ctx ⋀
 just-right Γ ⟨ left  ⟩ = ⊥
@@ -426,31 +428,33 @@ module _ {Γ : Ctx ★} {T S : Ty (just-right Γ)} (T=S : T ≅ᵗʸ S) where
   eq (unforget-left-tm-ι s) {x = right} _ = refl
 
 instance
-  just-right-functor : IsCtxFunctor just-right
-  ctx-map {{just-right-functor}} = just-right-subst
-  ctx-map-cong {{just-right-functor}} = just-right-subst-cong
-  ctx-map-id {{just-right-functor}} = just-right-subst-id
-  ctx-map-⊚ {{just-right-functor}} = just-right-subst-⊚
+  just-right-is-functor : IsCtxFunctor just-right
+  ctx-map {{just-right-is-functor}} = just-right-subst
+  ctx-map-cong {{just-right-is-functor}} = just-right-subst-cong
+  ctx-map-id {{just-right-is-functor}} = just-right-subst-id
+  ctx-map-⊚ {{just-right-is-functor}} = just-right-subst-⊚
 
   forget-left-unarynat : IsUnaryNatural forget-left-ty
   IsUnaryNatural.natural-un forget-left-unarynat = forget-left-ty-natural
   IsUnaryNatural.cong-un forget-left-unarynat = forget-left-ty-cong
 
+just-right-functor : CtxFunctor ★ ⋀
+ctx-op just-right-functor = just-right
+is-functor just-right-functor = just-right-is-functor
+
 forget-left : Modality ⋀ ★
-forget-left = record
-   { ctx-op = just-right
-   ; mod = forget-left-ty
-   ; mod-cong = forget-left-ty-cong
-   ; mod-natural = forget-left-ty-natural
-   ; mod-intro = forget-left-tm
-   ; mod-intro-cong = forget-left-tm-cong
-   ; mod-intro-natural = forget-left-tm-natural
-   ; mod-intro-ι = forget-left-tm-ι
-   ; mod-elim = unforget-left-tm
-   ; mod-elim-cong = unforget-left-tm-cong
-   ; mod-β = forget-left-β
-   ; mod-η = forget-left-η
-   }
+ctx-functor forget-left = just-right-functor
+⟨_∣_⟩ forget-left = forget-left-ty
+mod-cong forget-left = forget-left-ty-cong
+mod-natural forget-left = forget-left-ty-natural
+mod-intro forget-left = forget-left-tm
+mod-intro-cong forget-left = forget-left-tm-cong
+mod-intro-natural forget-left = forget-left-tm-natural
+mod-intro-ι forget-left = forget-left-tm-ι
+mod-elim forget-left = unforget-left-tm
+mod-elim-cong forget-left = unforget-left-tm-cong
+mod-β forget-left = forget-left-β
+mod-η forget-left = forget-left-η
 
 
 --------------------------------------------------

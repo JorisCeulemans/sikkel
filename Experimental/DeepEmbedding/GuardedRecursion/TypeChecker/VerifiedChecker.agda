@@ -97,7 +97,7 @@ infer-interpret (e-snd p) Γ = do
   prod-ty T S refl ← is-prod-ty P
   return (S , snd $ ⟦p⟧)
 infer-interpret (e-mod-intro μ t) Γ = do
-  T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
+  T , ⟦t⟧ ← infer-interpret t (CtxExpr._,lock⟨_⟩ Γ μ)
   return (e-mod μ T , mod-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (e-mod-elim {m} {mμ} μ t) Γ = do
   modal-ctx {mρ} Γ' ρ refl ← is-modal-ctx Γ

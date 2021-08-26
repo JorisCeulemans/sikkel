@@ -240,31 +240,33 @@ module _ {Γ : Ctx ★} {T S : Ty (always-false Γ)} (T=S : T ≅ᵗʸ S) where
   eq (forget-elim-ι s) {x = type-obj} _ = refl
 
 instance
-  always-false-functor : IsCtxFunctor always-false
-  ctx-map {{always-false-functor}} = always-false-subst
-  ctx-map-cong {{always-false-functor}} = always-false-subst-cong
-  ctx-map-id {{always-false-functor}} = always-false-subst-id
-  ctx-map-⊚ {{always-false-functor}} = always-false-subst-⊚
+  always-false-is-functor : IsCtxFunctor always-false
+  ctx-map {{always-false-is-functor}} = always-false-subst
+  ctx-map-cong {{always-false-is-functor}} = always-false-subst-cong
+  ctx-map-id {{always-false-is-functor}} = always-false-subst-id
+  ctx-map-⊚ {{always-false-is-functor}} = always-false-subst-⊚
 
   forget-unarynat : IsUnaryNatural forget
   natural-un {{forget-unarynat}} = forget-natural
   cong-un {{forget-unarynat}} = forget-cong
 
+always-false-functor : CtxFunctor ★ 𝟚
+ctx-op always-false-functor = always-false
+is-functor always-false-functor = always-false-is-functor
+
 forget-mod : Modality 𝟚 ★
-forget-mod = record
-   { ctx-op = always-false
-   ; mod = forget
-   ; mod-cong = forget-cong
-   ; mod-natural = forget-natural
-   ; mod-intro = forget-intro
-   ; mod-intro-cong = forget-intro-cong
-   ; mod-intro-natural = forget-intro-natural
-   ; mod-intro-ι = forget-intro-ι
-   ; mod-elim = forget-elim
-   ; mod-elim-cong = forget-elim-cong
-   ; mod-β = forget-β
-   ; mod-η = forget-η
-   }
+ctx-functor forget-mod = always-false-functor
+⟨_∣_⟩ forget-mod = forget
+mod-cong forget-mod = forget-cong
+mod-natural forget-mod = forget-natural
+mod-intro forget-mod = forget-intro
+mod-intro-cong forget-mod = forget-intro-cong
+mod-intro-natural forget-mod = forget-intro-natural
+mod-intro-ι forget-mod = forget-intro-ι
+mod-elim forget-mod = forget-elim
+mod-elim-cong forget-mod = forget-elim-cong
+mod-β forget-mod = forget-β
+mod-η forget-mod = forget-η
 
 
 --------------------------------------------------

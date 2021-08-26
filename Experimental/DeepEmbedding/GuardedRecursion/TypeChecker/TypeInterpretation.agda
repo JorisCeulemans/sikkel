@@ -38,14 +38,14 @@ private
 ⟦ e-Bool ⟧ty = Bool'
 ⟦ T1 e→ T2 ⟧ty = ⟦ T1 ⟧ty ⇛ ⟦ T2 ⟧ty
 ⟦ T1 e-⊠ T2 ⟧ty = ⟦ T1 ⟧ty ⊠ ⟦ T2 ⟧ty
-⟦ e-mod μ T ⟧ty = mod ⟦ μ ⟧modality ⟦ T ⟧ty
+⟦ e-mod μ T ⟧ty = ⟨ ⟦ μ ⟧modality ∣ ⟦ T ⟧ty ⟩
 ⟦ e-▻' T ⟧ty = ▻' ⟦ T ⟧ty
 ⟦ e-GStream T ⟧ty = GStream ⟦ T ⟧ty
 
 ⟦_⟧ctx : CtxExpr m → Ctx ⟦ m ⟧mode
 ⟦ e-◇ ⟧ctx = ◇
 ⟦ Γ , T ⟧ctx = ⟦ Γ ⟧ctx ,, ⟦ T ⟧ty
-⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = ctx-op ⟦ μ ⟧modality ⟦ Γ ⟧ctx
+⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = lock ⟦ μ ⟧modality ⟦ Γ ⟧ctx
 
 ⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
 ⟦⟧ty-natural e-Nat = discr-closed

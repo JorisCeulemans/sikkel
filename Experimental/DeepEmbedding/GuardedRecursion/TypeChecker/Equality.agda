@@ -242,7 +242,7 @@ reduce-ty-expr (e-▻' T) = e-▻' (reduce-ty-expr T)
 reduce-ty-expr (e-GStream T) = e-GStream (reduce-ty-expr T)
 
 apply-mod-reduced-sound : ∀ (μ : ModalityExpr m m') (T : TyExpr m) {Γ} →
-                          ⟦ apply-mod-reduced μ T ⟧ty {Γ} ≅ᵗʸ mod ⟦ μ ⟧modality ⟦ T ⟧ty
+                          ⟦ apply-mod-reduced μ T ⟧ty {Γ} ≅ᵗʸ ⟨ ⟦ μ ⟧modality ∣ ⟦ T ⟧ty ⟩
 apply-mod-reduced-sound e-𝟙 T = ≅ᵗʸ-refl
 apply-mod-reduced-sound (μ e-ⓜ ρ) e-Nat = ≅ᵗʸ-refl
 apply-mod-reduced-sound (μ e-ⓜ ρ) e-Bool = ≅ᵗʸ-refl
