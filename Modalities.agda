@@ -92,8 +92,11 @@ open Modality public
 _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 Γ ,lock⟨ μ ⟩ = lock μ Γ
 
+mod-closed : {μ : Modality C D} {T : ClosedType C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
+IsClosedNatural.closed-natural (mod-closed {μ = μ}) σ = ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (closed-natural (ctx-fmap (ctx-functor μ) σ)))
 
-module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
+
+module _ (μ : Modality C D) {Γ : Ctx D} where
 
   module _ {T S : Ty (Γ ,lock⟨ μ ⟩)} where
 
@@ -172,7 +175,6 @@ module _ {C}{D} (μ : Modality C D) {Γ : Ctx D} where
       mod-intro μ tt' ∎
     where open ≅ᵗᵐ-Reasoning
 
-open Modality
 
 -- The unit modality
 𝟙 : {C : Category} → Modality C C

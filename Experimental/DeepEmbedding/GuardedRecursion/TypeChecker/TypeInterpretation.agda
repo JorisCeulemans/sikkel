@@ -4,16 +4,15 @@
 
 module Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.TypeInterpretation where
 
-open import Categories
-open import CwF-Structure
-open import Types.Discrete
-open import Types.Functions
-open import Types.Products
-open import Types.Instances
-open import Modalities
-open Modality
-open import GuardedRecursion.Modalities
-open import GuardedRecursion.Streams.Guarded
+open import Categories as M hiding (★; ω)
+open import CwF-Structure as M hiding (◇; _,,_; var)
+open import Types.Discrete as M hiding (Nat'; Bool')
+open import Types.Functions as M hiding (_⇛_; lam; app)
+open import Types.Products as M hiding (_⊠_; pair; fst; snd)
+open import Types.Instances as M
+open import Modalities as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim)
+open import GuardedRecursion.Modalities as M hiding (timeless; allnow; later; ▻'; next'; _⊛'_; löb)
+open import GuardedRecursion.Streams.Guarded as M hiding (GStream; g-cons; g-head; g-tail)
 
 open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Syntax
 
@@ -23,35 +22,35 @@ private
 
 
 ⟦_⟧mode : ModeExpr → Category
-⟦ e-★ ⟧mode = ★
-⟦ e-ω ⟧mode = ω
+⟦ ★ ⟧mode = M.★
+⟦ ω ⟧mode = M.ω
 
 ⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
-⟦ e-𝟙 ⟧modality = 𝟙
-⟦ μ e-ⓜ ρ ⟧modality = ⟦ μ ⟧modality ⓜ ⟦ ρ ⟧modality
-⟦ e-timeless ⟧modality = timeless
-⟦ e-allnow ⟧modality = allnow
-⟦ e-later ⟧modality = later
+⟦ 𝟙 ⟧modality = M.𝟙
+⟦ μ ⓜ ρ ⟧modality = ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
+⟦ timeless ⟧modality = M.timeless
+⟦ allnow ⟧modality = M.allnow
+⟦ later ⟧modality = M.later
 
 ⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
-⟦ e-Nat ⟧ty = Nat'
-⟦ e-Bool ⟧ty = Bool'
-⟦ T1 e→ T2 ⟧ty = ⟦ T1 ⟧ty ⇛ ⟦ T2 ⟧ty
-⟦ T1 e-⊠ T2 ⟧ty = ⟦ T1 ⟧ty ⊠ ⟦ T2 ⟧ty
-⟦ e-mod μ T ⟧ty = ⟨ ⟦ μ ⟧modality ∣ ⟦ T ⟧ty ⟩
-⟦ e-▻' T ⟧ty = ▻' ⟦ T ⟧ty
-⟦ e-GStream T ⟧ty = GStream ⟦ T ⟧ty
+⟦ Nat' ⟧ty = M.Nat'
+⟦ Bool' ⟧ty = M.Bool'
+⟦ T1 ⇛ T2 ⟧ty = ⟦ T1 ⟧ty M.⇛ ⟦ T2 ⟧ty
+⟦ T1 ⊠ T2 ⟧ty = ⟦ T1 ⟧ty M.⊠ ⟦ T2 ⟧ty
+⟦ ⟨ μ ∣ T ⟩ ⟧ty = M.⟨_∣_⟩ ⟦ μ ⟧modality ⟦ T ⟧ty
+⟦ ▻' T ⟧ty = M.▻' ⟦ T ⟧ty
+⟦ GStream T ⟧ty = M.GStream ⟦ T ⟧ty
 
 ⟦_⟧ctx : CtxExpr m → Ctx ⟦ m ⟧mode
-⟦ e-◇ ⟧ctx = ◇
-⟦ Γ , T ⟧ctx = ⟦ Γ ⟧ctx ,, ⟦ T ⟧ty
-⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = lock ⟦ μ ⟧modality ⟦ Γ ⟧ctx
+⟦ ◇ ⟧ctx = M.◇
+⟦ Γ , T ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ T ⟧ty
+⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = ⟦ Γ ⟧ctx M.,lock⟨ ⟦ μ ⟧modality ⟩
 
 ⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
-⟦⟧ty-natural e-Nat = discr-closed
-⟦⟧ty-natural e-Bool = discr-closed
-⟦⟧ty-natural (T1 e→ T2) = fun-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
-⟦⟧ty-natural (T1 e-⊠ T2) = prod-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
-⟦⟧ty-natural (e-mod μ T) = record { closed-natural = λ σ → ≅ᵗʸ-trans (mod-natural ⟦ μ ⟧modality σ) (mod-cong ⟦ μ ⟧modality (closed-natural {{⟦⟧ty-natural T}} _)) }
-⟦⟧ty-natural (e-▻' T) = ▻'-closed {{⟦⟧ty-natural T}}
-⟦⟧ty-natural (e-GStream T) = gstream-closed {{⟦⟧ty-natural T}}
+⟦⟧ty-natural Nat' = M.discr-closed
+⟦⟧ty-natural Bool' = M.discr-closed
+⟦⟧ty-natural (T1 ⇛ T2) = M.fun-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
+⟦⟧ty-natural (T1 ⊠ T2) = M.prod-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
+⟦⟧ty-natural ⟨ μ ∣ T ⟩ = M.mod-closed {μ = ⟦ μ ⟧modality} {{⟦⟧ty-natural T}}
+⟦⟧ty-natural (▻' T) = M.▻'-closed {{⟦⟧ty-natural T}}
+⟦⟧ty-natural (GStream T) = M.gstream-closed {{⟦⟧ty-natural T}}

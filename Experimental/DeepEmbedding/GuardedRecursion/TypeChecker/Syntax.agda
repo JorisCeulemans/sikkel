@@ -15,55 +15,56 @@ open import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.Monad
 -- Expressions representing modes, modalities, types, contexts and terms
 
 data ModeExpr : Set where
-  e-★ e-ω : ModeExpr
+  ★ ω : ModeExpr
 
 private
   variable
     m m' m'' : ModeExpr
 
-infixl 5 _e-ⓜ_
+infixl 5 _ⓜ_
 data ModalityExpr : ModeExpr → ModeExpr → Set where
-  e-𝟙 : ModalityExpr m m
-  _e-ⓜ_ : ModalityExpr m' m'' → ModalityExpr m m' → ModalityExpr m m''
-  e-timeless : ModalityExpr e-★ e-ω
-  e-allnow : ModalityExpr e-ω e-★
-  e-later : ModalityExpr e-ω e-ω
+  𝟙 : ModalityExpr m m
+  _ⓜ_ : ModalityExpr m' m'' → ModalityExpr m m' → ModalityExpr m m''
+  timeless : ModalityExpr ★ ω
+  allnow : ModalityExpr ω ★
+  later : ModalityExpr ω ω
 
-infixr 6 _e→_
-infixl 5 _e-⊠_
+infixr 6 _⇛_
+infixl 5 _⊠_
 data TyExpr : ModeExpr → Set where
-  e-Nat : TyExpr m
-  e-Bool : TyExpr m
-  _e→_ : TyExpr m → TyExpr m → TyExpr m
-  _e-⊠_ : TyExpr m → TyExpr m → TyExpr m
-  e-mod : ModalityExpr m' m → TyExpr m' → TyExpr m
-  e-▻' : TyExpr e-ω → TyExpr e-ω
-  e-GStream : TyExpr e-★ → TyExpr e-ω
+  Nat' : TyExpr m
+  Bool' : TyExpr m
+  _⇛_ : TyExpr m → TyExpr m → TyExpr m
+  _⊠_ : TyExpr m → TyExpr m → TyExpr m
+  ⟨_∣_⟩ : ModalityExpr m' m → TyExpr m' → TyExpr m
+  ▻' : TyExpr ω → TyExpr ω
+  GStream : TyExpr ★ → TyExpr ω
 
 data CtxExpr (m : ModeExpr) : Set where
-  e-◇ : CtxExpr m
+  ◇ : CtxExpr m
   _,_ : (Γ : CtxExpr m) (T : TyExpr m) → CtxExpr m
   _,lock⟨_⟩ : (Γ : CtxExpr m') → ModalityExpr m m' → CtxExpr m
 
-infixl 5 _e-⊛'_
+infixl 5 _⊛'_
+infixl 50 _∙_
 data TmExpr : ModeExpr → Set where
-  e-ann_∈_ : TmExpr m → TyExpr m → TmExpr m   -- term with type annotation
-  e-var : ℕ → TmExpr m
-  e-lam : TyExpr m → TmExpr m → TmExpr m
-  e-app : TmExpr m → TmExpr m → TmExpr m
-  e-lit : ℕ → TmExpr m
-  e-suc e-plus : TmExpr m
-  e-true e-false : TmExpr m
-  e-if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
-  e-timeless-if : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
-  e-pair : TmExpr m → TmExpr m → TmExpr m
-  e-fst e-snd : TmExpr m → TmExpr m
-  e-mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
-  e-mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
-  e-next' : TmExpr e-ω → TmExpr e-ω
-  _e-⊛'_ : TmExpr e-ω → TmExpr e-ω → TmExpr e-ω
-  e-löb : TyExpr e-ω → TmExpr e-ω → TmExpr e-ω
-  e-gcons e-ghead e-gtail : TyExpr e-★ → TmExpr e-ω
+  ann_∈_ : TmExpr m → TyExpr m → TmExpr m   -- term with a type annotation
+  var : ℕ → TmExpr m
+  lam : TyExpr m → TmExpr m → TmExpr m
+  _∙_ : TmExpr m → TmExpr m → TmExpr m
+  lit : ℕ → TmExpr m
+  suc plus : TmExpr m
+  true false : TmExpr m
+  if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
+  timeless-if : TmExpr ω → TmExpr ω → TmExpr ω → TmExpr ω
+  pair : TmExpr m → TmExpr m → TmExpr m
+  fst snd : TmExpr m → TmExpr m
+  mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
+  mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
+  next' : TmExpr ω → TmExpr ω
+  _⊛'_ : TmExpr ω → TmExpr ω → TmExpr ω
+  löb : TyExpr ω → TmExpr ω → TmExpr ω
+  g-cons g-head g-tail : TyExpr ★ → TmExpr ω
 
 
 --------------------------------------------------
@@ -71,27 +72,27 @@ data TmExpr : ModeExpr → Set where
 --  (mostly for type errors)
 
 show-mode : ModeExpr → String
-show-mode e-★ = "★"
-show-mode e-ω = "ω"
+show-mode ★ = "★"
+show-mode ω = "ω"
 
 show-modality : ModalityExpr m m' → String
-show-modality e-𝟙 = "𝟙"
-show-modality (μ e-ⓜ ρ) = show-modality μ ++ " ⓜ " ++ show-modality ρ
-show-modality e-timeless = "timeless"
-show-modality e-allnow = "allnow"
-show-modality e-later = "later"
+show-modality 𝟙 = "𝟙"
+show-modality (μ ⓜ ρ) = show-modality μ ++ " ⓜ " ++ show-modality ρ
+show-modality timeless = "timeless"
+show-modality allnow = "allnow"
+show-modality later = "later"
 
 show-type : TyExpr m → String
-show-type e-Nat = "Nat"
-show-type e-Bool = "Bool"
-show-type (T1 e→ T2) = show-type T1 ++ " → " ++ show-type T2
-show-type (T1 e-⊠ T2) = show-type T1 ++ " ⊠ " ++ show-type T2
-show-type (e-mod μ T) = "⟨ " ++ show-modality μ ++ " | " ++ show-type T ++ " ⟩"
-show-type (e-▻' T) = "▻' " ++ show-type T
-show-type (e-GStream T) = "GStream " ++ show-type T
+show-type Nat' = "Nat"
+show-type Bool' = "Bool"
+show-type (T1 ⇛ T2) = show-type T1 ++ " → " ++ show-type T2
+show-type (T1 ⊠ T2) = show-type T1 ++ " ⊠ " ++ show-type T2
+show-type ⟨ μ ∣ T ⟩ = "⟨ " ++ show-modality μ ++ " | " ++ show-type T ++ " ⟩"
+show-type (▻' T) = "▻' " ++ show-type T
+show-type (GStream T) = "GStream " ++ show-type T
 
 show-ctx : CtxExpr m → String
-show-ctx e-◇ = "◇"
+show-ctx ◇ = "◇"
 show-ctx (Γ , T) = show-ctx Γ ++ " . " ++ show-type T
 show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ ".lock⟨ " ++ show-modality μ ++ " ⟩"
 
@@ -104,20 +105,20 @@ record IsFuncTyExpr (T : TyExpr m) : Set where
   constructor func-ty
   field
     dom cod : TyExpr m
-    is-func : T ≡ dom e→ cod
+    is-func : T ≡ dom ⇛ cod
 
 is-func-ty : (T : TyExpr m) → TCM (IsFuncTyExpr T)
-is-func-ty (T1 e→ T2) = return (func-ty T1 T2 refl)
+is-func-ty (T1 ⇛ T2) = return (func-ty T1 T2 refl)
 is-func-ty T = type-error ("Expected a function type but received instead: " ++ show-type T)
 
 record IsProdTyExpr (T : TyExpr m) : Set where
   constructor prod-ty
   field
     comp₁ comp₂ : TyExpr m
-    is-prod : T ≡ comp₁ e-⊠ comp₂
+    is-prod : T ≡ comp₁ ⊠ comp₂
 
 is-prod-ty : (T : TyExpr m) → TCM (IsProdTyExpr T)
-is-prod-ty (T1 e-⊠ T2) = return (prod-ty T1 T2 refl)
+is-prod-ty (T1 ⊠ T2) = return (prod-ty T1 T2 refl)
 is-prod-ty T = type-error ("Expected a product type but received instead: " ++ show-type T)
 
 record IsModalTyExpr (T : TyExpr m) : Set where
@@ -126,20 +127,20 @@ record IsModalTyExpr (T : TyExpr m) : Set where
     {n} : ModeExpr
     S : TyExpr n
     μ : ModalityExpr n m
-    is-modal : T ≡ e-mod μ S
+    is-modal : T ≡ ⟨ μ ∣ S ⟩
 
 is-modal-ty : (T : TyExpr m) → TCM (IsModalTyExpr T)
-is-modal-ty (e-mod μ T) = return (modal-ty T μ refl)
+is-modal-ty ⟨ μ ∣ T ⟩ = return (modal-ty T μ refl)
 is-modal-ty T = type-error ("Expected a modal type but received instead: " ++ show-type T)
 
-record IsLaterTyExpr (T : TyExpr e-ω) : Set where
+record IsLaterTyExpr (T : TyExpr ω) : Set where
   constructor later-ty
   field
-    S : TyExpr e-ω
-    is-later : T ≡ e-▻' S
+    S : TyExpr ω
+    is-later : T ≡ ▻' S
 
-is-later-ty : (T : TyExpr e-ω) → TCM (IsLaterTyExpr T)
-is-later-ty (e-▻' T) = return (later-ty T refl)
+is-later-ty : (T : TyExpr ω) → TCM (IsLaterTyExpr T)
+is-later-ty (▻' T) = return (later-ty T refl)
 is-later-ty T = type-error ("Expected a type of the form ▻' T but received instead: " ++ show-type T)
 
 record IsModalCtxExpr (Γ : CtxExpr m) : Set where

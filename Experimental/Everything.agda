@@ -30,3 +30,4 @@ import Experimental.DeepEmbedding.Simple.TypeChecker
 import Experimental.DeepEmbedding.Simple.PerformanceTest
 import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker
 import Experimental.DeepEmbedding.GuardedRecursion.StreamsExamples
+import Experimental.DeepEmbedding.GuardedRecursion.ModalityInteractionTest
