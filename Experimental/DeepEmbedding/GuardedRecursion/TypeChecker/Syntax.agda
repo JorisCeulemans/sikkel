@@ -52,16 +52,18 @@ data TyExpr : ModeExpr → Set where
 ▻ : TyExpr ω → TyExpr ω
 ▻ T = ⟨ later ∣ T ⟩
 
+infixl 4 _,_∈_
 data CtxExpr (m : ModeExpr) : Set where
   ◇ : CtxExpr m
-  _,_ : (Γ : CtxExpr m) (T : TyExpr m) → CtxExpr m
+  _,_∈_ : (Γ : CtxExpr m) → String → (T : TyExpr m) → CtxExpr m
   _,lock⟨_⟩ : (Γ : CtxExpr m') → ModalityExpr m m' → CtxExpr m
 
 infixl 50 _∙_
+infixr 4 lam[_∈_]_ löb[_∈▻_]_
 data TmExpr : ModeExpr → Set where
   ann_∈_ : TmExpr m → TyExpr m → TmExpr m   -- term with a type annotation
-  var : ℕ → TmExpr m
-  lam : TyExpr m → TmExpr m → TmExpr m
+  var : String → TmExpr m
+  lam[_∈_]_ : String → TyExpr m → TmExpr m → TmExpr m
   _∙_ : TmExpr m → TmExpr m → TmExpr m
   lit : ℕ → TmExpr m
   suc plus : TmExpr m
@@ -73,7 +75,7 @@ data TmExpr : ModeExpr → Set where
   mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
   mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
   coe : (μ ρ : ModalityExpr m m') → TwoCellExpr μ ρ → TmExpr m' → TmExpr m'
-  löb : TyExpr ω → TmExpr ω → TmExpr ω
+  löb[_∈▻_]_ : String → TyExpr ω → TmExpr ω → TmExpr ω
   g-cons g-head g-tail : TyExpr ★ → TmExpr ω
 
 syntax coe μ ρ α t = coe[ α ∈ μ ⇒ ρ ] t
@@ -104,7 +106,7 @@ show-type (GStream T) = "GStream " ++ show-type T
 
 show-ctx : CtxExpr m → String
 show-ctx ◇ = "◇"
-show-ctx (Γ , T) = show-ctx Γ ++ " , " ++ show-type T
+show-ctx (Γ , x ∈ T) = show-ctx Γ ++ " , " ++ x ++ " ∈ " ++ show-type T
 show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ " .lock⟨ " ++ show-modality μ ++ " ⟩"
 
 

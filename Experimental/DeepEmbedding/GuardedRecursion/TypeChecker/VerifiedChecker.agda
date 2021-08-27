@@ -5,9 +5,9 @@
 
 module Experimental.DeepEmbedding.GuardedRecursion.TypeChecker.VerifiedChecker where
 
+open import Data.Bool
 open import Data.Nat
-open import Data.Nat.Show renaming (show to showℕ)
-open import Data.String
+open import Data.String renaming (_==_ to _=string=_)
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
@@ -39,19 +39,20 @@ record InferInterpretResult (Γ : CtxExpr m) : Set where
     type : TyExpr m
     interpretation : Tm ⟦ Γ ⟧ctx ⟦ type ⟧ty
 
-infer-interpret-var : ℕ → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
-infer-interpret-var x       ◇ = type-error "There is a reference to a variable that does not exist in this context."
-infer-interpret-var zero    (Γ , T) = return (T , ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] ξ)
-infer-interpret-var (suc x) (Γ , T) = do
+infer-interpret-var : String → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
+infer-interpret-var x ◇ = type-error ("The variable "++ x ++ " does not exist in this context.")
+infer-interpret-var x (Γ , y ∈ T) with x =string= y
+infer-interpret-var x (Γ , y ∈ T) | true = return (T , (ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] ξ))
+infer-interpret-var x (Γ , y ∈ T) | false = do
   S , ⟦x⟧ ← infer-interpret-var x Γ
   return (S , ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} π ] (⟦x⟧ [ π ]'))
-infer-interpret-var x       (Γ ,lock⟨ 𝟙 ⟩) = do
+infer-interpret-var x (Γ ,lock⟨ 𝟙 ⟩) = do
   T , ⟦x⟧ ← infer-interpret-var x Γ
   return (T , ⟦x⟧)
-infer-interpret-var x       (Γ ,lock⟨ μ ⟩) = type-error ("Impossible to directly use the variable "
-                                                        ++ showℕ x
-                                                        ++ " from the locked context "
-                                                        ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ ".")
+infer-interpret-var x (Γ ,lock⟨ μ ⟩) = type-error ("Impossible to directly use the variable "
+                                                  ++ x
+                                                  ++ " from the locked context "
+                                                  ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ ".")
 
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret (ann t ∈ T) Γ = do
@@ -59,8 +60,8 @@ infer-interpret (ann t ∈ T) Γ = do
   T=T' ← ⟦ T ⟧≅ty?⟦ T' ⟧
   return (T , ι[ T=T' ] ⟦t⟧)
 infer-interpret (var x) Γ = infer-interpret-var x Γ
-infer-interpret (lam T b) Γ = do
-  S , ⟦b⟧ ← infer-interpret b (Γ , T)
+infer-interpret (lam[ x ∈ T ] b) Γ = do
+  S , ⟦b⟧ ← infer-interpret b (Γ , x ∈ T)
   return (T ⇛ S , M.lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧))
 infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
@@ -121,8 +122,8 @@ infer-interpret (coe {mμ} μ ρ α t) Γ = do
   refl ← mμ ≟mode mκ
   μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
   return (⟨ ρ ∣ A ⟩ , coe-closed ⟦ α ⟧two-cell {{⟦⟧ty-natural A}} (ι[ eq-mod-closed μ=κ ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
-infer-interpret (löb T t) Γ = do
-  S , ⟦t⟧ ← infer-interpret t (Γ , ▻ T)
+infer-interpret (löb[ x ∈▻ T ] t) Γ = do
+  S , ⟦t⟧ ← infer-interpret t (Γ , x ∈ ▻ T)
   T=S ← ⟦ T ⟧≅ty?⟦ S ⟧
   return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ]
                            (ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} _ ]

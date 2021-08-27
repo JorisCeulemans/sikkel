@@ -49,7 +49,7 @@ private
 
 ⟦_⟧ctx : CtxExpr m → Ctx ⟦ m ⟧mode
 ⟦ ◇ ⟧ctx = M.◇
-⟦ Γ , T ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ T ⟧ty
+⟦ Γ , _ ∈ T ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ T ⟧ty
 ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = ⟦ Γ ⟧ctx M.,lock⟨ ⟦ μ ⟧modality ⟩
 
 ⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
