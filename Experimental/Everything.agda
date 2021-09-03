@@ -31,3 +31,5 @@ import Experimental.DeepEmbedding.Simple.PerformanceTest
 import Experimental.DeepEmbedding.GuardedRecursion.TypeChecker
 import Experimental.DeepEmbedding.GuardedRecursion.StreamsExamples
 import Experimental.DeepEmbedding.GuardedRecursion.ModalityInteractionTest
+import Experimental.DeepEmbedding.Parametricity.TypeChecker
+import Experimental.DeepEmbedding.Parametricity.IntegerExample

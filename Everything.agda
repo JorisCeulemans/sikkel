@@ -17,7 +17,8 @@ import GuardedRecursion.Streams.Standard
 import GuardedRecursion.Streams.Examples.Guarded
 import GuardedRecursion.Streams.Examples.Standard
 import Parametricity.Unary
-import Parametricity.Binary
+import Parametricity.Binary.TypeSystem
+import Parametricity.Binary.IntegerExample
 import Reflection.Substitutions
 import Reflection.SubstitutionSequence
 import Reflection.Types
