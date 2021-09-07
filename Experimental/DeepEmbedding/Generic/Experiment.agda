@@ -1,4 +1,4 @@
-module Experimental.DeepEmbedding.Generic.Test where
+module Experimental.DeepEmbedding.Generic.Experiment where
 
 open import Data.Fin
 open import Data.List
