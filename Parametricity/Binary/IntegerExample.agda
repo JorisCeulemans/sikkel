@@ -127,37 +127,11 @@ module _ (i : Tm ◇ ℤ) where
   translations-related with i ⟨ relation , _ ⟩' | Tm.naturality i left-rel refl | Tm.naturality i right-rel refl
   translations-related | [ _ , r ] | refl | refl = r
 
-
-subtract★-left : {Γ : Ctx ★} → Tm Γ (forget-right-ty ℤ ⇛ forget-right-ty ℤ ⇛ forget-right-ty ℤ)
-subtract★-left = lamι[ "i" ∈ forget-right-ty ℤ ] lamι[ "j" ∈ forget-right-ty ℤ ]
-                 subtract ⟨$- forget-right ⟩ varι "i" ⊛⟨ forget-right ⟩ varι "j"
-
-subtract★-right : {Γ : Ctx ★} → Tm Γ (forget-left-ty ℤ ⇛ forget-left-ty ℤ ⇛ forget-left-ty ℤ)
-subtract★-right = lamι[ "i" ∈ forget-left-ty ℤ ] lamι[ "j" ∈ forget-left-ty ℤ ]
-                  subtract ⟨$- forget-left ⟩ varι "i" ⊛⟨ forget-left ⟩ varι "j"
-
--- instance
---   forget-right-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-right-ty (FromRel A B R))
---   Translatable.translated-type (forget-right-rel {A = A}) = A
---   Translatable.translate-term forget-right-rel t = t ⟨ tt , tt ⟩'
---   Translatable.translate-back forget-right-rel a = MkTm (λ _ _ → a) (λ _ _ → refl)
-
---   forget-left-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-left-ty (FromRel A B R))
---   Translatable.translated-type (forget-left-rel {B = B}) = B
---   Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
---   Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
-
--- subtract-DiffNat : DiffNat → DiffNat → DiffNat
--- subtract-DiffNat = translate-term subtract★-left
-
--- subtract-SignNat : SignNat → SignNat → SignNat
--- subtract-SignNat = translate-term subtract★-right
-
 instance
   translatable-FromRel : {A B : Set} {R : REL A B 0ℓ} → Translatable (FromRel A B R)
-  Translatable.translated-type (translatable-FromRel {A} {B} {R}) {x} xF = PrimFromRel A B R ⟨ x , _ ⟩
-  Translatable.translate-term translatable-FromRel {x} xF r = r
-  Translatable.translate-back translatable-FromRel {x} xF r = r
+  Translatable.translated-type (translatable-FromRel {A} {B} {R}) {x} _ = PrimFromRel A B R ⟨ x , _ ⟩
+  Translatable.translate-term translatable-FromRel {x} xM r = r
+  Translatable.translate-back translatable-FromRel {x} xM r = r
 
 subtract-ℤ : Tm Γ (ℤ ⇛ ℤ ⇛ ℤ)
 subtract-ℤ = subtract

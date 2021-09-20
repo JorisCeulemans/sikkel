@@ -30,13 +30,13 @@ open import Modalities
 
 record Translatable {C : Category} (T : Ty {C = C} ◇) : Set₁ where
   field
-    translated-type : {x : Category.Ob C} → (xF : Final C x) → Set
-    translate-term  : {x : Category.Ob C} → (xF : Final C x) → T ⟨ x , tt ⟩ → translated-type xF
-    translate-back  : {x : Category.Ob C} → (xF : Final C x) → translated-type xF → T ⟨ x , tt ⟩
+    translated-type : {x : Category.Ob C} → (xM : Minimal C x) → Set
+    translate-term  : {x : Category.Ob C} → (xM : Minimal C x) → T ⟨ x , tt ⟩ → translated-type xM
+    translate-back  : {x : Category.Ob C} → (xM : Minimal C x) → translated-type xM → T ⟨ x , tt ⟩
 
 open Translatable {{...}} public
 
-translate-type : ∀ {C} (T : Ty {C = C} ◇) → {{Translatable T}} → {x : Category.Ob C} → (xF : Final C x) → Set
+translate-type : ∀ {C} (T : Ty {C = C} ◇) → {{Translatable T}} → {x : Category.Ob C} → (xM : Minimal C x) → Set
 translate-type T = translated-type {T = T}
 
 
@@ -46,16 +46,16 @@ translate-type T = translated-type {T = T}
 
 instance
   translate-discr : ∀ {C} {A : Set} → Translatable {C = C} (Discr A)
-  translated-type {{translate-discr {A = A}}} xF = A
-  translate-term  {{translate-discr {A = A}}} xF t = t
-  translate-back  {{translate-discr {A = A}}} xF a = a
+  translated-type {{translate-discr {A = A}}} xM = A
+  translate-term  {{translate-discr {A = A}}} xM t = t
+  translate-back  {{translate-discr {A = A}}} xM a = a
 
   translate-prod : ∀ {C} {T : Ty {C = C} ◇} {{_ : Translatable T}}
                    {S : Ty ◇} {{_ : Translatable S}} →
                    Translatable (T ⊠ S)
-  translated-type {{translate-prod {T = T} {S = S}}} xF = translate-type T xF × translate-type S xF
-  translate-term  {{translate-prod {T = T} {S = S}}} xF p = [ translate-term xF (proj₁ p) , translate-term xF (proj₂ p) ]
-  translate-back  {{translate-prod {T = T} {S = S}}} xF [ t , s ] = [ translate-back xF t , translate-back xF s ]
+  translated-type {{translate-prod {T = T} {S = S}}} xM = translate-type T xM × translate-type S xM
+  translate-term  {{translate-prod {T = T} {S = S}}} xM p = [ translate-term xM (proj₁ p) , translate-term xM (proj₂ p) ]
+  translate-back  {{translate-prod {T = T} {S = S}}} xM [ t , s ] = [ translate-back xM t , translate-back xM s ]
 
 -- expose-sum-term : ∀ {C} {A : Ty {C = C} ◇} {B : Ty ◇} →
 --                   Category.Ob C → Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B
@@ -67,11 +67,11 @@ instance
   translate-sum : ∀ {C} {T : Ty {C = C} ◇} {{_ : Translatable T}}
                   {S : Ty ◇} {{_ : Translatable S}} →
                   Translatable (T ⊞ S)
-  translated-type {{translate-sum {T = T} {S = S}}} xF = translate-type T xF ⊎ translate-type S xF
+  translated-type {{translate-sum {T = T} {S = S}}} xM = translate-type T xM ⊎ translate-type S xM
   translate-term ⦃ translate-sum ⦄ x (inj₁ t) = inj₁ (translate-term x t)
-  translate-term ⦃ translate-sum {T = T} {S = S} ⦄ xF (inj₂ s) = inj₂ (translate-term xF s)
-  translate-back  {{translate-sum {T = T} {S = S}}} xF (inj₁ t) = inj₁ (translate-back xF t)
-  translate-back  {{translate-sum {T = T} {S = S}}} xF (inj₂ s) = inj₂ (translate-back xF s)
+  translate-term ⦃ translate-sum {T = T} {S = S} ⦄ xM (inj₂ s) = inj₂ (translate-term xM s)
+  translate-back  {{translate-sum {T = T} {S = S}}} xM (inj₁ t) = inj₁ (translate-back xM t)
+  translate-back  {{translate-sum {T = T} {S = S}}} xM (inj₂ s) = inj₂ (translate-back xM s)
 
 -- A term in the empty context in mode ★ is nothing more than an Agda value.
 to-★-◇-term : {T : Ty {C = ★} ◇} → T ⟨ tt , tt ⟩ → Tm ◇ T
@@ -90,32 +90,32 @@ instance
   translate-func : ∀ {C} {T : Ty {C = C} ◇} {{_ : Translatable T}}
                    {S : Ty ◇} {{_ : Translatable S}} →
                    Translatable (T ⇛ S)
-  translated-type {{translate-func {T = T} {S = S}}} xF = translate-type T xF → translate-type S xF
-  translate-term  {{translate-func {C = C} {T = T} {S = S}}} xF f t = translate-term xF (f $⟨ Category.hom-id C , refl ⟩ translate-back xF t)
-  _$⟨_,_⟩_ (translate-back ⦃ translate-func {T = T} {S = S} ⦄ {x = x} xF f) ρ refl t with xF [ _ , ρ ]
-  _$⟨_,_⟩_ (translate-back ⦃ translate-func {T = T} {S = S} ⦄ {x = x} xF f) ρ refl t | refl =
-    translate-back xF (f (translate-term xF t))
-  PresheafFunc.naturality (translate-back ⦃ translate-func {T = T} {S = S} ⦄ {x = x} xF f) {x₁} {y} {ρ-xy} {ρ-yz} {._} {._} {refl} {refl} {t} with xF [ _ , ρ-yz ]
-  PresheafFunc.naturality (translate-back ⦃ translate-func {C = C} {T = T} {{TransT}} {S = S} {{TransS}} ⦄ {x = x} xF f) {x₁} {y} {ρ-xy} {ρ-yz} {._} {._} {refl} {refl} {t} | refl = help
-    where help2 : translate-back {{translate-func}} xF f $⟨ ρ-xy , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t) ≡
-               S ⟪ ρ-xy , refl ⟫ Translatable.translate-back TransS xF (f (Translatable.translate-term TransT xF t))
-          help2 with xF [ x₁ , ρ-xy ]
+  translated-type {{translate-func {T = T} {S = S}}} xM = translate-type T xM → translate-type S xM
+  translate-term  {{translate-func {C = C} {T = T} {S = S}}} xM f t = translate-term xM (f $⟨ Category.hom-id C , refl ⟩ translate-back xM t)
+  _$⟨_,_⟩_ (translate-back ⦃ translate-func {T = T} {S = S} ⦄ {x = x} xM f) ρ refl t with xM [ _ , ρ ]
+  _$⟨_,_⟩_ (translate-back ⦃ translate-func {T = T} {S = S} ⦄ {x = x} xM f) ρ refl t | refl =
+    translate-back xM (f (translate-term xM t))
+  PresheafFunc.naturality (translate-back ⦃ translate-func {T = T} {S = S} ⦄ {x = x} xM f) {x₁} {y} {ρ-xy} {ρ-yz} {._} {._} {refl} {refl} {t} with xM [ _ , ρ-yz ]
+  PresheafFunc.naturality (translate-back ⦃ translate-func {C = C} {T = T} {{TransT}} {S = S} {{TransS}} ⦄ {x = x} xM f) {x₁} {y} {ρ-xy} {ρ-yz} {._} {._} {refl} {refl} {t} | refl = help
+    where help2 : translate-back {{translate-func}} xM f $⟨ ρ-xy , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t) ≡
+               S ⟪ ρ-xy , refl ⟫ Translatable.translate-back TransS xM (f (Translatable.translate-term TransT xM t))
+          help2 with xM [ x₁ , ρ-xy ]
           help2 | refl = trans (cong
                                   (λ x →
-                                     Translatable.translate-back TransS xF
-                                     (f (Translatable.translate-term TransT xF x)))
+                                     Translatable.translate-back TransS xM
+                                     (f (Translatable.translate-term TransT xM x)))
                                   (ty-id T)) (sym (ty-id S))
-          help : translate-back {{translate-func}} xF f $⟨ Category._∙_ C (Category.hom-id C) ρ-xy , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t) ≡
-               S ⟪ ρ-xy , refl ⟫ Translatable.translate-back TransS xF (f (Translatable.translate-term TransT xF t))
-          help = trans (cong (λ ρ-xy′ → translate-back {{translate-func {{TransT}} {{TransS}} }} xF f $⟨ ρ-xy′ , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t)) (Category.hom-idˡ C)) help2
+          help : translate-back {{translate-func}} xM f $⟨ Category._∙_ C (Category.hom-id C) ρ-xy , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t) ≡
+               S ⟪ ρ-xy , refl ⟫ Translatable.translate-back TransS xM (f (Translatable.translate-term TransT xM t))
+          help = trans (cong (λ ρ-xy′ → translate-back {{translate-func {{TransT}} {{TransS}} }} xM f $⟨ ρ-xy′ , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t)) (Category.hom-idˡ C)) help2
 
 
 --------------------------------------------------
 -- Example: translating addition of natural numbers from Sikkel to Agda
 
 translate-term′ : ∀ {C} {T : Ty {C = C} ◇} {{transT : Translatable T}} →
-                (x : Category.Ob C) (xF : Final C x) → Tm {C = C} ◇ T → Translatable.translated-type transT xF
-translate-term′ {C} {T} {{transT}} x xF t = translate-term {C = C} {T = T} {x = x} xF (Tm.term t x tt)
+                (x : Category.Ob C) (xM : Minimal C x) → Tm {C = C} ◇ T → Translatable.translated-type transT xM
+translate-term′ {C} {T} {{transT}} x xM t = translate-term {C = C} {T = T} {x = x} xM (Tm.term t x tt)
 
 private
   -- Definition of addition in Sikkel using the recursion principle for Nat'.

@@ -37,8 +37,8 @@ category-composition = _∙_
 
 syntax category-composition C g f = g ∙[ C ] f
 
-Final : (C : Category) (x : Category.Ob C) → Set
-Final C x = ∀ (y : (Σ (Category.Ob C) λ y → Category.Hom C y x)) → y ≡ (x , Category.hom-id C)
+Minimal : (C : Category) (x : Category.Ob C) → Set
+Minimal C x = ∀ (y : (Σ (Category.Ob C) λ y → Category.Hom C y x)) → y ≡ (x , Category.hom-id C)
 
 ω : Category
 Ob ω = ℕ
