@@ -19,7 +19,7 @@ open import Types.Functions
 open import Types.Instances
 open import Modalities
 open import Reflection.Tactic.Lambda
-open import Translation
+open import Translation2
 
 open import Parametricity.Binary.TypeSystem
 
@@ -136,26 +136,41 @@ subtract★-right : {Γ : Ctx ★} → Tm Γ (forget-left-ty ℤ ⇛ forget-left
 subtract★-right = lamι[ "i" ∈ forget-left-ty ℤ ] lamι[ "j" ∈ forget-left-ty ℤ ]
                   subtract ⟨$- forget-left ⟩ varι "i" ⊛⟨ forget-left ⟩ varι "j"
 
+-- instance
+--   forget-right-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-right-ty (FromRel A B R))
+--   Translatable.translated-type (forget-right-rel {A = A}) = A
+--   Translatable.translate-term forget-right-rel t = t ⟨ tt , tt ⟩'
+--   Translatable.translate-back forget-right-rel a = MkTm (λ _ _ → a) (λ _ _ → refl)
+
+--   forget-left-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-left-ty (FromRel A B R))
+--   Translatable.translated-type (forget-left-rel {B = B}) = B
+--   Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
+--   Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
+
+-- subtract-DiffNat : DiffNat → DiffNat → DiffNat
+-- subtract-DiffNat = translate-term subtract★-left
+
+-- subtract-SignNat : SignNat → SignNat → SignNat
+-- subtract-SignNat = translate-term subtract★-right
+
 instance
-  forget-right-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-right-ty (FromRel A B R))
-  Translatable.translated-type (forget-right-rel {A = A}) = A
-  Translatable.translate-term forget-right-rel t = t ⟨ tt , tt ⟩'
-  Translatable.translate-back forget-right-rel a = MkTm (λ _ _ → a) (λ _ _ → refl)
-
-  forget-left-rel : {A B : Set} {R : REL A B 0ℓ} → Translatable (forget-left-ty (FromRel A B R))
-  Translatable.translated-type (forget-left-rel {B = B}) = B
-  Translatable.translate-term forget-left-rel t = t ⟨ tt , tt ⟩'
-  Translatable.translate-back forget-left-rel b = MkTm (λ _ _ → b) (λ _ _ → refl)
-
-subtract-DiffNat : DiffNat → DiffNat → DiffNat
-subtract-DiffNat = translate-term subtract★-left
-
-subtract-SignNat : SignNat → SignNat → SignNat
-subtract-SignNat = translate-term subtract★-right
+  translatable-FromRel : {A B : Set} {R : REL A B 0ℓ} → Translatable (FromRel A B R)
+  Translatable.translated-type (translatable-FromRel {A} {B} {R}) {x} xF = PrimFromRel A B R ⟨ x , _ ⟩
+  Translatable.translate-term translatable-FromRel {x} xF r = r
+  Translatable.translate-back translatable-FromRel {x} xF r = r
 
 subtract-ℤ : Tm Γ (ℤ ⇛ ℤ ⇛ ℤ)
 subtract-ℤ = subtract
 
+subtract-Test : Tm ◇ (forget-left-ty (ℤ ⇛ ℤ ⇛ ℤ))
+subtract-Test = forget-left-tm subtract-ℤ
+
+subtract-DiffNat : DiffNat → DiffNat → DiffNat
+subtract-DiffNat = translate-term {C = ⋀} {T = (ℤ ⇛ ℤ ⇛ ℤ)} {x = left} (λ { [ .left , left-id ] → refl}) (Tm.term (subtract-ℤ {Γ = ◇}) left tt)
+
+subtract-SignNat : SignNat → SignNat → SignNat
+subtract-SignNat = translate-term {C = ⋀} {T = (ℤ ⇛ ℤ ⇛ ℤ)} {x = right} (λ { [ .right , right-id ] → refl}) (Tm.term (subtract-ℤ {Γ = ◇}) right tt)
+
 subtract-preserves-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
-subtract-preserves-∼ {d1}{s1} r1 {d2}{s2} r2 = proj₂ (
-  (subtract-ℤ {Γ = ◇} €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])
+subtract-preserves-∼ r1 r2 = proj₂ (
+  (subtract-ℤ {Γ = ◇} €⟨ relation , tt ⟩ [ _ , r1 ]) $⟨ relation-id , refl ⟩ [ _ , r2 ])

@@ -7,6 +7,7 @@ module Categories where
 open import Data.Nat using (ℕ; _≤_)
 open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _,_)
 open import Relation.Binary.PropositionalEquality
 
 open import Helpers
@@ -35,6 +36,9 @@ category-composition : (C : Category) {x y z : Ob C} →
 category-composition = _∙_
 
 syntax category-composition C g f = g ∙[ C ] f
+
+Final : (C : Category) (x : Category.Ob C) → Set
+Final C x = ∀ (y : (Σ (Category.Ob C) λ y → Category.Hom C y x)) → y ≡ (x , Category.hom-id C)
 
 ω : Category
 Ob ω = ℕ
