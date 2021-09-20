@@ -46,7 +46,7 @@ _⟨$-_⟩_ : ∀ {m m'} → TmExpr m' → ModalityExpr m' m → TmExpr m → Tm
 f ⟨$- μ ⟩ t = mod-intro μ (f ∙ mod-elim μ t)
 
 
-record IntStructure {m} (A : TyExpr m) : Set₁ where
+record IntStructure {m} (A : TyExpr m) : Set where
   field
     add : TmExpr m
     negate : TmExpr m
@@ -87,6 +87,6 @@ subtract-SignNat : SignNat → SignNat → SignNat
 subtract-SignNat = translate-term (⟦ subtract★-right ⟧tm-in ◇)
 
 subtract-preserves-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
-subtract-preserves-∼ {d1}{s1} r1 {d2}{s2} r2 =
+subtract-preserves-∼ r1 r2 =
   let subtract-ℤ = ⟦ subtract ℤ ⟧tm-in ◇
-  in proj₂ ((subtract-ℤ €⟨ relation , tt ⟩ [ [ d1 , s1 ] , r1 ]) $⟨ relation-id , refl ⟩ [ [ d2 , s2 ] , r2 ])
+  in proj₂ ((subtract-ℤ €⟨ relation , tt ⟩ [ _ , r1 ]) $⟨ relation-id , refl ⟩ [ _ , r2 ])

@@ -24,7 +24,7 @@ data TyExpr : ModeExpr → Set where
   _⊠_ : TyExpr m → TyExpr m → TyExpr m
   ⟨_∣_⟩ : ModalityExpr m m' → TyExpr m → TyExpr m'
 
-infixl 4 _,_∈_
+infixl 4 _,_∈_ _,lock⟨_⟩
 data CtxExpr (m : ModeExpr) : Set where
   ◇ : CtxExpr m
   _,_∈_ : (Γ : CtxExpr m) → String → (T : TyExpr m) → CtxExpr m
@@ -68,8 +68,7 @@ show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ " .lock⟨ " ++ show-modality μ 
 
 
 --------------------------------------------------
--- Deciding whether a type expression is a function type, a product type or
---   a modal type and whether a context is of the form Γ ,lock⟨ μ ⟩.
+-- Deciding whether a type expression is a function type, a product type or a modal type.
 
 record IsFuncTyExpr (T : TyExpr m) : Set where
   constructor func-ty
@@ -103,14 +102,31 @@ is-modal-ty : (T : TyExpr m) → TCM (IsModalTyExpr T)
 is-modal-ty ⟨ μ ∣ T ⟩ = return (modal-ty T μ refl)
 is-modal-ty T = type-error ("Expected a modal type but received instead: " ++ show-type T)
 
+
+--------------------------------------------------
+-- Deciding whether a context is of the form Γ ,lock⟨ μ ⟩ , Δ.
+
+data Telescope (m : ModeExpr) : Set where
+  [] : Telescope m
+  _,,_∈_ : Telescope m → String → TyExpr m → Telescope m
+
+infixl 3 _+tel_
+_+tel_ : CtxExpr m → Telescope m → CtxExpr m
+Γ +tel [] = Γ
+Γ +tel (Δ ,, v ∈ T) = (Γ +tel Δ) , v ∈ T
+
 record IsModalCtxExpr (Γ : CtxExpr m) : Set where
   constructor modal-ctx
   field
     {n} : ModeExpr
     Γ' : CtxExpr n
     μ : ModalityExpr m n
-    is-modal : Γ ≡ (Γ' ,lock⟨ μ ⟩)
+    Δ : Telescope m
+    is-modal : Γ ≡ (Γ' ,lock⟨ μ ⟩ +tel Δ)
 
 is-modal-ctx : (Γ : CtxExpr m) → TCM (IsModalCtxExpr Γ)
-is-modal-ctx (Γ ,lock⟨ μ ⟩) = return (modal-ctx Γ μ refl)
-is-modal-ctx Γ = type-error ("Expected a context with a lock applied but received instead: " ++ show-ctx Γ)
+is-modal-ctx ◇ = type-error "Expected a context which contains a lock but received instead: ◇"
+is-modal-ctx (Γ , x ∈ T) = modify-error-msg (_++ " , " ++ x ++ " ∈ " ++ show-type T) (do
+  modal-ctx Γ' μ Δ refl ← is-modal-ctx Γ
+  return (modal-ctx Γ' μ (Δ ,, x ∈ T) refl))
+is-modal-ctx (Γ ,lock⟨ μ ⟩) = return (modal-ctx Γ μ [] refl)

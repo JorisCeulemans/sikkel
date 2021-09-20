@@ -11,7 +11,7 @@ open import Data.String renaming (_==_ to _=string=_)
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
-open import CwF-Structure as M hiding (◇; _,,_; var; _++_)
+open import CwF-Structure as M hiding (◇; _,,_; var; _++_; Telescope)
 open import Modalities as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim; coe)
 open import Types.Discrete as M hiding (Nat'; Bool')
 open import Types.Functions as M hiding (_⇛_; lam; app)
@@ -38,6 +38,13 @@ record InferInterpretResult (Γ : CtxExpr m) : Set where
   field
     type : TyExpr m
     interpretation : Tm ⟦ Γ ⟧ctx ⟦ type ⟧ty
+
+weaken-sem-term : {Γ : CtxExpr m} (Δ : Telescope m) (T : TyExpr m) →
+                  Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty → Tm ⟦ Γ +tel Δ ⟧ctx ⟦ T ⟧ty
+weaken-sem-term []           T t = t
+weaken-sem-term (Δ ,, v ∈ S) T t =
+  let weakened-t = weaken-sem-term Δ T t
+  in ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] (weakened-t [ π ]')
 
 infer-interpret-var : String → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret-var x ◇ = type-error ("The variable "++ x ++ " does not exist in this context.")
@@ -108,14 +115,14 @@ infer-interpret (mod-intro μ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
   return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (mod-elim {m} {mμ} μ t) Γ = do
-  modal-ctx {mρ} Γ' ρ refl ← is-modal-ctx Γ
+  modal-ctx {mρ} Γ' ρ Δ refl ← is-modal-ctx Γ
   refl ← mμ ≟mode mρ
   ρ=μ ← ⟦ ρ ⟧≅mod?⟦ μ ⟧
   S , ⟦t⟧ ← infer-interpret t Γ'
   modal-ty {mκ} T κ refl ← is-modal-ty S
   refl ← m ≟mode mκ
   μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
-  return (T , M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧))
+  return (T , weaken-sem-term Δ T (M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧)))
 infer-interpret (coe {mμ} μ ρ α t) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   modal-ty {mκ} A κ refl ← is-modal-ty T
