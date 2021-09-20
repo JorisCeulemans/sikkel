@@ -110,18 +110,22 @@ instance
           help = trans (cong (λ ρ-xy′ → translate-back {{translate-func {{TransT}} {{TransS}} }} xF f $⟨ ρ-xy′ , refl ⟩ (T ⟪ ρ-xy , refl ⟫ t)) (Category.hom-idˡ C)) help2
 
 
--- --------------------------------------------------
--- -- Example: translating addition of natural numbers from Sikkel to Agda
+--------------------------------------------------
+-- Example: translating addition of natural numbers from Sikkel to Agda
 
--- private
---   -- Definition of addition in Sikkel using the recursion principle for Nat'.
---   nat-sum' : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
---   nat-sum' = nat-elim (Nat' ⇛ Nat')
---                       (lamι[ "n" ∈ Nat' ] varι "n")
---                       (lamι[ "f" ∈ Nat' ⇛ Nat' ] lamι[ "n" ∈ Nat' ] suc' $ (varι "f" $ varι "n"))
+translate-term′ : ∀ {C} {T : Ty {C = C} ◇} {{transT : Translatable T}} →
+                (x : Category.Ob C) (xF : Final C x) → Tm {C = C} ◇ T → Translatable.translated-type transT xF
+translate-term′ {C} {T} {{transT}} x xF t = translate-term {C = C} {T = T} {x = x} xF (Tm.term t x tt)
 
---   _+'_ : ℕ → ℕ → ℕ
---   _+'_ = translate-term nat-sum'
+private
+  -- Definition of addition in Sikkel using the recursion principle for Nat'.
+  nat-sum' : Tm {C = ★} ◇ (Nat' ⇛ Nat' ⇛ Nat')
+  nat-sum' = nat-elim (Nat' ⇛ Nat')
+                      (lamι[ "n" ∈ Nat' ] varι "n")
+                      (lamι[ "f" ∈ Nat' ⇛ Nat' ] lamι[ "n" ∈ Nat' ] suc' $ (varι "f" $ varι "n"))
 
---   test : 6 +' 3 ≡ 9
---   test = refl
+  _+'_ : ℕ → ℕ → ℕ
+  _+'_ = translate-term′ tt (λ _ → refl) nat-sum'
+
+  test : 6 +' 3 ≡ 9
+  test = refl

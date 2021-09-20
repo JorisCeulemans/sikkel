@@ -165,11 +165,12 @@ subtract-ℤ = subtract
 subtract-Test : Tm ◇ (forget-left-ty (ℤ ⇛ ℤ ⇛ ℤ))
 subtract-Test = forget-left-tm subtract-ℤ
 
+
 subtract-DiffNat : DiffNat → DiffNat → DiffNat
-subtract-DiffNat = translate-term {C = ⋀} {T = (ℤ ⇛ ℤ ⇛ ℤ)} {x = left} (λ { [ .left , left-id ] → refl}) (Tm.term (subtract-ℤ {Γ = ◇}) left tt)
+subtract-DiffNat = translate-term′ left (λ { [ .left , left-id ] → refl}) (subtract-ℤ {Γ = ◇})
 
 subtract-SignNat : SignNat → SignNat → SignNat
-subtract-SignNat = translate-term {C = ⋀} {T = (ℤ ⇛ ℤ ⇛ ℤ)} {x = right} (λ { [ .right , right-id ] → refl}) (Tm.term (subtract-ℤ {Γ = ◇}) right tt)
+subtract-SignNat = translate-term′ right (λ { [ .right , right-id ] → refl}) (subtract-ℤ {Γ = ◇})
 
 subtract-preserves-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
 subtract-preserves-∼ r1 r2 = proj₂ (
