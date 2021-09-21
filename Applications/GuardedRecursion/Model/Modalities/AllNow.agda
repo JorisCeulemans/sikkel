@@ -1,0 +1,130 @@
+--------------------------------------------------
+-- The timeless-allnow dependent adjunction
+--------------------------------------------------
+
+module Applications.GuardedRecursion.Model.Modalities.AllNow where
+
+open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
+open import Data.Unit using (⊤; tt)
+open import Relation.Binary.PropositionalEquality hiding ([_])
+
+open import Model.BaseCategory
+open import Model.CwF-Structure
+
+private
+  variable
+    Δ Γ Θ : Ctx ★
+
+
+timeless-ctx : Ctx ★ → Ctx ω
+timeless-ctx Γ ⟨ _ ⟩ = Γ ⟨ tt ⟩
+timeless-ctx Γ ⟪ _ ⟫ γ = γ
+ctx-id (timeless-ctx Γ) = refl
+ctx-comp (timeless-ctx Γ) = refl
+
+timeless-subst : Δ ⇒ Γ → timeless-ctx Δ ⇒ timeless-ctx Γ
+func (timeless-subst σ) = func σ
+_⇒_.naturality (timeless-subst σ) = refl
+
+timeless-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → timeless-subst σ ≅ˢ timeless-subst τ
+eq (timeless-subst-cong σ=τ) δ = eq σ=τ δ
+
+timeless-subst-id : timeless-subst (id-subst Γ) ≅ˢ id-subst (timeless-ctx Γ)
+eq timeless-subst-id _ = refl
+
+timeless-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → timeless-subst (σ ⊚ τ) ≅ˢ timeless-subst σ ⊚ timeless-subst τ
+eq (timeless-subst-⊚ σ τ) _ = refl
+
+instance
+  timeless-ctx-is-functor : IsCtxFunctor timeless-ctx
+  ctx-map {{timeless-ctx-is-functor}} = timeless-subst
+  ctx-map-cong {{timeless-ctx-is-functor}} = timeless-subst-cong
+  ctx-map-id {{timeless-ctx-is-functor}} = timeless-subst-id
+  ctx-map-⊚ {{timeless-ctx-is-functor}} = timeless-subst-⊚
+
+const-subst : Γ ⟨ tt ⟩ → ◇ ⇒ timeless-ctx Γ
+func (const-subst γ) _ = γ
+_⇒_.naturality (const-subst γ) = refl
+
+const-subst-cong : {γ1 γ2 : Γ ⟨ tt ⟩} → γ1 ≡ γ2 → const-subst {Γ = Γ} γ1 ≅ˢ const-subst γ2
+eq (const-subst-cong eγ) tt = eγ
+
+const-subst-natural : (δ : Δ ⟨ tt ⟩) (σ : Δ ⇒ Γ) → timeless-subst σ ⊚ const-subst δ ≅ˢ const-subst (func σ δ)
+eq (const-subst-natural δ σ) _ = refl
+
+allnow-ty : Ty (timeless-ctx Γ) → Ty Γ
+allnow-ty T ⟨ tt , γ ⟩ = Tm ◇ (T [ const-subst γ ])
+_⟪_,_⟫_ (allnow-ty {Γ = Γ} T) tt {γ}{γ'} eγ t = ι⁻¹[ proof ] t
+  where
+    proof : T [ const-subst γ ] ≅ᵗʸ T [ const-subst γ' ]
+    proof = ty-subst-cong-subst (const-subst-cong (trans (sym (ctx-id Γ)) eγ)) T
+ty-cong (allnow-ty T) _ = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
+ty-id (allnow-ty T) = tm-≅-to-≡ (record { eq = λ _ → strong-ty-id T })
+ty-comp (allnow-ty T) = tm-≅-to-≡
+  (record { eq = λ _ → trans (ty-cong T (≤-irrelevant _ _)) (ty-comp T) })
+
+module _ {T : Ty (timeless-ctx Γ)} where
+  allnow-tm : Tm (timeless-ctx Γ) T → Tm Γ (allnow-ty T)
+  (allnow-tm t ⟨ tt , γ ⟩') ⟨ n , tt ⟩' = t ⟨ n , γ ⟩'
+  Tm.naturality (allnow-tm t ⟨ tt , γ ⟩') f refl = Tm.naturality t f _
+  Tm.naturality (allnow-tm t) f eγ = tm-≅-to-≡ (record { eq = λ _ → Tm.naturality t ≤-refl _ })
+
+  unallnow-tm : Tm Γ (allnow-ty T) → Tm (timeless-ctx Γ) T
+  unallnow-tm t ⟨ n , γ ⟩' = t ⟨ tt , γ ⟩' ⟨ n , tt ⟩'
+  Tm.naturality (unallnow-tm t) f refl = Tm.naturality (t ⟨ tt , _ ⟩') f refl
+
+  allnow-ty-β : (t : Tm (timeless-ctx Γ) T) → unallnow-tm (allnow-tm t) ≅ᵗᵐ t
+  eq (allnow-ty-β t) _ = refl
+
+  allnow-ty-η : (t : Tm Γ (allnow-ty T)) → allnow-tm (unallnow-tm t) ≅ᵗᵐ t
+  eq (allnow-ty-η t) γ = tm-≅-to-≡ (record { eq = λ { tt → refl } })
+
+allnow-ty-cong : {T : Ty (timeless-ctx Γ)} {S : Ty (timeless-ctx Γ)} →
+                 T ≅ᵗʸ S → allnow-ty T ≅ᵗʸ allnow-ty S
+func (from (allnow-ty-cong T=S)) = ι⁻¹[ ty-subst-cong-ty (const-subst _) T=S ]_
+_↣_.naturality (from (allnow-ty-cong T=S)) = tm-≅-to-≡ (record { eq = λ _ → _↣_.naturality (from T=S) })
+func (to (allnow-ty-cong T=S)) = ι[ ty-subst-cong-ty (const-subst _) T=S ]_
+_↣_.naturality (to (allnow-ty-cong T=S)) = tm-≅-to-≡ (record { eq = λ _ → _↣_.naturality (to T=S) })
+eq (isoˡ (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symʳ (ty-subst-cong-ty (const-subst _) T=S) _)
+eq (isoʳ (allnow-ty-cong T=S)) _ = tm-≅-to-≡ (ι-symˡ (ty-subst-cong-ty (const-subst _) T=S) _)
+
+module _ {T : Ty (timeless-ctx Γ)} where
+  allnow-tm-cong : {t s : Tm (timeless-ctx Γ) T} → t ≅ᵗᵐ s → allnow-tm t ≅ᵗᵐ allnow-tm s
+  eq (allnow-tm-cong t=s) γ = tm-≅-to-≡ (record { eq = λ _ → eq t=s γ })
+
+  unallnow-tm-cong : {t s : Tm Γ (allnow-ty T)} → t ≅ᵗᵐ s → unallnow-tm t ≅ᵗᵐ unallnow-tm s
+  eq (unallnow-tm-cong t=s) γ = cong (λ - → - ⟨ _ , tt ⟩') (eq t=s γ)
+
+module _ {T S : Ty (timeless-ctx Γ)} (T=S : T ≅ᵗʸ S) where
+  allnow-tm-ι : (s : Tm (timeless-ctx Γ) S) → ι[ allnow-ty-cong T=S ] allnow-tm s ≅ᵗᵐ allnow-tm (ι[ T=S ] s)
+  eq (allnow-tm-ι s) γ = tm-≅-to-≡ (record { eq = λ _ → refl })
+
+  unallnow-tm-ι : (s : Tm Γ (allnow-ty S)) → ι[ T=S ] unallnow-tm s ≅ᵗᵐ unallnow-tm (ι[ allnow-ty-cong T=S ] s)
+  eq (unallnow-tm-ι s) _ = refl
+
+ty-const-subst : (T : Ty (timeless-ctx Γ)) (σ : Δ ⇒ Γ) (δ : Δ ⟨ tt ⟩) →
+                 (T [ timeless-subst σ ]) [ const-subst δ ] ≅ᵗʸ T [ const-subst (func σ δ) ]
+ty-const-subst T σ δ = ≅ᵗʸ-trans (ty-subst-comp T (timeless-subst σ) (const-subst _))
+                                 (ty-subst-cong-subst (const-subst-natural _ σ) T)
+
+allnow-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} → (allnow-ty T) [ σ ] ≅ᵗʸ allnow-ty (T [ timeless-subst σ ])
+func (from (allnow-ty-natural σ {T})) = ι[ ty-const-subst T σ _ ]_
+_↣_.naturality (from (allnow-ty-natural σ {T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
+func (to (allnow-ty-natural σ {T})) = ι⁻¹[ ty-const-subst T σ _ ]_
+_↣_.naturality (to (allnow-ty-natural σ {T})) = tm-≅-to-≡ (record { eq = λ _ → ty-cong-2-2 T refl })
+eq (isoˡ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symˡ (ty-const-subst T σ _) t)
+eq (isoʳ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
+
+instance
+  allnow-closed : {A : ClosedType ω} {{_ : IsClosedNatural A}} → IsClosedNatural (allnow-ty A)
+  closed-natural {{allnow-closed}} σ = ≅ᵗʸ-trans (allnow-ty-natural σ) (allnow-ty-cong (closed-natural (timeless-subst σ)))
+
+module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} where
+  allnow-tm-natural : (t : Tm (timeless-ctx Γ) T) →
+                        (allnow-tm t) [ σ ]' ≅ᵗᵐ ι[ allnow-ty-natural σ ] allnow-tm (t [ timeless-subst σ ]')
+  eq (allnow-tm-natural t) _ = tm-≅-to-≡ (record { eq = λ _ → sym (ty-id T) })
+
+  unallnow-tm-natural : (t : Tm Γ (allnow-ty T)) →
+                          (unallnow-tm t) [ timeless-subst σ ]' ≅ᵗᵐ unallnow-tm (ι⁻¹[ allnow-ty-natural σ ] (t [ σ ]'))
+  eq (unallnow-tm-natural t) _ = sym (ty-id T)
