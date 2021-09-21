@@ -65,7 +65,7 @@ g-map A B =
                  ∙ (var "m" ⊛⟨ later ⟩ g-tail A ∙ var "s")
 
 g-map-sem : Tm ′◇ (constantly-ty (′Nat' ′⇛ ′Nat') ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
-g-map-sem = ⟦ g-map Nat' Nat' ⟧tm-in ◇
+g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
 
 -- Γ ⊢ g-nats : GStream Nat'
 g-nats : TmExpr ω
@@ -75,28 +75,28 @@ g-nats =
             ∙ (g-map Nat' Nat' ∙ mod-intro constantly suc ⟨$-later⟩' var "s")
 
 g-nats-sem : Tm ′◇ (′GStream ′Nat')
-g-nats-sem = ⟦ g-nats ⟧tm-in ◇
+g-nats-sem = ⟦ g-nats ⟧tm
 
 -- Γ ⊢ g-snd A : GStream A ⇛ ▻ ⟨ constantly ∣ A ⟩
 g-snd : TyExpr ★ → TmExpr ω
 g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩' g-tail A ∙ var "s"
 
 g-snd-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (constantly-ty ′Nat'))
-g-snd-sem = ⟦ g-snd Nat' ⟧tm-in ◇
+g-snd-sem = ⟦ g-snd Nat' ⟧tm
 
 -- Γ ⊢ g-thrd A : GStream A ⇛ ▻ (▻ ⟨ constantly ∣ A ⟩)
 g-thrd : TyExpr ★ → TmExpr ω
 g-thrd A = lam[ "s" ∈ GStream A ] g-snd A ⟨$-later⟩' g-tail A ∙ var "s"
 
 g-thrd-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′▻ (constantly-ty ′Bool')))
-g-thrd-sem = ⟦ g-thrd Bool' ⟧tm-in ◇
+g-thrd-sem = ⟦ g-thrd Bool' ⟧tm
 
 -- Γ ⊢ g-zeros : GStream Nat'
 g-zeros : TmExpr ω
 g-zeros = löb[ "s" ∈▻ (GStream Nat') ] g-consN ∙ mod-intro constantly (lit 0) ∙ var "s"
 
 g-zeros-sem : Tm ′◇ (′GStream ′Nat')
-g-zeros-sem = ⟦ g-zeros ⟧tm-in ◇
+g-zeros-sem = ⟦ g-zeros ⟧tm
 
 -- Γ ⊢ g-iterate' A : ⟨ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
 g-iterate' : TyExpr ★ → TmExpr ω
@@ -108,7 +108,7 @@ g-iterate' A =
                  ∙ (var "g" ⊛⟨ later ⟩ (next (var "f" ⊛⟨ constantly ⟩ var "x")))
 
 g-iterate'-sem : Tm ′◇ (constantly-ty (′Nat' ′⇛ ′Nat') ′⇛ constantly-ty ′Nat' ′⇛ ′GStream ′Nat')
-g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm-in ◇
+g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm
 
 -- Γ ⊢ g-iterate A : ⟨ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
 g-iterate : TyExpr ★ → TmExpr ω
@@ -120,14 +120,14 @@ g-iterate A =
                  ∙ (g-map A A ⟨$-later⟩' var "f" ⊛⟨ later ⟩ var "s")
 
 g-iterate-sem : Tm ′◇ (′▻ (constantly-ty (′Bool' ′⇛ ′Bool')) ′⇛ constantly-ty ′Bool' ′⇛ ′GStream ′Bool')
-g-iterate-sem = ⟦ g-iterate Bool' ⟧tm-in ◇
+g-iterate-sem = ⟦ g-iterate Bool' ⟧tm
 
 -- Γ ⊢ g-nats' : GStream Nat'
 g-nats' : TmExpr ω
 g-nats' = g-iterate Nat' ∙ next (mod-intro constantly suc) ∙ mod-intro constantly (lit 0)
 
 g-nats'-sem : Tm ′◇ (′GStream ′Nat')
-g-nats'-sem = ⟦ g-nats' ⟧tm-in ◇
+g-nats'-sem = ⟦ g-nats' ⟧tm
 
 -- Γ ⊢ g-interleave A : GStream A ⇛ ▻ (GStream A) ⇛ GStream A
 g-interleave : TyExpr ★ → TmExpr ω
@@ -139,7 +139,7 @@ g-interleave A =
                  ∙ (var "g" ⊛⟨ later ⟩ var "t" ⊛⟨ later ⟩ next (g-tail A ∙ var "s"))
 
 g-interleave-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat')
-g-interleave-sem = ⟦ g-interleave Nat' ⟧tm-in ◇
+g-interleave-sem = ⟦ g-interleave Nat' ⟧tm
 
 -- Γ ⊢ g-toggle : GStream Nat'
 g-toggle : TmExpr ω
@@ -148,14 +148,14 @@ g-toggle = löb[ "s" ∈▻ (GStream Nat') ]
                      ∙ (next (g-consN ∙ mod-intro constantly (lit 0) ∙ var "s"))
 
 g-toggle-sem : Tm ′◇ (′GStream ′Nat')
-g-toggle-sem = ⟦ g-toggle ⟧tm-in ◇
+g-toggle-sem = ⟦ g-toggle ⟧tm
 
 -- Γ ⊢ g-paperfolds : GStream Nat'
 g-paperfolds : TmExpr ω
 g-paperfolds = löb[ "s" ∈▻ (GStream Nat') ] g-interleave Nat' ∙ g-toggle ∙ var "s"
 
 g-paperfolds-sem : Tm ′◇ (′GStream ′Nat')
-g-paperfolds-sem = ⟦ g-paperfolds ⟧tm-in ◇
+g-paperfolds-sem = ⟦ g-paperfolds ⟧tm
 
 -- Γ ⊢ g-initial : ((⟨ constantly ∣ A ⟩ ⊠ (▻ T)) ⇛ T) ⇛ GStream A ⇛ T
 g-initial : TyExpr ★ → TyExpr ω → TmExpr ω
@@ -167,7 +167,7 @@ g-initial A T =
                         (var "g" ⊛⟨ later ⟩ next (var "f") ⊛⟨ later ⟩ g-tail A ∙ var "s"))
 
 g-initial-sem : Tm ′◇ (((constantly-ty ′Nat' ′⊠ ′▻ ′Bool') ′⇛ ′Bool') ′⇛ ′GStream ′Nat' ′⇛ ′Bool')
-g-initial-sem = ⟦ g-initial Nat' Bool' ⟧tm-in ◇
+g-initial-sem = ⟦ g-initial Nat' Bool' ⟧tm
 
 -- Γ ⊢ g-final : (T ⇛ (⟨ constantly ∣ A ⟩ ⊠ (▻ T))) ⇛ T ⇛ GStream A
 g-final : TyExpr ★ → TyExpr ω → TmExpr ω
@@ -179,7 +179,7 @@ g-final A T =
                  ∙ (var "g" ⊛⟨ later ⟩ next (var "f") ⊛⟨ later ⟩ snd (var "f" ∙ var "x"))
 
 g-final-sem : Tm ′◇ ((′Bool' ′⇛ (constantly-ty ′Nat' ′⊠ ′▻ ′Bool')) ′⇛ ′Bool' ′⇛ ′GStream ′Nat')
-g-final-sem = ⟦ g-final Nat' Bool' ⟧tm-in ◇
+g-final-sem = ⟦ g-final Nat' Bool' ⟧tm
 
 g-consB = g-cons Bool'
 g-headB = g-head Bool'
@@ -208,7 +208,7 @@ g-thumorse =
                                  ∙ (next (g-consB ∙ mod-intro constantly true  ∙ (var "g" ⊛⟨ later ⟩ g-tailB ∙ var "s"))))
 
 g-thumorse-sem : Tm ′◇ (′GStream ′Bool')
-g-thumorse-sem = ⟦ g-thumorse ⟧tm-in ◇
+g-thumorse-sem = ⟦ g-thumorse ⟧tm
 
 -- Γ ⊢ g-fibonacci-word : GStream Bool'
 g-fibonacci-word : TmExpr ω
@@ -232,7 +232,7 @@ g-fibonacci-word =
                                  g-consB ∙ mod-intro constantly true ∙ (var "g" ⊛⟨ later ⟩ g-tailB ∙ var "s")))
 
 g-fibonacci-word-sem : Tm ′◇ (′GStream ′Bool')
-g-fibonacci-word-sem = ⟦ g-fibonacci-word ⟧tm-in ◇
+g-fibonacci-word-sem = ⟦ g-fibonacci-word ⟧tm
 
 -- Γ ⊢ g-mergef A B C : (⟨ constantly ∣ A ⟩ ⇛ ⟨ constantly ∣ B ⟩ ⇛ ▻ (GStream C) ⇛ GStream C) ⇛ GStream A ⇛ GStream B ⇛ GStream C
 g-mergef : (A B C : TyExpr ★) → TmExpr ω
@@ -246,7 +246,7 @@ g-mergef A B C =
                   ∙ (var "g" ⊛⟨ later ⟩ g-tail A ∙ var "xs" ⊛⟨ later ⟩ g-tail B ∙ var "ys")
 
 g-mergef-sem : Tm ′◇ ((constantly-ty ′Nat' ′⇛ constantly-ty ′Bool' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat') ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat')
-g-mergef-sem = ⟦ g-mergef Nat' Bool' Nat' ⟧tm-in ◇
+g-mergef-sem = ⟦ g-mergef Nat' Bool' Nat' ⟧tm
 
 -- Γ ⊢ g-zipWith A B C : ⟨ constantly ∣ A ⇛ B ⇛ C ⟩ ⇛ GStream A ⇛ GStream B ⇛ GStream C
 g-zipWith : (A B C : TyExpr ★) → TmExpr ω
@@ -259,7 +259,7 @@ g-zipWith A B C =
                    ∙ (var "g" ⊛⟨ later ⟩ g-tail A ∙ var "as" ⊛⟨ later ⟩ g-tail B ∙ var "bs")
 
 g-zipWith-sem : Tm ′◇ (constantly-ty (′Bool' ′⇛ ′Nat' ′⇛ ′Bool') ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool')
-g-zipWith-sem = ⟦ g-zipWith Bool' Nat' Bool' ⟧tm-in ◇
+g-zipWith-sem = ⟦ g-zipWith Bool' Nat' Bool' ⟧tm
 
 -- Γ ⊢ g-fibs : GStream Nat'
 g-fibs : TmExpr ω
@@ -274,7 +274,7 @@ g-fibs =
                                             ⟨$-later⟩' (g-tailN ⟨$-later⟩' var "s")))
 
 g-fibs-sem : Tm ′◇ (′GStream ′Nat')
-g-fibs-sem = ⟦ g-fibs ⟧tm-in ◇
+g-fibs-sem = ⟦ g-fibs ⟧tm
 
 -- Γ ⊢ g-flipFst A : GStream A ⇛ ▻ (GStream A)
 g-flipFst : TyExpr ★ → TmExpr ω
@@ -284,7 +284,7 @@ g-flipFst A =
     g-cons A ⟨$-later⟩' next (g-head A ∙ var "s") ⊛⟨ later ⟩ (g-tail A ⟨$-later⟩' g-tail A ∙ var "s"))
 
 g-flipFst-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′GStream ′Bool'))
-g-flipFst-sem = ⟦ g-flipFst Bool' ⟧tm-in ◇
+g-flipFst-sem = ⟦ g-flipFst Bool' ⟧tm
 
 
 
@@ -296,7 +296,7 @@ nats : TmExpr ★
 nats = mod-intro forever g-nats
 
 nats-sem : Tm ′◇ (′Stream' ′Nat')
-nats-sem = ⟦ nats ⟧tm-in ◇
+nats-sem = ⟦ nats ⟧tm
 
 nats-agda : Stream ℕ
 nats-agda = extract-term nats-sem
@@ -309,7 +309,7 @@ paperfolds : TmExpr ★
 paperfolds = mod-intro forever g-paperfolds
 
 paperfolds-sem : Tm ′◇ (′Stream' ′Nat')
-paperfolds-sem = ⟦ paperfolds ⟧tm-in ◇
+paperfolds-sem = ⟦ paperfolds ⟧tm
 
 paperfolds-agda : Stream ℕ
 paperfolds-agda = extract-term paperfolds-sem
@@ -322,7 +322,7 @@ thue-morse : TmExpr ★
 thue-morse = mod-intro forever g-thumorse
 
 thue-morse-sem : Tm ′◇ (′Stream' ′Bool')
-thue-morse-sem = ⟦ thue-morse ⟧tm-in ◇
+thue-morse-sem = ⟦ thue-morse ⟧tm
 
 thue-morse-agda : Stream Bool
 thue-morse-agda = extract-term thue-morse-sem
@@ -335,7 +335,7 @@ fibonacci-word : TmExpr ★
 fibonacci-word = mod-intro forever g-fibonacci-word
 
 fibonacci-word-sem : Tm ′◇ (′Stream' ′Bool')
-fibonacci-word-sem = ⟦ fibonacci-word ⟧tm-in ◇
+fibonacci-word-sem = ⟦ fibonacci-word ⟧tm
 
 fibonacci-word-agda : Stream Bool
 fibonacci-word-agda = extract-term fibonacci-word-sem
@@ -348,7 +348,7 @@ fibs : TmExpr ★
 fibs = mod-intro forever g-fibs
 
 fibs-sem : Tm ′◇ (′Stream' ′Nat')
-fibs-sem = ⟦ fibs ⟧tm-in ◇
+fibs-sem = ⟦ fibs ⟧tm
 
 fibs-agda : Stream ℕ
 fibs-agda = extract-term fibs-sem
@@ -367,7 +367,7 @@ head-nats : TmExpr ★
 head-nats = head' Nat' ∙ nats
 
 head-nats-agda : ℕ
-head-nats-agda = extract-term (⟦ head-nats ⟧tm-in ◇)
+head-nats-agda = extract-term (⟦ head-nats ⟧tm)
 
 head-nats-test : head-nats-agda ≡ 0
 head-nats-test = refl
@@ -379,7 +379,7 @@ tail' A = ann
   ∈ (Stream' A ⇛ Stream' A)
 
 tailN-sem : Tm ′◇ (′Stream' ′Nat' ′⇛ ′Stream' ′Nat')
-tailN-sem = ⟦ tail' Nat' ⟧tm-in ◇
+tailN-sem = ⟦ tail' Nat' ⟧tm
 
 -- Γ ⊢ cons' A : A ⇛ Stream' A ⇛ Stream' A
 cons' : TyExpr ★ → TmExpr ★
@@ -390,7 +390,7 @@ cons' A = ann
   ∈ (A ⇛ Stream' A ⇛ Stream' A)
 
 consB-sem : Tm ′◇ (′Bool' ′⇛ ′Stream' ′Bool' ′⇛ ′Stream' ′Bool')
-consB-sem = ⟦ cons' Bool' ⟧tm-in ◇
+consB-sem = ⟦ cons' Bool' ⟧tm
 
 -- Γ ⊢ map' A B : (A ⇛ B) ⇛ Stream' A ⇛ Stream' B
 map' : TyExpr ★ → TyExpr ★ → TmExpr ★
@@ -401,7 +401,7 @@ map' A B =
                 ⊛⟨ forever ⟩ var "s"
 
 map'-sem : Tm ′◇ ((′Nat' ′⇛ ′Nat') ′⇛ ′Stream' ′Nat' ′⇛ ′Stream' ′Nat')
-map'-sem = ⟦ map' Nat' Nat' ⟧tm-in ◇
+map'-sem = ⟦ map' Nat' Nat' ⟧tm
 
 -- Γ ⊢ g-every2nd A : ⟨ constantly ∣ Stream' A ⟩ ⇛ GStream A
 g-every2nd : TyExpr ★ → TmExpr ω
@@ -412,7 +412,7 @@ g-every2nd A =
                ∙ (var "g" ⊛⟨ later ⟩ next (tail' A ⟨$- constantly ⟩ (tail' A ⟨$- constantly ⟩ var "s")))
 
 g-every2ndB-sem : Tm ′◇ (constantly-ty (′Stream' ′Bool') ′⇛ ′GStream ′Bool')
-g-every2ndB-sem = ⟦ g-every2nd Bool' ⟧tm-in ◇
+g-every2ndB-sem = ⟦ g-every2nd Bool' ⟧tm
 
 -- Γ ⊢ every2nd A : Stream' A ⇛ Stream' A
 every2nd : TyExpr ★ → TmExpr ★
@@ -421,7 +421,7 @@ every2nd A =
     g-every2nd A ⟨$- forever ⟩ ann (var "s") ∈ ⟨ forever ∣ ⟨ constantly ∣ Stream' A ⟩ ⟩
 
 every2ndN-sem : Tm ′◇ (′Stream' ′Nat' ′⇛ ′Stream' ′Nat')
-every2ndN-sem = ⟦ every2nd Nat' ⟧tm-in ◇
+every2ndN-sem = ⟦ every2nd Nat' ⟧tm
 
 every2nd-test : take 6 (extract-term (every2ndN-sem $ nats-sem))
                 ≡ 0 ∷ 2 ∷ 4 ∷ 6 ∷ 8 ∷ 10 ∷ []
@@ -437,7 +437,7 @@ g-diag A =
                                                 ⟨$- constantly ⟩ (tail' (Stream' A) ⟨$- constantly ⟩ var "xss")))
 
 g-diagB⟧ : Tm ′◇ (constantly-ty (′Stream' (′Stream' ′Bool')) ′⇛ ′GStream ′Bool')
-g-diagB⟧ = ⟦ g-diag Bool' ⟧tm-in ◇
+g-diagB⟧ = ⟦ g-diag Bool' ⟧tm
 
 -- Γ ⊢ diag : Stream' (Stream' A) ⇛ Stream' A
 diag : TyExpr ★ → TmExpr ★
@@ -446,4 +446,4 @@ diag A =
     g-diag A ⟨$- forever ⟩ ann (var "s") ∈ ⟨ forever ∣ ⟨ constantly ∣ Stream' (Stream' A) ⟩ ⟩
 
 diagB-sem : Tm ′◇ (′Stream' (′Stream' ′Bool') ′⇛ ′Stream' ′Bool')
-diagB-sem = ⟦ diag Bool' ⟧tm-in ◇
+diagB-sem = ⟦ diag Bool' ⟧tm

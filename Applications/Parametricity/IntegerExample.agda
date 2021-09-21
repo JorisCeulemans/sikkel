@@ -160,12 +160,12 @@ subtract★-right : TmExpr ★
 subtract★-right = liftA2 forget-left ℤ ℤ ℤ ∙ mod-intro forget-left (subtract ℤ)
 
 subtract-DiffNat : DiffNat → DiffNat → DiffNat
-subtract-DiffNat = extract-term (⟦ subtract★-left ⟧tm-in ◇)
+subtract-DiffNat = extract-term (⟦ subtract★-left ⟧tm)
 
 subtract-SignNat : SignNat → SignNat → SignNat
-subtract-SignNat = extract-term (⟦ subtract★-right ⟧tm-in ◇)
+subtract-SignNat = extract-term (⟦ subtract★-right ⟧tm)
 
 subtract-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
 subtract-∼ r1 r2 =
-  let subtract-ℤ = ⟦ subtract ℤ ⟧tm-in ◇
+  let subtract-ℤ = ⟦ subtract ℤ ⟧tm
   in proj₂ ((subtract-ℤ €⟨ relation , tt ⟩ [ _ , r1 ]) $⟨ relation-id , refl ⟩ [ _ , r2 ])

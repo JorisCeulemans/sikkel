@@ -129,3 +129,6 @@ infer-type t Γ = InferInterpretResult.type <$> infer-interpret t Γ
 ⟦ t ⟧tm-in Γ with infer-interpret t Γ
 ⟦ t ⟧tm-in Γ | type-error _ = tt
 ⟦ t ⟧tm-in Γ | ok (T , ⟦t⟧) = ⟦t⟧
+
+⟦_⟧tm : (t : TmExpr m) → tcm-elim (λ _ → ⊤) (λ T → Tm ⟦ ◇ {m = m} ⟧ctx ⟦ T ⟧ty) (infer-type t ◇)
+⟦ t ⟧tm = ⟦ t ⟧tm-in ◇
