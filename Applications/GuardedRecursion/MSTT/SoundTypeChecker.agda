@@ -16,7 +16,7 @@ open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩;
 open import Model.Type.Discrete as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
-open import Applications.GuardedRecursion.Model.Modalities as M hiding (timeless; allnow; later; ▻; löb)
+open import Applications.GuardedRecursion.Model.Modalities as M hiding (constantly; later; ▻; löb)
 open import Applications.GuardedRecursion.Model.Streams.Guarded as M hiding (GStream; g-cons; g-head; g-tail)
 
 open import Applications.GuardedRecursion.MSTT.ModeTheory
@@ -89,16 +89,16 @@ infer-interpret (if c t f) Γ = do
   F , ⟦f⟧ ← infer-interpret f Γ
   T=F ← ⟦ T ⟧≅ty?⟦ F ⟧
   return (T , if' (ι[ Bool'=C ] ⟦c⟧) then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
-infer-interpret (timeless-if c t f) Γ = do
+infer-interpret (constantly-if c t f) Γ = do
   C , ⟦c⟧ ← infer-interpret c Γ
   modal-ty {m} B μ refl ← is-modal-ty C
   refl ← m ≟mode ★
-  timeless=μ ← ⟦ timeless ⟧≅mod?⟦ μ ⟧
+  constantly=μ ← ⟦ constantly ⟧≅mod?⟦ μ ⟧
   Bool'=B ← ⟦ Bool' ⟧≅ty?⟦ B ⟧
   T , ⟦t⟧ ← infer-interpret t Γ
   F , ⟦f⟧ ← infer-interpret f Γ
   T=F ← ⟦ T ⟧≅ty?⟦ F ⟧
-  return (T , timeless-if' (ι[ ≅ᵗʸ-trans (timeless-ty-cong Bool'=B) (eq-mod-closed timeless=μ ⟦ B ⟧ty {{⟦⟧ty-natural B}}) ] ⟦c⟧)
+  return (T , constantly-if' (ι[ ≅ᵗʸ-trans (constantly-ty-cong Bool'=B) (eq-mod-closed constantly=μ ⟦ B ⟧ty {{⟦⟧ty-natural B}}) ] ⟦c⟧)
               then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
 infer-interpret (pair t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
@@ -136,9 +136,9 @@ infer-interpret (löb[ x ∈▻ T ] t) Γ = do
   return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ]
                            (ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} _ ]
                            (ιc[ ,,-cong (▻-cong (closed-natural {{⟦⟧ty-natural T}} (from-earlier _))) ]' ⟦t⟧))))
-infer-interpret (g-cons T) Γ = return (⟨ timeless ∣ T ⟩ ⇛ ▻ (GStream T) ⇛ GStream T
+infer-interpret (g-cons T) Γ = return (⟨ constantly ∣ T ⟩ ⇛ ▻ (GStream T) ⇛ GStream T
                                       , ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (⇛-cong (▻-cong (closed-natural {{⟦⟧ty-natural (GStream T)}} _)) ≅ᵗʸ-refl) ] M.g-cons)
-infer-interpret (g-head T) Γ = return (GStream T ⇛ ⟨ timeless ∣ T ⟩ , M.g-head)
+infer-interpret (g-head T) Γ = return (GStream T ⇛ ⟨ constantly ∣ T ⟩ , M.g-head)
 infer-interpret (g-tail T) Γ = return (GStream T ⇛ ▻ (GStream T)
                                       , ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (▻-cong (closed-natural {{⟦⟧ty-natural (GStream T)}} _)) ] M.g-tail)
 

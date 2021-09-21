@@ -97,13 +97,13 @@ map-inverse {f = f}{g} e {as} =
 -- Definition of guarded streams.
 
 GStream : Ty (now Γ) → Ty Γ
-GStream {Γ = Γ} A ⟨ n , γ ⟩ = Vec (timeless-ty A ⟨ n , γ ⟩) (suc n)
-GStream A ⟪ m≤n , eγ ⟫ v = map (timeless-ty A ⟪ m≤n , eγ ⟫_) (first-≤ (s≤s m≤n) v)
+GStream {Γ = Γ} A ⟨ n , γ ⟩ = Vec (constantly-ty A ⟨ n , γ ⟩) (suc n)
+GStream A ⟪ m≤n , eγ ⟫ v = map (constantly-ty A ⟪ m≤n , eγ ⟫_) (first-≤ (s≤s m≤n) v)
 ty-cong (GStream A) refl = map-cong (λ _ → ty-cong A refl) _
 ty-id (GStream A) {t = v} =
   begin
-    map (timeless-ty A ⟪ ≤-refl , _ ⟫_) (first-≤ (s≤s ≤-refl) v)
-  ≡⟨ map-cong (λ _ → ty-id (timeless-ty A)) (first-≤ (s≤s ≤-refl) v) ⟩
+    map (constantly-ty A ⟪ ≤-refl , _ ⟫_) (first-≤ (s≤s ≤-refl) v)
+  ≡⟨ map-cong (λ _ → ty-id (constantly-ty A)) (first-≤ (s≤s ≤-refl) v) ⟩
     map id (first-≤ (s≤s ≤-refl) v)
   ≡⟨ map-id (first-≤ (s≤s ≤-refl) v) ⟩
     first-≤ (s≤s ≤-refl) v
@@ -112,67 +112,67 @@ ty-id (GStream A) {t = v} =
   where open ≡-Reasoning
 ty-comp (GStream A) {f = k≤m} {g = m≤n} {eγ-zy = eγ-nm} {eγ-yx = eγ-mk} {t = v} =
   begin
-    map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s (≤-trans k≤m m≤n)) v)
-  ≡⟨ cong (map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_)) first-≤-trans ⟩
-    map (timeless-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
-  ≡⟨ map-cong (λ _ → ty-comp (timeless-ty A)) _ ⟩
-    map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_ ∘ timeless-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
-  ≡⟨ map-∘ (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (timeless-ty A ⟪ m≤n , eγ-nm ⟫_) _ ⟩
-    map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (map (timeless-ty A ⟪ m≤n , eγ-nm ⟫_)
+    map (constantly-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s (≤-trans k≤m m≤n)) v)
+  ≡⟨ cong (map (constantly-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_)) first-≤-trans ⟩
+    map (constantly-ty A ⟪ ≤-trans k≤m m≤n , _ ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
+  ≡⟨ map-cong (λ _ → ty-comp (constantly-ty A)) _ ⟩
+    map (constantly-ty A ⟪ k≤m , eγ-mk ⟫_ ∘ constantly-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v))
+  ≡⟨ map-∘ (constantly-ty A ⟪ k≤m , eγ-mk ⟫_) (constantly-ty A ⟪ m≤n , eγ-nm ⟫_) _ ⟩
+    map (constantly-ty A ⟪ k≤m , eγ-mk ⟫_) (map (constantly-ty A ⟪ m≤n , eγ-nm ⟫_)
       (first-≤ (s≤s k≤m) (first-≤ (s≤s m≤n) v)))
-  ≡⟨ cong (map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_)) map-first-≤ ⟩
-    map (timeless-ty A ⟪ k≤m , eγ-mk ⟫_) (first-≤ (s≤s k≤m)
-      (map (timeless-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s m≤n) v))) ∎
+  ≡⟨ cong (map (constantly-ty A ⟪ k≤m , eγ-mk ⟫_)) map-first-≤ ⟩
+    map (constantly-ty A ⟪ k≤m , eγ-mk ⟫_) (first-≤ (s≤s k≤m)
+      (map (constantly-ty A ⟪ m≤n , eγ-nm ⟫_) (first-≤ (s≤s m≤n) v))) ∎
   where open ≡-Reasoning
 
 module _ {A : Ty (now Γ)} where
-  g-head : Tm Γ (GStream A ⇛ timeless-ty A)
+  g-head : Tm Γ (GStream A ⇛ constantly-ty A)
   _$⟨_,_⟩_ (g-head ⟨ n , γn ⟩') _ _ = head
   naturality (g-head ⟨ n , γn ⟩') {t = v} =
     begin
-      head (map (timeless-ty A ⟪ _ , _ ⟫_) (first-≤ (s≤s _) v))
+      head (map (constantly-ty A ⟪ _ , _ ⟫_) (first-≤ (s≤s _) v))
     ≡⟨ map-head (first-≤ (s≤s _) v) ⟩
-      timeless-ty A ⟪ _ , _ ⟫ (head (first-≤ (s≤s _) v))
-    ≡⟨ cong (timeless-ty A ⟪ _ , _ ⟫_) (first-≤-head v) ⟩
-      timeless-ty A ⟪ _ , _ ⟫ head v ∎
+      constantly-ty A ⟪ _ , _ ⟫ (head (first-≤ (s≤s _) v))
+    ≡⟨ cong (constantly-ty A ⟪ _ , _ ⟫_) (first-≤-head v) ⟩
+      constantly-ty A ⟪ _ , _ ⟫ head v ∎
     where open ≡-Reasoning
   naturality g-head m≤n eγ = to-pshfun-eq λ _ _ _ → refl
 
   g-tail : Tm Γ (GStream A ⇛ ▻' (GStream A))
   _$⟨_,_⟩_ (g-tail ⟨ n , γn ⟩') z≤n       _ = λ _ → _ -- = tt
-  _$⟨_,_⟩_ (g-tail ⟨ n , γn ⟩') (s≤s m≤n) _ = map (timeless-ty A ⟪ n≤1+n _ , refl ⟫_) ∘ tail
+  _$⟨_,_⟩_ (g-tail ⟨ n , γn ⟩') (s≤s m≤n) _ = map (constantly-ty A ⟪ n≤1+n _ , refl ⟫_) ∘ tail
   naturality (g-tail ⟨ n , γn ⟩') {ρ-xy = z≤n}     {ρ-yz = m≤n}             = refl
   naturality (g-tail ⟨ n , γn ⟩') {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} {t = v} =
     begin
-      map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ cong (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_)) (map-tail (first-≤ (s≤s (s≤s k≤m)) v)) ⟩
-      map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (map (timeless-ty A ⟪ s≤s k≤m , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ map-map-cong (λ _ → ty-cong-2-2 (timeless-ty A) (≤-irrelevant _ _)) ⟩
-      map (timeless-ty A ⟪ k≤m , _ ⟫_) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ cong (map (timeless-ty A ⟪ k≤m , _ ⟫_) ∘ map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_)) (first-≤-tail v) ⟩
-      map (timeless-ty A ⟪ k≤m , _ ⟫_) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (first-≤ (s≤s k≤m) (tail v)))
-    ≡⟨ cong (map (timeless-ty A ⟪ k≤m , _ ⟫_)) map-first-≤ ⟩
-      map (timeless-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (timeless-ty A ⟪ n≤1+n _ , _ ⟫_) (tail v))) ∎
+      map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (map (constantly-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)))
+    ≡⟨ cong (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_)) (map-tail (first-≤ (s≤s (s≤s k≤m)) v)) ⟩
+      map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (map (constantly-ty A ⟪ s≤s k≤m , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
+    ≡⟨ map-map-cong (λ _ → ty-cong-2-2 (constantly-ty A) (≤-irrelevant _ _)) ⟩
+      map (constantly-ty A ⟪ k≤m , _ ⟫_) (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
+    ≡⟨ cong (map (constantly-ty A ⟪ k≤m , _ ⟫_) ∘ map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_)) (first-≤-tail v) ⟩
+      map (constantly-ty A ⟪ k≤m , _ ⟫_) (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (first-≤ (s≤s k≤m) (tail v)))
+    ≡⟨ cong (map (constantly-ty A ⟪ k≤m , _ ⟫_)) map-first-≤ ⟩
+      map (constantly-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (tail v))) ∎
     where open ≡-Reasoning
   naturality g-tail z≤n       eγ = to-pshfun-eq λ { z≤n _ _ → refl }
   naturality g-tail (s≤s m≤n) eγ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
 
-  prim-g-cons : Tm (Γ ,, timeless-ty A ,, (▻' (GStream A)) [ π ]) (((GStream A) [ π ]) [ π ])
+  prim-g-cons : Tm (Γ ,, constantly-ty A ,, (▻' (GStream A)) [ π ]) (((GStream A) [ π ]) [ π ])
   prim-g-cons ⟨ zero ,    [ [ γn , a ] , t ] ⟩' = a ∷ []
   prim-g-cons ⟨ (suc n) , [ [ γn , a ] , t ] ⟩' = a ∷ map (ty-ctx-subst A (sym (ctx-comp Γ))) t
   naturality prim-g-cons {y = zero}  z≤n       refl = refl
   naturality prim-g-cons {y = suc n} z≤n       refl = refl
-  naturality prim-g-cons             (s≤s m≤n) refl = cong (timeless-ty A ⟪ s≤s m≤n , refl ⟫ _ ∷_) (sym (
+  naturality prim-g-cons             (s≤s m≤n) refl = cong (constantly-ty A ⟪ s≤s m≤n , refl ⟫ _ ∷_) (sym (
     begin
-      map (ty-ctx-subst A _) (map (timeless-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s m≤n) _))
+      map (ty-ctx-subst A _) (map (constantly-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s m≤n) _))
     ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
-      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (map (ty-ctx-subst A _) (first-≤ (s≤s m≤n) _))
-    ≡⟨ cong (map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_)) map-first-≤ ⟩
-      map (timeless-ty A ⟪ s≤s m≤n , refl ⟫_) (first-≤ (s≤s m≤n) (map (ty-ctx-subst A _) _)) ∎))
+      map (constantly-ty A ⟪ s≤s m≤n , refl ⟫_) (map (ty-ctx-subst A _) (first-≤ (s≤s m≤n) _))
+    ≡⟨ cong (map (constantly-ty A ⟪ s≤s m≤n , refl ⟫_)) map-first-≤ ⟩
+      map (constantly-ty A ⟪ s≤s m≤n , refl ⟫_) (first-≤ (s≤s m≤n) (map (ty-ctx-subst A _) _)) ∎))
     where open ≡-Reasoning
 
-  g-cons : Tm Γ (timeless-ty A ⇛ ▻' (GStream A) ⇛ GStream A)
-  g-cons = lam (timeless-ty A) (ι[ ⇛-natural π ]
+  g-cons : Tm Γ (constantly-ty A ⇛ ▻' (GStream A) ⇛ GStream A)
+  g-cons = lam (constantly-ty A) (ι[ ⇛-natural π ]
                lam (▻' (GStream A) [ π ])
                    prim-g-cons)
 

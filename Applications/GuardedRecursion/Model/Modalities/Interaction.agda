@@ -14,8 +14,8 @@ open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Modality
 open import Applications.GuardedRecursion.Model.Modalities.Later
-open import Applications.GuardedRecursion.Model.Modalities.Timeless
-open import Applications.GuardedRecursion.Model.Modalities.AllNow
+open import Applications.GuardedRecursion.Model.Modalities.Constantly
+open import Applications.GuardedRecursion.Model.Modalities.Forever
 open import Applications.GuardedRecursion.Model.Modalities.Bundles
 
 
@@ -28,82 +28,82 @@ CtxNatTransf.naturality (transf 𝟙≤later) = from-earlier-natural
 
 
 --------------------------------------------------
--- Interaction between the allnow and later modalities
+-- Interaction between the forever and later modalities
 
-earlier-timeless-ctx : (Γ : Ctx ★) → ◄ (timeless-ctx Γ) ≅ᶜ timeless-ctx Γ
-from (earlier-timeless-ctx Γ) = from-earlier (timeless-ctx Γ)
-func (to (earlier-timeless-ctx Γ)) γ = γ
-_⇒_.naturality (to (earlier-timeless-ctx Γ)) = refl
-eq (isoˡ (earlier-timeless-ctx Γ)) _ = refl
-eq (isoʳ (earlier-timeless-ctx Γ)) _ = refl
+earlier-constantly-ctx : (Γ : Ctx ★) → ◄ (constantly-ctx Γ) ≅ᶜ constantly-ctx Γ
+from (earlier-constantly-ctx Γ) = from-earlier (constantly-ctx Γ)
+func (to (earlier-constantly-ctx Γ)) γ = γ
+_⇒_.naturality (to (earlier-constantly-ctx Γ)) = refl
+eq (isoˡ (earlier-constantly-ctx Γ)) _ = refl
+eq (isoʳ (earlier-constantly-ctx Γ)) _ = refl
 
-allnow-later-tyʳ : {Γ : Ctx ★} (T : Ty (◄ (timeless-ctx Γ))) →
-                  allnow-ty (▻ T) ≅ᵗʸ allnow-ty (T [ to (earlier-timeless-ctx Γ) ])
-func (from (allnow-later-tyʳ T)) t ⟨ n , _ ⟩' = t ⟨ suc n , tt ⟩'
-Tm.naturality (func (from (allnow-later-tyʳ T)) t) m≤n _ = trans (ty-cong T refl) (Tm.naturality t (s≤s m≤n) refl)
-_↣_.naturality (from (allnow-later-tyʳ T)) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
-func (to (allnow-later-tyʳ T)) t ⟨ zero  , _ ⟩' = _
-func (to (allnow-later-tyʳ T)) t ⟨ suc n , _ ⟩' = t ⟨ n , tt ⟩'
-Tm.naturality (func (to (allnow-later-tyʳ T)) t) z≤n _ = refl
-Tm.naturality (func (to (allnow-later-tyʳ T)) t) (s≤s m≤n) _ = trans (ty-cong T refl) (Tm.naturality t m≤n refl)
-_↣_.naturality (to (allnow-later-tyʳ T)) = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → ty-cong T refl } })
-eq (isoˡ (allnow-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → refl } })
-eq (isoʳ (allnow-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ _ → refl })
+forever-later-tyʳ : {Γ : Ctx ★} (T : Ty (◄ (constantly-ctx Γ))) →
+                    forever-ty (▻ T) ≅ᵗʸ forever-ty (T [ to (earlier-constantly-ctx Γ) ])
+func (from (forever-later-tyʳ T)) t ⟨ n , _ ⟩' = t ⟨ suc n , tt ⟩'
+Tm.naturality (func (from (forever-later-tyʳ T)) t) m≤n _ = trans (ty-cong T refl) (Tm.naturality t (s≤s m≤n) refl)
+_↣_.naturality (from (forever-later-tyʳ T)) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
+func (to (forever-later-tyʳ T)) t ⟨ zero  , _ ⟩' = _
+func (to (forever-later-tyʳ T)) t ⟨ suc n , _ ⟩' = t ⟨ n , tt ⟩'
+Tm.naturality (func (to (forever-later-tyʳ T)) t) z≤n _ = refl
+Tm.naturality (func (to (forever-later-tyʳ T)) t) (s≤s m≤n) _ = trans (ty-cong T refl) (Tm.naturality t m≤n refl)
+_↣_.naturality (to (forever-later-tyʳ T)) = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → ty-cong T refl } })
+eq (isoˡ (forever-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → refl } })
+eq (isoʳ (forever-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ _ → refl })
 
-allnow-later : allnow ⓜ later ≅ᵐ allnow
-eq-lock allnow-later = earlier-timeless-ctx
-eq-mod-tyʳ allnow-later = allnow-later-tyʳ
+forever-later : forever ⓜ later ≅ᵐ forever
+eq-lock forever-later = earlier-constantly-ctx
+eq-mod-tyʳ forever-later = forever-later-tyʳ
 
-allnow-later'-ty : {Γ : Ctx ★} (T : Ty (timeless-ctx Γ)) →
-                   allnow-ty (▻' T) ≅ᵗʸ allnow-ty T
-allnow-later'-ty = eq-mod-tyˡ allnow-later
+forever-later'-ty : {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) →
+                    forever-ty (▻' T) ≅ᵗʸ forever-ty T
+forever-later'-ty = eq-mod-tyˡ forever-later
 
 
 --------------------------------------------------
--- Interaction between the allnow and timeless modalities
+-- Interaction between the forever and constantly modalities
 
-now-timeless-ctx : (Γ : Ctx ★) → now (timeless-ctx Γ) ≅ᶜ Γ
-func (from (now-timeless-ctx Γ)) = id
-_⇒_.naturality (from (now-timeless-ctx Γ)) {f = tt} = ctx-id Γ
-func (to (now-timeless-ctx Γ)) = id
-_⇒_.naturality (to (now-timeless-ctx Γ)) {f = tt} = sym (ctx-id Γ)
-eq (isoˡ (now-timeless-ctx Γ)) _ = refl
-eq (isoʳ (now-timeless-ctx Γ)) _ = refl
+now-constantly-ctx : (Γ : Ctx ★) → now (constantly-ctx Γ) ≅ᶜ Γ
+func (from (now-constantly-ctx Γ)) = id
+_⇒_.naturality (from (now-constantly-ctx Γ)) {f = tt} = ctx-id Γ
+func (to (now-constantly-ctx Γ)) = id
+_⇒_.naturality (to (now-constantly-ctx Γ)) {f = tt} = sym (ctx-id Γ)
+eq (isoˡ (now-constantly-ctx Γ)) _ = refl
+eq (isoʳ (now-constantly-ctx Γ)) _ = refl
 
-now-timeless-natural : {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) →
-                       from (now-timeless-ctx Γ) ⊚ now-subst (timeless-subst σ) ≅ˢ σ ⊚ from (now-timeless-ctx Δ)
-eq (now-timeless-natural σ) _ = refl
+now-constantly-natural : {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) →
+                         from (now-constantly-ctx Γ) ⊚ now-subst (constantly-subst σ) ≅ˢ σ ⊚ from (now-constantly-ctx Δ)
+eq (now-constantly-natural σ) _ = refl
 
-allnow-timeless-tyʳ : {Γ : Ctx ★} (T : Ty (now (timeless-ctx Γ))) →
-                      allnow-ty (timeless-ty T) ≅ᵗʸ T [ to (now-timeless-ctx Γ) ]
-func (from (allnow-timeless-tyʳ T)) tm = tm ⟨ 0 , tt ⟩'
-_↣_.naturality (from (allnow-timeless-tyʳ T)) = ty-cong T refl
-func (to (allnow-timeless-tyʳ T)) t ⟨ _ , _ ⟩' = t
-Tm.naturality (func (to (allnow-timeless-tyʳ T)) t) _ _ = strong-ty-id T
-_↣_.naturality (to (allnow-timeless-tyʳ T)) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
-eq (isoˡ (allnow-timeless-tyʳ T)) tm = tm-≅-to-≡ (record { eq = λ _ → trans (sym (Tm.naturality tm z≤n refl)) (strong-ty-id T) })
-eq (isoʳ (allnow-timeless-tyʳ T)) _ = refl
+forever-constantly-tyʳ : {Γ : Ctx ★} (T : Ty (now (constantly-ctx Γ))) →
+                         forever-ty (constantly-ty T) ≅ᵗʸ T [ to (now-constantly-ctx Γ) ]
+func (from (forever-constantly-tyʳ T)) tm = tm ⟨ 0 , tt ⟩'
+_↣_.naturality (from (forever-constantly-tyʳ T)) = ty-cong T refl
+func (to (forever-constantly-tyʳ T)) t ⟨ _ , _ ⟩' = t
+Tm.naturality (func (to (forever-constantly-tyʳ T)) t) _ _ = strong-ty-id T
+_↣_.naturality (to (forever-constantly-tyʳ T)) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
+eq (isoˡ (forever-constantly-tyʳ T)) tm = tm-≅-to-≡ (record { eq = λ _ → trans (sym (Tm.naturality tm z≤n refl)) (strong-ty-id T) })
+eq (isoʳ (forever-constantly-tyʳ T)) _ = refl
 
-allnow-timeless : allnow ⓜ timeless ≅ᵐ 𝟙
-eq-lock allnow-timeless = now-timeless-ctx
-eq-mod-tyʳ allnow-timeless = allnow-timeless-tyʳ
+forever-constantly : forever ⓜ constantly ≅ᵐ 𝟙
+eq-lock forever-constantly = now-constantly-ctx
+eq-mod-tyʳ forever-constantly = forever-constantly-tyʳ
 
-now-timeless-ctx-intro : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
-                         Tm Γ A → Tm (now (timeless-ctx Γ)) A
-now-timeless-ctx-intro {A} t = untimeless-tm (unallnow-tm (ι[ eq-mod-closed allnow-timeless A ] t))
+now-constantly-ctx-intro : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
+                           Tm Γ A → Tm (now (constantly-ctx Γ)) A
+now-constantly-ctx-intro {A} t = unconstantly-tm (unforever-tm (ι[ eq-mod-closed forever-constantly A ] t))
 
-to-timeless-now-ctx : (Γ : Ctx ω) → (Γ ⇒ timeless-ctx (now Γ))
-func (to-timeless-now-ctx Γ) = Γ ⟪ z≤n ⟫_
-_⇒_.naturality (to-timeless-now-ctx Γ) = ctx-comp Γ
+to-constantly-now-ctx : (Γ : Ctx ω) → (Γ ⇒ constantly-ctx (now Γ))
+func (to-constantly-now-ctx Γ) = Γ ⟪ z≤n ⟫_
+_⇒_.naturality (to-constantly-now-ctx Γ) = ctx-comp Γ
 
-to-timeless-now-ctx-natural : {Δ Γ : Ctx ω} (σ : Δ ⇒ Γ) →
-                              to-timeless-now-ctx Γ ⊚ σ ≅ˢ ctx-fmap (timeless-ctx-functor ⓕ now-functor) σ ⊚ to-timeless-now-ctx Δ
-eq (to-timeless-now-ctx-natural σ) δ = _⇒_.naturality σ
+to-constantly-now-ctx-natural : {Δ Γ : Ctx ω} (σ : Δ ⇒ Γ) →
+    to-constantly-now-ctx Γ ⊚ σ ≅ˢ ctx-fmap (constantly-ctx-functor ⓕ now-functor) σ ⊚ to-constantly-now-ctx Δ
+eq (to-constantly-now-ctx-natural σ) δ = _⇒_.naturality σ
 
-timeless∘allnow≤𝟙 : TwoCell (timeless ⓜ allnow) 𝟙
-transf-op (transf timeless∘allnow≤𝟙) = to-timeless-now-ctx
-CtxNatTransf.naturality (transf timeless∘allnow≤𝟙) = to-timeless-now-ctx-natural
+constantly∘forever≤𝟙 : TwoCell (constantly ⓜ forever) 𝟙
+transf-op (transf constantly∘forever≤𝟙) = to-constantly-now-ctx
+CtxNatTransf.naturality (transf constantly∘forever≤𝟙) = to-constantly-now-ctx-natural
 
-from-timeless-allnow-ty : {Γ : Ctx ω} {T : Ty (timeless-ctx (now Γ))} →
-                          Tm Γ (timeless-ty (allnow-ty T)) → Tm Γ (T [ to-timeless-now-ctx Γ ])
-from-timeless-allnow-ty {Γ = Γ} t = unallnow-tm (untimeless-tm t) [ to-timeless-now-ctx Γ ]'
+from-constantly-forever-ty : {Γ : Ctx ω} {T : Ty (constantly-ctx (now Γ))} →
+                             Tm Γ (constantly-ty (forever-ty T)) → Tm Γ (T [ to-constantly-now-ctx Γ ])
+from-constantly-forever-ty {Γ = Γ} t = unforever-tm (unconstantly-tm t) [ to-constantly-now-ctx Γ ]'

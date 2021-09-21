@@ -4,8 +4,8 @@ open import Model.BaseCategory
 open import Model.CwF-Structure.ContextFunctor
 open import Model.Modality
 open import Applications.GuardedRecursion.Model.Modalities.Later
-open import Applications.GuardedRecursion.Model.Modalities.Timeless
-open import Applications.GuardedRecursion.Model.Modalities.AllNow
+open import Applications.GuardedRecursion.Model.Modalities.Constantly
+open import Applications.GuardedRecursion.Model.Modalities.Forever
 
 earlier-functor : CtxFunctor ω ω
 ctx-op earlier-functor = ◄
@@ -29,34 +29,34 @@ now-functor : CtxFunctor ω ★
 ctx-op now-functor = now
 is-functor now-functor = now-is-functor
 
-timeless : Modality ★ ω
-ctx-functor timeless = now-functor
-⟨_∣_⟩ timeless = timeless-ty
-mod-cong timeless = timeless-ty-cong
-mod-natural timeless = timeless-ty-natural
-mod-intro timeless = timeless-tm
-mod-intro-cong timeless = timeless-tm-cong
-mod-intro-natural timeless = timeless-tm-natural
-mod-intro-ι timeless = timeless-tm-ι
-mod-elim timeless = untimeless-tm
-mod-elim-cong timeless = untimeless-tm-cong
-mod-β timeless = timeless-ty-β
-mod-η timeless = timeless-ty-η
+constantly : Modality ★ ω
+ctx-functor constantly = now-functor
+⟨_∣_⟩ constantly = constantly-ty
+mod-cong constantly = constantly-ty-cong
+mod-natural constantly = constantly-ty-natural
+mod-intro constantly = constantly-tm
+mod-intro-cong constantly = constantly-tm-cong
+mod-intro-natural constantly = constantly-tm-natural
+mod-intro-ι constantly = constantly-tm-ι
+mod-elim constantly = unconstantly-tm
+mod-elim-cong constantly = unconstantly-tm-cong
+mod-β constantly = constantly-ty-β
+mod-η constantly = constantly-ty-η
 
-timeless-ctx-functor : CtxFunctor ★ ω
-ctx-op timeless-ctx-functor = timeless-ctx
-is-functor timeless-ctx-functor = timeless-ctx-is-functor
+constantly-ctx-functor : CtxFunctor ★ ω
+ctx-op constantly-ctx-functor = constantly-ctx
+is-functor constantly-ctx-functor = constantly-ctx-is-functor
 
-allnow : Modality ω ★
-ctx-functor allnow = timeless-ctx-functor
-⟨_∣_⟩ allnow = allnow-ty
-mod-cong allnow = allnow-ty-cong
-mod-natural allnow = allnow-ty-natural
-mod-intro allnow = allnow-tm
-mod-intro-cong allnow = allnow-tm-cong
-mod-intro-natural allnow = allnow-tm-natural
-mod-intro-ι allnow = allnow-tm-ι
-mod-elim allnow = unallnow-tm
-mod-elim-cong allnow = unallnow-tm-cong
-mod-β allnow = allnow-ty-β
-mod-η allnow = allnow-ty-η
+forever : Modality ω ★
+ctx-functor forever = constantly-ctx-functor
+⟨_∣_⟩ forever = forever-ty
+mod-cong forever = forever-ty-cong
+mod-natural forever = forever-ty-natural
+mod-intro forever = forever-tm
+mod-intro-cong forever = forever-tm-cong
+mod-intro-natural forever = forever-tm-natural
+mod-intro-ι forever = forever-tm-ι
+mod-elim forever = unforever-tm
+mod-elim-cong forever = unforever-tm-cong
+mod-β forever = forever-ty-β
+mod-η forever = forever-ty-η

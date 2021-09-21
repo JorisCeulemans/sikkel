@@ -12,7 +12,7 @@ open import Model.CwF-Structure as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩)
-open import Applications.GuardedRecursion.Model.Modalities as M hiding (timeless; allnow; later; _⊛_)
+open import Applications.GuardedRecursion.Model.Modalities as M hiding (constantly; forever; later; _⊛_)
 open import Applications.GuardedRecursion.Model.Streams.Guarded as M hiding (GStream)
 
 open import Applications.GuardedRecursion.MSTT.ModeTheory
@@ -38,8 +38,8 @@ m ≟mode m' = type-error ("Mode " ++ show-mode m ++ " is not equal to " ++ show
 
 _≟modality_ : (μ ρ : ModalityExpr m m') → TCM (μ ≡ ρ)
 𝟙 ≟modality 𝟙 = return refl
-timeless ≟modality timeless = return refl
-allnow ≟modality allnow = return refl
+constantly ≟modality constantly = return refl
+forever ≟modality forever = return refl
 later ≟modality later = return refl
 (_ⓜ_ {m} μ ρ) ≟modality (_ⓜ_ {m'} μ' ρ') = do
   refl ← m ≟mode m'
@@ -66,18 +66,18 @@ T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-ty
 --      composition is flattened to a list-like structure. This is similar to a
 --      standard monoid solver.
 --   2. The list-like structure is reduced making use of specific equalities in the
---      mode theory such as `allnow ⓜ later ≅ᵐ allnow`.
+--      mode theory such as `forever ⓜ later ≅ᵐ forever`.
 
 -- A value of type S(imple)ModalityExpr represents a modality expression that does
 -- not include composition.
 data SModalityExpr : ModeExpr → ModeExpr → Set where
-  s-timeless : SModalityExpr ★ ω
-  s-allnow : SModalityExpr ω ★
+  s-constantly : SModalityExpr ★ ω
+  s-forever : SModalityExpr ω ★
   s-later : SModalityExpr ω ω
 
 interpret-smod-expr : SModalityExpr m m' → ModalityExpr m m'
-interpret-smod-expr s-timeless = timeless
-interpret-smod-expr s-allnow = allnow
+interpret-smod-expr s-constantly = constantly
+interpret-smod-expr s-forever = forever
 interpret-smod-expr s-later = later
 
 ⟦_⟧smod : SModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
@@ -108,8 +108,8 @@ _s++_ : SModalitySeq m'' m' → SModalitySeq m m'' → SModalitySeq m m'
 flatten : ModalityExpr m m' → SModalitySeq m m'
 flatten 𝟙 = []
 flatten (μ ⓜ ρ) = flatten μ s++ flatten ρ
-flatten timeless = s-timeless ∷ []
-flatten allnow = s-allnow ∷ []
+flatten constantly = s-constantly ∷ []
+flatten forever = s-forever ∷ []
 flatten later = s-later ∷ []
 
 s++-sound : (μs : SModalitySeq m'' m') (ρs : SModalitySeq m m'') →
@@ -135,15 +135,15 @@ flatten-sound (μ ⓜ ρ) = begin
     ≅⟨ ⓜ-congˡ ⟦ μ ⟧modality (flatten-sound ρ) ⟩
   ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality ∎
   where open ≅ᵐ-Reasoning
-flatten-sound timeless = ≅ᵐ-refl
-flatten-sound allnow = ≅ᵐ-refl
+flatten-sound constantly = ≅ᵐ-refl
+flatten-sound forever = ≅ᵐ-refl
 flatten-sound later = ≅ᵐ-refl
 
 -- Step 2: reducing the sequence using specific equalities
 reduce-smod-seq-cons : SModalityExpr m'' m' → SModalitySeq m m'' → SModalitySeq m m'
-reduce-smod-seq-cons s-allnow (s-timeless ∷ μs) = μs
-reduce-smod-seq-cons s-allnow (s-later    ∷ μs) = reduce-smod-seq-cons s-allnow μs
-reduce-smod-seq-cons μ        μs = μ ∷ μs
+reduce-smod-seq-cons s-forever (s-constantly ∷ μs) = μs
+reduce-smod-seq-cons s-forever (s-later    ∷ μs) = reduce-smod-seq-cons s-forever μs
+reduce-smod-seq-cons μ         μs = μ ∷ μs
 
 reduce-smod-seq : SModalitySeq m m' → SModalitySeq m m'
 reduce-smod-seq [] = []
@@ -151,35 +151,35 @@ reduce-smod-seq (μ ∷ μs) = reduce-smod-seq-cons μ (reduce-smod-seq μs)
 
 reduce-smod-seq-cons-sound : (μ : SModalityExpr m'' m') (μs : SModalitySeq m m'') →
                              ⟦ reduce-smod-seq-cons μ μs ⟧smod-seq ≅ᵐ ⟦ μ ⟧smod M.ⓜ ⟦ μs ⟧smod-seq
-reduce-smod-seq-cons-sound s-allnow (s-timeless ∷ μs) = begin
+reduce-smod-seq-cons-sound s-forever (s-constantly ∷ μs) = begin
   ⟦ μs ⟧smod-seq
     ≅˘⟨ 𝟙-identityˡ ⟦ μs ⟧smod-seq ⟩
   M.𝟙 M.ⓜ ⟦ μs ⟧smod-seq
-    ≅˘⟨ ⓜ-congʳ ⟦ μs ⟧smod-seq allnow-timeless ⟩
-  (M.allnow M.ⓜ M.timeless) M.ⓜ ⟦ μs ⟧smod-seq
+    ≅˘⟨ ⓜ-congʳ ⟦ μs ⟧smod-seq forever-constantly ⟩
+  (M.forever M.ⓜ M.constantly) M.ⓜ ⟦ μs ⟧smod-seq
     ≅⟨ ⓜ-assoc _ _ _ ⟩
-  M.allnow M.ⓜ (M.timeless M.ⓜ ⟦ μs ⟧smod-seq)
-    ≅˘⟨ ⓜ-congˡ M.allnow (interpret-smod-cons s-timeless μs) ⟩
-  M.allnow M.ⓜ ⟦ s-timeless ∷ μs ⟧smod-seq ∎
+  M.forever M.ⓜ (M.constantly M.ⓜ ⟦ μs ⟧smod-seq)
+    ≅˘⟨ ⓜ-congˡ M.forever (interpret-smod-cons s-constantly μs) ⟩
+  M.forever M.ⓜ ⟦ s-constantly ∷ μs ⟧smod-seq ∎
   where open ≅ᵐ-Reasoning
-reduce-smod-seq-cons-sound s-allnow (s-later    ∷ μs) = begin
-  ⟦ reduce-smod-seq-cons s-allnow μs ⟧smod-seq
-    ≅⟨ reduce-smod-seq-cons-sound s-allnow μs ⟩
-  M.allnow M.ⓜ ⟦ μs ⟧smod-seq
-    ≅˘⟨ ⓜ-congʳ ⟦ μs ⟧smod-seq allnow-later ⟩
-  (M.allnow M.ⓜ M.later) M.ⓜ ⟦ μs ⟧smod-seq
+reduce-smod-seq-cons-sound s-forever (s-later    ∷ μs) = begin
+  ⟦ reduce-smod-seq-cons s-forever μs ⟧smod-seq
+    ≅⟨ reduce-smod-seq-cons-sound s-forever μs ⟩
+  M.forever M.ⓜ ⟦ μs ⟧smod-seq
+    ≅˘⟨ ⓜ-congʳ ⟦ μs ⟧smod-seq forever-later ⟩
+  (M.forever M.ⓜ M.later) M.ⓜ ⟦ μs ⟧smod-seq
     ≅⟨ ⓜ-assoc _ _ _ ⟩
-  M.allnow M.ⓜ (M.later M.ⓜ ⟦ μs ⟧smod-seq)
-    ≅˘⟨ ⓜ-congˡ M.allnow (interpret-smod-cons s-later μs) ⟩
-  M.allnow M.ⓜ ⟦ s-later ∷ μs ⟧smod-seq ∎
+  M.forever M.ⓜ (M.later M.ⓜ ⟦ μs ⟧smod-seq)
+    ≅˘⟨ ⓜ-congˡ M.forever (interpret-smod-cons s-later μs) ⟩
+  M.forever M.ⓜ ⟦ s-later ∷ μs ⟧smod-seq ∎
   where open ≅ᵐ-Reasoning
-reduce-smod-seq-cons-sound s-allnow [] = ≅ᵐ-sym (𝟙-identityʳ _)
-reduce-smod-seq-cons-sound s-timeless μs = interpret-smod-cons s-timeless μs
+reduce-smod-seq-cons-sound s-forever [] = ≅ᵐ-sym (𝟙-identityʳ _)
+reduce-smod-seq-cons-sound s-constantly μs = interpret-smod-cons s-constantly μs
 reduce-smod-seq-cons-sound s-later μs = interpret-smod-cons s-later μs
 
 reduce-smod-seq-cons-empty : (μ : SModalityExpr m m') → reduce-smod-seq-cons μ [] ≡ μ ∷ []
-reduce-smod-seq-cons-empty s-timeless = refl
-reduce-smod-seq-cons-empty s-allnow = refl
+reduce-smod-seq-cons-empty s-constantly = refl
+reduce-smod-seq-cons-empty s-forever = refl
 reduce-smod-seq-cons-empty s-later = refl
 
 reduce-smod-seq-sound : (μs : SModalitySeq m m') → ⟦ reduce-smod-seq μs ⟧smod-seq ≅ᵐ ⟦ μs ⟧smod-seq
@@ -249,19 +249,19 @@ apply-mod-reduced-sound (μ ⓜ ρ) (T1 ⊠ T2) = ≅ᵗʸ-refl
 apply-mod-reduced-sound (μ ⓜ ρ) ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (μ ⓜ ρ ⓜ κ)) T)
                                                       (eq-mod-closed (reduce-modality-expr-sound (μ ⓜ ρ ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
 apply-mod-reduced-sound (μ ⓜ ρ) (GStream T) = ≅ᵗʸ-refl
-apply-mod-reduced-sound timeless Nat' = ≅ᵗʸ-refl
-apply-mod-reduced-sound timeless Bool' = ≅ᵗʸ-refl
-apply-mod-reduced-sound timeless (T1 ⇛ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound timeless (T1 ⊠ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound timeless ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (timeless ⓜ κ)) T)
-                                                       (eq-mod-closed (reduce-modality-expr-sound (timeless ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound allnow Nat' = ≅ᵗʸ-refl
-apply-mod-reduced-sound allnow Bool' = ≅ᵗʸ-refl
-apply-mod-reduced-sound allnow (T1 ⇛ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound allnow (T1 ⊠ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound allnow ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (allnow ⓜ κ)) T)
-                                                     (eq-mod-closed (reduce-modality-expr-sound (allnow ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound allnow (GStream T) = ≅ᵗʸ-refl
+apply-mod-reduced-sound constantly Nat' = ≅ᵗʸ-refl
+apply-mod-reduced-sound constantly Bool' = ≅ᵗʸ-refl
+apply-mod-reduced-sound constantly (T1 ⇛ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound constantly (T1 ⊠ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound constantly ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (constantly ⓜ κ)) T)
+                                                         (eq-mod-closed (reduce-modality-expr-sound (constantly ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+apply-mod-reduced-sound forever Nat' = ≅ᵗʸ-refl
+apply-mod-reduced-sound forever Bool' = ≅ᵗʸ-refl
+apply-mod-reduced-sound forever (T1 ⇛ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound forever (T1 ⊠ T2) = ≅ᵗʸ-refl
+apply-mod-reduced-sound forever ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (forever ⓜ κ)) T)
+                                                      (eq-mod-closed (reduce-modality-expr-sound (forever ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+apply-mod-reduced-sound forever (GStream T) = ≅ᵗʸ-refl
 apply-mod-reduced-sound later Nat' = ≅ᵗʸ-refl
 apply-mod-reduced-sound later Bool' = ≅ᵗʸ-refl
 apply-mod-reduced-sound later (T1 ⇛ T2) = ≅ᵗʸ-refl

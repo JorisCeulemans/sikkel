@@ -10,7 +10,7 @@ open import Model.BaseCategory as M hiding (★; ω)
 open import Model.CwF-Structure as M hiding (_ⓣ-vert_; _ⓣ-hor_)
 open import Model.Modality as M hiding (𝟙; _ⓜ_)
 open import Applications.GuardedRecursion.Model.Modalities as M hiding
-  (timeless; allnow; later; 𝟙≤later; timeless∘allnow≤𝟙)
+  (constantly; forever; later; 𝟙≤later; constantly∘forever≤𝟙)
 
 
 --------------------------------------------------
@@ -27,8 +27,8 @@ infixl 5 _ⓜ_
 data ModalityExpr : ModeExpr → ModeExpr → Set where
   𝟙 : ModalityExpr m m
   _ⓜ_ : ModalityExpr m' m'' → ModalityExpr m m' → ModalityExpr m m''
-  timeless : ModalityExpr ★ ω
-  allnow : ModalityExpr ω ★
+  constantly : ModalityExpr ★ ω
+  forever : ModalityExpr ω ★
   later : ModalityExpr ω ω
 
 data TwoCellExpr : ModalityExpr m m' → ModalityExpr m m' → Set where
@@ -39,7 +39,7 @@ data TwoCellExpr : ModalityExpr m m' → ModalityExpr m m' → Set where
             TwoCellExpr μ μ' → TwoCellExpr ρ ρ' → TwoCellExpr (μ ⓜ ρ) (μ' ⓜ ρ')
     -- ^ Horizontal composition of 2-cells, not used in examples.
   𝟙≤later : TwoCellExpr 𝟙 later
-  timeless∘allnow≤𝟙 : TwoCellExpr (timeless ⓜ allnow) 𝟙
+  constantly∘forever≤𝟙 : TwoCellExpr (constantly ⓜ forever) 𝟙
 
 
 --------------------------------------------------
@@ -52,8 +52,8 @@ show-mode ω = "ω"
 show-modality : ModalityExpr m m' → String
 show-modality 𝟙 = "𝟙"
 show-modality (μ ⓜ ρ) = show-modality μ ++ " ⓜ " ++ show-modality ρ
-show-modality timeless = "timeless"
-show-modality allnow = "allnow"
+show-modality constantly = "constantly"
+show-modality forever = "forever"
 show-modality later = "later"
 
 
@@ -67,8 +67,8 @@ show-modality later = "later"
 ⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
 ⟦ 𝟙 ⟧modality = M.𝟙
 ⟦ μ ⓜ ρ ⟧modality = ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
-⟦ timeless ⟧modality = M.timeless
-⟦ allnow ⟧modality = M.allnow
+⟦ constantly ⟧modality = M.constantly
+⟦ forever ⟧modality = M.forever
 ⟦ later ⟧modality = M.later
 
 ⟦_⟧two-cell : {μ ρ : ModalityExpr m m'} → TwoCellExpr μ ρ → TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality
@@ -76,7 +76,7 @@ show-modality later = "later"
 ⟦ α ⓣ-vert β ⟧two-cell = two-cell (transf ⟦ β ⟧two-cell M.ⓣ-vert transf ⟦ α ⟧two-cell)
 ⟦ α ⓣ-hor β ⟧two-cell = two-cell (transf ⟦ β ⟧two-cell M.ⓣ-hor transf ⟦ α ⟧two-cell)
 ⟦ 𝟙≤later ⟧two-cell = M.𝟙≤later
-⟦ timeless∘allnow≤𝟙 ⟧two-cell = M.timeless∘allnow≤𝟙
+⟦ constantly∘forever≤𝟙 ⟧two-cell = M.constantly∘forever≤𝟙
 
 
 --------------------------------------------------

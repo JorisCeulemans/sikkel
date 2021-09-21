@@ -48,7 +48,7 @@ data TmExpr : ModeExpr → Set where
   suc plus : TmExpr m
   true false : TmExpr m
   if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
-  timeless-if : TmExpr ω → TmExpr ω → TmExpr ω → TmExpr ω
+  constantly-if : TmExpr ω → TmExpr ω → TmExpr ω → TmExpr ω
   pair : TmExpr m → TmExpr m → TmExpr m
   fst snd : TmExpr m → TmExpr m
   mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
