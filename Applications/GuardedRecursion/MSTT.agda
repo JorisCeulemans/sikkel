@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Reexporting the instance of MSTT for guarded recursion
+--------------------------------------------------
+
 module Applications.GuardedRecursion.MSTT where
 
 open import Applications.GuardedRecursion.MSTT.ModeTheory public

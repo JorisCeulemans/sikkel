@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Interpretation of types and contexts in a presheaf model
+--------------------------------------------------
+
 open import MSTT.ModeTheory
 
 module MSTT.InterpretTypes (mt : ModeTheory) where

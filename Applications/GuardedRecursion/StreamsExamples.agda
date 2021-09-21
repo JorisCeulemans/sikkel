@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Many example programs dealing with streams (guarded and standard)
+--------------------------------------------------
+
 module Applications.GuardedRecursion.StreamsExamples where
 
 open import Data.Bool
@@ -19,9 +23,23 @@ open import Extraction
 open import Applications.GuardedRecursion.MSTT
 
 
+--------------------------------------------------
+--------------------------------------------------
+-- Abbreviations for frequently used combinations
+
 g-consN = g-cons Nat'
 g-headN = g-head Nat'
 g-tailN = g-tail Nat'
+
+g-consB = g-cons Bool'
+g-headB = g-head Bool'
+g-tailB = g-tail Bool'
+
+
+--------------------------------------------------
+--------------------------------------------------
+-- Definition of some helper functions that are used a lot
+--   in the example programs with streams.
 
 -- If Γ ⊢ f : ⟨ μ ∣ A ⇛ B ⟩ and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⊛⟨ μ ⟩ t : ⟨ μ ∣ B ⟩.
 infixl 5 _⊛⟨_⟩_
@@ -55,6 +73,13 @@ lift2▻ T S R =
   lam[ "f" ∈ T ⇛ S ⇛ R ] lam[ "t" ∈ ▻ T ] lam[ "s" ∈ ▻ S ] (var "f" ⟨$-later⟩' var "t" ⊛⟨ later ⟩ var "s")
 
 
+--------------------------------------------------
+--------------------------------------------------
+-- Examples involving guarded streams
+
+--------------------------------------------------
+-- The following is the example that is worked out in Section 3 of the CPP submission.
+
 -- Γ ⊢ g-map A B : ⟨ constantly ∣ A ⇛ B ⟩ ⇛ GStream A ⇛ GStream B
 g-map : TyExpr ★ → TyExpr ★ → TmExpr ω
 g-map A B =
@@ -76,6 +101,14 @@ g-nats =
 
 g-nats-sem : Tm ′◇ (′GStream ′Nat')
 g-nats-sem = ⟦ g-nats ⟧tm
+
+
+--------------------------------------------------
+-- The follwing definitions are an implementation of all examples involving streams on pages 8-10 of the paper
+--   Ranald Clouston, Aleš Bizjak, Hans Bugge Grathwohl, and Lars Birkedal.
+--   The Guarded Lambda-Calculus: Programming and Reasoning with Guarded Recursion for Coinductive Types.
+--   Logical Methods of Computer Science (LMCS), 12(3), 2016.
+--   https://doi.org/10.2168/LMCS-12(3:7)2016
 
 -- Γ ⊢ g-snd A : GStream A ⇛ ▻ ⟨ constantly ∣ A ⟩
 g-snd : TyExpr ★ → TmExpr ω
@@ -110,6 +143,10 @@ g-iterate' A =
 g-iterate'-sem : Tm ′◇ (constantly-ty (′Nat' ′⇛ ′Nat') ′⇛ constantly-ty ′Nat' ′⇛ ′GStream ′Nat')
 g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm
 
+-- This is a more general definition of iterate since the generating function of type
+-- ⟨ constantly ∣ A ⇛ A ⟩ appears under ▻. The implementation itself applies g-map to
+-- its corecursive call (represented by the variable "s"), which would not be allowed
+-- in a definition of standard Agda streams by copattern matching.
 -- Γ ⊢ g-iterate A : ⟨ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
 g-iterate : TyExpr ★ → TmExpr ω
 g-iterate A =
@@ -181,9 +218,9 @@ g-final A T =
 g-final-sem : Tm ′◇ ((′Bool' ′⇛ (constantly-ty ′Nat' ′⊠ ′▻ ′Bool')) ′⇛ ′Bool' ′⇛ ′GStream ′Nat')
 g-final-sem = ⟦ g-final Nat' Bool' ⟧tm
 
-g-consB = g-cons Bool'
-g-headB = g-head Bool'
-g-tailB = g-tail Bool'
+
+--------------------------------------------------
+-- Implementation of the examples on page 12 of the paper by Clouston et al. cited above.
 
 -- Γ ⊢ g-thumorse : GStream Bool'
 g-thumorse : TmExpr ω
@@ -234,6 +271,14 @@ g-fibonacci-word =
 g-fibonacci-word-sem : Tm ′◇ (′GStream ′Bool')
 g-fibonacci-word-sem = ⟦ g-fibonacci-word ⟧tm
 
+
+--------------------------------------------------
+-- This is an implementation of an example from the end of section 1.1 of the paper
+--   Robert Atkey, and Conor McBride.
+--   Productive Coprogramming with Guarded Recursion.
+--   ICFP 2013.
+--   https://doi.org/10.1145/2544174.2500597
+
 -- Γ ⊢ g-mergef A B C : (⟨ constantly ∣ A ⟩ ⇛ ⟨ constantly ∣ B ⟩ ⇛ ▻ (GStream C) ⇛ GStream C) ⇛ GStream A ⇛ GStream B ⇛ GStream C
 g-mergef : (A B C : TyExpr ★) → TmExpr ω
 g-mergef A B C =
@@ -247,6 +292,10 @@ g-mergef A B C =
 
 g-mergef-sem : Tm ′◇ ((constantly-ty ′Nat' ′⇛ constantly-ty ′Bool' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat') ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat')
 g-mergef-sem = ⟦ g-mergef Nat' Bool' Nat' ⟧tm
+
+
+--------------------------------------------------
+-- Examples that are not taken from a paper
 
 -- Γ ⊢ g-zipWith A B C : ⟨ constantly ∣ A ⇛ B ⇛ C ⟩ ⇛ GStream A ⇛ GStream B ⇛ GStream C
 g-zipWith : (A B C : TyExpr ★) → TmExpr ω
@@ -287,9 +336,17 @@ g-flipFst-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′GStream ′Bool
 g-flipFst-sem = ⟦ g-flipFst Bool' ⟧tm
 
 
+--------------------------------------------------
+--------------------------------------------------
+-- Examples involving standard streams and the extraction
+--   to Agda streams
 
 Stream' : TyExpr ★ → TyExpr ★
 Stream' A = ⟨ forever ∣ GStream A ⟩
+
+
+--------------------------------------------------
+-- Continuation of the example worked out in Sections 3, 5 and 6 of the CPP submission
 
 -- Γ ⊢ nats : Stream' Nat'
 nats : TmExpr ★
@@ -303,6 +360,11 @@ nats-agda = extract-term nats-sem
 
 nats-test : take 10 nats-agda ≡ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ []
 nats-test = refl
+
+
+--------------------------------------------------
+-- The following are implementations of all examples involving streams on page 11 of the paper
+--   by Clouston et al. cited above.
 
 -- Γ ⊢ paperfolds : Stream' Nat'
 paperfolds : TmExpr ★
@@ -342,20 +404,6 @@ fibonacci-word-agda = extract-term fibonacci-word-sem
 
 fibonacci-word-test : take 10 fibonacci-word-agda ≡ false ∷ true ∷ false ∷ false ∷ true ∷ false ∷ true ∷ false ∷ false ∷ true ∷ []
 fibonacci-word-test = refl
-
--- Γ ⊢ fibs : Stream' Nat'
-fibs : TmExpr ★
-fibs = mod-intro forever g-fibs
-
-fibs-sem : Tm ′◇ (′Stream' ′Nat')
-fibs-sem = ⟦ fibs ⟧tm
-
-fibs-agda : Stream ℕ
-fibs-agda = extract-term fibs-sem
-
-fibs-test : take 10 fibs-agda ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
-fibs-test = refl
-
 
 -- Γ ⊢ head' A : Stream' A ⇛ A
 head' : TyExpr ★ → TmExpr ★
@@ -436,8 +484,8 @@ g-diag A =
                ∙ (var "g" ⊛⟨ later ⟩ next (map' (Stream' A) (Stream' A) ∙ tail' A
                                                 ⟨$- constantly ⟩ (tail' (Stream' A) ⟨$- constantly ⟩ var "xss")))
 
-g-diagB⟧ : Tm ′◇ (constantly-ty (′Stream' (′Stream' ′Bool')) ′⇛ ′GStream ′Bool')
-g-diagB⟧ = ⟦ g-diag Bool' ⟧tm
+g-diagB-sem : Tm ′◇ (constantly-ty (′Stream' (′Stream' ′Bool')) ′⇛ ′GStream ′Bool')
+g-diagB-sem = ⟦ g-diag Bool' ⟧tm
 
 -- Γ ⊢ diag : Stream' (Stream' A) ⇛ Stream' A
 diag : TyExpr ★ → TmExpr ★
@@ -447,3 +495,20 @@ diag A =
 
 diagB-sem : Tm ′◇ (′Stream' (′Stream' ′Bool') ′⇛ ′Stream' ′Bool')
 diagB-sem = ⟦ diag Bool' ⟧tm
+
+
+--------------------------------------------------
+-- Example not taken from a paper
+
+-- Γ ⊢ fibs : Stream' Nat'
+fibs : TmExpr ★
+fibs = mod-intro forever g-fibs
+
+fibs-sem : Tm ′◇ (′Stream' ′Nat')
+fibs-sem = ⟦ fibs ⟧tm
+
+fibs-agda : Stream ℕ
+fibs-agda = extract-term fibs-sem
+
+fibs-test : take 10 fibs-agda ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
+fibs-test = refl

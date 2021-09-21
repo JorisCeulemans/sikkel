@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Checking equality for mode, modality and type expressions.
+-- Checking equivalence for mode, modality and type expressions.
 --------------------------------------------------
 
 module Applications.GuardedRecursion.MSTT.Equality where
@@ -223,7 +223,7 @@ reduce-compare-mod μ ρ =
 
 
 --------------------------------------------------
--- Deciding whether two types' interpretations are equivalent
+-- (Semi-)deciding whether two types' interpretations are equivalent
 
 apply-mod-reduced : ModalityExpr m m' → TyExpr m → TyExpr m'
 apply-mod-reduced 𝟙 T = T
@@ -296,15 +296,8 @@ reduce-compare-ty T S =
                       show-type T' ++ " =?= " ++ show-type S') (
     (T' ≟ty S') >>= λ T'=S' → return (ty-reflect T S T'=S'))
 
+-- The final procedure first checks whether T and S are identical and if not,
+-- whether they are identical after reduction. The former condition produces
+-- smaller proofs of ⟦ T ⟧ty ≅ᵗʸ ⟦ S ⟧.
 ⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
 ⟦ T ⟧≅ty?⟦ S ⟧ = (⟦⟧ty-cong T S <$> (T ≟ty S)) <∣> reduce-compare-ty T S
-
-{-
-⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-⟦ mod {m} μ T ⟧≅ty?⟦ mod {m'} ρ S ⟧ = do
-  refl ← m ≟mode m'
-  T=S ← ⟦ T ⟧≅ty?⟦ S ⟧
-  μ=ρ ← ⟦ μ ⟧≅mod?⟦ ρ ⟧
-  return (≅ᵗʸ-trans (mod-cong ⟦ μ ⟧modality T=S) (eq-mod-closed μ=ρ ⟦ S ⟧ty {{⟦⟧ty-natural S}}))
-⟦ T ⟧≅ty?⟦ S ⟧ = ⟦⟧ty-cong T S <$> (T ≟ty S)
--}

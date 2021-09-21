@@ -1,7 +1,7 @@
 --------------------------------------------------
 -- Discrete types
 --
--- Every Agda type can be turned into a Sikkel type in any context.
+-- Every Agda type can be turned into a presheaf type in any context.
 -- This lets us define the types of booleans, natural numbers, ...
 --------------------------------------------------
 

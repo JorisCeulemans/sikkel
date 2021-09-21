@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- An example of representation independence using
+-- binary parametricity
+--------------------------------------------------
+
 module Applications.Parametricity.IntegerExample where
 
 open import Data.Nat

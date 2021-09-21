@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Decision procedure for equivalence of types
+--------------------------------------------------
+
 open import MSTT.ModeTheory
 
 module MSTT.Equality (mt : ModeTheory) where
@@ -22,6 +26,17 @@ private
   variable
     m m' : ModeExpr
 
+
+-- The idea is to reduce a type expression to a canonical equivalent one in two steps.
+-- 1. Reduce all occurrences of ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩ to ⟨ μ ⓜ ρ ∣ T ⟩. The resulting type
+--    will not have a subexpression consisting of a double modality application.
+-- 2. Reduce all occurrences of ⟨ μ ∣ T ⟩ for which μ ≃ 𝟙 to T.
+-- Two types that are literally equal (up to equivalence of modalities determined by
+-- the mode theory) after this reduction are considered equivalent by the decision
+-- procedure ⟦_⟧≅ty?⟦_⟧.
+
+--------------------------------------------------
+-- Reduction step 1, implemented by reduce-comp
 
 reduce-comp-helper : ModalityExpr m m' → TyExpr m → TyExpr m'
 reduce-comp-helper μ Nat' = ⟨ μ ∣ Nat' ⟩
@@ -52,6 +67,10 @@ reduce-comp-sound (T ⇛ S) = ⇛-cong (reduce-comp-sound T) (reduce-comp-sound 
 reduce-comp-sound (T ⊠ S) = ⊠-cong (reduce-comp-sound T) (reduce-comp-sound S)
 reduce-comp-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-comp-helper-sound μ (reduce-comp T))
                                         (mod-cong ⟦ μ ⟧modality (reduce-comp-sound T))
+
+
+--------------------------------------------------
+-- Reduction step 2, implemented by reduce-unit
 
 reduce-unit-helper : ModalityExpr m m' → TyExpr m → TyExpr m'
 reduce-unit-helper {m} {m'} μ T with m ≟mode m'
@@ -84,6 +103,10 @@ reduce-unit-sound (T ⊠ S) = ⊠-cong (reduce-unit-sound T) (reduce-unit-sound 
 reduce-unit-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-unit-helper-sound μ (reduce-unit T))
                                         (mod-cong ⟦ μ ⟧modality (reduce-unit-sound T))
 
+
+--------------------------------------------------
+-- The full reduction function
+
 reduce-ty : TyExpr m → TyExpr m
 reduce-ty = reduce-unit ∘ reduce-comp
 
@@ -91,6 +114,11 @@ reduce-ty-sound : (T : TyExpr m) → ∀ {Γ} → ⟦ reduce-ty T ⟧ty {Γ} ≅
 reduce-ty-sound T = ≅ᵗʸ-trans (reduce-unit-sound (reduce-comp T))
                               (reduce-comp-sound T)
 
+
+--------------------------------------------------
+-- The final decision procedure for type equivalence
+
+-- Are two types identical up to equivalence of modalities?
 ⟦_⟧≅ty-strict?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
 ⟦ Nat' ⟧≅ty-strict?⟦ Nat' ⟧ = return ≅ᵗʸ-refl
 ⟦ Bool' ⟧≅ty-strict?⟦ Bool' ⟧ = return ≅ᵗʸ-refl
@@ -124,6 +152,9 @@ reduce-compare-ty T S =
                       show-type T' ++ " =?= " ++ show-type S') (
     (⟦ T' ⟧≅ty-strict?⟦ S' ⟧) >>= λ T'=S' → return (ty-reflect T S T'=S'))
 
-
+-- The final decision procedure. Note that we first check whether two types
+-- are identical and only compare their reductions if they are not.
+-- The reason is that the former condition generates smaller equivalence
+-- proofs for the interpretations as presheaves.
 ⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
 ⟦ T ⟧≅ty?⟦ S ⟧ = ⟦ T ⟧≅ty-strict?⟦ S ⟧ <∣> reduce-compare-ty T S

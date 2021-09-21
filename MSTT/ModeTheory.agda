@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Definition of a mode theory for MSTT
+--------------------------------------------------
+
 module MSTT.ModeTheory where
 
 open import Data.String

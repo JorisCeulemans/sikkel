@@ -1,6 +1,7 @@
 --------------------------------------------------
--- A Sikkel type system for reasoning about a
--- restricted form of binary parametricity
+-- A presheaf model for an MSTT instance with the
+-- purpose of reasoning about a restricted form of
+-- binary parametricity
 --------------------------------------------------
 
 module Applications.Parametricity.Model where

@@ -1,3 +1,13 @@
+--------------------------------------------------
+-- The Builtin type constructor in
+-- Applications.Parametricity.MSTT.Syntax
+-- allows to interpret a number of triples, consisting
+-- of two Agda types and a relation, as MSTT types at
+-- mode ⋀.
+-- To retain decidable equivalence checking, they are
+-- encoded by a universe defined in this file.
+--------------------------------------------------
+
 module Applications.Parametricity.MSTT.Builtin where
 
 open import Data.String hiding (Left; Right)

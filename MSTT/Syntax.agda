@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Definition of the MSTT syntax of types, terms and contexts
+--------------------------------------------------
+
 open import MSTT.ModeTheory
 
 module MSTT.Syntax (mt : ModeTheory) where
@@ -14,6 +18,9 @@ private
   variable
     m m' : ModeExpr
 
+
+--------------------------------------------------
+-- Expressions for MSTT types, contexts and terms
 
 infixr 6 _⇛_
 infixl 5 _⊠_
@@ -33,7 +40,7 @@ data CtxExpr (m : ModeExpr) : Set where
 infixl 50 _∙_
 infixr 4 lam[_∈_]_
 data TmExpr : ModeExpr → Set where
-  ann_∈_ : TmExpr m → TyExpr m → TmExpr m   -- term with a type annotation
+  ann_∈_ : TmExpr m → TyExpr m → TmExpr m
   var : String → TmExpr m
   lam[_∈_]_ : String → TyExpr m → TmExpr m → TmExpr m
   _∙_ : TmExpr m → TmExpr m → TmExpr m
@@ -51,7 +58,7 @@ syntax coe μ ρ α t = coe[ α ∈ μ ⇒ ρ ] t
 
 
 --------------------------------------------------
--- Printing type, and context expressions
+-- Printing type and context expressions
 --  (mostly for type errors)
 
 show-type : TyExpr m → String

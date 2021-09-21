@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Sound typechecker for MSTT
+--------------------------------------------------
+
 open import MSTT.ModeTheory
 
 module MSTT.SoundTypeChecker (mt : ModeTheory) where
@@ -14,7 +18,6 @@ open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩;
 open import Model.Type.Discrete as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
-
 
 open import MSTT.TCMonad
 open import MSTT.Syntax mt
@@ -38,6 +41,7 @@ record InferInterpretResult (Γ : CtxExpr m) : Set where
     type : TyExpr m
     interpretation : Tm ⟦ Γ ⟧ctx ⟦ type ⟧ty
 
+-- The following function is needed for the interpretation of the modal eliminator.
 weaken-sem-term : {Γ : CtxExpr m} (Δ : Telescope m) (T : TyExpr m) →
                   Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty → Tm ⟦ Γ +tel Δ ⟧ctx ⟦ T ⟧ty
 weaken-sem-term []           T t = t
@@ -54,15 +58,16 @@ infer-interpret-var x (Γ , y ∈ T) | false = do
   return (S , ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} π ] (⟦x⟧ [ π ]'))
 infer-interpret-var {m} x (_,lock⟨_⟩ {m'} Γ μ) = do
   T , ⟦x⟧ ← infer-interpret-var x Γ
-  _<∣>_ (do
-          refl ← m ≟mode m'
-          μ=𝟙 ← ⟦ μ ⟧≅mod?⟦ 𝟙 ⟧
-          return (T , (ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ]
-                        (ιc[ eq-lock (≅ᵐ-trans μ=𝟙 𝟙-interpretation) ⟦ Γ ⟧ctx ]' ⟦x⟧))))
-        (type-error ("Impossible to directly use the variable "
-                    ++ x
-                    ++ " from the locked context "
-                    ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ "."))  
+  with-error-msg
+    ("Impossible to directly use the variable "
+      ++ x
+      ++ " from the locked context "
+      ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ ".")
+    (do
+      refl ← m ≟mode m'
+      μ=𝟙 ← ⟦ μ ⟧≅mod?⟦ 𝟙 ⟧
+      return (T , (ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ]
+                    (ιc[ eq-lock (≅ᵐ-trans μ=𝟙 𝟙-interpretation) ⟦ Γ ⟧ctx ]' ⟦x⟧))))
 
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret (ann t ∈ T) Γ = do

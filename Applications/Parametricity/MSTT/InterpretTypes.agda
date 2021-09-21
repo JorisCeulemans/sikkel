@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Interpretation of modes, modalities, types and contexts in a presheaf model
+-- Interpretation of types and contexts in a presheaf model
 --------------------------------------------------
 
 open import Applications.Parametricity.MSTT.Builtin

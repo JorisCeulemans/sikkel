@@ -49,6 +49,7 @@ forget-right ≟modality forget-right = return refl
   refl ← μ ≟modality ρ
   return ≅ᵐ-refl
 
+-- See MSTT.Equality for a description of the testing procedure implemented below.
 reduce-comp-helper : ModalityExpr m m' → TyExpr m → TyExpr m'
 reduce-comp-helper μ Nat' = ⟨ μ ∣ Nat' ⟩
 reduce-comp-helper μ Bool' = ⟨ μ ∣ Bool' ⟩

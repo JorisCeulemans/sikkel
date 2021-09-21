@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- A test for the type checker to see if it handles
+--   modality and type equivalences well.
+--------------------------------------------------
+
 module Applications.GuardedRecursion.ModalityInteractionTest where
 
 open import Model.BaseCategory renaming (★ to ′★; ω to ′ω)
