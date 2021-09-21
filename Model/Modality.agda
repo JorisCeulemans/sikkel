@@ -13,7 +13,7 @@ open import Model.CwF-Structure.Reflection.SubstitutionSequence
 
 private
   variable
-    C D E : Category
+    C D E : BaseCategory
 
 infix 1 _≅ᵐ_
 infixl 20 _ⓜ_
@@ -22,7 +22,7 @@ infixl 20 _ⓜ_
 --------------------------------------------------
 -- Definition of a modality as a dependent right adjoint
 
-record Modality (C D : Category) : Set₁ where
+record Modality (C D : BaseCategory) : Set₁ where
   no-eta-equality
   field
     ctx-functor : CtxFunctor D C
@@ -94,7 +94,7 @@ open Modality public
 _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 Γ ,lock⟨ μ ⟩ = lock μ Γ
 
-mod-closed : {μ : Modality C D} {T : ClosedType C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
+mod-closed : {μ : Modality C D} {T : ClosedTy C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
 IsClosedNatural.closed-natural (mod-closed {μ = μ} {T = T}) σ =
   ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (closed-natural {U = T} (ctx-fmap (ctx-functor μ) σ)))
 
@@ -186,7 +186,7 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
 -- Constructing new modalities
 
 -- The unit modality
-𝟙 : {C : Category} → Modality C C
+𝟙 : {C : BaseCategory} → Modality C C
 ctx-functor 𝟙 = id-ctx-functor
 ⟨ 𝟙 ∣ T ⟩ = T
 mod-cong 𝟙 T=S = T=S
@@ -201,7 +201,7 @@ mod-β 𝟙 t = ≅ᵗᵐ-refl
 mod-η 𝟙 t = ≅ᵗᵐ-refl
 
 -- Composition of modalities
-_ⓜ_ : {C1 C2 C3 : Category} → Modality C2 C3 → Modality C1 C2 → Modality C1 C3
+_ⓜ_ : {C1 C2 C3 : BaseCategory} → Modality C2 C3 → Modality C1 C2 → Modality C1 C3
 ctx-functor (μ ⓜ ρ) = ctx-functor ρ ⓕ ctx-functor μ
 ⟨ μ ⓜ ρ ∣ T ⟩ = ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩
 mod-cong (μ ⓜ ρ) e = mod-cong μ (mod-cong ρ e)
@@ -250,7 +250,7 @@ record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
     ⟨ ρ ∣ T ⟩ ∎
     where open ≅ᵗʸ-Reasoning
 
-  eq-mod-closed : (A : ClosedType C) {{_ : IsClosedNatural A}} {Γ : Ctx D} → ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
+  eq-mod-closed : (A : ClosedTy C) {{_ : IsClosedNatural A}} {Γ : Ctx D} → ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
   eq-mod-closed A = begin
     ⟨ μ ∣ A ⟩
       ≅⟨ eq-mod-tyʳ A ⟩
@@ -289,7 +289,7 @@ eq-mod-tyʳ (𝟙-identityʳ μ) T = ≅ᵗʸ-sym (mod-cong μ (ty-subst-id T))
 eq-lock (𝟙-identityˡ μ) Γ = ≅ᶜ-refl
 eq-mod-tyʳ (𝟙-identityˡ μ) T = ≅ᵗʸ-sym (mod-cong μ (ty-subst-id T))
 
-ⓜ-assoc : {C₁ C₂ C₃ C₄ : Category}
+ⓜ-assoc : {C₁ C₂ C₃ C₄ : BaseCategory}
            (μ₃₄ : Modality C₃ C₄) (μ₂₃ : Modality C₂ C₃) (μ₁₂ : Modality C₁ C₂) →
            (μ₃₄ ⓜ μ₂₃) ⓜ μ₁₂ ≅ᵐ μ₃₄ ⓜ (μ₂₃ ⓜ μ₁₂)
 eq-lock (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) Γ = ≅ᶜ-refl
@@ -356,5 +356,5 @@ module _ {μ ρ : Modality C D} (α : TwoCell μ ρ) where
   coe : {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ coe-ty T ⟩
   coe t = mod-intro ρ ((mod-elim μ t) [ transf-op (transf α) _ ]')
 
-  coe-closed : {T : ClosedType C} {{_ : IsClosedNatural T}} {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
+  coe-closed : {T : ClosedTy C} {{_ : IsClosedNatural T}} {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
   coe-closed {T = T} t = ι⁻¹[ mod-cong ρ (closed-natural {U = T} (transf-op (transf α) _)) ] coe t

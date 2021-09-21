@@ -133,7 +133,7 @@ eq (isoʳ (timeless-ty-natural σ {T})) t =
   where open ≡-Reasoning
 
 instance
-  timeless-closed : {A : ClosedType ★} {{_ : IsClosedNatural A}} → IsClosedNatural (timeless-ty A)
+  timeless-closed : {A : ClosedTy ★} {{_ : IsClosedNatural A}} → IsClosedNatural (timeless-ty A)
   closed-natural {{timeless-closed}} σ = ≅ᵗʸ-trans (timeless-ty-natural σ) (timeless-ty-cong (closed-natural (now-subst σ)))
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where

@@ -11,13 +11,13 @@ open import Model.CwF-Structure.Reflection.SubstitutionSequence
 
 private
   variable
-    C : Category
+    C : BaseCategory
 
 
-ClosedType : Category → Set₁
-ClosedType C = {Γ : Ctx C} → Ty Γ
+ClosedTy : BaseCategory → Set₁
+ClosedTy C = {Γ : Ctx C} → Ty Γ
 
-record IsClosedNatural {C} (U : ClosedType C) : Set₁ where
+record IsClosedNatural {C} (U : ClosedTy C) : Set₁ where
   field
     closed-natural : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) →
                      U [ σ ] ≅ᵗʸ U
@@ -26,7 +26,7 @@ open IsClosedNatural {{...}} public
 
 
 -- A type in the empty context gives rise to a closed type.
-From-◇-ty : Ty {C = C} ◇ → ClosedType C
+From-◇-ty : Ty {C = C} ◇ → ClosedTy C
 From-◇-ty T {Γ = Γ} = T [ !◇ Γ ]
 
 -- We are not declaring this as an instance because From-◇-ty is currently never used.

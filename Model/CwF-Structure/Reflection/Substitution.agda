@@ -11,7 +11,7 @@
 
 open import Model.BaseCategory
 
-module Model.CwF-Structure.Reflection.Substitution {C : Category} where
+module Model.CwF-Structure.Reflection.Substitution {C : BaseCategory} where
 
 open import Relation.Binary.PropositionalEquality
 

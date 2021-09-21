@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.CwF-Structure.ContextEquivalence {C : Category} where
+module Model.CwF-Structure.ContextEquivalence {C : BaseCategory} where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 

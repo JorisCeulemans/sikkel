@@ -88,7 +88,7 @@ allnow-timeless : allnow ⓜ timeless ≅ᵐ 𝟙
 eq-lock allnow-timeless = now-timeless-ctx
 eq-mod-tyʳ allnow-timeless = allnow-timeless-tyʳ
 
-now-timeless-ctx-intro : {A : ClosedType ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
+now-timeless-ctx-intro : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
                          Tm Γ A → Tm (now (timeless-ctx Γ)) A
 now-timeless-ctx-intro {A} t = untimeless-tm (unallnow-tm (ι[ eq-mod-closed allnow-timeless A ] t))
 

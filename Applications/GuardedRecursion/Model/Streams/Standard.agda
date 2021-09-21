@@ -27,7 +27,7 @@ private
 --------------------------------------------------
 -- Definition of Stream'
 
-Stream' : ClosedType ★ → ClosedType ★
+Stream' : ClosedTy ★ → ClosedTy ★
 Stream' A = allnow-ty (GStream A)
 
 
@@ -61,7 +61,7 @@ head (vecs-to-stream f) = Vec.head (f 0)
 tail (vecs-to-stream f) = vecs-to-stream (λ n → Vec.tail (f (suc n)))
 
 instance
-  extract-stream : {A : ClosedType ★} {{_ : IsClosedNatural A}} {{_ : Extractable A}} → Extractable (Stream' A)
+  extract-stream : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {{_ : Extractable A}} → Extractable (Stream' A)
   translated-type {{extract-stream {A = A}}} = Stream (translate-type A)
   extract-term {{extract-stream {A = A}}} s = vecs-to-stream (λ n → Vec.map (extract-term {A} ∘ to-◇A-term) (unallnow-tm s ⟨ n , tt ⟩'))
     where

@@ -60,7 +60,7 @@ show-modality later = "later"
 --------------------------------------------------
 -- Interpretation of modes, modalities and 2-cells in the presheaf model
 
-⟦_⟧mode : ModeExpr → Category
+⟦_⟧mode : ModeExpr → BaseCategory
 ⟦ ★ ⟧mode = M.★
 ⟦ ω ⟧mode = M.ω
 

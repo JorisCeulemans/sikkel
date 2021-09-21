@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.Type.Product {C : Category} where
+module Model.Type.Product {C : BaseCategory} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
@@ -115,6 +115,6 @@ snd : Tm Γ (T ⊠ S ⇛ S)
 snd {T = T}{S = S} = lam (T ⊠ S) (prim-snd (ι⁻¹[ ⊠-natural π ] ξ))
 
 instance
-  prod-closed : {A B : ClosedType C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
+  prod-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                 IsClosedNatural (A ⊠ B)
   closed-natural {{prod-closed}} σ = ≅ᵗʸ-trans (⊠-natural σ) (⊠-cong (closed-natural σ) (closed-natural σ))

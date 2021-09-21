@@ -7,7 +7,7 @@
 
 open import Model.BaseCategory
 
-module Model.Type.Discrete {C : Category} where
+module Model.Type.Discrete {C : BaseCategory} where
 
 open import Data.Bool using (Bool; true; false; if_then_else_; _∧_; _∨_)
 open import Data.Nat hiding (_⊔_)
@@ -18,7 +18,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 open import Model.CwF-Structure
 open import Model.Type.Function
 
-open Category C
+open BaseCategory C
 
 private
   variable

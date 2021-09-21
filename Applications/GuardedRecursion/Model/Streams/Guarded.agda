@@ -222,5 +222,5 @@ eq (isoˡ (gstream-cong A=A')) _ = map-inverse (eq (isoˡ A=A'))
 eq (isoʳ (gstream-cong A=A')) _ = map-inverse (eq (isoʳ A=A'))
 
 instance
-  gstream-closed : {A : ClosedType ★} {{_ : IsClosedNatural A}} → IsClosedNatural (GStream A)
+  gstream-closed : {A : ClosedTy ★} {{_ : IsClosedNatural A}} → IsClosedNatural (GStream A)
   closed-natural {{gstream-closed}} σ = ≅ᵗʸ-trans (gstream-natural σ) (gstream-cong (closed-natural (now-subst σ)))

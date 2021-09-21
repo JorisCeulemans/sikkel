@@ -117,7 +117,7 @@ eq (isoˡ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symˡ (ty-const-subs
 eq (isoʳ (allnow-ty-natural σ {T})) t = tm-≅-to-≡ (ι-symʳ (ty-const-subst T σ _) t)
 
 instance
-  allnow-closed : {A : ClosedType ω} {{_ : IsClosedNatural A}} → IsClosedNatural (allnow-ty A)
+  allnow-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (allnow-ty A)
   closed-natural {{allnow-closed}} σ = ≅ᵗʸ-trans (allnow-ty-natural σ) (allnow-ty-cong (closed-natural (timeless-subst σ)))
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (timeless-ctx Γ)} where

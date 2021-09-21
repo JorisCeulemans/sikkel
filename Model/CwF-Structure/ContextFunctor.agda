@@ -11,13 +11,13 @@ open import Model.CwF-Structure.Context
 
 private
   variable
-    C D : Category
+    C D : BaseCategory
 
 
 --------------------------------------------------
 -- Definition of functors between context categories
 
-CtxOp : Category → Category → Set₁
+CtxOp : BaseCategory → BaseCategory → Set₁
 CtxOp C D = Ctx C → Ctx D
 
 record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
@@ -54,7 +54,7 @@ instance
 -- This operation is not made available for instance resolution because otherwise
 --   there would be infinitely many instances of IsCtxFunctor for any context
 --   operation (by pre- or postcomposition with the identity operation).
-composed-functor : {C1 C2 C3 : Category} {Φ : CtxOp C2 C3} {Ψ : CtxOp C1 C2} →
+composed-functor : {C1 C2 C3 : BaseCategory} {Φ : CtxOp C2 C3} {Ψ : CtxOp C1 C2} →
                    IsCtxFunctor Φ → IsCtxFunctor Ψ → IsCtxFunctor (λ Γ → Φ (Ψ Γ))
 ctx-map {{composed-functor φ ψ}} σ = ctx-map {{φ}} (ctx-map {{ψ}} σ)
 ctx-map-cong {{composed-functor φ ψ}} e = ctx-map-cong {{φ}} (ctx-map-cong {{ψ}} e)
@@ -62,7 +62,7 @@ ctx-map-id {{composed-functor φ ψ}} = ≅ˢ-trans (ctx-map-cong {{φ}} (ctx-ma
 ctx-map-⊚ {{composed-functor φ ψ}} τ σ = ≅ˢ-trans (ctx-map-cong {{φ}} (ctx-map-⊚ {{ψ}} τ σ)) (ctx-map-⊚ {{φ}} _ _)
 
 
-record CtxFunctor (C D : Category) : Set₁ where
+record CtxFunctor (C D : BaseCategory) : Set₁ where
   no-eta-equality
   field
     ctx-op : CtxOp C D
@@ -119,7 +119,7 @@ naturality (_ⓣ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
   where open ≅ˢ-Reasoning
 
 -- Horizontal composition of natural transformations
-_ⓣ-hor_ : {C1 C2 C3 : Category} {Φ Φ' : CtxFunctor C2 C3} {Ψ Ψ' : CtxFunctor C1 C2} →
+_ⓣ-hor_ : {C1 C2 C3 : BaseCategory} {Φ Φ' : CtxFunctor C2 C3} {Ψ Ψ' : CtxFunctor C1 C2} →
           CtxNatTransf Φ Φ' → CtxNatTransf Ψ Ψ' → CtxNatTransf (Φ ⓕ Ψ) (Φ' ⓕ Ψ')
 transf-op (_ⓣ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) Γ = transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)
 naturality (_ⓣ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begin

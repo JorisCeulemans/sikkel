@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.Type.Function {C : Category} where
+module Model.Type.Function {C : BaseCategory} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.String
@@ -14,7 +14,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 open import Model.Helpers
 open import Model.CwF-Structure
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
-open Category C
+open BaseCategory C
 
 private
   variable
@@ -29,8 +29,8 @@ infixr 4 lam[_∈_]_
 --------------------------------------------------
 -- Description of a function type at a specific stage (object of the base category)
 
-record PresheafFunc {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) (z : Ob) (γ : Γ ⟨ z ⟩) : Set where
-  constructor MkFunc
+record PshFun {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) (z : Ob) (γ : Γ ⟨ z ⟩) : Set where
+  constructor MkFun
   field
     _$⟨_,_⟩_ : ∀ {y} (ρ : Hom y z) {γ' : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ ⟫ γ ≡ γ') →
                T ⟨ y , γ' ⟩ → S ⟨ y , γ' ⟩
@@ -39,11 +39,11 @@ record PresheafFunc {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) (z : Ob) (γ : Γ ⟨ z
                  _$⟨_,_⟩_ (ρ-yz ∙ ρ-xy) (strong-ctx-comp Γ eγ-zy eγ-yx) (T ⟪ ρ-xy , eγ-yx ⟫ t) ≡
                    S ⟪ ρ-xy , eγ-yx ⟫ (_$⟨_,_⟩_ ρ-yz eγ-zy t)
   infix 13 _$⟨_,_⟩_
-open PresheafFunc public
+open PshFun public
 
 -- Here we make again use of uip by pattern matching on both equality proofs.
 $-cong : {T : Ty Γ} {S : Ty Γ}
-         {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} (f : PresheafFunc T S y γy)
+         {γx : Γ ⟨ x ⟩} {γy : Γ ⟨ y ⟩} (f : PshFun T S y γy)
          {ρ ρ' : Hom x y} (eρ : ρ ≡ ρ')
          {eγ : Γ ⟪ ρ ⟫ γy ≡ γx} {eγ' : Γ ⟪ ρ' ⟫ γy ≡ γx}
          {t : T ⟨ x , γx ⟩} →
@@ -52,19 +52,19 @@ $-cong f refl {eγ = refl} {eγ' = refl} = refl
 
 -- This is one of the few places where we use function extensionality.
 to-pshfun-eq : {T : Ty Γ} {S : Ty Γ}
-               {γ : Γ ⟨ y ⟩} {f g : PresheafFunc T S y γ} →
+               {γ : Γ ⟨ y ⟩} {f g : PshFun T S y γ} →
                (∀ {x} (ρ : Hom x y) {γ'} (eγ : Γ ⟪ ρ ⟫ γ ≡ γ') t →
                    f $⟨ ρ , eγ ⟩ t ≡ g $⟨ ρ , eγ ⟩ t) →
                f ≡ g
-to-pshfun-eq e = cong₂-d MkFunc
+to-pshfun-eq e = cong₂-d MkFun
   (funextI (funext (λ ρ → funextI (funext λ eq → funext λ t → e ρ eq t))))
   (funextI (funextI (funextI (funextI (funextI (funextI (funextI (funextI (funextI (uip _ _))))))))))
 
 -- This will be used to define the action of a function type on morphisms.
 lower-presheaffunc : {T : Ty Γ} {S : Ty Γ} (ρ-yz : Hom y z)
                      {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (eγ : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
-                     PresheafFunc T S z γz → PresheafFunc T S y γy
-lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy f = MkFunc g g-nat
+                     PshFun T S z γz → PshFun T S y γy
+lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy f = MkFun g g-nat
   where
     g : ∀ {x} (ρ-xy : Hom x y) {γx} (eγ-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) →
         T ⟨ x , γx ⟩ → S ⟨ x , γx ⟩
@@ -85,7 +85,7 @@ lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy
 -- Definition of the function type + term constructors
 
 _⇛_ : {Γ : Ctx C} → Ty Γ → Ty Γ → Ty Γ
-_⇛_ {Γ = Γ} T S ⟨ z , γ ⟩ = PresheafFunc T S z γ
+_⇛_ {Γ = Γ} T S ⟨ z , γ ⟩ = PshFun T S z γ
 _⟪_,_⟫_ (T ⇛ S) = lower-presheaffunc
 ty-cong (T ⇛ S) refl {t = f} = to-pshfun-eq λ _ _ _ → $-cong f refl
 ty-id (_⇛_ {Γ = Γ} T S) {t = f} = to-pshfun-eq (λ _ eγ _ → $-cong f hom-idˡ)
@@ -93,8 +93,8 @@ ty-comp (_⇛_ {Γ = Γ} T S) {t = f} = to-pshfun-eq (λ _ _ _ → $-cong f ∙a
 
 -- Lambda abstraction that adds a nameless variable to the context (only accessible by de Bruijn index).
 lam : (T : Ty Γ) → Tm (Γ ,, T) (S [ π ]) → Tm Γ (T ⇛ S)
-lam {S = S} T b ⟨ z , γz ⟩' = MkFunc (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
-                                     (λ {x = x}{y}{ρ-xy}{_}{γx}{γy}{eγ-zy}{eγ-yx}{t} →
+lam {S = S} T b ⟨ z , γz ⟩' = MkFun (λ ρ-yz {γy} eγ t → b ⟨ _ , [ γy , t ] ⟩')
+                                    (λ {x = x}{y}{ρ-xy}{_}{γx}{γy}{eγ-zy}{eγ-yx}{t} →
   begin
     b ⟨ x , [ γx , T ⟪ ρ-xy , eγ-yx ⟫ t ] ⟩'
   ≡˘⟨ naturality b ρ-xy (to-Σ-ty-eq T eγ-yx (ty-cong-2-1 T hom-idʳ)) ⟩
@@ -148,7 +148,7 @@ _$_ = app
 pshfun-dimap : {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ} →
                (T' ↣ T) → (S ↣ S') →
                {z : Ob} {γ : Γ ⟨ z ⟩} →
-               PresheafFunc T S z γ → PresheafFunc T' S' z γ
+               PshFun T S z γ → PshFun T' S' z γ
 _$⟨_,_⟩_ (pshfun-dimap η φ f) ρ eγ t' = func φ (f $⟨ ρ , eγ ⟩ func η t')
 naturality (pshfun-dimap {T = T}{T'}{S}{S'} η φ {z} {γ} f) {eγ-zy = eγ-zy} {eγ-yx} {t'} =
   begin
@@ -225,11 +225,11 @@ module _
 -- Naturality proofs
 
 module _ (σ : Δ ⇒ Γ) (T : Ty Γ) (S : Ty Γ) {δ : Δ ⟨ z ⟩} where
-  pshfun-subst-from : PresheafFunc T S z (func σ δ) → PresheafFunc (T [ σ ]) (S [ σ ]) z δ
+  pshfun-subst-from : PshFun T S z (func σ δ) → PshFun (T [ σ ]) (S [ σ ]) z δ
   _$⟨_,_⟩_ (pshfun-subst-from f) ρ-yz eδ t = f $⟨ ρ-yz , trans (naturality σ) (cong (func σ) eδ) ⟩ t
   naturality (pshfun-subst-from f) = trans ($-cong f refl) (naturality f)
 
-  pshfun-subst-to : PresheafFunc (T [ σ ]) (S [ σ ]) z δ → PresheafFunc T S z (func σ δ)
+  pshfun-subst-to : PshFun (T [ σ ]) (S [ σ ]) z δ → PshFun T S z (func σ δ)
   _$⟨_,_⟩_ (pshfun-subst-to f) ρ-yz {γ'} eδ t = ty-ctx-subst S proof (
                                                  f $⟨ ρ-yz , refl ⟩
                                                  ty-ctx-subst T (sym proof) t)
@@ -363,6 +363,6 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
 -- Instance of ClosedType
 
 instance
-  fun-closed : {A B : ClosedType C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
+  fun-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                IsClosedNatural (A ⇛ B)
   closed-natural {{fun-closed}} σ = ≅ᵗʸ-trans (⇛-natural σ) (⇛-cong (closed-natural σ) (closed-natural σ))

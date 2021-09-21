@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.Type.Sum {C : Category} where
+module Model.Type.Sum {C : BaseCategory} where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Function using (id)
@@ -122,6 +122,6 @@ eq (η-⊞ t) γ | inj₁ a = refl
 eq (η-⊞ t) γ | inj₂ b = refl
 
 instance
-  sum-closed : {A B : ClosedType C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
+  sum-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                IsClosedNatural (A ⊞ B)
   closed-natural {{sum-closed}} σ = ≅ᵗʸ-trans (⊞-natural σ) (⊞-cong (closed-natural σ) (closed-natural σ))

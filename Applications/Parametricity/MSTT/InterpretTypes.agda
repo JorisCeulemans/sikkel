@@ -23,7 +23,7 @@ private
     m : ModeExpr
 
 
-⟦_⟧ty : TyExpr m → ClosedType ⟦ m ⟧mode
+⟦_⟧ty : TyExpr m → ClosedTy ⟦ m ⟧mode
 ⟦ Nat' ⟧ty = M.Nat'
 ⟦ Bool' ⟧ty = M.Bool'
 ⟦ T1 ⇛ T2 ⟧ty = ⟦ T1 ⟧ty M.⇛ ⟦ T2 ⟧ty

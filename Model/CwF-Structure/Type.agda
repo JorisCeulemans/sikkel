@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.CwF-Structure.Type {C : Category} where
+module Model.CwF-Structure.Type {C : BaseCategory} where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Function hiding (_⟨_⟩_; _↣_)
@@ -14,7 +14,7 @@ open import Model.Helpers
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
 
-open Category C
+open BaseCategory C
 
 infix 10 _↣_
 infix 1 _≅ⁿ_ _≅ᵗʸ_

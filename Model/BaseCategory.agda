@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Definition of categories, functors + some examples
+-- Definition of base categories, functors + some examples
 --------------------------------------------------
 
 module Model.BaseCategory where
@@ -11,10 +11,9 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.Helpers
 
--- Currently, we only have categories with object and morphism types in Set₀.
--- This is sufficient for e.g. guarded recursion, but we will generalize this
--- in the future (it requires some reworking of contexts and types).
-record Category : Set₁ where
+-- We only support small base categories with object and morphism types in Set₀.
+-- This is sufficient for the current applications like guarded recursion.
+record BaseCategory : Set₁ where
   field
     Ob : Set
     Hom : Ob → Ob → Set
@@ -28,15 +27,15 @@ record Category : Set₁ where
             (h ∙ g) ∙ f ≡ h ∙ (g ∙ f)
     hom-idʳ : ∀ {x y} {f : Hom x y} → f ∙ hom-id ≡ f
     hom-idˡ : ∀ {x y} {f : Hom x y} → hom-id ∙ f ≡ f
-open Category
+open BaseCategory
 
-category-composition : (C : Category) {x y z : Ob C} →
+category-composition : (C : BaseCategory) {x y z : Ob C} →
                        Hom C y z → Hom C x y → Hom C x z
 category-composition = _∙_
 
 syntax category-composition C g f = g ∙[ C ] f
 
-ω : Category
+ω : BaseCategory
 Ob ω = ℕ
 Hom ω m n = m ≤ n
 hom-id ω = ≤-refl
@@ -45,7 +44,7 @@ _∙_ ω m≤n k≤m = ≤-trans k≤m m≤n
 hom-idʳ ω = ≤-irrelevant _ _
 hom-idˡ ω = ≤-irrelevant _ _
 
-★ : Category
+★ : BaseCategory
 Ob ★ = ⊤
 Hom ★ _ _ = ⊤
 hom-id ★ = tt
@@ -63,7 +62,7 @@ data 𝟚-Hom : 𝟚-Obj → 𝟚-Obj → Set where
   pred-id : 𝟚-Hom pred-obj pred-obj
   type-pred : 𝟚-Hom type-obj pred-obj
 
-𝟚 : Category
+𝟚 : BaseCategory
 Ob 𝟚 = 𝟚-Obj
 Hom 𝟚 = 𝟚-Hom
 hom-id 𝟚 {type-obj} = type-id
@@ -92,7 +91,7 @@ data ⋀-Hom : ⋀-Obj → ⋀-Obj → Set where
   left-rel    : ⋀-Hom left relation
   right-rel   : ⋀-Hom right relation
 
-⋀ : Category
+⋀ : BaseCategory
 Ob ⋀ = ⋀-Obj
 Hom ⋀ = ⋀-Hom
 hom-id ⋀ {left} = left-id
@@ -117,7 +116,7 @@ hom-idˡ ⋀ {f = relation-id} = refl
 hom-idˡ ⋀ {f = left-rel} = refl
 hom-idˡ ⋀ {f = right-rel} = refl
 
-Type-groupoid : (X : Set) → Category
+Type-groupoid : (X : Set) → BaseCategory
 Ob (Type-groupoid X) = X
 Hom (Type-groupoid X) = _≡_
 hom-id (Type-groupoid X) = refl
@@ -126,8 +125,8 @@ _∙_ (Type-groupoid X) y=z x=y = trans x=y y=z
 hom-idʳ (Type-groupoid X) = refl
 hom-idˡ (Type-groupoid X) = trans-reflʳ _
 
-record Functor (C D : Category) : Set where
-  open Category
+record Functor (C D : BaseCategory) : Set where
+  open BaseCategory
   field
     ob : Ob C → Ob D
     hom : ∀ {x y} → Hom C x y → Hom D (ob x) (ob y)

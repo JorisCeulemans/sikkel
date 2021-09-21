@@ -165,7 +165,7 @@ subtract-DiffNat = extract-term (⟦ subtract★-left ⟧tm-in ◇)
 subtract-SignNat : SignNat → SignNat → SignNat
 subtract-SignNat = extract-term (⟦ subtract★-right ⟧tm-in ◇)
 
-subtract-preserves-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
-subtract-preserves-∼ r1 r2 =
+subtract-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
+subtract-∼ r1 r2 =
   let subtract-ℤ = ⟦ subtract ℤ ⟧tm-in ◇
   in proj₂ ((subtract-ℤ €⟨ relation , tt ⟩ [ _ , r1 ]) $⟨ relation-id , refl ⟩ [ _ , r2 ])

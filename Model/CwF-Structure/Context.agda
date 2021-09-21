@@ -15,11 +15,11 @@ open import Model.Helpers
 --------------------------------------------------
 -- Definition of contexts and substitutions as presheaves over C
 
-record Ctx (C : Category) : Set₁ where
+record Ctx (C : BaseCategory) : Set₁ where
   constructor MkCtx
   no-eta-equality
 
-  open Category C
+  open BaseCategory C
 
   field
     set : Ob → Set
@@ -29,12 +29,12 @@ record Ctx (C : Category) : Set₁ where
                rel (g ∙ f) γ ≡ rel f (rel g γ)
 open Ctx public renaming (set to _⟨_⟩; rel to _⟪_⟫_)
 
-module _ {C : Category} where
+module _ {C : BaseCategory} where
   infix 10 _⇒_
   infix 1 _≅ˢ_
   infixl 20 _⊚_
 
-  open Category C
+  open BaseCategory C
 
   private
     variable

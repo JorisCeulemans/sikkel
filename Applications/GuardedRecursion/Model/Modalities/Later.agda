@@ -345,10 +345,10 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
       g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
 instance
-  ▻'-closed : {A : ClosedType ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻' A)
+  ▻'-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻' A)
   closed-natural {{▻'-closed}} σ = ≅ᵗʸ-trans (▻'-natural σ) (▻'-cong (closed-natural σ))
 
-  ▻-closed : {A : ClosedType ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻ A)
+  ▻-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻ A)
   closed-natural {{▻-closed}} σ = ≅ᵗʸ-trans (▻-natural σ) (▻-cong (closed-natural (◄-subst σ)))
 
 -- ▻' is an applicative functor as well (but this requires ▻-cong).

@@ -47,7 +47,7 @@ ty-comp (PrimFromRel A B R) {f = relation-id} {eγ-zy = refl} {eγ-yx = refl} = 
 ty-comp (PrimFromRel A B R) {f = left-rel}  {g = relation-id} = refl
 ty-comp (PrimFromRel A B R) {f = right-rel} {g = relation-id} = refl
 
-FromRel : (A B : Set) (R : REL A B 0ℓ) → ClosedType ⋀
+FromRel : (A B : Set) (R : REL A B 0ℓ) → ClosedTy ⋀
 FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
 
 instance

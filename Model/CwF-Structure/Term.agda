@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.CwF-Structure.Term {C : Category}  where
+module Model.CwF-Structure.Term {C : BaseCategory}  where
 
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
@@ -13,7 +13,7 @@ open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
 open import Model.CwF-Structure.Type
 
-open Category C
+open BaseCategory C
 
 infix 1 _≅ᵗᵐ_
 

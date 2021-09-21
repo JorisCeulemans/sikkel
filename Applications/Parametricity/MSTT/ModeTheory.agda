@@ -48,7 +48,7 @@ show-modality forget-right = "forget-right"
 --------------------------------------------------
 -- Interpretation of modes and modalities in a presheaf model.
 
-⟦_⟧mode : ModeExpr → Category
+⟦_⟧mode : ModeExpr → BaseCategory
 ⟦ ★ ⟧mode = M.★
 ⟦ ⋀ ⟧mode = M.⋀
 

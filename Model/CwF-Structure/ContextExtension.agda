@@ -4,7 +4,7 @@
 
 open import Model.BaseCategory
 
-module Model.CwF-Structure.ContextExtension {C : Category} where
+module Model.CwF-Structure.ContextExtension {C : BaseCategory} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Data.String
@@ -16,7 +16,7 @@ open import Model.CwF-Structure.ContextEquivalence
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
 
-open Category C
+open BaseCategory C
 
 infixl 15 _,,_
 infixl 15 _,,_∈_

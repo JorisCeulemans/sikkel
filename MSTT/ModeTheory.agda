@@ -13,7 +13,7 @@ record ModeTheory : Set₁ where
   field
     ModeExpr : Set
     show-mode : ModeExpr → String
-    ⟦_⟧mode : ModeExpr → Category
+    ⟦_⟧mode : ModeExpr → BaseCategory
     _≟mode_ : (m1 m2 : ModeExpr) → TCM (m1 ≡ m2)
 
     ModalityExpr : ModeExpr → ModeExpr → Set

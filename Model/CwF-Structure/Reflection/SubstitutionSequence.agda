@@ -9,7 +9,7 @@
 
 open import Model.BaseCategory
 
-module Model.CwF-Structure.Reflection.SubstitutionSequence {C : Category} where
+module Model.CwF-Structure.Reflection.SubstitutionSequence {C : BaseCategory} where
 
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
