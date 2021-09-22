@@ -218,8 +218,8 @@ reduce-compare-mod μ ρ =
     (μ' ≟modality ρ') >>= λ μ'=ρ' → return (modality-reflect μ ρ μ'=ρ'))
 
 -- The final procedure will test if two modalities are literally equal before reducing them.
-⟦_⟧≅mod?⟦_⟧ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
-⟦ μ ⟧≅mod?⟦ ρ ⟧ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare-mod μ ρ
+_≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+μ ≃ᵐ? ρ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare-mod μ ρ
 
 
 --------------------------------------------------
@@ -299,5 +299,5 @@ reduce-compare-ty T S =
 -- The final procedure first checks whether T and S are identical and if not,
 -- whether they are identical after reduction. The former condition produces
 -- smaller proofs of ⟦ T ⟧ty ≅ᵗʸ ⟦ S ⟧.
-⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-⟦ T ⟧≅ty?⟦ S ⟧ = (⟦⟧ty-cong T S <$> (T ≟ty S)) <∣> reduce-compare-ty T S
+_≃ᵗʸ?_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+T ≃ᵗʸ? S = (⟦⟧ty-cong T S <$> (T ≟ty S)) <∣> reduce-compare-ty T S

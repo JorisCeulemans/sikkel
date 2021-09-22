@@ -28,7 +28,7 @@ record ModeTheory : Set₁ where
     𝟙-interpretation : ∀ {m} → ⟦ 𝟙 {m} ⟧modality ≅ᵐ M.𝟙
     ⓜ-interpretation : ∀ {m m' m''} (μ : ModalityExpr m' m'') (ρ : ModalityExpr m m') →
                        ⟦ μ ⓜ ρ ⟧modality ≅ᵐ ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
-    ⟦_⟧≅mod?⟦_⟧ : ∀ {m m'} (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+    _≃ᵐ?_ : ∀ {m m'} (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
 
     TwoCellExpr : ∀ {m m'} → ModalityExpr m m' → ModalityExpr m m' → Set
     ⟦_⟧two-cell : ∀ {m m'} {μ ρ : ModalityExpr m m'} → TwoCellExpr μ ρ → TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality

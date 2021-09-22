@@ -44,8 +44,8 @@ forget-left ≟modality forget-left = return refl
 forget-right ≟modality forget-right = return refl
 μ ≟modality ρ = type-error ("Modality " ++ show-modality μ ++ " is not equal to " ++ show-modality ρ)
 
-⟦_⟧≅mod?⟦_⟧ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
-⟦ μ ⟧≅mod?⟦ ρ ⟧ = do
+_≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+μ ≃ᵐ? ρ = do
   refl ← μ ≟modality ρ
   return ≅ᵐ-refl
 
@@ -87,7 +87,7 @@ reduce-comp-sound (Builtin c) = ≅ᵗʸ-refl
 reduce-unit-helper : ModalityExpr m m' → TyExpr m → TyExpr m'
 reduce-unit-helper {m} {m'} μ T with m ≟mode m'
 reduce-unit-helper {m} {m'} μ T | type-error _ = ⟨ μ ∣ T ⟩
-reduce-unit-helper {m} {m'} μ T | ok refl with ⟦ 𝟙 ⟧≅mod?⟦ μ ⟧
+reduce-unit-helper {m} {m'} μ T | ok refl with 𝟙 ≃ᵐ? μ
 reduce-unit-helper {m} {m'} μ T | ok refl | type-error _ = ⟨ μ ∣ T ⟩
 reduce-unit-helper {m} {m'} μ T | ok refl | ok _ = T
 
@@ -103,7 +103,7 @@ reduce-unit-helper-sound : (μ : ModalityExpr m m') (T : TyExpr m) → ∀ {Γ} 
                            ⟦ reduce-unit-helper μ T ⟧ty {Γ} ≅ᵗʸ ⟦ ⟨ μ ∣ T ⟩ ⟧ty
 reduce-unit-helper-sound {m} {m'} μ T with m ≟mode m'
 reduce-unit-helper-sound {m} {m'} μ T | type-error _ = ≅ᵗʸ-refl
-reduce-unit-helper-sound {m} {m'} μ T | ok refl with ⟦ 𝟙 ⟧≅mod?⟦ μ ⟧
+reduce-unit-helper-sound {m} {m'} μ T | ok refl with 𝟙 ≃ᵐ? μ
 reduce-unit-helper-sound {m} {m'} μ T | ok refl | type-error _ = ≅ᵗʸ-refl
 reduce-unit-helper-sound {m} {m'} μ T | ok refl | ok 𝟙=μ = eq-mod-closed 𝟙=μ ⟦ T ⟧ty {{⟦⟧ty-natural T}}
 
@@ -123,27 +123,27 @@ reduce-ty-sound : (T : TyExpr m) → ∀ {Γ} → ⟦ reduce-ty T ⟧ty {Γ} ≅
 reduce-ty-sound T = ≅ᵗʸ-trans (reduce-unit-sound (reduce-comp T))
                               (reduce-comp-sound T)
 
-⟦_⟧≅ty-strict?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-⟦ Nat' ⟧≅ty-strict?⟦ Nat' ⟧ = return ≅ᵗʸ-refl
-⟦ Bool' ⟧≅ty-strict?⟦ Bool' ⟧ = return ≅ᵗʸ-refl
-⟦ T1 ⇛ S1 ⟧≅ty-strict?⟦ T2 ⇛ S2 ⟧ = do
-  T1=T2 ← ⟦ T1 ⟧≅ty-strict?⟦ T2 ⟧
-  S1=S2 ← ⟦ S1 ⟧≅ty-strict?⟦ S2 ⟧
+_≟ty_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+Nat' ≟ty Nat' = return ≅ᵗʸ-refl
+Bool' ≟ty Bool' = return ≅ᵗʸ-refl
+(T1 ⇛ S1) ≟ty (T2 ⇛ S2) = do
+  T1=T2 ← T1 ≟ty T2
+  S1=S2 ← S1 ≟ty S2
   return (⇛-cong T1=T2 S1=S2)
-⟦ T1 ⊠ S1 ⟧≅ty-strict?⟦ T2 ⊠ S2 ⟧ = do
-  T1=T2 ← ⟦ T1 ⟧≅ty-strict?⟦ T2 ⟧
-  S1=S2 ← ⟦ S1 ⟧≅ty-strict?⟦ S2 ⟧
+(T1 ⊠ S1) ≟ty (T2 ⊠ S2) = do
+  T1=T2 ← T1 ≟ty T2
+  S1=S2 ← S1 ≟ty S2
   return (⊠-cong T1=T2 S1=S2)
-⟦ ⟨_∣_⟩ {mT} μ T ⟧≅ty-strict?⟦ ⟨_∣_⟩ {mS} ρ S ⟧ = do
+(⟨_∣_⟩ {mT} μ T) ≟ty (⟨_∣_⟩ {mS} ρ S) = do
   refl ← mT ≟mode mS
-  μ=ρ ← ⟦ μ ⟧≅mod?⟦ ρ ⟧
-  T=S ← ⟦ T ⟧≅ty-strict?⟦ S ⟧
+  μ=ρ ← μ ≃ᵐ? ρ
+  T=S ← T ≟ty S
   return (≅ᵗʸ-trans (eq-mod-closed μ=ρ ⟦ T ⟧ty {{⟦⟧ty-natural T}})
                     (mod-cong ⟦ ρ ⟧modality T=S))
-⟦ Builtin c1 ⟧≅ty-strict?⟦ Builtin c2 ⟧ = do
+(Builtin c1) ≟ty (Builtin c2) = do
   refl ← c1 ≟code c2
   return ≅ᵗʸ-refl
-⟦ T ⟧≅ty-strict?⟦ S ⟧ = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
+T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
 
 ty-reflect : (T S : TyExpr m) → (∀ {Γ} → ⟦ reduce-ty T ⟧ty {Γ} ≅ᵗʸ ⟦ reduce-ty S ⟧ty) →
              ∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
@@ -157,7 +157,7 @@ reduce-compare-ty T S =
       S' = reduce-ty S
   in with-error-msg ("Type " ++ show-type T ++ " is not equal to " ++ show-type S ++ ", reduced the equality to " ++
                       show-type T' ++ " =?= " ++ show-type S') (
-    (⟦ T' ⟧≅ty-strict?⟦ S' ⟧) >>= λ T'=S' → return (ty-reflect T S T'=S'))
+    (T' ≟ty S') >>= λ T'=S' → return (ty-reflect T S T'=S'))
 
-⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-⟦ T ⟧≅ty?⟦ S ⟧ = ⟦ T ⟧≅ty-strict?⟦ S ⟧ <∣> reduce-compare-ty T S
+_≃ᵗʸ?_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+T ≃ᵗʸ? S = (T ≟ty S) <∣> reduce-compare-ty T S

@@ -33,7 +33,7 @@ private
 -- 2. Reduce all occurrences of ⟨ μ ∣ T ⟩ for which μ ≃ 𝟙 to T.
 -- Two types that are literally equal (up to equivalence of modalities determined by
 -- the mode theory) after this reduction are considered equivalent by the decision
--- procedure ⟦_⟧≅ty?⟦_⟧.
+-- procedure _≃ᵗʸ?_.
 
 --------------------------------------------------
 -- Reduction step 1, implemented by reduce-comp
@@ -75,7 +75,7 @@ reduce-comp-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-comp-helper-sound μ
 reduce-unit-helper : ModalityExpr m m' → TyExpr m → TyExpr m'
 reduce-unit-helper {m} {m'} μ T with m ≟mode m'
 reduce-unit-helper {m} {m'} μ T | type-error _ = ⟨ μ ∣ T ⟩
-reduce-unit-helper {m} {m'} μ T | ok refl with ⟦ 𝟙 ⟧≅mod?⟦ μ ⟧
+reduce-unit-helper {m} {m'} μ T | ok refl with 𝟙 ≃ᵐ? μ
 reduce-unit-helper {m} {m'} μ T | ok refl | type-error _ = ⟨ μ ∣ T ⟩
 reduce-unit-helper {m} {m'} μ T | ok refl | ok _ = T
 
@@ -90,7 +90,7 @@ reduce-unit-helper-sound : (μ : ModalityExpr m m') (T : TyExpr m) → ∀ {Γ} 
                            ⟦ reduce-unit-helper μ T ⟧ty {Γ} ≅ᵗʸ ⟦ ⟨ μ ∣ T ⟩ ⟧ty
 reduce-unit-helper-sound {m} {m'} μ T with m ≟mode m'
 reduce-unit-helper-sound {m} {m'} μ T | type-error _ = ≅ᵗʸ-refl
-reduce-unit-helper-sound {m} {m'} μ T | ok refl with ⟦ 𝟙 ⟧≅mod?⟦ μ ⟧
+reduce-unit-helper-sound {m} {m'} μ T | ok refl with 𝟙 ≃ᵐ? μ
 reduce-unit-helper-sound {m} {m'} μ T | ok refl | type-error _ = ≅ᵗʸ-refl
 reduce-unit-helper-sound {m} {m'} μ T | ok refl | ok 𝟙=μ = eq-mod-closed (≅ᵐ-trans (≅ᵐ-sym 𝟙-interpretation) 𝟙=μ)
                                                                          ⟦ T ⟧ty {{⟦⟧ty-natural T}}
@@ -119,24 +119,24 @@ reduce-ty-sound T = ≅ᵗʸ-trans (reduce-unit-sound (reduce-comp T))
 -- The final decision procedure for type equivalence
 
 -- Are two types identical up to equivalence of modalities?
-⟦_⟧≅ty-strict?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-⟦ Nat' ⟧≅ty-strict?⟦ Nat' ⟧ = return ≅ᵗʸ-refl
-⟦ Bool' ⟧≅ty-strict?⟦ Bool' ⟧ = return ≅ᵗʸ-refl
-⟦ T1 ⇛ S1 ⟧≅ty-strict?⟦ T2 ⇛ S2 ⟧ = do
-  T1=T2 ← ⟦ T1 ⟧≅ty-strict?⟦ T2 ⟧
-  S1=S2 ← ⟦ S1 ⟧≅ty-strict?⟦ S2 ⟧
+_≟ty_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+Nat' ≟ty Nat' = return ≅ᵗʸ-refl
+Bool' ≟ty Bool' = return ≅ᵗʸ-refl
+(T1 ⇛ S1) ≟ty (T2 ⇛ S2) = do
+  T1=T2 ← T1 ≟ty T2
+  S1=S2 ← S1 ≟ty S2
   return (⇛-cong T1=T2 S1=S2)
-⟦ T1 ⊠ S1 ⟧≅ty-strict?⟦ T2 ⊠ S2 ⟧ = do
-  T1=T2 ← ⟦ T1 ⟧≅ty-strict?⟦ T2 ⟧
-  S1=S2 ← ⟦ S1 ⟧≅ty-strict?⟦ S2 ⟧
+(T1 ⊠ S1) ≟ty (T2 ⊠ S2) = do
+  T1=T2 ← T1 ≟ty T2
+  S1=S2 ← S1 ≟ty S2
   return (⊠-cong T1=T2 S1=S2)
-⟦ ⟨_∣_⟩ {mT} μ T ⟧≅ty-strict?⟦ ⟨_∣_⟩ {mS} ρ S ⟧ = do
+(⟨_∣_⟩ {mT} μ T) ≟ty (⟨_∣_⟩ {mS} ρ S) = do
   refl ← mT ≟mode mS
-  μ=ρ ← ⟦ μ ⟧≅mod?⟦ ρ ⟧
-  T=S ← ⟦ T ⟧≅ty-strict?⟦ S ⟧
+  μ=ρ ← μ ≃ᵐ? ρ
+  T=S ← T ≟ty S
   return (≅ᵗʸ-trans (eq-mod-closed μ=ρ ⟦ T ⟧ty {{⟦⟧ty-natural T}})
                     (mod-cong ⟦ ρ ⟧modality T=S))
-⟦ T ⟧≅ty-strict?⟦ S ⟧ = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
+T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
 
 ty-reflect : (T S : TyExpr m) → (∀ {Γ} → ⟦ reduce-ty T ⟧ty {Γ} ≅ᵗʸ ⟦ reduce-ty S ⟧ty) →
              ∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
@@ -150,11 +150,11 @@ reduce-compare-ty T S =
       S' = reduce-ty S
   in with-error-msg ("Type " ++ show-type T ++ " is not equal to " ++ show-type S ++ ", reduced the equality to " ++
                       show-type T' ++ " =?= " ++ show-type S') (
-    (⟦ T' ⟧≅ty-strict?⟦ S' ⟧) >>= λ T'=S' → return (ty-reflect T S T'=S'))
+    (T' ≟ty S') >>= λ T'=S' → return (ty-reflect T S T'=S'))
 
 -- The final decision procedure. Note that we first check whether two types
 -- are identical and only compare their reductions if they are not.
 -- The reason is that the former condition generates smaller equivalence
 -- proofs for the interpretations as presheaves.
-⟦_⟧≅ty?⟦_⟧ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-⟦ T ⟧≅ty?⟦ S ⟧ = ⟦ T ⟧≅ty-strict?⟦ S ⟧ <∣> reduce-compare-ty T S
+_≃ᵗʸ?_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+T ≃ᵗʸ? S = (T ≟ty S) <∣> reduce-compare-ty T S

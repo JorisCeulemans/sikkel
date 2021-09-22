@@ -65,14 +65,14 @@ infer-interpret-var {m} x (_,lock⟨_⟩ {m'} Γ μ) = do
       ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ ".")
     (do
       refl ← m ≟mode m'
-      μ=𝟙 ← ⟦ μ ⟧≅mod?⟦ 𝟙 ⟧
+      μ=𝟙 ← μ ≃ᵐ? 𝟙
       return (T , (ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ]
                     (ιc[ eq-lock (≅ᵐ-trans μ=𝟙 𝟙-interpretation) ⟦ Γ ⟧ctx ]' ⟦x⟧))))
 
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret (ann t ∈ T) Γ = do
   T' , ⟦t⟧ ← infer-interpret t Γ
-  T=T' ← ⟦ T ⟧≅ty?⟦ T' ⟧
+  T=T' ← T ≃ᵗʸ? T'
   return (T , ι[ T=T' ] ⟦t⟧)
 infer-interpret (var x) Γ = infer-interpret-var x Γ
 infer-interpret (lam[ x ∈ T ] b) Γ = do
@@ -82,7 +82,7 @@ infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
   func-ty dom cod refl ← is-func-ty T1
   T2 , ⟦t2⟧ ← infer-interpret t2 Γ
-  dom=T2 ← ⟦ dom ⟧≅ty?⟦ T2 ⟧
+  dom=T2 ← dom ≃ᵗʸ? T2
   return (cod , M.app ⟦t1⟧ (ι[ dom=T2 ] ⟦t2⟧))
 infer-interpret (lit n) Γ = return (Nat' , discr n)
 infer-interpret suc Γ = return (Nat' ⇛ Nat' , suc')
@@ -91,10 +91,10 @@ infer-interpret true Γ = return (Bool' , true')
 infer-interpret false Γ = return (Bool' , false')
 infer-interpret (if c t f) Γ = do
   C , ⟦c⟧ ← infer-interpret c Γ
-  Bool'=C ← ⟦ Bool' ⟧≅ty?⟦ C ⟧
+  Bool'=C ← Bool' ≃ᵗʸ? C
   T , ⟦t⟧ ← infer-interpret t Γ
   F , ⟦f⟧ ← infer-interpret f Γ
-  T=F ← ⟦ T ⟧≅ty?⟦ F ⟧
+  T=F ← T ≃ᵗʸ? F
   return (T , if' (ι[ Bool'=C ] ⟦c⟧) then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
 infer-interpret (pair t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
@@ -114,17 +114,17 @@ infer-interpret (mod-intro μ t) Γ = do
 infer-interpret (mod-elim {m} {mμ} μ t) Γ = do
   modal-ctx {mρ} Γ' ρ Δ refl ← is-modal-ctx Γ
   refl ← mμ ≟mode mρ
-  ρ=μ ← ⟦ ρ ⟧≅mod?⟦ μ ⟧
+  ρ=μ ← ρ ≃ᵐ? μ
   S , ⟦t⟧ ← infer-interpret t Γ'
   modal-ty {mκ} T κ refl ← is-modal-ty S
   refl ← m ≟mode mκ
-  μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
+  μ=κ ← μ ≃ᵐ? κ
   return (T , weaken-sem-term Δ T (M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧)))
 infer-interpret (coe {mμ} μ ρ α t) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   modal-ty {mκ} A κ refl ← is-modal-ty T
   refl ← mμ ≟mode mκ
-  μ=κ ← ⟦ μ ⟧≅mod?⟦ κ ⟧
+  μ=κ ← μ ≃ᵐ? κ
   return (⟨ ρ ∣ A ⟩ , coe-closed ⟦ α ⟧two-cell {{⟦⟧ty-natural A}} (ι[ eq-mod-closed μ=κ ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
 
 infer-type : TmExpr m → CtxExpr m → TCM (TyExpr m)
