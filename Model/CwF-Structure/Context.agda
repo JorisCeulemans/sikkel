@@ -22,12 +22,12 @@ record Ctx (C : BaseCategory) : Set₁ where
   open BaseCategory C
 
   field
-    set : Ob → Set
-    rel : ∀ {x y} → Hom x y → set y → set x
-    ctx-id : ∀ {x} {γ : set x} → rel hom-id γ ≡ γ
-    ctx-comp : ∀ {x y z} {f : Hom x y} {g : Hom y z} {γ : set z} →
-               rel (g ∙ f) γ ≡ rel f (rel g γ)
-open Ctx public renaming (set to _⟨_⟩; rel to _⟪_⟫_)
+    ctx-cell : Ob → Set
+    ctx-hom : ∀ {x y} → Hom x y → ctx-cell y → ctx-cell x
+    ctx-id : ∀ {x} {γ : ctx-cell x} → ctx-hom hom-id γ ≡ γ
+    ctx-comp : ∀ {x y z} {f : Hom x y} {g : Hom y z} {γ : ctx-cell z} →
+               ctx-hom (g ∙ f) γ ≡ ctx-hom f (ctx-hom g γ)
+open Ctx public renaming (ctx-cell to _⟨_⟩; ctx-hom to _⟪_⟫_)
 
 module _ {C : BaseCategory} where
   infix 10 _⇒_

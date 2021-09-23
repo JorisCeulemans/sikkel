@@ -39,17 +39,17 @@ record Ty (Γ : Ctx C) : Set₁ where
   no-eta-equality
 
   field
-    type : (x : Ob) (γ : Γ ⟨ x ⟩) → Set
-    morph : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx → type y γy → type x γx
+    ty-cell : (x : Ob) (γ : Γ ⟨ x ⟩) → Set
+    ty-hom : ∀ {x y} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} → Γ ⟪ f ⟫ γy ≡ γx → ty-cell y γy → ty-cell x γx
     ty-cong : {f f' : Hom x y} (e-hom : f ≡ f')
               {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ f ⟫ γy ≡ γx} {eγ' : Γ ⟪ f' ⟫ γy ≡ γx}
-              {t : type y γy} →
-              morph f eγ t ≡ morph f' eγ' t
-    ty-id : ∀ {x} {γ : Γ ⟨ x ⟩} {t : type x γ} → morph hom-id (ctx-id Γ) t ≡ t
+              {t : ty-cell y γy} →
+              ty-hom f eγ t ≡ ty-hom f' eγ' t
+    ty-id : ∀ {x} {γ : Γ ⟨ x ⟩} {t : ty-cell x γ} → ty-hom hom-id (ctx-id Γ) t ≡ t
     ty-comp : ∀ {x y z} {f : Hom x y} {g : Hom y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} →
-              {eγ-zy : Γ ⟪ g ⟫ γz ≡ γy} {eγ-yx : Γ ⟪ f ⟫ γy ≡ γx} {t : type z γz} →
-              morph (g ∙ f) (strong-ctx-comp Γ eγ-zy eγ-yx) t ≡ morph f eγ-yx (morph g eγ-zy t)
-open Ty public renaming (type to infix 15 _⟨_,_⟩; morph to infixr 11 _⟪_,_⟫_)
+              {eγ-zy : Γ ⟪ g ⟫ γz ≡ γy} {eγ-yx : Γ ⟪ f ⟫ γy ≡ γx} {t : ty-cell z γz} →
+              ty-hom (g ∙ f) (strong-ctx-comp Γ eγ-zy eγ-yx) t ≡ ty-hom f eγ-yx (ty-hom g eγ-zy t)
+open Ty public renaming (ty-cell to infix 15 _⟨_,_⟩; ty-hom to infixr 11 _⟪_,_⟫_)
 
 private
   variable
