@@ -90,36 +90,25 @@ show-ctx (Γ ,lock⟨ μ ⟩) = show-ctx Γ ++ " .lock⟨ " ++ show-modality μ 
 --------------------------------------------------
 -- Deciding whether a type expression is a function type, a product type or a modal type.
 
-record IsFuncTyExpr (T : TyExpr m) : Set where
-  constructor func-ty
-  field
-    dom cod : TyExpr m
-    is-func : T ≡ dom ⇛ cod
+data IsFuncTyExpr : TyExpr m → Set where
+  func-ty : (T S : TyExpr m) → IsFuncTyExpr (T ⇛ S)
 
 is-func-ty : (T : TyExpr m) → TCM (IsFuncTyExpr T)
-is-func-ty (T1 ⇛ T2) = return (func-ty T1 T2 refl)
+is-func-ty (T1 ⇛ T2) = return (func-ty T1 T2)
 is-func-ty T = type-error ("Expected a function type but received instead: " ++ show-type T)
 
-record IsProdTyExpr (T : TyExpr m) : Set where
-  constructor prod-ty
-  field
-    comp₁ comp₂ : TyExpr m
-    is-prod : T ≡ comp₁ ⊠ comp₂
+data IsProdTyExpr : TyExpr m → Set where
+  prod-ty : (T S : TyExpr m) → IsProdTyExpr (T ⊠ S)
 
 is-prod-ty : (T : TyExpr m) → TCM (IsProdTyExpr T)
-is-prod-ty (T1 ⊠ T2) = return (prod-ty T1 T2 refl)
+is-prod-ty (T1 ⊠ T2) = return (prod-ty T1 T2)
 is-prod-ty T = type-error ("Expected a product type but received instead: " ++ show-type T)
 
-record IsModalTyExpr (T : TyExpr m) : Set where
-  constructor modal-ty
-  field
-    {n} : ModeExpr
-    S : TyExpr n
-    μ : ModalityExpr n m
-    is-modal : T ≡ ⟨ μ ∣ S ⟩
+data IsModalTyExpr : TyExpr m → Set where
+  modal-ty : (n : ModeExpr) (μ : ModalityExpr n m) (T : TyExpr n) → IsModalTyExpr ⟨ μ ∣ T ⟩
 
 is-modal-ty : (T : TyExpr m) → TCM (IsModalTyExpr T)
-is-modal-ty ⟨ μ ∣ T ⟩ = return (modal-ty T μ refl)
+is-modal-ty ⟨ μ ∣ T ⟩ = return (modal-ty _ μ T)
 is-modal-ty T = type-error ("Expected a modal type but received instead: " ++ show-type T)
 
 
@@ -135,18 +124,13 @@ _+tel_ : CtxExpr m → Telescope m → CtxExpr m
 Γ +tel [] = Γ
 Γ +tel (Δ ,, v ∈ T) = (Γ +tel Δ) , v ∈ T
 
-record IsModalCtxExpr (Γ : CtxExpr m) : Set where
-  constructor modal-ctx
-  field
-    {n} : ModeExpr
-    Γ' : CtxExpr n
-    μ : ModalityExpr m n
-    Δ : Telescope m
-    is-modal : Γ ≡ (Γ' ,lock⟨ μ ⟩ +tel Δ)
+data IsLockedCtxExpr : CtxExpr m → Set where
+  locked-ctx : (n : ModeExpr) (Γ' : CtxExpr n) (μ : ModalityExpr m n) (Δ : Telescope m) →
+               IsLockedCtxExpr (Γ' ,lock⟨ μ ⟩ +tel Δ)
 
-is-modal-ctx : (Γ : CtxExpr m) → TCM (IsModalCtxExpr Γ)
-is-modal-ctx ◇ = type-error "Expected a context which contains a lock but received instead: ◇"
-is-modal-ctx (Γ , x ∈ T) = modify-error-msg (_++ " , " ++ x ++ " ∈ " ++ show-type T) (do
-  modal-ctx Γ' μ Δ refl ← is-modal-ctx Γ
-  return (modal-ctx Γ' μ (Δ ,, x ∈ T) refl))
-is-modal-ctx (Γ ,lock⟨ μ ⟩) = return (modal-ctx Γ μ [] refl)
+is-locked-ctx : (Γ : CtxExpr m) → TCM (IsLockedCtxExpr Γ)
+is-locked-ctx ◇ = type-error "Expected a context which contains a lock but received instead: ◇"
+is-locked-ctx (Γ , x ∈ T) = modify-error-msg (_++ " , " ++ x ++ " ∈ " ++ show-type T) (do
+  locked-ctx _ Γ' μ Δ ← is-locked-ctx Γ
+  return (locked-ctx _ Γ' μ (Δ ,, x ∈ T)))
+is-locked-ctx (Γ ,lock⟨ μ ⟩) = return (locked-ctx _ Γ μ [])

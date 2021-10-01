@@ -14,7 +14,7 @@ open import Applications.GuardedRecursion.Model.Modalities hiding (constantly; f
 open import Applications.GuardedRecursion.MSTT
 
 
--- This example shows that the verified typechecker supports a wide range of
+-- This example shows that the sound typechecker supports a wide range of
 --   definitional equalities of modalities. Its modality solver takes care of
 --   associativity of composition, the identity laws for e-𝟙 and the equalities
 --   `forever ⓜ constantly ≅ᵐ 𝟙` and `forever ⓜ later ≅ᵐ forever` which are specific

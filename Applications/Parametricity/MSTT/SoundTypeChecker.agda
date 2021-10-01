@@ -33,7 +33,7 @@ private
     m : ModeExpr
 
 
--- The verified typechecker defined below accepts a term and a context and will,
+-- The sound typechecker defined below accepts a term and a context and will,
 --   if successful, produce the type of that term and an interpretation of that
 --   term in a presheaf model.
 infix 1 _,_
@@ -76,7 +76,7 @@ infer-interpret (lam[ x ∈ T ] b) Γ = do
   return (T ⇛ S , M.lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧))
 infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
-  func-ty dom cod refl ← is-func-ty T1
+  func-ty dom cod ← is-func-ty T1
   T2 , ⟦t2⟧ ← infer-interpret t2 Γ
   dom=T2 ← dom ≃ᵗʸ? T2
   return (cod , M.app ⟦t1⟧ (ι[ dom=T2 ] ⟦t2⟧))
@@ -98,21 +98,21 @@ infer-interpret (pair t s) Γ = do
   return (T ⊠ S , M.pair $ ⟦t⟧ $ ⟦s⟧)
 infer-interpret (fst p) Γ = do
   P , ⟦p⟧ ← infer-interpret p Γ
-  prod-ty T S refl ← is-prod-ty P
+  prod-ty T S ← is-prod-ty P
   return (T , M.fst $ ⟦p⟧)
 infer-interpret (snd p) Γ = do
   P , ⟦p⟧ ← infer-interpret p Γ
-  prod-ty T S refl ← is-prod-ty P
+  prod-ty T S ← is-prod-ty P
   return (S , M.snd $ ⟦p⟧)
 infer-interpret (mod-intro μ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (CtxExpr._,lock⟨_⟩ Γ μ)
   return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (mod-elim {m} {mμ} μ t) Γ = do
-  modal-ctx {mρ} Γ' ρ Δ refl ← is-modal-ctx Γ
+  locked-ctx mρ Γ' ρ Δ ← is-locked-ctx Γ
   refl ← mμ ≟mode mρ
   ρ=μ ← ρ ≃ᵐ? μ
   S , ⟦t⟧ ← infer-interpret t Γ'
-  modal-ty {mκ} T κ refl ← is-modal-ty S
+  modal-ty mκ κ T ← is-modal-ty S
   refl ← m ≟mode mκ
   μ=κ ← μ ≃ᵐ? κ
   return (T , weaken-sem-term Δ T (M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧)))
