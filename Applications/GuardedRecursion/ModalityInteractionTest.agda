@@ -8,6 +8,7 @@ module Applications.GuardedRecursion.ModalityInteractionTest where
 open import Model.BaseCategory renaming (★ to ′★; ω to ′ω)
 open import Model.CwF-Structure renaming (◇ to ′◇)
 open import Model.Type.Discrete renaming (Nat' to ′Nat'; Bool' to ′Bool')
+open import Model.Type.Function renaming (_⇛_ to _′⇛_) hiding (lam[_∈_]_)
 open import Model.Modality hiding (_ⓜ_; _,lock⟨_⟩; mod-intro; mod-elim) renaming (⟨_∣_⟩ to ′⟨_∣_⟩; 𝟙 to ′𝟙)
 open import Applications.GuardedRecursion.Model.Modalities hiding (constantly; forever; later; ▻'; next'; _⊛'_; löb)
 
@@ -32,3 +33,10 @@ combined-test-expr = ann (mod-intro forever (mod-intro constantly (lit 0))) ∈ 
 
 combined-test : Tm {C = ′★} ′◇ ′Nat'
 combined-test = ⟦ combined-test-expr ⟧tm-in ◇
+
+-- Testing whether the variable rule works correctly.
+var-test-expr : TmExpr ★
+var-test-expr = lam[ "n" ∈ Nat' ] mod-intro forever (mod-intro constantly (var "n"))
+
+var-test : Tm {C = ′★} ′◇ (′Nat' ′⇛ forever-ty (constantly-ty ′Nat'))
+var-test = ⟦ var-test-expr ⟧tm-in ◇

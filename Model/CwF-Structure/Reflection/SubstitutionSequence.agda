@@ -104,3 +104,9 @@ tm-subst-seq-cong {Δ = Δ} {T = T} σs τs t e =
   ≅⟨⟩
     ι[ ty-subst-seq-cong σs τs T e ] (t ⟦ τs ⟧') ∎
   where open ≅ᵗᵐ-Reasoning
+
+ty-subst-seq-id : (σs : Γ ⇒⁺ Γ) (T : Ty Γ) →
+                  fold σs ≅ˢ id-subst Γ →
+                  T ⟦ σs ⟧ ≅ᵗʸ T
+ty-subst-seq-id σs T e = ≅ᵗʸ-trans (ty-subst-seq-cong σs (id-subst _ ◼) T e)
+                                   (ty-subst-id T)

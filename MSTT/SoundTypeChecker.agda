@@ -1,5 +1,6 @@
 --------------------------------------------------
--- Sound typechecker for MSTT
+-- Sound type checker for MSTT
+-- The main function in this file is `infer-interpret`.
 --------------------------------------------------
 
 open import MSTT.ModeTheory
@@ -7,13 +8,14 @@ open import MSTT.ModeTheory
 module MSTT.SoundTypeChecker (mt : ModeTheory) where
 
 
-open import Data.Bool
+open import Data.Bool hiding (T)
 open import Data.Nat
 open import Data.String renaming (_==_ to _=string=_)
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure as M hiding (◇; _,,_)
+open import Model.CwF-Structure.Reflection.SubstitutionSequence
 open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim; coe)
 open import Model.Type.Discrete as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
@@ -28,10 +30,13 @@ open ModeTheory mt
 
 private
   variable
-    m : ModeExpr
+    m m' m'' : ModeExpr
 
 
--- The sound typechecker defined below accepts a term and a context and will,
+--------------------------------------------------
+-- Type of the final result after type checking/interpretation
+
+-- The sound type checker defined below accepts a term and a context and will,
 --   if successful, produce the type of that term and an interpretation of that
 --   term in a presheaf model.
 infix 1 _,_
@@ -41,33 +46,88 @@ record InferInterpretResult (Γ : CtxExpr m) : Set where
     type : TyExpr m
     interpretation : Tm ⟦ Γ ⟧ctx ⟦ type ⟧ty
 
--- The following function is needed for the interpretation of the modal eliminator.
-weaken-sem-term : {Γ : CtxExpr m} (Δ : Telescope m) (T : TyExpr m) →
-                  Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty → Tm ⟦ Γ +tel Δ ⟧ctx ⟦ T ⟧ty
-weaken-sem-term []           T t = t
-weaken-sem-term (Δ ,, v ∈ S) T t =
-  let weakened-t = weaken-sem-term Δ T t
-  in ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] (weakened-t [ π ]')
+
+--------------------------------------------------
+-- Checking + interpretation of variables
+
+-- When checking and interpreting a variable x in a context Γ, all other variables
+--   to the right of x are pruned away, locks are kept (in a lock sequence).
+--   It is then tested whether the composition of all locks to the right of x
+--   is equivalent to the unit modality 𝟙, after which the variable can be
+--   interpreted via M.ξ.
+
+-- A value of type LockSeq m m' is a sequence of (compatible) modalities, the first
+--   of which has codomain mode m', and the last of which has domain mode m (i.e. they
+--   can be composed in the order they appear in the sequence to get a modality from
+--   m to m').
+data LockSeq : ModeExpr → ModeExpr → Set where
+  [] : LockSeq m m
+  _,,_ : LockSeq m'' m' → ModalityExpr m m'' → LockSeq m m'
+
+compose-lock-seq : LockSeq m m' → ModalityExpr m m'
+compose-lock-seq [] = 𝟙
+compose-lock-seq (locks ,, μ) = compose-lock-seq locks ⓜ μ
+
+apply-lock-seq : CtxExpr m' → LockSeq m m' → CtxExpr m
+apply-lock-seq Γ [] = Γ
+apply-lock-seq Γ (locks ,, μ) = (apply-lock-seq Γ locks) ,lock⟨ μ ⟩
+
+apply-compose-lock-seq : (Γ : CtxExpr m') (locks : LockSeq m m') →
+                         ⟦ apply-lock-seq Γ locks ⟧ctx ≅ᶜ ⟦ Γ ,lock⟨ compose-lock-seq locks ⟩ ⟧ctx
+apply-compose-lock-seq Γ [] = ≅ᶜ-sym (eq-lock 𝟙-interpretation ⟦ Γ ⟧ctx)
+apply-compose-lock-seq Γ (locks ,, μ) = begin
+  lock ⟦ μ ⟧modality ⟦ apply-lock-seq Γ locks ⟧ctx
+    ≅⟨ ctx-functor-cong (ctx-functor ⟦ μ ⟧modality) (apply-compose-lock-seq Γ locks) ⟩
+  lock ⟦ μ ⟧modality (lock ⟦ compose-lock-seq locks ⟧modality ⟦ Γ ⟧ctx)
+    ≅˘⟨ eq-lock (ⓜ-interpretation (compose-lock-seq locks) μ) ⟦ Γ ⟧ctx ⟩
+  lock ⟦ compose-lock-seq locks ⓜ μ ⟧modality ⟦ Γ ⟧ctx ∎
+  where open ≅ᶜ-Reasoning
+
+record PruneCtxResult (Γ : CtxExpr m) (x : String) : Set where
+  constructor prune-ctx-result
+  field
+    n : ModeExpr
+    Γ' : CtxExpr n
+    T : TyExpr n
+    locks : LockSeq m n
+    σ : ⟦ Γ ⟧ctx ⇒ ⟦ apply-lock-seq (Γ' , x ∈ T) locks ⟧ctx
+
+prune-ctx-until-var : (x : String) (Γ : CtxExpr m) → TCM (PruneCtxResult Γ x)
+prune-ctx-until-var x ◇ = type-error ("The variable " ++ x ++ " is not in scope.")
+prune-ctx-until-var x (Γ , y ∈ T) with x =string= y
+prune-ctx-until-var x (Γ , y ∈ T) | true = return (prune-ctx-result _ Γ T [] (M.id-subst _))
+prune-ctx-until-var x (Γ , y ∈ T) | false = do
+  prune-ctx-result n Γ' S locks σ ← prune-ctx-until-var x Γ
+  return (prune-ctx-result n Γ' S locks (σ M.⊚ M.π))
+prune-ctx-until-var x (Γ ,lock⟨ μ ⟩) = do
+  prune-ctx-result n Γ' S locks σ ← prune-ctx-until-var x Γ
+  return (prune-ctx-result n Γ' S (locks ,, μ) (M.lock-fmap ⟦ μ ⟧modality σ))
 
 infer-interpret-var : String → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
-infer-interpret-var x ◇ = type-error ("The variable "++ x ++ " does not exist in this context.")
-infer-interpret-var x (Γ , y ∈ T) with x =string= y
-infer-interpret-var x (Γ , y ∈ T) | true = return (T , (ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} π ] ξ))
-infer-interpret-var x (Γ , y ∈ T) | false = do
-  S , ⟦x⟧ ← infer-interpret-var x Γ
-  return (S , ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} π ] (⟦x⟧ [ π ]'))
-infer-interpret-var {m} x (_,lock⟨_⟩ {m'} Γ μ) = do
-  T , ⟦x⟧ ← infer-interpret-var x Γ
-  with-error-msg
-    ("Impossible to directly use the variable "
-      ++ x
-      ++ " from the locked context "
-      ++ show-ctx (Γ ,lock⟨ μ ⟩) ++ ".")
-    (do
-      refl ← m ≟mode m'
-      μ=𝟙 ← μ ≃ᵐ? 𝟙
-      return (T , (ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ]
-                    (ιc[ eq-lock (≅ᵐ-trans μ=𝟙 𝟙-interpretation) ⟦ Γ ⟧ctx ]' ⟦x⟧))))
+infer-interpret-var {m = m} x Γ = do
+  prune-ctx-result n Γ' T locks σ ← prune-ctx-until-var x Γ
+  refl ← m ≟mode n
+  locks=𝟙 ← modify-error-msg (_++ " when looking for variable " ++ x ++ " in context " ++ show-ctx Γ)
+                             (compose-lock-seq locks ≃ᵐ? 𝟙)
+  return (T , (ι⁻¹[ ≅ᵗʸ-trans (ty-subst-seq-cong (π ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty ≅ˢ-refl) (closed-natural {{⟦⟧ty-natural T}} _) ]
+              ((ιc[ ≅ᶜ-trans (apply-compose-lock-seq (Γ' , x ∈ T) locks)
+                             (eq-lock (≅ᵐ-trans locks=𝟙 𝟙-interpretation) ⟦ Γ' , x ∈ T ⟧ctx) ]' ξ) [ σ ]')))
+
+
+--------------------------------------------------
+-- Helper for checking + interpreting of the modal eliminator
+
+from-telescope-subst : {Γ : CtxExpr m} (Δ : Telescope m) → ⟦ Γ +tel Δ ⟧ctx ⇒ ⟦ Γ ⟧ctx
+from-telescope-subst [] = id-subst _
+from-telescope-subst (Δ ,, v ∈ S) = from-telescope-subst Δ ⊚ π
+
+weaken-sem-term : {Γ : CtxExpr m} (Δ : Telescope m) (T : TyExpr m) →
+                  Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty → Tm ⟦ Γ +tel Δ ⟧ctx ⟦ T ⟧ty
+weaken-sem-term Δ T t = ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ] (t [ from-telescope-subst Δ ]')
+
+
+--------------------------------------------------
+-- The sound type checker
 
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret (ann t ∈ T) Γ = do
