@@ -1,18 +1,17 @@
-open import Categories
+open import Model.BaseCategory
 
-module Experimental.DependentTypes.SigmaType {C : Category} where
+module Experimental.DependentTypes.SigmaType {C : BaseCategory} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
-open import Helpers
-open import CwF-Structure.Contexts
-open import CwF-Structure.Types
-open import CwF-Structure.Terms
-open import CwF-Structure.ContextExtension
+open import Model.CwF-Structure.Context
+open import Model.CwF-Structure.Type
+open import Model.CwF-Structure.Term
+open import Model.CwF-Structure.ContextExtension
 
-open Category C
+open BaseCategory C
 
 private
   variable

@@ -1,3 +1,0 @@
-lam (Discr Bool)
-(convert-term (to (Discr-natural Bool π))
- (convert-term (from (Discr-natural Bool π)) ξ))

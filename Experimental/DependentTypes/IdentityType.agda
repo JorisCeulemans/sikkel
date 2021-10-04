@@ -1,15 +1,15 @@
-open import Categories
+open import Model.BaseCategory
 
-module Experimental.DependentTypes.IdentityType {C : Category} where
+module Experimental.DependentTypes.IdentityType {C : BaseCategory} where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Function
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
-open import Helpers
-open import CwF-Structure
+open import Model.Helpers
+open import Model.CwF-Structure
 
-open Category C
+open BaseCategory C
 
 private
   variable
@@ -48,9 +48,9 @@ module Alternative1 where
 
   Id-natural : (σ : Δ ⇒ Γ) {a b : Tm Γ A} → (Id a b) [ σ ] ≅ᵗʸ Id (a [ σ ]') (b [ σ ]')
   func (from (Id-natural σ {a = a} {b = b})) e = e
-  CwF-Structure.naturality (from (Id-natural σ {a = a} {b = b})) = refl
+  _↣_.naturality (from (Id-natural σ {a = a} {b = b})) = refl
   func (to (Id-natural σ {a = a} {b = b})) e = e
-  CwF-Structure.naturality (to (Id-natural σ {a = a} {b = b})) = refl
+  _↣_.naturality (to (Id-natural σ {a = a} {b = b})) = refl
   eq (isoˡ (Id-natural σ {a = a} {b = b})) _ = refl
   eq (isoʳ (Id-natural σ {a = a} {b = b})) _ = refl
 
@@ -58,9 +58,9 @@ module Alternative1 where
             (A=B : A ≅ᵗʸ B) → a ≅ᵗᵐ ι[ A=B ] b → a' ≅ᵗᵐ ι[ A=B ] b' →
             Id a a' ≅ᵗʸ Id b b'
   func (from (Id-cong A=B a=b a=b')) {γ = γ} e = trans (sym (eq (isoʳ A=B) _)) (trans (cong (func (from A=B)) (trans (sym (eq a=b γ)) (trans e (eq a=b' γ)))) (eq (isoʳ A=B) _))
-  CwF-Structure.naturality (from (Id-cong A=B a=b a=b')) = uip _ _
+  _↣_.naturality (from (Id-cong A=B a=b a=b')) = uip _ _
   func (to (Id-cong A=B a=b a=b')) {γ = γ} e = trans (eq a=b γ) (trans (cong (func (to A=B)) e) (sym (eq a=b' γ)))
-  CwF-Structure.naturality (to (Id-cong A=B a=b a=b')) = uip _ _
+  _↣_.naturality (to (Id-cong A=B a=b a=b')) = uip _ _
   eq (isoˡ (Id-cong A=B a=b a=b')) _ = uip _ _
   eq (isoʳ (Id-cong A=B a=b a=b')) _ = uip _ _
 

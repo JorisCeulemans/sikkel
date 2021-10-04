@@ -8,12 +8,11 @@ open import Data.Product renaming (_,_ to [_,_])
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
-open import Categories
-open import CwF-Structure
-open import Types.Discrete
-open import Types.Instances
+open import Model.BaseCategory
+open import Model.CwF-Structure
+open import Model.Type.Discrete
 open import Experimental.DependentTypes.SigmaType
-open import GuardedRecursion.Modalities
+open import Applications.GuardedRecursion.Model.Modalities
 
 variable
   Γ Δ : Ctx ω
@@ -28,9 +27,9 @@ ty-comp Empty {t = ()}
 
 Empty-natural : (σ : Δ ⇒ Γ) → Empty [ σ ] ≅ᵗʸ Empty
 func (from (Empty-natural σ)) ()
-CwF-Structure.naturality (from (Empty-natural σ)) {t = ()}
+_↣_.naturality (from (Empty-natural σ)) {t = ()}
 func (to (Empty-natural σ)) ()
-CwF-Structure.naturality (to (Empty-natural σ)) {t = ()}
+_↣_.naturality (to (Empty-natural σ)) {t = ()}
 eq (isoˡ (Empty-natural σ)) ()
 eq (isoʳ (Empty-natural σ)) ()
 
@@ -58,7 +57,7 @@ ty-comp (▻'[ m ] T) = {!!}
 nat-fixp : (t : Tm {C = ω} ◇ Nat') → Σ[ k ∈ ℕ ] t ⟨ k , tt ⟩' ≡ k
 nat-fixp t = [ t ⟨ 0 , tt ⟩' , Tm.naturality t z≤n refl ]
 
-module Contradiction (p : Tm {C = ω} ◇ (Sigma Nat' (▻'[ db-varι 0 ] Empty))) where
+module Contradiction (p : Tm {C = ω} ◇ (Sigma Nat' (▻'[ ι⁻¹[ Discr-natural _ π ] ξ ] Empty))) where
 
   fst-nat : ℕ
   fst-nat = proj₁ (nat-fixp (fst p))
