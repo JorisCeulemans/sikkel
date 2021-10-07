@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module Experimental.DependentTypes.LaterExperiment where
+module Experimental.DependentTypes.Model.LaterExperiment where
 
 open import Data.Empty
 open import Data.Nat
@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Type.Discrete
-open import Experimental.DependentTypes.SigmaType
+open import Experimental.DependentTypes.Model.SigmaType
 open import Applications.GuardedRecursion.Model.Modalities
 
 variable

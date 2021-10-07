@@ -1,6 +1,6 @@
 open import Model.BaseCategory
 
-module Experimental.DependentTypes.Boolean {C : BaseCategory} where
+module Experimental.DependentTypes.Model.Boolean {C : BaseCategory} where
 
 open import Data.Bool
 open import Data.Product renaming (_,_ to [_,_])
@@ -8,7 +8,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.CwF-Structure
 open import Model.Type.Discrete
-import Experimental.DependentTypes.IdentityType as IdentityType
+import Experimental.DependentTypes.Model.IdentityType as IdentityType
 open IdentityType.Alternative2
 
 private

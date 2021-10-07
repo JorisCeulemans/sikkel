@@ -1,6 +1,6 @@
 open import Model.BaseCategory
 
-module Experimental.DependentTypes.IdentityType {C : BaseCategory} where
+module Experimental.DependentTypes.Model.IdentityType {C : BaseCategory} where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Function

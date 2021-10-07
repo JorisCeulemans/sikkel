@@ -1,6 +1,6 @@
 open import Model.BaseCategory
 
-module Experimental.DependentTypes.SigmaType {C : BaseCategory} where
+module Experimental.DependentTypes.Model.SigmaType {C : BaseCategory} where
 
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
