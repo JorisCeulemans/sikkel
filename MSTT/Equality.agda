@@ -3,10 +3,12 @@
 --------------------------------------------------
 
 open import MSTT.ModeTheory
+open import MSTT.TypeExtension using (TyExt)
 
-module MSTT.Equality (mt : ModeTheory) where
+module MSTT.Equality (mt : ModeTheory) (ty-ext : TyExt mt) where
 
-
+open import Data.List hiding (_++_)
+open import Data.Product using (_×_; _,_)
 open import Data.String
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
@@ -17,14 +19,17 @@ open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
 open import MSTT.TCMonad
-open import MSTT.Syntax mt
-open import MSTT.InterpretTypes mt
+open import MSTT.Syntax mt ty-ext
+open import MSTT.InterpretTypes mt ty-ext
 
 open ModeTheory mt
+open TyExt ty-ext
+open MSTT.TypeExtension mt hiding (TyExt)
 
 private
   variable
     m m' : ModeExpr
+    margs : List ModeExpr
 
 
 -- The idea is to reduce a type expression to a canonical equivalent one in two steps.
@@ -44,13 +49,21 @@ reduce-comp-helper μ Bool' = ⟨ μ ∣ Bool' ⟩
 reduce-comp-helper μ (T ⇛ S) = ⟨ μ ∣ T ⇛ S ⟩
 reduce-comp-helper μ (T ⊠ S) = ⟨ μ ∣ T ⊠ S ⟩
 reduce-comp-helper μ ⟨ ρ ∣ T ⟩ = ⟨ μ ⓜ ρ ∣ T ⟩
+reduce-comp-helper μ (Ext c args) = ⟨ μ ∣ Ext c args ⟩
 
 reduce-comp : TyExpr m → TyExpr m
+reduce-comp-args : TyExtArgs margs → TyExtArgs margs
+
 reduce-comp Nat' = Nat'
 reduce-comp Bool' = Bool'
 reduce-comp (T ⇛ S) = reduce-comp T ⇛ reduce-comp S
 reduce-comp (T ⊠ S) = reduce-comp T ⊠ reduce-comp S
 reduce-comp ⟨ μ ∣ T ⟩ = reduce-comp-helper μ (reduce-comp T)
+reduce-comp (Ext c args) = Ext c (reduce-comp-args args)
+
+reduce-comp-args {[]}        args       = args
+reduce-comp-args {m ∷ margs} (T , args) = reduce-comp T , reduce-comp-args args
+
 
 reduce-comp-helper-sound : (μ : ModalityExpr m m') (T : TyExpr m) → ∀ {Γ} →
                            ⟦ reduce-comp-helper μ T ⟧ty {Γ} ≅ᵗʸ ⟦ ⟨ μ ∣ T ⟩ ⟧ty
@@ -59,14 +72,22 @@ reduce-comp-helper-sound μ Bool' = ≅ᵗʸ-refl
 reduce-comp-helper-sound μ (T ⇛ S) = ≅ᵗʸ-refl
 reduce-comp-helper-sound μ (T ⊠ S) = ≅ᵗʸ-refl
 reduce-comp-helper-sound μ ⟨ ρ ∣ T ⟩ = eq-mod-closed (ⓜ-interpretation μ ρ) ⟦ T ⟧ty {{⟦⟧ty-natural T}}
+reduce-comp-helper-sound μ (Ext c args) = ≅ᵗʸ-refl
 
 reduce-comp-sound : (T : TyExpr m) → ∀ {Γ} → ⟦ reduce-comp T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
+reduce-comp-sound-args : {F G : InterpretTyExtType margs m} → TyExtEquivType F G → (args : TyExtArgs margs) →
+                         ∀ {Γ} → interpret-ext-ty F (reduce-comp-args args) {Γ} ≅ᵗʸ interpret-ext-ty G args
+
 reduce-comp-sound Nat' = ≅ᵗʸ-refl
 reduce-comp-sound Bool' = ≅ᵗʸ-refl
 reduce-comp-sound (T ⇛ S) = ⇛-cong (reduce-comp-sound T) (reduce-comp-sound S)
 reduce-comp-sound (T ⊠ S) = ⊠-cong (reduce-comp-sound T) (reduce-comp-sound S)
 reduce-comp-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-comp-helper-sound μ (reduce-comp T))
                                         (mod-cong ⟦ μ ⟧modality (reduce-comp-sound T))
+reduce-comp-sound (Ext c args) = reduce-comp-sound-args (interpret-code-cong c) args
+
+reduce-comp-sound-args {[]}        is-equiv args       = is-equiv
+reduce-comp-sound-args {m ∷ margs} is-equiv (T , args) = reduce-comp-sound-args (is-equiv (reduce-comp-sound T)) args
 
 
 --------------------------------------------------
@@ -80,11 +101,17 @@ reduce-unit-helper {m} {m'} μ T | ok refl | type-error _ = ⟨ μ ∣ T ⟩
 reduce-unit-helper {m} {m'} μ T | ok refl | ok _ = T
 
 reduce-unit : TyExpr m → TyExpr m
+reduce-unit-args : TyExtArgs margs → TyExtArgs margs
+
 reduce-unit Nat' = Nat'
 reduce-unit Bool' = Bool'
 reduce-unit (T ⇛ S) = reduce-unit T ⇛ reduce-unit S
 reduce-unit (T ⊠ S) = reduce-unit T ⊠ reduce-unit S
 reduce-unit ⟨ μ ∣ T ⟩ = reduce-unit-helper μ (reduce-unit T)
+reduce-unit (Ext c args) = Ext c (reduce-unit-args args)
+
+reduce-unit-args {[]}        args       = args
+reduce-unit-args {m ∷ margs} (T , args) = reduce-unit T , reduce-unit-args args
 
 reduce-unit-helper-sound : (μ : ModalityExpr m m') (T : TyExpr m) → ∀ {Γ} →
                            ⟦ reduce-unit-helper μ T ⟧ty {Γ} ≅ᵗʸ ⟦ ⟨ μ ∣ T ⟩ ⟧ty
@@ -96,12 +123,19 @@ reduce-unit-helper-sound {m} {m'} μ T | ok refl | ok 𝟙=μ = eq-mod-closed (�
                                                                          ⟦ T ⟧ty {{⟦⟧ty-natural T}}
 
 reduce-unit-sound : (T : TyExpr m) → ∀ {Γ} → ⟦ reduce-unit T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
+reduce-unit-sound-args : {F G : InterpretTyExtType margs m} → TyExtEquivType F G → (args : TyExtArgs margs) →
+                         ∀ {Γ} → interpret-ext-ty F (reduce-unit-args args) {Γ} ≅ᵗʸ interpret-ext-ty G args
+
 reduce-unit-sound Nat' = ≅ᵗʸ-refl
 reduce-unit-sound Bool' = ≅ᵗʸ-refl
 reduce-unit-sound (T ⇛ S) = ⇛-cong (reduce-unit-sound T) (reduce-unit-sound S)
 reduce-unit-sound (T ⊠ S) = ⊠-cong (reduce-unit-sound T) (reduce-unit-sound S)
 reduce-unit-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-unit-helper-sound μ (reduce-unit T))
                                         (mod-cong ⟦ μ ⟧modality (reduce-unit-sound T))
+reduce-unit-sound (Ext c args) = reduce-unit-sound-args (interpret-code-cong c) args
+
+reduce-unit-sound-args {[]}        is-equiv args       = is-equiv
+reduce-unit-sound-args {m ∷ margs} is-equiv (T , args) = reduce-unit-sound-args (is-equiv (reduce-unit-sound T)) args
 
 
 --------------------------------------------------
@@ -118,8 +152,20 @@ reduce-ty-sound T = ≅ᵗʸ-trans (reduce-unit-sound (reduce-comp T))
 --------------------------------------------------
 -- The final decision procedure for type equivalence
 
+_≟list-mode_ : (ms1 ms2 : List ModeExpr) → TCM (ms1 ≡ ms2)
+[] ≟list-mode [] = return refl
+[] ≟list-mode (_ ∷ _) = type-error ""
+(_ ∷ _) ≟list-mode [] = type-error ""
+(m1 ∷ ms1) ≟list-mode (m2 ∷ ms2) = do
+  refl ← m1 ≟mode m2
+  refl ← ms1 ≟list-mode ms2
+  return refl
+
 -- Are two types identical up to equivalence of modalities?
 _≟ty_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
+≟ty-ext-args : {F G : InterpretTyExtType margs m} → TyExtEquivType F G → (args1 args2 : TyExtArgs margs) →
+               TCM (∀ {Γ} → interpret-ext-ty F args1 {Γ} ≅ᵗʸ interpret-ext-ty G args2)
+
 Nat' ≟ty Nat' = return ≅ᵗʸ-refl
 Bool' ≟ty Bool' = return ≅ᵗʸ-refl
 (T1 ⇛ S1) ≟ty (T2 ⇛ S2) = do
@@ -136,7 +182,17 @@ Bool' ≟ty Bool' = return ≅ᵗʸ-refl
   T=S ← T ≟ty S
   return (≅ᵗʸ-trans (eq-mod-closed μ=ρ ⟦ T ⟧ty {{⟦⟧ty-natural T}})
                     (mod-cong ⟦ ρ ⟧modality T=S))
+(Ext {margs1} c1 args1) ≟ty (Ext {margs2} c2 args2) = do
+  refl ← margs1 ≟list-mode margs2
+  refl ← c1 ≟code c2
+  ≟ty-ext-args (interpret-code-cong c1) args1 args2
 T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
+
+≟ty-ext-args {[]}        is-equiv args1 args2 = return is-equiv
+≟ty-ext-args {m ∷ margs} is-equiv (T1 , args1) (T2 , args2) = do
+  T1=T2 ← T1 ≟ty T2
+  ≟ty-ext-args (is-equiv T1=T2) args1 args2
+
 
 ty-reflect : (T S : TyExpr m) → (∀ {Γ} → ⟦ reduce-ty T ⟧ty {Γ} ≅ᵗʸ ⟦ reduce-ty S ⟧ty) →
              ∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty

@@ -4,6 +4,7 @@
 
 module MSTT.ModeTheory where
 
+open import Data.List
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 

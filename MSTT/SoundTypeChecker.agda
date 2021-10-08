@@ -4,8 +4,9 @@
 --------------------------------------------------
 
 open import MSTT.ModeTheory
+open import MSTT.TypeExtension using (TyExt)
 
-module MSTT.SoundTypeChecker (mt : ModeTheory) where
+module MSTT.SoundTypeChecker (mt : ModeTheory) (ty-ext : TyExt mt) where
 
 
 open import Data.Bool hiding (T)
@@ -22,11 +23,13 @@ open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
 
 open import MSTT.TCMonad
-open import MSTT.Syntax mt
-open import MSTT.Equality mt
-open import MSTT.InterpretTypes mt
+open import MSTT.Syntax mt ty-ext
+open import MSTT.Equality mt ty-ext
+open import MSTT.InterpretTypes mt ty-ext
 
 open ModeTheory mt
+open TyExt ty-ext
+open MSTT.TypeExtension mt hiding (TyExt)
 
 private
   variable

@@ -3,33 +3,47 @@
 --------------------------------------------------
 
 open import MSTT.ModeTheory
+open import MSTT.TypeExtension using (TyExt)
 
-module MSTT.Syntax (mt : ModeTheory) where
+module MSTT.Syntax (mt : ModeTheory) (ty-ext : TyExt mt)  where
 
+open import Data.List hiding (_++_)
 open import Data.Nat
+open import Data.Product using (_×_; proj₁; proj₂)
 open import Data.String
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
 open import MSTT.TCMonad
 
 open ModeTheory mt
+open MSTT.TypeExtension mt hiding (TyExt)
+open TyExt ty-ext
 
 private
   variable
     m m' : ModeExpr
+    margs : List ModeExpr
 
 
 --------------------------------------------------
 -- Expressions for MSTT types, contexts and terms
 
+data TyExpr : ModeExpr → Set
+TyExtArgs : List ModeExpr → Set
+
 infixr 6 _⇛_
 infixl 5 _⊠_
-data TyExpr : ModeExpr → Set where
+data TyExpr where
   Nat' : TyExpr m
   Bool' : TyExpr m
   _⇛_ : TyExpr m → TyExpr m → TyExpr m
   _⊠_ : TyExpr m → TyExpr m → TyExpr m
   ⟨_∣_⟩ : ModalityExpr m m' → TyExpr m → TyExpr m'
+  Ext : ∀ {margs m} → TyExtCode margs m → TyExtArgs margs → TyExpr m
+
+TyExtArgs [] = ⊤
+TyExtArgs (m ∷ margs) = TyExpr m × TyExtArgs margs
 
 infixl 4 _,_∈_ _,lock⟨_⟩
 data CtxExpr (m : ModeExpr) : Set where
@@ -62,11 +76,17 @@ syntax coe μ ρ α t = coe[ α ∈ μ ⇒ ρ ] t
 --  (mostly for type errors)
 
 show-type : TyExpr m → String
+show-ext-type : ShowTyExtType margs → TyExtArgs margs → String
+
 show-type Nat' = "Nat"
 show-type Bool' = "Bool"
 show-type (T1 ⇛ T2) = show-type T1 ++ " → " ++ show-type T2
 show-type (T1 ⊠ T2) = show-type T1 ++ " ⊠ " ++ show-type T2
 show-type ⟨ μ ∣ T ⟩ = "⟨ " ++ show-modality μ ++ " | " ++ show-type T ++ " ⟩"
+show-type (Ext code args) = show-ext-type (show-code code) args
+
+show-ext-type {[]}        s args = s
+show-ext-type {m ∷ margs} f args = show-ext-type (f (show-type (proj₁ args))) (proj₂ args)
 
 show-ctx : CtxExpr m → String
 show-ctx ◇ = "◇"

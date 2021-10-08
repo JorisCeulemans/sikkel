@@ -3,12 +3,13 @@
 --------------------------------------------------
 
 open import MSTT.ModeTheory
+open import MSTT.TypeExtension
 
-module MSTT.Example (mt : ModeTheory) where
+module MSTT.Example (mt : ModeTheory) (ty-ext : TyExt mt) where
 
 open ModeTheory mt
 
-open import MSTT.Syntax mt
+open import MSTT.Syntax mt ty-ext
 
 private variable
   m n : ModeExpr
