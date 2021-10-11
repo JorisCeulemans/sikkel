@@ -30,7 +30,7 @@ private
 
 
 ⟦_⟧ty : TyExpr m → ClosedTy ⟦ m ⟧mode
-interpret-ext-ty : InterpretTyExtType margs m → TyExtArgs margs → ClosedTy ⟦ m ⟧mode
+interpret-ext-ty : TyConstructor margs m → TyExtArgs margs → ClosedTy ⟦ m ⟧mode
 
 ⟦ Nat' ⟧ty = M.Nat'
 ⟦ Bool' ⟧ty = M.Bool'
@@ -48,7 +48,7 @@ interpret-ext-ty {m ∷ margs} F args = interpret-ext-ty (F ⟦ proj₁ args ⟧
 ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = ⟦ Γ ⟧ctx M.,lock⟨ ⟦ μ ⟧modality ⟩
 
 ⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
-interpret-ext-ty-natural : {F : InterpretTyExtType margs m} → TyExtNaturalityType F → (args : TyExtArgs margs) →
+interpret-ext-ty-natural : {F : TyConstructor margs m} → TyConstructorNatural F → (args : TyExtArgs margs) →
                            IsClosedNatural (interpret-ext-ty F args)
 
 ⟦⟧ty-natural Nat' = M.discr-closed

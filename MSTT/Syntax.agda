@@ -76,7 +76,7 @@ syntax coe μ ρ α t = coe[ α ∈ μ ⇒ ρ ] t
 --  (mostly for type errors)
 
 show-type : TyExpr m → String
-show-ext-type : ShowTyExtType margs → TyExtArgs margs → String
+show-ext-type : TyExtShow margs → TyExtArgs margs → String
 
 show-type Nat' = "Nat"
 show-type Bool' = "Bool"

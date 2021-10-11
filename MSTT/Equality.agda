@@ -52,18 +52,17 @@ reduce-comp-helper μ ⟨ ρ ∣ T ⟩ = ⟨ μ ⓜ ρ ∣ T ⟩
 reduce-comp-helper μ (Ext c args) = ⟨ μ ∣ Ext c args ⟩
 
 reduce-comp : TyExpr m → TyExpr m
-reduce-comp-args : TyExtArgs margs → TyExtArgs margs
+reduce-comp-ext-args : TyExtArgs margs → TyExtArgs margs
 
 reduce-comp Nat' = Nat'
 reduce-comp Bool' = Bool'
 reduce-comp (T ⇛ S) = reduce-comp T ⇛ reduce-comp S
 reduce-comp (T ⊠ S) = reduce-comp T ⊠ reduce-comp S
 reduce-comp ⟨ μ ∣ T ⟩ = reduce-comp-helper μ (reduce-comp T)
-reduce-comp (Ext c args) = Ext c (reduce-comp-args args)
+reduce-comp (Ext c args) = Ext c (reduce-comp-ext-args args)
 
-reduce-comp-args {[]}        args       = args
-reduce-comp-args {m ∷ margs} (T , args) = reduce-comp T , reduce-comp-args args
-
+reduce-comp-ext-args {[]}        args       = args
+reduce-comp-ext-args {m ∷ margs} (T , args) = reduce-comp T , reduce-comp-ext-args args
 
 reduce-comp-helper-sound : (μ : ModalityExpr m m') (T : TyExpr m) → ∀ {Γ} →
                            ⟦ reduce-comp-helper μ T ⟧ty {Γ} ≅ᵗʸ ⟦ ⟨ μ ∣ T ⟩ ⟧ty
@@ -75,8 +74,8 @@ reduce-comp-helper-sound μ ⟨ ρ ∣ T ⟩ = eq-mod-closed (ⓜ-interpretation
 reduce-comp-helper-sound μ (Ext c args) = ≅ᵗʸ-refl
 
 reduce-comp-sound : (T : TyExpr m) → ∀ {Γ} → ⟦ reduce-comp T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
-reduce-comp-sound-args : {F G : InterpretTyExtType margs m} → TyExtEquivType F G → (args : TyExtArgs margs) →
-                         ∀ {Γ} → interpret-ext-ty F (reduce-comp-args args) {Γ} ≅ᵗʸ interpret-ext-ty G args
+reduce-comp-sound-ext-args : {F G : TyConstructor margs m} → TyConstructorEquiv F G → (args : TyExtArgs margs) →
+                             ∀ {Γ} → interpret-ext-ty F (reduce-comp-ext-args args) {Γ} ≅ᵗʸ interpret-ext-ty G args
 
 reduce-comp-sound Nat' = ≅ᵗʸ-refl
 reduce-comp-sound Bool' = ≅ᵗʸ-refl
@@ -84,10 +83,10 @@ reduce-comp-sound (T ⇛ S) = ⇛-cong (reduce-comp-sound T) (reduce-comp-sound 
 reduce-comp-sound (T ⊠ S) = ⊠-cong (reduce-comp-sound T) (reduce-comp-sound S)
 reduce-comp-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-comp-helper-sound μ (reduce-comp T))
                                         (mod-cong ⟦ μ ⟧modality (reduce-comp-sound T))
-reduce-comp-sound (Ext c args) = reduce-comp-sound-args (interpret-code-cong c) args
+reduce-comp-sound (Ext c args) = reduce-comp-sound-ext-args (interpret-code-cong c) args
 
-reduce-comp-sound-args {[]}        is-equiv args       = is-equiv
-reduce-comp-sound-args {m ∷ margs} is-equiv (T , args) = reduce-comp-sound-args (is-equiv (reduce-comp-sound T)) args
+reduce-comp-sound-ext-args {[]}        is-equiv args       = is-equiv
+reduce-comp-sound-ext-args {m ∷ margs} is-equiv (T , args) = reduce-comp-sound-ext-args (is-equiv (reduce-comp-sound T)) args
 
 
 --------------------------------------------------
@@ -101,17 +100,17 @@ reduce-unit-helper {m} {m'} μ T | ok refl | type-error _ = ⟨ μ ∣ T ⟩
 reduce-unit-helper {m} {m'} μ T | ok refl | ok _ = T
 
 reduce-unit : TyExpr m → TyExpr m
-reduce-unit-args : TyExtArgs margs → TyExtArgs margs
+reduce-unit-ext-args : TyExtArgs margs → TyExtArgs margs
 
 reduce-unit Nat' = Nat'
 reduce-unit Bool' = Bool'
 reduce-unit (T ⇛ S) = reduce-unit T ⇛ reduce-unit S
 reduce-unit (T ⊠ S) = reduce-unit T ⊠ reduce-unit S
 reduce-unit ⟨ μ ∣ T ⟩ = reduce-unit-helper μ (reduce-unit T)
-reduce-unit (Ext c args) = Ext c (reduce-unit-args args)
+reduce-unit (Ext c args) = Ext c (reduce-unit-ext-args args)
 
-reduce-unit-args {[]}        args       = args
-reduce-unit-args {m ∷ margs} (T , args) = reduce-unit T , reduce-unit-args args
+reduce-unit-ext-args {[]}        args       = args
+reduce-unit-ext-args {m ∷ margs} (T , args) = reduce-unit T , reduce-unit-ext-args args
 
 reduce-unit-helper-sound : (μ : ModalityExpr m m') (T : TyExpr m) → ∀ {Γ} →
                            ⟦ reduce-unit-helper μ T ⟧ty {Γ} ≅ᵗʸ ⟦ ⟨ μ ∣ T ⟩ ⟧ty
@@ -123,8 +122,8 @@ reduce-unit-helper-sound {m} {m'} μ T | ok refl | ok 𝟙=μ = eq-mod-closed (�
                                                                          ⟦ T ⟧ty {{⟦⟧ty-natural T}}
 
 reduce-unit-sound : (T : TyExpr m) → ∀ {Γ} → ⟦ reduce-unit T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
-reduce-unit-sound-args : {F G : InterpretTyExtType margs m} → TyExtEquivType F G → (args : TyExtArgs margs) →
-                         ∀ {Γ} → interpret-ext-ty F (reduce-unit-args args) {Γ} ≅ᵗʸ interpret-ext-ty G args
+reduce-unit-sound-ext-args : {F G : TyConstructor margs m} → TyConstructorEquiv F G → (args : TyExtArgs margs) →
+                             ∀ {Γ} → interpret-ext-ty F (reduce-unit-ext-args args) {Γ} ≅ᵗʸ interpret-ext-ty G args
 
 reduce-unit-sound Nat' = ≅ᵗʸ-refl
 reduce-unit-sound Bool' = ≅ᵗʸ-refl
@@ -132,10 +131,10 @@ reduce-unit-sound (T ⇛ S) = ⇛-cong (reduce-unit-sound T) (reduce-unit-sound 
 reduce-unit-sound (T ⊠ S) = ⊠-cong (reduce-unit-sound T) (reduce-unit-sound S)
 reduce-unit-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (reduce-unit-helper-sound μ (reduce-unit T))
                                         (mod-cong ⟦ μ ⟧modality (reduce-unit-sound T))
-reduce-unit-sound (Ext c args) = reduce-unit-sound-args (interpret-code-cong c) args
+reduce-unit-sound (Ext c args) = reduce-unit-sound-ext-args (interpret-code-cong c) args
 
-reduce-unit-sound-args {[]}        is-equiv args       = is-equiv
-reduce-unit-sound-args {m ∷ margs} is-equiv (T , args) = reduce-unit-sound-args (is-equiv (reduce-unit-sound T)) args
+reduce-unit-sound-ext-args {[]}        is-equiv args       = is-equiv
+reduce-unit-sound-ext-args {m ∷ margs} is-equiv (T , args) = reduce-unit-sound-ext-args (is-equiv (reduce-unit-sound T)) args
 
 
 --------------------------------------------------
@@ -163,7 +162,7 @@ _≟list-mode_ : (ms1 ms2 : List ModeExpr) → TCM (ms1 ≡ ms2)
 
 -- Are two types identical up to equivalence of modalities?
 _≟ty_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-≟ty-ext-args : {F G : InterpretTyExtType margs m} → TyExtEquivType F G → (args1 args2 : TyExtArgs margs) →
+≟ty-ext-args : {F G : TyConstructor margs m} → TyConstructorEquiv F G → (args1 args2 : TyExtArgs margs) →
                TCM (∀ {Γ} → interpret-ext-ty F args1 {Γ} ≅ᵗʸ interpret-ext-ty G args2)
 
 Nat' ≟ty Nat' = return ≅ᵗʸ-refl

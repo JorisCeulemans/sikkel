@@ -17,31 +17,30 @@ private variable
   margs : List ModeExpr
 
 
-ShowTyExtType : List ModeExpr → Set
-ShowTyExtType [] = String
-ShowTyExtType (m ∷ margs) = String → ShowTyExtType margs
+TyExtShow : List ModeExpr → Set
+TyExtShow [] = String
+TyExtShow (m ∷ margs) = String → TyExtShow margs
 
-InterpretTyExtType : List ModeExpr → ModeExpr → Set₁
-InterpretTyExtType [] m = ClosedTy ⟦ m ⟧mode
-InterpretTyExtType (m' ∷ margs) m = ClosedTy ⟦ m' ⟧mode → InterpretTyExtType margs m
+TyConstructor : List ModeExpr → ModeExpr → Set₁
+TyConstructor [] m = ClosedTy ⟦ m ⟧mode
+TyConstructor (m' ∷ margs) m = ClosedTy ⟦ m' ⟧mode → TyConstructor margs m
 
-TyExtNaturalityType : InterpretTyExtType margs m → Set₁
-TyExtNaturalityType {[]}        T = IsClosedNatural T
-TyExtNaturalityType {m ∷ margs} F = {S : ClosedTy ⟦ m ⟧mode} → IsClosedNatural S → TyExtNaturalityType (F S)
+TyConstructorNatural : TyConstructor margs m → Set₁
+TyConstructorNatural {[]}        T = IsClosedNatural T
+TyConstructorNatural {m ∷ margs} F = {S : ClosedTy ⟦ m ⟧mode} → IsClosedNatural S → TyConstructorNatural (F S)
 
-TyExtEquivType : InterpretTyExtType margs m → InterpretTyExtType margs m → Set₁
-TyExtEquivType {[]}        T S = ∀ {Γ} → T {Γ} ≅ᵗʸ S
-TyExtEquivType {m ∷ margs} F G = {T S : ClosedTy ⟦ m ⟧mode} → (∀ {Γ} → T {Γ} ≅ᵗʸ S) → TyExtEquivType (F T) (G S)
+TyConstructorEquiv : TyConstructor margs m → TyConstructor margs m → Set₁
+TyConstructorEquiv {[]}        T S = ∀ {Γ} → T {Γ} ≅ᵗʸ S
+TyConstructorEquiv {m ∷ margs} F G = {T S : ClosedTy ⟦ m ⟧mode} → (∀ {Γ} → T {Γ} ≅ᵗʸ S) → TyConstructorEquiv (F T) (G S)
 
-TyExtCongType : InterpretTyExtType margs m → Set₁
-TyExtCongType F = TyExtEquivType F F
+TyConstructorCong : TyConstructor margs m → Set₁
+TyConstructorCong F = TyConstructorEquiv F F
 
 record TyExt : Set₁ where
   field
     TyExtCode : List ModeExpr → ModeExpr → Set
     _≟code_ : (c1 c2 : TyExtCode margs m) → TCM (c1 ≡ c2)
-    show-code : TyExtCode margs m → ShowTyExtType margs
-    interpret-code : TyExtCode margs m → InterpretTyExtType margs m
-    interpret-code-natural : (c : TyExtCode margs m) → TyExtNaturalityType (interpret-code c)
-    interpret-code-cong : (c : TyExtCode margs m) → TyExtCongType (interpret-code c)
-    
+    show-code : TyExtCode margs m → TyExtShow margs
+    interpret-code : TyExtCode margs m → TyConstructor margs m
+    interpret-code-natural : (c : TyExtCode margs m) → TyConstructorNatural (interpret-code c)
+    interpret-code-cong : (c : TyExtCode margs m) → TyConstructorCong (interpret-code c)
