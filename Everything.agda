@@ -12,11 +12,16 @@ import Model.Type.Sum
 import Model.Modality
 
 import MSTT.TCMonad
-import MSTT.ModeTheory
-import MSTT.Syntax
+import MSTT.Parameter.ModeTheory
+import MSTT.Parameter.TypeExtension
+import MSTT.Parameter.TermExtension
+import MSTT.Syntax.Type
+import MSTT.Syntax.Context
+import MSTT.Syntax.Term
 import MSTT.InterpretTypes
 import MSTT.Equality
-import MSTT.SoundTypeChecker
+import MSTT.TypeChecker.ResultType
+import MSTT.TypeChecker
 
 import Extraction
 

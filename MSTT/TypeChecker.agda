@@ -3,14 +3,17 @@
 -- The main function in this file is `infer-interpret`.
 --------------------------------------------------
 
-open import MSTT.ModeTheory
-open import MSTT.TypeExtension using (TyExt)
+open import MSTT.Parameter.ModeTheory
+open import MSTT.Parameter.TypeExtension using (TyExt)
+open import MSTT.Parameter.TermExtension using (TmExt)
 
-module MSTT.SoundTypeChecker (mt : ModeTheory) (ty-ext : TyExt mt) where
+module MSTT.TypeChecker (mt : ModeTheory) (ty-ext : TyExt mt) (tm-ext : TmExt mt ty-ext) where
 
 
 open import Data.Bool hiding (T)
+open import Data.List hiding (_++_)
 open import Data.Nat
+open import Data.Product using (proj₁; proj₂)
 open import Data.String renaming (_==_ to _=string=_)
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
@@ -23,31 +26,21 @@ open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
 
 open import MSTT.TCMonad
-open import MSTT.Syntax mt ty-ext
+open import MSTT.Syntax.Type mt ty-ext
+open import MSTT.Syntax.Context mt ty-ext
+open import MSTT.Syntax.Term mt ty-ext tm-ext
 open import MSTT.Equality mt ty-ext
 open import MSTT.InterpretTypes mt ty-ext
+open import MSTT.TypeChecker.ResultType mt ty-ext
 
 open ModeTheory mt
-open TyExt ty-ext
-open MSTT.TypeExtension mt hiding (TyExt)
+open TmExt tm-ext
+open MSTT.Parameter.TermExtension mt ty-ext hiding (TmExt)
 
 private
   variable
     m m' m'' : ModeExpr
-
-
---------------------------------------------------
--- Type of the final result after type checking/interpretation
-
--- The sound type checker defined below accepts a term and a context and will,
---   if successful, produce the type of that term and an interpretation of that
---   term in a presheaf model.
-infix 1 _,_
-record InferInterpretResult (Γ : CtxExpr m) : Set where
-  constructor _,_
-  field
-    type : TyExpr m
-    interpretation : Tm ⟦ Γ ⟧ctx ⟦ type ⟧ty
+    margs : List ModeExpr
 
 
 --------------------------------------------------
@@ -133,6 +126,9 @@ weaken-sem-term Δ T t = ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ] (t [
 -- The sound type checker
 
 infer-interpret : TmExpr m → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
+infer-interpret-ext-args : InferInterpretExt margs m → TmExtArgs margs → (Γ : CtxExpr m) →
+                           TCM (InferInterpretResult Γ)
+
 infer-interpret (ann t ∈ T) Γ = do
   T' , ⟦t⟧ ← infer-interpret t Γ
   T=T' ← T ≃ᵗʸ? T'
@@ -189,6 +185,11 @@ infer-interpret (coe {mμ} μ ρ α t) Γ = do
   refl ← mμ ≟mode mκ
   μ=κ ← μ ≃ᵐ? κ
   return (⟨ ρ ∣ A ⟩ , coe-closed ⟦ α ⟧two-cell {{⟦⟧ty-natural A}} (ι[ eq-mod-closed μ=κ ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
+infer-interpret (ext c args) Γ = infer-interpret-ext-args (infer-interpret-code c) args Γ
+
+infer-interpret-ext-args {[]}        f args Γ = f Γ
+infer-interpret-ext-args {m ∷ margs} f args Γ = infer-interpret-ext-args (f (infer-interpret (proj₁ args))) (proj₂ args) Γ
+
 
 infer-type : TmExpr m → CtxExpr m → TCM (TyExpr m)
 infer-type t Γ = InferInterpretResult.type <$> infer-interpret t Γ

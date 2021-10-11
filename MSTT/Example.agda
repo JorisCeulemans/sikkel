@@ -2,14 +2,16 @@
 -- Example program in MSTT
 --------------------------------------------------
 
-open import MSTT.ModeTheory
-open import MSTT.TypeExtension
+open import MSTT.Parameter.ModeTheory
+open import MSTT.Parameter.TypeExtension
+open import MSTT.Parameter.TermExtension
 
-module MSTT.Example (mt : ModeTheory) (ty-ext : TyExt mt) where
+module MSTT.Example (mt : ModeTheory) (ty-ext : TyExt mt) (tm-ext : TmExt mt ty-ext) where
 
 open ModeTheory mt
 
-open import MSTT.Syntax mt ty-ext
+open import MSTT.Syntax.Type mt ty-ext
+open import MSTT.Syntax.Term mt ty-ext tm-ext
 
 private variable
   m n : ModeExpr

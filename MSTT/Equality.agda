@@ -2,8 +2,8 @@
 -- Decision procedure for equivalence of types
 --------------------------------------------------
 
-open import MSTT.ModeTheory
-open import MSTT.TypeExtension using (TyExt)
+open import MSTT.Parameter.ModeTheory
+open import MSTT.Parameter.TypeExtension using (TyExt)
 
 module MSTT.Equality (mt : ModeTheory) (ty-ext : TyExt mt) where
 
@@ -19,12 +19,12 @@ open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
 open import MSTT.TCMonad
-open import MSTT.Syntax mt ty-ext
+open import MSTT.Syntax.Type mt ty-ext
 open import MSTT.InterpretTypes mt ty-ext
 
 open ModeTheory mt
 open TyExt ty-ext
-open MSTT.TypeExtension mt hiding (TyExt)
+open MSTT.Parameter.TypeExtension mt hiding (TyExt)
 
 private
   variable

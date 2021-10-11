@@ -1,6 +1,6 @@
-open import MSTT.ModeTheory
+open import MSTT.Parameter.ModeTheory
 
-module MSTT.TypeExtension (mt : ModeTheory) where
+module MSTT.Parameter.TypeExtension (mt : ModeTheory) where
 
 open import Data.List
 open import Data.String hiding (show)

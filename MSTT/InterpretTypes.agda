@@ -2,8 +2,8 @@
 -- Interpretation of types and contexts in a presheaf model
 --------------------------------------------------
 
-open import MSTT.ModeTheory
-open import MSTT.TypeExtension using (TyExt)
+open import MSTT.Parameter.ModeTheory
+open import MSTT.Parameter.TypeExtension using (TyExt)
 
 module MSTT.InterpretTypes (mt : ModeTheory) (ty-ext : TyExt mt) where
 
@@ -17,8 +17,9 @@ open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
 open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim)
 
 open import MSTT.TCMonad
-open import MSTT.Syntax mt ty-ext
-open MSTT.TypeExtension mt hiding (TyExt)
+open import MSTT.Syntax.Type mt ty-ext
+open import MSTT.Syntax.Context mt ty-ext
+open MSTT.Parameter.TypeExtension mt hiding (TyExt)
 
 open ModeTheory mt
 open TyExt ty-ext

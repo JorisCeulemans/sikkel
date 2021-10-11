@@ -2,9 +2,8 @@
 -- Definition of a mode theory for MSTT
 --------------------------------------------------
 
-module MSTT.ModeTheory where
+module MSTT.Parameter.ModeTheory where
 
-open import Data.List
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 
