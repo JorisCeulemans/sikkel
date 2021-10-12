@@ -17,9 +17,9 @@ open import Model.BaseCategory hiding (★; ⋀)
 open import Model.Type.Function hiding (_⇛_; lam; lam[_∈_]_)
 open import Extraction
 
-open import Applications.Parametricity.Model using (_⟨→⟩_)
-open import Applications.Parametricity.MSTT.Builtin
-open import Applications.Parametricity.MSTT.TCMonad
+open import Applications.Parametricity.Model as M using (_⟨→⟩_)
+open import Applications.Parametricity.MSTT.TypeExtension.RelExtension
+open import MSTT.TCMonad using (return)
 import Applications.Parametricity.MSTT
 
 
@@ -93,14 +93,14 @@ difference-∼ (suc m) (suc n) = diff-suc (difference-∼ m n)
 --   There is one code for a type ℤ, representing DiffNat and SignNat
 --   with the relation ~.
 
-data CodeUniv : Set where
-  ℤ-code : CodeUniv
+data RelCode : Set where
+  ℤ-code : RelCode
 
-builtin : BuiltinTypes
-BuiltinTypes.Code builtin = CodeUniv
-BuiltinTypes.show-code builtin ℤ-code = "ℤ"
-BuiltinTypes._≟code_ builtin ℤ-code ℤ-code = return refl
-BuiltinTypes.interpret-code builtin ℤ-code =
+builtin : RelExt
+RelExt.RelCode builtin = RelCode
+RelExt.show-code builtin ℤ-code = "ℤ"
+RelExt._≟code_ builtin ℤ-code ℤ-code = return refl
+RelExt.interpret-code builtin ℤ-code =
   record { Left = DiffNat ; Right = SignNat ; Relation = _∼_ }
 
 
@@ -149,7 +149,7 @@ subtract : (A : TyExpr m) {{_ : IntStructure A}} → TmExpr m
 subtract A = lam[ "a" ∈  A ] lam[ "b" ∈ A ] add ∙ var "a" ∙ (negate ∙ var "b")
 
 ℤ : TyExpr ⋀
-ℤ = Builtin ℤ-code
+ℤ = FromRel ℤ-code
 
 instance
   ℤ-is-int : IntStructure ℤ
