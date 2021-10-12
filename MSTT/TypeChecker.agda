@@ -29,7 +29,7 @@ open import MSTT.TCMonad
 open import MSTT.Syntax.Type mt ty-ext
 open import MSTT.Syntax.Context mt ty-ext
 open import MSTT.Syntax.Term mt ty-ext tm-ext
-open import MSTT.Equality mt ty-ext
+open import MSTT.Equivalence mt ty-ext
 open import MSTT.InterpretTypes mt ty-ext
 open import MSTT.TypeChecker.ResultType mt ty-ext
 

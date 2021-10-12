@@ -1,24 +1,18 @@
 --------------------------------------------------
--- Checking equivalence for mode, modality and type expressions.
+-- Checking equivalence for mode and modality expressions.
 --------------------------------------------------
 
-module Applications.GuardedRecursion.MSTT.Equality where
+module Applications.GuardedRecursion.MSTT.ModeTheory.Equivalence where
 
 open import Data.String
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
-open import Model.CwF-Structure as M
-open import Model.Type.Function as M hiding (_⇛_)
-open import Model.Type.Product as M hiding (_⊠_)
 open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩)
 open import Applications.GuardedRecursion.Model.Modalities as M hiding (constantly; forever; later; _⊛_)
-open import Applications.GuardedRecursion.Model.Streams.Guarded as M hiding (GStream)
 
-open import Applications.GuardedRecursion.MSTT.ModeTheory
-open import Applications.GuardedRecursion.MSTT.Syntax
-open import Applications.GuardedRecursion.MSTT.TCMonad
-open import Applications.GuardedRecursion.MSTT.InterpretTypes
+open import MSTT.TCMonad
+open import Applications.GuardedRecursion.MSTT.ModeTheory.Expressions
 
 private
   variable
@@ -26,10 +20,9 @@ private
 
 
 --------------------------------------------------
--- (Semi-)decidable equality for mode, modality and type expressions
---   Requiring modalities and types to be truly identical is too restrictive,
---   therefore we have the decision procedures further below which allow for
---   more judgmental equalities.
+-- (Semi-)decidable equality for mode and modality expressions
+--   The operation _≟modality_ tests whether two modalities are truly identical,
+--   the more expressive test _≃ᵐ?_ for equivalence is implemented below.
 
 _≟mode_ : (m1 m2 : ModeExpr) → TCM (m1 ≡ m2)
 ★ ≟mode ★ = return refl
@@ -46,20 +39,9 @@ later ≟modality later = return refl
   cong₂ _ⓜ_ <$> (μ ≟modality μ') ⊛ (ρ ≟modality ρ')
 μ ≟modality ρ = type-error ("Modality " ++ show-modality μ ++ " is not equal to " ++ show-modality ρ)
 
-_≟ty_ : (T1 T2 : TyExpr m) → TCM (T1 ≡ T2)
-Nat' ≟ty Nat' = return refl
-Bool' ≟ty Bool' = return refl
-(T1 ⇛ T2) ≟ty (T3 ⇛ T4) = (cong₂ _⇛_) <$> (T1 ≟ty T3) ⊛ (T2 ≟ty T4)
-(T1 ⊠ T2) ≟ty (T3 ⊠ T4) = (cong₂ _⊠_) <$> (T1 ≟ty T3) ⊛ (T2 ≟ty T4)
-(⟨_∣_⟩ {m1} μ1 T1) ≟ty (⟨_∣_⟩ {m2} μ2 T2) = do
-  refl ← m1 ≟mode m2
-  cong₂ ⟨_∣_⟩ <$> (μ1 ≟modality μ2) ⊛ (T1 ≟ty T2)
-(GStream T) ≟ty (GStream S) = (cong GStream) <$> (T ≟ty S)
-T ≟ty S = type-error ("Type " ++ show-type T ++ " is not equal to " ++ show-type S)
-
 
 --------------------------------------------------
--- Deciding whether two modalities' interpretations are equivalent
+-- Deciding whether two modalities are equivalent
 
 -- The decision procedure has two steps:
 --   1. A possibly tree-like structure caused by multiple applications of modality
@@ -220,84 +202,3 @@ reduce-compare-mod μ ρ =
 -- The final procedure will test if two modalities are literally equal before reducing them.
 _≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
 μ ≃ᵐ? ρ = (⟦⟧modality-cong <$> (μ ≟modality ρ)) <∣> reduce-compare-mod μ ρ
-
-
---------------------------------------------------
--- (Semi-)deciding whether two types' interpretations are equivalent
-
-apply-mod-reduced : ModalityExpr m m' → TyExpr m → TyExpr m'
-apply-mod-reduced 𝟙 T = T
-apply-mod-reduced μ ⟨ ρ ∣ T ⟩ = apply-mod-reduced (reduce-modality-expr (μ ⓜ ρ)) T
-apply-mod-reduced μ T = ⟨ μ ∣ T ⟩
-
-reduce-ty-expr : TyExpr m → TyExpr m
-reduce-ty-expr Nat' = Nat'
-reduce-ty-expr Bool' = Bool'
-reduce-ty-expr (T1 ⇛ T2) = reduce-ty-expr T1 ⇛ reduce-ty-expr T2
-reduce-ty-expr (T1 ⊠ T2) = reduce-ty-expr T1 ⊠ reduce-ty-expr T2
-reduce-ty-expr ⟨ μ ∣ T ⟩ = apply-mod-reduced (reduce-modality-expr μ) -- we have to apply reduce-modality-expr here to see if μ reduces to 𝟙
-                                             (reduce-ty-expr T)
-reduce-ty-expr (GStream T) = GStream (reduce-ty-expr T)
-
-apply-mod-reduced-sound : ∀ (μ : ModalityExpr m m') (T : TyExpr m) {Γ} →
-                          ⟦ apply-mod-reduced μ T ⟧ty {Γ} ≅ᵗʸ M.⟨_∣_⟩ ⟦ μ ⟧modality ⟦ T ⟧ty
-apply-mod-reduced-sound 𝟙 T = ≅ᵗʸ-refl
-apply-mod-reduced-sound (μ ⓜ ρ) Nat' = ≅ᵗʸ-refl
-apply-mod-reduced-sound (μ ⓜ ρ) Bool' = ≅ᵗʸ-refl
-apply-mod-reduced-sound (μ ⓜ ρ) (T1 ⇛ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound (μ ⓜ ρ) (T1 ⊠ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound (μ ⓜ ρ) ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (μ ⓜ ρ ⓜ κ)) T)
-                                                      (eq-mod-closed (reduce-modality-expr-sound (μ ⓜ ρ ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound (μ ⓜ ρ) (GStream T) = ≅ᵗʸ-refl
-apply-mod-reduced-sound constantly Nat' = ≅ᵗʸ-refl
-apply-mod-reduced-sound constantly Bool' = ≅ᵗʸ-refl
-apply-mod-reduced-sound constantly (T1 ⇛ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound constantly (T1 ⊠ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound constantly ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (constantly ⓜ κ)) T)
-                                                         (eq-mod-closed (reduce-modality-expr-sound (constantly ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound forever Nat' = ≅ᵗʸ-refl
-apply-mod-reduced-sound forever Bool' = ≅ᵗʸ-refl
-apply-mod-reduced-sound forever (T1 ⇛ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound forever (T1 ⊠ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound forever ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (forever ⓜ κ)) T)
-                                                      (eq-mod-closed (reduce-modality-expr-sound (forever ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound forever (GStream T) = ≅ᵗʸ-refl
-apply-mod-reduced-sound later Nat' = ≅ᵗʸ-refl
-apply-mod-reduced-sound later Bool' = ≅ᵗʸ-refl
-apply-mod-reduced-sound later (T1 ⇛ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound later (T1 ⊠ T2) = ≅ᵗʸ-refl
-apply-mod-reduced-sound later ⟨ κ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr (later ⓜ κ)) T)
-                                                    (eq-mod-closed (reduce-modality-expr-sound (later ⓜ κ)) ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-apply-mod-reduced-sound later (GStream T) = ≅ᵗʸ-refl
-
-reduce-ty-expr-sound : (T : TyExpr m) → ∀ {Γ} →  ⟦ reduce-ty-expr T ⟧ty {Γ} ≅ᵗʸ ⟦ T ⟧ty
-reduce-ty-expr-sound Nat' = ≅ᵗʸ-refl
-reduce-ty-expr-sound Bool' = ≅ᵗʸ-refl
-reduce-ty-expr-sound (T1 ⇛ T2) = ⇛-cong (reduce-ty-expr-sound T1) (reduce-ty-expr-sound T2)
-reduce-ty-expr-sound (T1 ⊠ T2) = ⊠-cong (reduce-ty-expr-sound T1) (reduce-ty-expr-sound T2)
-reduce-ty-expr-sound ⟨ μ ∣ T ⟩ = ≅ᵗʸ-trans (apply-mod-reduced-sound (reduce-modality-expr μ) (reduce-ty-expr T))
-                                           (≅ᵗʸ-trans (eq-mod-closed (reduce-modality-expr-sound μ) ⟦ reduce-ty-expr T ⟧ty {{⟦⟧ty-natural (reduce-ty-expr T)}})
-                                                      (mod-cong ⟦ μ ⟧modality (reduce-ty-expr-sound T)))
-reduce-ty-expr-sound (GStream T) = gstream-cong (reduce-ty-expr-sound T)
-
-⟦⟧ty-cong : (T S : TyExpr m) → T ≡ S → ∀ {Γ} →  ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
-⟦⟧ty-cong T .T refl = ≅ᵗʸ-refl
-
-ty-reflect : (T S : TyExpr m) → reduce-ty-expr T ≡ reduce-ty-expr S → ∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty
-ty-reflect T S e = ≅ᵗʸ-trans (≅ᵗʸ-trans (≅ᵗʸ-sym (reduce-ty-expr-sound T))
-                                        (⟦⟧ty-cong _ _ e))
-                             (reduce-ty-expr-sound S)
-
-reduce-compare-ty : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-reduce-compare-ty T S =
-  let T' = reduce-ty-expr T
-      S' = reduce-ty-expr S
-  in with-error-msg ("Type " ++ show-type T ++ " is not equal to " ++ show-type S ++ ", reduced the equality to " ++
-                      show-type T' ++ " =?= " ++ show-type S') (
-    (T' ≟ty S') >>= λ T'=S' → return (ty-reflect T S T'=S'))
-
--- The final procedure first checks whether T and S are identical and if not,
--- whether they are identical after reduction. The former condition produces
--- smaller proofs of ⟦ T ⟧ty ≅ᵗʸ ⟦ S ⟧.
-_≃ᵗʸ?_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
-T ≃ᵗʸ? S = (⟦⟧ty-cong T S <$> (T ≟ty S)) <∣> reduce-compare-ty T S

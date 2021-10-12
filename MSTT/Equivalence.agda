@@ -5,7 +5,7 @@
 open import MSTT.Parameter.ModeTheory
 open import MSTT.Parameter.TypeExtension using (TyExt)
 
-module MSTT.Equality (mt : ModeTheory) (ty-ext : TyExt mt) where
+module MSTT.Equivalence (mt : ModeTheory) (ty-ext : TyExt mt) where
 
 open import Data.List hiding (_++_)
 open import Data.Product using (_×_; _,_)

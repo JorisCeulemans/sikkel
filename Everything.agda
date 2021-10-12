@@ -19,7 +19,7 @@ import MSTT.Syntax.Type
 import MSTT.Syntax.Context
 import MSTT.Syntax.Term
 import MSTT.InterpretTypes
-import MSTT.Equality
+import MSTT.Equivalence
 import MSTT.TypeChecker.ResultType
 import MSTT.TypeChecker
 
