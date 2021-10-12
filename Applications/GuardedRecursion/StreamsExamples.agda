@@ -11,11 +11,12 @@ open import Data.Vec hiding (take; head; tail)
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure renaming (◇ to ′◇)
+open import Model.Modality renaming (⟨_∣_⟩ to ′⟨_∣_⟩) using ()
 open import Model.Type.Discrete renaming (Nat' to ′Nat'; Bool' to ′Bool')
 open import Model.Type.Function hiding (lam; lam[_∈_]_) renaming (_⇛_ to _′⇛_)
 open import Model.Type.Product hiding (pair; fst; snd) renaming (_⊠_ to _′⊠_)
 open import Applications.GuardedRecursion.Model.Modalities
-  hiding (constantly; forever; later; next; löb; lift▻; lift2▻; 𝟙≤later) renaming (▻ to ′▻)
+  hiding (next; löb; lift▻; lift2▻; 𝟙≤later) renaming (▻ to ′▻; constantly to ′constantly; forever to ′forever; later to ′later)
 open import Applications.GuardedRecursion.Model.Streams.Guarded hiding (g-cons; g-head; g-tail) renaming (GStream to ′GStream)
 open import Applications.GuardedRecursion.Model.Streams.Standard renaming (Stream' to ′Stream')
 open import Extraction
@@ -89,7 +90,7 @@ g-map A B =
         g-cons B ∙ (var "f" ⊛⟨ constantly ⟩ g-head A ∙ var "s")
                  ∙ (var "m" ⊛⟨ later ⟩ g-tail A ∙ var "s")
 
-g-map-sem : Tm ′◇ (constantly-ty (′Nat' ′⇛ ′Nat') ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
+g-map-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
 g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
 
 -- Γ ⊢ g-nats : GStream Nat'
@@ -114,14 +115,14 @@ g-nats-sem = ⟦ g-nats ⟧tm
 g-snd : TyExpr ★ → TmExpr ω
 g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩' g-tail A ∙ var "s"
 
-g-snd-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (constantly-ty ′Nat'))
+g-snd-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ ′⟨ ′constantly ∣ ′Nat' ⟩)
 g-snd-sem = ⟦ g-snd Nat' ⟧tm
 
 -- Γ ⊢ g-thrd A : GStream A ⇛ ▻ (▻ ⟨ constantly ∣ A ⟩)
 g-thrd : TyExpr ★ → TmExpr ω
 g-thrd A = lam[ "s" ∈ GStream A ] g-snd A ⟨$-later⟩' g-tail A ∙ var "s"
 
-g-thrd-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′▻ (constantly-ty ′Bool')))
+g-thrd-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′▻ ′⟨ ′constantly ∣ ′Bool' ⟩))
 g-thrd-sem = ⟦ g-thrd Bool' ⟧tm
 
 -- Γ ⊢ g-zeros : GStream Nat'
@@ -140,7 +141,7 @@ g-iterate' A =
         g-cons A ∙ var "x"
                  ∙ (var "g" ⊛⟨ later ⟩ (next (var "f" ⊛⟨ constantly ⟩ var "x")))
 
-g-iterate'-sem : Tm ′◇ (constantly-ty (′Nat' ′⇛ ′Nat') ′⇛ constantly-ty ′Nat' ′⇛ ′GStream ′Nat')
+g-iterate'-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Nat' ⟩ ′⇛ ′GStream ′Nat')
 g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm
 
 -- This is a more general definition of iterate since the generating function of type
@@ -156,7 +157,7 @@ g-iterate A =
         g-cons A ∙ var "a"
                  ∙ (g-map A A ⟨$-later⟩' var "f" ⊛⟨ later ⟩ var "s")
 
-g-iterate-sem : Tm ′◇ (′▻ (constantly-ty (′Bool' ′⇛ ′Bool')) ′⇛ constantly-ty ′Bool' ′⇛ ′GStream ′Bool')
+g-iterate-sem : Tm ′◇ (′▻ ′⟨ ′constantly ∣ ′Bool' ′⇛ ′Bool' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Bool' ⟩ ′⇛ ′GStream ′Bool')
 g-iterate-sem = ⟦ g-iterate Bool' ⟧tm
 
 -- Γ ⊢ g-nats' : GStream Nat'
@@ -203,7 +204,7 @@ g-initial A T =
         var "f" ∙ (pair (g-head A ∙ (var "s"))
                         (var "g" ⊛⟨ later ⟩ next (var "f") ⊛⟨ later ⟩ g-tail A ∙ var "s"))
 
-g-initial-sem : Tm ′◇ (((constantly-ty ′Nat' ′⊠ ′▻ ′Bool') ′⇛ ′Bool') ′⇛ ′GStream ′Nat' ′⇛ ′Bool')
+g-initial-sem : Tm ′◇ (((′⟨ ′constantly ∣ ′Nat' ⟩ ′⊠ ′▻ ′Bool') ′⇛ ′Bool') ′⇛ ′GStream ′Nat' ′⇛ ′Bool')
 g-initial-sem = ⟦ g-initial Nat' Bool' ⟧tm
 
 -- Γ ⊢ g-final : (T ⇛ (⟨ constantly ∣ A ⟩ ⊠ (▻ T))) ⇛ T ⇛ GStream A
@@ -215,7 +216,7 @@ g-final A T =
         g-cons A ∙ (fst (var "f" ∙ var "x"))
                  ∙ (var "g" ⊛⟨ later ⟩ next (var "f") ⊛⟨ later ⟩ snd (var "f" ∙ var "x"))
 
-g-final-sem : Tm ′◇ ((′Bool' ′⇛ (constantly-ty ′Nat' ′⊠ ′▻ ′Bool')) ′⇛ ′Bool' ′⇛ ′GStream ′Nat')
+g-final-sem : Tm ′◇ ((′Bool' ′⇛ (′⟨ ′constantly ∣ ′Nat' ⟩ ′⊠ ′▻ ′Bool')) ′⇛ ′Bool' ′⇛ ′GStream ′Nat')
 g-final-sem = ⟦ g-final Nat' Bool' ⟧tm
 
 
@@ -290,7 +291,7 @@ g-mergef A B C =
                   ∙ (g-head B ∙ var "ys")
                   ∙ (var "g" ⊛⟨ later ⟩ g-tail A ∙ var "xs" ⊛⟨ later ⟩ g-tail B ∙ var "ys")
 
-g-mergef-sem : Tm ′◇ ((constantly-ty ′Nat' ′⇛ constantly-ty ′Bool' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat') ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat')
+g-mergef-sem : Tm ′◇ ((′⟨ ′constantly ∣ ′Nat' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Bool' ⟩ ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat') ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat')
 g-mergef-sem = ⟦ g-mergef Nat' Bool' Nat' ⟧tm
 
 
@@ -307,7 +308,7 @@ g-zipWith A B C =
           g-cons C ∙ (var "f" ⊛⟨ constantly ⟩ g-head A ∙ var "as" ⊛⟨ constantly ⟩ g-head B ∙ var "bs")
                    ∙ (var "g" ⊛⟨ later ⟩ g-tail A ∙ var "as" ⊛⟨ later ⟩ g-tail B ∙ var "bs")
 
-g-zipWith-sem : Tm ′◇ (constantly-ty (′Bool' ′⇛ ′Nat' ′⇛ ′Bool') ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool')
+g-zipWith-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Bool' ′⇛ ′Nat' ′⇛ ′Bool' ⟩ ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool')
 g-zipWith-sem = ⟦ g-zipWith Bool' Nat' Bool' ⟧tm
 
 -- Γ ⊢ g-fibs : GStream Nat'
@@ -459,7 +460,7 @@ g-every2nd A =
       g-cons A ∙ (head' A ⟨$- constantly ⟩ var "s")
                ∙ (var "g" ⊛⟨ later ⟩ next (tail' A ⟨$- constantly ⟩ (tail' A ⟨$- constantly ⟩ var "s")))
 
-g-every2ndB-sem : Tm ′◇ (constantly-ty (′Stream' ′Bool') ′⇛ ′GStream ′Bool')
+g-every2ndB-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Stream' ′Bool' ⟩ ′⇛ ′GStream ′Bool')
 g-every2ndB-sem = ⟦ g-every2nd Bool' ⟧tm
 
 -- Γ ⊢ every2nd A : Stream' A ⇛ Stream' A
@@ -484,7 +485,7 @@ g-diag A =
                ∙ (var "g" ⊛⟨ later ⟩ next (map' (Stream' A) (Stream' A) ∙ tail' A
                                                 ⟨$- constantly ⟩ (tail' (Stream' A) ⟨$- constantly ⟩ var "xss")))
 
-g-diagB-sem : Tm ′◇ (constantly-ty (′Stream' (′Stream' ′Bool')) ′⇛ ′GStream ′Bool')
+g-diagB-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Stream' (′Stream' ′Bool') ⟩ ′⇛ ′GStream ′Bool')
 g-diagB-sem = ⟦ g-diag Bool' ⟧tm
 
 -- Γ ⊢ diag : Stream' (Stream' A) ⇛ Stream' A
