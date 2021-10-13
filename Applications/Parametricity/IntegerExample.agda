@@ -96,18 +96,18 @@ difference-∼ (suc m) (suc n) = diff-suc (difference-∼ m n)
 data RelCode : Set where
   ℤ-code : RelCode
 
-builtin : RelExt
-RelExt.RelCode builtin = RelCode
-RelExt.show-code builtin ℤ-code = "ℤ"
-RelExt._≟code_ builtin ℤ-code ℤ-code = return refl
-RelExt.interpret-code builtin ℤ-code =
+z-rel-ext : RelExt
+RelExt.RelCode z-rel-ext = RelCode
+RelExt.show-code z-rel-ext ℤ-code = "ℤ"
+RelExt._≟code_ z-rel-ext ℤ-code ℤ-code = return refl
+RelExt.interpret-code z-rel-ext ℤ-code =
   record { Left = DiffNat ; Right = SignNat ; Relation = _∼_ }
 
 
 --------------------------------------------------
 -- Definition of some basic operations in MSTT.
 
-open Applications.Parametricity.MSTT builtin
+open Applications.Parametricity.MSTT z-rel-ext
 
 private
   variable
