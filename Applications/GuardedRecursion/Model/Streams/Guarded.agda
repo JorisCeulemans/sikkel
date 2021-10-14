@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Definition of guarded streams in mode ω
+-- Definition of semantic guarded streams in base category ω
 --------------------------------------------------
 
 module Applications.GuardedRecursion.Model.Streams.Guarded where

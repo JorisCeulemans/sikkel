@@ -44,6 +44,8 @@ data TmExpr where
   mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
   coe : (μ ρ : ModalityExpr m m') → TwoCellExpr μ ρ → TmExpr m' → TmExpr m'
   ext : (code : TmExtCode margs m) → TmExtArgs margs → TmExpr m
+    -- ^ Every code in the universe of tm-ext gives rise to a new term constructor,
+    --   whose arguments are expressed by TmExtArgs.
 
 TmExtArgs [] = ⊤
 TmExtArgs (m ∷ margs) = TmExpr m × TmExtArgs margs

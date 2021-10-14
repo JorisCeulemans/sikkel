@@ -38,6 +38,8 @@ data TyExpr where
   _⊠_ : TyExpr m → TyExpr m → TyExpr m
   ⟨_∣_⟩ : ModalityExpr m m' → TyExpr m → TyExpr m'
   Ext : ∀ {margs m} → TyExtCode margs m → TyExtArgs margs → TyExpr m
+    -- ^ Every code in the universe of ty-ext gives rise to a new type constructor,
+    --   whose arguments are expressed by TyExtArgs.
 
 TyExtArgs [] = ⊤
 TyExtArgs (m ∷ margs) = TyExpr m × TyExtArgs margs

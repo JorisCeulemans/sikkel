@@ -37,14 +37,30 @@ module README where
   in later sections of the paper.
 -}
 
-import MSTT.ModeTheory
+import MSTT.Parameter.ModeTheory
+
+{-
+  Not in the paper:
+
+  MSTT allows to extend the syntax with new type and term formers. They must be
+  encoded in a universe (one for types and one for terms) and operations for
+  interpreting the new type constructors and type inference for new term formers
+  must be implemented (among others).
+  These requirements can be found in the following files.
+-}
+
+import MSTT.Parameter.TypeExtension
+import MSTT.Parameter.TermExtension
+  
 
 {-
   The syntax for MSTT types, contexts and terms is contained in the following
-  module.
+  modules.
 -}
 
-import MSTT.Syntax
+import MSTT.Syntax.Type
+import MSTT.Syntax.Context
+import MSTT.Syntax.Term
 
 {-
   The typing relation of MSTT is not formalized as an Agda relation.
@@ -62,20 +78,22 @@ import MSTT.Example
 -- SECTION 3: Application 1: GuardedRecursive Type Theory
 
 {-
-  The mode theory and syntax of the MSTT instance for guarded recursion are
-  worked out in the following modules.
+  The mode theory and universes for new type and term formers (encoding e.g. the
+  type constructor GStream and Löb induction) of the MSTT instance for guarded
+  recursion are worked out in the following modules.
 -}
 
 import Applications.GuardedRecursion.MSTT.ModeTheory
-import Applications.GuardedRecursion.MSTT.Syntax -- similar to MSTT.Syntax which was used as a template
+import Applications.GuardedRecursion.MSTT.TypeExtension
+import Applications.GuardedRecursion.MSTT.TermExtension
 
 {-
   Many example programs involving streams (guarded and standard) are presented
   in the following module. Note that the type checker an extraction mechanism
   are also already used in this file.
 
-  The example about (g-)nats can be found at lines 80 and 348.
-  The implementation of tail' is at line 423.
+  The example about (g-)nats can be found at lines 96 and 352.
+  The implementation of tail' is at line 424.
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
@@ -157,8 +175,12 @@ import Applications.GuardedRecursion.Model.Streams.Guarded
 
 {-
   The functions ⟦_⟧mode and ⟦_⟧modality for the interpretation of modes
-  and modalities were already included in MSTT.ModeTheory.
+  and modalities were already included in MSTT.Parameter.ModeTheory.
+-}
 
+import MSTT.Parameter.ModeTheory
+
+{-
   Interpretation of types and contexts can be found in MSTT.InterpretTypes.
 -}
 
@@ -172,33 +194,46 @@ import MSTT.TCMonad
 
 {-
   Again, the testing procedures for mode equality and modality equivalence
-  were included in MSTT.ModeTheory.
+  were included in MSTT.Parameter.ModeTheory.
+-}
 
+import MSTT.Parameter.ModeTheory
+
+{-
   The function for testing whethet types are equivalent is defined in the
   following file.
 -}
 
-import MSTT.Equality
+import MSTT.Equivalence
 
 {-
-  Finally, the type inference algorithm is implemented in the following module
+  Finally, the type InferInterpretResult is defined and the type inference
+  algorithm is implemented in the following modules.
 -}
 
-import MSTT.SoundTypeChecker
+import MSTT.TypeChecker.ResultType
+import MSTT.TypeChecker
 
 {-
-  The type inference algorithms and equivalence testing procedures for the
-  specific instance of MSTT for guarded recursion can be found in the following
-  file.
+  The equivalence testing procedure for the modalities of the specific instance
+  of MSTT for guarded recursion can be found in the following file.
 -}
 
-import Applications.GuardedRecursion.MSTT.Equality
-import Applications.GuardedRecursion.MSTT.SoundTypeChecker
+import Applications.GuardedRecursion.MSTT.ModeTheory.Equivalence
 
 {-
-  The semantics of the nats example from the end of the section was already
-  implemented in Applications.GuardedRecursion.StreamsExamples imported above.
+  Type inference for the extra term formers of guarded recursion (Löb induction,
+  g-cons, ...) is implemented in the following module.
 -}
+
+import Applications.GuardedRecursion.MSTT.TermExtension
+
+{-
+  The semantics of the nats example from the end of the section is implemented
+  in Applications.GuardedRecursion.StreamsExamples.
+-}
+
+import Applications.GuardedRecursion.StreamsExamples
 
 
 --------------------------------------------------
@@ -220,9 +255,10 @@ import Extraction
 import Applications.GuardedRecursion.Model.Streams.Standard
 
 {-
-  Again, the example nats-agda is found in
-  Applications.GuardedRecursion.StreamsExamples imported above (line 358)
+  Again, the example nats-agda is found in Applications.GuardedRecursion.StreamsExamples.
 -}
+
+import Applications.GuardedRecursion.StreamsExamples
 
 
 --------------------------------------------------
@@ -236,18 +272,20 @@ import Applications.GuardedRecursion.Model.Streams.Standard
 import Applications.Parametricity.MSTT.ModeTheory
 
 {-
-  The other parts of the implementation of this MSTT instance are located in
-  the following modules.
+  The specific new type constructor and term formers for this example are located
+  in the following files.
 -}
 
-import Applications.Parametricity.MSTT.Syntax
-import Applications.Parametricity.MSTT.Equality
-import Applications.Parametricity.MSTT.SoundTypeChecker
+import Applications.Parametricity.MSTT.TypeExtension
+import Applications.Parametricity.MSTT.TermExtension
 
 {-
-  The definition of the base category ⋀ is worked out in Model.BaseCategory,
-  which was already imported above.
+  The definition of the base category ⋀ is worked out in Model.BaseCategory.
+-}
 
+import Model.BaseCategory
+
+{-
   Further details about the presheaf model behind this example, such as the
   implementation of the semantic forget-right and forget-left modalities,
   are located in the following module.

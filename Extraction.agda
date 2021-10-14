@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Extracting embedded terms in mode ★ to Agda
+-- Extracting embedded (semantic) terms in base category ★ to Agda
 --------------------------------------------------
 
 module Extraction where

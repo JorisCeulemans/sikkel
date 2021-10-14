@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Definition of standard streams in mode ★
+-- Definition of semantic standard streams in base category ★
 --------------------------------------------------
 
 module Applications.GuardedRecursion.Model.Streams.Standard where
