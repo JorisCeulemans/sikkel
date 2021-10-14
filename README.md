@@ -1,25 +1,29 @@
-# Shallowly Embedding Type Theories as Presheaf Models in Agda
+# Sikkel
 
-This repository contains Agda code for shallow embeddings of extensions of Martin-Löf Type Theory (MLTT) as presheaf models.
-The framework can be instantiated with an arbitrary small base category, and a user can then manipulate types and terms in a similar way as in MLTT.
-The notions of contexts, types and terms are organized as an internal category with families, as defined by Peter Dybjer (see [here](https://link.springer.com/chapter/10.1007/3-540-61780-9_66)).
+Sikkel is an Agda library that allows a user to program in multimode simple type theories.
+It uses a deeply embedded language that is parametrized by a mode theory (specifying the available modes and modalities) and that can be easily extended with additional type and term constructors, thus supporting a wide variety of type theories.
+Moreover, Sikkel has a type checker that is sound by construction in the sense that all well-typed programs are automatically translated to their semantics in a shallow embedding based on presheaf models.
+Additionally, our model supports combining different base categories by using modalities to transport definitions between them.
+This enables in particular a general approach for extracting definitions to the meta-level, so that we can use the extended type theories to define regular Agda functions and prove properties of them.
 
-We use Agda 2.6.2 and the Agda standard library (version 1.7).
-We assume uniqueness of identity proofs and function extensionality (although the latter is only used when working with functions in the embedded type theory).
+## Installation
+
+Sikkel requires Agda 2.6.2 and the Agda standard library (version 1.7).
+To use the library in your Agda development, perform
+```
+git clone https://github.com/JorisCeulemans/sikkel.git
+```
+and add the path to Sikkel to the `libraries` file in your `AGDA_DIR` (see https://agda.readthedocs.io/en/v2.6.2/tools/package-system.html for more info).
+You can then add a `.agda-lib` file to your project containing
+```
+depend: sikkel
+```
+which will allow you to use Sikkel.
+
 
 ## Overview of this Repository
 
-* Some basic definitions and examples of categories and functors can be found in Categories.agda.
-* The definitions of the notions of contexts, substitutions, types and terms are in the folder CwF-Structure.
-* The folder Types contains the definition of some basic types (booleans, natural numbers, ...) and of some simple type constructors (non-dependent product types, sum types, non-dependent function types).
-* In the folder GuardedRecursion, we instantiate the framework with base category ω (the category structure induced on the set of natural numbers by its standard order), and we define a later modality on types and a primitive for working with Löb induction. This modality is then used to define a type of guarded streams of natural numbers and we implement some operations on streams (such as map and iterate) via Löb induction. Furthermore, this folder contains work in progress on the construction of solutions of recursive domain equations using guarded recursion, in particular the construction of a type in which the untyped lambda calculus can be interpreted.
-* The folder Reflection contains some solvers that generate equality proofs for substitutions and types. The naturality solver (which is the most frequently used) is implemented in Reflection.Naturality.agda.
-* The file LiftingFunctors describes how a functor from a category _C_ to a category _D_ gives rise to a cwf morphism from the presheaf model with base category _D_ to the presheaf model with base category _C_.
-* The Yoneda embedding and the Yondeda lemma are worked out in Yoneda.agda.
-
-## Using Your Own Base Category
-
-If you want to experiment with presheaves over a new small base category, you should first construct a term `my-category : Category` to represent this base category.
-A context should then have type `Ctx my-category ℓ` for an appropriate level `ℓ`.
-In most of the other constructs (e.g. in the Agda types for types (`Ty`) and terms (`Tm`)), the base category is an implicit parameter and hence needs not to be mentioned.
-When you define new operations on types, you probably want the naturality solver to work with them. In order to do so, you just need to provide a value of one of the types `NullaryTypeOp`, `UnaryTypeOp` or `BinaryTypeOp` from the module Reflection.Naturality.
+* The deeply embedded syntactic layer can be found in the MSTT directory, together with the sound type checker.
+* The formalization of presheaf models is located in the folder Model.
+* Extracting shallowly embedded terms in the model to Agda programs is implemented in the file Extraction.agda.
+* We have worked out two use cases of Sikkel: guarded recursive type theory and parametricity. They can be found in the directory Applications.
