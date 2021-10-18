@@ -3,7 +3,7 @@ module Experimental.DependentTypes.DeepEmbedding.Alternative1 where
 open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M
-open import Model.CwF-Structure as M
+open import Model.CwF-Structure as M hiding (_,,_)
 open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
@@ -35,11 +35,11 @@ record InferInterpretResult Γ sΓ Γ-ok where
     interpretation : Tm sΓ sT
 
 interpret-ctx ◇ = return M.◇
-interpret-ctx (Γ , T) with interpret-ctx Γ | inspect-interpret-ctx Γ
-interpret-ctx (Γ , T) | type-error m | _ = type-error m
-interpret-ctx (Γ , T) | ok sΓ        | [ Γ-ok ] with interpret-ty T Γ sΓ Γ-ok
-interpret-ctx (Γ , T) | ok sΓ        | [ Γ-ok ] | type-error m = type-error m
-interpret-ctx (Γ , T) | ok sΓ        | [ Γ-ok ] | ok sT = return (sΓ M.,, sT)
+interpret-ctx (Γ ,, T) with interpret-ctx Γ | inspect-interpret-ctx Γ
+interpret-ctx (Γ ,, T) | type-error m | _ = type-error m
+interpret-ctx (Γ ,, T) | ok sΓ        | [ Γ-ok ] with interpret-ty T Γ sΓ Γ-ok
+interpret-ctx (Γ ,, T) | ok sΓ        | [ Γ-ok ] | type-error m = type-error m
+interpret-ctx (Γ ,, T) | ok sΓ        | [ Γ-ok ] | ok sT = return (sΓ M.,, sT)
 
 inspect-interpret-ctx Γ = [ refl ]
 

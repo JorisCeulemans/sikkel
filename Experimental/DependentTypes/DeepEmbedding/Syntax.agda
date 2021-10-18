@@ -26,7 +26,7 @@ data TmExpr where
   fst snd : TmExpr → TmExpr
   refl : TmExpr → TmExpr
 
-infixl 4 _,_
+infixl 4 _,,_
 data CtxExpr : Set where
   ◇ : CtxExpr
-  _,_ : (Γ : CtxExpr) → (T : TyExpr) → CtxExpr
+  _,,_ : (Γ : CtxExpr) → (T : TyExpr) → CtxExpr
