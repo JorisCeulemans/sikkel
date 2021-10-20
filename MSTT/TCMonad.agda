@@ -13,7 +13,7 @@ private
     A B : Set ℓ
 
 infixl 4 _<$>_ _⊛_
-infixl 1 _>>=_
+infixl 1 _>>=_ _>>_
 
 
 -- The type checking monad currently only allows for simple strings as error messages.
