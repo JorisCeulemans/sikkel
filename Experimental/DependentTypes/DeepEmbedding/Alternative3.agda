@@ -1,8 +1,20 @@
-module Experimental.DependentTypes.DeepEmbedding.Inference where
+module Experimental.DependentTypes.DeepEmbedding.Alternative3 where
 
 open import Data.Nat renaming (_≟_ to _≟nat_)
+open import Data.Product
 open import Data.Unit hiding (_≟_)
 open import Relation.Nullary
+open import Relation.Binary.PropositionalEquality
+
+open import Model.BaseCategory as M
+open import Model.CwF-Structure as M hiding (_,,_)
+open import Model.Type.Discrete as M
+open import Model.Type.Function as M hiding (_⇛_)
+open import Model.Type.Product as M hiding (_⊠_)
+
+import Experimental.DependentTypes.Model.IdentityType
+module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
+open M-id hiding (Id)
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax
 open import MSTT.TCMonad
@@ -97,3 +109,49 @@ check-ty (Id t s) Γ = do
   T ← infer-tm t Γ
   S ← infer-tm s Γ
   T ≟ty S
+
+
+HasType : TmExpr → TyExpr → CtxExpr → Set
+HasType t T Γ = infer-tm t Γ ≡ ok T
+
+IsValidTy : TyExpr → CtxExpr → Set
+IsValidTy T Γ = check-ty T Γ ≡ ok tt
+
+IsValidCtx : CtxExpr → Set
+IsValidCtx ◇ = ⊤
+IsValidCtx (Γ ,, T) = IsValidCtx Γ × IsValidTy T Γ
+
+
+interpret-ctx : (Γ : CtxExpr) → IsValidCtx Γ → Ctx ★
+interpret-ty : (T : TyExpr) {Γ : CtxExpr} → IsValidTy T Γ → {vΓ : IsValidCtx Γ} → Ty (interpret-ctx Γ vΓ)
+interpret-tm : (t : TmExpr) (T : TyExpr) (Γ : CtxExpr) →
+               HasType t T Γ →
+               (vT : IsValidTy T Γ) (vΓ : IsValidCtx Γ) →
+               Tm (interpret-ctx Γ vΓ) (interpret-ty T vT)
+≟ty-sound : (T S : TyExpr) → (T ≟ty S ≡ ok tt) →
+            {Γ : CtxExpr} {vΓ : IsValidCtx Γ} {vT : IsValidTy T Γ} {vS : IsValidTy S Γ} →
+            interpret-ty T vT {vΓ} ≅ᵗʸ interpret-ty S vS
+≟tm-sound : (t s : TmExpr) → (t ≟tm s ≡ ok tt) →
+            {Γ : CtxExpr} {vΓ : IsValidCtx Γ} {T : TyExpr} {vT : IsValidTy T Γ} →
+            (vt : HasType t T Γ) (vs : HasType s T Γ) →
+            interpret-tm t T Γ vt vT vΓ ≅ᵗᵐ interpret-tm s T Γ vs vT vΓ
+
+
+interpret-ctx ◇ vΓ = M.◇
+interpret-ctx (Γ ,, T) (vΓ , vT) = interpret-ctx Γ vΓ M.,, interpret-ty T vT
+
+interpret-ty Nat _ = M.Nat'
+interpret-ty Bool _ = M.Bool'
+interpret-ty (T ⇛ S) {Γ} vT with check-ty T Γ | inspect (check-ty T) Γ
+interpret-ty (T ⇛ S) {Γ} vS | ok tt | [ vT ] = interpret-ty T vT M.⇛ interpret-ty S vS
+interpret-ty (T ⊠ S) {Γ} vT with check-ty T Γ | inspect (check-ty T) Γ
+interpret-ty (T ⊠ S) {Γ} vS | ok tt | [ vT ] = interpret-ty T vT M.⊠ interpret-ty S vS
+interpret-ty (Id t s) {Γ} vT with infer-tm t Γ | inspect (infer-tm t) Γ | infer-tm s Γ | inspect (infer-tm s) Γ
+interpret-ty (Id t s) {Γ} T=S | ok T | [ vt ] | ok S | [ vs ] =
+  M-id.Id (interpret-tm t T Γ vt {!!} {!!}) (ι[ ≟ty-sound T S T=S ] interpret-tm s S Γ vs {!!} {!!})
+
+interpret-tm t T Γ vt vT vΓ = {!!}
+
+≟ty-sound = {!!}
+
+≟tm-sound = {!!}
