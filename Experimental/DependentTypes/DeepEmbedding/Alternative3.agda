@@ -142,12 +142,12 @@ interpret-ctx (Γ ,, T) (vΓ , vT) = interpret-ctx Γ vΓ M.,, interpret-ty T vT
 
 interpret-ty Nat _ = M.Nat'
 interpret-ty Bool _ = M.Bool'
-interpret-ty (T ⇛ S) {Γ} vT with check-ty T Γ | inspect (check-ty T) Γ
-interpret-ty (T ⇛ S) {Γ} vS | ok tt | [ vT ] = interpret-ty T vT M.⇛ interpret-ty S vS
-interpret-ty (T ⊠ S) {Γ} vT with check-ty T Γ | inspect (check-ty T) Γ
-interpret-ty (T ⊠ S) {Γ} vS | ok tt | [ vT ] = interpret-ty T vT M.⊠ interpret-ty S vS
-interpret-ty (Id t s) {Γ} vT with infer-tm t Γ | inspect (infer-tm t) Γ | infer-tm s Γ | inspect (infer-tm s) Γ
-interpret-ty (Id t s) {Γ} T=S | ok T | [ vt ] | ok S | [ vs ] =
+interpret-ty (T ⇛ S) {Γ} vT with check-ty T Γ in vT
+interpret-ty (T ⇛ S) {Γ} vS | ok tt = interpret-ty T vT M.⇛ interpret-ty S vS
+interpret-ty (T ⊠ S) {Γ} vT with check-ty T Γ in vT
+interpret-ty (T ⊠ S) {Γ} vS | ok tt = interpret-ty T vT M.⊠ interpret-ty S vS
+interpret-ty (Id t s) {Γ} vT with infer-tm t Γ in vt | infer-tm s Γ in vs
+interpret-ty (Id t s) {Γ} T=S | ok T | ok S =
   M-id.Id (interpret-tm t T Γ vt {!!} {!!}) (ι[ ≟ty-sound T S T=S ] interpret-tm s S Γ vs {!!} {!!})
 
 interpret-tm t T Γ vt vT vΓ = {!!}
