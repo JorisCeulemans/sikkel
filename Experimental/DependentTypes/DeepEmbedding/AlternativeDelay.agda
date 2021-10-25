@@ -64,6 +64,8 @@ HasRes-invert->>=p (delay m) (next hr) with HasRes-invert-t>>=p m hr
 HasRes-invert->>=p (delay m) hr | v' , hrm , hrk = v' , next hrm , hrk
 HasRes-invert-t>>=p m hr = HasRes-invert->>=p (TCMThunk.force m) hr
 
+-- TODO: prove that this terminates using sized types?
+{-# TERMINATING #-}
 interpret-ctx : CtxExpr → TCM (Ctx ★)
 interpret-ty : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCM (Ty sΓ)
 interpret-ty-delay : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCMThunk (Ty sΓ)
@@ -126,12 +128,8 @@ TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS (next T-
   | sT1 , T1-ok , kT-ok | sS1 , S1-ok , kS-ok
   | sT2 , T2-ok , here refl | sS2 , S2-ok , here refl
  = do
-  -- with HasRes-invert->>=p (interpret-ty T1 Γ sΓ Γ-ok)
-  --                         {λ sT1 _ → interpret-ty T2 Γ sΓ Γ-ok >>= λ sT2 → return (sT1 M.⇛ sT2)}
-  --                         {!T-ok!}
--- TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS T-ok S-ok) | sT1 , T1-ok , k-ok = do
-  T1=S1 ← ty-eq? T1 S1 Γ sΓ Γ-ok sT1 sS1 {!T1-ok!} {!S1-ok!}
-  T2=S2 ← ty-eq? T2 S2 Γ sΓ Γ-ok sT2 sS2 {!T2-ok!} {!S2-ok!}
+  T1=S1 ← ty-eq? T1 S1 Γ sΓ Γ-ok sT1 sS1 T1-ok S1-ok
+  T2=S2 ← ty-eq? T2 S2 Γ sΓ Γ-ok sT2 sS2 T2-ok S2-ok
   return (⇛-cong T1=S1 T2=S2)
 -- -- ty-eq?-thunk (T1 ⊠ T2) (S1 ⊠ S2) Γ sΓ Γ-ok sT sS T-ok S-ok with interpret-ty T1 Γ sΓ Γ-ok in eqT1 | interpret-ty T2 Γ sΓ Γ-ok in eqT2 | interpret-ty S1 Γ sΓ Γ-ok in eqS1 | interpret-ty S2 Γ sΓ Γ-ok in eqS2
 -- -- ty-eq?-thunk (T1 ⊠ T2) (S1 ⊠ S2) Γ sΓ Γ-ok .(sT1 M.⊠ sT2) .(sS1 M.⊠ sS2) refl refl | ok sT1 | ok sT2 | ok sS1 | ok sS2 = do
