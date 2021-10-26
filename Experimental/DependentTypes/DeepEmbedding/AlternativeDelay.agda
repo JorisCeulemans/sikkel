@@ -37,6 +37,10 @@ data TCM A where
 return : {A : Set ℓ} → A → TCM A
 return = ok
 
+diverge : TCM A
+divergeThunk : TCMThunk A
+diverge = delay divergeThunk
+TCMThunk.force divergeThunk = diverge
 
 data HasRes {ℓ} {A : Set ℓ} : TCM A → A → Set ℓ where
   here : {v : A} {m : TCM A} → m ≡ ok v → HasRes m v
