@@ -1,8 +1,9 @@
-module Experimental.DependentTypes.DeepEmbedding.Alternative3 where
+module Experimental.DependentTypes.DeepEmbedding.Alternative3.SoundTypeChecker where
 
 open import Data.Nat renaming (_≟_ to _≟nat_)
 open import Data.Product
 open import Data.Unit hiding (_≟_)
+open import Function using (_∘_)
 open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality
 
@@ -16,7 +17,7 @@ import Experimental.DependentTypes.Model.IdentityType
 module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
 open M-id hiding (Id)
 
-open import Experimental.DependentTypes.DeepEmbedding.Syntax
+open import Experimental.DependentTypes.DeepEmbedding.Alternative3.Syntax
 open import MSTT.TCMonad
 
 
@@ -49,7 +50,7 @@ Nat ≟ty Nat = return tt
 Bool ≟ty Bool = return tt
 (T1 ⇛ S1) ≟ty (T2 ⇛ S2) = (T1 ≟ty T2) >> (S1 ≟ty S2)
 (T1 ⊠ S1) ≟ty (T2 ⊠ S2) = (T1 ≟ty T2) >> (S1 ≟ty S2)
-Id t1 s1 ≟ty Id t2 s2 = (t1 ≟tm t2) >> (s1 ≟tm s2)
+Id T1 t1 s1 ≟ty Id T2 t2 s2 = (T1 ≟ty T2) >> (t1 ≟tm t2) >> (s1 ≟tm s2)
 T ≟ty S = type-error ""
 
 lookup-var : ℕ → CtxExpr → TCM TyExpr
@@ -97,18 +98,19 @@ infer-tm (snd p) Γ = do
   prod-ty T S ← is-prod-ty P
   return S
 infer-tm (refl t) Γ = do
-  infer-tm t Γ
-  return (Id t t)
+  T ← infer-tm t Γ
+  return (Id T t t)
 
 check-ty : TyExpr → CtxExpr → TCM ⊤
 check-ty Nat Γ = return tt
 check-ty Bool Γ = return tt
 check-ty (T ⇛ S) Γ = check-ty T Γ >> check-ty S Γ
 check-ty (T ⊠ S) Γ = check-ty T Γ >> check-ty S Γ
-check-ty (Id t s) Γ = do
+check-ty (Id R t s) Γ = do
   T ← infer-tm t Γ
+  T ≟ty R
   S ← infer-tm s Γ
-  T ≟ty S
+  S ≟ty R
 
 
 HasType : TmExpr → TyExpr → CtxExpr → Set
@@ -121,9 +123,25 @@ IsValidCtx : CtxExpr → Set
 IsValidCtx ◇ = ⊤
 IsValidCtx (Γ ,, T) = IsValidCtx Γ × IsValidTy T Γ
 
+conversion : {t : TmExpr} {T S : TyExpr} {Γ : CtxExpr}→
+             HasType t T Γ → .(T ≟ty S ≡ ok tt) → HasType t S Γ
+conversion = {!!}
+
+tm-has-valid-ty : {t : TmExpr} {T : TyExpr} {Γ : CtxExpr} →
+                  HasType t T Γ → IsValidTy T Γ
+tm-has-valid-ty = {!!}
+
+valid-ty-has-valid-ctx : {T : TyExpr} {Γ : CtxExpr} →
+                         IsValidTy T Γ → IsValidCtx Γ
+valid-ty-has-valid-ctx = {!!}
+
+tm-has-valid-ctx : {t : TmExpr} {T : TyExpr} {Γ : CtxExpr} →
+                   HasType t T Γ → IsValidCtx Γ
+tm-has-valid-ctx {t} {T} = valid-ty-has-valid-ctx {T} ∘ tm-has-valid-ty {t}
+
 
 interpret-ctx : (Γ : CtxExpr) → IsValidCtx Γ → Ctx ★
-interpret-ty : (T : TyExpr) {Γ : CtxExpr} → IsValidTy T Γ → {vΓ : IsValidCtx Γ} → Ty (interpret-ctx Γ vΓ)
+interpret-ty : (T : TyExpr) {Γ : CtxExpr} → .(IsValidTy T Γ) → {vΓ : IsValidCtx Γ} → Ty (interpret-ctx Γ vΓ)
 interpret-tm : (t : TmExpr) (T : TyExpr) (Γ : CtxExpr) →
                HasType t T Γ →
                (vT : IsValidTy T Γ) (vΓ : IsValidCtx Γ) →
@@ -146,11 +164,35 @@ interpret-ty (T ⇛ S) {Γ} vT with check-ty T Γ in vT
 interpret-ty (T ⇛ S) {Γ} vS | ok tt = interpret-ty T vT M.⇛ interpret-ty S vS
 interpret-ty (T ⊠ S) {Γ} vT with check-ty T Γ in vT
 interpret-ty (T ⊠ S) {Γ} vS | ok tt = interpret-ty T vT M.⊠ interpret-ty S vS
-interpret-ty (Id t s) {Γ} vT with infer-tm t Γ in vt | infer-tm s Γ in vs
-interpret-ty (Id t s) {Γ} T=S | ok T | ok S =
-  M-id.Id (interpret-tm t T Γ vt {!!} {!!}) (ι[ ≟ty-sound T S T=S ] interpret-tm s S Γ vs {!!} {!!})
+interpret-ty (Id R t s) {Γ} vT with infer-tm t Γ in vt
+interpret-ty (Id R t s) {Γ} vR  | ok T with T ≟ty R in T=R | infer-tm s Γ in vs
+interpret-ty (Id R t s) {Γ} S=R | ok T | ok tt | ok S =
+  M-id.Id (interpret-tm t R Γ t∈R (tm-has-valid-ty {t} t∈R) _)
+          (interpret-tm s R Γ s∈R (tm-has-valid-ty {s} s∈R) _)
+  where
+    t∈R : HasType t R Γ
+    t∈R = conversion {t} vt T=R
 
-interpret-tm t T Γ vt vT vΓ = {!!}
+    s∈R : HasType s R Γ
+    s∈R = conversion {s} vs S=R
+
+interpret-tm (ann t ∈ S) T Γ vt vT vΓ with infer-tm t Γ in vt'
+interpret-tm (ann t ∈ S) T Γ vt vT vΓ | ok R with R ≟ty S in R=S
+interpret-tm (ann t ∈ S) .S Γ refl vS vΓ | ok R | ok tt = interpret-tm t S Γ (conversion {t} vt' R=S) vS vΓ
+interpret-tm (var zero) T (Γ ,, .T) refl vT (vΓ , vS) = ι[ {!!} ] ξ
+interpret-tm (var (suc x)) T (Γ ,, S) vt vT (vΓ , vS) = ι[ {!!} ] (interpret-tm (var x) T Γ vt {!!} vΓ [ π ]')
+interpret-tm (lam x t) T Γ vt vT vΓ = {!!}
+interpret-tm (f ∙ t) T Γ vt vT vΓ = {!!}
+interpret-tm (lit n) .Nat Γ refl vT vΓ = discr n
+interpret-tm suc .(Nat ⇛ Nat) Γ refl vT vΓ = suc'
+interpret-tm plus .(Nat ⇛ Nat ⇛ Nat) Γ refl vT vΓ = nat-sum
+interpret-tm true .Bool Γ refl vT vΓ = true'
+interpret-tm false .Bool Γ refl vT vΓ = false'
+interpret-tm (if c t f) T Γ vt vT vΓ = {!!}
+interpret-tm (pair t s) T Γ vt vT vΓ = {!!}
+interpret-tm (fst p) T Γ vt vT vΓ = {!!}
+interpret-tm (snd p) T Γ vt vT vΓ = {!!}
+interpret-tm (refl t) T Γ vt vT vΓ = {!!}
 
 ≟ty-sound = {!!}
 
