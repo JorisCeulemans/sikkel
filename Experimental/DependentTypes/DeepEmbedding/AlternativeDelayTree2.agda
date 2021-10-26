@@ -65,20 +65,17 @@ TCMThunk.force (m t>>=p k) = TCMThunk.force m >>=p λ { v (n , eq) → k v (ℕ.
 -- m >>= k = m >>=p λ v _ → k v
 -- m t>>= k = m t>>=p λ v _ → k v
 
--- HasRes-invert-t>>=p : ∀ {v} (m : TCMThunk ℓ′ A) {k : ∀ v → HasRes (delay m) v → TCM ℓ′ B} → HasRes (TCMThunk.force (m t>>=p k)) v →
---                     ∃ λ v' → Σ (HasRes (delay m) v') λ p → HasRes (k v' p) v
 HasRes-invert->>=p : ∀ {v} (m : TCM ℓ′ A) {k : ∀ v → HasRes m v → TCM ℓ′ B} → HasRes (m >>=p k) v →
                    ∃ λ v' → Σ (HasRes m v') λ p → HasRes (k v' p) v
-HasRes-invert->>=p (type-error x) (ℕ.suc (ℕ.suc n) , ())
-HasRes-invert->>=p (ok v) {k} (ℕ.suc (ℕ.suc n) , eq) with eval (ℕ.suc n) (k v (1 + n , refl)) in eq′
-HasRes-invert->>=p (ok v) {_} (ℕ.suc (ℕ.suc n) , refl) | just x = v , (1 + n , refl) , 1 + n , eq′
-HasRes-invert->>=p (delay m) (ℕ.suc (ℕ.suc n) , abc) = {!HasRes-invert-t>>=p m hr!}
--- HasRes-invert->>=p (bind m x) hr with HasRes-invert->>=p m hr
--- HasRes-invert->>=p (bind m x) hr | v , hrm , hrk with HasRes-invert->>=p (x v) hrk
--- HasRes-invert->>=p (bind m f) hr | v , hrm , hrk | v′ , hrf , hrk′ = v′ , bind hrm hrf , hrk′
--- HasRes-invert-t>>=p m hr with HasRes-invert->>=p (TCMThunk.force m) hr
--- HasRes-invert-t>>=p m hr | v , hr₁ , hr₂ = v , next hr₁ , hr₂
-HasRes-invert->>=p m hr = {!!}
+HasRes-invert->>=p-evalBind : ∀ (n : ℕ) → {B : Set ℓ′} → (m : TCM ℓ′ B) →
+                             (k : (v : B) → HasRes m v → TCM ℓ′ A) →
+                             (res : Maybe B) → (eq : eval (ℕ.suc n) m ≡ res) →
+                              ∀ {v} → evalBind (ℕ.suc n) m k res eq ≡ just v →
+                              ∃ λ v' → Σ (HasRes m v') λ p → HasRes (k v' p) v
+HasRes-invert->>=p-evalBind n (ok v) k (just .v) refl eq′ = v , (ℕ.suc n , refl) , (ℕ.suc n , eq′)
+HasRes-invert->>=p-evalBind n (bind m k₁) k₂ (just x) eq eq′ = x , (ℕ.suc n , eq) , (ℕ.suc n , eq′)
+HasRes-invert->>=p-evalBind n (delay m) k (just x) eq eq′ = x , (ℕ.suc n , eq) , ℕ.suc n , eq′
+HasRes-invert->>=p m (ℕ.suc (ℕ.suc n) , eq) = HasRes-invert->>=p-evalBind n m _ (eval (ℕ.suc n) m) refl eq
 
 -- interpret-ctx : CtxExpr → TCM ℓ′ (Ctx ★)
 -- interpret-ty : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCM ℓ′ (Ty sΓ)
