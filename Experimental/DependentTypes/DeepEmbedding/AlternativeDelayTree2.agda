@@ -3,7 +3,7 @@ module Experimental.DependentTypes.DeepEmbedding.AlternativeDelayTree2 where
 open import Level
 open import Data.String
 open import Data.Nat
-open import Data.Maybe
+open import Data.Maybe hiding (_>>=_)
 open import Data.Unit
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
@@ -60,10 +60,10 @@ _>>=p_ = bind
 _t>>=p_ : {A : Set ℓ} (m : TCMThunk ℓ A) → (∀ v → HasRes (delay m) v → TCM ℓ B) → TCMThunk ℓ B
 TCMThunk.force (m t>>=p k) = TCMThunk.force m >>=p λ { v (n , eq) → k v (ℕ.suc n , eq)}
 
--- _t>>=_ : {A : Set ℓ} {B : Set ℓ′} → TCMThunk ℓ′ A → (A → TCM ℓ′ B) → TCMThunk ℓ′ B
--- _>>=_ : {A : Set ℓ} {B : Set ℓ′} → TCM ℓ′ A → (A → TCM ℓ′ B) → TCM ℓ′ B
--- m >>= k = m >>=p λ v _ → k v
--- m t>>= k = m t>>=p λ v _ → k v
+_t>>=_ : {A : Set ℓ′} {B : Set ℓ} → TCMThunk ℓ′ A → (A → TCM ℓ′ B) → TCMThunk ℓ′ B
+_>>=_ : {A : Set ℓ′} {B : Set ℓ} → TCM ℓ′ A → (A → TCM ℓ′ B) → TCM ℓ′ B
+m >>= k = m >>=p λ v _ → k v
+m t>>= k = m t>>=p λ v _ → k v
 
 HasRes-invert->>=p : ∀ {v} (m : TCM ℓ′ A) {k : ∀ v → HasRes m v → TCM ℓ′ B} → HasRes (m >>=p k) v →
                    ∃ λ v' → Σ (HasRes m v') λ p → HasRes (k v' p) v
@@ -77,52 +77,56 @@ HasRes-invert->>=p-evalBind n (bind m k₁) k₂ (just x) eq eq′ = x , (ℕ.su
 HasRes-invert->>=p-evalBind n (delay m) k (just x) eq eq′ = x , (ℕ.suc n , eq) , ℕ.suc n , eq′
 HasRes-invert->>=p m (ℕ.suc (ℕ.suc n) , eq) = HasRes-invert->>=p-evalBind n m _ (eval (ℕ.suc n) m) refl eq
 
--- interpret-ctx : CtxExpr → TCM ℓ′ (Ctx ★)
--- interpret-ty : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCM ℓ′ (Ty sΓ)
--- interpret-ty-delay : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCMThunk ℓ′ (Ty sΓ)
--- ty-eq? : (T S : TyExpr) (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ)
---          (sT sS : Ty sΓ) → HasRes (interpret-ty T Γ sΓ Γ-ok) sT → HasRes (interpret-ty S Γ sΓ Γ-ok) sS →
---          TCM ℓ′ (sT ≅ᵗʸ sS)
--- ty-eq?-thunk : (T S : TyExpr) (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ)
---          (sT sS : Ty sΓ) → HasRes (interpret-ty T Γ sΓ Γ-ok) sT → HasRes (interpret-ty S Γ sΓ Γ-ok) sS →
---          TCMThunk ℓ′ (sT ≅ᵗʸ sS)
--- record InferInterpretResult (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ) : Set₁
--- infer-interpret-tm : TmExpr → (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ) → TCM ℓ′ (InferInterpretResult Γ sΓ Γ-ok)
+1ℓ : Level
+1ℓ = Level.suc 0ℓ
 
--- record InferInterpretResult Γ sΓ Γ-ok where
---   inductive
---   pattern
---   constructor tm-result
---   field
---     T : TyExpr
---     sT : Ty sΓ
---     type-valid : HasRes (interpret-ty T Γ sΓ Γ-ok) sT
---     interpretation : Tm sΓ sT
+interpret-ctx : CtxExpr → TCM 1ℓ (Ctx ★)
+interpret-ty : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCM 1ℓ (Ty sΓ)
+interpret-ty-delay : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCMThunk 1ℓ (Ty sΓ)
+ty-eq? : (T S : TyExpr) (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ)
+         (sT sS : Ty sΓ) → HasRes (interpret-ty T Γ sΓ Γ-ok) sT → HasRes (interpret-ty S Γ sΓ Γ-ok) sS →
+         TCM 1ℓ (Lift 1ℓ (sT ≅ᵗʸ sS))
+ty-eq?-thunk : (T S : TyExpr) (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ)
+         (sT sS : Ty sΓ) → HasRes (interpret-ty T Γ sΓ Γ-ok) sT → HasRes (interpret-ty S Γ sΓ Γ-ok) sS →
+         TCMThunk 1ℓ (Lift 1ℓ (sT ≅ᵗʸ sS))
+record InferInterpretResult (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ) : Set₁
+infer-interpret-tm : TmExpr → (Γ : CtxExpr) (sΓ : Ctx ★) (Γ-ok : HasRes (interpret-ctx Γ) sΓ) → TCM 1ℓ (InferInterpretResult Γ sΓ Γ-ok)
 
--- interpret-ctx ◇ = return M.◇
--- interpret-ctx (Γ ,, T) = interpret-ctx Γ >>=p
---                          λ sΓ Γ-ok → interpret-ty T Γ sΓ Γ-ok >>=
---                          λ sT → return (sΓ M.,, sT)
+record InferInterpretResult Γ sΓ Γ-ok where
+  inductive
+  pattern
+  constructor tm-result
+  field
+    T : TyExpr
+    sT : Ty sΓ
+    type-valid : HasRes (interpret-ty T Γ sΓ Γ-ok) sT
+    interpretation : Tm sΓ sT
 
--- interpret-ty T Γ sΓ Γ-ok = delay (interpret-ty-delay T Γ sΓ Γ-ok)
--- TCMThunk.force (interpret-ty-delay Nat Γ sΓ Γ-ok) = return M.Nat'
--- TCMThunk.force (interpret-ty-delay Bool Γ sΓ Γ-ok) = return M.Bool'
--- TCMThunk.force (interpret-ty-delay (T ⇛ S) Γ sΓ Γ-ok) = do
---   sT ← interpret-ty T Γ sΓ Γ-ok
---   sS ← interpret-ty S Γ sΓ Γ-ok
---   return (sT M.⇛ sS)
--- TCMThunk.force (interpret-ty-delay (T ⊠ S) Γ sΓ Γ-ok) = do
---   sT ← interpret-ty T Γ sΓ Γ-ok
---   sS ← interpret-ty S Γ sΓ Γ-ok
---   return (sT M.⊠ sS)
--- TCMThunk.force (interpret-ty-delay (Id t s) Γ sΓ Γ-ok) = do
---   tm-result T sT T-ok ⟦t⟧ ← infer-interpret-tm t Γ sΓ Γ-ok
---   tm-result S sS S-ok ⟦s⟧ ← infer-interpret-tm s Γ sΓ Γ-ok
---   sT=sS ← ty-eq? T S Γ sΓ Γ-ok sT sS T-ok S-ok
---   return (M-id.Id ⟦t⟧ (ι[ sT=sS ] ⟦s⟧))
+interpret-ctx ◇ = return M.◇
+interpret-ctx (Γ ,, T) = interpret-ctx Γ >>=p
+                         λ sΓ Γ-ok → interpret-ty T Γ sΓ Γ-ok >>=
+                         λ sT → return (sΓ M.,, sT)
 
--- ty-eq? T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok = delay (ty-eq?-thunk T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok )
+interpret-ty T Γ sΓ Γ-ok = delay (interpret-ty-delay T Γ sΓ Γ-ok)
+TCMThunk.force (interpret-ty-delay Nat Γ sΓ Γ-ok) = return M.Nat'
+TCMThunk.force (interpret-ty-delay Bool Γ sΓ Γ-ok) = return M.Bool'
+TCMThunk.force (interpret-ty-delay (T ⇛ S) Γ sΓ Γ-ok) = do
+  sT ← interpret-ty T Γ sΓ Γ-ok
+  sS ← interpret-ty S Γ sΓ Γ-ok
+  return (sT M.⇛ sS)
+TCMThunk.force (interpret-ty-delay (T ⊠ S) Γ sΓ Γ-ok) = do
+  sT ← interpret-ty T Γ sΓ Γ-ok
+  sS ← interpret-ty S Γ sΓ Γ-ok
+  return (sT M.⊠ sS)
+TCMThunk.force (interpret-ty-delay (Id t s) Γ sΓ Γ-ok) = do
+  tm-result T sT T-ok ⟦t⟧ ← infer-interpret-tm t Γ sΓ Γ-ok
+  tm-result S sS S-ok ⟦s⟧ ← infer-interpret-tm s Γ sΓ Γ-ok
+  lift sT=sS ← ty-eq? T S Γ sΓ Γ-ok sT sS T-ok S-ok
+  return (M-id.Id ⟦t⟧ (ι[ sT=sS ] ⟦s⟧))
 
+ty-eq? T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok = delay (ty-eq?-thunk T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok )
+
+ty-eq?-thunk T S Γ sΓ Γ-ok = {!!}
 -- TCMThunk.force (ty-eq?-thunk Nat Nat Γ sΓ Γ-ok .Nat' .Nat' (next (here refl)) (next (here refl))) = return ≅ᵗʸ-refl
 -- TCMThunk.force (ty-eq?-thunk Bool Bool Γ sΓ Γ-ok .Bool' .Bool' (next (here refl)) (next (here refl))) = return ≅ᵗʸ-refl
 -- TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS (next T-ok) (next S-ok)) with tt
