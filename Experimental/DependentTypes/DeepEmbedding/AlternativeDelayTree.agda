@@ -16,7 +16,7 @@ import Experimental.DependentTypes.Model.IdentityType
 module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
 open M-id hiding (Id)
 
-open import Experimental.DependentTypes.DeepEmbedding.Syntax
+open import Experimental.DependentTypes.DeepEmbedding.Syntax.UnannotatedIdentity
 -- open import MSTT.TCMonad
 
 private

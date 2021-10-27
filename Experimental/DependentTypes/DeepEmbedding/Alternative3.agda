@@ -1,4 +1,4 @@
-module Experimental.DependentTypes.DeepEmbedding.Alternative3.SoundTypeChecker where
+module Experimental.DependentTypes.DeepEmbedding.Alternative3 where
 
 open import Data.Nat renaming (_≟_ to _≟nat_)
 open import Data.Product
@@ -17,7 +17,7 @@ import Experimental.DependentTypes.Model.IdentityType
 module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
 open M-id hiding (Id)
 
-open import Experimental.DependentTypes.DeepEmbedding.Alternative3.Syntax
+open import Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity
 open import MSTT.TCMonad
 
 
@@ -192,7 +192,8 @@ interpret-tm (if c t f) T Γ vt vT vΓ = {!!}
 interpret-tm (pair t s) T Γ vt vT vΓ = {!!}
 interpret-tm (fst p) T Γ vt vT vΓ = {!!}
 interpret-tm (snd p) T Γ vt vT vΓ = {!!}
-interpret-tm (refl t) T Γ vt vT vΓ = {!!}
+interpret-tm (refl t) S Γ vt vS vΓ with infer-tm t Γ
+interpret-tm (refl t) .(Id T t t) Γ refl vS vΓ | ok T = {!!}
 
 ≟ty-sound = {!!}
 

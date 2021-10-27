@@ -1,4 +1,4 @@
-module Experimental.DependentTypes.DeepEmbedding.Syntax where
+module Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity where
 
 open import Data.Nat
 
@@ -13,7 +13,7 @@ infixl 5 _⊠_
 data TyExpr where
   Nat Bool : TyExpr
   _⇛_ _⊠_ : TyExpr → TyExpr → TyExpr
-  Id : TmExpr → TmExpr → TyExpr
+  Id : TyExpr → TmExpr → TmExpr → TyExpr
 
 infixl 50 _∙_
 data TmExpr where
