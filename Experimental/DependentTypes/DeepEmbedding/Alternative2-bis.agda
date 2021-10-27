@@ -17,7 +17,7 @@ import Experimental.DependentTypes.Model.IdentityType
 module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
 open M-id hiding (Id)
 
-open import Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity
+open import Experimental.DependentTypes.DeepEmbedding.Syntax.FullyAnnotated
 open import MSTT.TCMonad
 
 
@@ -33,7 +33,7 @@ _≟ty_ : TyExpr → TyExpr → TCM ⊤
 (ann t ∈ T) ≟tm (ann s ∈ S) = (t ≟tm s) >> (T ≟ty S)
 var x ≟tm var y = is-yes (x ≟nat y)
 lam T b ≟tm lam S c = (T ≟ty S) >> (b ≟tm c)
-(t1 ∙ s1) ≟tm (t2 ∙ s2) = (t1 ≟tm t2) >> (s1 ≟tm s2)
+(app R1 t1 s1) ≟tm (app R2 t2 s2) = (R1 ≟ty R2) >> (t1 ≟tm t2) >> (s1 ≟tm s2)
 lit n ≟tm lit m = is-yes (n ≟nat m)
 suc ≟tm suc = return tt
 plus ≟tm plus = return tt
@@ -41,9 +41,9 @@ true ≟tm true = return tt
 false ≟tm false = return tt
 if c t f ≟tm if c' t' f' = (c ≟tm c') >> (t ≟tm t') >> (f ≟tm f')
 pair t1 s1 ≟tm pair t2 s2 = (t1 ≟tm t2) >> (s1 ≟tm s2)
-fst p1 ≟tm fst p2 = p1 ≟tm p2
-snd p1 ≟tm snd p2 = p1 ≟tm p2
-refl t ≟tm refl s = t ≟tm s
+fst S1 p1 ≟tm fst S2 p2 = (S1 ≟ty S2) >> (p1 ≟tm p2)
+snd T1 p1 ≟tm snd T2 p2 = (T1 ≟ty T2) >> (p1 ≟tm p2)
+refl T t ≟tm refl S s = (T ≟ty S) >> (t ≟tm s)
 t ≟tm s = type-error ""
 
 Nat ≟ty Nat = return tt
@@ -83,7 +83,7 @@ _ ⊢ty Bool = ⊤
 Γ ⊢ (ann t ∈ S) ∈ T = (Γ ⊢ t ∈ S) × (S ≃ᵗʸ T)
 Γ ⊢ var x ∈ T = Γ ⊢var x ∈ T
 Γ ⊢ lam A t ∈ R = (Γ ⊢ty A) × Σ[ T ∈ TyExpr ] (R ≃ᵗʸ (A ⇛ T)) × (Γ ,, A ⊢ t ∈ T)
-Γ ⊢ f ∙ t ∈ S = Σ[ T ∈ TyExpr ] (Γ ⊢ f ∈ T ⇛ S) × (Γ ⊢ t ∈ T)
+Γ ⊢ app T f t ∈ S = (Γ ⊢ f ∈ T ⇛ S) × (Γ ⊢ t ∈ T)
 Γ ⊢ lit n ∈ T = T ≃ᵗʸ Nat
 Γ ⊢ suc ∈ T = T ≃ᵗʸ (Nat ⇛ Nat)
 Γ ⊢ plus ∈ T = T ≃ᵗʸ (Nat ⇛ Nat ⇛ Nat)
@@ -91,9 +91,9 @@ _ ⊢ty Bool = ⊤
 Γ ⊢ false ∈ T = T ≃ᵗʸ Bool
 Γ ⊢ if c t f ∈ T = (Γ ⊢ c ∈ Bool) × (Γ ⊢ t ∈ T) × (Γ ⊢ f ∈ T)
 Γ ⊢ pair t s ∈ P = Σ (IsProdTy P) λ { (prod-ty T S) → (Γ ⊢ t ∈ T) × (Γ ⊢ s ∈ S) }
-Γ ⊢ fst p ∈ T = Σ[ S ∈ TyExpr ] Γ ⊢ p ∈ T ⊠ S
-Γ ⊢ snd p ∈ S = Σ[ T ∈ TyExpr ] Γ ⊢ p ∈ T ⊠ S
-Γ ⊢ refl t ∈ T = T ≃ᵗʸ Id T t t
+Γ ⊢ fst S p ∈ T = Γ ⊢ p ∈ T ⊠ S
+Γ ⊢ snd T p ∈ S = Γ ⊢ p ∈ T ⊠ S
+Γ ⊢ refl T t ∈ S = S ≃ᵗʸ Id T t t
 
 ≃ᵗʸ-valid : {T S : TyExpr} {Γ : CtxExpr} →
             T ≃ᵗʸ S → Γ ⊢ty T → Γ ⊢ty S
@@ -129,11 +129,11 @@ interpret-tm (ann t ∈ S) T T-ok (Γ⊢t∈S , S=T) = ι⁻¹[ ≃ᵗʸ-sound {
 interpret-tm (var x) T T-ok t∈T = {!!}
 interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
   ι⁻¹[ ≃ᵗʸ-sound R=A⇛T ] M.lam (interpret-ty A Γ⊢A) (ι[ {!{-naturality-}!} ] interpret-tm t T {!!} Γ,,A⊢t∈T)
-interpret-tm (f ∙ t) S S-ok (T , Γ⊢f∈T⇛S , Γ⊢t∈T) = app {!interpret-tm f (T ⇛ S) {!!} Γ⊢f∈T⇛S!}
+interpret-tm (app T f t) S S-ok (Γ⊢f∈T⇛S , Γ⊢t∈T) = M.app {!interpret-tm f (T ⇛ S) {!!} Γ⊢f∈T⇛S!}
                                                         (interpret-tm t T {!!} Γ⊢t∈T)
 interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound {T = T} T=Nat ] M.discr n
 interpret-tm suc T T-ok T=Nat⇛Nat = ι[ ≃ᵗʸ-sound {T = T} {!T=Nat⇛Nat!} ] M.suc' -- trouble with termination checker (why here???)
-interpret-tm plus T T-ok T=Nat⇛Nat⇛Nat = ι[ ≃ᵗʸ-sound {T = T} {!T=Nat⇛Nat⇛Nat!} ] M.nat-sum
+interpret-tm plus T T-ok T=Nat⇛Nat⇛Nat = ι[ ≃ᵗʸ-sound {T = T} {!T=Nat⇛Nat⇛Nat!} ] M.nat-sum -- same
 interpret-tm true T T-ok T=Bool = ι[ ≃ᵗʸ-sound {T = T} T=Bool ] M.true'
 interpret-tm false T T-ok T=Bool = ι[ ≃ᵗʸ-sound {T = T} T=Bool ] M.false'
 interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
@@ -142,8 +142,8 @@ interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
   else' interpret-tm f T T-ok Γ⊢f∈T
 interpret-tm (pair t s) P (Γ⊢T , Γ⊢S) (prod-ty T S , Γ⊢t∈T , Γ⊢s∈S) = M.pair $ interpret-tm t T Γ⊢T Γ⊢t∈T
                                                                              $ interpret-tm s S Γ⊢S Γ⊢s∈S
-interpret-tm (fst p) T T-ok (S , Γ⊢p∈T⊠S) = {!M.fst $ interpret-tm p (T ⊠ S) {!!} Γ⊢p∈T⊠S!}
-interpret-tm (snd p) S S-ok (T , Γ⊢p∈T⊠S) = {!M.snd $ interpret-tm p (T ⊠ S) {!!} Γ⊢p∈T⊠S!}
-interpret-tm (refl t) R R-ok T=Idtt = ι[ ≃ᵗʸ-sound T=Idtt ] {!!}
+interpret-tm (fst S p) T T-ok Γ⊢p∈T⊠S = {!M.fst $ interpret-tm p (T ⊠ S) {!!} Γ⊢p∈T⊠S!}
+interpret-tm (snd T p) S S-ok Γ⊢p∈T⊠S = {!M.snd $ interpret-tm p (T ⊠ S) {!!} Γ⊢p∈T⊠S!}
+interpret-tm (refl T t) R R-ok T=Idtt = ι[ ≃ᵗʸ-sound T=Idtt ] {!!}
 
 ≃ᵗʸ-sound = {!!}
