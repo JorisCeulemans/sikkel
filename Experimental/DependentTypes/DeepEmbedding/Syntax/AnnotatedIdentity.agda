@@ -1,4 +1,4 @@
-module Experimental.DependentTypes.DeepEmbedding.Alternative3.Syntax where
+module Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity where
 
 open import Data.Nat
 

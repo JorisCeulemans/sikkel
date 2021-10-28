@@ -1,4 +1,4 @@
-module Experimental.DependentTypes.DeepEmbedding.Syntax where
+module Experimental.DependentTypes.DeepEmbedding.Syntax.FullyAnnotated where
 
 open import Data.Nat
 
@@ -13,21 +13,21 @@ infixl 5 _⊠_
 data TyExpr where
   Nat Bool : TyExpr
   _⇛_ _⊠_ : TyExpr → TyExpr → TyExpr
-  Id : TmExpr → TmExpr → TyExpr
+  Id : TyExpr → TmExpr → TmExpr → TyExpr
 
-infixl 50 _∙_
+-- infixl 50 _∙_
 data TmExpr where
   ann_∈_ : TmExpr → TyExpr → TmExpr
   var : ℕ → TmExpr
   lam : TyExpr → TmExpr → TmExpr
-  _∙_ : TmExpr → TmExpr → TmExpr
+  app : TyExpr → TmExpr → TmExpr → TmExpr
   lit : ℕ → TmExpr
   suc plus : TmExpr
   true false : TmExpr
   if : TmExpr → TmExpr → TmExpr → TmExpr
   pair : TmExpr → TmExpr → TmExpr
-  fst snd : TmExpr → TmExpr
-  refl : TmExpr → TmExpr
+  fst snd : TyExpr → TmExpr → TmExpr
+  refl : TyExpr → TmExpr → TmExpr
 
 infixl 4 _,,_
 data CtxExpr : Set where
