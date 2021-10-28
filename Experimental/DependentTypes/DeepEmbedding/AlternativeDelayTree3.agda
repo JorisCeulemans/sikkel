@@ -36,33 +36,31 @@ record TCMThunk ℓ′ (A : Set ℓ) : Set (Level.suc ℓ′ Level.⊔ ℓ) wher
   coinductive
   field force : TCM ℓ′ A
 HasRes : {A : Set ℓ} → TCM ℓ′ A → A → Set (ℓ Level.⊔ ℓ′)
-HasResBound : ℕ → {A : Set ℓ} → TCM ℓ′ A → A → Set (ℓ Level.⊔ ℓ′)
 
 data TCM ℓ′ A where
   type-error : String → TCM ℓ′ A
   ok : A → TCM ℓ′ A
   bind : {B : Set ℓ′} → (m : TCM ℓ′ B) → ((v : B) → HasRes m v → TCM ℓ′ A) → TCM ℓ′ A
-  delay : TCMThunk ℓ′ A → TCM ℓ′ A
+  -- delay : TCMThunk ℓ′ A → TCM ℓ′ A
 
-HasRes m v = ∃ λ n → HasResBound n m v
-HasResBound n (type-error x) v = Lift _ ⊥
-HasResBound {ℓ = ℓ} {ℓ′ = ℓ′} n (ok x) v = Lift (ℓ Level.⊔ ℓ′) (x ≡ v)
-HasResBound (suc n) (bind m k) v = ∃ λ v′ → Σ (HasResBound n m v′) λ m-ok → HasResBound n (k v′ (n , m-ok)) v
-HasResBound ℕ.zero m v = Lift _ ⊥
-HasResBound (suc n) (delay m) v = HasResBound n (TCMThunk.force m) v
+-- HasRes m v = ∃ λ n → HasResBound n m v
+HasRes (type-error x) v = Lift _ ⊥
+HasRes {ℓ = ℓ} {ℓ′ = ℓ′} (ok x) v = Lift (ℓ Level.⊔ ℓ′) (x ≡ v)
+HasRes (bind m k) v = ∃ λ v′ → Σ (HasRes m v′) λ m-ok → HasRes (k v′ m-ok) v
+-- HasResBound (suc n) (delay m) v = HasResBound n (TCMThunk.force m) v
 
 return : {A : Set ℓ} → A → TCM ℓ′ A
 return = ok
 
 _>>=p_ : {A : Set ℓ} (m : TCM ℓ A) → (∀ v → HasRes m v → TCM ℓ B) → TCM ℓ B
 _>>=p_ = bind
-_t>>=p_ : {A : Set ℓ} (m : TCMThunk ℓ A) → (∀ v → HasRes (delay m) v → TCM ℓ B) → TCMThunk ℓ B
-TCMThunk.force (m t>>=p k) = TCMThunk.force m >>=p λ { v (n , eq) → k v (ℕ.suc n , eq)}
+-- _t>>=p_ : {A : Set ℓ} (m : TCMThunk ℓ A) → (∀ v → HasRes (delay m) v → TCM ℓ B) → TCMThunk ℓ B
+-- TCMThunk.force (m t>>=p k) = TCMThunk.force m >>=p λ { v (n , eq) → k v (ℕ.suc n , eq)}
 
-_t>>=_ : {A : Set ℓ′} {B : Set ℓ} → TCMThunk ℓ′ A → (A → TCM ℓ′ B) → TCMThunk ℓ′ B
+-- _t>>=_ : {A : Set ℓ′} {B : Set ℓ} → TCMThunk ℓ′ A → (A → TCM ℓ′ B) → TCMThunk ℓ′ B
 _>>=_ : {A : Set ℓ′} {B : Set ℓ} → TCM ℓ′ A → (A → TCM ℓ′ B) → TCM ℓ′ B
 m >>= k = m >>=p λ v _ → k v
-m t>>= k = m t>>=p λ v _ → k v
+-- m t>>= k = m t>>=p λ v _ → k v
 
 _>>_ : {A : Set ℓ′} {B : Set ℓ} → TCM ℓ′ A → TCM ℓ′ B → TCM ℓ′ B
 m₁ >> m₂ = m₁ >>= λ _ → m₂
@@ -130,8 +128,9 @@ check-tm (ann t ∈ S) Γ T = do
 check-tm (var x) Γ T = check-var x Γ T
 check-tm (lam _ b) Γ T = do
   fun-ty T₁ T₂ ← is-fun-ty T
-  check-tm b (Γ ,, T₁) T₂
+  check-tm b (Γ ,, T₁) T₂ -- domi: should T₂ be shifted up?
 check-tm (app T₁ t1 t2) Γ T₂ = do
+  check-ty T₁ Γ
   check-tm t1 Γ (T₁ ⇛ T₂)
   check-tm t2 Γ T₁
 check-tm (lit n) Γ T = T ≟ty Nat
@@ -156,6 +155,7 @@ check-tm (if c t f) Γ T = do
 --   prod-ty T S ← is-prod-ty P
 --   return S
 check-tm (refl T t) Γ T′ = do
+  check-ty T Γ
   check-tm t Γ T
   T′ ≟ty (Id T t t)
 check-tm t Γ T = type-error "not implemented yet"
@@ -195,37 +195,42 @@ interpret-eq : (T S : TyExpr) (Γ : CtxExpr)
          interpret-ty T Γ Γ-ok T-ok ≅ᵗʸ interpret-ty S Γ Γ-ok S-ok
 
 interpret-ctx CtxExpr.◇ Γ-ok = M.◇
-interpret-ctx (Γ ,, T) (suc n , tt , Γ-ok , T-ok) =
-  interpret-ctx Γ (_ , Γ-ok) M.,, interpret-ty T Γ (_ , Γ-ok) (_ , T-ok)
+interpret-ctx (Γ ,, T) (tt , Γ-ok , T-ok) =
+  interpret-ctx Γ Γ-ok M.,, interpret-ty T Γ Γ-ok T-ok
 
 interpret-ty Nat Γ Γ-ok T-ok = M.Nat'
 interpret-ty Bool Γ Γ-ok T-ok = M.Bool'
-interpret-ty (T₁ ⇛ T₂) Γ Γ-ok (suc n , tt , T₁-ok , T₂-ok) =
-  interpret-ty T₁ Γ Γ-ok (_ , T₁-ok) M.⇛ interpret-ty T₂ Γ Γ-ok (_ , T₂-ok)
-interpret-ty (T₁ ⊠ T₂) Γ Γ-ok (suc n , tt , T₁-ok , T₂-ok) =
-  interpret-ty T₁ Γ Γ-ok (_ , T₁-ok) M.⊠ interpret-ty T₂ Γ Γ-ok (_ , T₂-ok)
-interpret-ty (Id T t₁ t₂) Γ Γ-ok (suc (suc n) , tt , T-ok , T₁ , t₁-ok , t₂-ok) =
+interpret-ty (T₁ ⇛ T₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) =
+  interpret-ty T₁ Γ Γ-ok T₁-ok M.⇛ interpret-ty T₂ Γ Γ-ok T₂-ok
+interpret-ty (T₁ ⊠ T₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) =
+  interpret-ty T₁ Γ Γ-ok T₁-ok M.⊠ interpret-ty T₂ Γ Γ-ok T₂-ok
+interpret-ty (Id T t₁ t₂) Γ Γ-ok (tt , T-ok , T₁ , t₁-ok , t₂-ok) =
   M-id.Id
-    (interpret-tm t₁ Γ Γ-ok (_ , T-ok) (_ , t₁-ok))
-    (interpret-tm t₂ Γ Γ-ok (_ , T-ok) (_ , t₂-ok))
+    (interpret-tm t₁ Γ Γ-ok T-ok t₁-ok)
+    (interpret-tm t₂ Γ Γ-ok T-ok t₂-ok)
 
 interpret-tm (ann t ∈ x) Γ Γ-ok T-ok t-ok = {!!}
 interpret-tm (var x) Γ Γ-ok T-ok t-ok = {!!}
-interpret-tm (TmExpr.lam _ t) Γ Γ-ok (suc n , tt , T₁-ok , T₂-ok) (suc n′ , fun-ty T₁ T₂ , lift refl , t-ok) =
-  M.lam {!!} {!interpret-tm t (Γ ,, T₁) ? ? (_ , t-ok)!}
-interpret-tm (TmExpr.app x t t₁) Γ Γ-ok T-ok t-ok = {!!}
-interpret-tm (lit x) Γ {T} Γ-ok T-ok t-ok = ι[ interpret-eq T Nat Γ Γ-ok T-ok (10 , lift refl) t-ok ] discr x
-interpret-tm suc Γ {T} Γ-ok T-ok t-ok = ι[ {!interpret-eq T (Nat ⇛ Nat) Γ Γ-ok T-ok (10 , tt , lift refl , lift refl) t-ok!} ] M.suc'
+interpret-tm (TmExpr.lam _ t) Γ Γ-ok (tt , T₁-ok , T₂-ok) (fun-ty T₁ T₂ , lift refl , t-ok) =
+  M.lam (interpret-ty T₁ Γ Γ-ok T₁-ok) {!interpret-tm t (Γ ,, T₁) (tt , Γ-ok , T₁-ok) ? t-ok!}
+interpret-tm (TmExpr.app T₁ t₁ t₂) Γ {T₂} Γ-ok T₂-ok (tt , T₁-ok , tt , t₁-ok , t₂-ok) =
+  M.app {!interpret-tm t₁ Γ {T₁ ⇛ T₂} Γ-ok (tt , T₁-ok , T₂-ok) t₁-ok!}
+    (interpret-tm t₂ Γ {T₁} Γ-ok T₁-ok t₂-ok)
+interpret-tm (lit x) Γ {T} Γ-ok T-ok t-ok = ι[ interpret-eq T Nat Γ Γ-ok T-ok (lift refl) t-ok ] discr x
+interpret-tm suc Γ {T} Γ-ok T-ok t-ok =
+  ι[ {!interpret-eq T (Nat ⇛ Nat) Γ Γ-ok T-ok (tt , lift refl , lift refl) t-ok!} ] M.suc'
 interpret-tm plus Γ {T} Γ-ok T-ok t-ok = {!!}
 interpret-tm true Γ {T} Γ-ok T-ok t-ok =
-  ι[ interpret-eq T Bool Γ Γ-ok T-ok (10 , lift refl) t-ok ] discr Bool.true
+  ι[ interpret-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] discr Bool.true
 interpret-tm false Γ {T} Γ-ok T-ok t-ok =
-  ι[ interpret-eq T Bool Γ Γ-ok T-ok (10 , lift refl) t-ok ] discr Bool.false
-interpret-tm (if t t₁ t₂) Γ {T} Γ-ok T-ok (suc (suc n) , tt , t-ok , tt , t₁-ok , t₂-ok) =
-  if' (interpret-tm t Γ Γ-ok (10 , lift refl) (_ , t-ok))
-  then' interpret-tm t₁ Γ Γ-ok T-ok (_ , t₁-ok)
-  else' interpret-tm t₂ Γ Γ-ok T-ok (_ , t₂-ok)
-interpret-tm (refl x t) Γ Γ-ok T-ok t-ok = {!!}
+  ι[ interpret-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] discr Bool.false
+interpret-tm (if t t₁ t₂) Γ {T} Γ-ok T-ok (tt , t-ok , tt , t₁-ok , t₂-ok) =
+  if' (interpret-tm t Γ Γ-ok (lift refl) t-ok)
+  then' interpret-tm t₁ Γ Γ-ok T-ok t₁-ok
+  else' interpret-tm t₂ Γ Γ-ok T-ok t₂-ok
+interpret-tm (refl T′ t) Γ {T} Γ-ok T-ok (tt , T′-ok , tt , t-ok , eq-ok) =
+  ι[ interpret-eq T (Id T′ t t) Γ Γ-ok T-ok (tt , T′-ok , tt , t-ok , t-ok) eq-ok ]
+  M-id.refl' (interpret-tm t Γ Γ-ok T′-ok t-ok)
 
 -- ty-eq? T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok = delay (ty-eq?-thunk T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok )
 
