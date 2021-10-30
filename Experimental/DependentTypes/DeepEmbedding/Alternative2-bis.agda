@@ -80,7 +80,7 @@ _ ⊢ty Bool = ⊤
 Γ ⊢ty T ⊠ S = Γ ⊢ty T × Γ ⊢ty S
 Γ ⊢ty Id R t s = (Γ ⊢ty R) × (Γ ⊢ t ∈ R) × (Γ ⊢ s ∈ R)
 
-Γ ⊢ (ann t ∈ S) ∈ T = (Γ ⊢ t ∈ S) × (S ≃ᵗʸ T)
+Γ ⊢ (ann t ∈ S) ∈ T = (Γ ⊢ty S) × (Γ ⊢ t ∈ S) × (S ≃ᵗʸ T)
 Γ ⊢ var x ∈ T = Γ ⊢var x ∈ T
 Γ ⊢ lam A t ∈ R = (Γ ⊢ty A) × Σ[ T ∈ TyExpr ] (R ≃ᵗʸ (A ⇛ T)) × (Γ ,, A ⊢ t ∈ T)
 Γ ⊢ app T f t ∈ S = (Γ ⊢ f ∈ T ⇛ S) × (Γ ⊢ t ∈ T)
@@ -91,7 +91,7 @@ _ ⊢ty Bool = ⊤
 Γ ⊢ false ∈ T = T ≃ᵗʸ Bool
 Γ ⊢ if c t f ∈ T = (Γ ⊢ c ∈ Bool) × (Γ ⊢ t ∈ T) × (Γ ⊢ f ∈ T)
 Γ ⊢ pair t s ∈ P = Σ (IsProdTy P) λ { (prod-ty T S) → (Γ ⊢ t ∈ T) × (Γ ⊢ s ∈ S) }
-Γ ⊢ fst S p ∈ T = Γ ⊢ p ∈ T ⊠ S
+Γ ⊢ fst S p ∈ T = Σ (IsProdTy S) λ { (prod-ty S₁ S₂) → Γ ⊢ty S × (T ≃ᵗʸ S₁) × Γ ⊢ p ∈ S}
 Γ ⊢ snd T p ∈ S = Γ ⊢ p ∈ T ⊠ S
 Γ ⊢ refl T t ∈ S = S ≃ᵗʸ Id T t t
 
@@ -125,15 +125,15 @@ interpret-ty (T ⊠ S) (T-ok , S-ok) = interpret-ty T T-ok M.⊠ interpret-ty S 
 interpret-ty (Id R t s) (R-ok , t∈R , s∈R) = M-id.Id (interpret-tm t R R-ok t∈R)
                                                      (interpret-tm s R R-ok s∈R)
 
-interpret-tm (ann t ∈ S) T T-ok (Γ⊢t∈S , S=T) = ι⁻¹[ ≃ᵗʸ-sound {T-ok = {!!}} {S-ok = T-ok} S=T ] interpret-tm t S {!!} Γ⊢t∈S
+interpret-tm (ann t ∈ S) T T-ok (Γ⊢S , Γ⊢t∈S , S=T) = ι⁻¹[ ≃ᵗʸ-sound {T-ok = Γ⊢S} {S-ok = T-ok} S=T ] interpret-tm t S Γ⊢S Γ⊢t∈S
 interpret-tm (var x) T T-ok t∈T = {!!}
 interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
-  ι⁻¹[ ≃ᵗʸ-sound R=A⇛T ] M.lam (interpret-ty A Γ⊢A) (ι[ {!{-naturality-}!} ] interpret-tm t T {!!} Γ,,A⊢t∈T)
-interpret-tm (app T f t) S S-ok (Γ⊢f∈T⇛S , Γ⊢t∈T) = M.app {!interpret-tm f (T ⇛ S) {!!} Γ⊢f∈T⇛S!}
-                                                        (interpret-tm t T {!!} Γ⊢t∈T)
+  {!ι⁻¹[ ≃ᵗʸ-sound R=A⇛T ] M.lam (interpret-ty A Γ⊢A) (ι[ {!{-naturality-}!} ] interpret-tm t T {!!} Γ,,A⊢t∈T)!}
+interpret-tm (app T f t) S S-ok (Γ⊢f∈T⇛S , Γ⊢t∈T) = {!M.app (interpret-tm f (T ⇛ S) {!!} Γ⊢f∈T⇛S)
+                                                        (interpret-tm t T {!!} Γ⊢t∈T)!}
 interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound {T = T} T=Nat ] M.discr n
-interpret-tm suc T T-ok T=Nat⇛Nat = ι[ ≃ᵗʸ-sound {T = T} {!T=Nat⇛Nat!} ] M.suc' -- trouble with termination checker (why here???)
-interpret-tm plus T T-ok T=Nat⇛Nat⇛Nat = ι[ ≃ᵗʸ-sound {T = T} {!T=Nat⇛Nat⇛Nat!} ] M.nat-sum -- same
+interpret-tm suc (Nat ⇛ Nat) T-ok T=Nat⇛Nat = M.suc'
+interpret-tm plus T T-ok T=Nat⇛Nat⇛Nat = {!ι[ ≃ᵗʸ-sound {T = T} {!T=Nat⇛Nat⇛Nat!} ] M.nat-sum!} -- same
 interpret-tm true T T-ok T=Bool = ι[ ≃ᵗʸ-sound {T = T} T=Bool ] M.true'
 interpret-tm false T T-ok T=Bool = ι[ ≃ᵗʸ-sound {T = T} T=Bool ] M.false'
 interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
@@ -142,8 +142,10 @@ interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
   else' interpret-tm f T T-ok Γ⊢f∈T
 interpret-tm (pair t s) P (Γ⊢T , Γ⊢S) (prod-ty T S , Γ⊢t∈T , Γ⊢s∈S) = M.pair $ interpret-tm t T Γ⊢T Γ⊢t∈T
                                                                              $ interpret-tm s S Γ⊢S Γ⊢s∈S
-interpret-tm (fst S p) T T-ok Γ⊢p∈T⊠S = {!M.fst $ interpret-tm p (T ⊠ S) {!!} Γ⊢p∈T⊠S!}
+interpret-tm (fst .(S₁ ⊠ S₂) p) T T-ok (prod-ty S₁ S₂ , (S₁-ok , S₂-ok) , T≃S₁ , Γ⊢p∈S) =
+  M.fst $ (ι[ M.⊠-cong (≃ᵗʸ-sound {T = T} {S = S₁} {T-ok} {S₁-ok} T≃S₁) M.≅ᵗʸ-refl ]
+    interpret-tm p (S₁ ⊠ S₂) (S₁-ok , S₂-ok) Γ⊢p∈S)
 interpret-tm (snd T p) S S-ok Γ⊢p∈T⊠S = {!M.snd $ interpret-tm p (T ⊠ S) {!!} Γ⊢p∈T⊠S!}
-interpret-tm (refl T t) R R-ok T=Idtt = ι[ ≃ᵗʸ-sound T=Idtt ] {!!}
+interpret-tm (refl T t) R R-ok T=Idtt = {!ι[ ≃ᵗʸ-sound T=Idtt ] {!!}!}
 
 ≃ᵗʸ-sound = {!!}
