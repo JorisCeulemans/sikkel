@@ -32,9 +32,9 @@ private
     A B : Set ℓ
 
 data TCM ℓ′ (A : Set ℓ) : Set (Level.suc ℓ′ Level.⊔ ℓ)
-record TCMThunk ℓ′ (A : Set ℓ) : Set (Level.suc ℓ′ Level.⊔ ℓ) where
-  coinductive
-  field force : TCM ℓ′ A
+-- record TCMThunk ℓ′ (A : Set ℓ) : Set (Level.suc ℓ′ Level.⊔ ℓ) where
+--   coinductive
+--   field force : TCM ℓ′ A
 HasRes : {A : Set ℓ} → TCM ℓ′ A → A → Set (ℓ Level.⊔ ℓ′)
 
 data TCM ℓ′ A where
@@ -83,20 +83,20 @@ is-yes (no _)  = type-error ""
 _≟tm_ : TmExpr → TmExpr → TCM 0ℓ ⊤
 _≟ty_ : TyExpr → TyExpr → TCM 0ℓ ⊤
 
-(ann t ∈ T) ≟tm (ann s ∈ S) = (t ≟tm s) >> (T ≟ty S)
-var x ≟tm var y = is-yes (x ≟nat y)
-lam T b ≟tm lam S c = (T ≟ty S) >> (b ≟tm c)
-(app T1 t1 s1) ≟tm (app T2 t2 s2) = (t1 ≟tm t2) >> (s1 ≟tm s2)
-lit n ≟tm lit m = is-yes (n ≟nat m)
-suc ≟tm suc = return tt
-plus ≟tm plus = return tt
+-- (ann t ∈ T) ≟tm (ann s ∈ S) = (t ≟tm s) >> (T ≟ty S)
+-- var x ≟tm var y = is-yes (x ≟nat y)
+-- lam T b ≟tm lam S c = (T ≟ty S) >> (b ≟tm c)
+-- (app T1 t1 s1) ≟tm (app T2 t2 s2) = (t1 ≟tm t2) >> (s1 ≟tm s2)
+-- lit n ≟tm lit m = is-yes (n ≟nat m)
+-- suc ≟tm suc = return tt
+-- plus ≟tm plus = return tt
 true ≟tm true = return tt
 false ≟tm false = return tt
-if c t f ≟tm if c' t' f' = (c ≟tm c') >> (t ≟tm t') >> (f ≟tm f')
-pair t1 s1 ≟tm pair t2 s2 = (t1 ≟tm t2) >> (s1 ≟tm s2)
-fst T1 p1 ≟tm fst T2 p2 = p1 ≟tm p2
-snd T1 p1 ≟tm snd T2 p2 = p1 ≟tm p2
-refl T t ≟tm refl S s = t ≟tm s
+-- if c t f ≟tm if c' t' f' = (c ≟tm c') >> (t ≟tm t') >> (f ≟tm f')
+-- pair t1 s1 ≟tm pair t2 s2 = (t1 ≟tm t2) >> (s1 ≟tm s2)
+-- fst T1 p1 ≟tm fst T2 p2 = p1 ≟tm p2
+-- snd T1 p1 ≟tm snd T2 p2 = p1 ≟tm p2
+-- refl T t ≟tm refl S s = t ≟tm s
 t ≟tm s = type-error ""
 
 Nat ≟ty Nat = return tt
@@ -108,7 +108,7 @@ T ≟ty S = type-error ""
 
 check-var : ℕ → CtxExpr → TyExpr → TCM 0ℓ ⊤
 check-var x ◇ T = type-error ""
-check-var zero    (Γ ,, T) T′ = T ≟ty T′
+check-var zero    (Γ ,, T) T′ = T ≟ty T′ -- T needs to be weakened?
 check-var (suc x) (Γ ,, T) = check-var x Γ
 
 is-fun-ty : (T : TyExpr) → TCM 0ℓ (IsFunTy T)
@@ -129,9 +129,11 @@ check-tm (var x) Γ T = check-var x Γ T
 check-tm (lam _ b) Γ T = do
   fun-ty T₁ T₂ ← is-fun-ty T
   check-tm b (Γ ,, T₁) T₂ -- domi: should T₂ be shifted up?
-check-tm (app T₁ t1 t2) Γ T₂ = do
-  check-ty T₁ Γ
-  check-tm t1 Γ (T₁ ⇛ T₂)
+check-tm (app T t1 t2) Γ T₂ = do
+  check-ty T Γ
+  fun-ty T₁ T₂′ ← is-fun-ty T
+  T₂ ≟ty T₂′
+  check-tm t1 Γ T
   check-tm t2 Γ T₁
 check-tm (lit n) Γ T = T ≟ty Nat
 check-tm suc Γ T = T ≟ty (Nat ⇛ Nat)
@@ -187,12 +189,29 @@ interpret-tm : (t : TmExpr) → (Γ : CtxExpr) {T : TyExpr} →
                (T-ok : HasRes (check-ty T Γ) tt) →
                (t-ok : HasRes (check-tm t Γ T) tt) →
                Tm (interpret-ctx Γ Γ-ok) (interpret-ty T Γ Γ-ok T-ok)
-interpret-eq : (T S : TyExpr) (Γ : CtxExpr)
+interpret-var : (x : ℕ) → (Γ : CtxExpr) {T : TyExpr} →
+               (Γ-ok : HasRes (check-ctx Γ) tt) →
+               (T-ok : HasRes (check-ty T Γ) tt) →
+               (x-ok : HasRes (check-var x Γ T) tt) →
+               Tm (interpret-ctx Γ Γ-ok) (interpret-ty T Γ Γ-ok T-ok)
+interpret-ty-eq : (T S : TyExpr) (Γ : CtxExpr)
          (Γ-ok : HasRes (check-ctx Γ) tt) →
          (T-ok : HasRes (check-ty T Γ) tt) →
          (S-ok : HasRes (check-ty S Γ) tt) →
          (eq-ok : HasRes (T ≟ty S) tt) →
          interpret-ty T Γ Γ-ok T-ok ≅ᵗʸ interpret-ty S Γ Γ-ok S-ok
+interpret-tm-eq : (t₁ t₂ : TmExpr) (Γ : CtxExpr) (T₁ T₂ : TyExpr)
+         (Γ-ok : HasRes (check-ctx Γ) tt) →
+         (T₁-ok : HasRes (check-ty T₁ Γ) tt) →
+         (T₂-ok : HasRes (check-ty T₂ Γ) tt) →
+         (t₁-ok : HasRes (check-tm t₁ Γ T₁) tt) →
+         (t₂-ok : HasRes (check-tm t₂ Γ T₂) tt) →
+         (ty-eq-ok : HasRes (T₁ ≟ty T₂) tt) →
+         (tm-eq-ok : HasRes (t₁ ≟tm t₂) tt) →
+         interpret-tm t₁ Γ Γ-ok T₁-ok t₁-ok ≅ᵗᵐ
+           ι[ interpret-ty-eq T₁ T₂ Γ Γ-ok T₁-ok T₂-ok ty-eq-ok ]
+             interpret-tm t₂ Γ Γ-ok T₂-ok t₂-ok
+
 
 interpret-ctx CtxExpr.◇ Γ-ok = M.◇
 interpret-ctx (Γ ,, T) (tt , Γ-ok , T-ok) =
@@ -209,71 +228,56 @@ interpret-ty (Id T t₁ t₂) Γ Γ-ok (tt , T-ok , T₁ , t₁-ok , t₂-ok) =
     (interpret-tm t₁ Γ Γ-ok T-ok t₁-ok)
     (interpret-tm t₂ Γ Γ-ok T-ok t₂-ok)
 
-interpret-tm (ann t ∈ x) Γ Γ-ok T-ok t-ok = {!!}
-interpret-tm (var x) Γ Γ-ok T-ok t-ok = {!!}
+interpret-var ℕ.zero (Γ ,, T) Γ-ok T-ok x-ok = {!!}
+interpret-var (suc x) (Γ ,, T) Γ-ok T-ok t-ok = {!!}
+
+interpret-tm (ann t ∈ T′) Γ {T} Γ-ok T-ok (tt , T′-ok , tt , t-ok , T-eq) =
+  ι[ interpret-ty-eq T T′ Γ Γ-ok T-ok T′-ok T-eq ] interpret-tm t Γ Γ-ok T′-ok t-ok
+interpret-tm (var x) Γ Γ-ok T-ok t-ok = interpret-var x Γ Γ-ok T-ok t-ok
 interpret-tm (TmExpr.lam _ t) Γ Γ-ok (tt , T₁-ok , T₂-ok) (fun-ty T₁ T₂ , lift refl , t-ok) =
   M.lam (interpret-ty T₁ Γ Γ-ok T₁-ok) {!interpret-tm t (Γ ,, T₁) (tt , Γ-ok , T₁-ok) ? t-ok!}
-interpret-tm (TmExpr.app T₁ t₁ t₂) Γ {T₂} Γ-ok T₂-ok (tt , T₁-ok , tt , t₁-ok , t₂-ok) =
-  M.app {!interpret-tm t₁ Γ {T₁ ⇛ T₂} Γ-ok (tt , T₁-ok , T₂-ok) t₁-ok!}
+interpret-tm (TmExpr.app T t₁ t₂) Γ {T₂} Γ-ok T₂-ok (tt , (tt , T₁-ok , T₂′-ok) , fun-ty T₁ T₂′ , lift refl , tt , eq₂ , tt , t₁-ok , t₂-ok) =
+  M.app (ι[ ⇛-cong M.≅ᵗʸ-refl (interpret-ty-eq T₂ T₂′ Γ Γ-ok T₂-ok T₂′-ok eq₂) ] interpret-tm t₁ Γ {T₁ ⇛ T₂′} Γ-ok (tt , T₁-ok , T₂′-ok) t₁-ok)
     (interpret-tm t₂ Γ {T₁} Γ-ok T₁-ok t₂-ok)
-interpret-tm (lit x) Γ {T} Γ-ok T-ok t-ok = ι[ interpret-eq T Nat Γ Γ-ok T-ok (lift refl) t-ok ] discr x
-interpret-tm suc Γ {T} Γ-ok T-ok t-ok =
-  ι[ {!interpret-eq T (Nat ⇛ Nat) Γ Γ-ok T-ok (tt , lift refl , lift refl) t-ok!} ] M.suc'
-interpret-tm plus Γ {T} Γ-ok T-ok t-ok = {!!}
+interpret-tm (lit x) Γ {T} Γ-ok T-ok t-ok = ι[ interpret-ty-eq T Nat Γ Γ-ok T-ok (lift refl) t-ok ] discr x
+interpret-tm suc Γ {Nat ⇛ Nat} Γ-ok T-ok t-ok = M.suc'
+interpret-tm plus Γ {Nat ⇛ Nat ⇛ Nat} Γ-ok T-ok t-ok = nat-sum
 interpret-tm true Γ {T} Γ-ok T-ok t-ok =
-  ι[ interpret-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] discr Bool.true
+  ι[ interpret-ty-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] discr Bool.true
 interpret-tm false Γ {T} Γ-ok T-ok t-ok =
-  ι[ interpret-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] discr Bool.false
+  ι[ interpret-ty-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] discr Bool.false
 interpret-tm (if t t₁ t₂) Γ {T} Γ-ok T-ok (tt , t-ok , tt , t₁-ok , t₂-ok) =
   if' (interpret-tm t Γ Γ-ok (lift refl) t-ok)
   then' interpret-tm t₁ Γ Γ-ok T-ok t₁-ok
   else' interpret-tm t₂ Γ Γ-ok T-ok t₂-ok
 interpret-tm (refl T′ t) Γ {T} Γ-ok T-ok (tt , T′-ok , tt , t-ok , eq-ok) =
-  ι[ interpret-eq T (Id T′ t t) Γ Γ-ok T-ok (tt , T′-ok , tt , t-ok , t-ok) eq-ok ]
+  ι[ interpret-ty-eq T (Id T′ t t) Γ Γ-ok T-ok (tt , T′-ok , tt , t-ok , t-ok) eq-ok ]
   M-id.refl' (interpret-tm t Γ Γ-ok T′-ok t-ok)
 
--- ty-eq? T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok = delay (ty-eq?-thunk T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok )
+interpret-ty-eq Nat Nat Γ Γ-ok T-ok S-ok eq-ok = M.≅ᵗʸ-refl
+interpret-ty-eq Bool Bool Γ Γ-ok T-ok S-ok eq-ok = M.≅ᵗʸ-refl
+interpret-ty-eq (T₁ ⇛ T₂) (S₁ ⇛ S₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) (tt , S₁-ok , S₂-ok) (tt , eq₁-ok , eq₂-ok) =
+  M.⇛-cong (interpret-ty-eq T₁ S₁ Γ Γ-ok T₁-ok S₁-ok eq₁-ok)
+    (interpret-ty-eq T₂ S₂ Γ Γ-ok T₂-ok S₂-ok eq₂-ok)
+interpret-ty-eq (T₁ ⊠ T₂) (S₁ ⊠ S₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) (tt , S₁-ok , S₂-ok) (tt , eq₁-ok , eq₂-ok) =
+  M.⊠-cong (interpret-ty-eq T₁ S₁ Γ Γ-ok T₁-ok S₁-ok eq₁-ok)
+    (interpret-ty-eq T₂ S₂ Γ Γ-ok T₂-ok S₂-ok eq₂-ok)
+interpret-ty-eq (Id T t₁ t₂) (Id S s₁ s₂) Γ Γ-ok (tt , T-ok , tt , t₁-ok , t₂-ok) (tt , S-ok , tt , s₁-ok , s₂-ok) (tt , T-eq , tt , eq₁-ok , eq₂-ok) =
+  Id-cong
+    (interpret-ty-eq T S Γ Γ-ok T-ok S-ok T-eq)
+    (interpret-tm-eq t₁ s₁ Γ T S Γ-ok T-ok S-ok t₁-ok s₁-ok T-eq eq₁-ok)
+    (interpret-tm-eq t₂ s₂ Γ T S Γ-ok T-ok S-ok t₂-ok s₂-ok T-eq eq₂-ok)
 
--- ty-eq?-thunk T S Γ sΓ Γ-ok = {!!}
--- -- TCMThunk.force (ty-eq?-thunk Nat Nat Γ sΓ Γ-ok .Nat' .Nat' (next (here refl)) (next (here refl))) = return ≅ᵗʸ-refl
--- -- TCMThunk.force (ty-eq?-thunk Bool Bool Γ sΓ Γ-ok .Bool' .Bool' (next (here refl)) (next (here refl))) = return ≅ᵗʸ-refl
--- -- TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS (next T-ok) (next S-ok)) with tt
--- -- TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS (next T-ok) (next S-ok)) | tt
--- --   with
--- --     HasRes-invert->>=p (interpret-ty T1 Γ sΓ Γ-ok) {λ sT1 _ → interpret-ty T2 Γ sΓ Γ-ok >>= λ sT2 → return (sT1 M.⇛ sT2)} T-ok
--- --   | HasRes-invert->>=p (interpret-ty S1 Γ sΓ Γ-ok) {λ sS1 _ → interpret-ty S2 Γ sΓ Γ-ok >>= λ sS2 → return (sS1 M.⇛ sS2)} S-ok
--- -- TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS (next T-ok) (next S-ok)) | tt 
--- --   | sT1 , T1-ok , kT-ok | sS1 , S1-ok , kS-ok
--- --   with
--- --     HasRes-invert->>=p (interpret-ty T2 Γ sΓ Γ-ok) {λ sT2 _ → return (sT1 M.⇛ sT2)} kT-ok
--- --   | HasRes-invert->>=p (interpret-ty S2 Γ sΓ Γ-ok) {λ sS2 _ → return (sS1 M.⇛ sS2)} kS-ok
--- -- TCMThunk.force (ty-eq?-thunk (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS (next T-ok) (next S-ok)) | tt 
--- --   | sT1 , T1-ok , kT-ok | sS1 , S1-ok , kS-ok
--- --   | sT2 , T2-ok , here refl | sS2 , S2-ok , here refl
--- --  = do
--- --   T1=S1 ← ty-eq? T1 S1 Γ sΓ Γ-ok sT1 sS1 T1-ok S1-ok
--- --   T2=S2 ← ty-eq? T2 S2 Γ sΓ Γ-ok sT2 sS2 T2-ok S2-ok
--- --   return (⇛-cong T1=S1 T2=S2)
--- -- -- -- ty-eq?-thunk (T1 ⊠ T2) (S1 ⊠ S2) Γ sΓ Γ-ok sT sS T-ok S-ok with interpret-ty T1 Γ sΓ Γ-ok in eqT1 | interpret-ty T2 Γ sΓ Γ-ok in eqT2 | interpret-ty S1 Γ sΓ Γ-ok in eqS1 | interpret-ty S2 Γ sΓ Γ-ok in eqS2
--- -- -- -- ty-eq?-thunk (T1 ⊠ T2) (S1 ⊠ S2) Γ sΓ Γ-ok .(sT1 M.⊠ sT2) .(sS1 M.⊠ sS2) refl refl | ok sT1 | ok sT2 | ok sS1 | ok sS2 = do
--- -- -- --   T1=S1 ← ty-eq?-thunk T1 S1 Γ sΓ Γ-ok sT1 sS1 eqT1 eqS1
--- -- -- --   T2=S2 ← ty-eq?-thunk T2 S2 Γ sΓ Γ-ok sT2 sS2 eqT2 eqS2
--- -- -- --   return (⊠-cong T1=S1 T2=S2)
--- -- -- ty-eq?-thunk (Id t1 t2) (Id s1 s2) Γ sΓ Γ-ok sT sS T-ok S-ok = type-error "123"
--- -- TCMThunk.force (ty-eq?-thunk T S Γ sΓ Γ-ok sT sS T-ok S-ok) = type-error ""
-
--- -- infer-interpret-tm t Γ sΓ Γ-ok  = {!!}
--- -- -- infer-interpret-tm (ann t ∈ x) Γ sΓ Γ-ok = {!!}
--- -- -- infer-interpret-tm (var x) Γ sΓ Γ-ok = {!!}
--- -- -- infer-interpret-tm (TmExpr.lam x t) Γ sΓ Γ-ok = {!!}
--- -- -- infer-interpret-tm (t ∙ t₁) Γ sΓ Γ-ok = {!!}
--- -- -- infer-interpret-tm (lit x) Γ sΓ Γ-ok = return (tm-result Nat M.Nat' refl (discr x))
--- -- -- infer-interpret-tm suc Γ sΓ Γ-ok = return (tm-result (Nat ⇛ Nat) (Nat' M.⇛ Nat') refl M.suc')
--- -- -- infer-interpret-tm plus Γ sΓ Γ-ok = return (tm-result (Nat ⇛ Nat ⇛ Nat) (Nat' M.⇛ Nat' M.⇛ Nat') refl M.nat-sum)
--- -- -- infer-interpret-tm true Γ sΓ Γ-ok = return (tm-result Bool M.Bool' refl M.true')
--- -- -- infer-interpret-tm false Γ sΓ Γ-ok = return (tm-result Bool M.Bool' refl M.false')
--- -- -- infer-interpret-tm (if t t₁ t₂) Γ sΓ Γ-ok = {!!}
--- -- -- infer-interpret-tm (TmExpr.pair t t₁) Γ sΓ Γ-ok = type-error "pairs not supported"
--- -- -- infer-interpret-tm (TmExpr.fst t) Γ sΓ Γ-ok = type-error "pairs not supported"
--- -- -- infer-interpret-tm (TmExpr.snd t) Γ sΓ Γ-ok = type-error "pairs not supported"
--- -- -- infer-interpret-tm (refl t) Γ sΓ Γ-ok = {!!}
+-- interpret-tm-eq (ann t₁ ∈ x) (ann t₂ ∈ x₁) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok =
+--   {!!}
+-- interpret-tm-eq (var x) (var x₁) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
+-- interpret-tm-eq (TmExpr.lam x t₁) (TmExpr.lam x₁ t₂) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
+-- interpret-tm-eq (TmExpr.app S₁ t₁ t₂) (TmExpr.app S₂ t₃ t₄) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
+-- interpret-tm-eq (lit x) (lit x₁) Γ Nat Nat Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
+-- interpret-tm-eq suc suc Γ (Nat ⇛ Nat) (Nat ⇛ Nat) Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok =
+--   {!!}
+-- interpret-tm-eq plus plus Γ (Nat ⇛ Nat ⇛ Nat) (Nat ⇛ Nat ⇛ Nat) Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
+interpret-tm-eq true true Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = ≅ᵗᵐ-refl
+interpret-tm-eq false false Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = ≅ᵗᵐ-refl
+-- interpret-tm-eq (if t₁ t₃ t₄) (if t₂ t₅ t₆) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
+-- interpret-tm-eq (refl x t₁) (refl x₁ t₂) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
