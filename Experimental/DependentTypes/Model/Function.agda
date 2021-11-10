@@ -105,6 +105,10 @@ lam[_∈_]_ v = lam
 _€⟨_,_⟩_ : Tm Γ (Pi T S) → (x : Ob) (γ : Γ ⟨ x ⟩) → (t : T ⟨ x , γ ⟩) → S ⟨ x , [ γ , t ] ⟩
 _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , ctx-id Γ ⟩ t
 
+€-cong : (f : Tm Γ (Pi T S)) {x : Ob} {γ : Γ ⟨ x ⟩} {t1 t2 : T ⟨ x , γ ⟩} →
+         (et : t1 ≡ t2) → ty-ctx-subst S (cong [ γ ,_] et) (f €⟨ x , γ ⟩ t1) ≡ f €⟨ x , γ ⟩ t2
+€-cong {S = S} f refl = strong-ty-id S
+
 €-natural : (f : Tm Γ (Pi T S)) {ρ : Hom x y}
             {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩} {eγ : Γ ⟪ ρ ⟫ γy ≡ γx}
             {t : T ⟨ y , γy ⟩} →
@@ -119,6 +123,23 @@ _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , ctx-id Γ �
   ≡⟨ cong (λ x → x $⟨ _ , _ ⟩ _) (naturality f ρ eγ) ⟩
     f ⟨ _ , γx ⟩' $⟨ hom-id , ctx-id Γ ⟩ (T ⟪ ρ , eγ ⟫ t) ∎
   where open ≡-Reasoning
+
+-- Inverse of lambda abstraction, producing a term in an extended context.
+ap : Tm Γ (Pi T S) → Tm (Γ ,, T) S
+ap f ⟨ x , [ γ , t ] ⟩' = f €⟨ x , γ ⟩ t
+naturality (ap {T = T} {S = S} f) {γy = [ γy , ty ]} {γx = [ γx , tx ]} ρ e = begin
+  S ⟪ ρ , e ⟫ (f €⟨ _ , γy ⟩ ty)
+    ≡˘⟨ ty-cong-2-1 S hom-idʳ ⟩
+  ty-ctx-subst S _ (S ⟪ ρ , _ ⟫ (f €⟨ _ , γy ⟩ ty))
+    ≡⟨ cong (ty-ctx-subst S _) (€-natural f) ⟩
+  ty-ctx-subst S _ (f €⟨ _ , γx ⟩ (T ⟪ ρ , eγ ⟫ ty))
+    ≡⟨ €-cong f (trans (sym (ty-cong-2-1 T hom-idʳ)) et) ⟩
+  f €⟨ _ , γx ⟩ tx ∎
+  where
+    open ≡-Reasoning
+    eγ = proj₁ (from-Σ-ty-eq T e)
+    et = proj₂ (from-Σ-ty-eq T e)
+
 {-
 app : Tm Γ (Pi T S) → Tm Γ T → Tm Γ S
 app f t ⟨ y , γ ⟩' = f €⟨ y , γ ⟩ (t ⟨ y , γ ⟩')
