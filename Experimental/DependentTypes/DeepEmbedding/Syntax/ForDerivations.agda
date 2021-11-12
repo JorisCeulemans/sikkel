@@ -35,7 +35,9 @@ data TmExpr where
 data SubstExpr where
   id-subst : SubstExpr
   _⊚_ : SubstExpr → SubstExpr → SubstExpr
+  ε : SubstExpr
   π : SubstExpr
+  _,s_ : SubstExpr → TmExpr → SubstExpr
 
 infixl 4 _,,_
 data CtxExpr : Set where

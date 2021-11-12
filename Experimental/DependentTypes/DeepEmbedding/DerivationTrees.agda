@@ -1,6 +1,8 @@
 module Experimental.DependentTypes.DeepEmbedding.DerivationTrees where
 
 open import Data.Nat
+open import Data.Product
+open import Function using (_∘_)
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.ForDerivations
 
@@ -29,7 +31,9 @@ data _⊢ctx where
 data _⊢_⇒_ where
   d-id-subst : Γ ⊢ctx → Γ ⊢ id-subst ⇒ Γ
   d-⊚ : (Γ ⊢ τ ⇒ Θ) → (Δ ⊢ σ ⇒ Γ) → (Δ ⊢ τ ⊚ σ ⇒ Θ)
+  d-ε : Γ ⊢ctx → Γ ⊢ ε ⇒ ◇
   d-π : Γ ⊢ty T → Γ ,, T ⊢ π ⇒ Γ
+  d-,s : Γ ⊢ σ ⇒ Δ → Γ ⊢ t ∈ T [ σ ] → Γ ⊢ σ ,s t ⇒ Δ ,, T
 
 data _⊢ty_ where
   d-Nat : Γ ⊢ctx → Γ ⊢ty Nat
@@ -40,7 +44,7 @@ data _⊢ty_ where
   d-ty-subst : Γ ⊢ty T → Δ ⊢ σ ⇒ Γ → Δ ⊢ty T [ σ ]
 
 data _⊢_∈_ where
-  d-var : ∀ {x} → Γ ⊢var x ∈ T → Γ ⊢ var x ∈ T
+  d-var : Γ ⊢ty T → ∀ {x} → Γ ⊢var x ∈ T → Γ ⊢ var x ∈ T
   d-lam : Γ ,, A ⊢ t ∈ T [ π ] → Γ ⊢ lam A t ∈ A ⇛ T
   d-app : Γ ⊢ f ∈ T ⇛ S → Γ ⊢ t ∈ T → Γ ⊢ f ∙ t ∈ S
   d-lit : ∀ {n} → Γ ⊢ctx → Γ ⊢ lit n ∈ Nat
@@ -54,3 +58,63 @@ data _⊢_∈_ where
   d-snd : Γ ⊢ p ∈ T ⊠ S → Γ ⊢ snd p ∈ S
   d-refl : Γ ⊢ t ∈ T → Γ ⊢ refl t ∈ Id t t
   d-tm-subst : Γ ⊢ t ∈ T → Δ ⊢ σ ⇒ Γ → Δ ⊢ t [ σ ] ∈ T [ σ ]
+
+d-,,-inverse : Γ ,, A ⊢ctx → Γ ⊢ctx × Γ ⊢ty A
+d-,,-inverse (d-,, dΓ dA) = dΓ , dA
+
+valid-subst-to-ctx : Γ ⊢ σ ⇒ Δ → Γ ⊢ctx
+valid-ty-to-ctx : Γ ⊢ty T → Γ ⊢ctx
+valid-tm-to-ctx : Γ ⊢ t ∈ T → Γ ⊢ctx
+
+valid-subst-to-ctx (d-id-subst dΓ) = dΓ
+valid-subst-to-ctx (d-⊚ dσ dτ) = valid-subst-to-ctx dτ
+valid-subst-to-ctx (d-ε dΓ) = dΓ
+valid-subst-to-ctx (d-π dT) = d-,, (valid-ty-to-ctx dT) dT
+valid-subst-to-ctx (d-,s dσ _) = valid-subst-to-ctx dσ
+
+valid-ty-to-ctx (d-Nat dΓ) = dΓ
+valid-ty-to-ctx (d-Bool dΓ) = dΓ
+valid-ty-to-ctx (d-⇛ dT dS) = valid-ty-to-ctx dT
+valid-ty-to-ctx (d-⊠ dT dS) = valid-ty-to-ctx dT
+valid-ty-to-ctx (d-Id dt ds) = valid-tm-to-ctx dt
+valid-ty-to-ctx (d-ty-subst dT dσ) = valid-subst-to-ctx dσ
+
+valid-tm-to-ctx (d-var dT dv) = valid-ty-to-ctx dT
+valid-tm-to-ctx (d-lam dt) = proj₁ (d-,,-inverse (valid-tm-to-ctx dt))
+valid-tm-to-ctx (d-app df dt) = valid-tm-to-ctx df
+valid-tm-to-ctx (d-lit dΓ) = dΓ
+valid-tm-to-ctx (d-suc dΓ) = dΓ
+valid-tm-to-ctx (d-plus dΓ) = dΓ
+valid-tm-to-ctx (d-true dΓ) = dΓ
+valid-tm-to-ctx (d-false dΓ) = dΓ
+valid-tm-to-ctx (d-if db dt df) = valid-tm-to-ctx db
+valid-tm-to-ctx (d-pair dt ds) = valid-tm-to-ctx dt
+valid-tm-to-ctx (d-fst dp) = valid-tm-to-ctx dp
+valid-tm-to-ctx (d-snd dp) = valid-tm-to-ctx dp
+valid-tm-to-ctx (d-refl dt) = valid-tm-to-ctx dt
+valid-tm-to-ctx (d-tm-subst dt dσ) = valid-subst-to-ctx dσ
+
+d-⇛-inverse : Γ ⊢ty T ⇛ S → Γ ⊢ty T × Γ ⊢ty S
+d-⇛-inverse (d-⇛ dT dS) = dT , dS
+
+d-⊠-inverse : Γ ⊢ty T ⊠ S → Γ ⊢ty T × Γ ⊢ty S
+d-⊠-inverse (d-⊠ dT dS) = dT , dS
+
+valid-tm-to-ty : Γ ⊢ t ∈ T → Γ ⊢ty T
+valid-tm-to-ty (d-var dT dv) = dT
+valid-tm-to-ty (d-lam dt) = d-⇛ (proj₂ (d-,,-inverse (valid-tm-to-ctx dt))) {!!}
+  -- Somehow, we need to prove that if T [ σ ] is well-formed, then T is well-formed.
+  --   But the way substitutions are now defined in the syntax, we don't even know in
+  --   which context we need to verify this. Maybe substitutions should be indexed by contexts?
+valid-tm-to-ty (d-app df dt) = proj₂ (d-⇛-inverse (valid-tm-to-ty df))
+valid-tm-to-ty (d-lit dΓ) = d-Nat dΓ
+valid-tm-to-ty (d-suc dΓ) = d-⇛ (d-Nat dΓ) (d-Nat dΓ)
+valid-tm-to-ty (d-plus dΓ) = d-⇛ (d-Nat dΓ) (d-⇛ (d-Nat dΓ) (d-Nat dΓ))
+valid-tm-to-ty (d-true dΓ) = d-Bool dΓ
+valid-tm-to-ty (d-false dΓ) = d-Bool dΓ
+valid-tm-to-ty (d-if db dt df) = valid-tm-to-ty dt
+valid-tm-to-ty (d-pair dt ds) = d-⊠ (valid-tm-to-ty dt) (valid-tm-to-ty ds)
+valid-tm-to-ty (d-fst dp) = proj₁ (d-⊠-inverse (valid-tm-to-ty dp))
+valid-tm-to-ty (d-snd dp) = proj₂ (d-⊠-inverse (valid-tm-to-ty dp))
+valid-tm-to-ty (d-refl dt) = d-Id dt dt
+valid-tm-to-ty (d-tm-subst dt dσ) = d-ty-subst (valid-tm-to-ty dt) dσ
