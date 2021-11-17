@@ -40,7 +40,7 @@ data _⊢ty_ where
   d-Bool : Γ ⊢ctx → Γ ⊢ty Bool
   d-⇛ : Γ ⊢ty T → Γ ⊢ty S → Γ ⊢ty T ⇛ S
   d-⊠ : Γ ⊢ty T → Γ ⊢ty S → Γ ⊢ty T ⊠ S
-  d-Id : Γ ⊢ t ∈ T → Γ ⊢ s ∈ T → Γ ⊢ty Id t s
+  d-Id : Γ ⊢ctx → Γ ⊢ t ∈ T → Γ ⊢ s ∈ T → Γ ⊢ty Id t s
   d-ty-subst : Γ ⊢ty T → Δ ⊢ σ ⇒ Γ → Δ ⊢ty T [ σ ]
 
 data _⊢_∈_ where
@@ -62,9 +62,16 @@ data _⊢_∈_ where
 d-,,-inverse : Γ ,, A ⊢ctx → Γ ⊢ctx × Γ ⊢ty A
 d-,,-inverse (d-,, dΓ dA) = dΓ , dA
 
+d-⇛-inverse : Γ ⊢ty T ⇛ S → Γ ⊢ty T × Γ ⊢ty S
+d-⇛-inverse (d-⇛ dT dS) = dT , dS
+
+d-⊠-inverse : Γ ⊢ty T ⊠ S → Γ ⊢ty T × Γ ⊢ty S
+d-⊠-inverse (d-⊠ dT dS) = dT , dS
+
 valid-subst-to-ctx : Γ ⊢ σ ⇒ Δ → Γ ⊢ctx
 valid-ty-to-ctx : Γ ⊢ty T → Γ ⊢ctx
 valid-tm-to-ctx : Γ ⊢ t ∈ T → Γ ⊢ctx
+valid-tm-to-ty : Γ ⊢ t ∈ T → Γ ⊢ty T
 
 valid-subst-to-ctx (d-id-subst dΓ) = dΓ
 valid-subst-to-ctx (d-⊚ dσ dτ) = valid-subst-to-ctx dτ
@@ -76,31 +83,11 @@ valid-ty-to-ctx (d-Nat dΓ) = dΓ
 valid-ty-to-ctx (d-Bool dΓ) = dΓ
 valid-ty-to-ctx (d-⇛ dT dS) = valid-ty-to-ctx dT
 valid-ty-to-ctx (d-⊠ dT dS) = valid-ty-to-ctx dT
-valid-ty-to-ctx (d-Id dt ds) = valid-tm-to-ctx dt
+valid-ty-to-ctx (d-Id dΓ dt ds) = dΓ
 valid-ty-to-ctx (d-ty-subst dT dσ) = valid-subst-to-ctx dσ
 
-valid-tm-to-ctx (d-var dT dv) = valid-ty-to-ctx dT
-valid-tm-to-ctx (d-lam dt) = proj₁ (d-,,-inverse (valid-tm-to-ctx dt))
-valid-tm-to-ctx (d-app df dt) = valid-tm-to-ctx df
-valid-tm-to-ctx (d-lit dΓ) = dΓ
-valid-tm-to-ctx (d-suc dΓ) = dΓ
-valid-tm-to-ctx (d-plus dΓ) = dΓ
-valid-tm-to-ctx (d-true dΓ) = dΓ
-valid-tm-to-ctx (d-false dΓ) = dΓ
-valid-tm-to-ctx (d-if db dt df) = valid-tm-to-ctx db
-valid-tm-to-ctx (d-pair dt ds) = valid-tm-to-ctx dt
-valid-tm-to-ctx (d-fst dp) = valid-tm-to-ctx dp
-valid-tm-to-ctx (d-snd dp) = valid-tm-to-ctx dp
-valid-tm-to-ctx (d-refl dt) = valid-tm-to-ctx dt
-valid-tm-to-ctx (d-tm-subst dt dσ) = valid-subst-to-ctx dσ
+valid-tm-to-ctx = valid-ty-to-ctx ∘ valid-tm-to-ty
 
-d-⇛-inverse : Γ ⊢ty T ⇛ S → Γ ⊢ty T × Γ ⊢ty S
-d-⇛-inverse (d-⇛ dT dS) = dT , dS
-
-d-⊠-inverse : Γ ⊢ty T ⊠ S → Γ ⊢ty T × Γ ⊢ty S
-d-⊠-inverse (d-⊠ dT dS) = dT , dS
-
-valid-tm-to-ty : Γ ⊢ t ∈ T → Γ ⊢ty T
 valid-tm-to-ty (d-var dT dv) = dT
 valid-tm-to-ty (d-lam dt) = d-⇛ (proj₂ (d-,,-inverse (valid-tm-to-ctx dt))) {!!}
   -- Somehow, we need to prove that if T [ σ ] is well-formed, then T is well-formed.
@@ -116,5 +103,52 @@ valid-tm-to-ty (d-if db dt df) = valid-tm-to-ty dt
 valid-tm-to-ty (d-pair dt ds) = d-⊠ (valid-tm-to-ty dt) (valid-tm-to-ty ds)
 valid-tm-to-ty (d-fst dp) = proj₁ (d-⊠-inverse (valid-tm-to-ty dp))
 valid-tm-to-ty (d-snd dp) = proj₂ (d-⊠-inverse (valid-tm-to-ty dp))
-valid-tm-to-ty (d-refl dt) = d-Id dt dt
+valid-tm-to-ty (d-refl dt) = d-Id (valid-tm-to-ctx dt) dt dt
 valid-tm-to-ty (d-tm-subst dt dσ) = d-ty-subst (valid-tm-to-ty dt) dσ
+
+{-
+-- Definition needed because first the termination checker was not happy with the valid-ty-to-ctx
+--   case for d-Id. However not defining valid-tm-to-ctx as valid-ty-to-ctx ∘ valid-tm-to-ctx
+--   gives trouble for implementing the interpretation. Now solved to add extra (redundant?) requirement
+--   about context in inference rule for identity types.
+valid-tm-to-ctx (d-var dT dv) = valid-ty-to-ctx dT
+valid-tm-to-ctx (d-lam dt) = proj₁ (d-,,-inverse (valid-tm-to-ctx dt))
+valid-tm-to-ctx (d-app df dt) = valid-tm-to-ctx df
+valid-tm-to-ctx (d-lit dΓ) = dΓ
+valid-tm-to-ctx (d-suc dΓ) = dΓ
+valid-tm-to-ctx (d-plus dΓ) = dΓ
+valid-tm-to-ctx (d-true dΓ) = dΓ
+valid-tm-to-ctx (d-false dΓ) = dΓ
+valid-tm-to-ctx (d-if db dt df) = valid-tm-to-ctx db
+valid-tm-to-ctx (d-pair dt ds) = valid-tm-to-ctx dt
+valid-tm-to-ctx (d-fst dp) = valid-tm-to-ctx dp
+valid-tm-to-ctx (d-snd dp) = valid-tm-to-ctx dp
+valid-tm-to-ctx (d-refl dt) = valid-tm-to-ctx dt
+valid-tm-to-ctx (d-tm-subst dt dσ) = valid-subst-to-ctx dσ
+-}
+
+open import Model.CwF-Structure as M
+open import Model.BaseCategory
+open import Model.Type.Discrete as M
+open import Model.Type.Function as M
+open import Model.Type.Product as M
+
+import Experimental.DependentTypes.Model.IdentityType
+module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
+open M-id hiding (Id)
+
+interpret-ctx : Γ ⊢ctx → Ctx ★
+interpret-ty : (dT : Γ ⊢ty T) → Ty (interpret-ctx (valid-ty-to-ctx dT))
+interpret-tm : (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx (valid-tm-to-ctx dt)) (interpret-ty (valid-tm-to-ty dt))
+
+interpret-ctx d-◇ = M.◇
+interpret-ctx (d-,, dΓ dT) = interpret-ctx (valid-ty-to-ctx dT) M.,, interpret-ty dT
+
+interpret-ty (d-Nat _) = M.Nat'
+interpret-ty (d-Bool _) = M.Bool'
+interpret-ty (d-⇛ dT dS) = interpret-ty dT M.⇛ {!interpret-ty dS!}
+interpret-ty (d-⊠ dT dS) = interpret-ty dT M.⊠ {!interpret-ty dS!}
+interpret-ty (d-Id dΓ dt ds) = {!!} -- M-id.Id interpret-tm dt interpret-tm ds
+interpret-ty (d-ty-subst dT dσ) = {!!} -- interpret-ty dT M.[ {!!} ]
+
+interpret-tm dt = ?
