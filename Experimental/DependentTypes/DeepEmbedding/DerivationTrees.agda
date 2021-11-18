@@ -95,6 +95,7 @@ valid-tm-to-ty (d-lam dt) = d-⇛ (proj₂ (d-,,-inverse (valid-tm-to-ctx dt))) 
   --   which context we need to verify this. Maybe substitutions should be indexed by contexts?
   -- Andreas: The derivation via d-ty-subst knows the target context of the substitution.
   --   Moreover, it should be provable that if the substitution is π, then this target must be the "cotail" of the source.
+  -- Dominique: Couldn't d-lam additionally contain a validity proof of T [ π ] that you could then recurse on here?
 valid-tm-to-ty (d-app df dt) = proj₂ (d-⇛-inverse (valid-tm-to-ty df))
 valid-tm-to-ty (d-lit dΓ) = d-Nat dΓ
 valid-tm-to-ty (d-suc dΓ) = d-⇛ (d-Nat dΓ) (d-Nat dΓ)
@@ -142,7 +143,12 @@ open M-id hiding (Id)
 
 interpret-ctx : Γ ⊢ctx → Ctx ★
 interpret-ty : (dT : Γ ⊢ty T) → Ty (interpret-ctx (valid-ty-to-ctx dT))
+-- Dominique: I would propose a different type:
+--   interpret-ty : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) → Ty (interpret-ctx dΓ)
+-- I think this might prevent the problem below in interpret-ty (d-⇛ dT dS) and interpret-ty (d-⊠ dT dS) and interpret-ty (d-Id dΓ dt ds)
 interpret-tm : (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx (valid-tm-to-ctx dt)) (interpret-ty (valid-tm-to-ty dt))
+-- Dominique: same here:
+-- interpret-tm : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx dΓ) (interpret-ty dT)
 
 interpret-ctx d-◇ = M.◇
 interpret-ctx (d-,, dΓ dT) = interpret-ctx (valid-ty-to-ctx dT) M.,, interpret-ty dT
@@ -151,7 +157,8 @@ interpret-ty (d-Nat _) = M.Nat'
 interpret-ty (d-Bool _) = M.Bool'
 interpret-ty (d-⇛ dT dS) = interpret-ty dT M.⇛ {!interpret-ty dS!}
 interpret-ty (d-⊠ dT dS) = interpret-ty dT M.⊠ {!interpret-ty dS!}
-interpret-ty (d-Id dΓ dt ds) = {!!} -- M-id.Id interpret-tm dt interpret-tm ds
-interpret-ty (d-ty-subst dT dσ) = {!!} -- interpret-ty dT M.[ {!!} ]
+-- Dominique: This breaks termination because the type of interpret-ty mentions the recursive call (interpret-ctx (validTy-to-ctx (d-ty-subst dT dσ))), which is passed as an implicit argument to _M.[_].
+-- Perhaps this can be already avoided by the change in the type of interpret-ty proposed above?
+-- Perhaps d-ty-subst can be made to additionally include a validity judgement of the context?
 
 interpret-tm dt = {!!}
