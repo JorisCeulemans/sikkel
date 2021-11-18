@@ -165,7 +165,7 @@ interpret-tm (refl T t) (Id R x y) R-ok T=Idtt = {!!}
   -- Two different proofs of Γ ⊢ t ∈ T give rise to interpretations that are not definitionally equal,
   --   so in order to apply M.refl, we must prove that interpretation does not depend on well-typedness proof
   --   (or that any two proofs of well-typedness for the same term, context and type are equal).
-  -- The latter is probably true.
+  -- Andreas: The latter is probably true.
 
 ≃ᵗʸ-sound {T = Nat} {S = Nat} e = ≅ᵗʸ-refl
 ≃ᵗʸ-sound {T = Bool} {S = Bool} e = ≅ᵗʸ-refl
