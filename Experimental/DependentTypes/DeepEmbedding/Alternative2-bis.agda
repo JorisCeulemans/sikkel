@@ -43,6 +43,8 @@ fst S1 p1 ≟tm fst S2 p2 = (S1 ≟ty S2) >> (p1 ≟tm p2)
 snd T1 p1 ≟tm snd T2 p2 = (T1 ≟ty T2) >> (p1 ≟tm p2)
 refl T t ≟tm refl S s = (T ≟ty S) >> (t ≟tm s)
 t ≟tm s = type-error ""
+-- Andreas: I'm sure you're aware of this, but this algorithm is not closed under beta- or eta-equality.
+--   It's really a syntactic equality check.
 
 Nat ≟ty Nat = return tt
 Bool ≟ty Bool = return tt
@@ -92,6 +94,8 @@ _ ⊢ty Bool = ⊤
 Γ ⊢ fst S p ∈ T = Σ (IsProdTy S) λ { (prod-ty S₁ S₂) → Γ ⊢ty S × (T ≃ᵗʸ S₁) × Γ ⊢ p ∈ S }
 Γ ⊢ snd T p ∈ S = Σ (IsProdTy T) λ { (prod-ty T₁ T₂) → Γ ⊢ty T × (S ≃ᵗʸ T₂) × Γ ⊢ p ∈ T }
 Γ ⊢ refl T t ∈ S = S ≃ᵗʸ Id T t t
+-- ^ Andreas: Since the equality relations are (still?) syntactic equality and not βη-equality,
+--   this is not a very flexible typing rule.
 
 {-
 ≃ᵗʸ-valid : {T S : TyExpr} {Γ : CtxExpr} →
@@ -135,9 +139,11 @@ interpret-tm (var (suc x)) {Γ ,, A} T T-ok t∈T = {!!}
 -- Needed to prove for variable interpretation:
 --   * Weakening respects well-formedness of types.
 --   * Interpretation of weakening is applying π in the model.
+-- Andreas: Both would be part of interpret-tm for a substitution operation in the syntax.
 interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
   {!ι[ ≃ᵗʸ-sound {T = R} R=A⇛T ] M.lam (interpret-ty A Γ⊢A) (ι[ {!!} ] interpret-tm t (weaken-ty T) {!!} Γ,,A⊢t∈T)!}
   -- Termination checker has a problem with `weaken-ty T` which is not structurally smaller than or equal to T.
+  -- Andreas: Could this be solved by having a substitution operation in the syntax?
 interpret-tm (app .(T₁ ⇛ T₂) f t) S S-ok (fun-ty T₁ T₂ , (T₁-ok , T₂-ok) , Γ⊢f∈T , Γ⊢t∈T₁ , S≃T₂) =
   ι[ ≃ᵗʸ-sound {T = S} S≃T₂ ] M.app (interpret-tm f (T₁ ⇛ T₂) (T₁-ok , T₂-ok) Γ⊢f∈T) (interpret-tm t T₁ T₁-ok Γ⊢t∈T₁)
 interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound {T = T} T=Nat ] M.discr n
@@ -159,6 +165,7 @@ interpret-tm (refl T t) (Id R x y) R-ok T=Idtt = {!!}
   -- Two different proofs of Γ ⊢ t ∈ T give rise to interpretations that are not definitionally equal,
   --   so in order to apply M.refl, we must prove that interpretation does not depend on well-typedness proof
   --   (or that any two proofs of well-typedness for the same term, context and type are equal).
+  -- The latter is probably true.
 
 ≃ᵗʸ-sound {T = Nat} {S = Nat} e = ≅ᵗʸ-refl
 ≃ᵗʸ-sound {T = Bool} {S = Bool} e = ≅ᵗʸ-refl
