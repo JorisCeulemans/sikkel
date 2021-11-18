@@ -93,6 +93,8 @@ valid-tm-to-ty (d-lam dt) = d-⇛ (proj₂ (d-,,-inverse (valid-tm-to-ctx dt))) 
   -- Somehow, we need to prove that if T [ σ ] is well-formed, then T is well-formed.
   --   But the way substitutions are now defined in the syntax, we don't even know in
   --   which context we need to verify this. Maybe substitutions should be indexed by contexts?
+  -- Andreas: The derivation via d-ty-subst knows the target context of the substitution.
+  --   Moreover, it should be provable that if the substitution is π, then this target must be the "cotail" of the source.
 valid-tm-to-ty (d-app df dt) = proj₂ (d-⇛-inverse (valid-tm-to-ty df))
 valid-tm-to-ty (d-lit dΓ) = d-Nat dΓ
 valid-tm-to-ty (d-suc dΓ) = d-⇛ (d-Nat dΓ) (d-Nat dΓ)
@@ -111,6 +113,7 @@ valid-tm-to-ty (d-tm-subst dt dσ) = d-ty-subst (valid-tm-to-ty dt) dσ
 --   case for d-Id. However not defining valid-tm-to-ctx as valid-ty-to-ctx ∘ valid-tm-to-ctx
 --   gives trouble for implementing the interpretation. Now solved to add extra (redundant?) requirement
 --   about context in inference rule for identity types.
+-- Andreas: There was redundancy anyway because well-formedness of Γ could be deduced from well-typedness of either s or t.
 valid-tm-to-ctx (d-var dT dv) = valid-ty-to-ctx dT
 valid-tm-to-ctx (d-lam dt) = proj₁ (d-,,-inverse (valid-tm-to-ctx dt))
 valid-tm-to-ctx (d-app df dt) = valid-tm-to-ctx df
@@ -151,4 +154,4 @@ interpret-ty (d-⊠ dT dS) = interpret-ty dT M.⊠ {!interpret-ty dS!}
 interpret-ty (d-Id dΓ dt ds) = {!!} -- M-id.Id interpret-tm dt interpret-tm ds
 interpret-ty (d-ty-subst dT dσ) = {!!} -- interpret-ty dT M.[ {!!} ]
 
-interpret-tm dt = ?
+interpret-tm dt = {!!}
