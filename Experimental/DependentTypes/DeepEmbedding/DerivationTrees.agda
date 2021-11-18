@@ -141,24 +141,61 @@ import Experimental.DependentTypes.Model.IdentityType
 module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
 open M-id hiding (Id)
 
-interpret-ctx : Γ ⊢ctx → Ctx ★
-interpret-ty : (dT : Γ ⊢ty T) → Ty (interpret-ctx (valid-ty-to-ctx dT))
--- Dominique: I would propose a different type:
---   interpret-ty : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) → Ty (interpret-ctx dΓ)
--- I think this might prevent the problem below in interpret-ty (d-⇛ dT dS) and interpret-ty (d-⊠ dT dS) and interpret-ty (d-Id dΓ dt ds)
-interpret-tm : (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx (valid-tm-to-ctx dt)) (interpret-ty (valid-tm-to-ty dt))
--- Dominique: same here:
--- interpret-tm : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx dΓ) (interpret-ty dT)
+module ComputeContextsTypes where
+  interpret-ctx : Γ ⊢ctx → Ctx ★
+  interpret-ty : (dT : Γ ⊢ty T) → Ty (interpret-ctx (valid-ty-to-ctx dT))
+  -- Dominique: I would propose a different type:
+  --   interpret-ty : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) → Ty (interpret-ctx dΓ)
+  -- I think this might prevent the problem below in interpret-ty (d-⇛ dT dS) and interpret-ty (d-⊠ dT dS) and interpret-ty (d-Id dΓ dt ds)
+  interpret-tm : (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx (valid-tm-to-ctx dt)) (interpret-ty (valid-tm-to-ty dt))
+  -- Dominique: same here:
+  -- interpret-tm : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) (dt : Γ ⊢ t ∈ T) → Tm (interpret-ctx dΓ) (interpret-ty dT)
 
-interpret-ctx d-◇ = M.◇
-interpret-ctx (d-,, dΓ dT) = interpret-ctx (valid-ty-to-ctx dT) M.,, interpret-ty dT
+  interpret-ctx d-◇ = M.◇
+  interpret-ctx (d-,, dΓ dT) = interpret-ctx (valid-ty-to-ctx dT) M.,, interpret-ty dT
 
-interpret-ty (d-Nat _) = M.Nat'
-interpret-ty (d-Bool _) = M.Bool'
-interpret-ty (d-⇛ dT dS) = interpret-ty dT M.⇛ {!interpret-ty dS!}
-interpret-ty (d-⊠ dT dS) = interpret-ty dT M.⊠ {!interpret-ty dS!}
--- Dominique: This breaks termination because the type of interpret-ty mentions the recursive call (interpret-ctx (validTy-to-ctx (d-ty-subst dT dσ))), which is passed as an implicit argument to _M.[_].
--- Perhaps this can be already avoided by the change in the type of interpret-ty proposed above?
--- Perhaps d-ty-subst can be made to additionally include a validity judgement of the context?
+  interpret-ty (d-Nat _) = M.Nat'
+  interpret-ty (d-Bool _) = M.Bool'
+  interpret-ty (d-⇛ dT dS) = interpret-ty dT M.⇛ {!interpret-ty dS!}
+  interpret-ty (d-⊠ dT dS) = interpret-ty dT M.⊠ {!interpret-ty dS!}
+  interpret-ty (d-Id dΓ dt ds) = {!!} -- M-id.Id interpret-tm dt interpret-tm ds
+  interpret-ty (d-ty-subst dT dσ) = {!!} -- interpret-ty dT M.[ {!!} ]
+  -- Dominique: This breaks termination because the type of interpret-ty mentions the recursive call (interpret-ctx (validTy-to-ctx (d-ty-subst dT dσ))), which is passed as an implicit argument to _M.[_].
+  -- Perhaps this can be already avoided by the change in the type of interpret-ty proposed above?
+  -- Perhaps d-ty-subst can be made to additionally include a validity judgement of the context?
 
-interpret-tm dt = {!!}
+  interpret-tm dt = {!!}
+
+
+module AllContextsTypes where
+  interpret-ctx : Γ ⊢ctx → Ctx ★
+  interpret-subst : (dΓ : Γ ⊢ctx) (dΔ : Δ ⊢ctx) → Γ ⊢ σ ⇒ Δ → interpret-ctx dΓ M.⇒ interpret-ctx dΔ
+  interpret-ty : (dΓ : Γ ⊢ctx) → Γ ⊢ty T → Ty (interpret-ctx dΓ)
+  interpret-tm : (dΓ : Γ ⊢ctx) (dT : Γ ⊢ty T) → Γ ⊢ t ∈ T → Tm (interpret-ctx dΓ) (interpret-ty dΓ dT)
+
+  interpret-ctx d-◇ = M.◇
+  interpret-ctx (d-,, dΓ dT) = interpret-ctx dΓ M.,, interpret-ty dΓ dT
+
+  interpret-subst dΓ dΔ dσ = {!!}
+
+  interpret-ty dΓ (d-Nat _) = M.Nat'
+  interpret-ty dΓ (d-Bool _) = M.Bool'
+  interpret-ty dΓ (d-⇛ dT dS) = interpret-ty dΓ dT M.⇛ interpret-ty dΓ dS
+  interpret-ty dΓ (d-⊠ dT dS) = interpret-ty dΓ dT M.⊠ interpret-ty dΓ dS
+  interpret-ty dΓ (d-Id _ dt ds) = M-id.Id (interpret-tm dΓ {!!} dt) (interpret-tm dΓ {!!} ds)
+  interpret-ty dΓ (d-ty-subst dT dσ) = interpret-ty {!!} dT M.[ interpret-subst dΓ {!!} dσ ]
+
+  interpret-tm dΓ dT (d-var _ dx) = {!!}
+  interpret-tm dΓ dT (d-lam dt) = {!!}
+  interpret-tm dΓ dT (d-app df dt) = M.app (interpret-tm dΓ {!!} df) (interpret-tm dΓ {!!} dt)
+  interpret-tm dΓ dT (d-lit x) = {!!}
+  interpret-tm dΓ dT (d-suc x) = {!!}
+  interpret-tm dΓ dT (d-plus x) = {!!}
+  interpret-tm dΓ dT (d-true x) = {!!}
+  interpret-tm dΓ dT (d-false x) = {!!}
+  interpret-tm dΓ dT (d-if dt dt₁ dt₂) = {!!}
+  interpret-tm dΓ (d-⊠ dT dS) (d-pair dt ds) = M.pair $ interpret-tm dΓ dT dt $ interpret-tm dΓ dS ds
+  interpret-tm dΓ dT (d-fst dp) = M.fst $ interpret-tm dΓ {!!} dp
+  interpret-tm dΓ dT (d-snd dt) = {!!}
+  interpret-tm dΓ dT (d-refl dt) = {!!}
+  interpret-tm dΓ dT (d-tm-subst dt x) = {!!}
