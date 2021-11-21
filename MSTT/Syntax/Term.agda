@@ -36,6 +36,7 @@ data TmExpr where
   _∙_ : TmExpr m → TmExpr m → TmExpr m
   lit : ℕ → TmExpr m
   suc plus : TmExpr m
+  nat-elim : TmExpr m → TmExpr m → TmExpr m
   true false : TmExpr m
   if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
   pair : TmExpr m → TmExpr m → TmExpr m
