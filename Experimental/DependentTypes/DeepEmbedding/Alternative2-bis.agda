@@ -93,7 +93,7 @@ _ ⊢ty Bool = ⊤
 Γ ⊢ pair t s ∈ P = Σ (IsProdTy P) λ { (prod-ty T S) → (Γ ⊢ t ∈ T) × (Γ ⊢ s ∈ S) }
 Γ ⊢ fst S p ∈ T = Σ (IsProdTy S) λ { (prod-ty S₁ S₂) → Γ ⊢ty S × (T ≃ᵗʸ S₁) × Γ ⊢ p ∈ S }
 Γ ⊢ snd T p ∈ S = Σ (IsProdTy T) λ { (prod-ty T₁ T₂) → Γ ⊢ty T × (S ≃ᵗʸ T₂) × Γ ⊢ p ∈ T }
-Γ ⊢ refl T t ∈ S = S ≃ᵗʸ Id T t t
+Γ ⊢ refl T t ∈ S = S ≃ᵗʸ Id T t t × Γ ⊢ty Id T t t
 -- ^ Andreas: Since the equality relations are (still?) syntactic equality and not βη-equality,
 --   this is not a very flexible typing rule.
 
@@ -120,8 +120,13 @@ interpret-ctx : (Γ : CtxExpr) → Γ ⊢ctx → Ctx ★
 interpret-ty : (T : TyExpr) {Γ : CtxExpr} → Γ ⊢ty T → {Γ-ok : Γ ⊢ctx} → Ty (interpret-ctx Γ Γ-ok)
 interpret-tm : (t : TmExpr) {Γ : CtxExpr} {Γ-ok : Γ ⊢ctx} (T : TyExpr) (T-ok : Γ ⊢ty T) →
                Γ ⊢ t ∈ T → Tm (interpret-ctx Γ Γ-ok) (interpret-ty T T-ok)
-≃ᵗʸ-sound : {Γ : CtxExpr} {Γ-ok : Γ ⊢ctx} {T S : TyExpr} {T-ok : Γ ⊢ty T} {S-ok : Γ ⊢ty S} →
+≃ᵗʸ-sound : {Γ : CtxExpr} {Γ-ok : Γ ⊢ctx} {T S : TyExpr} (T-ok : Γ ⊢ty T) (S-ok : Γ ⊢ty S) →
             T ≃ᵗʸ S → interpret-ty T T-ok {Γ-ok} ≅ᵗʸ interpret-ty S S-ok
+≃ᵗᵐ-sound : {Γ : CtxExpr} {Γ-ok : Γ ⊢ctx} {T S : TyExpr} (t s : TmExpr)
+            (T-ok : Γ ⊢ty T) (S-ok : Γ ⊢ty S)
+            (t-ok : Γ ⊢ t ∈ T) (s-ok : Γ ⊢ s ∈ S) →
+            (ty-eq : T ≃ᵗʸ S) → (tm-eq : t ≃ᵗᵐ s) →
+            interpret-tm t {Γ-ok = Γ-ok} T T-ok t-ok ≅ᵗᵐ ι[ ≃ᵗʸ-sound T-ok S-ok ty-eq ] interpret-tm s S S-ok s-ok
 
 interpret-ctx ◇ Γ-ok = M.◇
 interpret-ctx (Γ ,, T) (Γ-ok , T-ok) = interpret-ctx Γ Γ-ok M.,, interpret-ty T T-ok
@@ -133,7 +138,7 @@ interpret-ty (T ⊠ S) (T-ok , S-ok) = interpret-ty T T-ok M.⊠ interpret-ty S 
 interpret-ty (Id R t s) (R-ok , t∈R , s∈R) = M-id.Id (interpret-tm t R R-ok t∈R)
                                                      (interpret-tm s R R-ok s∈R)
 
-interpret-tm (ann t ∈ S) T T-ok (Γ⊢S , Γ⊢t∈S , S=T) = ι⁻¹[ ≃ᵗʸ-sound {T-ok = Γ⊢S} {S-ok = T-ok} S=T ] interpret-tm t S Γ⊢S Γ⊢t∈S
+interpret-tm (ann t ∈ S) T T-ok (Γ⊢S , Γ⊢t∈S , S=T) = ι⁻¹[ ≃ᵗʸ-sound Γ⊢S T-ok S=T ] interpret-tm t S Γ⊢S Γ⊢t∈S
 interpret-tm (var zero)    {Γ ,, A} T T-ok t∈T = {!!}
 interpret-tm (var (suc x)) {Γ ,, A} T T-ok t∈T = {!!}
 -- Needed to prove for variable interpretation:
@@ -145,12 +150,12 @@ interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
   -- Termination checker has a problem with `weaken-ty T` which is not structurally smaller than or equal to T.
   -- Andreas: Could this be solved by having a substitution operation in the syntax?
 interpret-tm (app .(T₁ ⇛ T₂) f t) S S-ok (fun-ty T₁ T₂ , (T₁-ok , T₂-ok) , Γ⊢f∈T , Γ⊢t∈T₁ , S≃T₂) =
-  ι[ ≃ᵗʸ-sound {T = S} S≃T₂ ] M.app (interpret-tm f (T₁ ⇛ T₂) (T₁-ok , T₂-ok) Γ⊢f∈T) (interpret-tm t T₁ T₁-ok Γ⊢t∈T₁)
-interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound {T = T} T=Nat ] M.discr n
+  ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] M.app (interpret-tm f (T₁ ⇛ T₂) (T₁-ok , T₂-ok) Γ⊢f∈T) (interpret-tm t T₁ T₁-ok Γ⊢t∈T₁)
+interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound T-ok tt T=Nat ] M.discr n
 interpret-tm suc (Nat ⇛ Nat) T-ok T=Nat⇛Nat = M.suc'
 interpret-tm plus (Nat ⇛ Nat ⇛ Nat) T-ok T=Nat⇛Nat⇛Nat = M.nat-sum
-interpret-tm true T T-ok T=Bool = ι[ ≃ᵗʸ-sound {T = T} T=Bool ] M.true'
-interpret-tm false T T-ok T=Bool = ι[ ≃ᵗʸ-sound {T = T} T=Bool ] M.false'
+interpret-tm true T T-ok T=Bool = ι[ ≃ᵗʸ-sound T-ok tt T=Bool ] M.true'
+interpret-tm false T T-ok T=Bool = ι[ ≃ᵗʸ-sound T-ok tt T=Bool ] M.false'
 interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
   M.if' interpret-tm c Bool tt Γ⊢c∈Bool
   then' interpret-tm t T T-ok Γ⊢t∈T
@@ -158,19 +163,40 @@ interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
 interpret-tm (pair t s) P (Γ⊢T , Γ⊢S) (prod-ty T S , Γ⊢t∈T , Γ⊢s∈S) = M.pair $ interpret-tm t T Γ⊢T Γ⊢t∈T
                                                                              $ interpret-tm s S Γ⊢S Γ⊢s∈S
 interpret-tm (fst .(S₁ ⊠ S₂) p) T T-ok (prod-ty S₁ S₂ , (S₁-ok , S₂-ok) , T≃S₁ , Γ⊢p∈S) =
-  ι[ ≃ᵗʸ-sound {T = T} T≃S₁ ] (M.fst $ interpret-tm p (S₁ ⊠ S₂) (S₁-ok , S₂-ok) Γ⊢p∈S)
+  ι[ ≃ᵗʸ-sound T-ok S₁-ok T≃S₁ ] (M.fst $ interpret-tm p (S₁ ⊠ S₂) (S₁-ok , S₂-ok) Γ⊢p∈S)
 interpret-tm (snd .(T₁ ⊠ T₂) p) S S-ok (prod-ty T₁ T₂ , (T₁-ok , T₂-ok) , S≃T₂ , Γ⊢p∈T) =
-  ι[ ≃ᵗʸ-sound {T = S} S≃T₂ ] (M.snd $ interpret-tm p (T₁ ⊠ T₂) (T₁-ok , T₂-ok) Γ⊢p∈T)
-interpret-tm (refl T t) (Id R x y) R-ok T=Idtt = {!!}
+  ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] (M.snd $ interpret-tm p (T₁ ⊠ T₂) (T₁-ok , T₂-ok) Γ⊢p∈T)
+interpret-tm (refl T t) {Γ-ok = Γ-ok} (Id R x y) IdRxy-ok@(R-ok , x-ok , y-ok) (T=Idtt , IdTtt-ok@(T-ok , t-ok , t-ok')) =
+  ι[ ≃ᵗʸ-sound {T = Id R x y} {S = Id T t t} IdRxy-ok (T-ok , t-ok , t-ok) T=Idtt ] M-id.refl' (interpret-tm t T T-ok t-ok)
   -- Two different proofs of Γ ⊢ t ∈ T give rise to interpretations that are not definitionally equal,
   --   so in order to apply M.refl, we must prove that interpretation does not depend on well-typedness proof
   --   (or that any two proofs of well-typedness for the same term, context and type are equal).
   -- Andreas: The latter is probably true.
 
-≃ᵗʸ-sound {T = Nat} {S = Nat} e = ≅ᵗʸ-refl
-≃ᵗʸ-sound {T = Bool} {S = Bool} e = ≅ᵗʸ-refl
-≃ᵗʸ-sound {T = T1 ⇛ T2} {S = S1 ⇛ S2} e with T1 ≟ty S1 in T1=S1
-≃ᵗʸ-sound {T = T1 ⇛ T2} {S = S1 ⇛ S2} T2=S2 | ok tt = ⇛-cong (≃ᵗʸ-sound {T = T1} T1=S1) (≃ᵗʸ-sound {T = T2} T2=S2)
-≃ᵗʸ-sound {T = T1 ⊠ T2} {S = S1 ⊠ S2} e with T1 ≟ty S1 in T1=S1
-≃ᵗʸ-sound {T = T1 ⊠ T2} {S = S1 ⊠ S2} T2=S2 | ok tt = ⊠-cong (≃ᵗʸ-sound {T = T1} T1=S1) (≃ᵗʸ-sound {T = T2} T2=S2)
-≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} e = {!!}
+≃ᵗʸ-sound {T = Nat} {S = Nat} T-ok S-ok e = ≅ᵗʸ-refl
+≃ᵗʸ-sound {T = Bool} {S = Bool} T-ok S-ok e = ≅ᵗʸ-refl
+≃ᵗʸ-sound {T = T1 ⇛ T2} {S = S1 ⇛ S2} T-ok S-ok e with T1 ≟ty S1 in T1=S1
+≃ᵗʸ-sound {T = T1 ⇛ T2} {S = S1 ⇛ S2} (T1-ok , T2-ok) (S1-ok , S2-ok) T2=S2 | ok tt =
+  ⇛-cong (≃ᵗʸ-sound T1-ok S1-ok T1=S1) (≃ᵗʸ-sound T2-ok S2-ok T2=S2)
+≃ᵗʸ-sound {T = T1 ⊠ T2} {S = S1 ⊠ S2} T-ok S-ok e with T1 ≟ty S1 in T1=S1
+≃ᵗʸ-sound {T = T1 ⊠ T2} {S = S1 ⊠ S2} (T1-ok , T2-ok) (S1-ok , S2-ok) T2=S2 | ok tt =
+  ⊠-cong (≃ᵗʸ-sound T1-ok S1-ok T1=S1) (≃ᵗʸ-sound T2-ok S2-ok T2=S2)
+≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} T-ok S-ok e with T ≟ty S in T=S
+≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} T-ok S-ok e | ok tt with t1 ≟tm s1 in t1=s1
+≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} (T-ok , t1-ok , t2-ok) (S-ok , s1-ok , s2-ok) e | ok tt | ok tt =
+  Id-cong (≃ᵗʸ-sound T-ok S-ok T=S) (≃ᵗᵐ-sound t1 s1 T-ok S-ok t1-ok s1-ok T=S t1=s1) (≃ᵗᵐ-sound t2 s2 T-ok S-ok t2-ok s2-ok T=S e)
+
+≃ᵗᵐ-sound (ann t ∈ x) (ann s ∈ x₁) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (var x) (var x₁) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (TmExpr.lam x t) (TmExpr.lam x₁ s) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (TmExpr.app x t t₁) (TmExpr.app x₁ s s₁) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (lit x) (lit x₁) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound {T = Nat ⇛ Nat} {S = Nat ⇛ Nat} suc suc T-ok S-ok refl refl refl refl = {!!}
+≃ᵗᵐ-sound plus plus T-ok S-ok t-ok s-ok ty-eq refl = {!!}
+≃ᵗᵐ-sound true s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound false s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (if t t₁ t₂) s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (TmExpr.pair t t₁) s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (TmExpr.fst x t) s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (TmExpr.snd x t) s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
+≃ᵗᵐ-sound (refl x t) s T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
