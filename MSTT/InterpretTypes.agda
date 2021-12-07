@@ -45,7 +45,7 @@ interpret-ext-ty {m ∷ margs} F args = interpret-ext-ty (F ⟦ proj₁ args ⟧
 
 ⟦_⟧ctx : CtxExpr m → Ctx ⟦ m ⟧mode
 ⟦ ◇ ⟧ctx = M.◇
-⟦ Γ , _ ∈ T ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ T ⟧ty
+⟦ Γ , μ ∣ _ ∈ T ⟧ctx = ⟦ Γ ⟧ctx M.,, M.⟨ ⟦ μ ⟧modality ∣ ⟦ T ⟧ty ⟩
 ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = ⟦ Γ ⟧ctx M.,lock⟨ ⟦ μ ⟧modality ⟩
 
 ⟦⟧ty-natural : (T : TyExpr m) → IsClosedNatural ⟦ T ⟧ty
