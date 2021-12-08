@@ -49,8 +49,8 @@ private
 -- When checking and interpreting a variable x in a context Γ, all other variables
 --   to the right of x are pruned away, locks are kept (in a lock sequence).
 --   It is then tested whether the composition of all locks to the right of x
---   is equivalent to the unit modality 𝟙, after which the variable can be
---   interpreted via M.ξ.
+--   can be the codomain of the given 2-cell and the modality with which x is
+--   introduced in the context can be its domain.
 
 -- A value of type LockSeq m m' is a sequence of (compatible) modalities, the first
 --   of which has codomain mode m', and the last of which has domain mode m (i.e. they
@@ -84,42 +84,33 @@ record PruneCtxResult (Γ : CtxExpr m) (x : String) : Set where
   field
     n : ModeExpr
     Γ' : CtxExpr n
-    T : TyExpr n
+    n' : ModeExpr
+    μ : ModalityExpr n' n
+    T : TyExpr n'
     locks : LockSeq m n
-    σ : ⟦ Γ ⟧ctx ⇒ ⟦ apply-lock-seq (Γ' , x ∈ T) locks ⟧ctx
+    σ : ⟦ Γ ⟧ctx ⇒ ⟦ apply-lock-seq (Γ' , μ ∣ x ∈ T) locks ⟧ctx
 
 prune-ctx-until-var : (x : String) (Γ : CtxExpr m) → TCM (PruneCtxResult Γ x)
 prune-ctx-until-var x ◇ = type-error ("The variable " ++ x ++ " is not in scope.")
-prune-ctx-until-var x (Γ , y ∈ T) with x =string= y
-prune-ctx-until-var x (Γ , y ∈ T) | true = return (prune-ctx-result _ Γ T [] (M.id-subst _))
-prune-ctx-until-var x (Γ , y ∈ T) | false = do
-  prune-ctx-result n Γ' S locks σ ← prune-ctx-until-var x Γ
-  return (prune-ctx-result n Γ' S locks (σ M.⊚ M.π))
+prune-ctx-until-var x (Γ , μ ∣ y ∈ T) with x =string= y
+prune-ctx-until-var x (Γ , μ ∣ y ∈ T) | true = return (prune-ctx-result _ Γ _ μ T [] (M.id-subst _))
+prune-ctx-until-var x (Γ , μ ∣ y ∈ T) | false = do
+  prune-ctx-result n Γ' n' ρ S locks σ ← prune-ctx-until-var x Γ
+  return (prune-ctx-result _ Γ' n' ρ S locks (σ M.⊚ M.π))
 prune-ctx-until-var x (Γ ,lock⟨ μ ⟩) = do
-  prune-ctx-result n Γ' S locks σ ← prune-ctx-until-var x Γ
-  return (prune-ctx-result n Γ' S (locks ,, μ) (M.lock-fmap ⟦ μ ⟧modality σ))
+  prune-ctx-result n Γ' n' ρ S locks σ ← prune-ctx-until-var x Γ
+  return (prune-ctx-result _ Γ' n' ρ S (locks ,, μ) (M.lock-fmap ⟦ μ ⟧modality σ))
 
-infer-interpret-var : String → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
-infer-interpret-var {m = m} x Γ = do
-  prune-ctx-result n Γ' T locks σ ← prune-ctx-until-var x Γ
-  refl ← m ≟mode n
-  locks=𝟙 ← modify-error-msg (_++ " when looking for variable " ++ x ++ " in context " ++ show-ctx Γ)
-                             (compose-lock-seq locks ≃ᵐ? 𝟙)
-  return (T , (ι⁻¹[ ≅ᵗʸ-trans (ty-subst-seq-cong (π ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty ≅ˢ-refl) (closed-natural {{⟦⟧ty-natural T}} _) ]
-              ((ιc[ ≅ᶜ-trans (apply-compose-lock-seq (Γ' , x ∈ T) locks)
-                             (eq-lock (≅ᵐ-trans locks=𝟙 𝟙-interpretation) ⟦ Γ' , x ∈ T ⟧ctx) ]' ξ) [ σ ]')))
-
-
---------------------------------------------------
--- Helper for checking + interpreting of the modal eliminator
-
-from-telescope-subst : {Γ : CtxExpr m} (Δ : Telescope m) → ⟦ Γ +tel Δ ⟧ctx ⇒ ⟦ Γ ⟧ctx
-from-telescope-subst [] = id-subst _
-from-telescope-subst (Δ ,, v ∈ S) = from-telescope-subst Δ ⊚ π
-
-weaken-sem-term : {Γ : CtxExpr m} (Δ : Telescope m) (T : TyExpr m) →
-                  Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty → Tm ⟦ Γ +tel Δ ⟧ctx ⟦ T ⟧ty
-weaken-sem-term Δ T t = ι⁻¹[ closed-natural {{⟦⟧ty-natural T}} _ ] (t [ from-telescope-subst Δ ]')
+infer-interpret-var : String → TwoCellExpr → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
+infer-interpret-var {m = m} x α Γ = do
+  prune-ctx-result n Γ' n' μ T locks σ ← prune-ctx-until-var x Γ
+  refl ← m ≟mode n'
+  ⟦α⟧ ← ⟦ α ∈ μ ⇒ compose-lock-seq locks ⟧two-cell
+  return (T , ι⁻¹[ ≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty ≅ˢ-refl) (closed-natural {{⟦⟧ty-natural T}} _) ] (
+              (ιc[ apply-compose-lock-seq (Γ' , μ ∣ x ∈ T) locks ]' (
+                Modality.mod-elim ⟦ μ ⟧modality
+                (ι⁻¹[ closed-natural {{⟦⟧ty-natural ⟨ μ ∣ T ⟩}} _ ] ξ) [ transf-op (transf ⟦α⟧) ⟦ Γ' , μ ∣ x ∈ T ⟧ctx ]'))
+              [ σ ]'))
 
 
 --------------------------------------------------
@@ -133,10 +124,11 @@ infer-interpret (ann t ∈ T) Γ = do
   T' , ⟦t⟧ ← infer-interpret t Γ
   T=T' ← T ≃ᵗʸ? T'
   return (T , ι[ T=T' ] ⟦t⟧)
-infer-interpret (var x) Γ = infer-interpret-var x Γ
+infer-interpret (var x α) Γ = infer-interpret-var x α Γ
 infer-interpret (lam[ x ∈ T ] b) Γ = do
-  S , ⟦b⟧ ← infer-interpret b (Γ , x ∈ T)
-  return (T ⇛ S , M.lam ⟦ T ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧))
+  S , ⟦b⟧ ← infer-interpret b (Γ , 𝟙 ∣ x ∈ T)
+  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-mod-closed 𝟙-interpretation ⟦ T ⟧ty {{⟦⟧ty-natural T}}) ≅ᵗʸ-refl ]
+                  M.lam ⟦ ⟨ 𝟙 ∣ T ⟩ ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧))
 infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
   func-ty dom cod ← is-func-ty T1
@@ -176,20 +168,14 @@ infer-interpret (mod-intro μ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
   return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (mod-elim {m} {mμ} μ t) Γ = do
-  locked-ctx mρ Γ' ρ Δ ← is-locked-ctx Γ
+  {!locked-ctx mρ Γ' ρ Δ ← is-locked-ctx Γ
   refl ← mμ ≟mode mρ
   ρ=μ ← ρ ≃ᵐ? μ
   S , ⟦t⟧ ← infer-interpret t Γ'
   modal-ty mκ κ T ← is-modal-ty S
   refl ← m ≟mode mκ
   μ=κ ← μ ≃ᵐ? κ
-  return (T , weaken-sem-term Δ T (M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧)))
-infer-interpret (coe {mμ} μ ρ α t) Γ = do
-  T , ⟦t⟧ ← infer-interpret t Γ
-  modal-ty mκ κ A ← is-modal-ty T
-  refl ← mμ ≟mode mκ
-  μ=κ ← μ ≃ᵐ? κ
-  return (⟨ ρ ∣ A ⟩ , coe-closed ⟦ α ⟧two-cell {{⟦⟧ty-natural A}} (ι[ eq-mod-closed μ=κ ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
+  return (T , weaken-sem-term Δ T (M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧)))!}
 infer-interpret (ext c args) Γ = infer-interpret-ext-args (infer-interpret-code c) args Γ
 
 infer-interpret-ext-args {[]}        f args Γ = f Γ

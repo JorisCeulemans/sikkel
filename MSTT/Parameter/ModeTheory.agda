@@ -30,5 +30,7 @@ record ModeTheory : Set₁ where
                        ⟦ μ ⓜ ρ ⟧modality ≅ᵐ ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
     _≃ᵐ?_ : ∀ {m m'} (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
 
-    TwoCellExpr : ∀ {m m'} → ModalityExpr m m' → ModalityExpr m m' → Set
-    ⟦_⟧two-cell : ∀ {m m'} {μ ρ : ModalityExpr m m'} → TwoCellExpr μ ρ → TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality
+    TwoCellExpr : Set
+    id-cell : TwoCellExpr
+    ⟦_∈_⇒_⟧two-cell : TwoCellExpr → ∀ {m m'} (μ ρ : ModalityExpr m m') →
+                      TCM (TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality)

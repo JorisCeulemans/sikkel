@@ -31,7 +31,7 @@ infixl 50 _∙_
 infixr 4 lam[_∈_]_
 data TmExpr where
   ann_∈_ : TmExpr m → TyExpr m → TmExpr m
-  var : String → TmExpr m
+  var : String → TwoCellExpr → TmExpr m
   lam[_∈_]_ : String → TyExpr m → TmExpr m → TmExpr m
   _∙_ : TmExpr m → TmExpr m → TmExpr m
   lit : ℕ → TmExpr m
@@ -43,7 +43,6 @@ data TmExpr where
   fst snd : TmExpr m → TmExpr m
   mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
   mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
-  coe : (μ ρ : ModalityExpr m m') → TwoCellExpr μ ρ → TmExpr m' → TmExpr m'
   ext : (code : TmExtCode margs m) → TmExtArgs margs → TmExpr m
     -- ^ Every code in the universe of tm-ext gives rise to a new term constructor,
     --   whose arguments are expressed by TmExtArgs.
@@ -51,4 +50,6 @@ data TmExpr where
 TmExtArgs [] = ⊤
 TmExtArgs (m ∷ margs) = TmExpr m × TmExtArgs margs
 
-syntax coe μ ρ α t = coe[ α ∈ μ ⇒ ρ ] t
+
+svar : String → TmExpr m
+svar x = var x id-cell
