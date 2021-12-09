@@ -20,7 +20,7 @@ open ModeTheory mt
 open TmExt tm-ext
 
 private variable
-  m m' : ModeExpr
+  m m' m'' : ModeExpr
   margs : List ModeExpr
 
 
@@ -41,8 +41,8 @@ data TmExpr where
   if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
   pair : TmExpr m → TmExpr m → TmExpr m
   fst snd : TmExpr m → TmExpr m
-  mod-intro : ModalityExpr m m' → TmExpr m → TmExpr m'
-  mod-elim : ModalityExpr m m' → TmExpr m' → TmExpr m
+  mod : ModalityExpr m m' → TmExpr m → TmExpr m'
+  mod-elim : ModalityExpr m' m → ModalityExpr m'' m' → String → TmExpr m' → TmExpr m → TmExpr m
   ext : (code : TmExtCode margs m) → TmExtArgs margs → TmExpr m
     -- ^ Every code in the universe of tm-ext gives rise to a new term constructor,
     --   whose arguments are expressed by TmExtArgs.
@@ -53,3 +53,10 @@ TmExtArgs (m ∷ margs) = TmExpr m × TmExtArgs margs
 
 svar : String → TmExpr m
 svar x = var x id-cell
+
+syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod[ μ ∣ x ] ← t in' s
+
+mod-elim' : ModalityExpr m' m → String → TmExpr m → TmExpr m → TmExpr m
+mod-elim' = mod-elim 𝟙
+
+syntax mod-elim' μ x t s = let' mod[ μ ∣ x ] ← t in' s

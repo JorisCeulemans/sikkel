@@ -164,18 +164,20 @@ infer-interpret (snd p) Γ = do
   P , ⟦p⟧ ← infer-interpret p Γ
   prod-ty T S ← is-prod-ty P
   return (S , M.snd $ ⟦p⟧)
-infer-interpret (mod-intro μ t) Γ = do
+infer-interpret (mod μ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
   return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)
-infer-interpret (mod-elim {m} {mμ} μ t) Γ = do
-  {!locked-ctx mρ Γ' ρ Δ ← is-locked-ctx Γ
-  refl ← mμ ≟mode mρ
-  ρ=μ ← ρ ≃ᵐ? μ
-  S , ⟦t⟧ ← infer-interpret t Γ'
-  modal-ty mκ κ T ← is-modal-ty S
-  refl ← m ≟mode mκ
-  μ=κ ← μ ≃ᵐ? κ
-  return (T , weaken-sem-term Δ T (M.mod-elim ⟦ ρ ⟧modality (ι[ eq-mod-closed (≅ᵐ-trans ρ=μ μ=κ) ⟦ T ⟧ty {{⟦⟧ty-natural T}} ] ⟦t⟧)))!}
+infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
+  T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ ρ ⟩)
+  modal-ty mμ' μ' A ← is-modal-ty T
+  refl ← mμ ≟mode mμ'
+  μ=μ' ← μ ≃ᵐ? μ'
+  S , ⟦s⟧ ← infer-interpret s (Γ , ρ ⓜ μ ∣ x ∈ A)
+  return (S , ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} _ ] (
+              ⟦s⟧ [ term-to-subst (ι[ eq-mod-closed (ⓜ-interpretation ρ μ) ⟦ A ⟧ty {{⟦⟧ty-natural A}} ]
+                                   Modality.mod-intro ⟦ ρ ⟧modality (
+                                   ι[ eq-mod-closed μ=μ' ⟦ A ⟧ty {{⟦⟧ty-natural A}} ] ⟦t⟧))
+                  ]'))
 infer-interpret (ext c args) Γ = infer-interpret-ext-args (infer-interpret-code c) args Γ
 
 infer-interpret-ext-args {[]}        f args Γ = f Γ
