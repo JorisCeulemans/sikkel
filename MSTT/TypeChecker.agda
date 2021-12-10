@@ -164,7 +164,7 @@ infer-interpret (snd p) Γ = do
   P , ⟦p⟧ ← infer-interpret p Γ
   prod-ty T S ← is-prod-ty P
   return (S , M.snd $ ⟦p⟧)
-infer-interpret (mod μ t) Γ = do
+infer-interpret (mod⟨ μ ⟩ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
   return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
