@@ -29,9 +29,10 @@ import Applications.GuardedRecursion.Model.Modalities
 import Applications.GuardedRecursion.Model.Streams.Guarded
 import Applications.GuardedRecursion.Model.Streams.Standard
 import Applications.GuardedRecursion.MSTT
-import Applications.GuardedRecursion.StreamsExamples
-import Applications.GuardedRecursion.ModalityInteractionTest
-
+-- import Applications.GuardedRecursion.StreamsExamples
+-- import Applications.GuardedRecursion.ModalityInteractionTest
+{-
 import Applications.Parametricity.Model
 import Applications.Parametricity.MSTT
 import Applications.Parametricity.IntegerExample
+-}

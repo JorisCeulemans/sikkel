@@ -10,7 +10,7 @@ module MSTT.InterpretTypes (mt : ModeTheory) (ty-ext : TyExt mt) where
 open import Data.List
 open import Data.Product using (_×_; proj₁; proj₂)
 
-open import Model.CwF-Structure as M hiding (◇; _,,_; _ⓣ-vert_; _ⓣ-hor_)
+open import Model.CwF-Structure as M hiding (◇; _,,_)
 open import Model.Type.Discrete as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)

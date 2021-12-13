@@ -4,6 +4,8 @@
 
 module Model.Modality where
 
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Type.Function
@@ -16,7 +18,7 @@ private
     C D E : BaseCategory
 
 infix 1 _≅ᵐ_
-infixl 20 _ⓜ_
+infixl 20 _ⓜ_ _ⓣ-vert_ _ⓣ-hor_
 
 
 --------------------------------------------------
@@ -232,12 +234,36 @@ mod-η (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-intro-cong μ (mod-η ρ _)) (mod-η
 record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
   field
     eq-lock : (Γ : Ctx D) → Γ ,lock⟨ μ ⟩ ≅ᶜ Γ ,lock⟨ ρ ⟩
+    eq-lock-natural-to : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) →
+                         to (eq-lock Γ) ⊚ lock-fmap ρ σ ≅ˢ lock-fmap μ σ ⊚ to (eq-lock Δ)
     eq-mod-tyʳ : {Γ : Ctx D} (T : Ty (Γ ,lock⟨ μ ⟩)) → ⟨ μ ∣ T ⟩ ≅ᵗʸ ⟨ ρ ∣ T [ to (eq-lock Γ) ] ⟩
 
     -- In the future, we will probably need an equivalence requirement for the modal term former,
     --  such as the following. For simplicity, we currently omit this.
     {-eq-mod-introʳ : {Γ : Ctx D} {T : Ty (lock μ Γ)} (t : Tm (lock μ Γ) T) →
                    mod-intro μ t ≅ᵗᵐ ι[ eq-mod-tyʳ T ] mod-intro ρ (t [ to (eq-lock Γ) ]')-}
+
+  eq-lock-natural-from : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) →
+                         from (eq-lock Γ) ⊚ lock-fmap μ σ ≅ˢ lock-fmap ρ σ ⊚ from (eq-lock Δ)
+  eq-lock-natural-from {Δ} {Γ} σ = begin
+    from (eq-lock Γ) ⊚ lock-fmap μ σ
+      ≅˘⟨ ⊚-id-substʳ _ ⟩
+    (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ id-subst (lock μ Δ)
+      ≅˘⟨ ⊚-congˡ (isoˡ (eq-lock Δ)) ⟩
+    (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ (to (eq-lock Δ) ⊚ from (eq-lock Δ))
+      ≅˘⟨ ⊚-assoc ⟩
+    ((from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ to (eq-lock Δ)) ⊚ from (eq-lock Δ)
+      ≅⟨ ⊚-congʳ ⊚-assoc ⟩
+    (from (eq-lock Γ) ⊚ (lock-fmap μ σ ⊚ to (eq-lock Δ))) ⊚ from (eq-lock Δ)
+      ≅˘⟨ ⊚-congʳ (⊚-congˡ (eq-lock-natural-to σ)) ⟩
+    (from (eq-lock Γ) ⊚ (to (eq-lock Γ) ⊚ lock-fmap ρ σ)) ⊚ from (eq-lock Δ)
+      ≅˘⟨ ⊚-congʳ ⊚-assoc ⟩
+    ((from (eq-lock Γ) ⊚ to (eq-lock Γ)) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
+      ≅⟨ ⊚-congʳ (⊚-congʳ (isoʳ (eq-lock Γ))) ⟩
+    (id-subst (lock ρ Γ) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
+      ≅⟨ ⊚-congʳ (⊚-id-substˡ _) ⟩
+    lock-fmap ρ σ ⊚ from (eq-lock Δ) ∎
+    where open ≅ˢ-Reasoning
 
   eq-mod-tyˡ : {Γ : Ctx D} (T : Ty (lock ρ Γ)) → ⟨ μ ∣ T [ from (eq-lock Γ) ] ⟩ ≅ᵗʸ ⟨ ρ ∣ T ⟩
   eq-mod-tyˡ {Γ = Γ} T = begin
@@ -263,14 +289,29 @@ open _≅ᵐ_ public
 
 ≅ᵐ-refl : ∀ {C D} → {μ : Modality C D} → μ ≅ᵐ μ
 eq-lock (≅ᵐ-refl {μ = μ}) Γ = ≅ᶜ-refl
+eq-lock-natural-to (≅ᵐ-refl {μ = μ}) σ = ≅ˢ-trans (⊚-id-substˡ _) (≅ˢ-sym (⊚-id-substʳ _))
 eq-mod-tyʳ (≅ᵐ-refl {μ = μ}) T = mod-cong μ (≅ᵗʸ-sym (ty-subst-id T))
 
 ≅ᵐ-sym : ∀ {C D} {μ ρ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ μ
 eq-lock (≅ᵐ-sym e) Γ = ≅ᶜ-sym (eq-lock e Γ)
+eq-lock-natural-to (≅ᵐ-sym e) σ = eq-lock-natural-from e σ
 eq-mod-tyʳ (≅ᵐ-sym e) T = ≅ᵗʸ-sym (eq-mod-tyˡ e T)
 
 ≅ᵐ-trans : ∀ {C D} {μ ρ κ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ κ → μ ≅ᵐ κ
 eq-lock (≅ᵐ-trans μ=ρ ρ=κ) Γ = ≅ᶜ-trans (eq-lock μ=ρ Γ) (eq-lock ρ=κ Γ)
+eq-lock-natural-to (≅ᵐ-trans {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
+  (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ⊚ lock-fmap κ σ
+    ≅⟨ ⊚-assoc ⟩
+  to (eq-lock μ=ρ _) ⊚ (to (eq-lock ρ=κ _) ⊚ lock-fmap κ σ)
+    ≅⟨ ⊚-congˡ (eq-lock-natural-to ρ=κ σ) ⟩
+  to (eq-lock μ=ρ _) ⊚ (lock-fmap ρ σ ⊚ to (eq-lock ρ=κ _))
+    ≅˘⟨ ⊚-assoc ⟩
+  (to (eq-lock μ=ρ _) ⊚ lock-fmap ρ σ) ⊚ to (eq-lock ρ=κ _)
+    ≅⟨ ⊚-congʳ (eq-lock-natural-to μ=ρ σ) ⟩
+  (lock-fmap μ σ ⊚ to (eq-lock μ=ρ _)) ⊚ to (eq-lock ρ=κ _)
+    ≅⟨ ⊚-assoc ⟩
+  lock-fmap μ σ ⊚ (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ∎
+  where open ≅ˢ-Reasoning
 eq-mod-tyʳ (≅ᵐ-trans {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T = begin
   ⟨ μ ∣ T ⟩
     ≅⟨ eq-mod-tyʳ μ=ρ T ⟩
@@ -283,20 +324,24 @@ eq-mod-tyʳ (≅ᵐ-trans {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T
 
 𝟙-identityʳ : (μ : Modality C D) → μ ⓜ 𝟙 ≅ᵐ μ
 eq-lock (𝟙-identityʳ μ) Γ = ≅ᶜ-refl
+eq (eq-lock-natural-to (𝟙-identityʳ μ) σ) _ = refl
 eq-mod-tyʳ (𝟙-identityʳ μ) T = ≅ᵗʸ-sym (mod-cong μ (ty-subst-id T))
 
 𝟙-identityˡ : (μ : Modality C D) → 𝟙 ⓜ μ ≅ᵐ μ
 eq-lock (𝟙-identityˡ μ) Γ = ≅ᶜ-refl
+eq (eq-lock-natural-to (𝟙-identityˡ μ) σ) _ = refl
 eq-mod-tyʳ (𝟙-identityˡ μ) T = ≅ᵗʸ-sym (mod-cong μ (ty-subst-id T))
 
 ⓜ-assoc : {C₁ C₂ C₃ C₄ : BaseCategory}
            (μ₃₄ : Modality C₃ C₄) (μ₂₃ : Modality C₂ C₃) (μ₁₂ : Modality C₁ C₂) →
            (μ₃₄ ⓜ μ₂₃) ⓜ μ₁₂ ≅ᵐ μ₃₄ ⓜ (μ₂₃ ⓜ μ₁₂)
 eq-lock (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) Γ = ≅ᶜ-refl
+eq (eq-lock-natural-to (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) σ) _ = refl
 eq-mod-tyʳ (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) T = ≅ᵗʸ-sym (mod-cong μ₃₄ (mod-cong μ₂₃ (mod-cong μ₁₂ (ty-subst-id T))))
 
 ⓜ-congˡ : (ρ : Modality D E) {μ μ' : Modality C D} → μ ≅ᵐ μ' → ρ ⓜ μ ≅ᵐ ρ ⓜ μ'
 eq-lock (ⓜ-congˡ ρ μ=μ') Γ = eq-lock μ=μ' (Γ ,lock⟨ ρ ⟩)
+eq-lock-natural-to (ⓜ-congˡ ρ {μ} {μ'} μ=μ') σ = eq-lock-natural-to μ=μ' (lock-fmap ρ σ)
 eq-mod-tyʳ (ⓜ-congˡ ρ μ=μ') T = mod-cong ρ (eq-mod-tyʳ μ=μ' T)
 
 ⓜ-congʳ : {ρ ρ' : Modality D E} (μ : Modality C D) → ρ ≅ᵐ ρ' → ρ ⓜ μ ≅ᵐ ρ' ⓜ μ
@@ -304,6 +349,15 @@ from (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = lock-fmap μ (from (eq-lock ρ=ρ' Γ
 to (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = lock-fmap μ (to (eq-lock ρ=ρ' Γ))
 isoˡ (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoˡ (eq-lock ρ=ρ' Γ))
 isoʳ (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoʳ (eq-lock ρ=ρ' Γ))
+eq-lock-natural-to (ⓜ-congʳ {ρ = ρ} {ρ'} μ ρ=ρ') σ = begin
+  lock-fmap μ (to (eq-lock ρ=ρ' _)) ⊚ lock-fmap μ (lock-fmap ρ' σ)
+    ≅˘⟨ lock-fmap-⊚ μ _ _ ⟩
+  lock-fmap μ (to (eq-lock ρ=ρ' _) ⊚ lock-fmap ρ' σ)
+    ≅⟨ lock-fmap-cong μ (eq-lock-natural-to ρ=ρ' σ) ⟩
+  lock-fmap μ (lock-fmap ρ σ ⊚ to (eq-lock ρ=ρ' _))
+    ≅⟨ lock-fmap-⊚ μ _ _ ⟩
+  lock-fmap μ (lock-fmap ρ σ) ⊚ lock-fmap μ (to (eq-lock ρ=ρ' _)) ∎
+  where open ≅ˢ-Reasoning
 eq-mod-tyʳ (ⓜ-congʳ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T = begin
   ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩
     ≅⟨ eq-mod-tyʳ ρ=ρ' ⟨ μ ∣ T ⟩ ⟩
@@ -358,3 +412,16 @@ module _ {μ ρ : Modality C D} (α : TwoCell μ ρ) where
 
   coe-closed : {T : ClosedTy C} {{_ : IsClosedNatural T}} {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
   coe-closed {T = T} t = ι⁻¹[ mod-cong ρ (closed-natural {U = T} (transf-op (transf α) _)) ] coe t
+
+
+-- Composition of 2-cells (both vertical and horizontal)
+_ⓣ-vert_ : {μ ρ κ : Modality C D} → TwoCell μ ρ → TwoCell κ μ → TwoCell κ ρ
+transf (α ⓣ-vert β) = transf β ⓝ-vert transf α
+
+_ⓣ-hor_ : {μ μ' : Modality D E} {ρ ρ' : Modality C D} → TwoCell μ μ' → TwoCell ρ ρ' → TwoCell (μ ⓜ ρ) (μ' ⓜ ρ')
+transf (α ⓣ-hor β) = transf β ⓝ-hor transf α
+
+-- An equivalence of modalities gives rise to an invertible 2-cell.
+≅ᵐ-to-2-cell : {μ ρ : Modality C D} → μ ≅ᵐ ρ → TwoCell μ ρ
+transf-op (transf (≅ᵐ-to-2-cell μ=ρ)) Γ = to (eq-lock μ=ρ Γ)
+naturality (transf (≅ᵐ-to-2-cell μ=ρ)) = eq-lock-natural-to μ=ρ

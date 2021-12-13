@@ -8,6 +8,7 @@ open import Model.Modality using (≅ᵐ-refl)
 
 open import MSTT.Parameter.ModeTheory
 
+open import Applications.GuardedRecursion.MSTT.ModeTheory.TwoCells
 
 -- Re-exporting the expressions and equality tests of the mode theory.
 open import Applications.GuardedRecursion.MSTT.ModeTheory.Expressions public
@@ -27,4 +28,5 @@ ModeTheory.𝟙-interpretation GR-mode-theory = ≅ᵐ-refl
 ModeTheory.ⓜ-interpretation GR-mode-theory = λ _ _ → ≅ᵐ-refl
 ModeTheory._≃ᵐ?_ GR-mode-theory = _≃ᵐ?_
 ModeTheory.TwoCellExpr GR-mode-theory = TwoCellExpr
-ModeTheory.⟦_⟧two-cell GR-mode-theory = ⟦_⟧two-cell
+ModeTheory.id-cell GR-mode-theory = id-cell
+ModeTheory.⟦_∈_⇒_⟧two-cell GR-mode-theory = check-two-cell

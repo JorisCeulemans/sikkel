@@ -8,8 +8,8 @@ module Applications.GuardedRecursion.MSTT.ModeTheory.Expressions where
 open import Data.String
 
 open import Model.BaseCategory as M hiding (★; ω)
-open import Model.CwF-Structure as M hiding (_ⓣ-vert_; _ⓣ-hor_)
-open import Model.Modality as M hiding (𝟙; _ⓜ_)
+open import Model.CwF-Structure as M
+open import Model.Modality as M hiding (𝟙; _ⓜ_; _ⓣ-vert_; _ⓣ-hor_)
 open import Applications.GuardedRecursion.Model.Modalities as M hiding
   (constantly; forever; later; 𝟙≤later; constantly∘forever≤𝟙)
 
@@ -32,15 +32,19 @@ data ModalityExpr : ModeExpr → ModeExpr → Set where
   forever : ModalityExpr ω ★
   later : ModalityExpr ω ω
 
-data TwoCellExpr : ModalityExpr m m' → ModalityExpr m m' → Set where
-  id-cell : (μ : ModalityExpr m m') → TwoCellExpr μ μ
-  _ⓣ-vert_ : {μ ρ κ : ModalityExpr m m'} → TwoCellExpr ρ κ → TwoCellExpr μ ρ → TwoCellExpr μ κ
+infixl 5 _ⓣ-hor_
+infixl 6 _ⓣ-vert_
+data TwoCellExpr : Set where
+  id-cell : TwoCellExpr
+  _ⓣ-vert_ : TwoCellExpr → TwoCellExpr → TwoCellExpr
     -- ^ Vertical composition of 2-cells, not used in examples.
-  _ⓣ-hor_ : {μ μ' : ModalityExpr m' m''} {ρ ρ' : ModalityExpr m m'} →
-            TwoCellExpr μ μ' → TwoCellExpr ρ ρ' → TwoCellExpr (μ ⓜ ρ) (μ' ⓜ ρ')
+  _ⓣ-hor_ : TwoCellExpr → TwoCellExpr → TwoCellExpr
     -- ^ Horizontal composition of 2-cells, not used in examples.
-  𝟙≤later : TwoCellExpr 𝟙 later
-  constantly∘forever≤𝟙 : TwoCellExpr (constantly ⓜ forever) 𝟙
+  𝟙≤later : TwoCellExpr
+  constantly∘forever≤𝟙 : TwoCellExpr
+  ann_∈_⇒_ : TwoCellExpr → ModalityExpr m m' → ModalityExpr m m' → TwoCellExpr
+    -- ^ Used to annotate a 2-cell with its domain and codomain. E.g. useful in
+    --   horizontal composition of the trivial 2-cell, which is not inferrable (see below).
 
 
 --------------------------------------------------
@@ -59,7 +63,7 @@ show-modality later = "later"
 
 
 --------------------------------------------------
--- Interpretation of modes, modalities and 2-cells in the presheaf model
+-- Interpretation of modes and modalities in the presheaf model
 
 ⟦_⟧mode : ModeExpr → BaseCategory
 ⟦ ★ ⟧mode = M.★
@@ -71,10 +75,3 @@ show-modality later = "later"
 ⟦ constantly ⟧modality = M.constantly
 ⟦ forever ⟧modality = M.forever
 ⟦ later ⟧modality = M.later
-
-⟦_⟧two-cell : {μ ρ : ModalityExpr m m'} → TwoCellExpr μ ρ → TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality
-⟦ id-cell _ ⟧two-cell = two-cell (id-ctx-transf _)
-⟦ α ⓣ-vert β ⟧two-cell = two-cell (transf ⟦ β ⟧two-cell M.ⓣ-vert transf ⟦ α ⟧two-cell)
-⟦ α ⓣ-hor β ⟧two-cell = two-cell (transf ⟦ β ⟧two-cell M.ⓣ-hor transf ⟦ α ⟧two-cell)
-⟦ 𝟙≤later ⟧two-cell = M.𝟙≤later
-⟦ constantly∘forever≤𝟙 ⟧two-cell = M.constantly∘forever≤𝟙

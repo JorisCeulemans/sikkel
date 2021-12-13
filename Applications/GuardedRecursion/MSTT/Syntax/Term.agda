@@ -19,8 +19,8 @@ open GRTerm public hiding (ext)
 
 pattern constantly-if c t f = ext constantly-if-code (c , (t , (f , tt)))
 
-infixr 4 löb[_∈▻_]_
-pattern löb[_∈▻_]_ x T t = ext (löb-code x T) (t , tt)
+infixr 4 löb[later∣_∈_]_
+pattern löb[later∣_∈_]_ x T t = ext (löb-code x T) (t , tt)
 
 pattern g-cons A = ext (g-cons-code A) tt
 pattern g-head A = ext (g-head-code A) tt

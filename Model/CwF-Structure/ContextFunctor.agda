@@ -109,9 +109,9 @@ naturality (id-ctx-transf Φ) σ = ≅ˢ-trans (⊚-id-substˡ (ctx-fmap Φ σ))
                                           (≅ˢ-sym (⊚-id-substʳ (ctx-fmap Φ σ)))
 
 -- Vertical composition of natural transformations.
-_ⓣ-vert_ : {Φ Ψ Ω : CtxFunctor C D} → CtxNatTransf Ψ Ω → CtxNatTransf Φ Ψ → CtxNatTransf Φ Ω
-transf-op (η ⓣ-vert ζ) Γ = transf-op η Γ ⊚ transf-op ζ Γ
-naturality (_ⓣ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
+_ⓝ-vert_ : {Φ Ψ Ω : CtxFunctor C D} → CtxNatTransf Ψ Ω → CtxNatTransf Φ Ψ → CtxNatTransf Φ Ω
+transf-op (η ⓝ-vert ζ) Γ = transf-op η Γ ⊚ transf-op ζ Γ
+naturality (_ⓝ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
   (transf-op η Γ ⊚ transf-op ζ Γ) ⊚ ctx-fmap Φ σ
     ≅⟨ ⊚-assoc ⟩
   transf-op η Γ ⊚ (transf-op ζ Γ ⊚ ctx-fmap Φ σ)
@@ -126,10 +126,10 @@ naturality (_ⓣ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
   where open ≅ˢ-Reasoning
 
 -- Horizontal composition of natural transformations
-_ⓣ-hor_ : {C1 C2 C3 : BaseCategory} {Φ Φ' : CtxFunctor C2 C3} {Ψ Ψ' : CtxFunctor C1 C2} →
+_ⓝ-hor_ : {C1 C2 C3 : BaseCategory} {Φ Φ' : CtxFunctor C2 C3} {Ψ Ψ' : CtxFunctor C1 C2} →
           CtxNatTransf Φ Φ' → CtxNatTransf Ψ Ψ' → CtxNatTransf (Φ ⓕ Ψ) (Φ' ⓕ Ψ')
-transf-op (_ⓣ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) Γ = transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)
-naturality (_ⓣ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begin
+transf-op (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) Γ = transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)
+naturality (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begin
   (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ)
     ≅⟨ ⊚-assoc ⟩
   transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (transf-op ζ Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ))

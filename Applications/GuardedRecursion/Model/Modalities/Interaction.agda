@@ -52,6 +52,7 @@ eq (isoʳ (forever-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ _ → refl
 
 forever-later : forever ⓜ later ≅ᵐ forever
 eq-lock forever-later = earlier-constantly-ctx
+eq (eq-lock-natural-to forever-later σ) δ = refl
 eq-mod-tyʳ forever-later = forever-later-tyʳ
 
 forever-later'-ty : {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) →
@@ -86,6 +87,7 @@ eq (isoʳ (forever-constantly-tyʳ T)) _ = refl
 
 forever-constantly : forever ⓜ constantly ≅ᵐ 𝟙
 eq-lock forever-constantly = now-constantly-ctx
+eq (eq-lock-natural-to forever-constantly σ) δ = refl
 eq-mod-tyʳ forever-constantly = forever-constantly-tyʳ
 
 now-constantly-ctx-intro : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
