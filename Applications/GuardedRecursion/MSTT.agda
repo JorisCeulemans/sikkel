@@ -14,3 +14,4 @@ open import Applications.GuardedRecursion.MSTT.Syntax.Term public
 open import MSTT.TCMonad public using (type-error ; ok)
 open import MSTT.TypeChecker.ResultType GR-mode-theory GR-ty-ext public
 open import MSTT.TypeChecker GR-mode-theory GR-ty-ext GR-tm-ext public
+open import MSTT.BasicOperations GR-mode-theory GR-ty-ext GR-tm-ext public

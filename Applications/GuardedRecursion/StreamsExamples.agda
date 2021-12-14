@@ -10,7 +10,7 @@ open import Data.Unit
 open import Data.Vec hiding (take; head; tail)
 open import Relation.Binary.PropositionalEquality
 
-open import Model.CwF-Structure renaming (◇ to ′◇)
+open import Model.CwF-Structure renaming (◇ to ′◇) hiding (_⇒_)
 open import Model.Modality renaming (⟨_∣_⟩ to ′⟨_∣_⟩) using ()
 open import Model.Type.Discrete renaming (Nat' to ′Nat'; Bool' to ′Bool')
 open import Model.Type.Function hiding (lam; lam[_∈_]_) renaming (_⇛_ to _′⇛_)
@@ -41,7 +41,7 @@ g-tailB = g-tail Bool'
 --------------------------------------------------
 -- Definition of some helper functions that are used a lot
 --   in the example programs with streams.
-
+{-
 -- If Γ ⊢ f : ⟨ μ ∣ A ⇛ B ⟩ and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⊛⟨ μ ⟩ t : ⟨ μ ∣ B ⟩.
 infixl 5 _⊛⟨_⟩_
 _⊛⟨_⟩_ : ∀ {m m'} → TmExpr m → ModalityExpr m' m → TmExpr m → TmExpr m
@@ -51,19 +51,19 @@ f ⊛⟨ μ ⟩ t = mod-intro μ (mod-elim μ f ∙ mod-elim μ t)
 infixl 5 _⟨$-_⟩_
 _⟨$-_⟩_ : ∀ {m m'} → TmExpr m' → ModalityExpr m' m → TmExpr m → TmExpr m
 f ⟨$- μ ⟩ t = mod-intro μ (f ∙ mod-elim μ t)
-
+-}
 -- If Γ ⊢ t : T, then Γ ⊢ next t : ▻ T.
 -- Note that this is different from (mod-intro later t), where t would be type-checked
 --   in context Γ ,lock⟨ later ⟩.
 next : TmExpr ω → TmExpr ω
-next t = coe[ 𝟙≤later ∈ 𝟙 ⇒ later ] mod-intro 𝟙 t
+next t = coe[ 𝟙≤later ∈ 𝟙 ⇒ later ] triv t
 
 -- If Γ ⊢ f : A ⇛ B and Γ ⊢ t : ▻ A, then Γ ⊢ f ⟨$-later⟩' t : ▻ B.
 -- The difference with f ⟨$- later ⟩ t is that f is type-checked in Γ and not Γ ,lock⟨ later ⟩.
 infixl 5 _⟨$-later⟩'_
 _⟨$-later⟩'_ : TmExpr ω → TmExpr ω → TmExpr ω
 f ⟨$-later⟩' t = next f ⊛⟨ later ⟩ t
-
+{-
 -- Γ ⊢ lift▻ T S : (T ⇛ S) ⇛ ▻ T ⇛ ▻ S.
 lift▻ : TyExpr ω → TyExpr ω → TmExpr ω
 lift▻ T S = lam[ "f" ∈ T ⇛ S ] lam[ "t" ∈ ▻ T ] (var "f" ⟨$-later⟩' var "t")
@@ -72,7 +72,7 @@ lift▻ T S = lam[ "f" ∈ T ⇛ S ] lam[ "t" ∈ ▻ T ] (var "f" ⟨$-later⟩
 lift2▻ : TyExpr ω → TyExpr ω → TyExpr ω → TmExpr ω
 lift2▻ T S R =
   lam[ "f" ∈ T ⇛ S ⇛ R ] lam[ "t" ∈ ▻ T ] lam[ "s" ∈ ▻ S ] (var "f" ⟨$-later⟩' var "t" ⊛⟨ later ⟩ var "s")
-
+-}
 
 --------------------------------------------------
 --------------------------------------------------
@@ -81,6 +81,30 @@ lift2▻ T S R =
 --------------------------------------------------
 -- The following is the example that is worked out in Section 3 of the CPP submission.
 
+g-map : TyExpr ★ → TyExpr ★ → TmExpr ω
+g-map A B =
+  lam[ constantly ∣ "f" ∈ A ⇛ B ]
+    löb[later∣ "m" ∈ GStream A ⇛ GStream B ]
+      lam[ "s" ∈ GStream A ]
+        let' mod⟨ constantly ⟩ "head-s" ← g-head A ∙ svar "s" in'
+        let' mod⟨ later ⟩ "tail-s" ← g-tail A ∙ svar "s" in' (
+        g-cons B ∙⟨ constantly ⟩ (svar "f" ∙ svar "head-s")
+                 ∙⟨ later ⟩ (svar "m" ∙ svar "tail-s"))
+
+g-map-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
+g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
+
+g-nats : TmExpr ω
+g-nats =
+  löb[later∣ "s" ∈ GStream Nat' ]
+    g-consN ∙⟨ constantly ⟩ lit 0
+            ∙⟨ later ⟩ (g-map Nat' Nat' ∙⟨ constantly ⟩ suc
+                                        ∙ svar "s")
+
+g-nats-sem : Tm ′◇ (′GStream ′Nat')
+g-nats-sem = ⟦ g-nats ⟧tm
+
+{-
 -- Γ ⊢ g-map A B : ⟨ constantly ∣ A ⇛ B ⟩ ⇛ GStream A ⇛ GStream B
 g-map : TyExpr ★ → TyExpr ★ → TmExpr ω
 g-map A B =
@@ -102,7 +126,7 @@ g-nats =
 
 g-nats-sem : Tm ′◇ (′GStream ′Nat')
 g-nats-sem = ⟦ g-nats ⟧tm
-
+-}
 
 --------------------------------------------------
 -- The follwing definitions are an implementation of all examples involving streams on pages 8-10 of the paper
@@ -111,6 +135,9 @@ g-nats-sem = ⟦ g-nats ⟧tm
 --   Logical Methods of Computer Science (LMCS), 12(3), 2016.
 --   https://doi.org/10.2168/LMCS-12(3:7)2016
 
+g-snd : TyExpr ★ → TmExpr ω
+g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩' g-tail A ∙ svar "s"
+{-
 -- Γ ⊢ g-snd A : GStream A ⇛ ▻ ⟨ constantly ∣ A ⟩
 g-snd : TyExpr ★ → TmExpr ω
 g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩' g-tail A ∙ var "s"
@@ -166,7 +193,43 @@ g-nats' = g-iterate Nat' ∙ next (mod-intro constantly suc) ∙ mod-intro const
 
 g-nats'-sem : Tm ′◇ (′GStream ′Nat')
 g-nats'-sem = ⟦ g-nats' ⟧tm
+-}
+g-interleave : TyExpr ★ → TmExpr ω
+g-interleave A =
+  löb[later∣ "g" ∈ GStream A ⇛ ▻ (GStream A) ⇛ GStream A ]
+    lam[ "s" ∈ GStream A ]
+      lam[ later ∣ "t" ∈ GStream A ]
+        let' mod⟨ constantly ⟩ "head-s" ← g-head A ∙ svar "s" in'
+        let' mod⟨ later ⟩ "tail-s" ← g-tail A ∙ svar "s" in' (
+        g-cons A ∙⟨ constantly ⟩ svar "head-s"
+                 ∙⟨ later ⟩ (svar "g" ∙ svar "t" ∙ next (svar "tail-s")))
 
+g-interleave-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat')
+g-interleave-sem = ⟦ g-interleave Nat' ⟧tm
+
+g-toggle : TmExpr ω
+g-toggle =
+  löb[later∣ "s" ∈ GStream Nat' ]
+    g-consN ∙⟨ constantly ⟩ lit 1
+            ∙⟨ later ⟩ (g-consN ∙⟨ constantly ⟩ lit 0
+                                ∙⟨ later ⟩ var "s" later≤later∘later)
+  where
+    later≤later∘later : TwoCellExpr
+    later≤later∘later = (ann id-cell ∈ later ⇒ later) ⓣ-hor 𝟙≤later
+
+g-toggle-sem : Tm ′◇ (′GStream ′Nat')
+g-toggle-sem = ⟦ g-toggle ⟧tm
+
+g-paperfolds : TmExpr ω
+g-paperfolds =
+  löb[later∣ "s" ∈ GStream Nat' ]
+    g-interleave Nat' ∙ g-toggle
+                      ∙ (mod⟨ later ⟩ svar "s")
+
+g-paperfolds-sem : Tm ′◇ (′GStream ′Nat')
+g-paperfolds-sem = ⟦ g-paperfolds ⟧tm
+
+{-
 -- Γ ⊢ g-interleave A : GStream A ⇛ ▻ (GStream A) ⇛ GStream A
 g-interleave : TyExpr ★ → TmExpr ω
 g-interleave A =
@@ -341,7 +404,7 @@ g-flipFst-sem = ⟦ g-flipFst Bool' ⟧tm
 --------------------------------------------------
 -- Examples involving standard streams and the extraction
 --   to Agda streams
-
+-}
 Stream' : TyExpr ★ → TyExpr ★
 Stream' A = ⟨ forever ∣ GStream A ⟩
 
@@ -351,7 +414,7 @@ Stream' A = ⟨ forever ∣ GStream A ⟩
 
 -- Γ ⊢ nats : Stream' Nat'
 nats : TmExpr ★
-nats = mod-intro forever g-nats
+nats = mod⟨ forever ⟩ g-nats
 
 nats-sem : Tm ′◇ (′Stream' ′Nat')
 nats-sem = ⟦ nats ⟧tm
@@ -369,7 +432,7 @@ nats-test = refl
 
 -- Γ ⊢ paperfolds : Stream' Nat'
 paperfolds : TmExpr ★
-paperfolds = mod-intro forever g-paperfolds
+paperfolds = mod⟨ forever ⟩ g-paperfolds
 
 paperfolds-sem : Tm ′◇ (′Stream' ′Nat')
 paperfolds-sem = ⟦ paperfolds ⟧tm
@@ -379,7 +442,7 @@ paperfolds-agda = extract-term paperfolds-sem
 
 paperfolds-test : take 10 paperfolds-agda ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
 paperfolds-test = refl
-
+{-
 -- Γ ⊢ thue-morse : Stream' Bool'
 thue-morse : TmExpr ★
 thue-morse = mod-intro forever g-thumorse
@@ -405,7 +468,23 @@ fibonacci-word-agda = extract-term fibonacci-word-sem
 
 fibonacci-word-test : take 10 fibonacci-word-agda ≡ false ∷ true ∷ false ∷ false ∷ true ∷ false ∷ true ∷ false ∷ false ∷ true ∷ []
 fibonacci-word-test = refl
+-}
+head' : TyExpr ★ → TmExpr ★
+head' A =
+  lam[ "s" ∈ Stream' A ]
+    let' mod⟨ forever ⟩ "s0" ← svar "s" in'
+    triv⁻¹ (comp forever constantly (mod⟨ forever ⟩ (g-head A ∙ svar "s0")))
 
+head-nats : TmExpr ★
+head-nats = head' Nat' ∙ nats
+
+head-nats-agda : ℕ
+head-nats-agda = extract-term (⟦ head-nats ⟧tm)
+
+head-nats-test : head-nats-agda ≡ 0
+head-nats-test = refl
+
+{-
 -- Γ ⊢ head' A : Stream' A ⇛ A
 head' : TyExpr ★ → TmExpr ★
 head' A = ann
@@ -513,3 +592,4 @@ fibs-agda = extract-term fibs-sem
 
 fibs-test : take 10 fibs-agda ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
 fibs-test = refl
+-}

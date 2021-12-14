@@ -17,3 +17,5 @@ open import MSTT.Syntax.Context mt ty-ext public
 open import MSTT.Syntax.Term mt ty-ext tm-ext public
 
 open import MSTT.TypeChecker mt ty-ext tm-ext public
+
+open import MSTT.BasicOperations mt ty-ext tm-ext public
