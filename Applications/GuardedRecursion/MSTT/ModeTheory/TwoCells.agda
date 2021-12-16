@@ -58,8 +58,8 @@ infer-two-cell (α ⓣ-vert β) = do
 infer-two-cell (α ⓣ-hor β) = do
   infer-result mα nα μα ρα ⟦α⟧ ← infer-two-cell α
   infer-result mβ nβ μβ ρβ ⟦β⟧ ← infer-two-cell β
-  refl ← nα ≟mode mβ
-  return (infer-result mα nβ (μβ ⓜ μα) (ρβ ⓜ ρα) (⟦β⟧ M.ⓣ-hor ⟦α⟧))
+  refl ← mα ≟mode nβ
+  return (infer-result mβ nα (μα ⓜ μβ) (ρα ⓜ ρβ) (⟦α⟧ M.ⓣ-hor ⟦β⟧))
 infer-two-cell 𝟙≤later = return (infer-result ω ω 𝟙 later M.𝟙≤later)
 infer-two-cell constantly∘forever≤𝟙 = return (infer-result ω ω (constantly ⓜ forever) 𝟙 M.constantly∘forever≤𝟙)
 infer-two-cell (ann α ∈ μ ⇒ ρ) = do

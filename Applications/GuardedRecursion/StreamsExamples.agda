@@ -42,27 +42,21 @@ g-tailB = g-tail Bool'
 -- Definition of some helper functions that are used a lot
 --   in the example programs with streams.
 {-
--- If Γ ⊢ f : ⟨ μ ∣ A ⇛ B ⟩ and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⊛⟨ μ ⟩ t : ⟨ μ ∣ B ⟩.
-infixl 5 _⊛⟨_⟩_
-_⊛⟨_⟩_ : ∀ {m m'} → TmExpr m → ModalityExpr m' m → TmExpr m → TmExpr m
-f ⊛⟨ μ ⟩ t = mod-intro μ (mod-elim μ f ∙ mod-elim μ t)
-
 -- If Γ ,lock⟨ μ ⟩ ⊢ f : A ⇛ B and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⟨$- μ ⟩ t : ⟨ μ ∣ B ⟩.
 infixl 5 _⟨$-_⟩_
 _⟨$-_⟩_ : ∀ {m m'} → TmExpr m' → ModalityExpr m' m → TmExpr m → TmExpr m
 f ⟨$- μ ⟩ t = mod-intro μ (f ∙ mod-elim μ t)
 -}
 -- If Γ ⊢ t : T, then Γ ⊢ next t : ▻ T.
--- Note that this is different from (mod-intro later t), where t would be type-checked
+-- Note that this is different from mod⟨ later ⟩ t, where t would be type-checked
 --   in context Γ ,lock⟨ later ⟩.
 next : TmExpr ω → TmExpr ω
 next t = coe[ 𝟙≤later ∈ 𝟙 ⇒ later ] triv t
 
 -- If Γ ⊢ f : A ⇛ B and Γ ⊢ t : ▻ A, then Γ ⊢ f ⟨$-later⟩' t : ▻ B.
--- The difference with f ⟨$- later ⟩ t is that f is type-checked in Γ and not Γ ,lock⟨ later ⟩.
-infixl 5 _⟨$-later⟩'_
-_⟨$-later⟩'_ : TmExpr ω → TmExpr ω → TmExpr ω
-f ⟨$-later⟩' t = next f ⊛⟨ later ⟩ t
+infixl 5 _⟨$-later⟩_
+_⟨$-later⟩_ : TmExpr ω → TmExpr ω → TmExpr ω
+f ⟨$-later⟩ t = next f ⊛⟨ later ⟩ t
 {-
 -- Γ ⊢ lift▻ T S : (T ⇛ S) ⇛ ▻ T ⇛ ▻ S.
 lift▻ : TyExpr ω → TyExpr ω → TmExpr ω
@@ -79,8 +73,9 @@ lift2▻ T S R =
 -- Examples involving guarded streams
 
 --------------------------------------------------
--- The following is the example that is worked out in Section 3 of the CPP submission.
+-- The following is the example that is worked out in Section 3 of the MSFP submission.
 
+-- Γ ⊢ g-map A B : [ constantly ∣ A ⇛ B ]⇛ GStream A ⇛ GStream B
 g-map : TyExpr ★ → TyExpr ★ → TmExpr ω
 g-map A B =
   lam[ constantly ∣ "f" ∈ A ⇛ B ]
@@ -94,6 +89,7 @@ g-map A B =
 g-map-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
 g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
 
+-- Γ ⊢ g-nats : GStream Nat'
 g-nats : TmExpr ω
 g-nats =
   löb[later∣ "s" ∈ GStream Nat' ]
@@ -104,29 +100,6 @@ g-nats =
 g-nats-sem : Tm ′◇ (′GStream ′Nat')
 g-nats-sem = ⟦ g-nats ⟧tm
 
-{-
--- Γ ⊢ g-map A B : ⟨ constantly ∣ A ⇛ B ⟩ ⇛ GStream A ⇛ GStream B
-g-map : TyExpr ★ → TyExpr ★ → TmExpr ω
-g-map A B =
-  lam[ "f" ∈ ⟨ constantly ∣ A ⇛ B ⟩ ]
-    löb[ "m" ∈▻ (GStream A ⇛ GStream B) ]
-      lam[ "s" ∈ GStream A ]
-        g-cons B ∙ (var "f" ⊛⟨ constantly ⟩ g-head A ∙ var "s")
-                 ∙ (var "m" ⊛⟨ later ⟩ g-tail A ∙ var "s")
-
-g-map-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
-g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
-
--- Γ ⊢ g-nats : GStream Nat'
-g-nats : TmExpr ω
-g-nats =
-  löb[ "s" ∈▻ (GStream Nat') ]
-    g-consN ∙ mod-intro constantly (lit 0)
-            ∙ (g-map Nat' Nat' ∙ mod-intro constantly suc ⟨$-later⟩' var "s")
-
-g-nats-sem : Tm ′◇ (′GStream ′Nat')
-g-nats-sem = ⟦ g-nats ⟧tm
--}
 
 --------------------------------------------------
 -- The follwing definitions are an implementation of all examples involving streams on pages 8-10 of the paper
@@ -135,65 +108,71 @@ g-nats-sem = ⟦ g-nats ⟧tm
 --   Logical Methods of Computer Science (LMCS), 12(3), 2016.
 --   https://doi.org/10.2168/LMCS-12(3:7)2016
 
-g-snd : TyExpr ★ → TmExpr ω
-g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩' g-tail A ∙ svar "s"
-{-
 -- Γ ⊢ g-snd A : GStream A ⇛ ▻ ⟨ constantly ∣ A ⟩
 g-snd : TyExpr ★ → TmExpr ω
-g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩' g-tail A ∙ var "s"
+g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩ g-tail A ∙ svar "s"
 
 g-snd-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ ′⟨ ′constantly ∣ ′Nat' ⟩)
 g-snd-sem = ⟦ g-snd Nat' ⟧tm
 
 -- Γ ⊢ g-thrd A : GStream A ⇛ ▻ (▻ ⟨ constantly ∣ A ⟩)
 g-thrd : TyExpr ★ → TmExpr ω
-g-thrd A = lam[ "s" ∈ GStream A ] g-snd A ⟨$-later⟩' g-tail A ∙ var "s"
+g-thrd A = lam[ "s" ∈ GStream A ] g-snd A ⟨$-later⟩ g-tail A ∙ svar "s"
 
 g-thrd-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′▻ ′⟨ ′constantly ∣ ′Bool' ⟩))
 g-thrd-sem = ⟦ g-thrd Bool' ⟧tm
 
 -- Γ ⊢ g-zeros : GStream Nat'
 g-zeros : TmExpr ω
-g-zeros = löb[ "s" ∈▻ (GStream Nat') ] g-consN ∙ mod-intro constantly (lit 0) ∙ var "s"
+g-zeros =
+  löb[later∣ "s" ∈ GStream Nat' ]
+    g-consN ∙⟨ constantly ⟩ lit 0
+            ∙⟨ later ⟩ svar "s"
 
 g-zeros-sem : Tm ′◇ (′GStream ′Nat')
 g-zeros-sem = ⟦ g-zeros ⟧tm
 
--- Γ ⊢ g-iterate' A : ⟨ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
+-- Γ ⊢ g-iterate' A : [ constantly | A ⇛ A ]⇛ [ constantly ∣ A ]⇛ GStream A
 g-iterate' : TyExpr ★ → TmExpr ω
 g-iterate' A =
-  lam[ "f" ∈ ⟨ constantly ∣ A ⇛ A ⟩ ]
-    löb[ "g" ∈▻ (⟨ constantly ∣ A ⟩ ⇛ GStream A) ]
-      lam[ "x" ∈ ⟨ constantly ∣ A ⟩ ]
-        g-cons A ∙ var "x"
-                 ∙ (var "g" ⊛⟨ later ⟩ (next (var "f" ⊛⟨ constantly ⟩ var "x")))
+  lam[ constantly ∣ "f" ∈ A ⇛ A ]
+    löb[later∣ "g" ∈ [ constantly ∣ A ]⇛ GStream A ]
+      lam[ constantly ∣ "x" ∈ A ]
+        g-cons A ∙⟨ constantly ⟩ svar "x"
+                 ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (var "f" α ∙ var "x" α))
+  where
+    -- α ∈ constantly ⇒ later ⓜ constantly
+    α : TwoCellExpr
+    α = 𝟙≤later ⓣ-hor (ann id-cell ∈ constantly ⇒ constantly)
 
 g-iterate'-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Nat' ⟩ ′⇛ ′GStream ′Nat')
 g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm
 
 -- This is a more general definition of iterate since the generating function of type
--- ⟨ constantly ∣ A ⇛ A ⟩ appears under ▻. The implementation itself applies g-map to
+-- only has to be available later. The implementation itself applies g-map to
 -- its corecursive call (represented by the variable "s"), which would not be allowed
 -- in a definition of standard Agda streams by copattern matching.
--- Γ ⊢ g-iterate A : ⟨ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
+-- Γ ⊢ g-iterate A : [ later ⓜ constantly | A ⇛ A ]⇛ [ constantly ∣ A ]⇛ GStream A
 g-iterate : TyExpr ★ → TmExpr ω
 g-iterate A =
-  lam[ "f" ∈ ▻ ⟨ constantly ∣ A ⇛ A ⟩ ]
-    lam[ "a" ∈ ⟨ constantly ∣ A ⟩ ]
-      löb[ "s" ∈▻ (GStream A) ]
-        g-cons A ∙ var "a"
-                 ∙ (g-map A A ⟨$-later⟩' var "f" ⊛⟨ later ⟩ var "s")
+  lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]
+    lam[ constantly ∣ "a" ∈ A ]
+      löb[later∣ "s" ∈ GStream A ]
+        g-cons A ∙⟨ constantly ⟩ svar "a"
+                 ∙⟨ later ⟩ (g-map A A ∙⟨ constantly ⟩ svar "f"
+                                       ∙ svar "s")
 
 g-iterate-sem : Tm ′◇ (′▻ ′⟨ ′constantly ∣ ′Bool' ′⇛ ′Bool' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Bool' ⟩ ′⇛ ′GStream ′Bool')
 g-iterate-sem = ⟦ g-iterate Bool' ⟧tm
 
 -- Γ ⊢ g-nats' : GStream Nat'
 g-nats' : TmExpr ω
-g-nats' = g-iterate Nat' ∙ next (mod-intro constantly suc) ∙ mod-intro constantly (lit 0)
+g-nats' = g-iterate Nat' ∙⟨ later ⓜ constantly ⟩ suc ∙⟨ constantly ⟩ lit 0
 
 g-nats'-sem : Tm ′◇ (′GStream ′Nat')
 g-nats'-sem = ⟦ g-nats' ⟧tm
--}
+
+-- Γ ⊢ g-interleave A : GStream A ⇛ ▻ (GStream A) ⇛ GStream A
 g-interleave : TyExpr ★ → TmExpr ω
 g-interleave A =
   löb[later∣ "g" ∈ GStream A ⇛ ▻ (GStream A) ⇛ GStream A ]
@@ -207,6 +186,7 @@ g-interleave A =
 g-interleave-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat')
 g-interleave-sem = ⟦ g-interleave Nat' ⟧tm
 
+-- Γ ⊢ g-toggle : GStream Nat'
 g-toggle : TmExpr ω
 g-toggle =
   löb[later∣ "s" ∈ GStream Nat' ]
@@ -220,6 +200,7 @@ g-toggle =
 g-toggle-sem : Tm ′◇ (′GStream ′Nat')
 g-toggle-sem = ⟦ g-toggle ⟧tm
 
+-- Γ ⊢ g-paperfolds : GStream Nat'
 g-paperfolds : TmExpr ω
 g-paperfolds =
   löb[later∣ "s" ∈ GStream Nat' ]
@@ -230,34 +211,6 @@ g-paperfolds-sem : Tm ′◇ (′GStream ′Nat')
 g-paperfolds-sem = ⟦ g-paperfolds ⟧tm
 
 {-
--- Γ ⊢ g-interleave A : GStream A ⇛ ▻ (GStream A) ⇛ GStream A
-g-interleave : TyExpr ★ → TmExpr ω
-g-interleave A =
-  löb[ "g" ∈▻ (GStream A ⇛ ▻ (GStream A) ⇛ GStream A) ]
-    lam[ "s" ∈ GStream A ]
-      lam[ "t" ∈ ▻ (GStream A) ]
-        g-cons A ∙ (g-head A ∙ var "s")
-                 ∙ (var "g" ⊛⟨ later ⟩ var "t" ⊛⟨ later ⟩ next (g-tail A ∙ var "s"))
-
-g-interleave-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat')
-g-interleave-sem = ⟦ g-interleave Nat' ⟧tm
-
--- Γ ⊢ g-toggle : GStream Nat'
-g-toggle : TmExpr ω
-g-toggle = löb[ "s" ∈▻ (GStream Nat') ]
-             g-consN ∙ (mod-intro constantly (lit 1))
-                     ∙ (next (g-consN ∙ mod-intro constantly (lit 0) ∙ var "s"))
-
-g-toggle-sem : Tm ′◇ (′GStream ′Nat')
-g-toggle-sem = ⟦ g-toggle ⟧tm
-
--- Γ ⊢ g-paperfolds : GStream Nat'
-g-paperfolds : TmExpr ω
-g-paperfolds = löb[ "s" ∈▻ (GStream Nat') ] g-interleave Nat' ∙ g-toggle ∙ var "s"
-
-g-paperfolds-sem : Tm ′◇ (′GStream ′Nat')
-g-paperfolds-sem = ⟦ g-paperfolds ⟧tm
-
 -- Γ ⊢ g-initial : ((⟨ constantly ∣ A ⟩ ⊠ (▻ T)) ⇛ T) ⇛ GStream A ⇛ T
 g-initial : TyExpr ★ → TyExpr ω → TmExpr ω
 g-initial A T =
