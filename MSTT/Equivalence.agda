@@ -41,6 +41,8 @@ _≟list-mode_ : (ms1 ms2 : List ModeExpr) → TCM (ms1 ≡ ms2)
   refl ← ms1 ≟list-mode ms2
   return refl
 
+-- The equivalence relation on types is the smallest congruence on types that
+-- respects equivalence of modalities (expressed by ≃ᵐ? in the mode theory).
 _≃ᵗʸ?_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ ⟦ S ⟧ty)
 ≃ᵗʸ?-ext-args : {F G : TyConstructor margs m} → TyConstructorEquiv F G → (args1 args2 : TyExtArgs margs) →
                TCM (∀ {Γ} → interpret-ext-ty F args1 {Γ} ≅ᵗʸ interpret-ext-ty G args2)

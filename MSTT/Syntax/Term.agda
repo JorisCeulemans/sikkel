@@ -71,7 +71,7 @@ syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 --   when type-checking b. More precisely, b is checked in context
 --   Γ , 𝟙 ∣ x ∈ ⟨ μ ∣ T ⟩ , μ ∣ x ∈ T
 --   so any occurrence of x in b will resolve to the final x which appears in the
---   context under the modality μ.
+--   context under the modality μ but with type T.
 infixr 4 lam[_∣_∈_]_
 lam[_∣_∈_]_ : ModalityExpr m' m → String → TyExpr m' → TmExpr m → TmExpr m
 lam[ μ ∣ x ∈ T ] b = lam[ x ∈ ⟨ μ ∣ T ⟩ ] (let' mod⟨ μ ⟩ x ← svar x in' b)

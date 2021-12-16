@@ -22,6 +22,7 @@ import MSTT.InterpretTypes
 import MSTT.Equivalence
 import MSTT.TypeChecker.ResultType
 import MSTT.TypeChecker
+import MSTT.BasicOperations
 
 import Extraction
 

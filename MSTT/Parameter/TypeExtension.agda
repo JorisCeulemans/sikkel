@@ -5,7 +5,7 @@
 --   type constructors, how these constructors will be interpreted in the presheaf
 --   model, and proofs that this interpretation is a congruence.
 --   Every code in the universe comes with a list of modes, representing the modes
---   of the constructor's arguments and a mode at which the resulting type will live.
+--   of the constructor's arguments, and a mode at which the resulting type will live.
 --------------------------------------------------
 
 open import MSTT.Parameter.ModeTheory
@@ -33,7 +33,7 @@ TyExtShow (m ∷ margs) = String → TyExtShow margs
 
 -- Every code is interpreted as a semantic type constructor working on closed types.
 TyConstructor : List ModeExpr → ModeExpr → Set₁
-TyConstructor [] m = ClosedTy ⟦ m ⟧mode
+TyConstructor []           m = ClosedTy ⟦ m ⟧mode
 TyConstructor (m' ∷ margs) m = ClosedTy ⟦ m' ⟧mode → TyConstructor margs m
 
 TyConstructorNatural : TyConstructor margs m → Set₁

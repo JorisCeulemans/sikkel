@@ -5,7 +5,7 @@
 --   and the implementation of type inference for these constructors, as well as
 --   their interpretation in a presheaf model.
 --   Every code in the universe comes with a list of modes, representing the modes
---   of the constructor's arguments and a mode at which the resulting term will live.
+--   of the constructor's arguments, and a mode at which the resulting term will live.
 --------------------------------------------------
 
 open import MSTT.Parameter.ModeTheory

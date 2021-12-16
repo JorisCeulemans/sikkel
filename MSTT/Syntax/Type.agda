@@ -24,7 +24,7 @@ private variable
 
 
 --------------------------------------------------
--- Expressions for MSTT types.
+-- Expressions for MSTT types
 
 data TyExpr : ModeExpr → Set
 TyExtArgs : List ModeExpr → Set
