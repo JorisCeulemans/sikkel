@@ -54,6 +54,7 @@ comp⁻¹ μ ρ t = let' mod⟨ μ ⓜ ρ ⟩ "x" ← t in' (mod⟨ μ ⟩ (mod�
 -- In other words, every modality is an applicative functor.
 
 -- If Γ ⊢ f : ⟨ μ ∣ A ⇛ B ⟩ and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⊛⟨ μ ⟩ t : ⟨ μ ∣ B ⟩.
+infixl 5 _⊛⟨_⟩_
 _⊛⟨_⟩_ : TmExpr m' → ModalityExpr m m' → TmExpr m' → TmExpr m'
 f ⊛⟨ μ ⟩ t = let' mod⟨ μ ⟩ "f0" ← f in'
              let' mod⟨ μ ⟩ "t0" ← t in'

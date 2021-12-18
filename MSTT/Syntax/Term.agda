@@ -28,8 +28,7 @@ data TmExpr : ModeExpr → Set
 TmExtArgs : List ModeExpr → Set
 
 infixl 50 _∙_
-infixr 4 lam[_∈_]_
-infixr 3 mod⟨_⟩_
+infixr 4 lam[_∈_]_ mod⟨_⟩_
 data TmExpr where
   ann_∈_ : TmExpr m → TyExpr m → TmExpr m
   var : String → TwoCellExpr → TmExpr m
