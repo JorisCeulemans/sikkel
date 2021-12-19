@@ -16,3 +16,4 @@ open import Applications.Parametricity.MSTT.Syntax.Term rel-ext public
 open import MSTT.TCMonad public using (type-error ; ok)
 open import MSTT.TypeChecker.ResultType par-mode-theory par-ty-ext public
 open import MSTT.TypeChecker par-mode-theory par-ty-ext par-tm-ext public
+open import MSTT.BasicOperations par-mode-theory par-ty-ext par-tm-ext public

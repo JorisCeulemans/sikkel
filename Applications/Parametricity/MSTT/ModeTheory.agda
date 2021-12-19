@@ -36,8 +36,8 @@ _ⓜ_ : ModalityExpr m' m'' → ModalityExpr m m' → ModalityExpr m m''
 forget-left ⓜ 𝟙 = forget-left
 forget-right ⓜ 𝟙 = forget-right
 
-data TwoCellExpr : ModalityExpr m m' → ModalityExpr m m' → Set where
-  id-cell : (μ : ModalityExpr m m') → TwoCellExpr μ μ
+data TwoCellExpr : Set where
+  id-cell : TwoCellExpr
 
 
 --------------------------------------------------
@@ -54,7 +54,7 @@ show-modality forget-right = "forget-right"
 
 
 --------------------------------------------------
--- Interpretation of modes and modalities in a presheaf model.
+-- Interpretation of modes and modalities in a presheaf model
 
 ⟦_⟧mode : ModeExpr → BaseCategory
 ⟦ ★ ⟧mode = M.★
@@ -71,12 +71,9 @@ show-modality forget-right = "forget-right"
 ⓜ-interpretation forget-left 𝟙 = ≅ᵐ-sym (𝟙-identityʳ M.forget-left)
 ⓜ-interpretation forget-right 𝟙 = ≅ᵐ-sym (𝟙-identityʳ M.forget-right)
 
-⟦_⟧two-cell : {μ ρ : ModalityExpr m m'} → TwoCellExpr μ ρ → TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality
-⟦ id-cell μ ⟧two-cell = two-cell (id-ctx-transf _)
-
 
 --------------------------------------------------
--- Equivalence of modes and modalities.
+-- Equivalence of modes and modalities
 
 _≟mode_ : (m1 m2 : ModeExpr) → TCM (m1 ≡ m2)
 ★ ≟mode ★ = return refl
@@ -97,6 +94,15 @@ _≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ �
 
 
 --------------------------------------------------
+-- Interpretation of two-cells in a presheaf model
+
+⟦_∈_⇒_⟧two-cell : TwoCellExpr → ∀ {m m'} (μ ρ : ModalityExpr m m') → TCM (TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality)
+⟦ id-cell ∈ μ ⇒ ρ ⟧two-cell = do
+  μ=ρ ← μ ≃ᵐ? ρ
+  return (M.≅ᵐ-to-2-cell μ=ρ)
+
+
+--------------------------------------------------
 -- The final definition of the mode theory
 
 par-mode-theory : ModeTheory
@@ -113,4 +119,5 @@ ModeTheory.𝟙-interpretation par-mode-theory = ≅ᵐ-refl
 ModeTheory.ⓜ-interpretation par-mode-theory = ⓜ-interpretation
 ModeTheory._≃ᵐ?_ par-mode-theory = _≃ᵐ?_
 ModeTheory.TwoCellExpr par-mode-theory = TwoCellExpr
-ModeTheory.⟦_⟧two-cell par-mode-theory = ⟦_⟧two-cell
+ModeTheory.id-cell par-mode-theory = id-cell
+ModeTheory.⟦_∈_⇒_⟧two-cell par-mode-theory = ⟦_∈_⇒_⟧two-cell

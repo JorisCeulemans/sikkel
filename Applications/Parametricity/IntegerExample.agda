@@ -105,7 +105,7 @@ RelExt.interpret-code z-rel-ext ℤ-code =
 
 
 --------------------------------------------------
--- Definition of some basic operations in MSTT.
+-- Definition of some basic operations in MSTT
 
 open Applications.Parametricity.MSTT z-rel-ext
 
@@ -113,23 +113,13 @@ private
   variable
     m : ModeExpr
 
--- If Γ ⊢ f : ⟨ μ ∣ A ⇛ B ⟩ and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⊛⟨ μ ⟩ t : ⟨ μ ∣ B ⟩.
-infixl 5 _⊛⟨_⟩_
-_⊛⟨_⟩_ : ∀ {m m'} → TmExpr m → ModalityExpr m' m → TmExpr m → TmExpr m
-f ⊛⟨ μ ⟩ t = mod-intro μ (mod-elim μ f ∙ mod-elim μ t)
-
--- If Γ ,lock⟨ μ ⟩ ⊢ f : A ⇛ B and Γ ⊢ t : ⟨ μ ∣ A ⟩, then Γ ⊢ f ⟨$- μ ⟩ t : ⟨ μ ∣ B ⟩.
-infixl 5 _⟨$-_⟩_
-_⟨$-_⟩_ : ∀ {m m'} → TmExpr m' → ModalityExpr m' m → TmExpr m → TmExpr m
-f ⟨$- μ ⟩ t = mod-intro μ (f ∙ mod-elim μ t)
-
--- Γ ⊢ liftA2 μ A B C : ⟨ μ ∣ A ⇛ B ⇛ C ⟩ ⇛ ⟨ μ ∣ A ⟩ ⇛ ⟨ μ ∣ B ⟩ ⇛ ⟨ μ ∣ C ⟩
+-- Γ ⊢ liftA2 μ A B C : [ μ ∣ A ⇛ B ⇛ C ]⇛ [ μ ∣ A ]⇛ [ μ ∣ B ]⇛ ⟨ μ ∣ C ⟩
 liftA2 : ∀ {m m'} → ModalityExpr m' m → TyExpr m' → TyExpr m' → TyExpr m' → TmExpr m
 liftA2 μ A B C =
-  lam[ "f" ∈ ⟨ μ ∣ A ⇛ B ⇛ C ⟩ ]
-    lam[ "a" ∈ ⟨ μ ∣ A ⟩ ]
-      lam[ "b" ∈ ⟨ μ ∣ B ⟩ ]
-        var "f" ⊛⟨ μ ⟩ var "a" ⊛⟨ μ ⟩ var "b"
+  lam[ μ ∣ "f" ∈ A ⇛ B ⇛ C ]
+    lam[ μ ∣ "a" ∈ A ]
+      lam[ μ ∣ "b" ∈ B ]
+        mod⟨ μ ⟩ (svar "f" ∙ svar "a" ∙ svar "b")
 
 
 --------------------------------------------------
@@ -146,7 +136,7 @@ record IntStructure {m} (A : TyExpr m) : Set where
 open IntStructure {{...}}
 
 subtract : (A : TyExpr m) {{_ : IntStructure A}} → TmExpr m
-subtract A = lam[ "a" ∈  A ] lam[ "b" ∈ A ] add ∙ var "a" ∙ (negate ∙ var "b")
+subtract A = lam[ "a" ∈  A ] lam[ "b" ∈ A ] add ∙ svar "a" ∙ (negate ∙ svar "b")
 
 ℤ : TyExpr ⋀
 ℤ = FromRel ℤ-code
@@ -158,11 +148,13 @@ instance
   IntStructure.add-well-typed ℤ-is-int = refl
   IntStructure.negate-well-typed ℤ-is-int = refl
 
+-- Γ ⊢ substract★-left : [ forget-right ∣ ℤ ]⇛ [ forget-right ∣ ℤ ]⇛ ⟨ forget-right ∣ ℤ ⟩
 subtract★-left : TmExpr ★
-subtract★-left = liftA2 forget-right ℤ ℤ ℤ ∙ mod-intro forget-right (subtract ℤ)
+subtract★-left = liftA2 forget-right ℤ ℤ ℤ ∙⟨ forget-right ⟩ subtract ℤ
 
+-- Γ ⊢ substract★-right : [ forget-left ∣ ℤ ]⇛ [ forget-left ∣ ℤ ]⇛ ⟨ forget-left ∣ ℤ ⟩
 subtract★-right : TmExpr ★
-subtract★-right = liftA2 forget-left ℤ ℤ ℤ ∙ mod-intro forget-left (subtract ℤ)
+subtract★-right = liftA2 forget-left ℤ ℤ ℤ ∙⟨ forget-left ⟩ subtract ℤ
 
 subtract-DiffNat : DiffNat → DiffNat → DiffNat
 subtract-DiffNat = extract-term (⟦ subtract★-left ⟧tm)
