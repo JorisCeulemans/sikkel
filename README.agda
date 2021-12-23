@@ -5,7 +5,7 @@
 module README where
 
 {-
-  This is the readme for the Sikkel library, as presented in the CPP submission
+  This is the readme for the Sikkel library, as presented in the MSFP submission
     Sikkel: Multimode Simple Type Theory as an Agda Library.
 
   We use Agda 2.6.2 and the Agda standard library (version 1.7).
@@ -40,20 +40,6 @@ module README where
 import MSTT.Parameter.ModeTheory
 
 {-
-  Not in the paper:
-
-  MSTT allows to extend the syntax with new type and term formers. They must be
-  encoded in a universe (one for types and one for terms) and operations for
-  interpreting the new type constructors and type inference for new term formers
-  must be implemented (among others).
-  These requirements can be found in the following files.
--}
-
-import MSTT.Parameter.TypeExtension
-import MSTT.Parameter.TermExtension
-  
-
-{-
   The syntax for MSTT types, contexts and terms is contained in the following
   modules.
 -}
@@ -67,19 +53,26 @@ import MSTT.Syntax.Term
   Instead, we immediately wrote a type inference algorithm discussed in Section 5.
   The same is true for equivalence of types.
 
-  The Example program at the end of the paragraph is located in the following
-  module.
+
+  Not in the paper:
+
+  MSTT allows to extend the syntax with new type and term formers. They must be
+  encoded in a universe (one for types and one for terms) and operations for
+  interpreting the new type constructors and type inference for new term formers
+  must be implemented (among others).
+  These requirements can be found in the following files.
 -}
 
-import MSTT.Example
+import MSTT.Parameter.TypeExtension
+import MSTT.Parameter.TermExtension
 
 
 --------------------------------------------------
--- SECTION 3: Application 1: GuardedRecursive Type Theory
+-- SECTION 3: Application 1: Guarded Recursive Type Theory
 
 {-
   The mode theory and universes for new type and term formers (encoding e.g. the
-  type constructor GStream and Löb induction) of the MSTT instance for guarded
+  type constructor GStream and term former löb) of the MSTT instance for guarded
   recursion are worked out in the following modules.
 -}
 
@@ -92,8 +85,8 @@ import Applications.GuardedRecursion.MSTT.TermExtension
   in the following module. Note that the type checker an extraction mechanism
   are also already used in this file.
 
-  The example about (g-)nats can be found at lines 96 and 352.
-  The implementation of tail' is at line 424.
+  The example about g-map and (g-)nats can be found at lines 70 and 362.
+  The implementation of cons' is at line 450.
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
@@ -143,32 +136,6 @@ import Model.Type.Discrete
 
 import Model.Modality
 
-{-
-  The definition of the base category ω is defined in Model.BaseCategory
-  imported above.
-
-  Implementation of the semantic later modality and earlier operation
-  are found in the following module.
--}
-
-import Applications.GuardedRecursion.Model.Modalities.Later
-
-{-
-  Although not presented in the paper, the semantics of the other
-  modalities for guarded recursion, together with some proofs on how
-  they interact are implemented in the following modules.
--}
-
-import Applications.GuardedRecursion.Model.Modalities.Constantly
-import Applications.GuardedRecursion.Model.Modalities.Forever
-import Applications.GuardedRecursion.Model.Modalities.Interaction
-
-{-
-  The semantics of guarded streams can be found in the following module.
--}
-
-import Applications.GuardedRecursion.Model.Streams.Guarded
-
 
 --------------------------------------------------
 -- SECTION 5: A Sound Type Checker
@@ -193,8 +160,9 @@ import MSTT.InterpretTypes
 import MSTT.TCMonad
 
 {-
-  Again, the testing procedures for mode equality and modality equivalence
-  were included in MSTT.Parameter.ModeTheory.
+  Again, the checking/interpretation function for 2-cells, as well as the testing
+  procedures for mode equality and modality equivalence were already included in
+  MSTT.Parameter.ModeTheory.
 -}
 
 import MSTT.Parameter.ModeTheory
@@ -230,7 +198,7 @@ import Applications.GuardedRecursion.MSTT.TermExtension
 
 {-
   The semantics of the nats example from the end of the section is implemented
-  in Applications.GuardedRecursion.StreamsExamples.
+  in Applications.GuardedRecursion.StreamsExamples (lines 94 and 368).
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
@@ -255,7 +223,8 @@ import Extraction
 import Applications.GuardedRecursion.Model.Streams.Standard
 
 {-
-  Again, the example nats-agda is found in Applications.GuardedRecursion.StreamsExamples.
+  Again, the example nats-agda is found in Applications.GuardedRecursion.StreamsExamples
+  (line 371).
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
@@ -308,3 +277,36 @@ import Applications.Parametricity.IntegerExample
 {-
   No code for this section.
 -}
+
+
+--------------------------------------------------
+-- APPENDIX A: Presheaf Semantics of Guarded Recursion
+
+{-
+  The definition of the base category ω is defined in Model.BaseCategory
+-}
+
+import Model.BaseCategory
+
+{-
+  Implementation of the semantic later modality and earlier operation
+  are found in the following module.
+-}
+
+import Applications.GuardedRecursion.Model.Modalities.Later
+
+{-
+  Although not presented in the paper, the semantics of the other
+  modalities for guarded recursion, together with some proofs on how
+  they interact are implemented in the following modules.
+-}
+
+import Applications.GuardedRecursion.Model.Modalities.Constantly
+import Applications.GuardedRecursion.Model.Modalities.Forever
+import Applications.GuardedRecursion.Model.Modalities.Interaction
+
+{-
+  The semantics of guarded streams can be found in the following module.
+-}
+
+import Applications.GuardedRecursion.Model.Streams.Guarded

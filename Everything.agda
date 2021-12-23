@@ -3,6 +3,7 @@ module Everything where
 import Model.Helpers
 import Model.BaseCategory
 import Model.CwF-Structure
+import Model.CwF-Structure.LiftingFunctors
 import Model.CwF-Structure.Reflection.Substitution
 import Model.CwF-Structure.Reflection.SubstitutionSequence
 import Model.Type.Discrete
