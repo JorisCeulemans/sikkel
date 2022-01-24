@@ -35,8 +35,10 @@ data TmExpr where
   lam[_∈_]_ : String → TyExpr m → TmExpr m → TmExpr m
   _∙_ : TmExpr m → TmExpr m → TmExpr m
   lit : ℕ → TmExpr m
-  suc plus : TmExpr m
+  suc : TmExpr m
   nat-elim : TmExpr m → TmExpr m → TmExpr m
+  plus : TmExpr m
+    -- ^ plus is not implemented in terms of nat-elim for performance reasons.
   true false : TmExpr m
   if : TmExpr m → TmExpr m → TmExpr m → TmExpr m
   pair : TmExpr m → TmExpr m → TmExpr m
