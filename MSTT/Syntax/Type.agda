@@ -45,12 +45,6 @@ TyExtArgs [] = ⊤
 TyExtArgs (m ∷ margs) = TyExpr m × TyExtArgs margs
 
 
--- Modal function types are defined in terms of ordinary function types and modal types.
-infixr 6 [_∣_]⇛_
-[_∣_]⇛_ : ModalityExpr m' m → TyExpr m' → TyExpr m → TyExpr m
-[ μ ∣ T ]⇛ S = ⟨ μ ∣ T ⟩ ⇛ S
-
-
 --------------------------------------------------
 -- Printing type expressions (mostly for type errors).
 

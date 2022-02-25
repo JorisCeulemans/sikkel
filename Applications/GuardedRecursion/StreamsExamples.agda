@@ -69,7 +69,7 @@ later⇒later∘later = 𝟙≤later ⓣ-hor (ann id-cell ∈ later ⇒ later)
 --------------------------------------------------
 -- The following is the example that is worked out in Section 3 of the MSFP submission.
 
--- Γ ⊢ g-map A B : [ constantly ∣ A ⇛ B ]⇛ GStream A ⇛ GStream B
+-- Γ ⊢ g-map A B : ⟨ constantly ∣ A ⇛ B ⟩ ⇛ GStream A ⇛ GStream B
 g-map : TyExpr ★ → TyExpr ★ → TmExpr ω
 g-map A B =
   lam[ constantly ∣ "f" ∈ A ⇛ B ]
@@ -126,11 +126,11 @@ g-zeros =
 g-zeros-sem : Tm ′◇ (′GStream ′Nat')
 g-zeros-sem = ⟦ g-zeros ⟧tm
 
--- Γ ⊢ g-iterate' A : [ constantly | A ⇛ A ]⇛ [ constantly ∣ A ]⇛ GStream A
+-- Γ ⊢ g-iterate' A : ⟨ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
 g-iterate' : TyExpr ★ → TmExpr ω
 g-iterate' A =
   lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]
-    löb[later∣ "g" ∈ [ constantly ∣ A ]⇛ GStream A ]
+    löb[later∣ "g" ∈ ⟨ constantly ∣ A ⟩ ⇛ GStream A ]
       lam[ constantly ∣ "x" ∈ A ]
         g-cons A ∙⟨ constantly ⟩ svar "x"
                  ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (svar "f" ∙ var "x" const⇒later∘const))
@@ -142,7 +142,7 @@ g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm
 -- only has to be available later. The implementation itself applies g-map to
 -- its corecursive call (represented by the variable "s"), which would not be allowed
 -- in a definition of standard Agda streams by copattern matching.
--- Γ ⊢ g-iterate A : [ later ⓜ constantly | A ⇛ A ]⇛ [ constantly ∣ A ]⇛ GStream A
+-- Γ ⊢ g-iterate A : ⟨ later ⓜ constantly | A ⇛ A ⟩ ⇛ ⟨ constantly ∣ A ⟩ ⇛ GStream A
 g-iterate : TyExpr ★ → TmExpr ω
 g-iterate A =
   lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]
@@ -285,10 +285,10 @@ g-fibonacci-word-sem = ⟦ g-fibonacci-word ⟧tm
 --   ICFP 2013.
 --   https://doi.org/10.1145/2544174.2500597
 
--- Γ ⊢ g-mergef A B C : ([ constantly ∣ A ]⇛ [ constantly ∣ B ]⇛ [ later ∣ GStream C ]⇛ GStream C) ⇛ GStream A ⇛ GStream B ⇛ GStream C
+-- Γ ⊢ g-mergef A B C : (⟨ constantly ∣ A ⟩ ⇛ ⟨ constantly ∣ B ⟩ ⇛ ▻ (GStream C) ⇛ GStream C) ⇛ GStream A ⇛ GStream B ⇛ GStream C
 g-mergef : (A B C : TyExpr ★) → TmExpr ω
 g-mergef A B C =
-  lam[ "f" ∈ [ constantly ∣ A ]⇛ [ constantly ∣ B ]⇛ [ later ∣ GStream C ]⇛ GStream C ]
+  lam[ "f" ∈ ⟨ constantly ∣ A ⟩ ⇛ ⟨ constantly ∣ B ⟩ ⇛ ▻ (GStream C) ⇛ GStream C ]
     löb[later∣ "g" ∈ GStream A ⇛ GStream B ⇛ GStream C ]
       lam[ "xs" ∈ GStream A ]
         lam[ "ys" ∈ GStream B ]
@@ -305,9 +305,9 @@ g-mergef-sem = ⟦ g-mergef Nat' Bool' Nat' ⟧tm
 
 
 --------------------------------------------------
--- Examples that are not taken from a paper
+-- Examples that are not taken from a specific paper
 
--- Γ ⊢ g-zipWith A B C : [ constantly ∣ A ⇛ B ⇛ C ]⇛ GStream A ⇛ GStream B ⇛ GStream C
+-- Γ ⊢ g-zipWith A B C : ⟨ constantly ∣ A ⇛ B ⇛ C ⟩ ⇛ GStream A ⇛ GStream B ⇛ GStream C
 g-zipWith : (A B C : TyExpr ★) → TmExpr ω
 g-zipWith A B C =
   lam[ constantly ∣ "f" ∈ A ⇛ B ⇛ C ]
@@ -471,10 +471,10 @@ map' A B =
 map'-sem : Tm ′◇ ((′Nat' ′⇛ ′Nat') ′⇛ ′Stream' ′Nat' ′⇛ ′Stream' ′Nat')
 map'-sem = ⟦ map' Nat' Nat' ⟧tm
 
--- Γ ⊢ g-every2nd A : [ constantly ∣ Stream' A ]⇛ GStream A
+-- Γ ⊢ g-every2nd A : ⟨ constantly ∣ Stream' A ⟩ ⇛ GStream A
 g-every2nd : TyExpr ★ → TmExpr ω
 g-every2nd A =
-  löb[later∣ "g" ∈ [ constantly ∣ Stream' A ]⇛ GStream A ]
+  löb[later∣ "g" ∈ ⟨ constantly ∣ Stream' A ⟩ ⇛ GStream A ]
     lam[ constantly ∣ "s" ∈ Stream' A ]
       g-cons A ∙⟨ constantly ⟩ (head' A ∙ svar "s")
                ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (tail' A ∙ (tail' A ∙ var "s" const⇒later∘const)))
@@ -495,10 +495,10 @@ every2nd-test : take 6 (extract-term (every2ndN-sem $ nats-sem))
                 ≡ 0 ∷ 2 ∷ 4 ∷ 6 ∷ 8 ∷ 10 ∷ []
 every2nd-test = refl
 
--- Γ ⊢ g-diag : [ constantly ∣ Stream' (Stream' A) ]⇛ GStream A
+-- Γ ⊢ g-diag : ⟨ constantly ∣ Stream' (Stream' A) ⟩ ⇛ GStream A
 g-diag : TyExpr ★ → TmExpr ω
 g-diag A =
-  löb[later∣ "g" ∈ [ constantly ∣ Stream' (Stream' A) ]⇛ GStream A ]
+  löb[later∣ "g" ∈ ⟨ constantly ∣ Stream' (Stream' A) ⟩ ⇛ GStream A ]
     lam[ constantly ∣ "xss" ∈ Stream' (Stream' A) ]
       g-cons A ∙⟨ constantly ⟩ (head' A ∙ (head' (Stream' A) ∙ svar "xss"))
                ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (map' (Stream' A) (Stream' A) ∙ tail' A

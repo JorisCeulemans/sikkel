@@ -113,7 +113,7 @@ private
   variable
     m : ModeExpr
 
--- Γ ⊢ liftA2 μ A B C : [ μ ∣ A ⇛ B ⇛ C ]⇛ [ μ ∣ A ]⇛ [ μ ∣ B ]⇛ ⟨ μ ∣ C ⟩
+-- Γ ⊢ liftA2 μ A B C : ⟨ μ ∣ A ⇛ B ⇛ C ⟩ ⇛ ⟨ μ ∣ A ⟩ ⇛ ⟨ μ ∣ B ⟩ ⇛ ⟨ μ ∣ C ⟩
 liftA2 : ∀ {m m'} → ModalityExpr m' m → TyExpr m' → TyExpr m' → TyExpr m' → TmExpr m
 liftA2 μ A B C =
   lam[ μ ∣ "f" ∈ A ⇛ B ⇛ C ]
@@ -148,11 +148,11 @@ instance
   IntStructure.add-well-typed ℤ-is-int = refl
   IntStructure.negate-well-typed ℤ-is-int = refl
 
--- Γ ⊢ substract★-left : [ forget-right ∣ ℤ ]⇛ [ forget-right ∣ ℤ ]⇛ ⟨ forget-right ∣ ℤ ⟩
+-- Γ ⊢ substract★-left : ⟨ forget-right ∣ ℤ ⟩ ⇛ ⟨ forget-right ∣ ℤ ⟩ ⇛ ⟨ forget-right ∣ ℤ ⟩
 subtract★-left : TmExpr ★
 subtract★-left = liftA2 forget-right ℤ ℤ ℤ ∙⟨ forget-right ⟩ subtract ℤ
 
--- Γ ⊢ substract★-right : [ forget-left ∣ ℤ ]⇛ [ forget-left ∣ ℤ ]⇛ ⟨ forget-left ∣ ℤ ⟩
+-- Γ ⊢ substract★-right : ⟨ forget-left ∣ ℤ ⟩ ⇛ ⟨ forget-left ∣ ℤ ⟩ ⇛ ⟨ forget-left ∣ ℤ ⟩
 subtract★-right : TmExpr ★
 subtract★-right = liftA2 forget-left ℤ ℤ ℤ ∙⟨ forget-left ⟩ subtract ℤ
 

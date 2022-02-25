@@ -56,7 +56,7 @@ infer-interpret-gr-code (löb-code x T) = λ infer-t Γ → do
                             ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} _ ]
                             ιc[ ,,-cong (▻-cong (closed-natural {{⟦⟧ty-natural T}} (from-earlier _))) ]' ⟦t⟧))
 infer-interpret-gr-code (g-cons-code A) = λ Γ →
-  return ([ constantly ∣ A ]⇛ [ later ∣ GStream A ]⇛ GStream A
+  return (⟨ constantly ∣ A ⟩ ⇛ ▻ (GStream A) ⇛ GStream A
          , ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (⇛-cong (▻-cong (closed-natural {{⟦⟧ty-natural (GStream A)}} _)) ≅ᵗʸ-refl) ] M.g-cons)
 infer-interpret-gr-code (g-head-code A) = λ Γ → return (GStream A ⇛ ⟨ constantly ∣ A ⟩ , M.g-head)
 infer-interpret-gr-code (g-tail-code A) = λ Γ →

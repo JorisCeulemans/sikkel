@@ -77,7 +77,7 @@ infixr 4 lam[_∣_∈_]_
 lam[_∣_∈_]_ : ModalityExpr m' m → String → TyExpr m' → TmExpr m → TmExpr m
 lam[ μ ∣ x ∈ T ] b = lam[ x ∈ ⟨ μ ∣ T ⟩ ] (let' mod⟨ μ ⟩ x ← svar x in' b)
 
--- If Γ ⊢ f : [ μ ∣ T ]⇛ S and Γ ,lock⟨ μ ⟩ ⊢ t : T then
+-- If Γ ⊢ f : ⟨ μ ∣ T ⟩ ⇛ S and Γ ,lock⟨ μ ⟩ ⊢ t : T then
 --   Γ ⊢ f ∙⟨ μ ⟩ t : S
 infixl 50 _∙⟨_⟩_
 _∙⟨_⟩_ : TmExpr m → ModalityExpr m' m → TmExpr m' → TmExpr m
