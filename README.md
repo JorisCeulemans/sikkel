@@ -6,6 +6,8 @@ Moreover, Sikkel has a type checker that is sound by construction in the sense t
 Additionally, our model supports combining different base categories by using modalities to transport definitions between them.
 This enables in particular a general approach for extracting definitions to the meta-level, so that we can use the extended type theories to define regular Agda functions and prove properties of them.
 
+For an overview of the MSFP paper "Sikkel: Multimode Simple Type Theory as an Agda Library" together with the relevant code, we refer to the file [README.agda](README.agda).
+
 ## Installation
 
 Sikkel requires Agda 2.6.2 and the Agda standard library (version 1.7).

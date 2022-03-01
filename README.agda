@@ -5,7 +5,7 @@
 module README where
 
 {-
-  This is the readme for the Sikkel library, as presented in the MSFP submission
+  This is the readme for the Sikkel library, as presented in the MSFP paper
     Sikkel: Multimode Simple Type Theory as an Agda Library.
 
   We use Agda 2.6.2 and the Agda standard library (version 1.7).
@@ -168,7 +168,7 @@ import MSTT.TCMonad
 import MSTT.Parameter.ModeTheory
 
 {-
-  The function for testing whethet types are equivalent is defined in the
+  The function for testing whether types are equivalent is defined in the
   following file.
 -}
 
