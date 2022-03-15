@@ -13,6 +13,9 @@ import Model.Type.Product as M
 import Model.Type.Discrete as M
 
 
+--------------------------------------------------
+-- Definition of syntactic types, contexts and terms
+
 infixr 6 _⇛_
 infixl 5 _⊠_
 data TyExpr : Set where
@@ -34,7 +37,7 @@ private variable
   Γ Δ : CtxExpr
 
 
--- de Bruijn indices
+-- Variables are represented as de Bruijn indices.
 data Var : CtxExpr → TyExpr → Set where
   vzero : Var (Γ ,, T) T
   vsuc : Var Γ T → Var (Γ ,, S) T
@@ -53,13 +56,10 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
   fst : TmExpr Γ (T ⊠ S) → TmExpr Γ T
   snd : TmExpr Γ (T ⊠ S) → TmExpr Γ S
 
-id : TmExpr Γ (T ⇛ T)
-id = lam (var vzero)
 
-plus : TmExpr Γ (Nat' ⇛ Nat' ⇛ Nat')
-plus = nat-elim id (lam (lam (suc ∙ (var (vsuc vzero) ∙ var vzero))))
-
-
+--------------------------------------------------
+-- Interpretation of types, contexts and terms in the presheaf
+--   model over the trivial base category
 
 ⟦_⟧ty : TyExpr → ClosedTy ★
 ⟦ Nat' ⟧ty = M.Nat'
