@@ -6,6 +6,8 @@ open import Model.BaseCategory
 
 module Model.Type.Product {C : BaseCategory} where
 
+open BaseCategory C
+
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -98,9 +100,9 @@ module _ (t : Tm Γ T) (s : Tm Γ S) where
   β-⊠-prim-snd : prim-snd (prim-pair t s) ≅ᵗᵐ s
   eq β-⊠-prim-snd _ = refl
 
-η-⊠ : (p : Tm Γ (T ⊠ S)) →
+prim-η-⊠ : (p : Tm Γ (T ⊠ S)) →
       p ≅ᵗᵐ prim-pair (prim-fst p) (prim-snd p)
-eq (η-⊠ p) _ = refl
+eq (prim-η-⊠ p) _ = refl
 
 pair : Tm Γ (T ⇛ S ⇛ T ⊠ S)
 pair {T = T}{S = S} =
@@ -113,6 +115,17 @@ fst {T = T}{S = S} = lam (T ⊠ S) (prim-fst (ι⁻¹[ ⊠-natural π ] ξ))
 
 snd : Tm Γ (T ⊠ S ⇛ S)
 snd {T = T}{S = S} = lam (T ⊠ S) (prim-snd (ι⁻¹[ ⊠-natural π ] ξ))
+
+module _ (t : Tm Γ T) (s : Tm Γ S) where
+  β-⊠-fst : (app fst (app (app pair t) s)) ≅ᵗᵐ t
+  eq β-⊠-fst γ = trans (ty-cong-2-1 T hom-idʳ) (ty-id T)
+
+  β-⊠-snd : (app snd (app (app pair t) s)) ≅ᵗᵐ s
+  eq β-⊠-snd γ = trans (ty-cong-2-1 S hom-idʳ) (ty-id S)
+
+η-⊠ : (p : Tm Γ (T ⊠ S)) → p ≅ᵗᵐ app (app pair (app fst p)) (app snd p)
+eq (η-⊠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
+                                                (trans (ty-cong-2-1 S hom-idʳ) (ty-id S)))
 
 instance
   prod-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →

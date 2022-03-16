@@ -169,6 +169,9 @@ naturality (suc' t) f γ = cong suc (naturality t f γ)
 suc' : Tm Γ (Nat' ⇛ Nat')
 suc' = discr-func suc
 
+suc'-discr : {n : ℕ} {Γ : Ctx C} → app {Γ = Γ} suc' (discr n) ≅ᵗᵐ discr (suc n)
+eq suc'-discr γ = refl
+
 nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
 nat-elim {Γ = Γ} T t f = MkTm tm nat
   where

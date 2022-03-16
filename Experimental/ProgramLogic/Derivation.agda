@@ -2,6 +2,14 @@ module Experimental.ProgramLogic.Derivation where
 
 open import Data.Nat
 
+open import Model.BaseCategory
+open import Model.CwF-Structure as M using (Ctx; Ty; Tm)
+import Model.Type.Function as M
+import Model.Type.Product as M
+import Model.Type.Discrete as M
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
+import Experimental.DependentTypes.Model.Function as MDF
+
 open import Experimental.ProgramLogic.STT
 open import Experimental.ProgramLogic.Formula
 
@@ -78,3 +86,43 @@ data _∣_⊢_ : (Γ : CtxExpr) → FrmEnv Γ → Formula Γ → Set where
   nat-induction : (Γ ∣ φs [ id-subst ∷ lit 0 ]frm-env ⊢ φ [ id-subst ∷ lit 0 ]frm) →
                   (Γ ,, Nat' ∣ (φs [ π ∷ (suc ∙ var vzero) ]frm-env) ∷ φ ⊢ φ [ π ∷ (suc ∙ var vzero) ]frm) →
                   (Γ ,, Nat' ∣ φs ⊢ φ)
+
+
+⟦_∣_⟧ctx-env : (Γ : CtxExpr) → FrmEnv Γ → Ctx ★
+forget-assumptions : {Γ : CtxExpr} (φs : FrmEnv Γ) → ⟦ Γ ∣ φs ⟧ctx-env M.⇒ ⟦ Γ ⟧ctx
+
+⟦ Γ ∣ []     ⟧ctx-env = ⟦ Γ ⟧ctx
+⟦ Γ ∣ φs ∷ φ ⟧ctx-env = ⟦ Γ ∣ φs ⟧ctx-env M.,, (⟦ φ ⟧frm M.[ forget-assumptions φs ])
+
+forget-assumptions [] = M.id-subst _
+forget-assumptions (φs ∷ φ) = forget-assumptions φs M.⊚ M.π
+
+
+interpret-assumption : Assumption φs φ → Tm ⟦ Γ ∣ φs ⟧ctx-env (⟦ φ ⟧frm M.[ forget-assumptions φs ])
+interpret-assumption azero    = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] M.ξ
+interpret-assumption (asuc x) = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] (interpret-assumption x M.[ M.π ]')
+
+⟦_⟧der : (Γ ∣ φs ⊢ φ) → Tm ⟦ Γ ∣ φs ⟧ctx-env (⟦ φ ⟧frm M.[ forget-assumptions φs ])
+⟦ refl ⟧der = (M.refl' _) M.[ _ ]'
+⟦ sym d ⟧der = M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)
+⟦ trans d1 d2 ⟧der = M.ι[ M.Id-natural _ ] M.trans' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d1 ⟧der) (M.ι⁻¹[ M.Id-natural _ ] ⟦ d2 ⟧der)
+⟦ cong f {t1 = t1} {t2 = t2} d ⟧der = M.ι[ M.≅ᵗʸ-trans (M.Id-natural _) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t1 ⟧tm) (M.app-natural _ ⟦ f ⟧tm ⟦ t2 ⟧tm)) ]
+  M.cong' (M.ι⁻¹[ M.⇛-natural _ ] (⟦ f ⟧tm M.[ _ ]')) (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)
+⟦ fun-cong d t ⟧der = {!!}
+⟦ assume d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
+⟦ assumption x ⟧der = interpret-assumption x
+⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.app (M.app M.pair ⟦ d1 ⟧der) ⟦ d2 ⟧der
+⟦ ∧-elimˡ d ⟧der = M.app M.fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
+⟦ ∧-elimʳ d ⟧der = M.app M.snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
+⟦ ∀-intro d ⟧der = {!!}
+⟦ ∀-elim d t ⟧der = {!!}
+⟦ fun-β ⟧der = {!!} M.[ _ ]'
+⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-discr M.[ _ ]'
+⟦ nat-elim-β-zero {a = a} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-zero ⟦ a ⟧tm _) M.[ _ ]'
+⟦ nat-elim-β-suc {a = a} {f = f} {n = n} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-suc ⟦ a ⟧tm ⟦ f ⟧tm ⟦ n ⟧tm) M.[ _ ]'
+⟦ if-β-true {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-true ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'
+⟦ if-β-false {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-false ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'
+⟦ pair-β-fst {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id {!M.β-⊠-fst ⟦ t ⟧tm ⟦ s ⟧tm!} M.[ _ ]' -- Type-checking is extremely slow + consumes a lot of memory.
+⟦ pair-β-snd {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id {!M.β-⊠-snd ⟦ t ⟧tm ⟦ s ⟧tm!} M.[ _ ]'
+⟦ bool-induction d1 d2 ⟧der = {!!}
+⟦ nat-induction d1 d2 ⟧der = {!!}

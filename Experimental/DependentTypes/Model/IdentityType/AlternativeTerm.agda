@@ -76,9 +76,22 @@ _↣_.naturality (to (Id-cong A=B a=b a=b')) = uip _ _
 eq (isoˡ (Id-cong A=B a=b a=b')) _ = uip _ _
 eq (isoʳ (Id-cong A=B a=b a=b')) _ = uip _ _
 
+Id-cong' : {A : Ty Γ} {a a' b b' : Tm Γ A} →
+           a ≅ᵗᵐ b → a' ≅ᵗᵐ b' →
+           Id a a' ≅ᵗʸ Id b b'
+func (from (Id-cong' e e')) ea = trans (sym (eq e _)) (trans ea (eq e' _))
+_↣_.naturality (from (Id-cong' ea eb)) = uip _ _
+func (to (Id-cong' e e')) eb = trans (eq e _) (trans eb (sym (eq e' _)))
+_↣_.naturality (to (Id-cong' ea eb)) = uip _ _
+eq (isoˡ (Id-cong' ea eb)) _ = uip _ _
+eq (isoʳ (Id-cong' ea eb)) _ = uip _ _
+
 eq-reflect : {a b : Tm Γ A} → Tm Γ (Id a b) → a ≅ᵗᵐ b
 eq (eq-reflect e) {x = x} γ = e ⟨ x , γ ⟩'
 
+≅ᵗᵐ-to-Id : {a b : Tm Γ A} → a ≅ᵗᵐ b → Tm Γ (Id a b)
+≅ᵗᵐ-to-Id e ⟨ x , γ ⟩' = eq e γ
+Tm.naturality (≅ᵗᵐ-to-Id e) _ _ = uip _ _
 
 private
   -- Example exploring how difficult it is to use subst'.
