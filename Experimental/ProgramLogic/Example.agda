@@ -8,6 +8,7 @@ open import Data.Nat hiding (_+_)
 open import Relation.Binary.PropositionalEquality
 
 open import Experimental.ProgramLogic.STT
+open import Experimental.ProgramLogic.Formula
 open import Extraction
 
 private variable
@@ -26,3 +27,6 @@ _+_ = extract-term ⟦ plus {◇} ⟧tm
 
 _ : 16 + 9 ≡ 25
 _ = refl
+
+plus-zeroʳ : Formula Γ
+plus-zeroʳ = ∀[ Nat' ] (plus ∙ var vzero ∙ lit 0 ≡ᶠ var vzero)
