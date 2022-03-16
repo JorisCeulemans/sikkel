@@ -8,8 +8,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.CwF-Structure
 open import Model.Type.Discrete
-import Experimental.DependentTypes.Model.IdentityType as IdentityType
-open IdentityType.Alternative2
+open import Experimental.DependentTypes.Model.IdentityType.AlternativeVar
 
 private
   variable
