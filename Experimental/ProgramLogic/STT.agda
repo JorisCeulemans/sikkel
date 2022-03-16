@@ -34,7 +34,7 @@ data CtxExpr : Set where
   _,,_ : (Γ : CtxExpr) (T : TyExpr) → CtxExpr
 
 private variable
-  Γ Δ : CtxExpr
+  Γ Δ Θ : CtxExpr
 
 
 -- Variables are represented as de Bruijn indices.
@@ -94,3 +94,78 @@ ty-closed (T ⊠ S) = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (ty-closed 
 ⟦ pair t s ⟧tm = M.app (M.app M.pair ⟦ t ⟧tm) ⟦ s ⟧tm
 ⟦ fst p ⟧tm = M.app M.fst ⟦ p ⟧tm
 ⟦ snd p ⟧tm = M.app M.snd ⟦ p ⟧tm
+
+
+--------------------------------------------------
+-- Definition of some operations on contexts and terms,
+--   most notably weakening of a term.
+
+_++ctx_ : CtxExpr → CtxExpr → CtxExpr
+Γ ++ctx ◇ = Γ
+Γ ++ctx (Δ ,, T) = (Γ ++ctx Δ) ,, T
+
+multi-weaken-var : {Γ : CtxExpr} (Δ : CtxExpr) → Var (Γ ++ctx Δ) T → Var ((Γ ,, S) ++ctx Δ) T
+multi-weaken-var ◇        x        = vsuc x
+multi-weaken-var (Δ ,, R) vzero    = vzero
+multi-weaken-var (Δ ,, R) (vsuc x) = vsuc (multi-weaken-var Δ x)
+
+multi-weaken-tm : TmExpr (Γ ++ctx Δ) T → TmExpr ((Γ ,, S) ++ctx Δ) T
+multi-weaken-tm {Γ} {Δ} (var x) = var (multi-weaken-var Δ x)
+multi-weaken-tm {Γ} {Δ} (lam t) = lam (multi-weaken-tm {Γ} {Δ ,, _} t)
+multi-weaken-tm (f ∙ t) = multi-weaken-tm f ∙ multi-weaken-tm t
+multi-weaken-tm (lit n) = lit n
+multi-weaken-tm suc = suc
+multi-weaken-tm (nat-elim a f) = nat-elim (multi-weaken-tm a) (multi-weaken-tm f)
+multi-weaken-tm true = true
+multi-weaken-tm false = true
+multi-weaken-tm (if b t f) = if (multi-weaken-tm b) (multi-weaken-tm t) (multi-weaken-tm f)
+multi-weaken-tm (pair t s) = pair (multi-weaken-tm t) (multi-weaken-tm s)
+multi-weaken-tm (fst p) = fst (multi-weaken-tm p)
+multi-weaken-tm (snd p) = snd (multi-weaken-tm p)
+
+weaken-tm : TmExpr Γ T → TmExpr (Γ ,, S) T
+weaken-tm t = multi-weaken-tm {Δ = ◇} t
+
+
+--------------------------------------------------
+-- Substitutions are sequences of terms.
+
+data SubstExpr (Δ : CtxExpr) : CtxExpr → Set where
+  [] : SubstExpr Δ ◇
+  _∷_ : SubstExpr Δ Γ → TmExpr Δ T → SubstExpr Δ (Γ ,, T)
+
+weaken-subst : SubstExpr Δ Γ → SubstExpr (Δ ,, S) Γ
+weaken-subst [] = []
+weaken-subst (σ ∷ t) = weaken-subst σ ∷ (weaken-tm t)
+
+id-subst : SubstExpr Γ Γ
+id-subst {◇} = []
+id-subst {Γ ,, T} = weaken-subst (id-subst {Γ}) ∷ var vzero
+
+π : SubstExpr (Γ ,, T) Γ
+π = weaken-subst id-subst
+
+_⊹ : SubstExpr Δ Γ → SubstExpr (Δ ,, T) (Γ ,, T)
+σ ⊹ = weaken-subst σ ∷ var vzero
+
+subst-var : Var Γ T → SubstExpr Δ Γ → TmExpr Δ T
+subst-var vzero    (σ ∷ t) = t
+subst-var (vsuc x) (σ ∷ s) = subst-var x σ
+
+_[_]tm : TmExpr Γ T → SubstExpr Δ Γ → TmExpr Δ T
+var x [ σ ]tm = subst-var x σ
+lam t [ σ ]tm = lam (t [ σ ⊹ ]tm)
+(f ∙ t) [ σ ]tm = (f [ σ ]tm) ∙ (t [ σ ]tm)
+lit n [ σ ]tm = lit n
+suc [ σ ]tm = suc
+nat-elim a f [ σ ]tm = nat-elim (a [ σ ]tm) (f [ σ ]tm)
+true [ σ ]tm = true
+false [ σ ]tm = false
+if b t f [ σ ]tm = if (b [ σ ]tm) (t [ σ ]tm) (f [ σ ]tm)
+pair t s [ σ ]tm = pair (t [ σ ]tm) (s [ σ ]tm)
+fst p [ σ ]tm = fst (p [ σ ]tm)
+snd p [ σ ]tm = snd (p [ σ ]tm)
+
+_⊚_ : SubstExpr Γ Θ → SubstExpr Δ Γ → SubstExpr Δ Θ
+[]      ⊚ σ = []
+(τ ∷ t) ⊚ σ = (τ ⊚ σ) ∷ (t [ σ ]tm)
