@@ -145,7 +145,7 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
       ≅⟨ prim-pair-cong (mod-η μ (prim-fst p)) (mod-η μ (prim-snd p)) ⟩
         prim-pair (prim-fst p)
                   (prim-snd p)
-      ≅˘⟨ η-⊠ p ⟩
+      ≅˘⟨ prim-η-⊠ p ⟩
         p ∎
       where open ≅ᵗᵐ-Reasoning
 
@@ -163,7 +163,7 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
       ≅⟨ mod-intro-cong μ (prim-pair-cong (mod-β μ _) (mod-β μ _)) ⟩
         mod-intro μ (prim-pair (prim-fst (mod-elim μ p))
                                (prim-snd (mod-elim μ p)))
-      ≅˘⟨ mod-intro-cong μ (η-⊠ (mod-elim μ p)) ⟩
+      ≅˘⟨ mod-intro-cong μ (prim-η-⊠ (mod-elim μ p)) ⟩
         mod-intro μ (mod-elim μ p)
       ≅⟨ mod-η μ p ⟩
         p ∎
