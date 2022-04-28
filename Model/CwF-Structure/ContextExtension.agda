@@ -24,7 +24,7 @@ infixl 15 _,,_∈_
 private
   variable
     Γ Δ Θ : Ctx C
-    T S : Ty Γ
+    T S R : Ty Γ
 
 
 -- Definition of the extension of a context Γ with a type T.
@@ -125,6 +125,15 @@ _⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
 ,,-map : (T ↣ S) → (Γ ,, T ⇒ Γ ,, S)
 func (,,-map η) [ γ , t ] = [ γ , func η t ]
 naturality (,,-map η) = cong [ _ ,_] (naturality η)
+
+,,-map-cong : {η φ : T ↣ S} → η ≅ⁿ φ → ,,-map η ≅ˢ ,,-map φ
+eq (,,-map-cong e) [ γ , t ] = cong ([ γ ,_]) (eq e t)
+
+,,-map-id : {T : Ty Γ} → ,,-map (id-trans T) ≅ˢ id-subst (Γ ,, T)
+eq ,,-map-id _ = refl
+
+,,-map-comp : (η : S ↣ T) (φ : R ↣ S) → ,,-map (η ⊙ φ) ≅ˢ ,,-map η ⊚ ,,-map φ
+eq (,,-map-comp η φ) _ = refl
 
 ,,-cong : T ≅ᵗʸ S → Γ ,, T ≅ᶜ Γ ,, S
 from (,,-cong T=S) = ,,-map (from T=S)
