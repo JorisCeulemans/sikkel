@@ -91,9 +91,9 @@ ty-closed (T ⊠ S) = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (ty-closed 
 ⟦ true ⟧tm = M.true'
 ⟦ false ⟧tm = M.false'
 ⟦ if b t f ⟧tm = M.if' ⟦ b ⟧tm then' ⟦ t ⟧tm else' ⟦ f ⟧tm
-⟦ pair t s ⟧tm = M.app (M.app M.pair ⟦ t ⟧tm) ⟦ s ⟧tm
-⟦ fst p ⟧tm = M.app M.fst ⟦ p ⟧tm
-⟦ snd p ⟧tm = M.app M.snd ⟦ p ⟧tm
+⟦ pair t s ⟧tm = M.prim-pair ⟦ t ⟧tm ⟦ s ⟧tm
+⟦ fst p ⟧tm = M.prim-fst ⟦ p ⟧tm
+⟦ snd p ⟧tm = M.prim-snd ⟦ p ⟧tm
 
 
 --------------------------------------------------

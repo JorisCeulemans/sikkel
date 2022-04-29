@@ -124,7 +124,7 @@ interpret-assumption (asuc x) = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] (interpret-as
 ⟦ nat-elim-β-suc {a = a} {f = f} {n = n} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-suc ⟦ a ⟧tm ⟦ f ⟧tm ⟦ n ⟧tm) M.[ _ ]'
 ⟦ if-β-true {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-true ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'
 ⟦ if-β-false {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-false ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'
-⟦ pair-β-fst {t = t} {s = s} ⟧der = {!M.≅ᵗᵐ-to-Id {!M.β-⊠-fst ⟦ t ⟧tm ⟦ s ⟧tm!} M.[ _ ]'!} -- Type-checking is extremely slow + consumes a lot of memory.
-⟦ pair-β-snd {t = t} {s = s} ⟧der = {!M.≅ᵗᵐ-to-Id {!M.β-⊠-snd ⟦ t ⟧tm ⟦ s ⟧tm!} M.[ _ ]'!}
+⟦ pair-β-fst {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id (M.β-⊠-prim-fst ⟦ t ⟧tm ⟦ s ⟧tm) M.[ _ ]'
+⟦ pair-β-snd {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id (M.β-⊠-prim-snd ⟦ t ⟧tm ⟦ s ⟧tm) M.[ _ ]'
 ⟦ bool-induction d1 d2 ⟧der = {!!}
 ⟦ nat-induction d1 d2 ⟧der = {!!}

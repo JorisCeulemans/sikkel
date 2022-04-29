@@ -130,7 +130,7 @@ to-ctx-subst (Ξ ∷ᶠ φ) = to-ctx-subst Ξ M.⊚ M.π
 ⟦ nat-elim-β-suc ⟧der = {!!}
 ⟦ if-β-true ⟧der = {!!}
 ⟦ if-β-false ⟧der = {!!}
-⟦ pair-β-fst ⟧der = {!!}
-⟦ pair-β-snd ⟧der = {!!}
+⟦ pair-β-fst {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id (M.β-⊠-prim-fst ⟦ t ⟧tm ⟦ s ⟧tm) M.[ _ ]'
+⟦ pair-β-snd {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id (M.β-⊠-prim-snd ⟦ t ⟧tm ⟦ s ⟧tm) M.[ _ ]'
 ⟦ bool-induction d1 d2 ⟧der = {!!}
 ⟦ nat-induction d1 d2 ⟧der = {!!}
