@@ -112,9 +112,9 @@ to-ctx-subst (Ξ ∷ᶠ φ) = to-ctx-subst Ξ M.⊚ M.π
 ⟦ fun-cong d t ⟧der = {!!}
 ⟦ assume d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
 ⟦ assumption x ⟧der = {!!}
-⟦ ∧-intro d1 d2 ⟧der = {!!}
-⟦ ∧-elimˡ d ⟧der = {!!}
-⟦ ∧-elimʳ d ⟧der = {!!}
+⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
+⟦ ∧-elimˡ d ⟧der = M.prim-fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
+⟦ ∧-elimʳ d ⟧der = M.prim-snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
 ⟦ ∀-intro {Ξ = Ξ} {T = T} {φ = φ} d ⟧der = M.ι[ M.≅ᵗʸ-trans (MDF.Pi-natural _) (MDF.Pi-cong (ty-closed T) proof) ] (MDF.lam _ ⟦ d ⟧der)
   where
     proof : ⟦ φ ⟧frm M.[ (to-ctx-subst Ξ) M.⊹ ] M.≅ᵗʸ
@@ -125,11 +125,11 @@ to-ctx-subst (Ξ ∷ᶠ φ) = to-ctx-subst Ξ M.⊚ M.π
                               (M.≅ˢ-sym (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.⊚-id-substʳ _))))
 ⟦ ∀-elim d t ⟧der = {!!}
 ⟦ fun-β ⟧der = {!!}
-⟦ suc-lit ⟧der = {!!}
-⟦ nat-elim-β-zero ⟧der = {!!}
-⟦ nat-elim-β-suc ⟧der = {!!}
-⟦ if-β-true ⟧der = {!!}
-⟦ if-β-false ⟧der = {!!}
+⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-discr M.[ _ ]'
+⟦ nat-elim-β-zero {a = a} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-zero ⟦ a ⟧tm ⟦ f ⟧tm) M.[ _ ]'
+⟦ nat-elim-β-suc {a = a} {f = f} {n = n} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-suc ⟦ a ⟧tm ⟦ f ⟧tm ⟦ n ⟧tm) M.[ _ ]'
+⟦ if-β-true {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-true ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'
+⟦ if-β-false {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-false ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'
 ⟦ pair-β-fst {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id (M.β-⊠-prim-fst ⟦ t ⟧tm ⟦ s ⟧tm) M.[ _ ]'
 ⟦ pair-β-snd {t = t} {s = s} ⟧der = M.≅ᵗᵐ-to-Id (M.β-⊠-prim-snd ⟦ t ⟧tm ⟦ s ⟧tm) M.[ _ ]'
 ⟦ bool-induction d1 d2 ⟧der = {!!}
