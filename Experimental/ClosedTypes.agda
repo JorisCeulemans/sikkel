@@ -48,6 +48,12 @@ eq (stm-subst-id {T = T} t) γ = ty-id T
 stm-subst-comp : (t : SimpleTm Δ T) (σ : Γ ⇒ Δ) (τ : Θ ⇒ Γ) → ((t [ σ ]s) [ τ ]s) ≅ᵗᵐ (t [ σ ⊚ τ ]s)
 eq (stm-subst-comp {T = T} t σ τ) θ = ty-id T
 
+stm-subst-cong-subst : (t : SimpleTm Δ T) {σ τ : Γ ⇒ Δ} → σ ≅ˢ τ → t [ σ ]s ≅ᵗᵐ t [ τ ]s
+eq (stm-subst-cong-subst {T = T} t e) γ = cong (λ δ → T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩') (eq e γ)
+
+stm-subst-cong-tm : {t s : SimpleTm Δ T} → t ≅ᵗᵐ s → (σ : Γ ⇒ Δ) → t [ σ ]s ≅ᵗᵐ s [ σ ]s
+eq (stm-subst-cong-tm {T = T} e σ) γ = cong (T ⟪ _ , refl ⟫_) (eq e (func σ γ))
+
 -- Extending a context with a closed type
 infixl 15 _,,ₛ_
 _,,ₛ_ : Ctx C → ClosedTy C → Ctx C
@@ -69,6 +75,16 @@ eq (,ₛ-β2 {T = T} σ t) δ = trans (ty-id T) (ty-id T)
 ,ₛ-η : (σ : Δ ⇒ Γ ,,ₛ T) → σ ≅ˢ ((π ⊚ σ) ,ₛ (sξ [ σ ]s))
 eq (,ₛ-η {T = T} σ) δ = cong [ _ ,_] (sym (trans (ty-id T) (ty-id T)))
 
+,ₛ-cong1 : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (t : SimpleTm Δ T) → σ ,ₛ t ≅ˢ τ ,ₛ t
+eq (,ₛ-cong1 {T = T} e t) δ = cong [_, T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩' ] (eq e δ)
+
+,ₛ-cong2 : (σ : Δ ⇒ Γ) {t s : SimpleTm Δ T} → t ≅ᵗᵐ s → σ ,ₛ t ≅ˢ σ ,ₛ s
+eq (,ₛ-cong2 {T = T} σ e) δ = cong (λ x → [ func σ δ , T ⟪ _ , refl ⟫ x ]) (eq e δ)
+
+-- The following is also provable from the η and β laws for _,ₛ_.
+,ₛ-⊚ : (σ : Δ ⇒ Γ) (t : SimpleTm Δ T) (τ : Θ ⇒ Δ) → ((σ ,ₛ t) ⊚ τ) ≅ˢ ((σ ⊚ τ) ,ₛ (t [ τ ]s))
+eq (,ₛ-⊚ {T = T} σ t τ) θ = cong [ _ ,_] (sym (ty-id T))
+
 _s⊹ : (σ : Δ ⇒ Γ) → (Δ ,,ₛ T ⇒ Γ ,,ₛ T)
 σ s⊹ = (σ ⊚ π) ,ₛ sξ
 
@@ -81,6 +97,23 @@ sλ[ T ] b = ι[ ⇛-natural (!◇ _) ] (lam _ (ι[ closed-ty-natural _ π ] b))
 
 _∙ₛ_ : SimpleTm Γ (T ⇛ S) → SimpleTm Γ T → SimpleTm Γ S
 f ∙ₛ t = app (ι⁻¹[ ⇛-natural _ ] f) t
+
+sλ-natural : {b : SimpleTm (Γ ,,ₛ T) S} (σ : Δ ⇒ Γ) → (sλ[ T ] b) [ σ ]s ≅ᵗᵐ (sλ[ T ] (b [ σ s⊹ ]s))
+eq (sλ-natural {C} {Γ = Γ} {T = T} {S = S} {b = b} σ) δ = to-pshfun-eq (λ _ _ _ →
+  let proof1 = trans (ctx-id Γ) (trans (cong (λ - → Γ ⟪ - ⟫ _) hom-idˡ) (naturality σ))
+      proof2 = trans (strong-ty-id T) (cong (T ⟪ hom-id , refl ⟫_) (ty-cong T refl))
+  in
+  trans (ty-cong-2-1 S hom-idʳ)
+        (trans (naturality b hom-id (to-Σ-ty-eq T proof1 proof2))
+               (sym (trans (strong-ty-id S)
+                           (trans (ty-id S) (ty-id S))))))
+  where open BaseCategory C
+
+{-
+-- Typechecking takes very long, we should disable η equality for semantic terms.
+sλ-cong : {b1 b2 : SimpleTm (Γ ,,ₛ T) S} → b1 ≅ᵗᵐ b2 → (sλ[ T ] b1) ≅ᵗᵐ (sλ[ T ] b2)
+sλ-cong e = ι-cong (⇛-natural (!◇ _)) (lam-cong _ (ι-cong (closed-ty-natural _ π) e))
+-}
 
 sfun-β : {T S : ClosedTy C} (b : SimpleTm (Γ ,,ₛ T) S) (t : SimpleTm Γ T) → (sλ[ T ] b) ∙ₛ t ≅ᵗᵐ (b [ id-subst Γ ,ₛ t ]s)
 eq (sfun-β {C = C} {Γ = Γ} {T = T} {S = S} b t) γ =
