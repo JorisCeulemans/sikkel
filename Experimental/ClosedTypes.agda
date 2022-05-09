@@ -4,6 +4,8 @@
 
 module Experimental.ClosedTypes where
 
+open import Data.Bool using (true; false)
+open import Data.Nat using (suc)
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
@@ -12,6 +14,7 @@ open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
 open import Model.CwF-Structure.ContextExtension
+open import Model.Type.Discrete
 open import Model.Type.Function
 open import Model.Type.Product
 
@@ -99,6 +102,54 @@ eq (sfun-η {C = C} {Γ = Γ} {T = T} {S = S} f) γ = to-pshfun-eq λ { ρ refl 
                            (sym (trans ($-cong (f ⟨ _ , γ ⟩') (sym (BaseCategory.hom-idʳ C)))
                                        (trans (cong (_$⟨ BaseCategory.hom-id C , refl ⟩ t) (naturality f ρ refl))
                                               ($-cong (f ⟨ _ , _ ⟩') (sym (BaseCategory.hom-idˡ C))))))))) }
+
+
+--------------------------------------------------
+-- All discrete types are closed
+
+sdiscr : {A : Set} → A → SimpleTm Γ (Discr A)
+sdiscr a = (discr a) [ !◇ _ ]'
+
+sdiscr-func : {A B : Set} → (A → B) → SimpleTm Γ (Discr A ⇛ Discr B)
+sdiscr-func f = (discr-func f) [ !◇ _ ]'
+
+sdiscr-func₂ : {A B C : Set} → (A → B → C) → SimpleTm Γ (Discr A ⇛ Discr B ⇛ Discr C)
+sdiscr-func₂ f = (discr-func₂ f) [ !◇ _ ]'
+
+strue sfalse : SimpleTm Γ Bool'
+strue = sdiscr true
+sfalse = sdiscr false
+
+sif : SimpleTm Γ Bool' → SimpleTm Γ T → SimpleTm Γ T → SimpleTm Γ T
+sif b t f = if' (ι⁻¹[ Discr-natural _ _ ] b) then' t else' f
+
+sif-β-true : (t f : SimpleTm Γ T) → sif (sdiscr true) t f ≅ᵗᵐ t
+sif-β-true t f = record { eq = λ _ → refl }
+
+sif-β-false : (t f : SimpleTm Γ T) → sif (sdiscr false) t f ≅ᵗᵐ f
+sif-β-false t f = record { eq = λ _ → refl }
+
+szero : SimpleTm Γ Nat'
+szero = sdiscr 0
+
+ssuc : SimpleTm Γ (Nat' ⇛ Nat')
+ssuc = sdiscr-func suc
+
+snat-elim : {A : ClosedTy C} → SimpleTm Γ A → SimpleTm Γ (A ⇛ A) → SimpleTm Γ (Nat' ⇛ A)
+snat-elim a f = ι[ ≅ᵗʸ-trans (⇛-natural _) (⇛-cong (Discr-natural _ _) ≅ᵗʸ-refl) ] (nat-elim _ a (ι⁻¹[ ⇛-natural _ ] f))
+
+snat-β-zero : {A : ClosedTy C} (a : SimpleTm Γ A) (f : SimpleTm Γ (A ⇛ A)) → snat-elim a f ∙ₛ szero ≅ᵗᵐ a
+snat-β-zero {Γ = Γ} {A = A} a f = record { eq = λ γ → trans (ty-cong A refl) (naturality a _ (trans (ctx-id Γ) (ctx-id Γ))) }
+
+snat-β-suc : {A : ClosedTy C} (a : SimpleTm Γ A) (f : SimpleTm Γ (A ⇛ A)) (n : SimpleTm Γ Nat') →
+             snat-elim a f ∙ₛ (ssuc ∙ₛ n) ≅ᵗᵐ (f ∙ₛ (snat-elim a f ∙ₛ n))
+snat-β-suc {C = C} {Γ = Γ} a f n = record { eq = λ {x} γ →
+  let t = _
+  in
+  trans (sym (naturality (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩')))
+        (trans ($-cong (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩') refl)
+               (cong (_$⟨ hom-id , _ ⟩ t) (naturality f {x} {x} {Γ ⟪ hom-id ⟫ γ} {γ} hom-id (trans (ctx-id Γ) (ctx-id Γ))))) }
+  where open BaseCategory C
 
 
 --------------------------------------------------
