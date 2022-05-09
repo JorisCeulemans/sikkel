@@ -58,6 +58,10 @@ cong' : (f : Tm Γ (A ⇛ B)) {a1 a2 : Tm Γ A} → Tm Γ (Id a1 a2) → Tm Γ (
 cong' f e ⟨ x , γ ⟩' = cong (f ⟨ x , γ ⟩' $⟨ hom-id , _ ⟩_) (e ⟨ x , γ ⟩')
 Tm.naturality (cong' f e) _ _ = uip _ _
 
+fun-cong' : {f g : Tm Γ (A ⇛ B)} → Tm Γ (Id f g) → (a : Tm Γ A) → Tm Γ (Id (app f a) (app g a))
+fun-cong' {Γ} e a ⟨ x , γ ⟩' = cong (_$⟨ hom-id , ctx-id Γ ⟩ (a ⟨ x , γ ⟩')) (e ⟨ x , γ ⟩')
+Tm.naturality (fun-cong' e a) _ _ = uip _ _
+
 Id-natural : (σ : Δ ⇒ Γ) {a b : Tm Γ A} → (Id a b) [ σ ] ≅ᵗʸ Id (a [ σ ]') (b [ σ ]')
 func (from (Id-natural σ {a = a} {b = b})) e = e
 _↣_.naturality (from (Id-natural σ {a = a} {b = b})) = refl

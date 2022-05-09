@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module Experimental.ProgramLogic.Derivation.OneEnvironment where
 
 open import Data.Nat
@@ -104,14 +106,23 @@ to-ctx-subst [] = M.id-subst M.◇
 to-ctx-subst (Ξ ∷ᵛ T) = ((to-ctx-subst Ξ) M.⊹) M.⊚ M._≅ᶜ_.to (M.,,-cong (ty-closed T))
 to-ctx-subst (Ξ ∷ᶠ φ) = to-ctx-subst Ξ M.⊚ M.π
 
+interpret-assumption : Assumption Ξ φ → Tm ⟦ Ξ ⟧env (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
+interpret-assumption azero = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] M.ξ
+interpret-assumption (asuc x) = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] (interpret-assumption x M.[ M.π ]')
+interpret-assumption (skip-var x) = {!interpret-assumption x!}
+
 ⟦_⟧der : (Ξ ⊢ φ) → Tm ⟦ Ξ ⟧env (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
 ⟦ refl ⟧der = (M.refl' _) M.[ _ ]'
 ⟦ sym d ⟧der = M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)
 ⟦ trans d1 d2 ⟧der = M.ι[ M.Id-natural _ ] M.trans' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d1 ⟧der) (M.ι⁻¹[ M.Id-natural _ ] ⟦ d2 ⟧der)
-⟦ cong f d ⟧der = {!!}
-⟦ fun-cong d t ⟧der = {!!}
+⟦ cong f {t1} {t2} d ⟧der =
+  M.ι[ M.≅ᵗʸ-trans (M.Id-natural _ {M.app ⟦ f ⟧tm ⟦ t1 ⟧tm} {M.app ⟦ f ⟧tm ⟦ t2 ⟧tm}) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t1 ⟧tm) (M.app-natural _ ⟦ f ⟧tm ⟦ t2 ⟧tm)) ]
+    {!M.cong' (M.ι⁻¹[ M.⇛-natural _ ] (⟦ f ⟧tm M.[ _ ]')) {⟦ t1 ⟧tm M.[ _ ]'} {⟦ t2 ⟧tm M.[ _ ]'} (M.ι⁻¹[ M.Id-natural _ {⟦ t1 ⟧tm} {⟦ t2 ⟧tm} ] ⟦ d ⟧der)!}
+⟦ fun-cong {f = f} {g = g} d t ⟧der =
+  M.ι[ M.≅ᵗʸ-trans (M.Id-natural _) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t ⟧tm) (M.app-natural _ ⟦ g ⟧tm ⟦ t ⟧tm)) ]
+    {!M.fun-cong' (M.≅ᵗᵐ-to-Id (M.ι⁻¹-cong (M.⇛-natural ?) (M.tm-subst-cong-tm {!!} (M.eq-reflect {!⟦ d ⟧der!})))) (⟦ t ⟧tm M.[ _ ]')!}
 ⟦ assume d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
-⟦ assumption x ⟧der = {!!}
+⟦ assumption x ⟧der = interpret-assumption x
 ⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
 ⟦ ∧-elimʳ d ⟧der = M.prim-snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)

@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 --------------------------------------------------
 -- A Simple Type Theory for which we will provide a logic
 --------------------------------------------------
@@ -169,3 +171,29 @@ snd p [ σ ]tm = snd (p [ σ ]tm)
 _⊚_ : SubstExpr Γ Θ → SubstExpr Δ Γ → SubstExpr Δ Θ
 []      ⊚ σ = []
 (τ ∷ t) ⊚ σ = (τ ⊚ σ) ∷ (t [ σ ]tm)
+
+
+-- Interpretation of substitutions as presheaf morphisms
+⟦_⟧subst : SubstExpr Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
+⟦ [] ⟧subst = M.!◇ _
+⟦ _∷_ {_} {T} σ t ⟧subst = M.to-ext-subst _ ⟦ σ ⟧subst (M.ι[ ty-closed T ] ⟦ t ⟧tm)
+
+tm-subst-sound : (t : TmExpr Γ T) (σ : SubstExpr Δ Γ) → (M.ι[ ty-closed T ] ⟦ t [ σ ]tm ⟧tm) M.≅ᵗᵐ ⟦ t ⟧tm M.[ ⟦ σ ⟧subst ]'
+tm-subst-sound {T = T} (var vzero)    (σ ∷ t) = record { eq = {!!} }
+  -- M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (M.ι-subst-commute ⟦ σ ∷ t ⟧subst (M.≅ᵗʸ-sym (ty-closed T)) M.ξ)) (M.≅ᵗᵐ-trans (M.ι-cong α (M.ctx-ext-subst-β₂ _ _)) {!!}))
+  -- where
+  --   α = M.ty-subst-cong-ty
+  --      (M.to-ext-subst ⟦ T ⟧ty ⟦ σ ⟧subst (M.ι[ ty-closed T ] ⟦ t ⟧tm))
+  --      (M.≅ᵗʸ-sym (ty-closed T))
+tm-subst-sound (var (vsuc x)) (σ ∷ t) = record { eq = {!!} }
+tm-subst-sound (lam t) σ = record { eq = λ _ → M.to-pshfun-eq {!!} }
+tm-subst-sound (f ∙ t) σ = {!!}
+tm-subst-sound (lit n) σ = M.≅ᵗᵐ-sym (M.discr-natural n ⟦ σ ⟧subst)
+tm-subst-sound suc σ = {!!}
+tm-subst-sound (nat-elim a f) σ = {!!}
+tm-subst-sound true σ = M.≅ᵗᵐ-sym (M.discr-natural _ _)
+tm-subst-sound false σ = M.≅ᵗᵐ-sym (M.discr-natural _ _)
+tm-subst-sound (if b t f) σ = {!!}
+tm-subst-sound (pair t s) σ = {!!}
+tm-subst-sound (fst {T = T} {S = S} p) σ = {!!} -- M.≅ᵗᵐ-trans (M.prim-fst-ι (ty-closed T) (ty-closed S) ⟦ p [ σ ]tm ⟧tm) {!tm-subst-sound p σ!}
+tm-subst-sound (snd p) σ = {!!}
