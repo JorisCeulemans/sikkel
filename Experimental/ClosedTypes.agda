@@ -109,11 +109,8 @@ eq (sλ-natural {C} {Γ = Γ} {T = T} {S = S} {b = b} σ) δ = to-pshfun-eq (λ 
                            (trans (ty-id S) (ty-id S))))))
   where open BaseCategory C
 
-{-
--- Typechecking takes very long, we should disable η equality for semantic terms.
 sλ-cong : {b1 b2 : SimpleTm (Γ ,,ₛ T) S} → b1 ≅ᵗᵐ b2 → (sλ[ T ] b1) ≅ᵗᵐ (sλ[ T ] b2)
 sλ-cong e = ι-cong (⇛-natural (!◇ _)) (lam-cong _ (ι-cong (closed-ty-natural _ π) e))
--}
 
 sfun-β : {T S : ClosedTy C} (b : SimpleTm (Γ ,,ₛ T) S) (t : SimpleTm Γ T) → (sλ[ T ] b) ∙ₛ t ≅ᵗᵐ (b [ id-subst Γ ,ₛ t ]s)
 eq (sfun-β {C = C} {Γ = Γ} {T = T} {S = S} b t) γ =

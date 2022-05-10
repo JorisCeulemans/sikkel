@@ -16,6 +16,7 @@ open import Model.Modality
 open import Applications.GuardedRecursion.Model.Modalities.Later
 open import Applications.GuardedRecursion.Model.Modalities.Constantly
 open import Applications.GuardedRecursion.Model.Modalities.Forever
+open OmegaLimit
 open import Applications.GuardedRecursion.Model.Modalities.Bundles
 
 
@@ -39,16 +40,14 @@ eq (isoʳ (earlier-constantly-ctx Γ)) _ = refl
 
 forever-later-tyʳ : {Γ : Ctx ★} (T : Ty (◄ (constantly-ctx Γ))) →
                     forever-ty (▻ T) ≅ᵗʸ forever-ty (T [ to (earlier-constantly-ctx Γ) ])
-func (from (forever-later-tyʳ T)) t ⟨ n , _ ⟩' = t ⟨ suc n , tt ⟩'
-Tm.naturality (func (from (forever-later-tyʳ T)) t) m≤n _ = trans (ty-cong T refl) (Tm.naturality t (s≤s m≤n) refl)
-_↣_.naturality (from (forever-later-tyʳ T)) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
-func (to (forever-later-tyʳ T)) t ⟨ zero  , _ ⟩' = _
-func (to (forever-later-tyʳ T)) t ⟨ suc n , _ ⟩' = t ⟨ n , tt ⟩'
-Tm.naturality (func (to (forever-later-tyʳ T)) t) z≤n _ = refl
-Tm.naturality (func (to (forever-later-tyʳ T)) t) (s≤s m≤n) _ = trans (ty-cong T refl) (Tm.naturality t m≤n refl)
-_↣_.naturality (to (forever-later-tyʳ T)) = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → ty-cong T refl } })
-eq (isoˡ (forever-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ { {zero} _ → refl ; {suc n} _ → refl } })
-eq (isoʳ (forever-later-tyʳ T)) t = tm-≅-to-≡ (record { eq = λ _ → refl })
+limit (func (from (forever-later-tyʳ T)) l) = λ n → limit l (suc n)
+limit-natural (func (from (forever-later-tyʳ T)) l) m≤n = limit-natural l (s≤s m≤n)
+_↣_.naturality (from (forever-later-tyʳ T)) = to-ω-limit-eq (λ _ → ty-cong T refl)
+limit (func (to (forever-later-tyʳ T)) l) = λ { zero → _ ; (suc n) → limit l n }
+limit-natural (func (to (forever-later-tyʳ T)) l) = λ { z≤n → refl ; (s≤s m≤n) → limit-natural l m≤n }
+_↣_.naturality (to (forever-later-tyʳ T)) = to-ω-limit-eq (λ { zero → refl ; (suc n) → ty-cong T refl })
+eq (isoˡ (forever-later-tyʳ T)) l = to-ω-limit-eq (λ { zero → refl ; (suc n) → refl })
+eq (isoʳ (forever-later-tyʳ T)) l = to-ω-limit-eq (λ _ → refl)
 
 forever-later : forever ⓜ later ≅ᵐ forever
 eq-lock forever-later = earlier-constantly-ctx
@@ -77,12 +76,12 @@ eq (now-constantly-natural σ) _ = refl
 
 forever-constantly-tyʳ : {Γ : Ctx ★} (T : Ty (now (constantly-ctx Γ))) →
                          forever-ty (constantly-ty T) ≅ᵗʸ T [ to (now-constantly-ctx Γ) ]
-func (from (forever-constantly-tyʳ T)) tm = tm ⟨ 0 , tt ⟩'
+func (from (forever-constantly-tyʳ T)) l = limit l 0
 _↣_.naturality (from (forever-constantly-tyʳ T)) = ty-cong T refl
-func (to (forever-constantly-tyʳ T)) t ⟨ _ , _ ⟩' = t
-Tm.naturality (func (to (forever-constantly-tyʳ T)) t) _ _ = strong-ty-id T
-_↣_.naturality (to (forever-constantly-tyʳ T)) = tm-≅-to-≡ (record { eq = λ _ → ty-cong T refl })
-eq (isoˡ (forever-constantly-tyʳ T)) tm = tm-≅-to-≡ (record { eq = λ _ → trans (sym (Tm.naturality tm z≤n refl)) (strong-ty-id T) })
+limit (func (to (forever-constantly-tyʳ T)) t) = λ n → t
+limit-natural (func (to (forever-constantly-tyʳ T)) t) = λ m≤n → ty-id T
+_↣_.naturality (to (forever-constantly-tyʳ T)) = to-ω-limit-eq (λ _ → ty-cong T refl)
+eq (isoˡ (forever-constantly-tyʳ T)) l = to-ω-limit-eq (λ _ → trans (sym (limit-natural l z≤n)) (ty-id T))
 eq (isoʳ (forever-constantly-tyʳ T)) _ = refl
 
 forever-constantly : forever ⓜ constantly ≅ᵐ 𝟙
