@@ -3,7 +3,7 @@ open import Categories
 module Types.Universe {C : Category} where
 
 open import Data.Unit using (⊤; tt)
-open import Function using (_∘_)
+open import Function using (_∘_; id)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary using (Setoid; IsEquivalence)
 open import Relation.Binary.PropositionalEquality
@@ -60,6 +60,28 @@ module OnlyPropElimination where
   morph-hom-cong (El 𝑇) _ = lift tt
   morph-id (El 𝑇) _ = lift tt
   morph-comp (El 𝑇) _ _ _ _ _ = lift tt
+
+  Is-sikkel-prop : Ty Γ ℓ r → Set _
+  Is-sikkel-prop {Γ = Γ} T = {x : Ob} {γ : Γ ⟨ x ⟩} (t s : T ⟨ x , γ ⟩) → t ≈⟦ T ⟧≈ s
+
+  el-⌜⌝ : (T : Ty ◇ ℓ r) → Is-sikkel-prop T → El ⌜ T ⌝ ≅ᵗʸ T
+  func (from (el-⌜⌝ T T-prop)) = id
+  func-cong (from (el-⌜⌝ T T-prop)) _ = T-prop _ _
+  CwF-Structure.naturality (from (el-⌜⌝ T T-prop)) t = T-prop _ _
+  func (to (el-⌜⌝ T T-prop)) = id
+  func-cong (to (el-⌜⌝ T T-prop)) _ = lift tt
+  CwF-Structure.naturality (to (el-⌜⌝ T T-prop)) _ = lift tt
+  eq (isoˡ (el-⌜⌝ T T-prop)) _ = lift tt
+  eq (isoʳ (el-⌜⌝ T T-prop)) _ = ty≈-refl T
+
+  ⌜⌝-el : (𝑇 : Tm ◇ (𝒰 ℓ r)) → ⌜ El 𝑇 ⌝ ≅ᵗᵐ 𝑇
+  func (from (eq (⌜⌝-el 𝑇) _)) = {!!}
+  func-cong (from (eq (⌜⌝-el 𝑇) _)) = {!!}
+  CwF-Structure.naturality (from (eq (⌜⌝-el 𝑇) _)) = {!!}
+  to (eq (⌜⌝-el 𝑇) _) = {!!}
+  isoˡ (eq (⌜⌝-el 𝑇) _) = {!!}
+  isoʳ (eq (⌜⌝-el 𝑇) _) = {!!}
+
 
 
 module RestrictToHSets where
