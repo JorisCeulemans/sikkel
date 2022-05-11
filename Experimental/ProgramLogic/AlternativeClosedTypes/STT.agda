@@ -105,25 +105,50 @@ multi-weaken-var ◇        x        = vsuc x
 multi-weaken-var (Δ ,, R) vzero    = vzero
 multi-weaken-var (Δ ,, R) (vsuc x) = vsuc (multi-weaken-var Δ x)
 
-multi-weaken-tm : TmExpr (Γ ++ctx Δ) T → TmExpr ((Γ ,, S) ++ctx Δ) T
-multi-weaken-tm {Γ} {Δ} (var x) = var (multi-weaken-var Δ x)
-multi-weaken-tm {Γ} {Δ} (lam t) = lam (multi-weaken-tm {Γ} {Δ ,, _} t)
-multi-weaken-tm (f ∙ t) = multi-weaken-tm f ∙ multi-weaken-tm t
-multi-weaken-tm (lit n) = lit n
-multi-weaken-tm suc = suc
-multi-weaken-tm (nat-elim a f) = nat-elim (multi-weaken-tm a) (multi-weaken-tm f)
-multi-weaken-tm true = true
-multi-weaken-tm false = true
-multi-weaken-tm (if b t f) = if (multi-weaken-tm b) (multi-weaken-tm t) (multi-weaken-tm f)
-multi-weaken-tm (pair t s) = pair (multi-weaken-tm t) (multi-weaken-tm s)
-multi-weaken-tm (fst p) = fst (multi-weaken-tm p)
-multi-weaken-tm (snd p) = snd (multi-weaken-tm p)
+multi-weaken-tm : (Δ : CtxExpr) → TmExpr (Γ ++ctx Δ) T → TmExpr ((Γ ,, S) ++ctx Δ) T
+multi-weaken-tm {Γ} Δ (var x) = var (multi-weaken-var Δ x)
+multi-weaken-tm {Γ} Δ (lam t) = lam (multi-weaken-tm {Γ} (Δ ,, _) t)
+multi-weaken-tm Δ (f ∙ t) = multi-weaken-tm Δ f ∙ multi-weaken-tm Δ t
+multi-weaken-tm Δ (lit n) = lit n
+multi-weaken-tm Δ suc = suc
+multi-weaken-tm Δ (nat-elim a f) = nat-elim (multi-weaken-tm Δ a) (multi-weaken-tm Δ f)
+multi-weaken-tm Δ true = true
+multi-weaken-tm Δ false = false
+multi-weaken-tm Δ (if b t f) = if (multi-weaken-tm Δ b) (multi-weaken-tm Δ t) (multi-weaken-tm Δ f)
+multi-weaken-tm Δ (pair t s) = pair (multi-weaken-tm Δ t) (multi-weaken-tm Δ s)
+multi-weaken-tm Δ (fst p) = fst (multi-weaken-tm Δ p)
+multi-weaken-tm Δ (snd p) = snd (multi-weaken-tm Δ p)
 
 weaken-tm : TmExpr Γ T → TmExpr (Γ ,, S) T
-weaken-tm t = multi-weaken-tm {Δ = ◇} t
+weaken-tm t = multi-weaken-tm ◇ t
+
+multi-weaken-sem-subst : {Γ : CtxExpr} (S : TyExpr) (Δ : CtxExpr) → ⟦ (Γ ,, S) ++ctx Δ ⟧ctx M.⇒ ⟦ Γ ++ctx Δ ⟧ctx
+multi-weaken-sem-subst S ◇ = M.π
+multi-weaken-sem-subst S (Δ ,, T) = multi-weaken-sem-subst S Δ s⊹
+
+multi-weaken-var-sound : {Γ : CtxExpr} (Δ : CtxExpr) (x : Var (Γ ++ctx Δ) T) →
+                         (⟦ x ⟧var [ multi-weaken-sem-subst S Δ ]s) M.≅ᵗᵐ ⟦ multi-weaken-var Δ x ⟧var
+multi-weaken-var-sound ◇        x = M.≅ᵗᵐ-refl
+multi-weaken-var-sound (Δ ,, T) vzero    = {!!}
+multi-weaken-var-sound (Δ ,, T) (vsuc x) = {!!}
+
+multi-weaken-tm-sound : {S : TyExpr} (Δ : CtxExpr) (t : TmExpr (Γ ++ctx Δ) T) →
+                        (⟦ t ⟧tm [ multi-weaken-sem-subst S Δ ]s) M.≅ᵗᵐ ⟦ multi-weaken-tm {S = S} Δ t ⟧tm
+multi-weaken-tm-sound Δ (var x) = {!!}
+multi-weaken-tm-sound Δ (lam t) = M.≅ᵗᵐ-trans (sλ-natural _) (sλ-cong (multi-weaken-tm-sound (Δ ,, _) t))
+multi-weaken-tm-sound Δ (f ∙ t) = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (multi-weaken-tm-sound Δ f) (multi-weaken-tm-sound Δ t))
+multi-weaken-tm-sound Δ (lit n) = {!!}
+multi-weaken-tm-sound Δ suc = {!!}
+multi-weaken-tm-sound Δ (nat-elim a f) = {!!}
+multi-weaken-tm-sound Δ true = {!!}
+multi-weaken-tm-sound Δ false = {!!}
+multi-weaken-tm-sound Δ (if b t f) = {!!}
+multi-weaken-tm-sound Δ (pair t s) = M.≅ᵗᵐ-trans (spair-natural _) (spair-cong (multi-weaken-tm-sound Δ t) (multi-weaken-tm-sound Δ s))
+multi-weaken-tm-sound Δ (fst p) = M.≅ᵗᵐ-trans (sfst-natural _) (sfst-cong (multi-weaken-tm-sound Δ p))
+multi-weaken-tm-sound Δ (snd p) = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (multi-weaken-tm-sound Δ p))
 
 weaken-tm-sound : {S : TyExpr} (t : TmExpr Γ T) → (⟦ t ⟧tm [ M.π ]s) M.≅ᵗᵐ ⟦ weaken-tm {S = S} t ⟧tm
-weaken-tm-sound t = {!!}
+weaken-tm-sound t = multi-weaken-tm-sound ◇ t
 
 
 --------------------------------------------------
@@ -189,16 +214,16 @@ tm-subst-sound (var (vsuc x)) (σ ∷ t) =
               (M.≅ᵗᵐ-trans (stm-subst-cong-subst (⟦ x ⟧var) (,ₛ-β1 ⟦ σ ⟧subst ⟦ t ⟧tm))
                            (tm-subst-sound (var x) σ))
 tm-subst-sound (lam t) σ =
-  {!M.≅ᵗᵐ-trans (sλ-natural {b = ⟦ t ⟧tm} ⟦ σ ⟧subst)
+  M.≅ᵗᵐ-trans (sλ-natural {b = ⟦ t ⟧tm} ⟦ σ ⟧subst)
               (sλ-cong (M.≅ᵗᵐ-trans (stm-subst-cong-subst ⟦ t ⟧tm (⊹-sound σ))
-                                    (tm-subst-sound t (σ ⊹))))!}
-tm-subst-sound (f ∙ t) σ = {!!}
+                                    (tm-subst-sound t (σ ⊹))))
+tm-subst-sound (f ∙ t) σ = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (tm-subst-sound f σ) (tm-subst-sound t σ))
 tm-subst-sound (lit n) σ = {!!}
 tm-subst-sound suc σ = {!!}
 tm-subst-sound (nat-elim a f) σ = {!!}
 tm-subst-sound true σ = {!!}
 tm-subst-sound false σ = {!!}
 tm-subst-sound (if b t f) σ = {!!}
-tm-subst-sound (pair t s) σ = {!!}
-tm-subst-sound (fst p) σ = {!!}
-tm-subst-sound (snd p) σ = {!!}
+tm-subst-sound (pair t s) σ = M.≅ᵗᵐ-trans (spair-natural _) (spair-cong (tm-subst-sound t σ) (tm-subst-sound s σ))
+tm-subst-sound (fst p) σ = M.≅ᵗᵐ-trans (sfst-natural _) (sfst-cong (tm-subst-sound p σ))
+tm-subst-sound (snd p) σ = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (tm-subst-sound p σ))

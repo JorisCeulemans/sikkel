@@ -112,6 +112,13 @@ eq (sλ-natural {C} {Γ = Γ} {T = T} {S = S} {b = b} σ) δ = to-pshfun-eq (λ 
 sλ-cong : {b1 b2 : SimpleTm (Γ ,,ₛ T) S} → b1 ≅ᵗᵐ b2 → (sλ[ T ] b1) ≅ᵗᵐ (sλ[ T ] b2)
 sλ-cong e = ι-cong (⇛-natural (!◇ _)) (lam-cong _ (ι-cong (closed-ty-natural _ π) e))
 
+∙ₛ-natural : {f : SimpleTm Γ (T ⇛ S)} {t : SimpleTm Γ T} (σ : Δ ⇒ Γ) → (f ∙ₛ t) [ σ ]s ≅ᵗᵐ (f [ σ ]s) ∙ₛ (t [ σ ]s)
+eq (∙ₛ-natural {f = f} σ) δ = trans (sym (naturality (f ⟨ _ , _ ⟩'))) ($-cong (f ⟨ _ , _ ⟩') refl)
+
+∙ₛ-cong : {f1 f2 : SimpleTm Γ (T ⇛ S)} {t1 t2 : SimpleTm Γ T} →
+          f1 ≅ᵗᵐ f2 → t1 ≅ᵗᵐ t2 → (f1 ∙ₛ t1) ≅ᵗᵐ (f2 ∙ₛ t2)
+∙ₛ-cong ef et = app-cong (ι⁻¹-cong (⇛-natural (!◇ _)) ef) et
+
 sfun-β : {T S : ClosedTy C} (b : SimpleTm (Γ ,,ₛ T) S) (t : SimpleTm Γ T) → (sλ[ T ] b) ∙ₛ t ≅ᵗᵐ (b [ id-subst Γ ,ₛ t ]s)
 eq (sfun-β {C = C} {Γ = Γ} {T = T} {S = S} b t) γ =
   trans (ty-cong-2-1 S (BaseCategory.hom-idˡ C)) (trans (naturality b _ proof) (sym (ty-id S)))
@@ -196,6 +203,26 @@ ssnd p = prim-snd (ι⁻¹[ ⊠-natural _ ] p)
 
 sprod-β-fst : (t : SimpleTm Γ T) (s : SimpleTm Γ S) → sfst (spair t s) ≅ᵗᵐ t
 sprod-β-fst t s = record { eq = λ _ → refl }
+
+spair-natural : {t : SimpleTm Γ T} {s : SimpleTm Γ S} (σ : Δ ⇒ Γ) →
+                (spair t s) [ σ ]s ≅ᵗᵐ spair (t [ σ ]s) (s [ σ ]s)
+eq (spair-natural σ) _ = refl
+
+spair-cong : {t1 t2 : SimpleTm Γ T} {s1 s2 : SimpleTm Γ S} →
+             t1 ≅ᵗᵐ t2 → s1 ≅ᵗᵐ s2 → spair t1 s1 ≅ᵗᵐ spair t2 s2
+spair-cong et es = ι-cong (⊠-natural _) (prim-pair-cong et es)
+
+sfst-natural : {p : SimpleTm Γ (T ⊠ S)} (σ : Δ ⇒ Γ) → (sfst p) [ σ ]s ≅ᵗᵐ sfst (p [ σ ]s)
+eq (sfst-natural σ) _ = refl
+
+sfst-cong : {p1 p2 : SimpleTm Γ (T ⊠ S)} → p1 ≅ᵗᵐ p2 → sfst p1 ≅ᵗᵐ sfst p2
+sfst-cong ep = prim-fst-cong (ι⁻¹-cong (⊠-natural _) ep)
+
+ssnd-natural : {p : SimpleTm Γ (T ⊠ S)} (σ : Δ ⇒ Γ) → (ssnd p) [ σ ]s ≅ᵗᵐ ssnd (p [ σ ]s)
+eq (ssnd-natural σ) _ = refl
+
+ssnd-cong : {p1 p2 : SimpleTm Γ (T ⊠ S)} → p1 ≅ᵗᵐ p2 → ssnd p1 ≅ᵗᵐ ssnd p2
+ssnd-cong ep = prim-snd-cong (ι⁻¹-cong (⊠-natural _) ep)
 
 sprod-β-snd : (t : SimpleTm Γ T) (s : SimpleTm Γ S) → ssnd (spair t s) ≅ᵗᵐ s
 sprod-β-snd t s = record { eq = λ _ → refl }
