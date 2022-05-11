@@ -74,20 +74,22 @@ module OnlyPropElimination where
   eq (isoˡ (el-⌜⌝ T T-prop)) _ = lift tt
   eq (isoʳ (el-⌜⌝ T T-prop)) _ = ty≈-refl T
 
+  -- For the remaining holes, we probably need that 𝑇 ⟨ x , tt ⟩' is a proposition for every x.
   ⌜⌝-el : (𝑇 : Tm ◇ (𝒰 ℓ r)) → ⌜ El 𝑇 ⌝ ≅ᵗᵐ 𝑇
-  func (from (eq (⌜⌝-el 𝑇) _)) = {!!}
-  func-cong (from (eq (⌜⌝-el 𝑇) _)) = {!!}
+  func (from (eq (⌜⌝-el 𝑇) _)) {γ = ρ} = ctx-element-subst (𝑇 ⟨ _ , tt ⟩') hom-idʳ ∘ func (to (Tm.naturality 𝑇 ρ ≡-refl))
+  func-cong (from (eq (⌜⌝-el 𝑇) _)) _ = morph-cong (𝑇 ⟨ _ , tt ⟩') hom-id _ (func-cong (to (Tm.naturality 𝑇 _ ≡-refl)) {!!})
   CwF-Structure.naturality (from (eq (⌜⌝-el 𝑇) _)) = {!!}
-  to (eq (⌜⌝-el 𝑇) _) = {!!}
-  isoˡ (eq (⌜⌝-el 𝑇) _) = {!!}
-  isoʳ (eq (⌜⌝-el 𝑇) _) = {!!}
-
+  func (to (eq (⌜⌝-el 𝑇) _)) {γ = ρ} = func (from (Tm.naturality 𝑇 ρ ≡-refl)) ∘ ctx-element-subst (𝑇 ⟨ _ , tt ⟩') (≡-sym hom-idʳ)
+  func-cong (to (eq (⌜⌝-el 𝑇) _)) = _
+  CwF-Structure.naturality (to (eq (⌜⌝-el 𝑇) _)) = _
+  isoˡ (eq (⌜⌝-el 𝑇) _) = _
+  eq (isoʳ (eq (⌜⌝-el 𝑇) _)) = {!!}
 
 
 module RestrictToHSets where
   Is-agda-h-prop : Set ℓ → Set ℓ
   Is-agda-h-prop A = (x y : A) → x ≡ y
-  
+
   Is-sikkel-h-set : Ty Γ ℓ r → Set _
   Is-sikkel-h-set {Γ = Γ} T = {x : Ob} {γ : Γ ⟨ x ⟩} (t s : T ⟨ x , γ ⟩) → Is-agda-h-prop (t ≈⟦ T ⟧≈ s)
 
@@ -131,3 +133,68 @@ module RestrictToHSets where
     -- "2-cells" trivial (i.e. allow elimination to h-sets, similar to how the
     -- curent universe from the alternative above allows you to eliminate to h-props).
   morph-comp (El 𝑇) = {!!}
+
+
+
+module PropUniverse where
+  Is-sikkel-prop : Ty Γ ℓ r → Set _
+  Is-sikkel-prop {Γ = Γ} T = {x : Ob} {γ : Γ ⟨ x ⟩} (t s : T ⟨ x , γ ⟩) → t ≈⟦ T ⟧≈ s
+
+  []-preserves-propness : (T : Ty Γ ℓ r) (σ : Δ ⇒ Γ) → Is-sikkel-prop T → Is-sikkel-prop (T [ σ ])
+  []-preserves-propness T σ T-prop = T-prop
+
+  record Sikkel-prop {Γℓ Γr} (Γ : Ctx C Γℓ Γr) (ℓ r : Level) : Set (lsuc ℓ ⊔ lsuc r ⊔ Γℓ ⊔ Γr) where
+    constructor _,p_
+    field
+      prop-type : Ty Γ ℓ r
+      prop-is-prop : Is-sikkel-prop prop-type
+  open Sikkel-prop
+
+  𝒰 : (ℓ r : Level) → Ty {C = C} ◇ (lsuc ℓ ⊔ lsuc r) (ℓ ⊔ r)
+  Setoid.Carrier (type (𝒰 ℓ r) x _) = Sikkel-prop (𝕪 x) ℓ r
+  Setoid._≈_ (type (𝒰 ℓ r) x _) (T ,p _) (S ,p _) = T ≅ᵗʸ S
+  IsEquivalence.refl (Setoid.isEquivalence (type (𝒰 ℓ r) x _)) = ≅ᵗʸ-refl
+  IsEquivalence.sym (Setoid.isEquivalence (type (𝒰 ℓ r) x _)) = ≅ᵗʸ-sym
+  IsEquivalence.trans (Setoid.isEquivalence (type (𝒰 ℓ r) x _)) = ≅ᵗʸ-trans
+  morph (𝒰 ℓ r) f _ (T ,p T-prop) = (T [ to-𝕪⇒𝕪 f ]) ,p []-preserves-propness T (to-𝕪⇒𝕪 f) T-prop
+  morph-cong (𝒰 ℓ r) f _ = ty-subst-cong-ty (to-𝕪⇒𝕪 f)
+  morph-hom-cong (𝒰 ℓ r) ≡-refl = ≅ᵗʸ-refl
+  morph-id (𝒰 ℓ r) (T ,p _) = ≅ᵗʸ-trans (ty-subst-cong-subst 𝕪-refl T)
+                                        (ty-subst-id T)
+  morph-comp (𝒰 ℓ r) f g _ _ (T ,p _) = ≅ᵗʸ-trans (ty-subst-cong-subst (≅ˢ-sym (𝕪-comp f g)) T)
+                                                  (≅ᵗʸ-sym (ty-subst-comp T (to-𝕪⇒𝕪 g) (to-𝕪⇒𝕪 f)))
+
+  ⌜_,_⌝ : (T : Ty {C = C} ◇ ℓ r) → Is-sikkel-prop T → Tm ◇ (𝒰 ℓ r)
+  term ⌜ T , T-prop ⌝ x _ = (T [ !◇ (𝕪 x) ]) ,p T-prop
+  Tm.naturality ⌜ T , T-prop ⌝ {x = x}{y = y} f eγ = ty-subst-seq-cong (!◇ (𝕪 y) ∷ to-𝕪⇒* f ◼) (!◇ (𝕪 x) ◼) T (◇-terminal (𝕪 x) _ _)
+
+  El : Tm ◇ (𝒰 ℓ r) → Ty {C = C} ◇ ℓ r
+  type (El 𝑇) x _ = type (prop-type (𝑇 ⟨ x , tt ⟩')) x hom-id
+  morph (El 𝑇) {y = y} f _ = func (from (Tm.naturality 𝑇 f ≡-refl)) ∘ (prop-type (𝑇 ⟨ y , tt ⟩')) ⟪ f , ≡-trans hom-idˡ (≡-sym hom-idʳ) ⟫_
+  morph-cong (El 𝑇) _ _ _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  morph-hom-cong (El 𝑇) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  morph-id (El 𝑇) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  morph-comp (El 𝑇) _ _ _ _ _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+
+  el-prop : (𝑇 : Tm ◇ (𝒰 ℓ r)) → Is-sikkel-prop (El 𝑇)
+  el-prop 𝑇 = prop-is-prop (𝑇 ⟨ _ , tt ⟩')
+
+  el-⌜⌝ : (T : Ty ◇ ℓ r) (T-prop : Is-sikkel-prop T) → El ⌜ T , T-prop ⌝ ≅ᵗʸ T
+  func (from (el-⌜⌝ T T-prop)) = id
+  func-cong (from (el-⌜⌝ T T-prop)) = id
+  CwF-Structure.naturality (from (el-⌜⌝ T T-prop)) t = ty≈-sym T (morph-hom-cong-2-1 T hom-idʳ)
+  func (to (el-⌜⌝ T T-prop)) = id
+  func-cong (to (el-⌜⌝ T T-prop)) = id
+  CwF-Structure.naturality (to (el-⌜⌝ T T-prop)) t = morph-hom-cong-2-1 T hom-idʳ
+  eq (isoˡ (el-⌜⌝ T T-prop)) _ = ty≈-refl T
+  eq (isoʳ (el-⌜⌝ T T-prop)) t = ty≈-refl T
+
+  ⌜⌝-el : (𝑇 : Tm ◇ (𝒰 ℓ r)) → ⌜ El 𝑇 , el-prop 𝑇 ⌝ ≅ᵗᵐ 𝑇
+  func (from (eq (⌜⌝-el 𝑇) _)) {γ = ρ} = ctx-element-subst (prop-type (𝑇 ⟨ _ , tt ⟩')) hom-idʳ ∘ func (to (Tm.naturality 𝑇 ρ ≡-refl))
+  func-cong (from (eq (⌜⌝-el 𝑇) _)) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  CwF-Structure.naturality (from (eq (⌜⌝-el 𝑇) _)) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  func (to (eq (⌜⌝-el 𝑇) _)) {γ = ρ} = func (from (Tm.naturality 𝑇 ρ ≡-refl)) ∘ ctx-element-subst (prop-type (𝑇 ⟨ _ , tt ⟩')) (≡-sym hom-idʳ)
+  func-cong (to (eq (⌜⌝-el 𝑇) _)) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  CwF-Structure.naturality (to (eq (⌜⌝-el 𝑇) _)) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  eq (isoˡ (eq (⌜⌝-el 𝑇) _)) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
+  eq (isoʳ (eq (⌜⌝-el 𝑇) _)) _ = prop-is-prop (𝑇 ⟨ _ , tt ⟩') _ _
