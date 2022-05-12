@@ -4,9 +4,11 @@
 
 module Experimental.ClosedTypes where
 
-open import Data.Bool using (true; false)
-open import Data.Nat using (suc)
+open import Data.Bool using (true; false; if_then_else_)
+open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product renaming (_,_ to [_,_])
+open import Data.Unit using (⊤; tt)
+open import Function.Nary.NonDependent using (congₙ)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Model.BaseCategory
@@ -17,6 +19,8 @@ open import Model.CwF-Structure.ContextExtension
 open import Model.Type.Discrete
 open import Model.Type.Function
 open import Model.Type.Product
+
+open import Experimental.ClosedTypes.Helpers
 
 private variable
   C : BaseCategory
@@ -153,12 +157,31 @@ sdiscr-func f = (discr-func f) [ !◇ _ ]'
 sdiscr-func₂ : {A B C : Set} → (A → B → C) → SimpleTm Γ (Discr A ⇛ Discr B ⇛ Discr C)
 sdiscr-func₂ f = (discr-func₂ f) [ !◇ _ ]'
 
+sdiscr-natural : {A : Set} {a : A} (σ : Δ ⇒ Γ) → (sdiscr a) [ σ ]s ≅ᵗᵐ sdiscr a
+eq (sdiscr-natural σ) _ = refl
+
+sdiscr-func-natural : {A B : Set} {f : A → B} (σ : Δ ⇒ Γ) → (sdiscr-func f) [ σ ]s ≅ᵗᵐ sdiscr-func f
+eq (sdiscr-func-natural σ) _ = to-pshfun-eq (λ _ _ _ → refl)
+
+sdiscr-func₂-natural : {A B C : Set} {f : A → B → C} (σ : Δ ⇒ Γ) →
+                       (sdiscr-func₂ f) [ σ ]s ≅ᵗᵐ sdiscr-func₂ f
+eq (sdiscr-func₂-natural σ) _ = to-pshfun-eq (λ _ _ _ → to-pshfun-eq (λ _ _ _ → refl))
+
 strue sfalse : SimpleTm Γ Bool'
 strue = sdiscr true
 sfalse = sdiscr false
 
 sif : SimpleTm Γ Bool' → SimpleTm Γ T → SimpleTm Γ T → SimpleTm Γ T
 sif b t f = if' (ι⁻¹[ Discr-natural _ _ ] b) then' t else' f
+
+sif-natural : {b : SimpleTm Γ Bool'} {t f : SimpleTm Γ T} (σ : Δ ⇒ Γ) →
+              (sif b t f) [ σ ]s ≅ᵗᵐ sif (b [ σ ]s) (t [ σ ]s) (f [ σ ]s)
+eq (sif-natural {T = T} σ) δ = trans (ty-id T) (sym (cong₂ (λ x y → if _ then x else y) (ty-id T) (ty-id T)))
+
+sif-cong : {b1 b2 : SimpleTm Γ Bool'} {t1 t2 f1 f2 : SimpleTm Γ T} →
+           b1 ≅ᵗᵐ b2 → t1 ≅ᵗᵐ t2 → f1 ≅ᵗᵐ f2 →
+           sif b1 t1 f1 ≅ᵗᵐ sif b2 t2 f2
+eq (sif-cong eb et ef) γ = congₙ 3 if_then_else_ (eq eb γ) (eq et γ) (eq ef γ)
 
 sif-β-true : (t f : SimpleTm Γ T) → sif (sdiscr true) t f ≅ᵗᵐ t
 sif-β-true t f = record { eq = λ _ → refl }
@@ -174,6 +197,42 @@ ssuc = sdiscr-func suc
 
 snat-elim : {A : ClosedTy C} → SimpleTm Γ A → SimpleTm Γ (A ⇛ A) → SimpleTm Γ (Nat' ⇛ A)
 snat-elim a f = ι[ ≅ᵗʸ-trans (⇛-natural _) (⇛-cong (Discr-natural _ _) ≅ᵗʸ-refl) ] (nat-elim _ a (ι⁻¹[ ⇛-natural _ ] f))
+
+snat-elim-natural : {A : ClosedTy C} {a : SimpleTm Γ A} {f : SimpleTm Γ (A ⇛ A)} (σ : Δ ⇒ Γ) →
+                    (snat-elim a f) [ σ ]s ≅ᵗᵐ snat-elim (a [ σ ]s) (f [ σ ]s)
+eq (snat-elim-natural {C = C} {Γ = Γ} {Δ = Δ} {A = A} {a} {f} σ) {y} δ = to-pshfun-eq lemma
+  where
+    open BaseCategory C
+    ctx-lemma : {x : Ob} (ρ : Hom x y) → Γ ⟪ hom-id ⟫ func σ (Δ ⟪ ρ ⟫ δ) ≡ Γ ⟪ hom-id ∙ ρ ⟫ func σ δ
+    ctx-lemma ρ = sym (trans (cong (Γ ⟪_⟫ _) (trans hom-idˡ (sym hom-idʳ)))
+                             (trans (ctx-comp Γ) (cong (Γ ⟪ hom-id ⟫_) (naturality σ))))
+
+    lemma : {x : Ob} (ρ : Hom x y) {γ' : ⊤} (eγ : tt ≡ γ') (n : ℕ) →
+            ((snat-elim a f) [ σ ]s) ⟨ y , δ ⟩' $⟨ ρ , eγ ⟩ n ≡ (snat-elim (a [ σ ]s) (f [ σ ]s)) ⟨ y , δ ⟩' $⟨ ρ , eγ ⟩ n
+    lemma {x} ρ eγ zero    = trans (strong-ty-id A)
+                                   (sym (trans (ty-cong-2-1 A hom-idʳ)
+                                               (naturality a _ (ctx-lemma ρ))))
+    lemma {x} ρ eγ (suc n) =
+      let ζ = _
+      in
+      trans (ty-cong A refl)
+            (cong (A ⟪ hom-id , _ ⟫_) (trans (cong (_$⟨ hom-id , _ ⟩ ζ) (sym (naturality f hom-id (ctx-lemma ρ))))
+                                             (trans ($-cong (f ⟨ x , _ ⟩') refl)
+                                                    (cong (f ⟨ x , _ ⟩' $⟨ hom-id ∙ hom-id , _ ⟩_) (remove-≡ids (λ _ → strong-ty-id A)
+                                                                                                                (λ _ → strong-ty-id A)
+                                                                                                                (lemma ρ eγ n))))))
+
+snat-elim-cong : {A : ClosedTy C} {a1 a2 : SimpleTm Γ A} {f1 f2 : SimpleTm Γ (A ⇛ A)} →
+                 a1 ≅ᵗᵐ a2 → f1 ≅ᵗᵐ f2 → snat-elim a1 f1 ≅ᵗᵐ snat-elim a2 f2
+eq (snat-elim-cong {C = C} {Γ = Γ} {A = A} {a1} {a2} {f1} {f2} ea ef) {y} γ = to-pshfun-eq lemma
+  where
+    open BaseCategory C
+    lemma : {x : Ob} (ρ : Hom x y) {γ' : ⊤} (eγ : tt ≡ γ') (n : ℕ) →
+            (snat-elim a1 f1) ⟨ y , γ ⟩' $⟨ ρ , eγ ⟩ n ≡ (snat-elim a2 f2) ⟨ y , γ ⟩' $⟨ ρ , eγ ⟩ n
+    lemma {x} ρ eγ zero    = cong (A ⟪ hom-id , eγ ⟫_) (eq ea _)
+    lemma {x} ρ eγ (suc n) =
+      cong (A ⟪ hom-id , eγ ⟫_) (trans (cong (λ h → h $⟨ hom-id , _ ⟩ _) (eq ef (Γ ⟪ ρ ⟫ γ)))
+                                       (cong (f2 ⟨ x , Γ ⟪ ρ ⟫ γ ⟩' $⟨ hom-id , _ ⟩_) (remove-≡id (λ _ → strong-ty-id A) (lemma ρ refl n))))
 
 snat-β-zero : {A : ClosedTy C} (a : SimpleTm Γ A) (f : SimpleTm Γ (A ⇛ A)) → snat-elim a f ∙ₛ szero ≅ᵗᵐ a
 snat-β-zero {Γ = Γ} {A = A} a f = record { eq = λ γ → trans (ty-cong A refl) (naturality a _ (trans (ctx-id Γ) (ctx-id Γ))) }
