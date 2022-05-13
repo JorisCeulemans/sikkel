@@ -3,7 +3,8 @@ module Experimental.ProgramLogic.InductionInduction.Derivations where
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.ProgramLogic.InductionInduction.Definitions
+open import Experimental.ProgramLogic.InductionInduction.Definitions as Defs
+open Defs.AgdaInterpretation
 
 
 private variable
