@@ -131,6 +131,22 @@ eq (ι-symʳ T=S t) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
           ι[ ≅ᵗʸ-trans T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
 eq (ι-trans T=S S=R r) γ = refl
 
+move-ι-right : (T=S : T ≅ᵗʸ S) {t : Tm Γ T} {s : Tm Γ S} →
+               ι⁻¹[ T=S ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι[ T=S ] s
+move-ι-right T=S t=s = ≅ᵗᵐ-trans (≅ᵗᵐ-sym (ι-symʳ T=S _)) (ι-cong T=S t=s)
+
+move-ι-left : (S=T : S ≅ᵗʸ T) {t : Tm Γ T} {s : Tm Γ S} →
+              t ≅ᵗᵐ ι⁻¹[ S=T ] s → ι[ S=T ] t ≅ᵗᵐ s
+move-ι-left S=T t=s = ≅ᵗᵐ-trans (ι-cong S=T t=s) (ι-symʳ S=T _)
+
+move-ι⁻¹-right : (S=T : S ≅ᵗʸ T) {t : Tm Γ T} {s : Tm Γ S} →
+                ι[ S=T ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι⁻¹[ S=T ] s
+move-ι⁻¹-right S=T t=s = ≅ᵗᵐ-trans (≅ᵗᵐ-sym (ι-symˡ S=T _)) (ι⁻¹-cong S=T t=s)
+
+move-ι⁻¹-left : (T=S : T ≅ᵗʸ S) {t : Tm Γ T} {s : Tm Γ S} →
+                 t ≅ᵗᵐ ι[ T=S ] s → ι⁻¹[ T=S ] t ≅ᵗᵐ s
+move-ι⁻¹-left T=S t=s = ≅ᵗᵐ-trans (ι⁻¹-cong T=S t=s) (ι-symˡ T=S _)
+
 
 --------------------------------------------------
 -- Substitution of terms
