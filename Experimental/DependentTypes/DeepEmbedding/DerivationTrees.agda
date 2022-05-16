@@ -137,9 +137,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M
 open import Model.Type.Product as M
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 module ComputeContextsTypes where
   interpret-ctx : Γ ⊢ctx → Ctx ★
@@ -182,7 +180,7 @@ module AllContextsTypes where
   interpret-ty dΓ (d-Bool _) = M.Bool'
   interpret-ty dΓ (d-⇛ dT dS) = interpret-ty dΓ dT M.⇛ interpret-ty dΓ dS
   interpret-ty dΓ (d-⊠ dT dS) = interpret-ty dΓ dT M.⊠ interpret-ty dΓ dS
-  interpret-ty dΓ (d-Id _ dt ds) = M-id.Id (interpret-tm dΓ {!!} dt) (interpret-tm dΓ {!!} ds)
+  interpret-ty dΓ (d-Id _ dt ds) = M.Id (interpret-tm dΓ {!!} dt) (interpret-tm dΓ {!!} ds)
   interpret-ty dΓ (d-ty-subst dT dσ) = interpret-ty {!!} dT M.[ interpret-subst dΓ {!!} dσ ]
 
   interpret-tm dΓ dT (d-var _ dx) = {!!}

@@ -12,9 +12,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.UnannotatedIdentity
 -- open import MSTT.TCMonad
@@ -112,7 +110,7 @@ TCMThunk.force (interpret-ty-delay (Id t s) Γ sΓ Γ-ok) = do
   tm-result T sT T-ok ⟦t⟧ ← infer-interpret-tm t Γ sΓ Γ-ok
   tm-result S sS S-ok ⟦s⟧ ← infer-interpret-tm s Γ sΓ Γ-ok
   sT=sS ← ty-eq? T S Γ sΓ Γ-ok sT sS T-ok S-ok
-  return (M-id.Id ⟦t⟧ (ι[ sT=sS ] ⟦s⟧))
+  return (M.Id ⟦t⟧ (ι[ sT=sS ] ⟦s⟧))
 
 ty-eq? T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok = delay (ty-eq?-thunk T1 T2 Γ sΓ Γ-ok sT1 sT2 T1-ok T2-ok )
 

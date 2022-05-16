@@ -12,9 +12,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity
 open import MSTT.TCMonad
@@ -137,8 +135,8 @@ interpret-ty Nat T-ok = M.Nat'
 interpret-ty Bool T-ok = M.Bool'
 interpret-ty (T ⇛ S) (T-ok , S-ok) = interpret-ty T T-ok M.⇛ interpret-ty S S-ok
 interpret-ty (T ⊠ S) (T-ok , S-ok) = interpret-ty T T-ok M.⊠ interpret-ty S S-ok
-interpret-ty (Id R t s) (R-ok , t∈R , s∈R) = M-id.Id (interpret-tm t R R-ok t∈R)
-                                                     (interpret-tm s R R-ok s∈R)
+interpret-ty (Id R t s) (R-ok , t∈R , s∈R) = M.Id (interpret-tm t R R-ok t∈R)
+                                                  (interpret-tm s R R-ok s∈R)
 
 interpret-tm (ann t ∈ S) T T-ok t∈T = {!!}
 interpret-tm (var x) T T-ok t∈T = {!!}
@@ -155,4 +153,4 @@ interpret-tm (pair t s) T T-ok t∈T = {!!}
 interpret-tm (fst p) T T-ok t∈T = {!!}
 interpret-tm (snd p) T T-ok t∈T = {!!}
 interpret-tm (refl t) {Γ} T T-ok t∈T with infer-type t Γ
-interpret-tm (refl t) {_} .(Id S t t) T-ok refl | ok S = {!M-id.refl' {A = ?} ?!}
+interpret-tm (refl t) {_} .(Id S t t) T-ok refl | ok S = {!M.refl' {A = ?} ?!}

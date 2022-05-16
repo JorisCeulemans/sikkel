@@ -13,9 +13,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.FullyAnnotated
 open import MSTT.TCMonad
@@ -135,8 +133,8 @@ interpret-ty Nat T-ok = M.Nat'
 interpret-ty Bool T-ok = M.Bool'
 interpret-ty (T ⇛ S) (T-ok , S-ok) = interpret-ty T T-ok M.⇛ interpret-ty S S-ok
 interpret-ty (T ⊠ S) (T-ok , S-ok) = interpret-ty T T-ok M.⊠ interpret-ty S S-ok
-interpret-ty (Id R t s) (R-ok , t∈R , s∈R) = M-id.Id (interpret-tm t R R-ok t∈R)
-                                                     (interpret-tm s R R-ok s∈R)
+interpret-ty (Id R t s) (R-ok , t∈R , s∈R) = M.Id (interpret-tm t R R-ok t∈R)
+                                                  (interpret-tm s R R-ok s∈R)
 
 interpret-tm (ann t ∈ S) T T-ok (Γ⊢S , Γ⊢t∈S , S=T) = ι⁻¹[ ≃ᵗʸ-sound Γ⊢S T-ok S=T ] interpret-tm t S Γ⊢S Γ⊢t∈S
 interpret-tm (var zero)    {Γ ,, A} T T-ok t∈T = {!!}
@@ -146,7 +144,7 @@ interpret-tm (var (suc x)) {Γ ,, A} T T-ok t∈T = {!!}
 --   * Interpretation of weakening is applying π in the model.
 -- Andreas: Both would be part of interpret-tm for a substitution operation in the syntax.
 interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
-  {!ι[ ≃ᵗʸ-sound {T = R} R=A⇛T ] M.lam (interpret-ty A Γ⊢A) (ι[ {!!} ] interpret-tm t (weaken-ty T) {!!} Γ,,A⊢t∈T)!}
+  {!ι[ ≃ᵗʸ-sound {T = R} ? ? R=A⇛T ] M.lam (interpret-ty A Γ⊢A) (ι[ {!!} ] interpret-tm t (weaken-ty T) {!!} Γ,,A⊢t∈T)!}
   -- Termination checker has a problem with `weaken-ty T` which is not structurally smaller than or equal to T.
   -- Andreas: Could this be solved by having a substitution operation in the syntax?
 interpret-tm (app .(T₁ ⇛ T₂) f t) S S-ok (fun-ty T₁ T₂ , (T₁-ok , T₂-ok) , Γ⊢f∈T , Γ⊢t∈T₁ , S≃T₂) =
@@ -167,7 +165,7 @@ interpret-tm (fst .(S₁ ⊠ S₂) p) T T-ok (prod-ty S₁ S₂ , (S₁-ok , S�
 interpret-tm (snd .(T₁ ⊠ T₂) p) S S-ok (prod-ty T₁ T₂ , (T₁-ok , T₂-ok) , S≃T₂ , Γ⊢p∈T) =
   ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] (M.snd $ interpret-tm p (T₁ ⊠ T₂) (T₁-ok , T₂-ok) Γ⊢p∈T)
 interpret-tm (refl T t) {Γ-ok = Γ-ok} (Id R x y) IdRxy-ok@(R-ok , x-ok , y-ok) (T=Idtt , IdTtt-ok@(T-ok , t-ok , t-ok')) =
-  ι[ ≃ᵗʸ-sound {T = Id R x y} {S = Id T t t} IdRxy-ok (T-ok , t-ok , t-ok) T=Idtt ] M-id.refl' (interpret-tm t T T-ok t-ok)
+  ι[ ≃ᵗʸ-sound {T = Id R x y} {S = Id T t t} IdRxy-ok (T-ok , t-ok , t-ok) T=Idtt ] M.refl' (interpret-tm t T T-ok t-ok)
   -- Two different proofs of Γ ⊢ t ∈ T give rise to interpretations that are not definitionally equal,
   --   so in order to apply M.refl, we must prove that interpretation does not depend on well-typedness proof
   --   (or that any two proofs of well-typedness for the same term, context and type are equal).
@@ -184,7 +182,7 @@ interpret-tm (refl T t) {Γ-ok = Γ-ok} (Id R x y) IdRxy-ok@(R-ok , x-ok , y-ok)
 ≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} T-ok S-ok e with T ≟ty S in T=S
 ≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} T-ok S-ok e | ok tt with t1 ≟tm s1 in t1=s1
 ≃ᵗʸ-sound {T = Id T t1 t2} {S = Id S s1 s2} (T-ok , t1-ok , t2-ok) (S-ok , s1-ok , s2-ok) e | ok tt | ok tt =
-  Id-cong (≃ᵗʸ-sound T-ok S-ok T=S) (≃ᵗᵐ-sound t1 s1 T-ok S-ok t1-ok s1-ok T=S t1=s1) (≃ᵗᵐ-sound t2 s2 T-ok S-ok t2-ok s2-ok T=S e)
+  M.Id-cong (≃ᵗʸ-sound T-ok S-ok T=S) (≃ᵗᵐ-sound t1 s1 T-ok S-ok t1-ok s1-ok T=S t1=s1) (≃ᵗᵐ-sound t2 s2 T-ok S-ok t2-ok s2-ok T=S e)
 
 ≃ᵗᵐ-sound (ann t ∈ x) (ann s ∈ x₁) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}
 ≃ᵗᵐ-sound (var x) (var x₁) T-ok S-ok t-ok s-ok ty-eq tm-eq = {!!}

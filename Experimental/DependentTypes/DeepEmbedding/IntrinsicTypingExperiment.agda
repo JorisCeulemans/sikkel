@@ -7,9 +7,7 @@ open import Model.CwF-Structure as M hiding (◇)
 open import Model.BaseCategory
 open import Model.Type.Discrete
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 
 -- Intrinsically-typed approach + interpretation in the model (trivial base category)
@@ -41,12 +39,12 @@ interp-ctx ◇ = M.◇
 interp-ctx (Γ , T) = interp-ctx Γ ,, interp-ty Γ T
 
 interp-ty Γ Bool = Bool'
-interp-ty Γ (Id t s) = M-id.Id (interp-tm Γ _ t) (interp-tm Γ _ s)
+interp-ty Γ (Id t s) = M.Id (interp-tm Γ _ t) (interp-tm Γ _ s)
 
 interp-tm Γ .Bool true = true'
 interp-tm Γ .Bool false = false'
 interp-tm Γ T (if c t f) = if' (interp-tm Γ Bool c) then' (interp-tm Γ T t) else' (interp-tm Γ T f)
-interp-tm Γ .(Id t t) (refl t) = refl' (interp-tm Γ _ t)
+interp-tm Γ .(Id t t) (refl t) = M.refl' (interp-tm Γ _ t)
 
 
 -- Extrinsically-typed approach + translation to intrinsically-typed syntax
@@ -142,11 +140,11 @@ interp-ctx' d-◇ = M.◇
 interp-ctx' (d-, dΓ dT) = interp-ctx' dΓ ,, interp-ty' dΓ dT
 
 interp-ty' dΓ (d-Bool _) = Bool'
-interp-ty' dΓ (d-Id _ dT dt ds) = M-id.Id (interp-tm' dΓ dT dt) (interp-tm' dΓ dT ds)
+interp-ty' dΓ (d-Id _ dT dt ds) = M.Id (interp-tm' dΓ dT dt) (interp-tm' dΓ dT ds)
 
 interp-tm' dΓ (d-Bool _) (d-true _) = true'
 interp-tm' dΓ (d-Bool _) (d-false _) = false'
 interp-tm' dΓ dT (d-if dΓ' _ dc dt df) = if' (interp-tm' dΓ (d-Bool dΓ) dc) then' (interp-tm' dΓ dT dt) else' (interp-tm' dΓ dT df)
-interp-tm' dΓ (d-Id _ dT dt1 dt2) (d-refl _ _ _) = subst (λ - → Tm (interp-ctx' dΓ) (M-id.Id (interp-tm' dΓ dT dt1) (interp-tm' dΓ dT -)))
+interp-tm' dΓ (d-Id _ dT dt1 dt2) (d-refl _ _ _) = subst (λ - → Tm (interp-ctx' dΓ) (M.Id (interp-tm' dΓ dT dt1) (interp-tm' dΓ dT -)))
                                                          (tm-deriv-irr dt1 dt2)
-                                                         (refl' (interp-tm' dΓ dT dt1))
+                                                         (M.refl' (interp-tm' dΓ dT dt1))

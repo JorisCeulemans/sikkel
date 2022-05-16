@@ -13,9 +13,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity
 open import MSTT.TCMonad
@@ -167,8 +165,8 @@ interpret-ty (T ⊠ S) {Γ} vS | ok tt = interpret-ty T vT M.⊠ interpret-ty S 
 interpret-ty (Id R t s) {Γ} vT with infer-tm t Γ in vt
 interpret-ty (Id R t s) {Γ} vR  | ok T with T ≟ty R in T=R | infer-tm s Γ in vs
 interpret-ty (Id R t s) {Γ} S=R | ok T | ok tt | ok S =
-  M-id.Id (interpret-tm t R Γ t∈R (tm-has-valid-ty {t} t∈R) _)
-          (interpret-tm s R Γ s∈R (tm-has-valid-ty {s} s∈R) _)
+  M.Id (interpret-tm t R Γ t∈R (tm-has-valid-ty {t} t∈R) _)
+       (interpret-tm s R Γ s∈R (tm-has-valid-ty {s} s∈R) _)
   where
     t∈R : HasType t R Γ
     t∈R = conversion {t} vt T=R

@@ -17,9 +17,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.AnnotatedIdentity hiding (is-fun-ty; is-prod-ty)
 -- open import MSTT.TCMonad
@@ -251,7 +249,7 @@ interpret-ty (Id T t₁ t₂) Γ Γ-ok IdTt₁t₂-ok | tt , T-ok , T₁eq₁T�
 interpret-ty (Id T t₁ t₂) Γ Γ-ok IdTt₁t₂-ok | tt , T-ok , _ | T₁ , T₁-ok , eqT₂eq-ok with HasRes-invert->>=p (T ≟ty T₁) eqT₂eq-ok
 interpret-ty (Id T t₁ t₂) Γ Γ-ok IdTt₁t₂-ok | tt , T-ok , _ | T₁ , T₁-ok , _ | tt , eq₁-ok , T₂eq-ok with HasRes-invert->>=p (infer-tm t₂ Γ) T₂eq-ok
 interpret-ty (Id T t₁ t₂) Γ Γ-ok IdTt₁t₂-ok | tt , T-ok , _ | T₁ , t₁-ok , _ | tt , eq₁-ok , _ | T₂ , t₂-ok , eq₂-ok =
-  M-id.Id
+  M.Id
     (ι[ interpret-eq T T₁ Γ Γ-ok T-ok (inferredTypes-check t₁ Γ-ok t₁-ok) eq₁-ok  ] interpret-tm t₁ Γ Γ-ok t₁-ok)
     (ι[ interpret-eq T T₂ Γ Γ-ok T-ok (inferredTypes-check t₂ Γ-ok t₂-ok) eq₂-ok ] interpret-tm t₂ Γ Γ-ok t₂-ok)
 -- interpret-ty-delay : TyExpr → (Γ : CtxExpr) (sΓ : Ctx ★) → HasRes (interpret-ctx Γ) sΓ → TCMThunk 1ℓ (Ty sΓ)

@@ -19,9 +19,7 @@ open import Model.Type.Discrete as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
-import Experimental.DependentTypes.Model.IdentityType
-module M-id = Experimental.DependentTypes.Model.IdentityType.Alternative1
-open M-id hiding (Id)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.DependentTypes.DeepEmbedding.Syntax.EvenMoreAnnotated hiding (is-fun-ty; is-prod-ty)
 -- open import MSTT.TCMonad
@@ -224,7 +222,7 @@ interpret-ty (T₁ ⇛ T₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) =
 interpret-ty (T₁ ⊠ T₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) =
   interpret-ty T₁ Γ Γ-ok T₁-ok M.⊠ interpret-ty T₂ Γ Γ-ok T₂-ok
 interpret-ty (Id T t₁ t₂) Γ Γ-ok (tt , T-ok , T₁ , t₁-ok , t₂-ok) =
-  M-id.Id
+  M.Id
     (interpret-tm t₁ Γ Γ-ok T-ok t₁-ok)
     (interpret-tm t₂ Γ Γ-ok T-ok t₂-ok)
 
@@ -252,7 +250,7 @@ interpret-tm (if t t₁ t₂) Γ {T} Γ-ok T-ok (tt , t-ok , tt , t₁-ok , t₂
   else' interpret-tm t₂ Γ Γ-ok T-ok t₂-ok
 interpret-tm (refl T′ t) Γ {T} Γ-ok T-ok (tt , T′-ok , tt , t-ok , eq-ok) =
   ι[ interpret-ty-eq T (Id T′ t t) Γ Γ-ok T-ok (tt , T′-ok , tt , t-ok , t-ok) eq-ok ]
-  M-id.refl' (interpret-tm t Γ Γ-ok T′-ok t-ok)
+  M.refl' (interpret-tm t Γ Γ-ok T′-ok t-ok)
 
 interpret-ty-eq Nat Nat Γ Γ-ok T-ok S-ok eq-ok = M.≅ᵗʸ-refl
 interpret-ty-eq Bool Bool Γ Γ-ok T-ok S-ok eq-ok = M.≅ᵗʸ-refl
@@ -263,7 +261,7 @@ interpret-ty-eq (T₁ ⊠ T₂) (S₁ ⊠ S₂) Γ Γ-ok (tt , T₁-ok , T₂-ok
   M.⊠-cong (interpret-ty-eq T₁ S₁ Γ Γ-ok T₁-ok S₁-ok eq₁-ok)
     (interpret-ty-eq T₂ S₂ Γ Γ-ok T₂-ok S₂-ok eq₂-ok)
 interpret-ty-eq (Id T t₁ t₂) (Id S s₁ s₂) Γ Γ-ok (tt , T-ok , tt , t₁-ok , t₂-ok) (tt , S-ok , tt , s₁-ok , s₂-ok) (tt , T-eq , tt , eq₁-ok , eq₂-ok) =
-  Id-cong
+  M.Id-cong
     (interpret-ty-eq T S Γ Γ-ok T-ok S-ok T-eq)
     (interpret-tm-eq t₁ s₁ Γ T S Γ-ok T-ok S-ok t₁-ok s₁-ok T-eq eq₁-ok)
     (interpret-tm-eq t₂ s₂ Γ T S Γ-ok T-ok S-ok t₂-ok s₂-ok T-eq eq₂-ok)
@@ -277,7 +275,7 @@ interpret-ty-eq (Id T t₁ t₂) (Id S s₁ s₂) Γ Γ-ok (tt , T-ok , tt , t�
 -- interpret-tm-eq suc suc Γ (Nat ⇛ Nat) (Nat ⇛ Nat) Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok =
 --   {!!}
 -- interpret-tm-eq plus plus Γ (Nat ⇛ Nat ⇛ Nat) (Nat ⇛ Nat ⇛ Nat) Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
-interpret-tm-eq true true Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = ≅ᵗᵐ-refl
-interpret-tm-eq false false Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = ≅ᵗᵐ-refl
+interpret-tm-eq true true Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!≅ᵗᵐ-refl!}
+interpret-tm-eq false false Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!≅ᵗᵐ-refl!}
 -- interpret-tm-eq (if t₁ t₃ t₄) (if t₂ t₅ t₆) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
 -- interpret-tm-eq (refl x t₁) (refl x₁ t₂) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
