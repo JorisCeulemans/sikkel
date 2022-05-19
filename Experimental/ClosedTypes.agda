@@ -195,6 +195,9 @@ szero = sdiscr 0
 ssuc : SimpleTm Γ (Nat' ⇛ Nat')
 ssuc = sdiscr-func suc
 
+ssuc-sdiscr : {n : ℕ} → ssuc {Γ = Γ} ∙ₛ (sdiscr n) ≅ᵗᵐ sdiscr (suc n)
+eq ssuc-sdiscr _ = refl
+
 snat-elim : {A : ClosedTy C} → SimpleTm Γ A → SimpleTm Γ (A ⇛ A) → SimpleTm Γ (Nat' ⇛ A)
 snat-elim a f = ι[ ≅ᵗʸ-trans (⇛-natural _) (⇛-cong (Discr-natural _ _) ≅ᵗʸ-refl) ] (nat-elim _ a (ι⁻¹[ ⇛-natural _ ] f))
 
@@ -260,9 +263,6 @@ sfst p = prim-fst (ι⁻¹[ ⊠-natural _ ] p)
 ssnd : SimpleTm Γ (T ⊠ S) → SimpleTm Γ S
 ssnd p = prim-snd (ι⁻¹[ ⊠-natural _ ] p)
 
-sprod-β-fst : (t : SimpleTm Γ T) (s : SimpleTm Γ S) → sfst (spair t s) ≅ᵗᵐ t
-sprod-β-fst t s = record { eq = λ _ → refl }
-
 spair-natural : {t : SimpleTm Γ T} {s : SimpleTm Γ S} (σ : Δ ⇒ Γ) →
                 (spair t s) [ σ ]s ≅ᵗᵐ spair (t [ σ ]s) (s [ σ ]s)
 eq (spair-natural σ) _ = refl
@@ -282,6 +282,9 @@ eq (ssnd-natural σ) _ = refl
 
 ssnd-cong : {p1 p2 : SimpleTm Γ (T ⊠ S)} → p1 ≅ᵗᵐ p2 → ssnd p1 ≅ᵗᵐ ssnd p2
 ssnd-cong ep = prim-snd-cong (ι⁻¹-cong (⊠-natural _) ep)
+
+sprod-β-fst : (t : SimpleTm Γ T) (s : SimpleTm Γ S) → sfst (spair t s) ≅ᵗᵐ t
+sprod-β-fst t s = record { eq = λ _ → refl }
 
 sprod-β-snd : (t : SimpleTm Γ T) (s : SimpleTm Γ S) → ssnd (spair t s) ≅ᵗᵐ s
 sprod-β-snd t s = record { eq = λ _ → refl }

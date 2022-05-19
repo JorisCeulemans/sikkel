@@ -1,5 +1,6 @@
 module Experimental.ProgramLogic.InductionInduction.Derivations where
 
+open import Data.Nat
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
@@ -37,19 +38,19 @@ data _⊢_ : (Γ : CtxExpr) → Formula Γ → Set where
   -- ∀-elim : (Γ ⊢ ∀[ T ] φ) → (t : TmExpr Γ T) → (Γ ⊢ φ [ id-subst ∷ t ]frm)
 
   -- -- Specific computation rules for term formers (currently no eta rules).
-  -- fun-β : {b : TmExpr (to-ctx Γ ,, T) S} {t : TmExpr Γ T} →
+  -- fun-β : {b : TmExpr (Γ ,,ᵛ T) S} {t : TmExpr Γ T} →
   --         (Γ ⊢ lam b ∙ t ≡ᶠ (b [ id-subst ∷ t ]tm))
-  -- suc-lit : {n : ℕ} → (Γ ⊢ (suc ∙ lit n) ≡ᶠ lit (suc n))
-  -- nat-elim-β-zero : {A : TyExpr} {a : TmExpr Γ A} {f : TmExpr Γ (A ⇛ A)} →
-  --                   (Γ ⊢ nat-elim a f ∙ lit 0 ≡ᶠ a)
-  -- nat-elim-β-suc : {A : TyExpr} {a : TmExpr Γ A} {f : TmExpr Γ (A ⇛ A)} {n : TmExpr Γ Nat'} →
-  --                  (Γ ⊢ nat-elim a f ∙ (suc ∙ n) ≡ᶠ f ∙ (nat-elim a f ∙ n))
-  -- if-β-true : {t f : TmExpr Γ T} → (Γ ⊢ if true t f ≡ᶠ t)
-  -- if-β-false : {t f : TmExpr Γ T} → (Γ ⊢ if false t f ≡ᶠ f)
-  -- pair-β-fst : {t : TmExpr Γ T} {s : TmExpr Γ S} →
-  --              (Γ ⊢ fst (pair t s) ≡ᶠ t)
-  -- pair-β-snd : {t : TmExpr Γ T} {s : TmExpr Γ S} →
-  --              (Γ ⊢ snd (pair t s) ≡ᶠ s)
+  suc-lit : {n : ℕ} → (Γ ⊢ (suc ∙ lit n) ≡ᶠ lit (suc n))
+  nat-elim-β-zero : {A : TyExpr} {a : TmExpr Γ A} {f : TmExpr Γ (A ⇛ A)} →
+                    (Γ ⊢ nat-elim a f ∙ lit 0 ≡ᶠ a)
+  nat-elim-β-suc : {A : TyExpr} {a : TmExpr Γ A} {f : TmExpr Γ (A ⇛ A)} {n : TmExpr Γ Nat'} →
+                   (Γ ⊢ nat-elim a f ∙ (suc ∙ n) ≡ᶠ f ∙ (nat-elim a f ∙ n))
+  if-β-true : {t f : TmExpr Γ T} → (Γ ⊢ if true t f ≡ᶠ t)
+  if-β-false : {t f : TmExpr Γ T} → (Γ ⊢ if false t f ≡ᶠ f)
+  pair-β-fst : {t : TmExpr Γ T} {s : TmExpr Γ S} →
+               (Γ ⊢ fst (pair t s) ≡ᶠ t)
+  pair-β-snd : {t : TmExpr Γ T} {s : TmExpr Γ S} →
+               (Γ ⊢ snd (pair t s) ≡ᶠ s)
 
   -- -- Induction schemata for Bool' and Nat'.
   -- bool-induction : (Γ ⊢ φ [ id-subst ∷ true ]frm) →
@@ -64,6 +65,7 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Model.Type.Product as M
 import Experimental.DependentTypes.Model.Function as M
 import Model.Type.Function as M hiding (lam)
+import Experimental.ClosedTypes as M
 
 ⟦_⟧der : Γ ⊢ φ → M.Tm ⟦ Γ ⟧ctx ⟦ φ ⟧frm
 ⟦ refl' ⟧der = M.refl' _
@@ -80,3 +82,10 @@ import Model.Type.Function as M hiding (lam)
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst ⟦ d ⟧der
 ⟦ ∧-elimʳ d ⟧der = M.prim-snd ⟦ d ⟧der
 ⟦ ∀-intro d ⟧der = M.lam _ ⟦ d ⟧der
+⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.ssuc-sdiscr
+⟦ nat-elim-β-zero ⟧der = M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)
+⟦ nat-elim-β-suc ⟧der = M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)
+⟦ if-β-true ⟧der = M.≅ᵗᵐ-to-Id (M.sif-β-true _ _)
+⟦ if-β-false ⟧der = M.≅ᵗᵐ-to-Id (M.sif-β-false _ _)
+⟦ pair-β-fst ⟧der = M.≅ᵗᵐ-to-Id (M.sprod-β-fst _ _)
+⟦ pair-β-snd ⟧der = M.≅ᵗᵐ-to-Id (M.sprod-β-snd _ _)
