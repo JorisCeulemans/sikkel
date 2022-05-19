@@ -66,6 +66,7 @@ data Formula where
   ∀[_]_ : (T : TyExpr) → Formula (Γ ,,ᵛ T) → Formula Γ
 
 
+{-
 module AgdaInterpretation where
   -- Interpretation of syntax in Agda (standard set model).
   ⟦_⟧ty : TyExpr → Set
@@ -104,51 +105,51 @@ module AgdaInterpretation where
   ⟦ φ ⊃ ψ ⟧frm γ = ⟦ φ ⟧frm γ → ⟦ ψ ⟧frm γ
   ⟦ φ ∧ ψ ⟧frm γ = ⟦ φ ⟧frm γ × ⟦ ψ ⟧frm γ
   ⟦ ∀[ T ] φ ⟧frm γ = (t : ⟦ T ⟧ty) → ⟦ φ ⟧frm (γ , t)
+-}
 
-module SikkelInterpretation where
-  open import Model.BaseCategory
-  import Model.CwF-Structure as M hiding (ClosedTy)
-  import Model.Type.Function as M
-  import Model.Type.Product as M
-  import Model.Type.Sum as M
-  import Model.Type.Discrete as M
-  import Experimental.ClosedTypes as M
-  import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
-  import Experimental.DependentTypes.Model.Function as M
+open import Model.BaseCategory
+import Model.CwF-Structure as M hiding (ClosedTy)
+import Model.Type.Function as M
+import Model.Type.Product as M
+import Model.Type.Sum as M
+import Model.Type.Discrete as M
+import Experimental.ClosedTypes as M
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
+import Experimental.DependentTypes.Model.Function as M
 
-  ⟦_⟧ty : TyExpr → M.ClosedTy ★
-  ⟦ Nat' ⟧ty = M.Nat'
-  ⟦ Bool' ⟧ty = M.Bool'
-  ⟦ T ⇛ S ⟧ty = ⟦ T ⟧ty M.⇛ ⟦ S ⟧ty
-  ⟦ T ⊠ S ⟧ty = ⟦ T ⟧ty M.⊠ ⟦ S ⟧ty
+⟦_⟧ty : TyExpr → M.ClosedTy ★
+⟦ Nat' ⟧ty = M.Nat'
+⟦ Bool' ⟧ty = M.Bool'
+⟦ T ⇛ S ⟧ty = ⟦ T ⟧ty M.⇛ ⟦ S ⟧ty
+⟦ T ⊠ S ⟧ty = ⟦ T ⟧ty M.⊠ ⟦ S ⟧ty
 
-  ⟦_⟧ctx : CtxExpr → M.Ctx ★
-  ⟦_⟧var : Var Γ T → M.SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
-  ⟦_⟧tm : TmExpr Γ T → M.SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
-  ⟦_⟧frm : Formula Γ → M.Ty ⟦ Γ ⟧ctx
+⟦_⟧ctx : CtxExpr → M.Ctx ★
+⟦_⟧var : Var Γ T → M.SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
+⟦_⟧tm : TmExpr Γ T → M.SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
+⟦_⟧frm : Formula Γ → M.Ty ⟦ Γ ⟧ctx
 
-  ⟦ ◇ ⟧ctx = M.◇
-  ⟦ Γ ,,ᵛ T ⟧ctx = ⟦ Γ ⟧ctx M.,,ₛ ⟦ T ⟧ty
-  ⟦ Γ ,,ᶠ φ ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ φ ⟧frm
+⟦ ◇ ⟧ctx = M.◇
+⟦ Γ ,,ᵛ T ⟧ctx = ⟦ Γ ⟧ctx M.,,ₛ ⟦ T ⟧ty
+⟦ Γ ,,ᶠ φ ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ φ ⟧frm
 
-  ⟦ vzero ⟧var = M.sξ
-  ⟦ vsuc x ⟧var = ⟦ x ⟧var M.[ M.π ]s
-  ⟦ skip-frm x ⟧var = ⟦ x ⟧var M.[ M.π ]s
+⟦ vzero ⟧var = M.sξ
+⟦ vsuc x ⟧var = ⟦ x ⟧var M.[ M.π ]s
+⟦ skip-frm x ⟧var = ⟦ x ⟧var M.[ M.π ]s
 
-  ⟦ var x ⟧tm = ⟦ x ⟧var
-  ⟦ lam t ⟧tm = M.sλ[ _ ] ⟦ t ⟧tm
-  ⟦ f ∙ t ⟧tm = ⟦ f ⟧tm M.∙ₛ ⟦ t ⟧tm
-  ⟦ lit n ⟧tm = M.sdiscr n
-  ⟦ suc ⟧tm = M.sdiscr-func suc
-  ⟦ nat-elim a f ⟧tm = M.snat-elim ⟦ a ⟧tm ⟦ f ⟧tm
-  ⟦ true ⟧tm = M.strue
-  ⟦ false ⟧tm = M.sfalse
-  ⟦ if b t f ⟧tm = M.sif ⟦ b ⟧tm ⟦ t ⟧tm ⟦ f ⟧tm
-  ⟦ pair t s ⟧tm = M.spair ⟦ t ⟧tm ⟦ s ⟧tm
-  ⟦ fst p ⟧tm = M.sfst ⟦ p ⟧tm
-  ⟦ snd p ⟧tm = M.ssnd ⟦ p ⟧tm
+⟦ var x ⟧tm = ⟦ x ⟧var
+⟦ lam t ⟧tm = M.sλ[ _ ] ⟦ t ⟧tm
+⟦ f ∙ t ⟧tm = ⟦ f ⟧tm M.∙ₛ ⟦ t ⟧tm
+⟦ lit n ⟧tm = M.sdiscr n
+⟦ suc ⟧tm = M.sdiscr-func suc
+⟦ nat-elim a f ⟧tm = M.snat-elim ⟦ a ⟧tm ⟦ f ⟧tm
+⟦ true ⟧tm = M.strue
+⟦ false ⟧tm = M.sfalse
+⟦ if b t f ⟧tm = M.sif ⟦ b ⟧tm ⟦ t ⟧tm ⟦ f ⟧tm
+⟦ pair t s ⟧tm = M.spair ⟦ t ⟧tm ⟦ s ⟧tm
+⟦ fst p ⟧tm = M.sfst ⟦ p ⟧tm
+⟦ snd p ⟧tm = M.ssnd ⟦ p ⟧tm
 
-  ⟦ t1 ≡ᶠ t2 ⟧frm = M.Id ⟦ t1 ⟧tm ⟦ t2 ⟧tm
-  ⟦ φ ⊃ ψ ⟧frm = ⟦ φ ⟧frm M.⇛ ⟦ ψ ⟧frm
-  ⟦ φ ∧ ψ ⟧frm = ⟦ φ ⟧frm M.⊠ ⟦ ψ ⟧frm
-  ⟦ ∀[ T ] φ ⟧frm = M.Pi _ ⟦ φ ⟧frm
+⟦ t1 ≡ᶠ t2 ⟧frm = M.Id ⟦ t1 ⟧tm ⟦ t2 ⟧tm
+⟦ φ ⊃ ψ ⟧frm = ⟦ φ ⟧frm M.⇛ ⟦ ψ ⟧frm
+⟦ φ ∧ ψ ⟧frm = ⟦ φ ⟧frm M.⊠ ⟦ ψ ⟧frm
+⟦ ∀[ T ] φ ⟧frm = M.Pi _ ⟦ φ ⟧frm

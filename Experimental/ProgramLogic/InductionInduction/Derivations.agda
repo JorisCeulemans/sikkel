@@ -3,8 +3,7 @@ module Experimental.ProgramLogic.InductionInduction.Derivations where
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.ProgramLogic.InductionInduction.Definitions as Defs
-open Defs.AgdaInterpretation
+open import Experimental.ProgramLogic.InductionInduction.Definitions
 
 
 private variable
@@ -60,14 +59,24 @@ data _⊢_ : (Γ : CtxExpr) → Formula Γ → Set where
   --                 (Γ ∷ᵛ Nat' ∷ᶠ φ ⊢ φ [ π ∷ (suc ∙ var vzero) ]frm) →
   --                 (Γ ∷ᵛ Nat' ⊢ φ)
 
+import Model.CwF-Structure as M
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
+import Model.Type.Product as M
+import Experimental.DependentTypes.Model.Function as M
+import Model.Type.Function as M hiding (lam)
 
-⟦_⟧der : Γ ⊢ φ → ((γ : ⟦ Γ ⟧ctx) → ⟦ φ ⟧frm γ)
-⟦ refl' ⟧der γ = refl
-⟦ sym' d ⟧der γ = sym (⟦ d ⟧der γ)
-⟦ trans' d1 d2 ⟧der γ = trans (⟦ d1 ⟧der γ) (⟦ d2 ⟧der γ)
-⟦ cong' f d ⟧der γ = cong (⟦ f ⟧tm γ) (⟦ d ⟧der γ)
-⟦ fun-cong d t ⟧der γ = cong (λ x → x (⟦ t ⟧tm γ)) (⟦ d ⟧der γ)
-⟦ ∧-intro dφ dψ ⟧der γ = (⟦ dφ ⟧der γ) , (⟦ dψ ⟧der γ)
-⟦ ∧-elimˡ d ⟧der γ = proj₁ (⟦ d ⟧der γ)
-⟦ ∧-elimʳ d ⟧der γ = proj₂ (⟦ d ⟧der γ)
-⟦ ∀-intro d ⟧der γ = λ t → ⟦ d ⟧der (γ , t)
+⟦_⟧der : Γ ⊢ φ → M.Tm ⟦ Γ ⟧ctx ⟦ φ ⟧frm
+⟦ refl' ⟧der = M.refl' _
+⟦ sym' d ⟧der = M.sym' ⟦ d ⟧der
+⟦ trans' d1 d2 ⟧der = M.trans' ⟦ d1 ⟧der ⟦ d2 ⟧der
+⟦ cong' f d ⟧der = M.cong' _ ⟦ d ⟧der
+⟦ fun-cong d t ⟧der =
+  M.fun-cong' (M.ι⁻¹[ M.Id-cong (M.⇛-natural _)
+                                (M.≅ᵗᵐ-sym (M.ι-symʳ (M.⇛-natural _) _))
+                                (M.≅ᵗᵐ-sym (M.ι-symʳ (M.⇛-natural _) _))
+                    ] ⟦ d ⟧der)
+              ⟦ t ⟧tm
+⟦ ∧-intro dφ dψ ⟧der = M.prim-pair ⟦ dφ ⟧der ⟦ dψ ⟧der
+⟦ ∧-elimˡ d ⟧der = M.prim-fst ⟦ d ⟧der
+⟦ ∧-elimʳ d ⟧der = M.prim-snd ⟦ d ⟧der
+⟦ ∀-intro d ⟧der = M.lam _ ⟦ d ⟧der
