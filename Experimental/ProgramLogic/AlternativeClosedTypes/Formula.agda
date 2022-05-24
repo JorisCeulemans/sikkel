@@ -4,7 +4,11 @@
 
 module Experimental.ProgramLogic.AlternativeClosedTypes.Formula where
 
+open import Data.Product renaming (_,_ to [_,_])
+open import Relation.Binary.PropositionalEquality
+
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
+import Model.CwF-Structure.Reflection.SubstitutionSequence as M
 import Model.Type.Function as M
 import Model.Type.Product as M
 import Experimental.DependentTypes.Model.Function as M
@@ -44,4 +48,10 @@ frm-subst-sound (t1 ≡ᶠ t2) σ =
                                                                   (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))
 frm-subst-sound (φ ⊃ ψ) σ = M.≅ᵗʸ-trans (M.⇛-natural _) (M.⇛-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
 frm-subst-sound (φ ∧ ψ) σ = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
-frm-subst-sound (∀[ T ] φ) σ = M.≅ᵗʸ-trans (M.Pi-natural _) (M.Pi-cong (closed-ty-natural _ _) {!frm-subst-sound φ (σ ⊹)!})
+frm-subst-sound (∀[ T ] φ) σ = M.≅ᵗʸ-trans (M.Pi-natural _) (M.Pi-cong (closed-ty-natural _ _)
+                                           (M.≅ᵗʸ-trans (M.ty-subst-seq-cong (_ M.◼) (_ M.∷ _ M.◼) ⟦ φ ⟧frm subst-eq-proof)
+                                                        (M.ty-subst-cong-ty _ (frm-subst-sound φ (σ ⊹)))))
+  where
+    subst-eq-proof : _ M.≅ˢ _
+    subst-eq-proof = M.≅ˢ-trans (record { eq = λ _ → cong [ M.func ⟦ σ ⟧subst _ ,_] (sym (trans (M.ty-id ⟦ T ⟧ty) (M.ty-id ⟦ T ⟧ty))) })
+                                (M.⊚-congʳ (,ₛ-cong1 (weaken-subst-sound σ) _))
