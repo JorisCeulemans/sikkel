@@ -13,6 +13,7 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as MDF
 
 import Experimental.ClosedTypes as M
+import Experimental.ClosedTypes.Pi as M
 
 open import Experimental.ProgramLogic.AlternativeClosedTypes.STT
 open import Experimental.ProgramLogic.AlternativeClosedTypes.Formula
@@ -137,8 +138,13 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
 ⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
 ⟦ ∧-elimʳ d ⟧der = M.prim-snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
-⟦ ∀-intro d ⟧der = {!!}
-⟦ ∀-elim d t ⟧der = {!!}
+⟦ ∀-intro d ⟧der = M.ι[ M.sPi-natural _ ] (M.sdλ[ _ ] ⟦ d ⟧der)
+⟦ ∀-elim {Ξ = Ξ} {φ = φ} d t ⟧der =
+  M.ι[ M.≅ᵗʸ-trans (M.≅ᵗʸ-sym (M.ty-subst-cong-ty _ (frm-subst-sound φ (id-subst ∷ t)))) (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm subst-eq-proof) ]
+  (M.sdapp (M.ι⁻¹[ M.sPi-natural _ ] ⟦ d ⟧der) (⟦ t ⟧tm M.[ to-ctx-subst Ξ ]s))
+  where
+    subst-eq-proof : _ M.≅ˢ _
+    subst-eq-proof = M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.≅ˢ-trans (M.,ₛ-cong1 (M.⊚-congʳ (M.≅ˢ-sym (id-subst-sound (to-ctx Ξ)))) _) (M.≅ˢ-trans (M.,ₛ-cong1 (M.⊚-id-substˡ _) _) (M.≅ˢ-sym (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.≅ˢ-trans (M.,ₛ-cong2 _ (M.,ₛ-β2 _ _)) (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.⊚-id-substʳ _))) _))))))
 ⟦ fun-β {Ξ = Ξ} {b = b} {t = t} ⟧der =
   (M.≅ᵗᵐ-to-Id (M.≅ᵗᵐ-trans (M.sfun-β _ _)
                             (M.≅ᵗᵐ-trans (M.stm-subst-cong-subst _ (M.,ₛ-cong1 (id-subst-sound (to-ctx Ξ)) _))
@@ -153,19 +159,3 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
 ⟦ pair-β-snd ⟧der = (M.≅ᵗᵐ-to-Id (M.sprod-β-snd _ _)) M.[ _ ]'
 ⟦ bool-induction d1 d2 ⟧der = {!!}
 ⟦ nat-induction d1 d2 ⟧der = {!!}
-
-
-{-
-⟦_⟧der : (Ξ ⊢ φ) → Tm ⟦ Ξ ⟧env (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
-⟦ ∀-intro {Ξ = Ξ} {T = T} {φ = φ} d ⟧der = M.ι[ M.≅ᵗʸ-trans (MDF.Pi-natural _) (MDF.Pi-cong (ty-closed T) proof) ] (MDF.lam _ ⟦ d ⟧der)
-  where
-    proof : ⟦ φ ⟧frm M.[ (to-ctx-subst Ξ) M.⊹ ] M.≅ᵗʸ
-              (⟦ φ ⟧frm M.[ ((to-ctx-subst Ξ) M.⊹) M.⊚ M.to (M.,,-cong (ty-closed T)) ]) M.[ M.from (M.,,-cong (ty-closed T)) ]
-    proof = ty-subst-seq-cong (((to-ctx-subst Ξ) M.⊹) ◼)
-                              (((to-ctx-subst Ξ) M.⊹) M.⊚ M.to (M.,,-cong (ty-closed T)) ∷ˢ M.from (M.,,-cong (ty-closed T)) ◼)
-                              ⟦ φ ⟧frm
-                              (M.≅ˢ-sym (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.⊚-id-substʳ _))))
-⟦ ∀-elim d t ⟧der = {!!}
-⟦ bool-induction d1 d2 ⟧der = {!!}
-⟦ nat-induction d1 d2 ⟧der = {!!}
--}

@@ -15,6 +15,7 @@ import Experimental.DependentTypes.Model.Function as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.ClosedTypes
+open import Experimental.ClosedTypes.Pi
 open import Experimental.ProgramLogic.AlternativeClosedTypes.STT
 
 private variable
@@ -33,7 +34,7 @@ data Formula (Γ : CtxExpr) : Set where
 ⟦ t1 ≡ᶠ t2 ⟧frm = M.Id ⟦ t1 ⟧tm ⟦ t2 ⟧tm
 ⟦ φ ⊃ ψ ⟧frm = ⟦ φ ⟧frm M.⇛ ⟦ ψ ⟧frm
 ⟦ φ ∧ ψ ⟧frm = ⟦ φ ⟧frm M.⊠ ⟦ ψ ⟧frm
-⟦ ∀[ T ] φ ⟧frm = M.Pi (⟦ T ⟧ty M.[ _ ]) ⟦ φ ⟧frm
+⟦ ∀[ T ] φ ⟧frm = sPi ⟦ T ⟧ty ⟦ φ ⟧frm
 
 -- Applying a substitution to a formula.
 _[_]frm : Formula Γ → SubstExpr Δ Γ → Formula Δ
@@ -48,10 +49,5 @@ frm-subst-sound (t1 ≡ᶠ t2) σ =
                                                                   (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))
 frm-subst-sound (φ ⊃ ψ) σ = M.≅ᵗʸ-trans (M.⇛-natural _) (M.⇛-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
 frm-subst-sound (φ ∧ ψ) σ = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
-frm-subst-sound (∀[ T ] φ) σ = M.≅ᵗʸ-trans (M.Pi-natural _) (M.Pi-cong (closed-ty-natural _ _)
-                                           (M.≅ᵗʸ-trans (M.ty-subst-seq-cong (_ M.◼) (_ M.∷ _ M.◼) ⟦ φ ⟧frm subst-eq-proof)
-                                                        (M.ty-subst-cong-ty _ (frm-subst-sound φ (σ ⊹)))))
-  where
-    subst-eq-proof : _ M.≅ˢ _
-    subst-eq-proof = M.≅ˢ-trans (record { eq = λ _ → cong [ M.func ⟦ σ ⟧subst _ ,_] (sym (trans (M.ty-id ⟦ T ⟧ty) (M.ty-id ⟦ T ⟧ty))) })
-                                (M.⊚-congʳ (,ₛ-cong1 (weaken-subst-sound σ) _))
+frm-subst-sound (∀[ T ] φ) σ = M.≅ᵗʸ-trans (sPi-natural _) (sPi-cong₂ (M.≅ᵗʸ-trans (M.ty-subst-cong-subst (⊹-sound σ) ⟦ φ ⟧frm)
+                                                                                   (frm-subst-sound φ (σ ⊹))))
