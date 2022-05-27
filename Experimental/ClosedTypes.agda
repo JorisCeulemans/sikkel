@@ -192,6 +192,14 @@ sif-β-true t f = record { eq = λ _ → refl }
 sif-β-false : (t f : SimpleTm Γ T) → sif (sdiscr false) t f ≅ᵗᵐ f
 sif-β-false t f = record { eq = λ _ → refl }
 
+sbool-induction : (T : Ty (Γ ,,ₛ Bool')) →
+                  Tm Γ (T [ id-subst Γ ,ₛ strue ]) → Tm Γ (T [ id-subst Γ ,ₛ sfalse ]) →
+                  Tm (Γ ,,ₛ Bool') T
+sbool-induction T t f ⟨ x , [ γ , false ] ⟩' = f ⟨ x , γ ⟩'
+sbool-induction T t f ⟨ x , [ γ , true  ] ⟩' = t ⟨ x , γ ⟩'
+naturality (sbool-induction T t f) {γy = [ _ , false ]} {γx = [ _ , false ]} ρ refl = naturality f ρ refl
+naturality (sbool-induction T t f) {γy = [ _ , true  ]} {γx = [ _ , true  ]} ρ refl = naturality t ρ refl
+
 szero : SimpleTm Γ Nat'
 szero = sdiscr 0
 
@@ -252,6 +260,15 @@ snat-β-suc {C = C} {Γ = Γ} a f n = record { eq = λ {x} γ →
         (trans ($-cong (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩') refl)
                (cong (_$⟨ hom-id , _ ⟩ t) (naturality f {x} {x} {Γ ⟪ hom-id ⟫ γ} {γ} hom-id (trans (ctx-id Γ) (ctx-id Γ))))) }
   where open BaseCategory C
+
+snat-induction : (T : Ty (Γ ,,ₛ Nat')) →
+                 Tm Γ (T [ id-subst Γ ,ₛ szero ]) → Tm (Γ ,,ₛ Nat' ,, T) (T [ (π ,ₛ (ssuc ∙ₛ sξ)) ⊚ π ]) →
+                 Tm (Γ ,,ₛ Nat') T
+snat-induction T z s ⟨ x , [ γ , zero  ] ⟩' = z ⟨ x , γ ⟩'
+snat-induction T z s ⟨ x , [ γ , suc n ] ⟩' = s ⟨ x , [ [ γ , n ] , snat-induction T z s ⟨ x , [ γ , n ] ⟩' ] ⟩'
+naturality (snat-induction T z s) {γy = [ _ , zero  ]} {γx = [ _ , zero  ]} ρ refl = naturality z ρ refl
+naturality (snat-induction T z s) {γy = [ _ , suc n ]} {γx = [ _ , suc m ]} ρ refl =
+  trans (ty-cong T refl) (naturality s ρ (cong [ _ ,_] (naturality (snat-induction T z s) ρ refl)))
 
 
 --------------------------------------------------

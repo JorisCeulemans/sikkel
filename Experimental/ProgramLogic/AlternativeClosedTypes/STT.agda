@@ -218,8 +218,8 @@ id-subst-sound (Γ ,, T) = M.≅ˢ-trans ,ₛ-η-id (,ₛ-cong1 (M.≅ˢ-trans (
                                                                    (M.≅ˢ-trans (M.⊚-congʳ (id-subst-sound Γ))
                                                                                (weaken-subst-sound (id-subst Γ)))) _)
 
-π-sound : M.π M.≅ˢ ⟦ π {Γ = Γ} {T = T} ⟧subst
-π-sound {Γ = Γ} {T = T} =
+π-sound : (Γ : CtxExpr) (T : TyExpr) → M.π M.≅ˢ ⟦ π {Γ = Γ} {T = T} ⟧subst
+π-sound Γ T =
   M.≅ˢ-trans (M.≅ˢ-sym (M.⊚-id-substˡ _)) (M.≅ˢ-trans (M.⊚-congʳ (id-subst-sound Γ)) (weaken-subst-sound (id-subst Γ) {S = T}))
 
 ⊹-sound : (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹ {T = T} σ ⟧subst
@@ -245,3 +245,15 @@ tm-subst-sound (if b t f) σ = M.≅ᵗᵐ-trans (sif-natural _) (sif-cong (tm-s
 tm-subst-sound (pair t s) σ = M.≅ᵗᵐ-trans (spair-natural _) (spair-cong (tm-subst-sound t σ) (tm-subst-sound s σ))
 tm-subst-sound (fst p) σ = M.≅ᵗᵐ-trans (sfst-natural _) (sfst-cong (tm-subst-sound p σ))
 tm-subst-sound (snd p) σ = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (tm-subst-sound p σ))
+
+subst-lemma : (Δ : CtxExpr) {Γ : M.Ctx ★} {T : ClosedTy ★}
+              (σ : Γ M.⇒ ⟦ Δ ⟧ctx) (t : SimpleTm ⟦ Δ ⟧ctx T) →
+              (⟦ id-subst Δ ⟧subst ,ₛ t) M.⊚ σ M.≅ˢ (σ s⊹) M.⊚ (M.id-subst Γ ,ₛ (t [ σ ]s))
+subst-lemma Δ σ t =
+  M.≅ˢ-trans (M.,ₛ-⊚ _ _ _)
+             (M.≅ˢ-trans (M.,ₛ-cong1 (M.⊚-congʳ (M.≅ˢ-sym (id-subst-sound Δ))) _)
+                         (M.≅ˢ-trans (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)
+                                     (M.≅ˢ-sym (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _)
+                                                           (M.≅ˢ-trans (M.,ₛ-cong2 _ (M.,ₛ-β2 _ _))
+                                                                       (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _))
+                                                                                                                     (M.⊚-id-substʳ _))) _))))))

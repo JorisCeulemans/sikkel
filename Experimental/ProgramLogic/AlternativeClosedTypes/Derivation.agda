@@ -118,7 +118,7 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
   (interpret-assumption x M.[ M.π ]')
   where
     subst-eq-proof : _ M.≅ˢ _
-    subst-eq-proof = M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ M.sξ)) (M.⊚-congʳ (π-sound {Γ = to-ctx Ξ} {T = T}))
+    subst-eq-proof = M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ M.sξ)) (M.⊚-congʳ (π-sound (to-ctx Ξ) T))
 
 ⟦_⟧der : (Ξ ⊢ φ) → Tm ⟦ Ξ ⟧env (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
 ⟦ refl ⟧der = M.refl' _ M.[ _ ]'
@@ -140,18 +140,10 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
 ⟦ ∧-elimʳ d ⟧der = M.prim-snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
 ⟦ ∀-intro d ⟧der = M.ι[ M.sPi-natural _ ] (M.sdλ[ _ ] ⟦ d ⟧der)
 ⟦ ∀-elim {Ξ = Ξ} {φ = φ} d t ⟧der =
-  M.ι[ M.≅ᵗʸ-trans (M.≅ᵗʸ-sym (M.ty-subst-cong-ty _ (frm-subst-sound φ (t /var0)))) (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm subst-eq-proof) ]
+  M.ι[ M.≅ᵗʸ-trans (M.≅ᵗʸ-sym (M.ty-subst-cong-ty _ (frm-subst-sound φ (t /var0))))
+                   (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) ⟦ t ⟧tm))
+     ]
   (M.sdapp (M.ι⁻¹[ M.sPi-natural _ ] ⟦ d ⟧der) (⟦ t ⟧tm M.[ to-ctx-subst Ξ ]s))
-  where
-    subst-eq-proof : _ M.≅ˢ _
-    subst-eq-proof =
-      M.≅ˢ-trans (M.,ₛ-⊚ _ _ _)
-                 (M.≅ˢ-trans (M.,ₛ-cong1 (M.⊚-congʳ (M.≅ˢ-sym (id-subst-sound (to-ctx Ξ)))) _)
-                             (M.≅ˢ-trans (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)
-                                         (M.≅ˢ-sym (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _)
-                                                               (M.≅ˢ-trans (M.,ₛ-cong2 _ (M.,ₛ-β2 _ _))
-                                                                           (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _))
-                                                                                                                         (M.⊚-id-substʳ _))) _))))))
 ⟦ fun-β {Ξ = Ξ} {b = b} {t = t} ⟧der =
   (M.≅ᵗᵐ-to-Id (M.≅ᵗᵐ-trans (M.sfun-β _ _)
                             (M.≅ᵗᵐ-trans (M.stm-subst-cong-subst _ (M.,ₛ-cong1 (id-subst-sound (to-ctx Ξ)) _))
@@ -164,5 +156,29 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
 ⟦ if-β-false ⟧der = (M.≅ᵗᵐ-to-Id (M.sif-β-false _ _)) M.[ _ ]'
 ⟦ pair-β-fst ⟧der = (M.≅ᵗᵐ-to-Id (M.sprod-β-fst _ _)) M.[ _ ]'
 ⟦ pair-β-snd ⟧der = (M.≅ᵗᵐ-to-Id (M.sprod-β-snd _ _)) M.[ _ ]'
-⟦ bool-induction d1 d2 ⟧der = {!!}
-⟦ nat-induction d1 d2 ⟧der = {!!}
+⟦ bool-induction {Ξ = Ξ} {φ = φ} d1 d2 ⟧der =
+  M.sbool-induction _ (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
+                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
+                                                                       (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.strue))))
+                                        (M.ty-subst-cong-ty _ (frm-subst-sound φ (true /var0)))
+                          ] ⟦ d1 ⟧der)
+                      (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
+                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
+                                                                       (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.sfalse))))
+                                        (M.ty-subst-cong-ty _ (frm-subst-sound φ (false /var0)))
+                          ] ⟦ d2 ⟧der)
+⟦ nat-induction {Ξ = Ξ} {φ = φ} d1 d2 ⟧der =
+  M.snat-induction _ (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
+                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
+                                                                       (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.szero))))
+                                       (M.ty-subst-cong-ty _ (frm-subst-sound φ (lit 0 /var0)))
+                         ] ⟦ d1 ⟧der)
+                     (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm subst-eq-proof)
+                                       (M.ty-subst-cong-ty _ (frm-subst-sound φ _)) ] ⟦ d2 ⟧der)
+  where
+    subst-eq-proof : _ M.≅ˢ _
+    subst-eq-proof =
+      M.≅ˢ-trans (M.≅ˢ-sym M.⊚-assoc) (M.≅ˢ-trans (M.⊚-congʳ (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.≅ˢ-trans
+      (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (π-sound (to-ctx Ξ) _))))) _)
+                  (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sdiscr-func-natural _) (M.,ₛ-β2 _ _)))))))
+      (M.≅ˢ-sym (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
