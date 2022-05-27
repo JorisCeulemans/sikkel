@@ -167,15 +167,18 @@ weaken-subst : SubstExpr Δ Γ → SubstExpr (Δ ,, S) Γ
 weaken-subst [] = []
 weaken-subst (σ ∷ t) = weaken-subst σ ∷ (weaken-tm t)
 
-id-subst : SubstExpr Γ Γ
-id-subst {◇} = []
-id-subst {Γ ,, T} = weaken-subst (id-subst {Γ}) ∷ var vzero
+id-subst : (Γ : CtxExpr) → SubstExpr Γ Γ
+id-subst ◇        = []
+id-subst (Γ ,, T) = weaken-subst (id-subst Γ) ∷ var vzero
 
 π : SubstExpr (Γ ,, T) Γ
-π = weaken-subst id-subst
+π {Γ = Γ} = weaken-subst (id-subst Γ)
 
 _⊹ : SubstExpr Δ Γ → SubstExpr (Δ ,, T) (Γ ,, T)
 σ ⊹ = weaken-subst σ ∷ var vzero
+
+_/var0 : TmExpr Γ T → SubstExpr Γ (Γ ,, T)
+t /var0 = id-subst _ ∷ t
 
 subst-var : Var Γ T → SubstExpr Δ Γ → TmExpr Δ T
 subst-var vzero    (σ ∷ t) = t
@@ -209,15 +212,15 @@ weaken-subst-sound : (σ : SubstExpr Δ Γ) {S : TyExpr} → (⟦ σ ⟧subst M.
 weaken-subst-sound []      = M.◇-terminal _ _ _
 weaken-subst-sound (σ ∷ t) = M.≅ˢ-trans (,ₛ-⊚ _ _ _) (M.≅ˢ-trans (,ₛ-cong1 (weaken-subst-sound σ) _) (,ₛ-cong2 _ (weaken-tm-sound t)))
 
-id-subst-sound : (Γ : CtxExpr) → M.id-subst ⟦ Γ ⟧ctx M.≅ˢ ⟦ id-subst {Γ = Γ} ⟧subst
+id-subst-sound : (Γ : CtxExpr) → M.id-subst ⟦ Γ ⟧ctx M.≅ˢ ⟦ id-subst Γ ⟧subst
 id-subst-sound ◇        = M.◇-terminal _ _ _
 id-subst-sound (Γ ,, T) = M.≅ˢ-trans ,ₛ-η-id (,ₛ-cong1 (M.≅ˢ-trans (M.≅ˢ-sym (M.⊚-id-substˡ _))
-                                                                       (M.≅ˢ-trans (M.⊚-congʳ (id-subst-sound Γ))
-                                                                                   (weaken-subst-sound {Δ = Γ} id-subst))) _)
+                                                                   (M.≅ˢ-trans (M.⊚-congʳ (id-subst-sound Γ))
+                                                                               (weaken-subst-sound (id-subst Γ)))) _)
 
 π-sound : M.π M.≅ˢ ⟦ π {Γ = Γ} {T = T} ⟧subst
 π-sound {Γ = Γ} {T = T} =
-  M.≅ˢ-trans (M.≅ˢ-sym (M.⊚-id-substˡ _)) (M.≅ˢ-trans (M.⊚-congʳ (id-subst-sound Γ)) (weaken-subst-sound {Γ} id-subst {S = T}))
+  M.≅ˢ-trans (M.≅ˢ-sym (M.⊚-id-substˡ _)) (M.≅ˢ-trans (M.⊚-congʳ (id-subst-sound Γ)) (weaken-subst-sound (id-subst Γ) {S = T}))
 
 ⊹-sound : (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹ {T = T} σ ⟧subst
 ⊹-sound σ = ,ₛ-cong1 (weaken-subst-sound σ) sξ
