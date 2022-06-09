@@ -1,5 +1,6 @@
 --------------------------------------------------
--- Example in which we (try to) prove that ∀ n . n + 0 = n
+-- Examples in which we prove some properties of
+--  addition of natural numbers
 --------------------------------------------------
 
 module Experimental.ProgramLogic.AlternativeClosedTypes.Example where
@@ -42,13 +43,42 @@ _ : 16 + 9 ≡ 25
 _ = refl
 -}
 
+-- ∀ n → plus n 0 = n
 plus-zeroʳ : Formula Γ
 plus-zeroʳ = ∀[ Nat' ] (plus ∙ var vzero ∙ lit 0 ≡ᶠ var vzero)
 
-proof-plus-zeroʳ : [] ⊢ plus-zeroʳ
+proof-plus-zeroʳ : {Ξ : Env} → Ξ ⊢ plus-zeroʳ
 proof-plus-zeroʳ =
   ∀-intro (nat-induction (trans (fun-cong nat-elim-β-zero (lit 0)) fun-β)
                          (trans (fun-cong (trans nat-elim-β-suc fun-β) (lit 0)) (trans fun-β (cong suc (assumption azero)))))
 
 sem-proof : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _) M.[ _ ])
-sem-proof = ⟦ proof-plus-zeroʳ ⟧der
+sem-proof = ⟦ proof-plus-zeroʳ {Ξ = []} ⟧der
+
+-- ∀ m n → plus m (suc n) = suc (plus m n)
+plus-sucʳ : Formula Γ
+plus-sucʳ = ∀[ Nat' ] (∀[ Nat' ] (plus ∙ var (vsuc vzero) ∙ (suc ∙ var vzero) ≡ᶠ suc ∙ (plus ∙ var (vsuc vzero) ∙ var vzero)))
+
+proof-plus-sucʳ : {Ξ : Env} → Ξ ⊢ plus-sucʳ
+proof-plus-sucʳ = ∀-intro (nat-induction
+  (∀-intro (trans (fun-cong nat-elim-β-zero _) (trans fun-β (sym (cong suc (trans (fun-cong nat-elim-β-zero _) fun-β))))))
+  (∀-intro (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) (trans fun-β
+    (cong suc (trans (∀-elim (assumption (skip-var azero)) (var vzero))
+                     (sym (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) fun-β))))))))))
+
+⟦proof-plus-sucʳ⟧ : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _)) M.[ _ ])
+⟦proof-plus-sucʳ⟧ = ⟦ proof-plus-sucʳ {Ξ = []} ⟧der
+
+-- ∀ m n → plus m n = plus n m
+plus-comm : Formula Γ
+plus-comm = ∀[ Nat' ] (∀[ Nat' ] (plus ∙ var (vsuc vzero) ∙ var vzero ≡ᶠ (plus ∙ var vzero ∙ var (vsuc vzero))))
+
+proof-plus-comm : {Ξ : Env} → Ξ ⊢ plus-comm
+proof-plus-comm = ∀-intro (nat-induction
+  (∀-intro (trans (fun-cong nat-elim-β-zero _) (trans fun-β (sym (∀-elim proof-plus-zeroʳ (var vzero))))))
+  (∀-intro (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) (trans fun-β (trans
+       (cong suc (∀-elim (assumption (skip-var azero)) (var vzero)))
+       (sym (∀-elim (∀-elim proof-plus-sucʳ (var vzero)) (var (vsuc vzero))))))))))
+
+⟦plus-comm-proof⟧ : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _)) M.[ _ ])
+⟦plus-comm-proof⟧ = ⟦ proof-plus-comm {Ξ = []} ⟧der
