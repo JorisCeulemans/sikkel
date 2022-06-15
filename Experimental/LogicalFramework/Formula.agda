@@ -2,7 +2,7 @@
 -- Definition of formulas encoding logical propositions
 --------------------------------------------------
 
-module Experimental.ProgramLogic.AlternativeClosedTypes.Formula where
+module Experimental.LogicalFramework.Formula where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality
@@ -16,7 +16,7 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.ClosedTypes
 open import Experimental.ClosedTypes.Pi
-open import Experimental.ProgramLogic.AlternativeClosedTypes.STT
+open import Experimental.LogicalFramework.STT
 
 private variable
   Γ Δ : CtxExpr

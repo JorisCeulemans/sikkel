@@ -1,4 +1,4 @@
-module Experimental.ProgramLogic.AlternativeClosedTypes.Derivation where
+module Experimental.LogicalFramework.Derivation where
 
 open import Data.Nat
 import Relation.Binary.PropositionalEquality as A≡
@@ -15,8 +15,8 @@ import Experimental.DependentTypes.Model.Function as MDF
 import Experimental.ClosedTypes as M
 import Experimental.ClosedTypes.Pi as M
 
-open import Experimental.ProgramLogic.AlternativeClosedTypes.STT
-open import Experimental.ProgramLogic.AlternativeClosedTypes.Formula
+open import Experimental.LogicalFramework.STT
+open import Experimental.LogicalFramework.Formula
 
 private variable
   Γ Δ : CtxExpr

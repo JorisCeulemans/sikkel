@@ -1,10 +1,10 @@
-module Experimental.ProgramLogic.InductionInduction.Derivations where
+module Experimental.LogicalFramework.Archive.InductionInduction.Derivations where
 
 open import Data.Nat
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.ProgramLogic.InductionInduction.Definitions
+open import Experimental.LogicalFramework.Archive.InductionInduction.Definitions
 
 
 private variable

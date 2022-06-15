@@ -3,14 +3,14 @@
 --  addition of natural numbers
 --------------------------------------------------
 
-module Experimental.ProgramLogic.AlternativeClosedTypes.Example where
+module Experimental.LogicalFramework.Example where
 
 open import Data.Nat hiding (_+_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import Experimental.ProgramLogic.AlternativeClosedTypes.STT
-open import Experimental.ProgramLogic.AlternativeClosedTypes.Formula
-open import Experimental.ProgramLogic.AlternativeClosedTypes.Derivation
+open import Experimental.LogicalFramework.STT
+open import Experimental.LogicalFramework.Formula
+open import Experimental.LogicalFramework.Derivation
 open import Extraction
 
 open import Model.BaseCategory

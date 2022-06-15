@@ -1,4 +1,4 @@
-module Experimental.ProgramLogic.InductionInduction.DependentTypesTest where
+module Experimental.LogicalFramework.Archive.InductionInduction.DependentTypesTest where
 
 open import Data.Bool hiding (T)
 open import Data.Product

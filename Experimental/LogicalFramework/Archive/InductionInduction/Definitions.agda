@@ -1,4 +1,4 @@
-module Experimental.ProgramLogic.InductionInduction.Definitions where
+module Experimental.LogicalFramework.Archive.InductionInduction.Definitions where
 
 open import Data.Bool hiding (T; _∧_)
 open import Data.Nat

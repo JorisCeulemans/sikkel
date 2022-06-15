@@ -2,7 +2,7 @@
 -- A Simple Type Theory for which we will provide a logic
 --------------------------------------------------
 
-module Experimental.ProgramLogic.AlternativeClosedTypes.STT where
+module Experimental.LogicalFramework.STT where
 
 open import Data.Nat
 

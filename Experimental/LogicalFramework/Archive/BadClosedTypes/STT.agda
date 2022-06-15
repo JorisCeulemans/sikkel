@@ -4,7 +4,7 @@
 -- A Simple Type Theory for which we will provide a logic
 --------------------------------------------------
 
-module Experimental.ProgramLogic.STT where
+module Experimental.LogicalFramework.Archive.BadClosedTypes.STT where
 
 open import Data.Nat
 

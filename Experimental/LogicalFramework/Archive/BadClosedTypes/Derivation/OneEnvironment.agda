@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module Experimental.ProgramLogic.Derivation.OneEnvironment where
+module Experimental.LogicalFramework.Archive.BadClosedTypes.Derivation.OneEnvironment where
 
 open import Data.Nat
 
@@ -13,8 +13,8 @@ import Model.Type.Discrete as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as MDF
 
-open import Experimental.ProgramLogic.STT
-open import Experimental.ProgramLogic.Formula
+open import Experimental.LogicalFramework.Archive.BadClosedTypes.STT
+open import Experimental.LogicalFramework.Archive.BadClosedTypes.Formula
 
 private variable
   Γ Δ : CtxExpr

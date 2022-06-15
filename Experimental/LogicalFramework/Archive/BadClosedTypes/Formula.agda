@@ -4,7 +4,7 @@
 -- Definition of formulas encoding logical propositions
 --------------------------------------------------
 
-module Experimental.ProgramLogic.Formula where
+module Experimental.LogicalFramework.Archive.BadClosedTypes.Formula where
 
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
 import Model.Type.Function as M
@@ -12,7 +12,7 @@ import Model.Type.Product as M
 import Experimental.DependentTypes.Model.Function as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
-open import Experimental.ProgramLogic.STT
+open import Experimental.LogicalFramework.Archive.BadClosedTypes.STT
 
 private variable
   Γ Δ : CtxExpr
