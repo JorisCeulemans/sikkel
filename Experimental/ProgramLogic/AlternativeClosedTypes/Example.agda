@@ -45,12 +45,12 @@ _ = refl
 
 -- ∀ n → plus n 0 = n
 plus-zeroʳ : Formula Γ
-plus-zeroʳ = ∀[ Nat' ] (plus ∙ var vzero ∙ lit 0 ≡ᶠ var vzero)
+plus-zeroʳ = ∀[ Nat' ] (plus ∙ var vzero ∙ zero ≡ᶠ var vzero)
 
 proof-plus-zeroʳ : {Ξ : Env} → Ξ ⊢ plus-zeroʳ
 proof-plus-zeroʳ =
-  ∀-intro (nat-induction (trans (fun-cong nat-elim-β-zero (lit 0)) fun-β)
-                         (trans (fun-cong (trans nat-elim-β-suc fun-β) (lit 0)) (trans fun-β (cong suc (assumption azero)))))
+  ∀-intro (nat-induction (trans (fun-cong nat-elim-β-zero zero) fun-β)
+                         (trans (fun-cong (trans nat-elim-β-suc fun-β) zero) (trans fun-β (cong suc (assumption azero)))))
 
 sem-proof : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _) M.[ _ ])
 sem-proof = ⟦ proof-plus-zeroʳ {Ξ = []} ⟧der

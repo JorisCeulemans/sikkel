@@ -76,9 +76,8 @@ data _⊢_ : (Ξ : Env) → Formula (to-ctx Ξ) → Set where
   -- Specific computation rules for term formers (currently no eta rules).
   fun-β : {b : TmExpr (to-ctx Ξ ,, T) S} {t : TmExpr (to-ctx Ξ) T} →
           (Ξ ⊢ lam b ∙ t ≡ᶠ (b [ t /var0 ]tm))
-  suc-lit : {n : ℕ} → (Ξ ⊢ (suc ∙ lit n) ≡ᶠ lit (suc n))
   nat-elim-β-zero : {A : TyExpr} {a : TmExpr (to-ctx Ξ) A} {f : TmExpr (to-ctx Ξ) (A ⇛ A)} →
-                    (Ξ ⊢ nat-elim a f ∙ lit 0 ≡ᶠ a)
+                    (Ξ ⊢ nat-elim a f ∙ zero ≡ᶠ a)
   nat-elim-β-suc : {A : TyExpr} {a : TmExpr (to-ctx Ξ) A} {f : TmExpr (to-ctx Ξ) (A ⇛ A)} {n : TmExpr (to-ctx Ξ) Nat'} →
                    (Ξ ⊢ nat-elim a f ∙ (suc ∙ n) ≡ᶠ f ∙ (nat-elim a f ∙ n))
   if-β-true : {t f : TmExpr (to-ctx Ξ) T} → (Ξ ⊢ if true t f ≡ᶠ t)
@@ -92,7 +91,7 @@ data _⊢_ : (Ξ : Env) → Formula (to-ctx Ξ) → Set where
   bool-induction : (Ξ ⊢ φ [ true /var0 ]frm) →
                    (Ξ ⊢ φ [ false /var0 ]frm) →
                    (Ξ ∷ᵛ Bool' ⊢ φ)
-  nat-induction : (Ξ ⊢ φ [ lit 0 /var0 ]frm) →
+  nat-induction : (Ξ ⊢ φ [ zero /var0 ]frm) →
                   (Ξ ∷ᵛ Nat' ∷ᶠ φ ⊢ φ [ π ∷ (suc ∙ var vzero) ]frm) →
                   (Ξ ∷ᵛ Nat' ⊢ φ)
 
@@ -149,7 +148,6 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
                             (M.≅ᵗᵐ-trans (M.stm-subst-cong-subst _ (M.,ₛ-cong1 (id-subst-sound (to-ctx Ξ)) _))
                                          (tm-subst-sound b (id-subst _ ∷ t)))))
   M.[ _ ]'
-⟦ suc-lit ⟧der = (M.≅ᵗᵐ-to-Id M.ssuc-sdiscr) M.[ _ ]'
 ⟦ nat-elim-β-zero ⟧der = (M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)) M.[ _ ]'
 ⟦ nat-elim-β-suc ⟧der = (M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]'
 ⟦ if-β-true ⟧der = (M.≅ᵗᵐ-to-Id (M.sif-β-true _ _)) M.[ _ ]'
@@ -171,10 +169,11 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
   M.snat-induction _ (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
                                                            (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
                                                                        (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.szero))))
-                                       (M.ty-subst-cong-ty _ (frm-subst-sound φ (lit 0 /var0)))
+                                       (M.ty-subst-cong-ty _ (frm-subst-sound φ (zero /var0)))
                          ] ⟦ d1 ⟧der)
                      (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm subst-eq-proof)
-                                       (M.ty-subst-cong-ty _ (frm-subst-sound φ _)) ] ⟦ d2 ⟧der)
+                                       (M.ty-subst-cong-ty _ (frm-subst-sound φ _))
+                         ] ⟦ d2 ⟧der)
   where
     subst-eq-proof : _ M.≅ˢ _
     subst-eq-proof =

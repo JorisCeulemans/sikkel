@@ -49,7 +49,7 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
   var : Var Γ T → TmExpr Γ T
   lam : TmExpr (Γ ,, T) S → TmExpr Γ (T ⇛ S)
   _∙_ : TmExpr Γ (T ⇛ S) → TmExpr Γ T → TmExpr Γ S
-  lit : ℕ → TmExpr Γ Nat'
+  zero : TmExpr Γ Nat'
   suc : TmExpr Γ (Nat' ⇛ Nat')
   nat-elim : {A : TyExpr} → TmExpr Γ A → TmExpr Γ (A ⇛ A) → TmExpr Γ (Nat' ⇛ A)
   true false : TmExpr Γ Bool'
@@ -81,7 +81,7 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
 ⟦ var x ⟧tm = ⟦ x ⟧var
 ⟦ lam t ⟧tm = sλ[ _ ] ⟦ t ⟧tm
 ⟦ f ∙ t ⟧tm = ⟦ f ⟧tm ∙ₛ ⟦ t ⟧tm
-⟦ lit n ⟧tm = sdiscr n
+⟦ zero ⟧tm = szero
 ⟦ suc ⟧tm = ssuc
 ⟦ nat-elim a f ⟧tm = snat-elim ⟦ a ⟧tm ⟦ f ⟧tm
 ⟦ true ⟧tm = strue
@@ -109,7 +109,7 @@ multi-weaken-tm : (Δ : CtxExpr) → TmExpr (Γ ++ctx Δ) T → TmExpr ((Γ ,, S
 multi-weaken-tm {Γ} Δ (var x) = var (multi-weaken-var Δ x)
 multi-weaken-tm {Γ} Δ (lam t) = lam (multi-weaken-tm {Γ} (Δ ,, _) t)
 multi-weaken-tm Δ (f ∙ t) = multi-weaken-tm Δ f ∙ multi-weaken-tm Δ t
-multi-weaken-tm Δ (lit n) = lit n
+multi-weaken-tm Δ zero = zero
 multi-weaken-tm Δ suc = suc
 multi-weaken-tm Δ (nat-elim a f) = nat-elim (multi-weaken-tm Δ a) (multi-weaken-tm Δ f)
 multi-weaken-tm Δ true = true
@@ -141,7 +141,7 @@ multi-weaken-tm-sound : {S : TyExpr} (Δ : CtxExpr) (t : TmExpr (Γ ++ctx Δ) T)
 multi-weaken-tm-sound Δ (var x) = multi-weaken-var-sound Δ x
 multi-weaken-tm-sound Δ (lam t) = M.≅ᵗᵐ-trans (sλ-natural _) (sλ-cong (multi-weaken-tm-sound (Δ ,, _) t))
 multi-weaken-tm-sound Δ (f ∙ t) = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (multi-weaken-tm-sound Δ f) (multi-weaken-tm-sound Δ t))
-multi-weaken-tm-sound Δ (lit n) = sdiscr-natural _
+multi-weaken-tm-sound Δ zero = sdiscr-natural _
 multi-weaken-tm-sound Δ suc = sdiscr-func-natural _
 multi-weaken-tm-sound Δ (nat-elim a f) = M.≅ᵗᵐ-trans (snat-elim-natural _) (snat-elim-cong (multi-weaken-tm-sound Δ a) (multi-weaken-tm-sound Δ f))
 multi-weaken-tm-sound Δ true = sdiscr-natural _
@@ -188,7 +188,7 @@ _[_]tm : TmExpr Γ T → SubstExpr Δ Γ → TmExpr Δ T
 var x [ σ ]tm = subst-var x σ
 lam t [ σ ]tm = lam (t [ σ ⊹ ]tm)
 (f ∙ t) [ σ ]tm = (f [ σ ]tm) ∙ (t [ σ ]tm)
-lit n [ σ ]tm = lit n
+zero [ σ ]tm = zero
 suc [ σ ]tm = suc
 nat-elim a f [ σ ]tm = nat-elim (a [ σ ]tm) (f [ σ ]tm)
 true [ σ ]tm = true
@@ -236,7 +236,7 @@ tm-subst-sound (lam t) σ =
               (sλ-cong (M.≅ᵗᵐ-trans (stm-subst-cong-subst ⟦ t ⟧tm (⊹-sound σ))
                                     (tm-subst-sound t (σ ⊹))))
 tm-subst-sound (f ∙ t) σ = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (tm-subst-sound f σ) (tm-subst-sound t σ))
-tm-subst-sound (lit n) σ = sdiscr-natural _
+tm-subst-sound zero σ = sdiscr-natural _
 tm-subst-sound suc σ = sdiscr-func-natural _
 tm-subst-sound (nat-elim a f) σ = M.≅ᵗᵐ-trans (snat-elim-natural _) (snat-elim-cong (tm-subst-sound a σ) (tm-subst-sound f σ))
 tm-subst-sound true σ = sdiscr-natural _
