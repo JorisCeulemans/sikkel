@@ -117,7 +117,7 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
   (interpret-assumption x M.[ M.π ]')
   where
     subst-eq-proof : _ M.≅ˢ _
-    subst-eq-proof = M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ M.sξ)) (M.⊚-congʳ (π-sound (to-ctx Ξ) T))
+    subst-eq-proof = M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ M.sξ)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))
 
 ⟦_⟧der : (Ξ ⊢ φ) → Tm ⟦ Ξ ⟧env (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
 ⟦ refl ⟧der = M.refl' _ M.[ _ ]'
@@ -144,9 +144,7 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
      ]
   (M.sdapp (M.ι⁻¹[ M.sPi-natural _ ] ⟦ d ⟧der) (⟦ t ⟧tm M.[ to-ctx-subst Ξ ]s))
 ⟦ fun-β {Ξ = Ξ} {b = b} {t = t} ⟧der =
-  (M.≅ᵗᵐ-to-Id (M.≅ᵗᵐ-trans (M.sfun-β _ _)
-                            (M.≅ᵗᵐ-trans (M.stm-subst-cong-subst _ (M.,ₛ-cong1 (id-subst-sound (to-ctx Ξ)) _))
-                                         (tm-subst-sound b (id-subst _ ∷ t)))))
+  (M.≅ᵗᵐ-to-Id (M.≅ᵗᵐ-trans (M.sfun-β _ _) (tm-subst-sound b (id-subst _ ∷ t))))
   M.[ _ ]'
 ⟦ nat-elim-β-zero ⟧der = (M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)) M.[ _ ]'
 ⟦ nat-elim-β-suc ⟧der = (M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]'
@@ -178,6 +176,6 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
     subst-eq-proof : _ M.≅ˢ _
     subst-eq-proof =
       M.≅ˢ-trans (M.≅ˢ-sym M.⊚-assoc) (M.≅ˢ-trans (M.⊚-congʳ (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.≅ˢ-trans
-      (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (π-sound (to-ctx Ξ) _))))) _)
+      (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))))) _)
                   (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sdiscr-func-natural _) (M.,ₛ-β2 _ _)))))))
       (M.≅ˢ-sym (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
