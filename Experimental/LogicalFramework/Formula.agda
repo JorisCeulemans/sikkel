@@ -49,5 +49,4 @@ frm-subst-sound (t1 ≡ᶠ t2) σ =
                                                                   (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))
 frm-subst-sound (φ ⊃ ψ) σ = M.≅ᵗʸ-trans (M.⇛-natural _) (M.⇛-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
 frm-subst-sound (φ ∧ ψ) σ = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
-frm-subst-sound (∀[ T ] φ) σ = M.≅ᵗʸ-trans (sPi-natural _) (sPi-cong₂ (M.≅ᵗʸ-trans (M.ty-subst-cong-subst (⊹-sound σ) ⟦ φ ⟧frm)
-                                                                                   (frm-subst-sound φ (σ ⊹))))
+frm-subst-sound (∀[ T ] φ) σ = M.≅ᵗʸ-trans (sPi-natural _) (sPi-cong₂ (frm-subst-sound φ (σ ⊹)))

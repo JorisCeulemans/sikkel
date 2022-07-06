@@ -173,8 +173,10 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 data SubstExpr : CtxExpr → CtxExpr → Set where
   [] : SubstExpr Γ ◇
   _∷_ : SubstExpr Δ Γ → TmExpr Δ T → SubstExpr Δ (Γ ,, T)
-  πs : (Δ : CtxExpr) → SubstExpr (Γ ++ctx Δ) Γ
+  id-subst : (Γ : CtxExpr) → SubstExpr Γ Γ
+  _⊚πs⟨_⟩ : SubstExpr Δ Γ → (Θ : CtxExpr) → SubstExpr (Δ ++ctx Θ) Γ
 
+{-
 weaken-subst : SubstExpr Δ Γ → SubstExpr (Δ ,, S) Γ
 weaken-subst [] = []
 weaken-subst (σ ∷ t) = weaken-subst σ ∷ (weaken-tm t)
@@ -182,12 +184,16 @@ weaken-subst (πs Δ) = πs (Δ ,, _)
 
 id-subst : (Γ : CtxExpr) → SubstExpr Γ Γ
 id-subst Γ = πs ◇
+-}
 
 π : SubstExpr (Γ ,, T) Γ
-π = πs _
+π = id-subst _ ⊚πs⟨ _ ⟩
+
+_⊚π : SubstExpr Δ Γ → SubstExpr (Δ ,, T) Γ
+σ ⊚π = σ ⊚πs⟨ _ ⟩
 
 _⊹ : SubstExpr Δ Γ → SubstExpr (Δ ,, T) (Γ ,, T)
-σ ⊹ = weaken-subst σ ∷ var vzero
+σ ⊹ = (σ ⊚π) ∷ var vzero
 
 _/var0 : TmExpr Γ T → SubstExpr Γ (Γ ,, T)
 t /var0 = id-subst _ ∷ t
@@ -197,34 +203,38 @@ t /var0 = id-subst _ ∷ t
 -- substitution for terms, in order to treat some substitutions
 -- specially.
 data SpecialSubstExpr : SubstExpr Γ Δ → Set where
-  πs : ∀ {Γ} → (Δ : CtxExpr) → SpecialSubstExpr (πs {Γ} Δ)
+  id-subst : (Γ : CtxExpr) → SpecialSubstExpr (id-subst Γ)
+  _⊚πs⟨_⟩ : (σ : SubstExpr Γ Δ) → (Θ : CtxExpr) → SpecialSubstExpr (σ ⊚πs⟨ Θ ⟩)
 
 is-special-subst? : (σ : SubstExpr Γ Δ) → Maybe (SpecialSubstExpr σ)
-is-special-subst? []       = nothing
-is-special-subst? (σ ∷ t)  = nothing
-is-special-subst? (πs Δ)   = just (πs Δ)
+is-special-subst? []           = nothing
+is-special-subst? (σ ∷ t)      = nothing
+is-special-subst? (id-subst Γ) = just (id-subst Γ)
+is-special-subst? (σ ⊚πs⟨ Θ ⟩) = just (σ ⊚πs⟨ Θ ⟩)
 
 subst-var : Var Γ T → SubstExpr Δ Γ → TmExpr Δ T
-subst-var x        (πs ◇) = var x
-subst-var x        (πs (Δ ,, T)) = weaken-tm (subst-var x (πs Δ))
+subst-var x        (id-subst Γ) = var x
+subst-var x        (σ ⊚πs⟨ ◇ ⟩) = subst-var x σ
+subst-var x        (σ ⊚πs⟨ Δ ,, T ⟩) = weaken-tm (subst-var x (σ ⊚πs⟨ Δ ⟩))
 subst-var vzero    (σ ∷ t) = t
 subst-var (vsuc x) (σ ∷ s) = subst-var x σ
 
 _[_]tm : TmExpr Γ T → SubstExpr Δ Γ → TmExpr Δ T
 t [ σ ]tm with is-special-subst? σ
-t [ .(πs Δ) ]tm      | just (πs Δ) = multi-weaken-tm Δ t
-var x [ σ ]tm        | nothing = subst-var x σ
-lam t [ σ ]tm        | nothing = lam (t [ σ ⊹ ]tm)
-(f ∙ t) [ σ ]tm      | nothing = (f [ σ ]tm) ∙ (t [ σ ]tm)
-zero [ σ ]tm         | nothing = zero
-suc [ σ ]tm          | nothing = suc
-nat-elim a f [ σ ]tm | nothing = nat-elim (a [ σ ]tm) (f [ σ ]tm)
-true [ σ ]tm         | nothing = true
-false [ σ ]tm        | nothing = false
-if b t f [ σ ]tm     | nothing = if (b [ σ ]tm) (t [ σ ]tm) (f [ σ ]tm)
-pair t s [ σ ]tm     | nothing = pair (t [ σ ]tm) (s [ σ ]tm)
-fst p [ σ ]tm        | nothing = fst (p [ σ ]tm)
-snd p [ σ ]tm        | nothing = snd (p [ σ ]tm)
+(t [ .(id-subst Γ) ]tm) | just (id-subst Γ) = t
+(t [ .(σ ⊚πs⟨ Θ ⟩) ]tm) | just (σ ⊚πs⟨ Θ ⟩) = multi-weaken-tm Θ (t [ σ ]tm)
+var x [ σ ]tm           | nothing = subst-var x σ
+lam t [ σ ]tm           | nothing = lam (t [ σ ⊹ ]tm)
+(f ∙ t) [ σ ]tm         | nothing = (f [ σ ]tm) ∙ (t [ σ ]tm)
+zero [ σ ]tm            | nothing = zero
+suc [ σ ]tm             | nothing = suc
+nat-elim a f [ σ ]tm    | nothing = nat-elim (a [ σ ]tm) (f [ σ ]tm)
+true [ σ ]tm            | nothing = true
+false [ σ ]tm           | nothing = false
+if b t f [ σ ]tm        | nothing = if (b [ σ ]tm) (t [ σ ]tm) (f [ σ ]tm)
+pair t s [ σ ]tm        | nothing = pair (t [ σ ]tm) (s [ σ ]tm)
+fst p [ σ ]tm           | nothing = fst (p [ σ ]tm)
+snd p [ σ ]tm           | nothing = snd (p [ σ ]tm)
 
 {-
 _⊚_ : SubstExpr Γ Θ → SubstExpr Δ Γ → SubstExpr Δ Θ
@@ -237,15 +247,16 @@ _⊚_ : SubstExpr Γ Θ → SubstExpr Δ Γ → SubstExpr Δ Θ
 ⟦_⟧subst : SubstExpr Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ [] ⟧subst = M.!◇ _
 ⟦ _∷_ {_} {T} σ t ⟧subst = ⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm
-⟦ πs ◇        ⟧subst = M.id-subst _
-⟦ πs (Δ ,, T) ⟧subst = ⟦ πs Δ ⟧subst M.⊚ M.π
-
+⟦ id-subst Γ ⟧subst = M.id-subst _
+⟦ σ ⊚πs⟨ ◇ ⟩      ⟧subst = ⟦ σ ⟧subst
+⟦ σ ⊚πs⟨ Δ ,, T ⟩ ⟧subst = ⟦ σ ⊚πs⟨ Δ ⟩ ⟧subst M.⊚ M.π
+{-
 weaken-subst-sound : (σ : SubstExpr Δ Γ) {S : TyExpr} → (⟦ σ ⟧subst M.⊚ M.π) M.≅ˢ ⟦ weaken-subst {S = S} σ ⟧subst
 weaken-subst-sound []      = M.◇-terminal _ _ _
 weaken-subst-sound (σ ∷ t) = M.≅ˢ-trans (,ₛ-⊚ _ _ _) (M.≅ˢ-trans (,ₛ-cong1 (weaken-subst-sound σ) _) (,ₛ-cong2 _ (weaken-tm-sound t)))
 weaken-subst-sound (πs ◇) = M.≅ˢ-refl
 weaken-subst-sound (πs (Δ ,, T)) = M.≅ˢ-refl
-
+-}
 {-
 id-subst-sound : (Γ : CtxExpr) → M.id-subst ⟦ Γ ⟧ctx M.≅ˢ ⟦ id-subst ⟧subst
 id-subst-sound ◇        = M.◇-terminal _ _ _
@@ -259,7 +270,7 @@ id-subst-sound (Γ ,, T) = M.≅ˢ-trans ,ₛ-η-id (,ₛ-cong1 (M.≅ˢ-trans (
 -}
 
 ⊹-sound : (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹ {T = T} σ ⟧subst
-⊹-sound σ = ,ₛ-cong1 (weaken-subst-sound σ) sξ
+⊹-sound σ = M.≅ˢ-refl
 
 subst-var-sound : (x : Var Γ T) (σ : SubstExpr Δ Γ) → (⟦ x ⟧var [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ subst-var x σ ⟧tm
 subst-var-sound vzero    (σ ∷ t) = ,ₛ-β2 ⟦ σ ⟧subst ⟦ t ⟧tm
@@ -267,24 +278,25 @@ subst-var-sound (vsuc x) (σ ∷ t) =
   M.≅ᵗᵐ-trans (stm-subst-comp ⟦ x ⟧var M.π (⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm))
               (M.≅ᵗᵐ-trans (stm-subst-cong-subst (⟦ x ⟧var) (,ₛ-β1 ⟦ σ ⟧subst ⟦ t ⟧tm))
                            (subst-var-sound x σ))
-subst-var-sound x (πs ◇)        = stm-subst-id _
-subst-var-sound x (πs (Δ ,, T)) =
-  M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (stm-subst-comp ⟦ x ⟧var ⟦ πs Δ ⟧subst M.π))
-              (M.≅ᵗᵐ-trans (stm-subst-cong-tm (subst-var-sound x (πs Δ)) _)
-                           (weaken-tm-sound (subst-var x (πs Δ))))
+subst-var-sound x (id-subst Γ) = stm-subst-id _
+subst-var-sound x (σ ⊚πs⟨ ◇ ⟩)      = subst-var-sound x σ
+subst-var-sound x (σ ⊚πs⟨ Δ ,, T ⟩) =
+  M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (stm-subst-comp _ _ _))
+              (M.≅ᵗᵐ-trans (stm-subst-cong-tm (subst-var-sound x (σ ⊚πs⟨ Δ ⟩)) _)
+                           (weaken-tm-sound (subst-var x (σ ⊚πs⟨ Δ ⟩))))
 
 tm-subst-sound : (t : TmExpr Γ T) (σ : SubstExpr Δ Γ) → (⟦ t ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ t [ σ ]tm ⟧tm
 tm-subst-sound t σ with is-special-subst? σ
-tm-subst-sound t .(πs ◇)        | just (πs ◇) = stm-subst-id ⟦ t ⟧tm
-tm-subst-sound t .(πs (Δ ,, T)) | just (πs (Δ ,, T)) =
+tm-subst-sound t .(id-subst Γ)      | just (id-subst Γ) = stm-subst-id ⟦ t ⟧tm
+tm-subst-sound t .(σ ⊚πs⟨ ◇ ⟩)      | just (σ ⊚πs⟨ ◇ ⟩) = tm-subst-sound t σ
+tm-subst-sound t .(σ ⊚πs⟨ Θ ,, T ⟩) | just (σ ⊚πs⟨ Θ ,, T ⟩) =
   M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (M.stm-subst-comp _ _ _))
-              (M.≅ᵗᵐ-trans (stm-subst-cong-tm (tm-subst-sound t (πs Δ)) _)
-                           (weaken-tm-sound (t [ πs Δ ]tm)))
+               (M.≅ᵗᵐ-trans (stm-subst-cong-tm (tm-subst-sound t (σ ⊚πs⟨ Θ ⟩)) _)
+                            (weaken-tm-sound (t [ σ ⊚πs⟨ Θ ⟩ ]tm)))
 tm-subst-sound (var x) σ | nothing = subst-var-sound x σ
 tm-subst-sound (lam t) σ | nothing =
   M.≅ᵗᵐ-trans (sλ-natural {b = ⟦ t ⟧tm} ⟦ σ ⟧subst)
-              (sλ-cong (M.≅ᵗᵐ-trans (stm-subst-cong-subst ⟦ t ⟧tm (⊹-sound σ))
-                                    (tm-subst-sound t (σ ⊹))))
+              (sλ-cong (tm-subst-sound t (σ ⊹)))
 tm-subst-sound (f ∙ t) σ | nothing = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (tm-subst-sound f σ) (tm-subst-sound t σ))
 tm-subst-sound zero σ | nothing = sdiscr-natural _
 tm-subst-sound suc σ | nothing = sdiscr-func-natural _
@@ -295,6 +307,49 @@ tm-subst-sound (if b t f) σ | nothing = M.≅ᵗᵐ-trans (sif-natural _) (sif-
 tm-subst-sound (pair t s) σ | nothing = M.≅ᵗᵐ-trans (spair-natural _) (spair-cong (tm-subst-sound t σ) (tm-subst-sound s σ))
 tm-subst-sound (fst p) σ | nothing = M.≅ᵗᵐ-trans (sfst-natural _) (sfst-cong (tm-subst-sound p σ))
 tm-subst-sound (snd p) σ | nothing = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (tm-subst-sound p σ))
+
+multi⊹ : (Θ : CtxExpr) → SubstExpr Γ Δ → SubstExpr (Γ ++ctx Θ) (Δ ++ctx Θ)
+multi⊹ ◇        σ = σ
+multi⊹ (Θ ,, T) σ = (multi⊹ Θ σ) ⊹
+
+cong₃ : {A B C D : Set} (f : A → B → C → D)
+        {a a' : A} {b b' : B} {c c' : C} →
+        a ≡ a' → b ≡ b' → c ≡ c' →
+        f a b c ≡ f a' b' c'
+cong₃ f refl refl refl = refl
+
+tm-weaken-subst-trivial-lemma : (Θ : CtxExpr) (t : TmExpr (Γ ++ctx Θ) T) {s : TmExpr Γ S} → (mid-weaken-tm Θ t) [ multi⊹ Θ (s /var0) ]tm ≡ t
+tm-weaken-subst-trivial-lemma ◇ (var x) = refl
+tm-weaken-subst-trivial-lemma ◇ (lam t) = cong lam (tm-weaken-subst-trivial-lemma (◇ ,, _) t)
+tm-weaken-subst-trivial-lemma ◇ (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-lemma ◇ f) (tm-weaken-subst-trivial-lemma ◇ t)
+tm-weaken-subst-trivial-lemma ◇ zero = refl
+tm-weaken-subst-trivial-lemma ◇ suc = refl
+tm-weaken-subst-trivial-lemma ◇ (nat-elim a f) = cong₂ nat-elim (tm-weaken-subst-trivial-lemma ◇ a) (tm-weaken-subst-trivial-lemma ◇ f)
+tm-weaken-subst-trivial-lemma ◇ true = refl
+tm-weaken-subst-trivial-lemma ◇ false = refl
+tm-weaken-subst-trivial-lemma ◇ (if b t f) =
+  cong₃ if (tm-weaken-subst-trivial-lemma ◇ b) (tm-weaken-subst-trivial-lemma ◇ t) (tm-weaken-subst-trivial-lemma ◇ f)
+tm-weaken-subst-trivial-lemma ◇ (pair t s) = cong₂ pair (tm-weaken-subst-trivial-lemma ◇ t) (tm-weaken-subst-trivial-lemma ◇ s)
+tm-weaken-subst-trivial-lemma ◇ (fst p) = cong fst (tm-weaken-subst-trivial-lemma ◇ p)
+tm-weaken-subst-trivial-lemma ◇ (snd p) = cong snd (tm-weaken-subst-trivial-lemma ◇ p)
+tm-weaken-subst-trivial-lemma (Θ ,, T) (var vzero) = refl
+tm-weaken-subst-trivial-lemma (◇ ,, T) (var (vsuc x)) = refl
+tm-weaken-subst-trivial-lemma (Θ ,, S ,, T) (var (vsuc x)) = cong (mid-weaken-tm ◇) (tm-weaken-subst-trivial-lemma (Θ ,, S) (var x))
+tm-weaken-subst-trivial-lemma (Θ ,, T) (lam t) = cong lam (tm-weaken-subst-trivial-lemma (Θ ,, T ,, _) t)
+tm-weaken-subst-trivial-lemma (Θ ,, T) (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-lemma (Θ ,, T) f) (tm-weaken-subst-trivial-lemma (Θ ,, T) t)
+tm-weaken-subst-trivial-lemma (Θ ,, T) zero = refl
+tm-weaken-subst-trivial-lemma (Θ ,, T) suc = refl
+tm-weaken-subst-trivial-lemma (Θ ,, T) (nat-elim a f) = cong₂ nat-elim (tm-weaken-subst-trivial-lemma (Θ ,, T) a) (tm-weaken-subst-trivial-lemma (Θ ,, T) f)
+tm-weaken-subst-trivial-lemma (Θ ,, T) true = refl
+tm-weaken-subst-trivial-lemma (Θ ,, T) false = refl
+tm-weaken-subst-trivial-lemma (Θ ,, T) (if b t f) =
+  cong₃ if (tm-weaken-subst-trivial-lemma (Θ ,, T) b) (tm-weaken-subst-trivial-lemma (Θ ,, T) t) (tm-weaken-subst-trivial-lemma (Θ ,, T) f)
+tm-weaken-subst-trivial-lemma (Θ ,, T) (pair t s) = cong₂ pair (tm-weaken-subst-trivial-lemma (Θ ,, T) t) (tm-weaken-subst-trivial-lemma (Θ ,, T) s)
+tm-weaken-subst-trivial-lemma (Θ ,, T) (fst p) = cong fst (tm-weaken-subst-trivial-lemma (Θ ,, T) p)
+tm-weaken-subst-trivial-lemma (Θ ,, T) (snd p) = cong snd (tm-weaken-subst-trivial-lemma (Θ ,, T) p)
+
+tm-weaken-subst-trivial : (t : TmExpr Γ T) {s : TmExpr Γ S} → (t [ π ]tm) [ s /var0 ]tm ≡ t
+tm-weaken-subst-trivial t = tm-weaken-subst-trivial-lemma ◇ t
 
 -- The next lemma is needed multiple times in the soundness proof.
 subst-lemma : (Δ : CtxExpr) {Γ : M.Ctx ★} {T : ClosedTy ★}
