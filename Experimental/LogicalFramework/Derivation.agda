@@ -14,6 +14,7 @@ import Experimental.DependentTypes.Model.Function as MDF
 
 import Experimental.ClosedTypes as M
 import Experimental.ClosedTypes.Pi as M
+import Experimental.ClosedTypes.Identity as M
 
 open import Experimental.LogicalFramework.STT
 open import Experimental.LogicalFramework.Formula
@@ -56,13 +57,10 @@ data _⊢_ : (Ξ : Env) → Formula (to-ctx Ξ) → Set where
   trans : {t1 t2 t3 : TmExpr (to-ctx Ξ) T} →
           (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t3) →
           (Ξ ⊢ t1 ≡ᶠ t3)
-  cong : (f : TmExpr (to-ctx Ξ) (T ⇛ S)) {t1 t2 : TmExpr (to-ctx Ξ) T} →
-         (Ξ ⊢ t1 ≡ᶠ t2) →
-         (Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2)
-  fun-cong : {f g : TmExpr (to-ctx Ξ) (T ⇛ S)} →
-             (Ξ ⊢ f ≡ᶠ g) →
-             (t : TmExpr (to-ctx Ξ) T) →
-             (Ξ ⊢ f ∙ t ≡ᶠ g ∙ t)
+  subst : (φ : Formula (to-ctx (Ξ ∷ᵛ T))) {t1 t2 : TmExpr (to-ctx Ξ) T} →
+          (Ξ ⊢ t1 ≡ᶠ t2) →
+          (Ξ ⊢ φ [ t1 /var0 ]frm) →
+          (Ξ ⊢ φ [ t2 /var0 ]frm)
 
   -- Introduction and elimination for logical combinators ⊃, ∧ and ∀.
   assume : (Ξ ∷ᶠ φ ⊢ ψ) → (Ξ ⊢ φ ⊃ ψ)
@@ -123,15 +121,17 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
 ⟦ refl ⟧der = M.refl' _ M.[ _ ]'
 ⟦ sym d ⟧der = M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)
 ⟦ trans d1 d2 ⟧der = M.ι[ M.Id-natural _ ] M.trans' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d1 ⟧der) (M.ι⁻¹[ M.Id-natural _ ] ⟦ d2 ⟧der)
-⟦ cong f {t1} {t2} d ⟧der =
-  M.ι[ M.≅ᵗʸ-trans (M.Id-natural _ {⟦ f ⟧tm M.∙ₛ ⟦ t1 ⟧tm} {⟦ f ⟧tm M.∙ₛ ⟦ t2 ⟧tm}) (M.Id-cong' (M.app-natural _ _ _) (M.app-natural _ _ _)) ]
-    M.cong' (M.ι⁻¹[ M.⇛-natural _ ] ((M.ι⁻¹[ M.⇛-natural _ ] ⟦ f ⟧tm ) M.[ _ ]')) (M.ι⁻¹[ M.Id-natural _ {⟦ t1 ⟧tm} {⟦ t2 ⟧tm} ] ⟦ d ⟧der)
-⟦ fun-cong {Ξ = Ξ} d t ⟧der =
-  M.ι[ M.≅ᵗʸ-trans (M.Id-natural _) (M.Id-cong' (M.app-natural _ _ ⟦ t ⟧tm) (M.app-natural _ _ ⟦ t ⟧tm)) ]
-    M.fun-cong' (M.≅ᵗᵐ-to-Id f=g) (⟦ t ⟧tm M.[ _ ]')
-  where
-    f=g : _ M.≅ᵗᵐ _
-    M._≅ᵗᵐ_.eq f=g γ = A≡.cong (λ x → M.pshfun-subst-from _ _ _ (M.pshfun-subst-from _ _ _ x)) (M.eq (M.eq-reflect (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)) γ)
+⟦ subst {Ξ = Ξ} φ {t1 = t1} {t2 = t2} e d ⟧der =
+  M.ι[ M.≅ᵗʸ-trans (M.ty-subst-cong-ty _ (M.≅ᵗʸ-sym (frm-subst-sound φ (t2 /var0))))
+                   (ty-subst-seq-cong (_ ∷ˢ _ ◼) ((to-ctx-subst Ξ M.,ₛ (⟦ t2 ⟧tm M.[ to-ctx-subst Ξ ]s)) ◼) ⟦ φ ⟧frm
+                                      (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)))
+     ]
+  M.ssubst' ⟦ φ ⟧frm (to-ctx-subst Ξ) ⟦ e ⟧der (
+  M.ι⁻¹[ M.≅ᵗʸ-trans (M.ty-subst-cong-ty _ (M.≅ᵗʸ-sym (frm-subst-sound φ (t1 /var0))))
+                     (ty-subst-seq-cong (_ ∷ˢ _ ◼) ((to-ctx-subst Ξ M.,ₛ (⟦ t1 ⟧tm M.[ to-ctx-subst Ξ ]s)) ◼) ⟦ φ ⟧frm
+                                        (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)))
+     ]
+  ⟦ d ⟧der)
 ⟦ assume d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
 ⟦ assumption x ⟧der = interpret-assumption x
 ⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
@@ -179,3 +179,34 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
       (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))))) _)
                   (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sdiscr-func-natural _) (M.,ₛ-β2 _ _)))))))
       (M.≅ˢ-sym (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
+
+cong : (f : TmExpr (to-ctx Ξ) (T ⇛ S)) {t1 t2 : TmExpr (to-ctx Ξ) T} →
+       (Ξ ⊢ t1 ≡ᶠ t2) →
+       (Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2)
+cong {Ξ = Ξ} f {t1 = t1} {t2 = t2} e =
+  -- goal : Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2
+  A≡.subst (λ x → Ξ ⊢ f ∙ t1 ≡ᶠ x ∙ t2) (tm-weaken-subst-trivial f t2) (
+  -- new goal : Ξ ⊢ f ∙ t1 ≡ᶠ (f [ π ]tm [ t2 /var0 ]tm) ∙ t2
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ (f [ π ]tm [ t2 /var0 ]tm) ∙ t2) (tm-weaken-subst-trivial (f ∙ t1) t2) (
+  -- new goal : Ξ ⊢ (f [ π ]tm [ t2 /var0 ]tm) ∙ (t1 [ π ]tm [ t2 /var0 ]tm) ≡ᶠ (f [ π ]tm [ t2 /var0 ]tm) ∙ t2
+  subst (((f ∙ t1) [ π ]tm) ≡ᶠ (f [ π ]tm) ∙ var vzero) e (
+  -- new goal : Ξ ⊢ (f [ π ]tm [ t1 /var0 ]tm) ∙ (t1 [ π ]tm [ t1 /var0 ]tm) ≡ᶠ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1
+  A≡.subst (λ x → Ξ ⊢ (f [ π ]tm [ t1 /var0 ]tm) ∙ x ≡ᶠ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1) (A≡.sym (tm-weaken-subst-trivial t1 t1))
+  -- new goal : Ξ ⊢ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1 ≡ᶠ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1
+  refl)))
+
+fun-cong : {f g : TmExpr (to-ctx Ξ) (T ⇛ S)} →
+           (Ξ ⊢ f ≡ᶠ g) →
+           (t : TmExpr (to-ctx Ξ) T) →
+           (Ξ ⊢ f ∙ t ≡ᶠ g ∙ t)
+fun-cong {Ξ = Ξ} {f = f} {g = g} e t =
+  -- goal : Ξ ⊢ f ∙ t ≡ᶠ g ∙ t
+  A≡.subst (λ x → _ ⊢ f ∙ t ≡ᶠ g ∙ x) (tm-weaken-subst-trivial t g) (
+  -- new goal : Ξ ⊢ f ∙ t ≡ᶠ g ∙ (t [ π ]tm [ g /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ (x ≡ᶠ (g ∙ ((t [ π ]tm) [ g /var0 ]tm)))) (tm-weaken-subst-trivial (f ∙ t) g) (
+  -- new goal : Ξ ⊢ (f [ π ]tm [ g /var0 ]tm) ∙ (t [ π ]tm [ g /var0 ]) ≡ᶠ g ∙ (t [ π ]tm [ g /var0 ]tm)
+  subst (((f ∙ t) [ π ]tm) ≡ᶠ (var vzero ∙ (t [ π ]tm))) e (
+  -- new goal : Ξ ⊢ (f [ π ]tm [ f /var0 ]tm) ∙ (t [ π ]tm [ f /var0 ]) ≡ᶠ f ∙ (t [ π ]tm [ f /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ x ∙ (t [ π ]tm [ f /var0 ]tm) ≡ᶠ f ∙ (t [ π ]tm [ f /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial f f))
+  -- new goal : Ξ ⊢ f ∙ (t [ π ]tm [ f /var0 ]) ≡ᶠ f ∙ (t [ π ]tm [ f /var0 ]tm)
+  refl)))

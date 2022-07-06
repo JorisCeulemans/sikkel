@@ -348,8 +348,8 @@ tm-weaken-subst-trivial-lemma (Θ ,, T) (pair t s) = cong₂ pair (tm-weaken-sub
 tm-weaken-subst-trivial-lemma (Θ ,, T) (fst p) = cong fst (tm-weaken-subst-trivial-lemma (Θ ,, T) p)
 tm-weaken-subst-trivial-lemma (Θ ,, T) (snd p) = cong snd (tm-weaken-subst-trivial-lemma (Θ ,, T) p)
 
-tm-weaken-subst-trivial : (t : TmExpr Γ T) {s : TmExpr Γ S} → (t [ π ]tm) [ s /var0 ]tm ≡ t
-tm-weaken-subst-trivial t = tm-weaken-subst-trivial-lemma ◇ t
+tm-weaken-subst-trivial : (t : TmExpr Γ T) (s : TmExpr Γ S) → (t [ π ]tm) [ s /var0 ]tm ≡ t
+tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-lemma ◇ t
 
 -- The next lemma is needed multiple times in the soundness proof.
 subst-lemma : (Δ : CtxExpr) {Γ : M.Ctx ★} {T : ClosedTy ★}
