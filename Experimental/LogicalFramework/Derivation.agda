@@ -29,32 +29,32 @@ private variable
 -- Definition of proof judgments and inference rules
 
 
--- Environment consisiting of (STT) variables and formulas.
-data Env : Set
-to-ctx : Env → CtxExpr
+-- A proof context can, apart from STT variables, also consist of formulas (assumptions).
+data ProofCtx : Set
+to-ctx : ProofCtx → CtxExpr
 
 infixl 2 _∷ᵛ_ _∷ᶠ_
-data Env where
-  [] : Env
-  _∷ᵛ_ : (Ξ : Env) (T : TyExpr) → Env
-  _∷ᶠ_ : (Ξ : Env) (φ : Formula (to-ctx Ξ)) → Env
+data ProofCtx where
+  [] : ProofCtx
+  _∷ᵛ_ : (Ξ : ProofCtx) (T : TyExpr) → ProofCtx
+  _∷ᶠ_ : (Ξ : ProofCtx) (φ : Formula (to-ctx Ξ)) → ProofCtx
 
 to-ctx []       = ◇
 to-ctx (Ξ ∷ᵛ T) = to-ctx Ξ ,, T
 to-ctx (Ξ ∷ᶠ φ) = to-ctx Ξ
 
 private variable
-  Ξ : Env
+  Ξ : ProofCtx
 
 
-data Assumption : (Ξ : Env) → Formula (to-ctx Ξ) → Set where
+data Assumption : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
   azero : Assumption (Ξ ∷ᶠ φ) φ
   asuc  : Assumption Ξ φ → Assumption (Ξ ∷ᶠ ψ) φ
   skip-var : Assumption Ξ φ → Assumption (Ξ ∷ᵛ T) (φ [ π ]frm)
 
 
 infix 1 _⊢_
-data _⊢_ : (Ξ : Env) → Formula (to-ctx Ξ) → Set where
+data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
   -- Structural rules for ≡ᶠ
   refl : {t : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ t
   sym : {t1 t2 : TmExpr (to-ctx Ξ) T} → (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t1)
@@ -291,8 +291,8 @@ if-cong = tm-constructor-cong₃ if (λ _ _ _ _ → A≡.refl)
 --------------------------------------------------
 -- Soundness proof of the logical framework w.r.t. a trivial presheaf model
 
-⟦_⟧env : Env → Ctx ★
-to-ctx-subst : (Ξ : Env) → ⟦ Ξ ⟧env M.⇒ ⟦ to-ctx Ξ ⟧ctx
+⟦_⟧env : ProofCtx → Ctx ★
+to-ctx-subst : (Ξ : ProofCtx) → ⟦ Ξ ⟧env M.⇒ ⟦ to-ctx Ξ ⟧ctx
 
 ⟦ [] ⟧env = M.◇
 ⟦ Ξ ∷ᵛ T ⟧env = ⟦ Ξ ⟧env M.,,ₛ ⟦ T ⟧ty

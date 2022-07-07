@@ -47,7 +47,7 @@ _ = refl
 plus-zeroʳ : Formula Γ
 plus-zeroʳ = ∀[ Nat' ] (plus ∙ var vzero ∙ zero ≡ᶠ var vzero)
 
-proof-plus-zeroʳ : {Ξ : Env} → Ξ ⊢ plus-zeroʳ
+proof-plus-zeroʳ : {Ξ : ProofCtx} → Ξ ⊢ plus-zeroʳ
 proof-plus-zeroʳ =
   ∀-intro (nat-induction (trans (fun-cong nat-elim-β-zero zero) fun-β)
                          (trans (fun-cong (trans nat-elim-β-suc fun-β) zero) (trans fun-β (cong suc (assumption azero)))))
@@ -59,7 +59,7 @@ sem-proof = ⟦ proof-plus-zeroʳ {Ξ = []} ⟧der
 plus-sucʳ : Formula Γ
 plus-sucʳ = ∀[ Nat' ] (∀[ Nat' ] (plus ∙ var (vsuc vzero) ∙ (suc ∙ var vzero) ≡ᶠ suc ∙ (plus ∙ var (vsuc vzero) ∙ var vzero)))
 
-proof-plus-sucʳ : {Ξ : Env} → Ξ ⊢ plus-sucʳ
+proof-plus-sucʳ : {Ξ : ProofCtx} → Ξ ⊢ plus-sucʳ
 proof-plus-sucʳ = ∀-intro (nat-induction
   (∀-intro (trans (fun-cong nat-elim-β-zero _) (trans fun-β (sym (cong suc (trans (fun-cong nat-elim-β-zero _) fun-β))))))
   (∀-intro (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) (trans fun-β
@@ -73,7 +73,7 @@ proof-plus-sucʳ = ∀-intro (nat-induction
 plus-comm : Formula Γ
 plus-comm = ∀[ Nat' ] (∀[ Nat' ] (plus ∙ var (vsuc vzero) ∙ var vzero ≡ᶠ (plus ∙ var vzero ∙ var (vsuc vzero))))
 
-proof-plus-comm : {Ξ : Env} → Ξ ⊢ plus-comm
+proof-plus-comm : {Ξ : ProofCtx} → Ξ ⊢ plus-comm
 proof-plus-comm = ∀-intro (nat-induction
   (∀-intro (trans (fun-cong nat-elim-β-zero _) (trans fun-β (sym (∀-elim proof-plus-zeroʳ (var vzero))))))
   (∀-intro (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) (trans fun-β (trans

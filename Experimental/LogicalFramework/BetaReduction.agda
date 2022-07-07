@@ -27,14 +27,14 @@ is-bool-val true = just true
 is-bool-val false = just false
 is-bool-val _ = nothing
 
-data IsNatAlmostValue : TmExpr Γ T → Set where
-  zero : ∀ {Γ} → IsNatAlmostValue {Γ} zero
-  suc : (t : TmExpr Γ Nat') → IsNatAlmostValue (suc ∙ t)
+data IsNatWHNF : TmExpr Γ T → Set where
+  zero : ∀ {Γ} → IsNatWHNF {Γ} zero
+  suc : (t : TmExpr Γ Nat') → IsNatWHNF (suc ∙ t)
 
-is-nat-almost-value : (t : TmExpr Γ T) → Maybe (IsNatAlmostValue t)
-is-nat-almost-value zero = just zero
-is-nat-almost-value (suc ∙ t) = just (suc t)
-is-nat-almost-value _ = nothing
+is-nat-whnf : (t : TmExpr Γ T) → Maybe (IsNatWHNF t)
+is-nat-whnf zero = just zero
+is-nat-whnf (suc ∙ t) = just (suc t)
+is-nat-whnf _ = nothing
 
 data IsNatElim : TmExpr Γ T → Set where
   nat-elim : ∀ {A} (z : TmExpr Γ A) (s : TmExpr Γ (A ⇛ A)) → IsNatElim (nat-elim z s)
@@ -55,7 +55,7 @@ step (var x) = var x
 step (lam b) = lam b
 step (f ∙ t) with is-lam f
 step (.(lam b) ∙ t) | just (lam b) = b [ t /var0 ]tm
-step (f               ∙ t         ) | nothing with is-nat-elim f | is-nat-almost-value t
+step (f               ∙ t         ) | nothing with is-nat-elim f | is-nat-whnf t
 step (.(nat-elim z s) ∙ .zero     ) | nothing | just (nat-elim z s) | just zero = z
 step (.(nat-elim z s) ∙ .(suc ∙ t)) | nothing | just (nat-elim z s) | just (suc t) = s ∙ (nat-elim z s ∙ t)
 step (.(nat-elim z s) ∙ t         ) | nothing | just (nat-elim z s) | nothing = (nat-elim z s) ∙ step t
@@ -81,12 +81,12 @@ steps : ℕ → TmExpr Γ T → TmExpr Γ T
 steps zero    t = t
 steps (suc n) t = steps n (step t)
 
-step-sound : {Ξ : Env} (t : TmExpr (to-ctx Ξ) T) → Ξ ⊢ t ≡ᶠ step t
+step-sound : {Ξ : ProofCtx} (t : TmExpr (to-ctx Ξ) T) → Ξ ⊢ t ≡ᶠ step t
 step-sound (var x) = refl
 step-sound (lam b) = refl
 step-sound (f ∙ t) with is-lam f
 step-sound (.(lam b)        ∙ t         ) | just (lam b) = fun-β
-step-sound (f               ∙ t         ) | nothing with is-nat-elim f | is-nat-almost-value t
+step-sound (f               ∙ t         ) | nothing with is-nat-elim f | is-nat-whnf t
 step-sound (.(nat-elim z s) ∙ .zero     ) | nothing | just (nat-elim z s) | just zero = nat-elim-β-zero
 step-sound (.(nat-elim z s) ∙ .(suc ∙ t)) | nothing | just (nat-elim z s) | just (suc t) = nat-elim-β-suc
 step-sound (.(nat-elim z s) ∙ t         ) | nothing | just (nat-elim z s) | nothing = cong _ (step-sound t)
@@ -108,21 +108,21 @@ step-sound (snd p) with is-pair p
 step-sound (snd .(pair t s)) | just (pair t s) = pair-β-snd
 step-sound (snd p          ) | nothing = snd-cong (step-sound p)
 
-steps-sound : (n : ℕ) {Ξ : Env} (t : TmExpr (to-ctx Ξ) T) → Ξ ⊢ t ≡ᶠ steps n t
+steps-sound : (n : ℕ) {Ξ : ProofCtx} (t : TmExpr (to-ctx Ξ) T) → Ξ ⊢ t ≡ᶠ steps n t
 steps-sound zero    t = refl
 steps-sound (suc n) t = trans (step-sound t) (steps-sound n _)
 
 -- Some proof schemes based on reduction
-reduce : (n : ℕ) {Ξ : Env} {t : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ steps n t
+reduce : (n : ℕ) {Ξ : ProofCtx} {t : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ steps n t
 reduce n = steps-sound n _
 
-with-reduce-left : (n : ℕ) {Ξ : Env} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ steps n t ≡ᶠ s → Ξ ⊢ t ≡ᶠ s
+with-reduce-left : (n : ℕ) {Ξ : ProofCtx} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ steps n t ≡ᶠ s → Ξ ⊢ t ≡ᶠ s
 with-reduce-left n d = trans (steps-sound n _) d
 
-with-reduce-right : (n : ℕ) {Ξ : Env} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ steps n s → Ξ ⊢ t ≡ᶠ s
+with-reduce-right : (n : ℕ) {Ξ : ProofCtx} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ steps n s → Ξ ⊢ t ≡ᶠ s
 with-reduce-right n d = trans d (sym (steps-sound n _))
 
-with-reduce : (n : ℕ) {Ξ : Env} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ steps n t ≡ᶠ steps n s → Ξ ⊢ t ≡ᶠ s
+with-reduce : (n : ℕ) {Ξ : ProofCtx} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ steps n t ≡ᶠ steps n s → Ξ ⊢ t ≡ᶠ s
 with-reduce n d = with-reduce-left n (with-reduce-right n d)
 
 -- Test proofs

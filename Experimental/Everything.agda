@@ -8,3 +8,11 @@ import Experimental.DependentTypes.Model.Boolean
 import Experimental.DependentTypes.Model.Function
 
 import Experimental.ClosedTypes
+import Experimental.ClosedTypes.Pi
+import Experimental.ClosedTypes.Identity
+
+import Experimental.LogicalFramework.STT
+import Experimental.LogicalFramework.Formula
+import Experimental.LogicalFramework.Derivation
+import Experimental.LogicalFramework.BetaReduction
+import Experimental.LogicalFramework.Example
