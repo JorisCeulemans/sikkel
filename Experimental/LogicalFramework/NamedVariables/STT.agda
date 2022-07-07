@@ -2,11 +2,17 @@
 -- A Simple Type Theory for which we will provide a logic
 --------------------------------------------------
 
-module Experimental.LogicalFramework.STT where
+module Experimental.LogicalFramework.NamedVariables.STT where
 
+open import Data.Empty
 open import Data.Maybe
 open import Data.Nat
+open import Data.Product
+open import Data.String as Str
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality
+open import Relation.Nullary
+open import Relation.Nullary.Decidable.Core
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm)
@@ -31,25 +37,82 @@ data TyExpr : Set where
 private variable
   T S : TyExpr
 
+NoConfTy : TyExpr → TyExpr → Set
+NoConfTy Nat' Nat' = ⊤
+NoConfTy Nat' S = ⊥
+NoConfTy Bool' Bool' = ⊤
+NoConfTy Bool' S = ⊥
+NoConfTy (T ⇛ T') (S ⇛ S') = T ≡ S × T' ≡ S'
+NoConfTy (T ⇛ T') S = ⊥
+NoConfTy (T ⊠ T') (S ⊠ S') = T ≡ S × T' ≡ S'
+NoConfTy (T ⊠ T') S = ⊥
 
-infixl 4 _,,_
+noconf-ty : T ≡ S → NoConfTy T S
+noconf-ty {Nat'} {.Nat'} refl = tt
+noconf-ty {Bool'} {.Bool'} refl = tt
+noconf-ty {T ⇛ T'} {.(T ⇛ T')} refl = refl , refl
+noconf-ty {T ⊠ T'} {.(T ⊠ T')} refl = refl , refl
+
+_≟ty_ : (T S : TyExpr) → Dec (T ≡ S)
+Nat' ≟ty Nat' = yes refl
+Nat' ≟ty Bool' = no (λ ())
+Nat' ≟ty (S ⇛ S') = no (λ ())
+Nat' ≟ty (S ⊠ S') = no (λ ())
+Bool' ≟ty Nat' = no (λ ())
+Bool' ≟ty Bool' = yes refl
+Bool' ≟ty (S ⇛ S') = no (λ ())
+Bool' ≟ty (S ⊠ S') = no (λ ())
+(T ⇛ T') ≟ty Nat' = no (λ ())
+(T ⇛ T') ≟ty Bool' = no (λ ())
+(T ⇛ T') ≟ty (S ⇛ S') with T ≟ty S | T' ≟ty S'
+(T ⇛ T') ≟ty (S ⇛ S') | yes T=S | yes T'=S' = yes (cong₂ _⇛_ T=S T'=S')
+(T ⇛ T') ≟ty (S ⇛ S') | yes T=S | no ¬T'=S' = no (λ e → ¬T'=S' (proj₂ (noconf-ty e)))
+(T ⇛ T') ≟ty (S ⇛ S') | no ¬T=S | y = no (λ e → ¬T=S (proj₁ (noconf-ty e)))
+(T ⇛ T') ≟ty (S ⊠ S') = no (λ ())
+(T ⊠ T') ≟ty Nat' = no (λ ())
+(T ⊠ T') ≟ty Bool' = no (λ ())
+(T ⊠ T') ≟ty (S ⇛ S') = no (λ ())
+(T ⊠ T') ≟ty (S ⊠ S') with T ≟ty S | T' ≟ty S'
+(T ⊠ T') ≟ty (S ⊠ S') | yes T=S | yes T'=S' = yes (cong₂ _⊠_ T=S T'=S')
+(T ⊠ T') ≟ty (S ⊠ S') | yes T=S | no ¬T'=S' = no (λ e → ¬T'=S' (proj₂ (noconf-ty e)))
+(T ⊠ T') ≟ty (S ⊠ S') | no ¬T=S | y = no (λ e → ¬T=S (proj₁ (noconf-ty e)))
+
+
+infixl 4 _,,_∈_
 data CtxExpr : Set where
   ◇ : CtxExpr
-  _,,_ : (Γ : CtxExpr) (T : TyExpr) → CtxExpr
+  _,,_∈_ : (Γ : CtxExpr) (x : String) (T : TyExpr) → CtxExpr
 
 private variable
   Γ Δ Θ : CtxExpr
 
 
--- Variables are represented as de Bruijn indices.
-data Var : CtxExpr → TyExpr → Set where
-  vzero : Var (Γ ,, T) T
-  vsuc : Var Γ T → Var (Γ ,, S) T
+-- Variables are represented as de Bruijn indices, but we keep track
+-- of their names.
+data Var : CtxExpr → String → TyExpr → Set where
+  vzero : ∀ {x} → Var (Γ ,, x ∈ T) x T
+  vsuc : ∀ {x y} →  Var Γ x T → Var (Γ ,, y ∈ S) x T
+
+vpred-str : ∀ {x y} → ¬ (x ≡ y) → Var (Γ ,, y ∈ S) x T → Var Γ x T
+vpred-str ¬x=y vzero    = ⊥-elim (¬x=y refl)
+vpred-str ¬x=y (vsuc v) = v
+
+vpred-ty : ∀ {x y} → ¬ (T ≡ S) → Var (Γ ,, y ∈ S) x T → Var Γ x T
+vpred-ty ¬T=S vzero    = ⊥-elim (¬T=S refl)
+vpred-ty ¬T=S (vsuc v) = v
+
+var? : (x : String) (T : TyExpr) (Γ : CtxExpr) → Dec (Var Γ x T)
+var? x T ◇ = no (λ ())
+var? x T (Γ ,, y ∈ S) with x Str.≟ y
+var? x T (Γ ,, .x ∈ S) | yes refl with T ≟ty S
+var? x T (Γ ,, x ∈ .T) | yes refl | yes refl = yes vzero
+var? x T (Γ ,, .x ∈ S) | yes refl | no ¬T=S = map′ vsuc (vpred-ty ¬T=S) (var? x T Γ)
+var? x T (Γ ,, y ∈ S)  | no ¬x=y = map′ vsuc (vpred-str ¬x=y) (var? x T Γ)
 
 infixl 50 _∙_
 data TmExpr (Γ : CtxExpr) : TyExpr → Set where
-  var : Var Γ T → TmExpr Γ T
-  lam : TmExpr (Γ ,, T) S → TmExpr Γ (T ⇛ S)
+  var : (x : String) → {True (var? x T Γ)} → TmExpr Γ T
+  lam[_∈_]_ : (x : String) (T : TyExpr) → TmExpr (Γ ,, x ∈ T) S → TmExpr Γ (T ⇛ S)
   _∙_ : TmExpr Γ (T ⇛ S) → TmExpr Γ T → TmExpr Γ S
   zero : TmExpr Γ Nat'
   suc : TmExpr Γ (Nat' ⇛ Nat')
@@ -60,6 +123,9 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
   fst : TmExpr Γ (T ⊠ S) → TmExpr Γ T
   snd : TmExpr Γ (T ⊠ S) → TmExpr Γ S
 
+id : TmExpr Γ (Bool' ⇛ Bool')
+id = lam[ "x" ∈ _ ] var "x"
+{-
 
 --------------------------------------------------
 -- Interpretation of types, contexts and terms in the presheaf
@@ -328,3 +394,4 @@ subst-lemma Δ σ t =
                                                (M.≅ˢ-trans (M.,ₛ-cong2 _ (M.,ₛ-β2 _ _))
                                                            (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _))
                                                                                                          (M.⊚-id-substʳ _))) _)))))
+-}
