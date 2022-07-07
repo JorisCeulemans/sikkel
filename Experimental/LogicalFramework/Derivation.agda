@@ -21,8 +21,12 @@ open import Experimental.LogicalFramework.Formula
 
 private variable
   Γ Δ : CtxExpr
-  T S : TyExpr
+  T S R U : TyExpr
   φ ψ : Formula Γ
+
+
+--------------------------------------------------
+-- Definition of proof judgments and inference rules
 
 
 -- Environment consisiting of (STT) variables and formulas.
@@ -93,6 +97,199 @@ data _⊢_ : (Ξ : Env) → Formula (to-ctx Ξ) → Set where
                   (Ξ ∷ᵛ Nat' ∷ᶠ φ ⊢ φ [ π ∷ (suc ∙ var vzero) ]frm) →
                   (Ξ ∷ᵛ Nat' ⊢ φ)
 
+
+--------------------------------------------------
+-- Some rules derivable from the basic ones
+
+TmConstructor₁ : (T S : TyExpr) → Set
+TmConstructor₁ T S = ∀ {Γ} → TmExpr Γ T → TmExpr Γ S
+
+-- The naturality condition could be more strict (requiring the same
+-- condition for all substitutions instead of restricting to those of
+-- the form r /var0), but this condition suffices to show that the
+-- corresponding constructor is congruent and this condition will be
+-- provable by reflexivity for most term constructors.
+TmConstructorNatural₁ : TmConstructor₁ T S → Set
+TmConstructorNatural₁ {T} op = ∀ {Γ R} → (r : TmExpr Γ R) (t : TmExpr (Γ ,, R) T) → (op t) [ r /var0 ]tm A≡.≡ op (t [ r /var0 ]tm)
+
+tm-constructor-cong₁ : (op : TmConstructor₁ T S) (op-nat : TmConstructorNatural₁ op) →
+                      {t t' : TmExpr (to-ctx Ξ) T} →
+                      (Ξ ⊢ t ≡ᶠ t') →
+                      (Ξ ⊢ op t ≡ᶠ op t')
+tm-constructor-cong₁ {Ξ = Ξ} op op-nat {t} {t'} et =
+  -- goal : Ξ ⊢ op t ≡ᶠ op t'
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ op t') (tm-weaken-subst-trivial (op t) t') (
+  -- goal : Ξ ⊢ (op t) [ π ]tm [ t' /var0 ]tm ≡ᶠ op t'
+  A≡.subst (λ x → Ξ ⊢ ((op t) [ π ]tm [ t' /var0 ]tm) ≡ᶠ x) (op-nat t' (var vzero)) (
+  -- goal : Ξ ⊢ (op t) [ π ]tm [ t' /var0 ]tm ≡ᶠ (op (var vzero)) [ t' /var0 ]tm
+  subst (((op t) [ π ]tm) ≡ᶠ op (var vzero)) et (
+  -- goal : Ξ ⊢ (op t) [ π ]tm [ t /var0 ]tm ≡ᶠ (op (var vzero)) [ t /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (var vzero)) [ t /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial (op t) t)) (
+  -- goal : Ξ ⊢ op t ≡ᶠ (op (var vzero)) [ t /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ op t ≡ᶠ x) (A≡.sym (op-nat t (var vzero)))
+  -- goal : Ξ ⊢ op t ≡ᶠ op t
+  refl))))
+
+TmConstructor₂ : (T S R : TyExpr) → Set
+TmConstructor₂ T S R = ∀ {Γ} → TmExpr Γ T → TmExpr Γ S → TmExpr Γ R
+
+TmConstructorNatural₂ : TmConstructor₂ T S R → Set
+TmConstructorNatural₂ {T} {S} op =
+  ∀ {Γ W} → (w : TmExpr Γ W) (t : TmExpr (Γ ,, W) T) (s : TmExpr (Γ ,, W) S) →
+  (op t s) [ w /var0 ]tm A≡.≡ op (t [ w /var0 ]tm) (s [ w /var0 ]tm)
+
+tm-constructor-cong₂ : (op : TmConstructor₂ T S R) → TmConstructorNatural₂ op →
+                       {t t' : TmExpr (to-ctx Ξ) T} {s s' : TmExpr (to-ctx Ξ) S} →
+                       (Ξ ⊢ t ≡ᶠ t') →
+                       (Ξ ⊢ s ≡ᶠ s') →
+                       (Ξ ⊢ op t s ≡ᶠ op t' s')
+tm-constructor-cong₂ {Ξ = Ξ} op op-nat {t} {t'} {s} {s'} et es =
+  -- goal : Ξ ⊢ op t s ≡ᶠ op t' s'
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ op t' s') (tm-weaken-subst-trivial (op t s) t') (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t' /var0 ]tm ≡ᶠ op t' s'
+  A≡.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ t' /var0 ]tm) ≡ᶠ op t' x) (tm-weaken-subst-trivial s' t') (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t' /var0 ]tm ≡ᶠ op t' (s' [ π ]tm [ t' /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ t' /var0 ]tm) ≡ᶠ x) (op-nat t' (var vzero) (s' [ π ]tm)) (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t' /var0 ]tm ≡ᶠ (op (var vzero) (s' [ π ]tm)) [ t' /var0 ]tm
+  subst (((op t s) [ π ]tm) ≡ᶠ op (var vzero) (s' [ π ]tm)) et (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t /var0 ]tm ≡ᶠ (op (var vzero) (s' [ π ]tm)) [ t /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (var vzero) (s' [ π ]tm)) [ t /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial (op t s) t)) (
+  -- goal : Ξ ⊢ op t s ≡ᶠ (op (var vzero) (s' [ π ]tm)) [ t /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ op t s ≡ᶠ x) (A≡.sym (op-nat t (var vzero) (s' [ π ]tm))) (
+  -- goal : Ξ ⊢ op t s ≡ᶠ op t (s' [ π ]tm [ t /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ op t s ≡ᶠ op t x) (A≡.sym (tm-weaken-subst-trivial s' t)) (
+  -- goal : Ξ ⊢ op t s ≡ᶠ op t s'
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ op t s') (tm-weaken-subst-trivial (op t s) s') (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s' /var0 ]tm ≡ᶠ op t s'
+  A≡.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ s' /var0 ]tm) ≡ᶠ op x s') (tm-weaken-subst-trivial t s') (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s' /var0 ]tm ≡ᶠ op (t [ π ]tm [ s' /var0 ]tm) s'
+  A≡.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ s' /var0 ]tm) ≡ᶠ x) (op-nat s' (t [ π ]tm) (var vzero)) (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s' /var0 ]tm ≡ᶠ (op (t [ π ]tm) (var vzero)) [ s' /var0 ]tm
+  subst (((op t s) [ π ]tm) ≡ᶠ op (t [ π ]tm) (var vzero)) es (
+  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s /var0 ]tm ≡ᶠ (op (t [ π ]tm) (var vzero)) [ s /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (t [ π ]tm) (var vzero)) [ s /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial (op t s) s)) (
+  -- goal : Ξ ⊢ op t s ≡ᶠ (op (t [ π ]tm) (var vzero)) [ s /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ op t s ≡ᶠ x) (A≡.sym (op-nat s (t [ π ]tm) (var vzero))) (
+  -- goal : Ξ ⊢ op t s ≡ᶠ op (t [ π ]tm [ s /var0 ]tm) s
+  A≡.subst (λ x → Ξ ⊢ op t s ≡ᶠ op x s) (A≡.sym (tm-weaken-subst-trivial t s)) (
+  -- goal : Ξ ⊢ op t s ≡ᶠ op t s
+  refl))))))))))))))
+
+TmConstructor₃ : (R S T U : TyExpr) → Set
+TmConstructor₃ R S T U = ∀ {Γ} → TmExpr Γ R → TmExpr Γ S → TmExpr Γ T → TmExpr Γ U
+
+TmConstructorNatural₃ : TmConstructor₃ R S T U → Set
+TmConstructorNatural₃ {R} {S} {T} op =
+  ∀ {Γ V} → (v : TmExpr Γ V) (r : TmExpr (Γ ,, V) R) (s : TmExpr (Γ ,, V) S) (t : TmExpr (Γ ,, V) T) →
+  (op r s t) [ v /var0 ]tm A≡.≡ op (r [ v /var0 ]tm) (s [ v /var0 ]tm) (t [ v /var0 ]tm)
+
+tm-constructor-cong₃ : (op : TmConstructor₃ R S T U) → TmConstructorNatural₃ op →
+                       {r r' : TmExpr (to-ctx Ξ) R} {s s' : TmExpr (to-ctx Ξ) S} {t t' : TmExpr (to-ctx Ξ) T} →
+                       (Ξ ⊢ r ≡ᶠ r') →
+                       (Ξ ⊢ s ≡ᶠ s') →
+                       (Ξ ⊢ t ≡ᶠ t') →
+                       (Ξ ⊢ op r s t ≡ᶠ op r' s' t')
+tm-constructor-cong₃ {Ξ = Ξ} op op-nat {r} {r'} {s} {s'} {t} {t'} er es et =
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r' s' t'
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ op r' s' t') (tm-weaken-subst-trivial (op r s t) r') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' /var0 ]tm ≡ᶠ op r' s' t'
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ r' /var0 ]tm) ≡ᶠ op r' x t') (tm-weaken-subst-trivial s' r') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' /var0 ]tm ≡ᶠ op r' (s' [ π ]tm [ r' /var0 ]tm) t'
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ r' /var0 ]tm) ≡ᶠ op r' (s' [ π ]tm [ r' /var0 ]tm) x) (tm-weaken-subst-trivial t' r') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' /var0 ]tm ≡ᶠ op r' (s' [ π ]tm [ r' /var0 ]tm) (t' [ π ]tm [ r' /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ r' /var0 ]tm) ≡ᶠ x) (op-nat r' (var vzero) (s' [ π ]tm) (t' [ π ]tm)) (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' /var0 ]tm ≡ᶠ (op (var vzero) (s' [ π ]tm) (t' [ π ]tm)) [ r' /var0 ]tm
+  subst (((op r s t) [ π ]tm) ≡ᶠ op (var vzero) (s' [ π ]tm) (t' [ π ]tm)) er (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r /var0 ]tm ≡ᶠ (op (var vzero) (s' [ π ]tm) (t' [ π ]tm)) [ r /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (var vzero) (s' [ π ]tm) (t' [ π ]tm)) [ r /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial (op r s t) r)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ (op (var vzero) (s' [ π ]tm) (t' [ π ]tm)) [ r /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ x) (A≡.sym (op-nat r (var vzero) (s' [ π ]tm) (t' [ π ]tm))) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r (s' [ π ]tm [ r /var0 ]tm) (t' [ π ]tm [ r /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r x (t' [ π ]tm [ r /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial s' r)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s' (t' [ π ]tm [ r /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r s' x) (A≡.sym (tm-weaken-subst-trivial t' r)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s' t'
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ op r s' t') (tm-weaken-subst-trivial (op r s t) s') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' /var0 ]tm ≡ᶠ op r s' t'
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ s' /var0 ]tm) ≡ᶠ op x s' t') (tm-weaken-subst-trivial r s') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' /var0 ]tm ≡ᶠ op (r [ π ]tm [ s' /var0 ]tm) s' t'
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ s' /var0 ]tm) ≡ᶠ op (r [ π ]tm [ s' /var0 ]tm) s' x) (tm-weaken-subst-trivial t' s') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' /var0 ]tm ≡ᶠ op (r [ π ]tm [ s' /var0 ]tm) s' (t' [ π ]tm [ s' /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ s' /var0 ]tm) ≡ᶠ x) (op-nat s' (r [ π ]tm) (var vzero) (t' [ π ]tm)) (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' /var0 ]tm ≡ᶠ (op (r [ π ]tm) (var vzero) (t' [ π ]tm)) [ s' /var0 ]tm
+  subst (((op r s t) [ π ]tm) ≡ᶠ op (r [ π ]tm) (var vzero) (t' [ π ]tm)) es (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s /var0 ]tm ≡ᶠ (op (r [ π ]tm) (var vzero) (t' [ π ]tm)) [ s /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (r [ π ]tm) (var vzero) (t' [ π ]tm)) [ s /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial (op r s t) s)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ (op (r [ π ]tm) (var vzero) (t' [ π ]tm)) [ s /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ x) (A≡.sym (op-nat s (r [ π ]tm) (var vzero) (t' [ π ]tm))) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op (r [ π ]tm [ s /var0 ]tm) s (t' [ π ]tm [ s /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op x s (t' [ π ]tm [ s /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial r s)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s (t' [ π ]tm [ s /var0 ]tm)
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r s x) (A≡.sym (tm-weaken-subst-trivial t' s)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s t'
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ op r s t') (tm-weaken-subst-trivial (op r s t) t') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' /var0 ]tm ≡ᶠ op r s t'
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ t' /var0 ]tm) ≡ᶠ op x s t') (tm-weaken-subst-trivial r t') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' /var0 ]tm ≡ᶠ op (r [ π ]tm [ t' /var0 ]tm) s t'
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ t' /var0 ]tm) ≡ᶠ op (r [ π ]tm [ t' /var0 ]tm) x t') (tm-weaken-subst-trivial s t') (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' /var0 ]tm ≡ᶠ op (r [ π ]tm [ t' /var0 ]tm) (s [ π ]tm [ t' /var0 ]tm) t' 
+  A≡.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ t' /var0 ]tm) ≡ᶠ x) (op-nat t' (r [ π ]tm) (s [ π ]tm) (var vzero)) (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' /var0 ]tm ≡ᶠ (op (r [ π ]tm) (s [ π ]tm) (var vzero)) [ t' /var0 ]tm
+  subst (((op r s t) [ π ]tm) ≡ᶠ op (r [ π ]tm) (s [ π ]tm) (var vzero)) et (
+  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t /var0 ]tm ≡ᶠ (op (r [ π ]tm) (s [ π ]tm) (var vzero)) [ t /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (r [ π ]tm) (s [ π ]tm) (var vzero)) [ t /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial (op r s t) t)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ (op (r [ π ]tm) (s [ π ]tm) (var vzero)) [ t /var0 ]tm
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ x) (A≡.sym (op-nat t (r [ π ]tm) (s [ π ]tm) (var vzero))) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op (r [ π ]tm [ t /var0 ]tm) (s [ π ]tm [ t /var0 ]tm) t
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op x (s [ π ]tm [ t /var0 ]tm) t) (A≡.sym (tm-weaken-subst-trivial r t)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r (s [ π ]tm [ s /var0 ]tm) t
+  A≡.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r x t) (A≡.sym (tm-weaken-subst-trivial s t)) (
+  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s t'
+  refl)))))))))))))))))))))))))))
+
+fst-cong : {p p' : TmExpr (to-ctx Ξ) (T ⊠ S)} →
+           (Ξ ⊢ p ≡ᶠ p') →
+           (Ξ ⊢ fst p ≡ᶠ fst p')
+fst-cong = tm-constructor-cong₁ fst (λ _ _ → A≡.refl)
+
+snd-cong : {p p' : TmExpr (to-ctx Ξ) (T ⊠ S)} →
+           (Ξ ⊢ p ≡ᶠ p') →
+           (Ξ ⊢ snd p ≡ᶠ snd p')
+snd-cong = tm-constructor-cong₁ snd (λ _ _ → A≡.refl)
+
+simultaneous-fun-cong : {f f' : TmExpr (to-ctx Ξ) (T ⇛ S)} {t t' : TmExpr (to-ctx Ξ) T} →
+                        (Ξ ⊢ f ≡ᶠ f') →
+                        (Ξ ⊢ t ≡ᶠ t') →
+                        (Ξ ⊢ f ∙ t ≡ᶠ f' ∙ t')
+simultaneous-fun-cong = tm-constructor-cong₂ _∙_ (λ _ _ _ → A≡.refl)
+
+cong : (f : TmExpr (to-ctx Ξ) (T ⇛ S)) {t1 t2 : TmExpr (to-ctx Ξ) T} →
+       (Ξ ⊢ t1 ≡ᶠ t2) →
+       (Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2)
+cong f = simultaneous-fun-cong refl
+
+fun-cong : {f g : TmExpr (to-ctx Ξ) (T ⇛ S)} →
+           (Ξ ⊢ f ≡ᶠ g) →
+           (t : TmExpr (to-ctx Ξ) T) →
+           (Ξ ⊢ f ∙ t ≡ᶠ g ∙ t)
+fun-cong ef t = simultaneous-fun-cong ef refl
+
+pair-cong : {t t' : TmExpr (to-ctx Ξ) T} {s s' : TmExpr (to-ctx Ξ) S} →
+            (Ξ ⊢ t ≡ᶠ t') →
+            (Ξ ⊢ s ≡ᶠ s') →
+            (Ξ ⊢ pair t s ≡ᶠ pair t' s')
+pair-cong = tm-constructor-cong₂ pair (λ _ _ _ → A≡.refl)
+
+if-cong : {b b' : TmExpr (to-ctx Ξ) Bool'} {t t' f f' : TmExpr (to-ctx Ξ) T} →
+          (Ξ ⊢ b ≡ᶠ b') →
+          (Ξ ⊢ t ≡ᶠ t') →
+          (Ξ ⊢ f ≡ᶠ f') →
+          (Ξ ⊢ if b t f ≡ᶠ if b' t' f')
+if-cong = tm-constructor-cong₃ if (λ _ _ _ _ → A≡.refl)
+
+
+--------------------------------------------------
+-- Soundness proof of the logical framework w.r.t. a trivial presheaf model
 
 ⟦_⟧env : Env → Ctx ★
 to-ctx-subst : (Ξ : Env) → ⟦ Ξ ⟧env M.⇒ ⟦ to-ctx Ξ ⟧ctx
@@ -179,34 +376,3 @@ interpret-assumption (skip-var {Ξ = Ξ} {φ = φ} {T = T} x) =
       (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))))) _)
                   (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sdiscr-func-natural _) (M.,ₛ-β2 _ _)))))))
       (M.≅ˢ-sym (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
-
-cong : (f : TmExpr (to-ctx Ξ) (T ⇛ S)) {t1 t2 : TmExpr (to-ctx Ξ) T} →
-       (Ξ ⊢ t1 ≡ᶠ t2) →
-       (Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2)
-cong {Ξ = Ξ} f {t1 = t1} {t2 = t2} e =
-  -- goal : Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2
-  A≡.subst (λ x → Ξ ⊢ f ∙ t1 ≡ᶠ x ∙ t2) (tm-weaken-subst-trivial f t2) (
-  -- new goal : Ξ ⊢ f ∙ t1 ≡ᶠ (f [ π ]tm [ t2 /var0 ]tm) ∙ t2
-  A≡.subst (λ x → Ξ ⊢ x ≡ᶠ (f [ π ]tm [ t2 /var0 ]tm) ∙ t2) (tm-weaken-subst-trivial (f ∙ t1) t2) (
-  -- new goal : Ξ ⊢ (f [ π ]tm [ t2 /var0 ]tm) ∙ (t1 [ π ]tm [ t2 /var0 ]tm) ≡ᶠ (f [ π ]tm [ t2 /var0 ]tm) ∙ t2
-  subst (((f ∙ t1) [ π ]tm) ≡ᶠ (f [ π ]tm) ∙ var vzero) e (
-  -- new goal : Ξ ⊢ (f [ π ]tm [ t1 /var0 ]tm) ∙ (t1 [ π ]tm [ t1 /var0 ]tm) ≡ᶠ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1
-  A≡.subst (λ x → Ξ ⊢ (f [ π ]tm [ t1 /var0 ]tm) ∙ x ≡ᶠ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1) (A≡.sym (tm-weaken-subst-trivial t1 t1))
-  -- new goal : Ξ ⊢ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1 ≡ᶠ (f [ π ]tm [ t1 /var0 ]tm) ∙ t1
-  refl)))
-
-fun-cong : {f g : TmExpr (to-ctx Ξ) (T ⇛ S)} →
-           (Ξ ⊢ f ≡ᶠ g) →
-           (t : TmExpr (to-ctx Ξ) T) →
-           (Ξ ⊢ f ∙ t ≡ᶠ g ∙ t)
-fun-cong {Ξ = Ξ} {f = f} {g = g} e t =
-  -- goal : Ξ ⊢ f ∙ t ≡ᶠ g ∙ t
-  A≡.subst (λ x → _ ⊢ f ∙ t ≡ᶠ g ∙ x) (tm-weaken-subst-trivial t g) (
-  -- new goal : Ξ ⊢ f ∙ t ≡ᶠ g ∙ (t [ π ]tm [ g /var0 ]tm)
-  A≡.subst (λ x → Ξ ⊢ (x ≡ᶠ (g ∙ ((t [ π ]tm) [ g /var0 ]tm)))) (tm-weaken-subst-trivial (f ∙ t) g) (
-  -- new goal : Ξ ⊢ (f [ π ]tm [ g /var0 ]tm) ∙ (t [ π ]tm [ g /var0 ]) ≡ᶠ g ∙ (t [ π ]tm [ g /var0 ]tm)
-  subst (((f ∙ t) [ π ]tm) ≡ᶠ (var vzero ∙ (t [ π ]tm))) e (
-  -- new goal : Ξ ⊢ (f [ π ]tm [ f /var0 ]tm) ∙ (t [ π ]tm [ f /var0 ]) ≡ᶠ f ∙ (t [ π ]tm [ f /var0 ]tm)
-  A≡.subst (λ x → Ξ ⊢ x ∙ (t [ π ]tm [ f /var0 ]tm) ≡ᶠ f ∙ (t [ π ]tm [ f /var0 ]tm)) (A≡.sym (tm-weaken-subst-trivial f f))
-  -- new goal : Ξ ⊢ f ∙ (t [ π ]tm [ f /var0 ]) ≡ᶠ f ∙ (t [ π ]tm [ f /var0 ]tm)
-  refl)))
