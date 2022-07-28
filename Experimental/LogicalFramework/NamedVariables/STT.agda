@@ -86,12 +86,6 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
 var : (x : String) → {v : True (var? x Γ)} → TmExpr Γ (lookup-var (toWitness v))
 var x {v} = var' x {toWitness v} {refl}
 
-id : TmExpr Γ (T ⇛ T)
-id = lam[ "x" ∈ _ ] var "x"
-
-const : TmExpr Γ (T ⇛ S ⇛ T)
-const {T = T} {S} = lam[ "t" ∈ T ] lam[ "_" ∈ S ] var "t"
-
 
 --------------------------------------------------
 -- Interpretation of types, contexts and terms in the presheaf
@@ -215,7 +209,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 -- efficient than implementing it (claim needs justification).
 data SubstExpr : CtxExpr → CtxExpr → Set where
   [] : SubstExpr Γ ◇
-  _∷_ : ∀ {x} → SubstExpr Δ Γ → TmExpr Δ T → SubstExpr Δ (Γ ,, x ∈ T)
+  _∷_/_ : SubstExpr Δ Γ → TmExpr Δ T → (x : String) → SubstExpr Δ (Γ ,, x ∈ T)
   id-subst : (Γ : CtxExpr) → SubstExpr Γ Γ
   _⊚πs⟨_⟩ : SubstExpr Δ Γ → (Θ : CtxExpr) → SubstExpr (Δ ++ctx Θ) Γ
 
@@ -225,11 +219,11 @@ data SubstExpr : CtxExpr → CtxExpr → Set where
 _⊚π : ∀ {x} → SubstExpr Δ Γ → SubstExpr (Δ ,, x ∈ T) Γ
 σ ⊚π = σ ⊚πs⟨ _ ⟩
 
-_⊹[_] : SubstExpr Δ Γ → (x : String) → SubstExpr (Δ ,, x ∈ T) (Γ ,, x ∈ T)
-σ ⊹[ x ] = (σ ⊚π) ∷ var' x {vzero} {refl}
+_⊹⟨_⟩ : SubstExpr Δ Γ → (x : String) → SubstExpr (Δ ,, x ∈ T) (Γ ,, x ∈ T)
+σ ⊹⟨ x ⟩ = (σ ⊚π) ∷ var' x {vzero} {refl} / x
 
-_/var0 : ∀ {x} → TmExpr Γ T → SubstExpr Γ (Γ ,, x ∈ T)
-t /var0 = id-subst _ ∷ t
+_/_ : TmExpr Γ T → (x : String) → SubstExpr Γ (Γ ,, x ∈ T)
+t / x = id-subst _ ∷ t / x
 
 
 -- We will use the following view pattern in the implementation of
@@ -241,7 +235,7 @@ data SpecialSubstExpr : SubstExpr Γ Δ → Set where
 
 is-special-subst? : (σ : SubstExpr Γ Δ) → Maybe (SpecialSubstExpr σ)
 is-special-subst? []           = nothing
-is-special-subst? (σ ∷ t)      = nothing
+is-special-subst? (σ ∷ t / x)  = nothing
 is-special-subst? (id-subst Γ) = just (id-subst Γ)
 is-special-subst? (σ ⊚πs⟨ Θ ⟩) = just (σ ⊚πs⟨ Θ ⟩)
 
@@ -249,15 +243,15 @@ subst-var : ∀ {x T} → (v : Var x Γ) → SubstExpr Δ Γ → lookup-var v �
 subst-var {x = x} v (id-subst Γ) e = var' x {v} {e}
 subst-var v         (σ ⊚πs⟨ ◇ ⟩) e = subst-var v σ e
 subst-var v         (σ ⊚πs⟨ Δ ,, _ ∈ T ⟩) e = weaken-tm (subst-var v (σ ⊚πs⟨ Δ ⟩) e)
-subst-var vzero     (σ ∷ t) refl = t
-subst-var (vsuc v)  (σ ∷ s) e = subst-var v σ e
+subst-var vzero     (σ ∷ t / x) refl = t
+subst-var (vsuc v)  (σ ∷ s / x) e = subst-var v σ e
 
 _[_]tm : TmExpr Γ T → SubstExpr Δ Γ → TmExpr Δ T
 t [ σ ]tm with is-special-subst? σ
 (t [ .(id-subst Γ) ]tm)  | just (id-subst Γ) = t
 (t [ .(σ ⊚πs⟨ Θ ⟩) ]tm)  | just (σ ⊚πs⟨ Θ ⟩) = multi-weaken-tm Θ (t [ σ ]tm)
 var' x {v} {e} [ σ ]tm   | nothing = subst-var v σ e
-(lam[ x ∈ T ] t) [ σ ]tm | nothing = lam[ x ∈ T ] (t [ σ ⊹[ x ] ]tm)
+(lam[ x ∈ T ] t) [ σ ]tm | nothing = lam[ x ∈ T ] (t [ σ ⊹⟨ x ⟩ ]tm)
 (f ∙ t) [ σ ]tm          | nothing = (f [ σ ]tm) ∙ (t [ σ ]tm)
 zero [ σ ]tm             | nothing = zero
 suc [ σ ]tm              | nothing = suc
@@ -273,17 +267,17 @@ snd p [ σ ]tm            | nothing = snd (p [ σ ]tm)
 -- Interpretation of substitutions as presheaf morphisms
 ⟦_⟧subst : SubstExpr Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ [] ⟧subst = M.!◇ _
-⟦ _∷_ {_} {T} σ t ⟧subst = ⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm
+⟦ _∷_/_ {_} {T} σ t _ ⟧subst = ⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm
 ⟦ id-subst Γ ⟧subst = M.id-subst _
 ⟦ σ ⊚πs⟨ ◇ ⟩      ⟧subst = ⟦ σ ⟧subst
 ⟦ σ ⊚πs⟨ Δ ,, _ ∈ T ⟩ ⟧subst = ⟦ σ ⊚πs⟨ Δ ⟩ ⟧subst M.⊚ M.π
 
-⊹-sound : ∀ {x} (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹[_] {T = T} σ x ⟧subst
+⊹-sound : ∀ {x} (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst
 ⊹-sound σ = M.≅ˢ-refl
 
 subst-var-sound : ∀ {x} (v : Var x Γ) (σ : SubstExpr Δ Γ) → (⟦ v ⟧var [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ subst-var v σ refl ⟧tm
-subst-var-sound vzero    (σ ∷ t) = ,ₛ-β2 ⟦ σ ⟧subst ⟦ t ⟧tm
-subst-var-sound (vsuc v) (σ ∷ t) =
+subst-var-sound vzero    (σ ∷ t / x) = ,ₛ-β2 ⟦ σ ⟧subst ⟦ t ⟧tm
+subst-var-sound (vsuc v) (σ ∷ t / x) =
   M.≅ᵗᵐ-trans (stm-subst-comp ⟦ v ⟧var M.π (⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm))
               (M.≅ᵗᵐ-trans (stm-subst-cong-subst (⟦ v ⟧var) (,ₛ-β1 ⟦ σ ⟧subst ⟦ t ⟧tm))
                            (subst-var-sound v σ))
@@ -305,7 +299,7 @@ tm-subst-sound t .(σ ⊚πs⟨ Θ ,, _ ∈ T ⟩) | just (σ ⊚πs⟨ Θ ,, _ 
 tm-subst-sound (var' x {v} {refl}) σ | nothing = subst-var-sound v σ
 tm-subst-sound (lam[ x ∈ _ ] t) σ | nothing =
   M.≅ᵗᵐ-trans (sλ-natural {b = ⟦ t ⟧tm} ⟦ σ ⟧subst)
-              (sλ-cong (tm-subst-sound t (σ ⊹[ x ])))
+              (sλ-cong (tm-subst-sound t (σ ⊹⟨ x ⟩)))
 tm-subst-sound (f ∙ t) σ | nothing = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (tm-subst-sound f σ) (tm-subst-sound t σ))
 tm-subst-sound zero σ | nothing = sdiscr-natural _
 tm-subst-sound suc σ | nothing = sdiscr-func-natural _
@@ -319,7 +313,7 @@ tm-subst-sound (snd p) σ | nothing = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-c
 
 multi⊹ : (Θ : CtxExpr) → SubstExpr Γ Δ → SubstExpr (Γ ++ctx Θ) (Δ ++ctx Θ)
 multi⊹ ◇            σ = σ
-multi⊹ (Θ ,, x ∈ T) σ = (multi⊹ Θ σ) ⊹[ x ]
+multi⊹ (Θ ,, x ∈ T) σ = (multi⊹ Θ σ) ⊹⟨ x ⟩
 
 cong₃ : {A B C D : Set} (f : A → B → C → D)
         {a a' : A} {b b' : B} {c c' : C} →
@@ -328,13 +322,13 @@ cong₃ : {A B C D : Set} (f : A → B → C → D)
 cong₃ f refl refl refl = refl
 
 var-weaken-subst-trivial-multi : ∀ {x y} (Θ : CtxExpr) (v : Var x (Γ ++ctx Θ)) {s : TmExpr Γ S} (e : lookup-var (mid-weaken-var Θ v) ≡ lookup-var v) →
-  (var' x {mid-weaken-var {y = y} Θ v} {e}) [ multi⊹ Θ (s /var0) ]tm ≡ var' x {v} {refl}
+  (var' x {mid-weaken-var Θ v} {e}) [ multi⊹ Θ (s / y) ]tm ≡ var' x {v} {refl}
 var-weaken-subst-trivial-multi ◇ v refl = refl
 var-weaken-subst-trivial-multi (Θ ,, x ∈ T) vzero refl = refl
 var-weaken-subst-trivial-multi (◇ ,, x ∈ T) (vsuc v) refl = refl
 var-weaken-subst-trivial-multi (Θ ,, x ∈ T ,, y ∈ S) (vsuc v) e = cong weaken-tm (var-weaken-subst-trivial-multi (Θ ,, x ∈ T) v e)
 
-tm-weaken-subst-trivial-multi : ∀ {x} (Θ : CtxExpr) (t : TmExpr (Γ ++ctx Θ) T) {s : TmExpr Γ S} → (mid-weaken-tm {x = x} Θ t) [ multi⊹ Θ (s /var0) ]tm ≡ t
+tm-weaken-subst-trivial-multi : ∀ {x} (Θ : CtxExpr) (t : TmExpr (Γ ++ctx Θ) T) {s : TmExpr Γ S} → (mid-weaken-tm Θ t) [ multi⊹ Θ (s / x) ]tm ≡ t
 tm-weaken-subst-trivial-multi ◇ (var' x {_} {refl}) = refl
 tm-weaken-subst-trivial-multi ◇ (lam[ _ ∈ _ ] t) = cong (lam[ _ ∈ _ ]_) (tm-weaken-subst-trivial-multi (◇ ,, _ ∈ _) t)
 tm-weaken-subst-trivial-multi ◇ (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-multi ◇ f) (tm-weaken-subst-trivial-multi ◇ t)
@@ -362,7 +356,7 @@ tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (pair t s) = cong₂ pair (tm-weak
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (fst p) = cong fst (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) p)
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (snd p) = cong snd (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) p)
 
-tm-weaken-subst-trivial : ∀ {x} → (t : TmExpr Γ T) (s : TmExpr Γ S) → (t [ π {x = x} ]tm) [ s /var0 ]tm ≡ t
+tm-weaken-subst-trivial : ∀ {x} → (t : TmExpr Γ T) (s : TmExpr Γ S) → (t [ π ]tm) [ s / x ]tm ≡ t
 tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-multi ◇ t
 
 -- The next lemma is needed multiple times in the soundness proof.
