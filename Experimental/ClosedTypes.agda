@@ -209,57 +209,59 @@ ssuc = sdiscr-func suc
 ssuc-sdiscr : {n : ℕ} → ssuc {Γ = Γ} ∙ₛ (sdiscr n) ≅ᵗᵐ sdiscr (suc n)
 eq ssuc-sdiscr _ = refl
 
+-- This can also be implemented in terms of prim-nat-elim. However,
+-- now it is easier to prove prim-snat-elim-natural and prim-snat-elim-cong.
+prim-snat-elim : {A : ClosedTy C} → SimpleTm Γ A → SimpleTm (Γ ,,ₛ A) A → SimpleTm (Γ ,,ₛ Nat') A
+prim-snat-elim a f ⟨ x , [ γ , zero  ] ⟩' = a ⟨ x , γ ⟩'
+prim-snat-elim a f ⟨ x , [ γ , suc n ] ⟩' = f ⟨ x , [ γ , prim-snat-elim a f ⟨ x , [ γ , n ] ⟩' ] ⟩'
+naturality (prim-snat-elim a f) {γy = [ _ , zero ]} {γx = [ _ , zero ]} ρ refl = naturality a ρ refl
+naturality (prim-snat-elim {A = A} a f) {γy = [ _ , suc n ]} {γx = [ _ , suc n ]} ρ refl =
+  trans (ty-cong A refl) (naturality f ρ (cong [ _ ,_] (naturality (prim-snat-elim a f) {γy = [ _ , n ]} ρ refl)))
+
 snat-elim : {A : ClosedTy C} → SimpleTm Γ A → SimpleTm Γ (A ⇛ A) → SimpleTm Γ (Nat' ⇛ A)
-snat-elim a f = ι[ ≅ᵗʸ-trans (⇛-natural _) (⇛-cong (Discr-natural _ _) ≅ᵗʸ-refl) ] (nat-elim _ a (ι⁻¹[ ⇛-natural _ ] f))
+snat-elim a f = sλ[ Nat' ] prim-snat-elim a ((f [ π ]s) ∙ₛ sξ)
+
+prim-snat-elim-natural : {A : ClosedTy C} {a : SimpleTm Γ A} {f : SimpleTm (Γ ,,ₛ A) A}
+                         (σ : Δ ⇒ Γ) →
+                         (prim-snat-elim a f) [ σ s⊹ ]s ≅ᵗᵐ prim-snat-elim (a [ σ ]s) (f [ σ s⊹ ]s)
+eq (prim-snat-elim-natural         σ) [ δ , zero  ] = refl
+eq (prim-snat-elim-natural {A = A} {f = f} σ) [ δ , suc n ] =
+  cong (λ - → A ⟪ _ , _ ⟫ f ⟨ _ , [ _ , - ] ⟩') (trans (sym (ty-id A)) (trans (eq (prim-snat-elim-natural {f = f} σ) [ δ , n ]) (sym (ty-id A))))
+
+prim-snat-elim-cong : {A : ClosedTy C} {a1 a2 : SimpleTm Γ A} {f1 f2 : SimpleTm (Γ ,,ₛ A) A} →
+                      a1 ≅ᵗᵐ a2 → f1 ≅ᵗᵐ f2 → prim-snat-elim a1 f1 ≅ᵗᵐ prim-snat-elim a2 f2
+eq (prim-snat-elim-cong ea ef) [ γ , zero ] = eq ea γ
+eq (prim-snat-elim-cong {f2 = f2} ea ef) [ γ , suc n ] = trans (eq ef _) (cong (λ x → f2 ⟨ _ , [ γ , x ] ⟩') (eq (prim-snat-elim-cong ea ef) [ γ , n ]))
 
 snat-elim-natural : {A : ClosedTy C} {a : SimpleTm Γ A} {f : SimpleTm Γ (A ⇛ A)} (σ : Δ ⇒ Γ) →
                     (snat-elim a f) [ σ ]s ≅ᵗᵐ snat-elim (a [ σ ]s) (f [ σ ]s)
-eq (snat-elim-natural {C = C} {Γ = Γ} {Δ = Δ} {A = A} {a} {f} σ) {y} δ = to-pshfun-eq lemma
+snat-elim-natural {f = f} σ =
+  ≅ᵗᵐ-trans (sλ-natural σ)
+            (sλ-cong (≅ᵗᵐ-trans (prim-snat-elim-natural σ)
+                                (prim-snat-elim-cong ≅ᵗᵐ-refl (≅ᵗᵐ-trans (∙ₛ-natural (σ s⊹))
+                                                                         (∙ₛ-cong ⊹-lemma (,ₛ-β2 _ _))))))
   where
-    open BaseCategory C
-    ctx-lemma : {x : Ob} (ρ : Hom x y) → Γ ⟪ hom-id ⟫ func σ (Δ ⟪ ρ ⟫ δ) ≡ Γ ⟪ hom-id ∙ ρ ⟫ func σ δ
-    ctx-lemma ρ = sym (trans (cong (Γ ⟪_⟫ _) (trans hom-idˡ (sym hom-idʳ)))
-                             (trans (ctx-comp Γ) (cong (Γ ⟪ hom-id ⟫_) (naturality σ))))
-
-    lemma : {x : Ob} (ρ : Hom x y) {γ' : ⊤} (eγ : tt ≡ γ') (n : ℕ) →
-            ((snat-elim a f) [ σ ]s) ⟨ y , δ ⟩' $⟨ ρ , eγ ⟩ n ≡ (snat-elim (a [ σ ]s) (f [ σ ]s)) ⟨ y , δ ⟩' $⟨ ρ , eγ ⟩ n
-    lemma {x} ρ eγ zero    = trans (strong-ty-id A)
-                                   (sym (trans (ty-cong-2-1 A hom-idʳ)
-                                               (naturality a _ (ctx-lemma ρ))))
-    lemma {x} ρ eγ (suc n) =
-      let ζ = _
-      in
-      trans (ty-cong A refl)
-            (cong (A ⟪ hom-id , _ ⟫_) (trans (cong (_$⟨ hom-id , _ ⟩ ζ) (sym (naturality f hom-id (ctx-lemma ρ))))
-                                             (trans ($-cong (f ⟨ x , _ ⟩') refl)
-                                                    (cong (f ⟨ x , _ ⟩' $⟨ hom-id ∙ hom-id , _ ⟩_) (remove-≡ids (λ _ → strong-ty-id A)
-                                                                                                                (λ _ → strong-ty-id A)
-                                                                                                                (lemma ρ eγ n))))))
+    ⊹-lemma : (f [ π ]s) [ σ s⊹ ]s ≅ᵗᵐ (f [ σ ]s) [ π ]s
+    ⊹-lemma = ≅ᵗᵐ-trans (stm-subst-comp _ _ _) (≅ᵗᵐ-trans (stm-subst-cong-subst _ (,ₛ-β1 _ _)) (≅ᵗᵐ-sym (stm-subst-comp _ _ _)))
 
 snat-elim-cong : {A : ClosedTy C} {a1 a2 : SimpleTm Γ A} {f1 f2 : SimpleTm Γ (A ⇛ A)} →
                  a1 ≅ᵗᵐ a2 → f1 ≅ᵗᵐ f2 → snat-elim a1 f1 ≅ᵗᵐ snat-elim a2 f2
-eq (snat-elim-cong {C = C} {Γ = Γ} {A = A} {a1} {a2} {f1} {f2} ea ef) {y} γ = to-pshfun-eq lemma
-  where
-    open BaseCategory C
-    lemma : {x : Ob} (ρ : Hom x y) {γ' : ⊤} (eγ : tt ≡ γ') (n : ℕ) →
-            (snat-elim a1 f1) ⟨ y , γ ⟩' $⟨ ρ , eγ ⟩ n ≡ (snat-elim a2 f2) ⟨ y , γ ⟩' $⟨ ρ , eγ ⟩ n
-    lemma {x} ρ eγ zero    = cong (A ⟪ hom-id , eγ ⟫_) (eq ea _)
-    lemma {x} ρ eγ (suc n) =
-      cong (A ⟪ hom-id , eγ ⟫_) (trans (cong (λ h → h $⟨ hom-id , _ ⟩ _) (eq ef (Γ ⟪ ρ ⟫ γ)))
-                                       (cong (f2 ⟨ x , Γ ⟪ ρ ⟫ γ ⟩' $⟨ hom-id , _ ⟩_) (remove-≡id (λ _ → strong-ty-id A) (lemma ρ refl n))))
+snat-elim-cong ea ef = sλ-cong (prim-snat-elim-cong ea (∙ₛ-cong (stm-subst-cong-tm ef π) ≅ᵗᵐ-refl))
 
 snat-β-zero : {A : ClosedTy C} (a : SimpleTm Γ A) (f : SimpleTm Γ (A ⇛ A)) → snat-elim a f ∙ₛ szero ≅ᵗᵐ a
-snat-β-zero {Γ = Γ} {A = A} a f = record { eq = λ γ → trans (ty-cong A refl) (naturality a _ (trans (ctx-id Γ) (ctx-id Γ))) }
+eq (snat-β-zero {Γ = Γ} {A = A} a f) γ =
+  trans (strong-ty-id A) (trans (ty-cong A refl) (naturality a _ (trans (ctx-id Γ) (ctx-id Γ))))
 
 snat-β-suc : {A : ClosedTy C} (a : SimpleTm Γ A) (f : SimpleTm Γ (A ⇛ A)) (n : SimpleTm Γ Nat') →
              snat-elim a f ∙ₛ (ssuc ∙ₛ n) ≅ᵗᵐ (f ∙ₛ (snat-elim a f ∙ₛ n))
-snat-β-suc {C = C} {Γ = Γ} a f n = record { eq = λ {x} γ →
-  let t = _
-  in
-  trans (sym (naturality (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩')))
-        (trans ($-cong (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩') refl)
-               (cong (_$⟨ hom-id , _ ⟩ t) (naturality f {x} {x} {Γ ⟪ hom-id ⟫ γ} {γ} hom-id (trans (ctx-id Γ) (ctx-id Γ))))) }
-  where open BaseCategory C
+eq (snat-β-suc {C = C} {Γ = Γ} {A = A} a f n) {x} γ =
+  trans (cong (A ⟪ hom-id , _ ⟫_) (sym (naturality (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩'))))
+        (trans (sym (naturality (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩')))
+               (trans ($-cong (f ⟨ x , Γ ⟪ hom-id ⟫ γ ⟩') (trans hom-idʳ hom-idʳ))
+                      (cong (_$⟨ hom-id , _ ⟩ t) (naturality f {x} {x} {Γ ⟪ hom-id ⟫ γ} {γ} hom-id (trans (ctx-id Γ) (ctx-id Γ))))))
+  where
+    open BaseCategory C
+    t = _
 
 snat-induction : (T : Ty (Γ ,,ₛ Nat')) →
                  Tm Γ (T [ id-subst Γ ,ₛ szero ]) → Tm (Γ ,,ₛ Nat' ,, T) (T [ (π ,ₛ (ssuc ∙ₛ sξ)) ⊚ π ]) →
