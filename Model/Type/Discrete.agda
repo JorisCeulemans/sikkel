@@ -11,6 +11,7 @@ module Model.Type.Discrete {C : BaseCategory} where
 
 open import Data.Bool using (Bool; true; false; if_then_else_; _∧_; _∨_)
 open import Data.Nat hiding (_⊔_)
+open import Data.Product renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -160,43 +161,21 @@ zero' = discr zero
 one' : Tm Γ Nat'
 one' = discr (suc zero)
 
-{-
-suc' : Tm Γ Nat' → Tm Γ Nat'
-term (suc' t) x γ = suc (t ⟨ x , γ ⟩')
-naturality (suc' t) f γ = cong suc (naturality t f γ)
--}
-
 suc' : Tm Γ (Nat' ⇛ Nat')
 suc' = discr-func suc
 
 suc'-discr : {n : ℕ} {Γ : Ctx C} → app {Γ = Γ} suc' (discr n) ≅ᵗᵐ discr (suc n)
 eq suc'-discr γ = refl
 
+prim-nat-elim : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm (Γ ,, Nat') (T [ π ])
+prim-nat-elim T t f ⟨ x , [ γ , zero  ] ⟩' = t ⟨ x , γ ⟩'
+prim-nat-elim T t f ⟨ x , [ γ , suc n ] ⟩' = f ⟨ x , [ γ , prim-nat-elim T t f ⟨ x , [ γ , n ] ⟩' ] ⟩'
+naturality (prim-nat-elim T t f) {γy = [ _ , zero ]} {γx = [ _ , zero ]} ρ refl = naturality t ρ refl
+naturality (prim-nat-elim T t f) {γy = [ _ , suc n ]} {γx = [ _ , suc n ]} ρ refl =
+  trans (ty-cong T refl) (naturality f ρ (cong [ _ ,_] (naturality (prim-nat-elim T t f) {γy = [ _ , n ]} ρ refl)))
+
 nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
-nat-elim {Γ = Γ} T t f = MkTm tm nat
-  where
-    open ≡-Reasoning
-    tm : (x : Ob) (γ : Γ ⟨ x ⟩) → (Nat' ⇛ T) ⟨ x , γ ⟩
-    tm x γ $⟨ ρ , eγ ⟩ zero = t ⟨ _ , _ ⟩'
-    tm x γ $⟨ ρ , eγ ⟩ suc n = f €⟨ _ , _ ⟩ (tm x γ $⟨ ρ , eγ ⟩ n)
-    naturality (tm z γ) {eγ-zy = eq-zy} {eq-yx} {zero} = sym (naturality t _ eq-yx)
-    naturality (tm z γ) {eγ-zy = eq-zy} {eq-yx} {suc n} =
-      begin
-        f €⟨ _ , _ ⟩ (tm z γ $⟨ _ , _ ⟩ n)
-      ≡⟨ cong (f €⟨ _ , _ ⟩_) (naturality (tm z γ) {t = n}) ⟩
-        f €⟨ _ , _ ⟩ (T ⟪ _ , eq-yx ⟫ tm z γ $⟨ _ , eq-zy ⟩ n)
-      ≡˘⟨ €-natural f ⟩
-        T ⟪ _ , eq-yx ⟫ (f €⟨ _ , _ ⟩ (tm z γ $⟨ _ , eq-zy ⟩ n)) ∎
-
-    helper : {y z : Ob} {ρ-yz : Hom y z} {γy : Γ ⟨ y ⟩} {γz : Γ ⟨ z ⟩} (eq-zy : Γ ⟪ ρ-yz ⟫ γz ≡ γy) →
-             {x : Ob} (ρ-xy : Hom x y) {γx : Γ ⟨ x ⟩} (eq-yx : Γ ⟪ ρ-xy ⟫ γy ≡ γx) (n : ℕ) →
-             (Nat' ⇛ T ⟪ ρ-yz , eq-zy ⟫ tm z γz) $⟨ ρ-xy , eq-yx ⟩ n ≡ tm y γy $⟨ ρ-xy , eq-yx ⟩ n
-    helper eq-zy ρ-xy eq-yx zero    = refl
-    helper eq-zy ρ-xy eq-yx (suc n) = cong (f €⟨ _ , _ ⟩_) (helper eq-zy ρ-xy eq-yx n)
-
-    nat : ∀ {y z} {γz : Γ ⟨ z ⟩} {γy : Γ ⟨ y ⟩} (ρ : Hom y z) (eγ : Γ ⟪ ρ ⟫ γz ≡ γy) →
-          Nat' ⇛ T ⟪ ρ , eγ ⟫ (tm z γz) ≡ tm y γy
-    nat _ eq-zy = to-pshfun-eq (helper eq-zy)
+nat-elim T t f = lam Nat' (prim-nat-elim T t (ap f))
 
 module _ {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
   β-nat-zero : app (nat-elim T t f) zero' ≅ᵗᵐ t

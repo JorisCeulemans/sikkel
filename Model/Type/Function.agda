@@ -141,6 +141,10 @@ naturality (app {Γ = Γ}{T = T}{S = S} f t) {γy = γy}{γx} ρ eγ =
 infixl 10 _$_
 _$_ = app
 
+ap : Tm Γ (T ⇛ S) → Tm (Γ ,, T) (S [ π ])
+ap f ⟨ x , [ γ , t ] ⟩' = f €⟨ x , γ ⟩ t
+naturality (ap {T = T} f) ρ refl = trans (€-natural f) (cong (f €⟨ _ , _ ⟩_) (ty-cong T refl))
+
 
 --------------------------------------------------
 -- Congruence proofs
