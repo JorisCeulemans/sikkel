@@ -3,7 +3,7 @@
 --   model over the trivial base category
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.STT.Interpretation where
+module Experimental.LogicalFramework.STT.Interpretation where
 
 open import Data.Maybe
 open import Data.String
@@ -17,10 +17,10 @@ import Model.Type.Discrete as M
 
 open import Experimental.ClosedTypes as M
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Named
-import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Nameless as DB
-open import Experimental.LogicalFramework.NamedVariables.STT.AlphaEquivalence
-open import Experimental.LogicalFramework.NamedVariables.STT.Interpretation.Nameless as DBInt
+open import Experimental.LogicalFramework.STT.Syntax.Named
+import Experimental.LogicalFramework.STT.Syntax.Nameless as DB
+open import Experimental.LogicalFramework.STT.AlphaEquivalence
+open import Experimental.LogicalFramework.STT.Interpretation.Nameless as DBInt
 
 private variable
   Γ Δ : CtxExpr

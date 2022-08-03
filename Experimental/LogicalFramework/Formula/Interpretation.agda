@@ -3,7 +3,7 @@
 --   base category
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.Formula.Interpretation where
+module Experimental.LogicalFramework.Formula.Interpretation where
 
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
 import Model.Type.Function as M
@@ -13,10 +13,10 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 open import Experimental.ClosedTypes
 open import Experimental.ClosedTypes.Pi
 
-open import Experimental.LogicalFramework.NamedVariables.STT
-open import Experimental.LogicalFramework.NamedVariables.Formula.Named
-open import Experimental.LogicalFramework.NamedVariables.Formula.AlphaEquivalence
-open import Experimental.LogicalFramework.NamedVariables.Formula.Interpretation.Nameless
+open import Experimental.LogicalFramework.STT
+open import Experimental.LogicalFramework.Formula.Named
+open import Experimental.LogicalFramework.Formula.AlphaEquivalence
+open import Experimental.LogicalFramework.Formula.Interpretation.Nameless
 
 private variable
   Γ Δ : CtxExpr

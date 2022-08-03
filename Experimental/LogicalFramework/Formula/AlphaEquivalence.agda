@@ -2,13 +2,13 @@
 -- Definition of α-equivalence of formulas via a translation to nameless formulas
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.Formula.AlphaEquivalence where
+module Experimental.LogicalFramework.Formula.AlphaEquivalence where
 
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.NamedVariables.Formula.Named
-import Experimental.LogicalFramework.NamedVariables.Formula.Nameless as NMLS
-open import Experimental.LogicalFramework.NamedVariables.STT
+open import Experimental.LogicalFramework.Formula.Named
+import Experimental.LogicalFramework.Formula.Nameless as NMLS
+open import Experimental.LogicalFramework.STT
 
 private variable
   Γ : CtxExpr

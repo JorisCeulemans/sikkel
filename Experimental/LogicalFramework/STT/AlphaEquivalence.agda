@@ -2,13 +2,13 @@
 -- Definition of α-equivalence of STT terms via a translation to nameless terms
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.STT.AlphaEquivalence where
+module Experimental.LogicalFramework.STT.AlphaEquivalence where
 
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Named
-import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Nameless as NMLS
+open import Experimental.LogicalFramework.STT.Syntax.Named
+import Experimental.LogicalFramework.STT.Syntax.Nameless as NMLS
 
 private variable
   Γ : CtxExpr

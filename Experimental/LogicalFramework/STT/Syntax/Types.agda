@@ -2,7 +2,7 @@
 -- Definition of STT types
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.STT.Syntax.Types where
+module Experimental.LogicalFramework.STT.Syntax.Types where
 
 infixr 6 _⇛_
 infixl 5 _⊠_

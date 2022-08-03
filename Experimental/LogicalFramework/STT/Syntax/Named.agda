@@ -2,7 +2,7 @@
 -- Instantiation of the general STT syntax with strings as names
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.STT.Syntax.Named where
+module Experimental.LogicalFramework.STT.Syntax.Named where
 
 open import Data.Empty
 open import Data.String as Str
@@ -14,8 +14,8 @@ open import Relation.Binary.PropositionalEquality
 --------------------------------------------------
 -- Re-exporting the definitions of types, contexts, terms and associated operations.
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Types public
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.General String public
+open import Experimental.LogicalFramework.STT.Syntax.Types public
+open import Experimental.LogicalFramework.STT.Syntax.General String public
 
 private variable
   Γ : CtxExpr

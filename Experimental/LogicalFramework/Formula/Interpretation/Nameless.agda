@@ -3,7 +3,7 @@
 --   trivial base category
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.Formula.Interpretation.Nameless where
+module Experimental.LogicalFramework.Formula.Interpretation.Nameless where
 
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
 import Model.Type.Function as M
@@ -13,9 +13,9 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 open import Experimental.ClosedTypes
 open import Experimental.ClosedTypes.Pi
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Nameless
-open import Experimental.LogicalFramework.NamedVariables.STT.Interpretation.Nameless
-open import Experimental.LogicalFramework.NamedVariables.Formula.Nameless
+open import Experimental.LogicalFramework.STT.Syntax.Nameless
+open import Experimental.LogicalFramework.STT.Interpretation.Nameless
+open import Experimental.LogicalFramework.Formula.Nameless
 
 private variable
   Γ Δ : CtxExpr

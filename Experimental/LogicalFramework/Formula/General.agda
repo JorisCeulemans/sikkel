@@ -6,13 +6,13 @@
 --   Formula.Named.
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.Formula.General (Name : Set) where
+module Experimental.LogicalFramework.Formula.General (Name : Set) where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Types
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.General Name
+open import Experimental.LogicalFramework.STT.Syntax.Types
+open import Experimental.LogicalFramework.STT.Syntax.General Name
 
 private variable
   Γ Δ : CtxExpr

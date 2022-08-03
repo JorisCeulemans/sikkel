@@ -3,9 +3,9 @@
 --   This essentially means that we have nameless formulas.
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.Formula.Nameless where
+module Experimental.LogicalFramework.Formula.Nameless where
 
 open import Data.Unit
 
 
-open import Experimental.LogicalFramework.NamedVariables.Formula.General ⊤ public
+open import Experimental.LogicalFramework.Formula.General ⊤ public

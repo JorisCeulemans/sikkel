@@ -5,12 +5,12 @@
 --   but rather use STT.Syntax.Named.
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.STT.Syntax.General (Name : Set) where
+module Experimental.LogicalFramework.STT.Syntax.General (Name : Set) where
 
 open import Data.Maybe
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Types
+open import Experimental.LogicalFramework.STT.Syntax.Types
 
 private variable
   T S : TyExpr

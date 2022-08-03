@@ -3,7 +3,7 @@
 --   presheaf model over the trivial base category
 --------------------------------------------------
 
-module Experimental.LogicalFramework.NamedVariables.STT.Interpretation.Nameless where
+module Experimental.LogicalFramework.STT.Interpretation.Nameless where
 
 open import Relation.Binary.PropositionalEquality
 
@@ -15,8 +15,8 @@ import Model.Type.Discrete as M
 
 open import Experimental.ClosedTypes as M
 
-open import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Nameless
-open import Experimental.LogicalFramework.NamedVariables.STT.AlphaEquivalence
+open import Experimental.LogicalFramework.STT.Syntax.Nameless
+open import Experimental.LogicalFramework.STT.AlphaEquivalence
 
 private variable
   Γ : CtxExpr
