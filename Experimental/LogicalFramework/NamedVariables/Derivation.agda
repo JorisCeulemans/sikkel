@@ -4,6 +4,7 @@ open import Data.Empty
 open import Data.Nat
 open import Data.String as Str
 import Relation.Binary.PropositionalEquality as Ag
+open Ag public using (refl)
 open import Relation.Nullary
 open import Relation.Nullary.Decidable.Core
 
@@ -22,12 +23,14 @@ import Experimental.ClosedTypes.Identity as M
 
 open import Experimental.LogicalFramework.NamedVariables.STT
 open import Experimental.LogicalFramework.NamedVariables.Formula
+open import Experimental.LogicalFramework.NamedVariables.Formula.Interpretation.Nameless using (⟦_⟧frm-nmls)
+open import Experimental.LogicalFramework.NamedVariables.STT.Interpretation.Nameless using (⟦_⟧tm-nmls)
 
 private variable
   Γ Δ : CtxExpr
   T S R U : TyExpr
   φ ψ : Formula Γ
-  x y z : String
+  x y : String
 
 
 --------------------------------------------------
@@ -79,8 +82,13 @@ lookup-assumption (skip-var a)    = (lookup-assumption a) [ π ]frm
 
 infix 1 _⊢_
 data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
+  -- Making sure that derivability respects alpha equivalence.
+  -- This is not ideal, we would like to bake this into assumption' below.
+  -- However see comment on withTmAlpha below for problems with that.
+  withAlpha : {{ φ ≈αᶠ ψ }} → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
+
   -- Structural rules for ≡ᶠ
-  refl : {t : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ t
+  refl : {t s : TmExpr (to-ctx Ξ) T} → {{ t ≈α s }} → Ξ ⊢ t ≡ᶠ s
   sym : {t1 t2 : TmExpr (to-ctx Ξ) T} → (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t1)
   trans : {t1 t2 t3 : TmExpr (to-ctx Ξ) T} →
           (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t3) →
@@ -92,7 +100,7 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
 
   -- Introduction and elimination for logical combinators ⊃, ∧ and ∀.
   assume[_]_ : (x : String) → (Ξ ∷ᶠ x ∈ φ ⊢ ψ) → (Ξ ⊢ φ ⊃ ψ)
-  assumption' : (x : String) {a : Assumption x Ξ} → Ξ ⊢ lookup-assumption a
+  assumption' : (x : String) {a : Assumption x Ξ} → (Ξ ⊢ lookup-assumption a)
   ∧-intro : (Ξ ⊢ φ) → (Ξ ⊢ ψ) → (Ξ ⊢ φ ∧ ψ)
   ∧-elimˡ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ φ)
   ∧-elimʳ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ ψ)
@@ -101,13 +109,15 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
 
   -- Specific computation rules for term formers (currently no eta rules).
   fun-β : {b : TmExpr (to-ctx Ξ ,, x ∈ T) S} {t : TmExpr (to-ctx Ξ) T} →
-          (Ξ ⊢ (lam[ x ∈ T ] b) ∙ t ≡ᶠ (b [ t / x ]tm))
+          (Ξ ⊢ (lam[ x ∈ T ] b) ∙ t ≡ᶠ b [ t / x ]tm)
   nat-elim-β-zero : {A : TyExpr} {a : TmExpr (to-ctx Ξ) A} {f : TmExpr (to-ctx Ξ) (A ⇛ A)} →
                     (Ξ ⊢ nat-elim a f ∙ zero ≡ᶠ a)
   nat-elim-β-suc : {A : TyExpr} {a : TmExpr (to-ctx Ξ) A} {f : TmExpr (to-ctx Ξ) (A ⇛ A)} {n : TmExpr (to-ctx Ξ) Nat'} →
                    (Ξ ⊢ nat-elim a f ∙ (suc ∙ n) ≡ᶠ f ∙ (nat-elim a f ∙ n))
-  if-β-true : {t f : TmExpr (to-ctx Ξ) T} → (Ξ ⊢ if true t f ≡ᶠ t)
-  if-β-false : {t f : TmExpr (to-ctx Ξ) T} → (Ξ ⊢ if false t f ≡ᶠ f)
+  if-β-true : {t f : TmExpr (to-ctx Ξ) T} →
+              (Ξ ⊢ if true t f ≡ᶠ t)
+  if-β-false : {t f : TmExpr (to-ctx Ξ) T} →
+               (Ξ ⊢ if false t f ≡ᶠ f)
   pair-β-fst : {t : TmExpr (to-ctx Ξ) T} {s : TmExpr (to-ctx Ξ) S} →
                (Ξ ⊢ fst (pair t s) ≡ᶠ t)
   pair-β-snd : {t : TmExpr (to-ctx Ξ) T} {s : TmExpr (to-ctx Ξ) S} →
@@ -122,12 +132,27 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
                   (Ξ ∷ᵛ x ∈ Nat' ∷ᶠ hyp ∈ φ ⊢ φ [ π ∷ (suc ∙ var' x {vzero} {Ag.refl}) / x ]frm) →
                   (Ξ ∷ᵛ x ∈ Nat' ⊢ φ)
 
-assumption : (x : String) → {a : True (assumption? x Ξ)} → (Ξ ⊢ lookup-assumption (toWitness a))
+assumption : (x : String) {a : True (assumption? x Ξ)} → (Ξ ⊢ lookup-assumption (toWitness a))
 assumption x {a} = assumption' x {toWitness a}
 
 
 --------------------------------------------------
 -- Some rules derivable from the basic ones
+
+-- Not all of the above inference rules respect α equivalence. Since
+-- refl does respect α equivalence, the following can be used for the
+-- other rules. This situation is not ideal: the user does not want to
+-- explicitly mention withAlpha. However, changing the types of the
+-- inference rules that do not respect α equivalence so that they look
+-- like the type of refl, does lead to the problem that Agda cannot
+-- infer the intermediate formulas in a chain of equalities (using
+-- trans) any more. We should investigate if reflection might provide
+-- a solution.
+withTmAlpha : {t s s' : TmExpr (to-ctx Ξ) T} →
+              (Ξ ⊢ t ≡ᶠ s) →
+              {{ s ≈α s' }} →
+              (Ξ ⊢ t ≡ᶠ s')
+withTmAlpha t=s = trans t=s refl
 
 TmConstructor₁ : (T S : TyExpr) → Set
 TmConstructor₁ T S = ∀ {Γ} → TmExpr Γ T → TmExpr Γ S
@@ -343,7 +368,8 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
     subst-eq-proof = M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ M.sξ)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))
 
 ⟦_⟧der : (Ξ ⊢ φ) → Tm ⟦ Ξ ⟧pctx (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
-⟦ refl ⟧der = M.refl' _ M.[ _ ]'
+⟦ withAlpha {Ξ = Ξ} {{ φ≈ψ }} d ⟧der = Ag.subst (λ x → Tm ⟦ Ξ ⟧pctx (⟦ x ⟧frm-nmls M.[ _ ])) φ≈ψ ⟦ d ⟧der
+⟦ refl {Ξ = Ξ} {{t≈s}} ⟧der = Ag.subst (λ x → Tm ⟦ Ξ ⟧pctx ((M.Id _ ⟦ x ⟧tm-nmls) M.[ _ ])) t≈s (M.refl' _ M.[ _ ]')
 ⟦ sym d ⟧der = M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)
 ⟦ trans d1 d2 ⟧der = M.ι[ M.Id-natural _ ] M.trans' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d1 ⟧der) (M.ι⁻¹[ M.Id-natural _ ] ⟦ d2 ⟧der)
 ⟦ subst {Ξ = Ξ} {x = x} φ {t1 = t1} {t2 = t2} e d ⟧der =
@@ -368,9 +394,7 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
                    (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) ⟦ t ⟧tm))
      ]
   (M.sdapp (M.ι⁻¹[ M.sPi-natural _ ] ⟦ d ⟧der) (⟦ t ⟧tm M.[ to-ctx-subst Ξ ]s))
-⟦ fun-β {Ξ = Ξ} {b = b} {t = t} ⟧der =
-  (M.≅ᵗᵐ-to-Id (M.≅ᵗᵐ-trans (M.sfun-β _ _) (tm-subst-sound b (id-subst _ ∷ t / _))))
-  M.[ _ ]'
+⟦ fun-β {b = b} {t = t} ⟧der = (M.≅ᵗᵐ-to-Id (M.≅ᵗᵐ-trans (M.sfun-β _ _) (tm-subst-sound b (id-subst _ ∷ t / _)))) M.[ _ ]'
 ⟦ nat-elim-β-zero ⟧der = (M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)) M.[ _ ]'
 ⟦ nat-elim-β-suc ⟧der = (M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]'
 ⟦ if-β-true ⟧der = (M.≅ᵗᵐ-to-Id (M.sif-β-true _ _)) M.[ _ ]'

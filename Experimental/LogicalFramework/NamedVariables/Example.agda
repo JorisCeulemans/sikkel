@@ -85,3 +85,20 @@ proof-plus-comm = ∀-intro (nat-induction "ind-hyp"
 
 ⟦plus-comm-proof⟧ : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _)) M.[ _ ])
 ⟦plus-comm-proof⟧ = ⟦ proof-plus-comm {Ξ = []} ⟧der
+
+-- Tests for α-equivalence
+α-test : [] ⊢ (lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] var "f" ∙ var "x"))
+                ≡ᶠ (lam[ "b" ∈ Bool' ] (lam[ "g" ∈ Bool' ⇛ Bool' ] var "g" ∙ var "b"))
+α-test = refl
+
+α-test2 : [] ⊢ ∀[ "b" ∈ Bool' ] ((lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] var "f" ∙ var "x")) ∙ var "b")
+                                       ≡ᶠ (lam[ "g" ∈ Bool' ⇛ Bool' ] var "g" ∙ var "b")
+α-test2 = ∀-intro (withTmAlpha fun-β)
+
+α-test3 : [] ⊢ (∀[ "n" ∈ Nat' ] var "n" ≡ᶠ var "n")
+                 ⊃ (∀[ "m" ∈ Nat' ] var "m" ≡ᶠ var "m")
+α-test3 = assume[ "reflexivity" ] withAlpha (assumption "reflexivity")
+
+α-test4 : [] ⊢ (∀[ "n" ∈ Nat' ] (lam[ "m" ∈ Nat' ] var "n") ≡ᶠ (lam[ "n" ∈ Nat' ] var "n"))
+                 ⊃ (∀[ "m" ∈ Nat' ] (lam[ "n" ∈ Nat' ] var "m") ≡ᶠ lam[ "x" ∈ Nat' ] var "x")
+α-test4 = assume[ "silly assumption" ] withAlpha (assumption "silly assumption")
