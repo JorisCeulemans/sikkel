@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- Interpretation of nameless STT types, contexts and terms in the
+--   presheaf model over the trivial base category
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.STT.Interpretation.Nameless where
 
 open import Relation.Binary.PropositionalEquality

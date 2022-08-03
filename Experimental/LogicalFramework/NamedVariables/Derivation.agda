@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Definition of proof judgment, inference rules and proof of their soundness
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.Derivation where
 
 open import Data.Empty
@@ -36,7 +40,6 @@ private variable
 --------------------------------------------------
 -- Definition of proof judgments and inference rules
 
-
 -- A proof context can, apart from STT variables, also consist of formulas (assumptions).
 data ProofCtx : Set
 to-ctx : ProofCtx → CtxExpr
@@ -55,6 +58,10 @@ private variable
   Ξ : ProofCtx
 
 
+-- In the same way as variables in STT, assumptions are internally
+--  referred to using De Bruijn indices, but we keep track of their
+--  names. The (proof-relevant) predicate Assumption x Ξ expresses
+--  that an assumption with name x is present in proof context Ξ.
 data Assumption : String → ProofCtx → Set where
   azero : Assumption x (Ξ ∷ᶠ x ∈ φ)
   asuc  : Assumption x Ξ → Assumption x (Ξ ∷ᶠ y ∈ ψ)
@@ -82,9 +89,9 @@ lookup-assumption (skip-var a)    = (lookup-assumption a) [ π ]frm
 
 infix 1 _⊢_
 data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
-  -- Making sure that derivability respects alpha equivalence.
-  -- This is not ideal, we would like to bake this into assumption' below.
-  -- However see comment on withTmAlpha below for problems with that.
+  -- Making sure that derivability respects alpha equivalence. This is
+  --  not ideal, we would like to bake this into assumption' below.
+  --  However see comment on withTmAlpha below for problems with that.
   withAlpha : {{ φ ≈αᶠ ψ }} → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
 
   -- Structural rules for ≡ᶠ
@@ -139,15 +146,15 @@ assumption x {a} = assumption' x {toWitness a}
 --------------------------------------------------
 -- Some rules derivable from the basic ones
 
--- Not all of the above inference rules respect α equivalence. Since
--- refl does respect α equivalence, the following can be used for the
--- other rules. This situation is not ideal: the user does not want to
--- explicitly mention withAlpha. However, changing the types of the
--- inference rules that do not respect α equivalence so that they look
--- like the type of refl, does lead to the problem that Agda cannot
--- infer the intermediate formulas in a chain of equalities (using
--- trans) any more. We should investigate if reflection might provide
--- a solution.
+-- Not all of the above inference rules respect α-equivalence. Since
+--  refl does respect α-equivalence, the following can be used for the
+--  other rules. This situation is not ideal: the user does not want
+--  to explicitly mention withAlpha. However, changing the types of
+--  the inference rules that do not respect α equivalence so that they
+--  look like the type of refl, does lead to the problem that Agda
+--  cannot infer the intermediate formulas in a chain of equalities
+--  (using trans) any more. We should investigate if reflection might
+--  provide a solution.
 withTmAlpha : {t s s' : TmExpr (to-ctx Ξ) T} →
               (Ξ ⊢ t ≡ᶠ s) →
               {{ s ≈α s' }} →
@@ -158,10 +165,10 @@ TmConstructor₁ : (T S : TyExpr) → Set
 TmConstructor₁ T S = ∀ {Γ} → TmExpr Γ T → TmExpr Γ S
 
 -- The naturality condition could be more strict (requiring the same
--- condition for all substitutions instead of restricting to those of
--- the form r / x), but this condition suffices to show that the
--- corresponding constructor is congruent and this condition will be
--- provable by reflexivity for most term constructors.
+--  condition for all substitutions instead of restricting to those of
+--  the form r / x), but this condition suffices to show that the
+--  corresponding constructor is congruent and this condition will be
+--  provable by reflexivity for most term constructors.
 TmConstructorNatural₁ : TmConstructor₁ T S → Set
 TmConstructorNatural₁ {T} op = ∀ {Γ R x} → (r : TmExpr Γ R) (t : TmExpr (Γ ,, x ∈ R) T) → (op t) [ r / x ]tm Ag.≡ op (t [ r / x ]tm)
 

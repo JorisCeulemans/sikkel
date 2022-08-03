@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- Interpretation of formulas in the presheaf model over the trivial
+--   base category
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.Formula.Interpretation where
 
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
@@ -17,8 +22,9 @@ private variable
   Γ Δ : CtxExpr
 
 
--- A formula can be interpreted as a (dependent) type in the presheaf
---   model over base category ★.
+-- Just as with the STT interpretation, this interpretation goes via unnamed formulas.
+--   This makes it nearly trivial to prove that α-equivalent formulas have the same
+--   interpretation.
 ⟦_⟧frm : Formula Γ → Ty ⟦ Γ ⟧ctx
 ⟦ φ ⟧frm = ⟦ erase-names-frm φ ⟧frm-nmls
 

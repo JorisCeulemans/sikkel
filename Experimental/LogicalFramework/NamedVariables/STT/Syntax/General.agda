@@ -1,5 +1,8 @@
 --------------------------------------------------
--- A Simple Type Theory for which we will provide a logic
+-- Definition of STT contexts, terms and their associated operations
+--   The general syntax is parametrised by a type of names to represent
+--   variables. It is not recommended to directly import this module,
+--   but rather use STT.Syntax.Named.
 --------------------------------------------------
 
 module Experimental.LogicalFramework.NamedVariables.STT.Syntax.General (Name : Set) where
@@ -15,19 +18,23 @@ private variable
 
 
 --------------------------------------------------
--- Definition of syntactic types, contexts and terms
+-- Definition of STT contexts and terms
 
 infixl 4 _,,_∈_
 data CtxExpr : Set where
   ◇ : CtxExpr
   _,,_∈_ : (Γ : CtxExpr) (x : Name) (T : TyExpr) → CtxExpr
+    -- ^ All variables have a name of type Name.
 
 private variable
   Γ Δ Θ : CtxExpr
 
 
--- Variables are represented as de Bruijn indices, but we keep track
--- of their names.
+-- The predicate Var x Γ expresses that a variable named x is present
+-- in context Γ. Note that this is a proof-relevant predicate and
+-- names in Γ may not be unique (but this is of course discouraged).
+-- As a result, STT terms internally represent variables using De
+-- Bruijn indices, but we do keep track of the names of the variables.
 data Var : Name → CtxExpr → Set where
   vzero : Var x (Γ ,, x ∈ T)
   vsuc : Var x Γ → Var x (Γ ,, y ∈ S)
@@ -39,6 +46,9 @@ lookup-var (vsuc v) = lookup-var v
 infixl 50 _∙_
 data TmExpr (Γ : CtxExpr) : TyExpr → Set where
   var' : (x : Name) {v : Var x Γ} → {lookup-var v ≡ T} → TmExpr Γ T
+  -- ^ When writing programs, one should not directly use var' but rather combine
+  --   it with a decision procedure for Var, which will resolve the name.
+  --   Using the type equality, lets us avoid transporting terms in the operations below.
   lam[_∈_]_ : (x : Name) (T : TyExpr) → TmExpr (Γ ,, x ∈ T) S → TmExpr Γ (T ⇛ S)
   _∙_ : TmExpr Γ (T ⇛ S) → TmExpr Γ T → TmExpr Γ S
   zero : TmExpr Γ Nat'
@@ -52,8 +62,7 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
 
 
 --------------------------------------------------
--- Definition of some operations on contexts and terms,
---   most notably weakening of a term.
+-- Weakening of terms
 
 _++ctx_ : CtxExpr → CtxExpr → CtxExpr
 Γ ++ctx ◇ = Γ
@@ -99,7 +108,7 @@ multi-weaken-tm (Δ ,, x ∈ T) t = weaken-tm (multi-weaken-tm Δ t)
 -- the same substitution. This is not a problem since we will never
 -- compare substitutions (only apply them to terms and compute
 -- immediately). Having a constructor for e.g. the identity seems more
--- efficient than implementing it (claim needs justification).
+-- efficient than implementing it (but this claim needs justification).
 data SubstExpr : CtxExpr → CtxExpr → Set where
   [] : SubstExpr Γ ◇
   _∷_/_ : SubstExpr Δ Γ → TmExpr Δ T → (x : Name) → SubstExpr Δ (Γ ,, x ∈ T)
@@ -118,6 +127,11 @@ _⊹⟨_⟩ : SubstExpr Δ Γ → (x : Name) → SubstExpr (Δ ,, x ∈ T) (Γ ,
 _/_ : TmExpr Γ T → (x : Name) → SubstExpr Γ (Γ ,, x ∈ T)
 t / x = id-subst _ ∷ t / x
 
+
+--------------------------------------------------
+-- Applying a substitution to a term
+--   Note that the operation _[_]tm is automatically capture-avoiding
+--   since it only makes use of the De Bruijn indices, not of names.
 
 -- We will use the following view pattern in the implementation of
 -- substitution for terms, in order to treat some substitutions
@@ -156,6 +170,10 @@ false [ σ ]tm            | nothing = false
 (fst p) [ σ ]tm          | nothing = fst (p [ σ ]tm)
 (snd p) [ σ ]tm          | nothing = snd (p [ σ ]tm)
 
+
+--------------------------------------------------
+-- Proving that substituting the most recently added variable in a
+--   weakened term has no effect.
 
 multi⊹ : (Θ : CtxExpr) → SubstExpr Γ Δ → SubstExpr (Γ ++ctx Θ) (Δ ++ctx Θ)
 multi⊹ ◇            σ = σ

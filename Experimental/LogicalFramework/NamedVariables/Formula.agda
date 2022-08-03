@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Definition of formulas encoding logical propositions
+-- Module that re-exports all definitions involving predicates on STT programs
 --------------------------------------------------
 
 module Experimental.LogicalFramework.NamedVariables.Formula where

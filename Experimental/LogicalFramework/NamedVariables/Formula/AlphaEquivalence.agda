@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Definition of α-equivalence of formulas via a translation to nameless formulas
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.Formula.AlphaEquivalence where
 
 open import Relation.Binary.PropositionalEquality

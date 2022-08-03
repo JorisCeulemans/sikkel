@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- Module that re-exports all definitions needed for working with the
+--   type theory STT
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.STT where
 
 

@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- Interpretation of nameless formulas in the presheaf model over the
+--   trivial base category
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.Formula.Interpretation.Nameless where
 
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
@@ -16,8 +21,6 @@ private variable
   Γ Δ : CtxExpr
 
 
--- A formula can be interpreted as a (dependent) type in the presheaf
---   model over base category ★.
 ⟦_⟧frm-nmls : Formula Γ → Ty ⟦ Γ ⟧ctx-nmls
 ⟦ t1 ≡ᶠ t2 ⟧frm-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
 ⟦ φ ⊃ ψ ⟧frm-nmls = ⟦ φ ⟧frm-nmls M.⇛ ⟦ ψ ⟧frm-nmls

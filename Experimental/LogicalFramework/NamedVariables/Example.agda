@@ -1,6 +1,5 @@
 --------------------------------------------------
--- Examples in which we prove some properties of
---  addition of natural numbers
+-- Examples of STT programs and proofs of their properties
 --------------------------------------------------
 
 module Experimental.LogicalFramework.NamedVariables.Example where
@@ -11,6 +10,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Experimental.LogicalFramework.NamedVariables.STT
 open import Experimental.LogicalFramework.NamedVariables.Formula
 open import Experimental.LogicalFramework.NamedVariables.Derivation
+open import Experimental.LogicalFramework.NamedVariables.BetaReduction
 open import Extraction
 
 open import Model.BaseCategory
@@ -25,6 +25,9 @@ private variable
   Γ : CtxExpr
   T : TyExpr
 
+
+--------------------------------------------------
+-- Proving some properties of natural number addition
 
 id : TmExpr Γ (T ⇛ T)
 id = lam[ "x" ∈ _ ] var "x"
@@ -53,8 +56,14 @@ proof-plus-zeroʳ =
             (trans (fun-cong nat-elim-β-zero zero) fun-β)
             (trans (fun-cong (trans nat-elim-β-suc fun-β) zero) (trans fun-β (cong suc (assumption "ind-hyp")))))
 
-sem-proof : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _) M.[ _ ])
-sem-proof = ⟦ proof-plus-zeroʳ {Ξ = []} ⟧der
+proof-plus-zeroʳ-with-β : ∀ {Ξ} → Ξ ⊢ plus-zeroʳ
+proof-plus-zeroʳ-with-β =
+  ∀-intro (nat-induction "ind-hyp"
+    (reduce 2)
+    (with-reduce-left 3 (cong suc (assumption "ind-hyp"))))
+
+⟦proof-plus-zeroʳ⟧ : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _) M.[ _ ])
+⟦proof-plus-zeroʳ⟧ = ⟦ proof-plus-zeroʳ {Ξ = []} ⟧der
 
 -- ∀ m n → plus m (suc n) = suc (plus m n)
 plus-sucʳ : Formula Γ
@@ -67,6 +76,11 @@ proof-plus-sucʳ = ∀-intro (nat-induction "ind-hyp"
   (∀-intro (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) (trans fun-β (
     cong suc (trans (∀-elim (assumption "ind-hyp") (var "n"))
                     (sym (trans (fun-cong nat-elim-β-suc _) (trans (fun-cong fun-β _) fun-β))))))))))
+
+proof-plus-sucʳ-with-β : ∀ {Ξ} → Ξ ⊢ plus-sucʳ
+proof-plus-sucʳ-with-β = ∀-intro (nat-induction "ind-hyp"
+  (∀-intro (with-reduce 2 refl))
+  (∀-intro (with-reduce 3 (cong suc (∀-elim (assumption "ind-hyp") (var "n"))))))
 
 ⟦proof-plus-sucʳ⟧ : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _)) M.[ _ ])
 ⟦proof-plus-sucʳ⟧ = ⟦ proof-plus-sucʳ {Ξ = []} ⟧der
@@ -83,10 +97,20 @@ proof-plus-comm = ∀-intro (nat-induction "ind-hyp"
        (cong suc (∀-elim (assumption "ind-hyp") (var "n")))
        (sym (∀-elim (∀-elim proof-plus-sucʳ (var "n")) (var "m")))))))))
 
+proof-plus-comm-with-β : ∀ {Ξ} → Ξ ⊢ plus-comm
+proof-plus-comm-with-β = ∀-intro (nat-induction "ind-hyp"
+  (∀-intro (with-reduce-left 2 (sym (∀-elim proof-plus-zeroʳ (var "n")))))
+  (∀-intro (with-reduce-left 3 (trans
+    (cong suc (∀-elim (assumption "ind-hyp") (var "n")))
+    (sym (∀-elim (∀-elim proof-plus-sucʳ (var "n")) (var "m")))))))
+
 ⟦plus-comm-proof⟧ : M.Tm (M.◇ {★}) (M.Pi (M.Nat' M.[ _ ]) (M.Pi (M.Nat' M.[ _ ]) (M.Id _ _)) M.[ _ ])
 ⟦plus-comm-proof⟧ = ⟦ proof-plus-comm {Ξ = []} ⟧der
 
+
+--------------------------------------------------
 -- Tests for α-equivalence
+
 α-test : [] ⊢ (lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] var "f" ∙ var "x"))
                 ≡ᶠ (lam[ "b" ∈ Bool' ] (lam[ "g" ∈ Bool' ⇛ Bool' ] var "g" ∙ var "b"))
 α-test = refl

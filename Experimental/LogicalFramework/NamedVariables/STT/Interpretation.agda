@@ -1,3 +1,8 @@
+--------------------------------------------------
+-- Interpretation of STT contexts and terms in the presheaf
+--   model over the trivial base category
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.STT.Interpretation where
 
 open import Data.Maybe
@@ -22,13 +27,27 @@ private variable
   T S : TyExpr
 
 
+--------------------------------------------------
+-- Re-export interpretation of types
+
 open DBInt public using (⟦_⟧ty)
+
+
+--------------------------------------------------
+-- Definition of the interpretation of contexts and terms
+--   Note that these are defined in terms of the interpretation for
+--   nameless syntax. This will make it almost trivial to prove that
+--   α-equivalent terms have the same interpretation.
 
 ⟦_⟧ctx : CtxExpr → Ctx ★
 ⟦ Γ ⟧ctx = ⟦ erase-names-ctx Γ ⟧ctx-nmls
 
 ⟦_⟧tm : TmExpr Γ T → SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 ⟦ t ⟧tm = ⟦ erase-names-tm t ⟧tm-nmls
+
+
+--------------------------------------------------
+-- Proof that weakening a term semantically corresponds to applying a π substitution
 
 mid-weaken-sem-subst : (x : String) {Γ : CtxExpr} (S : TyExpr) (Δ : CtxExpr) → ⟦ (Γ ,, x ∈ S) ++ctx Δ ⟧ctx M.⇒ ⟦ Γ ++ctx Δ ⟧ctx
 mid-weaken-sem-subst _ S ◇ = M.π
@@ -64,7 +83,11 @@ mid-weaken-tm-sound Δ (snd p) = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (
 weaken-tm-sound : ∀ {x} {S : TyExpr} (t : TmExpr Γ T) → (⟦ t ⟧tm [ M.π ]s) M.≅ᵗᵐ ⟦ weaken-tm {x = x} {S = S} t ⟧tm
 weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 
+
+--------------------------------------------------
 -- Interpretation of substitutions as presheaf morphisms
+--   and soundness proof of term substitution
+
 ⟦_⟧subst : SubstExpr Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ [] ⟧subst = M.!◇ _
 ⟦ _∷_/_ {_} {T} σ t _ ⟧subst = ⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm
@@ -115,7 +138,10 @@ tm-subst-sound (pair t s) σ             | nothing =
 tm-subst-sound (fst p) σ                | nothing = M.≅ᵗᵐ-trans (sfst-natural _) (sfst-cong (tm-subst-sound p σ))
 tm-subst-sound (snd p) σ                | nothing = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (tm-subst-sound p σ))
 
--- The next lemma is needed multiple times in the soundness proof.
+
+--------------------------------------------------
+-- Proof of a lemma needed in the soundness proof of the logical framework
+
 subst-lemma : (Δ : CtxExpr) {Γ : M.Ctx ★} {T : ClosedTy ★}
               (σ : Γ M.⇒ ⟦ Δ ⟧ctx) (t : SimpleTm ⟦ Δ ⟧ctx T) →
               (⟦ id-subst Δ ⟧subst ,ₛ t) M.⊚ σ M.≅ˢ (σ s⊹) M.⊚ (M.id-subst Γ ,ₛ (t [ σ ]s))

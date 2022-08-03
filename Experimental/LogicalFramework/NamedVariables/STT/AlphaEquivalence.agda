@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Definition of α-equivalence of STT terms via a translation to nameless terms
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.STT.AlphaEquivalence where
 
 open import Data.String
@@ -8,8 +12,8 @@ import Experimental.LogicalFramework.NamedVariables.STT.Syntax.Nameless as NMLS
 
 private variable
   Γ : CtxExpr
-  T S : TyExpr
-  x y : String
+  T : TyExpr
+  x : String
 
 
 erase-names-ctx : CtxExpr → NMLS.CtxExpr
@@ -27,7 +31,7 @@ erase-names-var-ty (vsuc v) = erase-names-var-ty v
 erase-names-tm : TmExpr Γ T → NMLS.TmExpr (erase-names-ctx Γ) T
 erase-names-tm (var' x {v} {e}) = NMLS.var' _ {erase-names-var v} {trans (erase-names-var-ty v) e}
 erase-names-tm (lam[ x ∈ T ] t) = NMLS.lam[ _ ∈ T ] erase-names-tm t
-erase-names-tm (f ∙ t) = erase-names-tm f NMLS.∙ erase-names-tm t
+erase-names-tm (f ∙ t) = (erase-names-tm f) NMLS.∙ (erase-names-tm t)
 erase-names-tm zero = NMLS.zero
 erase-names-tm suc = NMLS.suc
 erase-names-tm (nat-elim a f) = NMLS.nat-elim (erase-names-tm a) (erase-names-tm f)

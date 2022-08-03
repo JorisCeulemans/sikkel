@@ -1,5 +1,10 @@
+--------------------------------------------------
+-- Implementation of some proof helpers that semi-automate β-reduction
+--------------------------------------------------
+
 module Experimental.LogicalFramework.NamedVariables.BetaReduction where
 
+open import Data.Maybe
 open import Data.Nat
 open import Data.String
 open import Experimental.LogicalFramework.NamedVariables.STT
@@ -12,10 +17,12 @@ private variable
   x : String
 
 
+--------------------------------------------------
+-- Definition of a reduction function for STT (based on fuel)
+
 data IsLam : TmExpr Γ T → Set where
   lam : (x : String) (b : TmExpr (Γ ,, x ∈ T) S) → IsLam (lam[ x ∈ T ] b)
 
-open import Data.Maybe
 is-lam : (t : TmExpr Γ T) → Maybe (IsLam t)
 is-lam (lam[ x ∈ T ] b) = just (lam x b)
 is-lam _ = nothing
@@ -52,6 +59,10 @@ is-pair : (t : TmExpr Γ T) → Maybe (IsPair t)
 is-pair (pair t s) = just (pair t s)
 is-pair _ = nothing
 
+-- The behaviour of step with term constructors like if or function
+-- application, is to make a step in all subterms (given that no
+-- special rules apply). We might make this customisable if that were
+-- useful in some proofs.
 step : TmExpr Γ T → TmExpr Γ T
 step (var' x {v} {e}) = var' x {v} {e}
 step (lam[ x ∈ T ] b) = lam[ x ∈ T ] b
@@ -82,6 +93,10 @@ step (snd p          ) | nothing = snd (step p)
 steps : ℕ → TmExpr Γ T → TmExpr Γ T
 steps zero    t = t
 steps (suc n) t = steps n (step t)
+
+
+--------------------------------------------------
+-- Proof that the step function is sound w.r.t. the proof system
 
 step-sound : {Ξ : ProofCtx} (t : TmExpr (to-ctx Ξ) T) → Ξ ⊢ t ≡ᶠ step t
 step-sound (var' x) = refl
@@ -114,7 +129,12 @@ steps-sound : (n : ℕ) {Ξ : ProofCtx} (t : TmExpr (to-ctx Ξ) T) → Ξ ⊢ t 
 steps-sound zero    t = refl
 steps-sound (suc n) t = trans (step-sound t) (steps-sound n _)
 
+
+--------------------------------------------------
 -- Some proof schemes based on reduction
+--   Note that for termination reasons, you must provide the maximal
+--   number of reduction steps.
+
 reduce : (n : ℕ) {Ξ : ProofCtx} {t : TmExpr (to-ctx Ξ) T} → Ξ ⊢ t ≡ᶠ steps n t
 reduce n = steps-sound n _
 
@@ -126,24 +146,3 @@ with-reduce-right n d = trans d (sym (steps-sound n _))
 
 with-reduce : (n : ℕ) {Ξ : ProofCtx} {t s : TmExpr (to-ctx Ξ) T} → Ξ ⊢ steps n t ≡ᶠ steps n s → Ξ ⊢ t ≡ᶠ s
 with-reduce n d = with-reduce-left n (with-reduce-right n d)
-
--- Test proofs
-open import Experimental.LogicalFramework.NamedVariables.Example using (plus; plus-zeroʳ; plus-sucʳ; plus-comm)
-
-proof-plus-zeroʳ : ∀ {Ξ} → Ξ ⊢ plus-zeroʳ
-proof-plus-zeroʳ =
-  ∀-intro (nat-induction "ind-hyp"
-    (reduce 2)
-    (with-reduce-left 3 (cong suc (assumption "ind-hyp"))))
-
-proof-plus-sucʳ : ∀ {Ξ} → Ξ ⊢ plus-sucʳ
-proof-plus-sucʳ = ∀-intro (nat-induction "ind-hyp"
-  (∀-intro (with-reduce 2 refl))
-  (∀-intro (with-reduce 3 (cong suc (∀-elim (assumption "ind-hyp") (var "n"))))))
-
-proof-plus-comm : ∀ {Ξ} → Ξ ⊢ plus-comm
-proof-plus-comm = ∀-intro (nat-induction "ind-hyp"
-  (∀-intro (with-reduce-left 2 (sym (∀-elim proof-plus-zeroʳ (var "n")))))
-  (∀-intro (with-reduce-left 3 (trans
-    (cong suc (∀-elim (assumption "ind-hyp") (var "n")))
-    (sym (∀-elim (∀-elim proof-plus-sucʳ (var "n")) (var "m")))))))
