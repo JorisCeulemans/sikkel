@@ -5,6 +5,7 @@
 module Experimental.LogicalFramework.STT.Syntax.Named where
 
 open import Data.Empty
+open import Data.Product
 open import Data.String as Str
 open import Relation.Nullary
 open import Relation.Nullary.Decidable.Core
@@ -26,17 +27,17 @@ private variable
 --------------------------------------------------
 -- Constructing a variable term by only mentioning the variable name
 --   (i.e. resolving the De Bruijn index automatically).
---   This works via a decision procedure for Var x Γ.
+--   This works via a decision procedure for Var x Γ T.
 
-vpred : ¬ (x ≡ y) → Var x (Γ ,, y ∈ S) → Var x Γ
+vpred : ¬ (x ≡ y) → Var x (Γ ,, y ∈ S) T → Var x Γ T
 vpred ¬x=y vzero    = ⊥-elim (¬x=y refl)
 vpred ¬x=y (vsuc v) = v
 
-var? : (x : String) (Γ : CtxExpr) → Dec (Var x Γ)
+var? : (x : String) (Γ : CtxExpr) → Dec (Σ[ T ∈ TyExpr ] Var x Γ T)
 var? x ◇ = no (λ ())
 var? x (Γ ,, y ∈ T) with x Str.≟ y
-var? x (Γ ,, .x ∈ T) | yes refl = yes vzero
-var? x (Γ ,, y ∈ T)  | no ¬x=y = map′ vsuc (vpred ¬x=y) (var? x Γ)
+... | yes refl = yes (T , vzero)
+... | no ¬x=y = map′ (map₂ vsuc) (map₂ (vpred ¬x=y)) (var? x Γ)
 
-var : (x : String) → {v : True (var? x Γ)} → TmExpr Γ (lookup-var (toWitness v))
-var x {v} = var' x {toWitness v} {refl}
+var : (x : String) → {v : True (var? x Γ)} → TmExpr Γ (proj₁ (toWitness v))
+var x {v} = var' x {proj₂ (toWitness v)}

@@ -65,7 +65,7 @@ is-pair _ = nothing
 -- special rules apply). We might make this customisable if that were
 -- useful in some proofs.
 step : TmExpr Γ T → TmExpr Γ T
-step (var' x {v} {e}) = var' x {v} {e}
+step (var' x {v}) = var' x {v}
 step (lam[ x ∈ T ] b) = lam[ x ∈ T ] b
 step (f ∙ t) with is-lam f
 step (.(lam[ x ∈ _ ] b) ∙ t)          | just (lam x b) = b [ t / x ]tm

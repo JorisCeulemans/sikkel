@@ -20,16 +20,12 @@ erase-names-ctx : CtxExpr → NMLS.CtxExpr
 erase-names-ctx ◇ = NMLS.◇
 erase-names-ctx (Γ ,, x ∈ T) = erase-names-ctx Γ NMLS.,, _ ∈ T
 
-erase-names-var : Var x Γ → NMLS.Var _ (erase-names-ctx Γ)
+erase-names-var : Var x Γ T → NMLS.Var _ (erase-names-ctx Γ) T
 erase-names-var vzero = NMLS.vzero
 erase-names-var (vsuc v) = NMLS.vsuc (erase-names-var v)
 
-erase-names-var-ty : (v : Var x Γ) → NMLS.lookup-var (erase-names-var v) ≡ lookup-var v
-erase-names-var-ty vzero = refl
-erase-names-var-ty (vsuc v) = erase-names-var-ty v
-
 erase-names-tm : TmExpr Γ T → NMLS.TmExpr (erase-names-ctx Γ) T
-erase-names-tm (var' x {v} {e}) = NMLS.var' _ {erase-names-var v} {trans (erase-names-var-ty v) e}
+erase-names-tm (var' x {v}) = NMLS.var' _ {erase-names-var v}
 erase-names-tm (lam[ x ∈ T ] t) = NMLS.lam[ _ ∈ T ] erase-names-tm t
 erase-names-tm (f ∙ t) = (erase-names-tm f) NMLS.∙ (erase-names-tm t)
 erase-names-tm zero = NMLS.zero

@@ -53,8 +53,8 @@ mid-weaken-sem-subst : (x : String) {Γ : CtxExpr} (S : TyExpr) (Δ : CtxExpr) �
 mid-weaken-sem-subst _ S ◇ = M.π
 mid-weaken-sem-subst x S (Δ ,, _ ∈ T) = mid-weaken-sem-subst x S Δ s⊹
 
-mid-weaken-var-sound : ∀ {x y} {Γ : CtxExpr} (Δ : CtxExpr) (v : Var x (Γ ++ctx Δ)) →
-                       (⟦ var' x {v} {refl} ⟧tm [ mid-weaken-sem-subst y S Δ ]s) M.≅ᵗᵐ ⟦ var' x {mid-weaken-var Δ v} {mid-weaken-var-ty Δ v} ⟧tm
+mid-weaken-var-sound : ∀ {x y} {Γ : CtxExpr} (Δ : CtxExpr) (v : Var x (Γ ++ctx Δ) T) →
+                       (⟦ var' x {v} ⟧tm [ mid-weaken-sem-subst y S Δ ]s) M.≅ᵗᵐ ⟦ var' x {mid-weaken-var Δ v} ⟧tm
 mid-weaken-var-sound ◇ vzero    = M.≅ᵗᵐ-refl
 mid-weaken-var-sound ◇ (vsuc v) = M.≅ᵗᵐ-refl
 mid-weaken-var-sound (Δ ,, _ ∈ T) vzero    = ,ₛ-β2 _ sξ
@@ -66,7 +66,7 @@ mid-weaken-var-sound (Δ ,, _ ∈ T) (vsuc v) =
 
 mid-weaken-tm-sound : ∀ {x} {S : TyExpr} (Δ : CtxExpr) (t : TmExpr (Γ ++ctx Δ) T) →
                       (⟦ t ⟧tm [ mid-weaken-sem-subst x S Δ ]s) M.≅ᵗᵐ ⟦ mid-weaken-tm {S = S} Δ t ⟧tm
-mid-weaken-tm-sound Δ (var' x {v} {refl}) = mid-weaken-var-sound Δ v
+mid-weaken-tm-sound Δ (var' x {v}) = mid-weaken-var-sound Δ v
 mid-weaken-tm-sound Δ (lam[ _ ∈ _ ] t) = M.≅ᵗᵐ-trans (sλ-natural _) (sλ-cong (mid-weaken-tm-sound (Δ ,, _ ∈ _) t))
 mid-weaken-tm-sound Δ (f ∙ t) = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (mid-weaken-tm-sound Δ f) (mid-weaken-tm-sound Δ t))
 mid-weaken-tm-sound Δ zero = sdiscr-natural _
@@ -98,7 +98,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⊹-sound : ∀ {x} (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst
 ⊹-sound σ = M.≅ˢ-refl
 
-subst-var-sound : ∀ {x} (v : Var x Γ) (σ : SubstExpr Δ Γ) → (⟦ var' x {v} {refl} ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ subst-var v σ refl ⟧tm
+subst-var-sound : ∀ {x} (v : Var x Γ T) (σ : SubstExpr Δ Γ) → (⟦ var' x {v} ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ subst-var v σ ⟧tm
 subst-var-sound vzero    (σ ∷ t / x) = ,ₛ-β2 ⟦ σ ⟧subst ⟦ t ⟧tm
 subst-var-sound (vsuc v) (σ ∷ t / x) =
   M.≅ᵗᵐ-trans (stm-subst-comp _ M.π (⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm))
@@ -109,7 +109,7 @@ subst-var-sound v (σ ⊚πs⟨ ◇ ⟩)      = subst-var-sound v σ
 subst-var-sound v (σ ⊚πs⟨ Δ ,, _ ∈ T ⟩) =
   M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (stm-subst-comp _ _ _))
               (M.≅ᵗᵐ-trans (stm-subst-cong-tm (subst-var-sound v (σ ⊚πs⟨ Δ ⟩)) _)
-                           (weaken-tm-sound (subst-var v (σ ⊚πs⟨ Δ ⟩) refl)))
+                           (weaken-tm-sound (subst-var v (σ ⊚πs⟨ Δ ⟩))))
 
 tm-subst-sound : (t : TmExpr Γ T) (σ : SubstExpr Δ Γ) → (⟦ t ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ t [ σ ]tm ⟧tm
 tm-subst-sound t σ with is-special-subst? σ
@@ -119,7 +119,7 @@ tm-subst-sound t .(σ ⊚πs⟨ Θ ,, _ ∈ T ⟩) | just (σ ⊚πs⟨ Θ ,, _ 
   M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (M.stm-subst-comp _ _ _))
                (M.≅ᵗᵐ-trans (stm-subst-cong-tm (tm-subst-sound t (σ ⊚πs⟨ Θ ⟩)) _)
                             (weaken-tm-sound (t [ σ ⊚πs⟨ Θ ⟩ ]tm)))
-tm-subst-sound (var' x {v} {refl}) σ    | nothing = subst-var-sound v σ
+tm-subst-sound (var' x {v}) σ           | nothing = subst-var-sound v σ
 tm-subst-sound (lam[ x ∈ _ ] t) σ       | nothing =
   M.≅ᵗᵐ-trans (sλ-natural {b = ⟦ t ⟧tm} ⟦ σ ⟧subst)
               (sλ-cong (tm-subst-sound t (σ ⊹⟨ x ⟩)))

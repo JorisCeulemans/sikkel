@@ -33,12 +33,12 @@ private variable
 ⟦ ◇ ⟧ctx-nmls = M.◇
 ⟦ Γ ,, _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls ,,ₛ ⟦ T ⟧ty
 
-⟦_,_⟧var-nmls : (v : Var _ Γ) → lookup-var v ≡ T → SimpleTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
-⟦ vzero  , refl ⟧var-nmls = sξ
-⟦ vsuc v , e    ⟧var-nmls = ⟦ v , e ⟧var-nmls [ M.π ]s
+⟦_⟧var-nmls : (v : Var _ Γ T) → SimpleTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
+⟦ vzero ⟧var-nmls = sξ
+⟦ vsuc v ⟧var-nmls = ⟦ v ⟧var-nmls [ M.π ]s
 
 ⟦_⟧tm-nmls : TmExpr Γ T → SimpleTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
-⟦ var' _ {v} {e} ⟧tm-nmls = ⟦ v , e ⟧var-nmls
+⟦ var' _ {v} ⟧tm-nmls = ⟦ v ⟧var-nmls
 ⟦ lam[ _ ∈ _ ] t ⟧tm-nmls = sλ[ _ ] ⟦ t ⟧tm-nmls
 ⟦ f ∙ t ⟧tm-nmls = ⟦ f ⟧tm-nmls ∙ₛ ⟦ t ⟧tm-nmls
 ⟦ zero ⟧tm-nmls = szero

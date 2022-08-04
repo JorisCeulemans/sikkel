@@ -139,7 +139,7 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
                    (Ξ ∷ᵛ x ∈ Bool' ⊢ φ)
   nat-induction : (hyp : String) →
                   (Ξ ⊢ φ [ zero / x ]frm) →
-                  (Ξ ∷ᵛ x ∈ Nat' ∷ᶠ hyp ∈ φ ⊢ φ [ π ∷ (suc ∙ var' x {vzero} {Ag.refl}) / x ]frm) →
+                  (Ξ ∷ᵛ x ∈ Nat' ∷ᶠ hyp ∈ φ ⊢ φ [ π ∷ (suc ∙ var' x {vzero}) / x ]frm) →
                   (Ξ ∷ᵛ x ∈ Nat' ⊢ φ)
 
 assumption : (x : String) {a : True (assumption? x Ξ)} → (Ξ ⊢ lookup-assumption (toWitness a))
