@@ -164,191 +164,153 @@ withTmAlpha : {t s s' : TmExpr (to-ctx Ξ) T} →
               (Ξ ⊢ t ≡ᶠ s')
 withTmAlpha t=s = trans t=s refl
 
-TmConstructor₁ : (T S : TyExpr) → Set
-TmConstructor₁ T S = ∀ {Γ} → TmExpr Γ T → TmExpr Γ S
+TmConstructor₁ : (Γ : CtxExpr) (T S : TyExpr) → Set
+TmConstructor₁ Γ T S = ∀ {Δ} → SubstExpr Δ Γ → TmExpr Δ T → TmExpr Δ S
 
 -- The naturality condition could be more strict (requiring the same
 --  condition for all substitutions instead of restricting to those of
 --  the form r / x), but this condition suffices to show that the
 --  corresponding constructor is congruent and this condition will be
 --  provable by reflexivity for most term constructors.
-TmConstructorNatural₁ : TmConstructor₁ T S → Set
-TmConstructorNatural₁ {T} op = ∀ {Γ R x} → (r : TmExpr Γ R) (t : TmExpr (Γ ,, x ∈ R) T) → (op t) [ r / x ]tm Ag.≡ op (t [ r / x ]tm)
+TmConstructorNatural₁ : TmConstructor₁ Γ T S → Set
+TmConstructorNatural₁ {Γ} {T} op = ∀ {Δ R x σ} (r : TmExpr Δ R) (t : TmExpr (Δ ,, x ∈ R) T) → (op (σ ⊚π) t) [ r / x ]tm Ag.≡ op σ (t [ r / x ]tm)
 
-tm-constructor-cong₁ : (op : TmConstructor₁ T S) (op-nat : TmConstructorNatural₁ op) →
+tm-constructor-cong₁ : (op : TmConstructor₁ (to-ctx Ξ) T S) (op-nat : TmConstructorNatural₁ op) →
                        {t t' : TmExpr (to-ctx Ξ) T} →
                        (Ξ ⊢ t ≡ᶠ t') →
-                       (Ξ ⊢ op t ≡ᶠ op t')
+                       (Ξ ⊢ op (id-subst _) t ≡ᶠ op (id-subst _) t')
 tm-constructor-cong₁ {Ξ = Ξ} op op-nat {t} {t'} et =
-  -- goal : Ξ ⊢ op t ≡ᶠ op t'
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op t') (tm-weaken-subst-trivial (op t) t') (
-  -- goal : Ξ ⊢ (op t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op t'
-  Ag.subst (λ x → Ξ ⊢ ((op t) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ x) (op-nat t' (var "dummy")) (
-  -- goal : Ξ ⊢ (op t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ (op (var "dummy")) [ t' / "dummy" ]tm
-  subst (((op t) [ π ]tm) ≡ᶠ op (var "dummy")) et (
-  -- goal : Ξ ⊢ (op t) [ π ]tm [ t / "dummy" ]tm ≡ᶠ (op (var "dummy")) [ t / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (var "dummy")) [ t / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op t) t)) (
-  -- goal : Ξ ⊢ op t ≡ᶠ (op (var "dummy")) [ t / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ op t ≡ᶠ x) (Ag.sym (op-nat t (var "dummy")))
-  -- goal : Ξ ⊢ op t ≡ᶠ op t
+  -- goal : Ξ ⊢ op id t ≡ᶠ op id t'
+  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op (id-subst _) t') (tm-weaken-subst-trivial (op (id-subst _) t) t') (
+  -- goal : Ξ ⊢ (op id t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op id t'
+  Ag.subst (λ x → Ξ ⊢ ((op (id-subst _) t) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ x) (op-nat t' (var "dummy")) (
+  -- goal : Ξ ⊢ (op id t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ (op (id ⊚π) (var "dummy")) [ t' / "dummy" ]tm
+  subst (((op (id-subst _) t) [ π ]tm) ≡ᶠ op (id-subst _ ⊚π) (var "dummy")) et (
+  -- goal : Ξ ⊢ (op id t) [ π ]tm [ t / "dummy" ]tm ≡ᶠ (op (id ⊚π) (var "dummy")) [ t / "dummy" ]tm
+  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (id-subst _ ⊚π) (var "dummy")) [ t / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op (id-subst _) t) t)) (
+  -- goal : Ξ ⊢ op id t ≡ᶠ (op (id ⊚π) (var "dummy")) [ t / "dummy" ]tm
+  Ag.subst (λ x → Ξ ⊢ op (id-subst _) t ≡ᶠ x) (Ag.sym (op-nat t (var "dummy")))
+  -- goal : Ξ ⊢ op id t ≡ᶠ op id t
   refl))))
 
-TmConstructor₂ : (T S R : TyExpr) → Set
-TmConstructor₂ T S R = ∀ {Γ} → TmExpr Γ T → TmExpr Γ S → TmExpr Γ R
+TmConstructor₂ : (Γ : CtxExpr) (T S R : TyExpr) → Set
+TmConstructor₂ Γ T S R = ∀ {Δ} → SubstExpr Δ Γ → TmExpr Δ T → TmExpr Δ S → TmExpr Δ R
 
-TmConstructorNatural₂ : TmConstructor₂ T S R → Set
-TmConstructorNatural₂ {T} {S} op =
-  ∀ {Γ W x} → (w : TmExpr Γ W) (t : TmExpr (Γ ,, x ∈ W) T) (s : TmExpr (Γ ,, x ∈ W) S) →
-  (op t s) [ w / x ]tm Ag.≡ op (t [ w / x ]tm) (s [ w / x ]tm)
+TmConstructorNatural₂ : TmConstructor₂ Γ T S R → Set
+TmConstructorNatural₂ {Γ} {T} {S} op =
+  ∀ {Δ W x σ} → (w : TmExpr Δ W) (t : TmExpr (Δ ,, x ∈ W) T) (s : TmExpr (Δ ,, x ∈ W) S) →
+  (op (σ ⊚π) t s) [ w / x ]tm Ag.≡ op σ (t [ w / x ]tm) (s [ w / x ]tm)
 
-tm-constructor-cong₂ : (op : TmConstructor₂ T S R) → TmConstructorNatural₂ op →
+apply-tmc₂ˡ : TmExpr Γ T → TmConstructor₂ Γ T S R → TmConstructor₁ Γ S R
+apply-tmc₂ˡ t op = λ σ s → op σ (t [ σ ]tm) s
+
+apply-tmc₂ˡ-natural : (t : TmExpr Γ T) (op : TmConstructor₂ Γ T S R) →
+                      TmConstructorNatural₂ op → TmConstructorNatural₁ (apply-tmc₂ˡ t op)
+apply-tmc₂ˡ-natural t op op-nat {σ = σ} = λ r s →
+  Ag.trans (op-nat r (t [ σ ⊚π ]tm) s) (Ag.cong (λ x → op σ x _) (tm-weaken-subst-trivial (t [ σ ]tm) r))
+
+apply-tmc₂ʳ : TmExpr Γ S → TmConstructor₂ Γ T S R → TmConstructor₁ Γ T R
+apply-tmc₂ʳ s op = λ σ t → op σ t (s [ σ ]tm)
+
+apply-tmc₂ʳ-natural : (s : TmExpr Γ S) (op : TmConstructor₂ Γ T S R) →
+                      TmConstructorNatural₂ op → TmConstructorNatural₁ (apply-tmc₂ʳ s op)
+apply-tmc₂ʳ-natural s op op-nat {σ = σ} = λ r t →
+  Ag.trans (op-nat r t (s [ σ ⊚π ]tm)) (Ag.cong (op σ _) (tm-weaken-subst-trivial (s [ σ ]tm) r))
+
+tm-constructor-cong₂ : (op : TmConstructor₂ (to-ctx Ξ) T S R) → TmConstructorNatural₂ op →
                        {t t' : TmExpr (to-ctx Ξ) T} {s s' : TmExpr (to-ctx Ξ) S} →
                        (Ξ ⊢ t ≡ᶠ t') →
                        (Ξ ⊢ s ≡ᶠ s') →
-                       (Ξ ⊢ op t s ≡ᶠ op t' s')
-tm-constructor-cong₂ {Ξ = Ξ} op op-nat {t} {t'} {s} {s'} et es =
-  -- goal : Ξ ⊢ op t s ≡ᶠ op t' s'
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op t' s') (tm-weaken-subst-trivial (op t s) t') (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op t' s'
-  Ag.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ op t' x) (tm-weaken-subst-trivial s' t') (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op t' (s' [ π ]tm [ t' / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ x) (op-nat t' (var "dummy") (s' [ π ]tm)) (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ (op (var "dummy") (s' [ π ]tm)) [ t' / "dummy" ]tm
-  subst (((op t s) [ π ]tm) ≡ᶠ op (var "dummy") (s' [ π ]tm)) et (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ t / "dummy" ]tm ≡ᶠ (op (var "dummy") (s' [ π ]tm)) [ t / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (var "dummy") (s' [ π ]tm)) [ t / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op t s) t)) (
-  -- goal : Ξ ⊢ op t s ≡ᶠ (op (var "dummy") (s' [ π ]tm)) [ t / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ op t s ≡ᶠ x) (Ag.sym (op-nat t (var "dummy") (s' [ π ]tm))) (
-  -- goal : Ξ ⊢ op t s ≡ᶠ op t (s' [ π ]tm [ t / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ op t s ≡ᶠ op t x) (Ag.sym (tm-weaken-subst-trivial s' t)) (
-  -- goal : Ξ ⊢ op t s ≡ᶠ op t s'
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op t s') (tm-weaken-subst-trivial (op t s) s') (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ op t s'
-  Ag.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ s' / "dummy" ]tm) ≡ᶠ op x s') (tm-weaken-subst-trivial t s') (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ op (t [ π ]tm [ s' / "dummy" ]tm) s'
-  Ag.subst (λ x → Ξ ⊢ ((op t s) [ π ]tm [ s' / "dummy" ]tm) ≡ᶠ x) (op-nat s' (t [ π ]tm) (var "dummy")) (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ (op (t [ π ]tm) (var "dummy")) [ s' / "dummy" ]tm
-  subst (((op t s) [ π ]tm) ≡ᶠ op (t [ π ]tm) (var "dummy")) es (
-  -- goal : Ξ ⊢ (op t s) [ π ]tm [ s / "dummy" ]tm ≡ᶠ (op (t [ π ]tm) (var "dummy")) [ s / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (t [ π ]tm) (var' "dummy")) [ s / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op t s) s)) (
-  -- goal : Ξ ⊢ op t s ≡ᶠ (op (t [ π ]tm) (var "dummy")) [ s / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ op t s ≡ᶠ x) (Ag.sym (op-nat s (t [ π ]tm) (var' "dummy"))) (
-  -- goal : Ξ ⊢ op t s ≡ᶠ op (t [ π ]tm [ s / "dummy" ]tm) s
-  Ag.subst (λ x → Ξ ⊢ op t s ≡ᶠ op x s) (Ag.sym (tm-weaken-subst-trivial t s)) (
-  -- goal : Ξ ⊢ op t s ≡ᶠ op t s
-  refl))))))))))))))
+                       (Ξ ⊢ op (id-subst _) t s ≡ᶠ op (id-subst _) t' s')
+tm-constructor-cong₂ {Ξ = Ξ} op op-nat {t} {t'} {s} {s'} et es = trans
+  (tm-constructor-cong₁ (apply-tmc₂ʳ s op)  (apply-tmc₂ʳ-natural s op op-nat)  et)
+  (tm-constructor-cong₁ (apply-tmc₂ˡ t' op) (apply-tmc₂ˡ-natural t' op op-nat) es)
 
-TmConstructor₃ : (R S T U : TyExpr) → Set
-TmConstructor₃ R S T U = ∀ {Γ} → TmExpr Γ R → TmExpr Γ S → TmExpr Γ T → TmExpr Γ U
+TmConstructor₃ : (Γ : CtxExpr) (R S T U : TyExpr) → Set
+TmConstructor₃ Γ R S T U = ∀ {Δ} → SubstExpr Δ Γ → TmExpr Δ R → TmExpr Δ S → TmExpr Δ T → TmExpr Δ U
 
-TmConstructorNatural₃ : TmConstructor₃ R S T U → Set
-TmConstructorNatural₃ {R} {S} {T} op =
-  ∀ {Γ V x} → (v : TmExpr Γ V) (r : TmExpr (Γ ,, x ∈ V) R) (s : TmExpr (Γ ,, x ∈ V) S) (t : TmExpr (Γ ,, x ∈ V) T) →
-  (op r s t) [ v / x ]tm Ag.≡ op (r [ v / x ]tm) (s [ v / x ]tm) (t [ v / x ]tm)
+TmConstructorNatural₃ : TmConstructor₃ Γ R S T U → Set
+TmConstructorNatural₃ {Γ} {R} {S} {T} op =
+  ∀ {Δ V x σ} → (v : TmExpr Δ V) (r : TmExpr (Δ ,, x ∈ V) R) (s : TmExpr (Δ ,, x ∈ V) S) (t : TmExpr (Δ ,, x ∈ V) T) →
+  (op (σ ⊚π) r s t) [ v / x ]tm Ag.≡ op σ (r [ v / x ]tm) (s [ v / x ]tm) (t [ v / x ]tm)
 
-tm-constructor-cong₃ : (op : TmConstructor₃ R S T U) → TmConstructorNatural₃ op →
+apply-tmc₃ʳ : TmExpr Γ T → TmConstructor₃ Γ R S T U → TmConstructor₂ Γ R S U
+apply-tmc₃ʳ t op = λ σ r s → op σ r s (t [ σ ]tm)
+
+apply-tmc₃ʳ-natural : (t : TmExpr Γ T) (op : TmConstructor₃ Γ R S T U) →
+                      TmConstructorNatural₃ op → TmConstructorNatural₂ (apply-tmc₃ʳ t op)
+apply-tmc₃ʳ-natural t op op-nat {σ = σ} = λ w r s →
+  Ag.trans (op-nat w r s (t [ σ ⊚π ]tm)) (Ag.cong (op σ _ _) (tm-weaken-subst-trivial (t [ σ ]tm) w))
+
+apply-tmc₃ˡᶜ : TmExpr Γ R → TmExpr Γ S → TmConstructor₃ Γ R S T U → TmConstructor₁ Γ T U
+apply-tmc₃ˡᶜ r s op = λ σ t → op σ (r [ σ ]tm) (s [ σ ]tm) t
+
+apply-tmc₃ˡᶜ-natural : (r : TmExpr Γ R) (s : TmExpr Γ S) (op : TmConstructor₃ Γ R S T U) →
+                       TmConstructorNatural₃ op → TmConstructorNatural₁ (apply-tmc₃ˡᶜ r s op)
+apply-tmc₃ˡᶜ-natural r s op op-nat {σ = σ} = λ w t →
+  Ag.trans (op-nat w (r [ σ ⊚π ]tm) (s [ σ ⊚π ]tm) t)
+           (Ag.cong₂ (λ x y → op σ x y _) (tm-weaken-subst-trivial (r [ σ ]tm) w) (tm-weaken-subst-trivial (s [ σ ]tm) w))
+
+tm-constructor-cong₃ : (op : TmConstructor₃ (to-ctx Ξ) R S T U) → TmConstructorNatural₃ op →
                        {r r' : TmExpr (to-ctx Ξ) R} {s s' : TmExpr (to-ctx Ξ) S} {t t' : TmExpr (to-ctx Ξ) T} →
                        (Ξ ⊢ r ≡ᶠ r') →
                        (Ξ ⊢ s ≡ᶠ s') →
                        (Ξ ⊢ t ≡ᶠ t') →
-                       (Ξ ⊢ op r s t ≡ᶠ op r' s' t')
-tm-constructor-cong₃ {Ξ = Ξ} op op-nat {r} {r'} {s} {s'} {t} {t'} er es et =
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r' s' t'
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op r' s' t') (tm-weaken-subst-trivial (op r s t) r') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' / "dummy" ]tm ≡ᶠ op r' s' t'
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ r' / "dummy" ]tm) ≡ᶠ op r' x t') (tm-weaken-subst-trivial s' r') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' / "dummy" ]tm ≡ᶠ op r' (s' [ π ]tm [ r' / "dummy" ]tm) t'
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ r' / "dummy" ]tm) ≡ᶠ op r' (s' [ π ]tm [ r' / "dummy" ]tm) x) (tm-weaken-subst-trivial t' r') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' / "dummy" ]tm ≡ᶠ op r' (s' [ π ]tm [ r' / "dummy" ]tm) (t' [ π ]tm [ r' / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ r' / "dummy" ]tm) ≡ᶠ x) (op-nat r' (var "dummy") (s' [ π ]tm) (t' [ π ]tm)) (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r' / "dummy" ]tm ≡ᶠ (op (var "dummy") (s' [ π ]tm) (t' [ π ]tm)) [ r' / "dummy" ]tm
-  subst (((op r s t) [ π ]tm) ≡ᶠ op (var "dummy") (s' [ π ]tm) (t' [ π ]tm)) er (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ r / "dummy" ]tm ≡ᶠ (op (var "dummy") (s' [ π ]tm) (t' [ π ]tm)) [ r / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (var "dummy") (s' [ π ]tm) (t' [ π ]tm)) [ r / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op r s t) r)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ (op (var "dummy") (s' [ π ]tm) (t' [ π ]tm)) [ r / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ x) (Ag.sym (op-nat r (var "dummy") (s' [ π ]tm) (t' [ π ]tm))) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r (s' [ π ]tm [ r / "dummy" ]tm) (t' [ π ]tm [ r / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r x (t' [ π ]tm [ r / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial s' r)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s' (t' [ π ]tm [ r / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r s' x) (Ag.sym (tm-weaken-subst-trivial t' r)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s' t'
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op r s' t') (tm-weaken-subst-trivial (op r s t) s') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ op r s' t'
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ s' / "dummy" ]tm) ≡ᶠ op x s' t') (tm-weaken-subst-trivial r s') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ op (r [ π ]tm [ s' / "dummy" ]tm) s' t'
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ s' / "dummy" ]tm) ≡ᶠ op (r [ π ]tm [ s' / "dummy" ]tm) s' x) (tm-weaken-subst-trivial t' s') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ op (r [ π ]tm [ s' / "dummy" ]tm) s' (t' [ π ]tm [ s' / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ s' / "dummy" ]tm) ≡ᶠ x) (op-nat s' (r [ π ]tm) (var "dummy") (t' [ π ]tm)) (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s' / "dummy" ]tm ≡ᶠ (op (r [ π ]tm) (var "dummy") (t' [ π ]tm)) [ s' / "dummy" ]tm
-  subst (((op r s t) [ π ]tm) ≡ᶠ op (r [ π ]tm) (var "dummy") (t' [ π ]tm)) es (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ s / "dummy" ]tm ≡ᶠ (op (r [ π ]tm) (var "dummy") (t' [ π ]tm)) [ s / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (r [ π ]tm) (var "dummy") (t' [ π ]tm)) [ s / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op r s t) s)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ (op (r [ π ]tm) (var "dummy") (t' [ π ]tm)) [ s / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ x) (Ag.sym (op-nat s (r [ π ]tm) (var "dummy") (t' [ π ]tm))) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op (r [ π ]tm [ s / "dummy" ]tm) s (t' [ π ]tm [ s / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op x s (t' [ π ]tm [ s / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial r s)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s (t' [ π ]tm [ s / "dummy" ]tm)
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r s x) (Ag.sym (tm-weaken-subst-trivial t' s)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s t'
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ op r s t') (tm-weaken-subst-trivial (op r s t) t') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op r s t'
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ op x s t') (tm-weaken-subst-trivial r t') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op (r [ π ]tm [ t' / "dummy" ]tm) s t'
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ op (r [ π ]tm [ t' / "dummy" ]tm) x t') (tm-weaken-subst-trivial s t') (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ op (r [ π ]tm [ t' / "dummy" ]tm) (s [ π ]tm [ t' / "dummy" ]tm) t' 
-  Ag.subst (λ x → Ξ ⊢ ((op r s t) [ π ]tm [ t' / "dummy" ]tm) ≡ᶠ x) (op-nat t' (r [ π ]tm) (s [ π ]tm) (var "dummy")) (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t' / "dummy" ]tm ≡ᶠ (op (r [ π ]tm) (s [ π ]tm) (var "dummy")) [ t' / "dummy" ]tm
-  subst (((op r s t) [ π ]tm) ≡ᶠ op (r [ π ]tm) (s [ π ]tm) (var "dummy")) et (
-  -- goal : Ξ ⊢ (op r s t) [ π ]tm [ t / "dummy" ]tm ≡ᶠ (op (r [ π ]tm) (s [ π ]tm) (var "dummy")) [ t / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ x ≡ᶠ ((op (r [ π ]tm) (s [ π ]tm) (var "dummy")) [ t / "dummy" ]tm)) (Ag.sym (tm-weaken-subst-trivial (op r s t) t)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ (op (r [ π ]tm) (s [ π ]tm) (var "dummy")) [ t / "dummy" ]tm
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ x) (Ag.sym (op-nat t (r [ π ]tm) (s [ π ]tm) (var "dummy"))) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op (r [ π ]tm [ t / "dummy" ]tm) (s [ π ]tm [ t / "dummy" ]tm) t
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op x (s [ π ]tm [ t / "dummy" ]tm) t) (Ag.sym (tm-weaken-subst-trivial r t)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r (s [ π ]tm [ s / "dummy" ]tm) t
-  Ag.subst (λ x → Ξ ⊢ op r s t ≡ᶠ op r x t) (Ag.sym (tm-weaken-subst-trivial s t)) (
-  -- goal : Ξ ⊢ op r s t ≡ᶠ op r s t'
-  refl)))))))))))))))))))))))))))
+                       (Ξ ⊢ op (id-subst _) r s t ≡ᶠ op (id-subst _) r' s' t')
+tm-constructor-cong₃ {Ξ = Ξ} op op-nat {r} {r'} {s} {s'} {t} {t'} er es et = trans
+  (tm-constructor-cong₂ (apply-tmc₃ʳ t op) (apply-tmc₃ʳ-natural t op op-nat) er es)
+  (tm-constructor-cong₁ (apply-tmc₃ˡᶜ r' s' op) (apply-tmc₃ˡᶜ-natural r' s' op op-nat) et)
 
 fst-cong : {p p' : TmExpr (to-ctx Ξ) (T ⊠ S)} →
            (Ξ ⊢ p ≡ᶠ p') →
            (Ξ ⊢ fst p ≡ᶠ fst p')
-fst-cong = tm-constructor-cong₁ fst (λ _ _ → Ag.refl)
+fst-cong = tm-constructor-cong₁ (λ _ → fst) (λ _ _ → Ag.refl)
 
 snd-cong : {p p' : TmExpr (to-ctx Ξ) (T ⊠ S)} →
            (Ξ ⊢ p ≡ᶠ p') →
            (Ξ ⊢ snd p ≡ᶠ snd p')
-snd-cong = tm-constructor-cong₁ snd (λ _ _ → Ag.refl)
+snd-cong = tm-constructor-cong₁ (λ _ → snd) (λ _ _ → Ag.refl)
+
+app-constr : TmConstructor₂ Γ (T ⇛ S) T S
+app-constr = λ _ → _∙_
+
+app-constr-natural : ∀ {Γ T S} → TmConstructorNatural₂ (app-constr {Γ} {T} {S})
+app-constr-natural = λ _ _ _ → Ag.refl
 
 simultaneous-fun-cong : {f f' : TmExpr (to-ctx Ξ) (T ⇛ S)} {t t' : TmExpr (to-ctx Ξ) T} →
                         (Ξ ⊢ f ≡ᶠ f') →
                         (Ξ ⊢ t ≡ᶠ t') →
                         (Ξ ⊢ f ∙ t ≡ᶠ f' ∙ t')
-simultaneous-fun-cong = tm-constructor-cong₂ _∙_ (λ _ _ _ → Ag.refl)
+simultaneous-fun-cong = tm-constructor-cong₂ app-constr (λ _ _ _ → Ag.refl)
 
 cong : (f : TmExpr (to-ctx Ξ) (T ⇛ S)) {t1 t2 : TmExpr (to-ctx Ξ) T} →
        (Ξ ⊢ t1 ≡ᶠ t2) →
        (Ξ ⊢ f ∙ t1 ≡ᶠ f ∙ t2)
-cong f = simultaneous-fun-cong refl
+cong {Ξ = Ξ} f = tm-constructor-cong₁
+  (apply-tmc₂ˡ f app-constr)
+  (λ {_}{_}{_}{σ} → apply-tmc₂ˡ-natural f app-constr (λ {_}{_}{_}{τ} → app-constr-natural {σ = τ}) {σ = σ})
 
 fun-cong : {f g : TmExpr (to-ctx Ξ) (T ⇛ S)} →
            (Ξ ⊢ f ≡ᶠ g) →
            (t : TmExpr (to-ctx Ξ) T) →
            (Ξ ⊢ f ∙ t ≡ᶠ g ∙ t)
-fun-cong ef t = simultaneous-fun-cong ef refl
+fun-cong ef t = tm-constructor-cong₁
+  (apply-tmc₂ʳ t app-constr)
+  (λ {_}{_}{_}{σ} → apply-tmc₂ʳ-natural t app-constr (λ {_}{_}{_}{τ} → app-constr-natural {σ = τ}) {σ = σ})
+  ef
 
 pair-cong : {t t' : TmExpr (to-ctx Ξ) T} {s s' : TmExpr (to-ctx Ξ) S} →
             (Ξ ⊢ t ≡ᶠ t') →
             (Ξ ⊢ s ≡ᶠ s') →
             (Ξ ⊢ pair t s ≡ᶠ pair t' s')
-pair-cong = tm-constructor-cong₂ pair (λ _ _ _ → Ag.refl)
+pair-cong = tm-constructor-cong₂ (λ _ → pair) (λ _ _ _ → Ag.refl)
 
 if-cong : {b b' : TmExpr (to-ctx Ξ) Bool'} {t t' f f' : TmExpr (to-ctx Ξ) T} →
           (Ξ ⊢ b ≡ᶠ b') →
           (Ξ ⊢ t ≡ᶠ t') →
           (Ξ ⊢ f ≡ᶠ f') →
           (Ξ ⊢ if b t f ≡ᶠ if b' t' f')
-if-cong = tm-constructor-cong₃ if (λ _ _ _ _ → Ag.refl)
+if-cong = tm-constructor-cong₃ (λ _ → if) (λ _ _ _ _ → Ag.refl)
 
 
 --------------------------------------------------
