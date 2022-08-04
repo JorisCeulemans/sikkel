@@ -4,10 +4,17 @@
 
 module Experimental.LogicalFramework.STT.Syntax.Types where
 
+open import Experimental.LogicalFramework.STT.ModeTheory
+
+private variable
+  m n : Mode
+
+
 infixr 6 _⇛_
 infixl 5 _⊠_
-data TyExpr : Set where
-  Nat' : TyExpr
-  Bool' : TyExpr
-  _⇛_ : TyExpr → TyExpr → TyExpr
-  _⊠_ : TyExpr → TyExpr → TyExpr
+data Ty (m : Mode) : Set where
+  Nat' : Ty m
+  Bool' : Ty m
+  _⇛_ : Ty m → Ty m → Ty m
+  _⊠_ : Ty m → Ty m → Ty m
+  ⟨_∣_⟩ : Modality n m → Ty n → Ty m 
