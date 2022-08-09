@@ -75,8 +75,23 @@ syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 
 
 private
+  coe[_]_ : Name → TwoCell μ ρ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
+  coe[_]_ {μ = μ} {ρ = ρ} x α t = let' mod⟨ μ ⟩ x ← t in' (mod⟨ ρ ⟩ var' x {_} {skip-lock ρ vzero} {!α!})
+
   triv : Tm Γ T → Tm Γ ⟨ 𝟙 ∣ T ⟩
   triv t = mod⟨ 𝟙 ⟩ {!t!}
+
+  triv⁻¹ : Name → Tm Γ ⟨ 𝟙 ∣ T ⟩ → Tm Γ T
+  triv⁻¹ x t = let' mod⟨ 𝟙 ⟩ x ← t in' var' x {_} {vzero} id-cell
+
+  comp : Name → Name → Tm Γ ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩ → Tm Γ ⟨ μ ⓜ ρ ∣ T ⟩
+  comp {μ = μ} {ρ = ρ} x y t =
+    let' mod⟨ μ ⟩ x ← t in'
+    let⟨ μ ⟩ mod⟨ ρ ⟩ y ← var' x {_} {skip-lock _ vzero} {!id-cell!} in'
+    (mod⟨ μ ⓜ ρ ⟩ var' y {_} {skip-lock _ vzero} {!id-cell!})
+
+  comp⁻¹ : Name → Tm Γ ⟨ μ ⓜ ρ ∣ T ⟩ → Tm Γ ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩
+  comp⁻¹ {μ = μ} {ρ = ρ} x t = let' mod⟨ μ ⓜ ρ ⟩ x ← t in' (mod⟨ μ ⟩ (mod⟨ ρ ⟩ var' x {_} {skip-lock _ (skip-lock _ vzero)} {!id-cell!}))
 
 
 --------------------------------------------------
@@ -129,27 +144,37 @@ multi-weaken-tm (Δ ,, x ∈ T) t = weaken-tm (multi-weaken-tm Δ t)
 --------------------------------------------------
 -- Syntactic substitutions
 
+data LockFreeTele (m : Mode) : Set where
+  ◇t : LockFreeTele m
+  _,,_∣_∈_ : LockFreeTele m → Modality n m → Name → Ty n → LockFreeTele m
+
+_++lft_ : Ctx m → LockFreeTele m → Ctx m
+Γ ++lft ◇t = Γ
+Γ ++lft (Δ ,, μ ∣ x ∈ T) = (Γ ++lft Δ) ,, μ ∣ x ∈ T
+
 -- With the following data type, there are multiple ways to represent
 -- the same substitution. This is not a problem since we will never
 -- compare substitutions (only apply them to terms and compute
 -- immediately). Having a constructor for e.g. the identity seems more
 -- efficient than implementing it (but this claim needs justification).
-data Subst : Ctx → Ctx → Set where
+data Subst : Ctx m → Ctx m → Set where
   [] : Subst Γ ◇
-  _∷_/_ : Subst Δ Γ → Tm Δ T → (x : Name) → Subst Δ (Γ ,, x ∈ T)
-  id-subst : (Γ : Ctx) → Subst Γ Γ
-  _⊚πs⟨_⟩ : Subst Δ Γ → (Θ : Ctx) → Subst (Δ ++ctx Θ) Γ
+  _∷_/_ : Subst Δ Γ → Tm (Δ ,lock⟨ μ ⟩) T → (x : Name) → Subst Δ (Γ ,, μ ∣ x ∈ T)
+  id-subst : (Γ : Ctx m) → Subst Γ Γ
+  _⊚πs⟨_⟩ : Subst Δ Γ → (Θ : LockFreeTele m) → Subst (Δ ++lft Θ) Γ
+  _,lock⟨_⟩ : Subst Δ Γ → (μ : Modality m n) → Subst (Δ ,lock⟨ μ ⟩) (Γ ,lock⟨ μ ⟩)
+  key : TwoCell μ ρ → Subst (Γ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⟩)
 
-π : Subst (Γ ,, x ∈ T) Γ
+π : Subst (Γ ,, μ ∣ x ∈ T) Γ
 π = id-subst _ ⊚πs⟨ _ ⟩
 
-_⊚π : Subst Δ Γ → Subst (Δ ,, x ∈ T) Γ
+_⊚π : Subst Δ Γ → Subst (Δ ,, μ ∣ x ∈ T) Γ
 σ ⊚π = σ ⊚πs⟨ _ ⟩
 
-_⊹⟨_⟩ : Subst Δ Γ → (x : Name) → Subst (Δ ,, x ∈ T) (Γ ,, x ∈ T)
-σ ⊹⟨ x ⟩ = (σ ⊚π) ∷ var' x {vzero} / x
+_⊹⟨_⟩ : Subst Δ Γ → (x : Name) → Subst (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
+σ ⊹⟨ x ⟩ = (σ ⊚π) ∷ var' x {_} {skip-lock _ vzero} {!id-cell!} / x
 
-_/_ : Tm Γ T → (x : Name) → Subst Γ (Γ ,, x ∈ T)
+_/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Subst Γ (Γ ,, μ ∣ x ∈ T)
 t / x = id-subst _ ∷ t / x
 
 
@@ -162,27 +187,49 @@ t / x = id-subst _ ∷ t / x
 -- substitution for terms, in order to treat some substitutions
 -- specially.
 data SpecialSubst : Subst Γ Δ → Set where
-  id-subst : (Γ : Ctx) → SpecialSubst (id-subst Γ)
-  _⊚πs⟨_⟩ : (σ : Subst Γ Δ) → (Θ : Ctx) → SpecialSubst (σ ⊚πs⟨ Θ ⟩)
+  id-subst : (Γ : Ctx m) → SpecialSubst (id-subst Γ)
+  _⊚πs⟨_⟩ : {Γ Δ : Ctx m} (σ : Subst Γ Δ) → (Θ : LockFreeTele m) → SpecialSubst (σ ⊚πs⟨ Θ ⟩)
 
 is-special-subst? : (σ : Subst Γ Δ) → Maybe (SpecialSubst σ)
 is-special-subst? []           = nothing
 is-special-subst? (σ ∷ t / x)  = nothing
 is-special-subst? (id-subst Γ) = just (id-subst Γ)
 is-special-subst? (σ ⊚πs⟨ Θ ⟩) = just (σ ⊚πs⟨ Θ ⟩)
+is-special-subst? (σ ,lock⟨ μ ⟩) = nothing
+is-special-subst? (key α) = nothing
 
-subst-var : (v : Var x Γ T) → Subst Δ Γ → Tm Δ T
+subst-var : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
+            (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → Subst Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
+subst-var {x = x} v ρ α (id-subst _) = var' x {_} {skip-lock ρ v} α
+subst-var v ρ α (σ ⊚πs⟨ ◇t ⟩) = subst-var v ρ α σ
+subst-var v ρ α (σ ⊚πs⟨ Θ ,, _ ∣ _ ∈ _ ⟩) = {!!}
+subst-var vzero ρ α (σ ∷ t / x) = {!t [ key α ]tm!}
+subst-var (vsuc v) ρ α (σ ∷ t / x) = subst-var v ρ α σ
+subst-var (skip-lock .μ v) ρ α (σ ,lock⟨ μ ⟩) = {!subst-var v (μ ⓜ ρ) {!α!} σ!}
+subst-var {x = x} (skip-lock _ v) ρ α (key β) = var' x {_} {skip-lock _ (skip-lock _ v)} (((id-cell ⓣ-hor β) ⓣ-hor id-cell {_}{_}{ρ}) ⓣ-vert α)
+
+{-
+subst-var : (v : Var x μ T κ Γ) → TwoCell μ κ → Subst Δ Γ → Tm Δ T
+subst-var {x = x} v α (id-subst _) = var' x {v = v} α
+subst-var v α (σ ⊚πs⟨ ◇t ⟩) = subst-var v α σ
+subst-var v α (σ ⊚πs⟨ Θ ,, _ ∣ _ ∈ _ ⟩) = {!!}
+subst-var vzero α (σ ∷ t / x) = {!t [ key α ]tm!}
+subst-var (vsuc v) α (σ ∷ t / x) = subst-var v α σ
+subst-var (skip-lock .μ v) α (σ ,lock⟨ μ ⟩) = {!subst-var v ? ?!}
+subst-var {x = x} (skip-lock μ v) α (key {ρ = ρ} β) = var' x {v = skip-lock ρ v} ((id-cell ⓣ-hor β) ⓣ-vert α)
+-}
+{-
 subst-var {x = x} v (id-subst Γ) = var' x {v}
 subst-var v         (σ ⊚πs⟨ ◇ ⟩) = subst-var v σ
 subst-var v         (σ ⊚πs⟨ Δ ,, _ ∈ T ⟩) = weaken-tm (subst-var v (σ ⊚πs⟨ Δ ⟩))
 subst-var vzero     (σ ∷ t / x) = t
 subst-var (vsuc v)  (σ ∷ s / x) = subst-var v σ
-
+-}
 _[_]tm : Tm Γ T → Subst Δ Γ → Tm Δ T
 t [ σ ]tm with is-special-subst? σ
 (t [ .(id-subst Γ) ]tm)  | just (id-subst Γ) = t
-(t [ .(σ ⊚πs⟨ Θ ⟩) ]tm)  | just (σ ⊚πs⟨ Θ ⟩) = multi-weaken-tm Θ (t [ σ ]tm)
-(var' x {v}) [ σ ]tm     | nothing = subst-var v σ
+(t [ .(σ ⊚πs⟨ Θ ⟩) ]tm)  | just (σ ⊚πs⟨ Θ ⟩) = {!multi-weaken-tm Θ (t [ σ ]tm)!}
+(var' x {_}{v} α) [ σ ]tm | nothing = {!subst-var v α σ!}
 (lam[ x ∈ T ] t) [ σ ]tm | nothing = lam[ x ∈ T ] (t [ σ ⊹⟨ x ⟩ ]tm)
 (f ∙ t) [ σ ]tm          | nothing = (f [ σ ]tm) ∙ (t [ σ ]tm)
 zero [ σ ]tm             | nothing = zero
@@ -194,7 +241,9 @@ false [ σ ]tm            | nothing = false
 (pair t s) [ σ ]tm       | nothing = pair (t [ σ ]tm) (s [ σ ]tm)
 (fst p) [ σ ]tm          | nothing = fst (p [ σ ]tm)
 (snd p) [ σ ]tm          | nothing = snd (p [ σ ]tm)
-
+(mod⟨ μ ⟩ t) [ σ ]tm      | nothing = mod⟨ μ ⟩ (t [ σ ,lock⟨ μ ⟩ ]tm)
+(mod-elim ρ μ x t s) [ σ ]tm | nothing = mod-elim ρ μ x (t [ σ ,lock⟨ ρ ⟩ ]tm) (s [ σ ⊹⟨ x ⟩ ]tm)
+{-
 
 --------------------------------------------------
 -- Proving that substituting the most recently added variable in a
