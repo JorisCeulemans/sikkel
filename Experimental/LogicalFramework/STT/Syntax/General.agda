@@ -61,23 +61,50 @@ data Tm (Γ : Ctx m) : Ty m → Set where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   snd : Tm Γ (T ⊠ S) → Tm Γ S
-  mod⟨_⟩_ : Modality m n → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
-  let⟨_⟩mod⟨_⟩_←_in'_ : (ρ : Modality o m) (μ : Modality n o) (x : Name) (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) → Tm Γ S
-{-
+  mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
+  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : Name)
+             (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) →
+             Tm Γ S
+
+syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
+
+mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
+mod-elim' = {!mod-elim 𝟙!}
+
+syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
+
+
+private
+  triv : Tm Γ T → Tm Γ ⟨ 𝟙 ∣ T ⟩
+  triv t = mod⟨ 𝟙 ⟩ {!t!}
+
 
 --------------------------------------------------
 -- Weakening of terms
 
-_++ctx_ : Ctx → Ctx → Ctx
-Γ ++ctx ◇ = Γ
-Γ ++ctx (Δ ,, x ∈ T) = (Γ ++ctx Δ) ,, x ∈ T
+data Telescope : (m n : Mode) → Set where
+  ◇t : Telescope m m
+  _,,_∣_∈_ : Telescope m n → Modality o n → Name → Ty o → Telescope m n
+  _,lock⟨_⟩ : Telescope m n → Modality o n → Telescope m o
 
-mid-weaken-var : {Γ : Ctx} (Δ : Ctx) → Var x (Γ ++ctx Δ) T → Var x ((Γ ,, y ∈ S) ++ctx Δ) T
+_++tel_ : Ctx m → Telescope m n → Ctx n
+Γ ++tel ◇t = Γ
+Γ ++tel (Δ ,, μ ∣ x ∈ T) = (Γ ++tel Δ) ,, μ ∣ x ∈ T
+Γ ++tel (Δ ,lock⟨ μ ⟩) = (Γ ++tel Δ) ,lock⟨ μ ⟩
+{-
+mid-weaken-var : {Γ : Ctx m} {φ : Modality n m} (Δ : Telescope m n φ) →
+                 Var x μ T (κ ⓜ φ) (Γ ++tel Δ) →
+                 Var x μ T (κ ⓜ φ) ((Γ ,, ρ ∣ y ∈ S) ++tel Δ)
+mid-weaken-var ◇t v = vsuc v
+mid-weaken-var (Δ ,, _ ∣ _ ∈ _) vzero = vzero
+mid-weaken-var (Δ ,, _ ∣ _ ∈ _) (vsuc v) = vsuc (mid-weaken-var Δ v)
+mid-weaken-var (Δ ,lock⟨ μ ⟩) v = {!skip-lock μ {!!}!}
+
 mid-weaken-var ◇            v        = vsuc v
 mid-weaken-var (Δ ,, _ ∈ R) vzero    = vzero
 mid-weaken-var (Δ ,, _ ∈ R) (vsuc v) = vsuc (mid-weaken-var Δ v)
 
-mid-weaken-tm : ∀ (Δ : Ctx) → Tm (Γ ++ctx Δ) T → Tm ((Γ ,, x ∈ S) ++ctx Δ) T
+mid-weaken-tm : ∀ (Δ : Ctx) → Tm (Γ ++tel Δ) T → Tm ((Γ ,, x ∈ S) ++tel Δ) T
 mid-weaken-tm Δ (var' x {v}) = var' x {mid-weaken-var Δ v}
 mid-weaken-tm Δ (lam[ y ∈ T ] t) = lam[ y ∈ T ] mid-weaken-tm (Δ ,, y ∈ T) t
 mid-weaken-tm Δ (f ∙ t) = mid-weaken-tm Δ f ∙ mid-weaken-tm Δ t
@@ -94,10 +121,10 @@ mid-weaken-tm Δ (snd p) = snd (mid-weaken-tm Δ p)
 weaken-tm : Tm Γ T → Tm (Γ ,, x ∈ S) T
 weaken-tm t = mid-weaken-tm ◇ t
 
-multi-weaken-tm : (Δ : Ctx) → Tm Γ T → Tm (Γ ++ctx Δ) T
+multi-weaken-tm : (Δ : Ctx) → Tm Γ T → Tm (Γ ++tel Δ) T
 multi-weaken-tm ◇            t = t
 multi-weaken-tm (Δ ,, x ∈ T) t = weaken-tm (multi-weaken-tm Δ t)
-
+-}
 
 --------------------------------------------------
 -- Syntactic substitutions
@@ -173,7 +200,7 @@ false [ σ ]tm            | nothing = false
 -- Proving that substituting the most recently added variable in a
 --   weakened term has no effect.
 
-multi⊹ : (Θ : Ctx) → Subst Γ Δ → Subst (Γ ++ctx Θ) (Δ ++ctx Θ)
+multi⊹ : (Θ : Ctx) → Subst Γ Δ → Subst (Γ ++tel Θ) (Δ ++tel Θ)
 multi⊹ ◇            σ = σ
 multi⊹ (Θ ,, x ∈ T) σ = (multi⊹ Θ σ) ⊹⟨ x ⟩
 
@@ -183,14 +210,14 @@ cong₃ : {A B C D : Set} (f : A → B → C → D)
         f a b c ≡ f a' b' c'
 cong₃ f refl refl refl = refl
 
-var-weaken-subst-trivial-multi : (Θ : Ctx) (v : Var x (Γ ++ctx Θ) T) {s : Tm Γ S} →
+var-weaken-subst-trivial-multi : (Θ : Ctx) (v : Var x (Γ ++tel Θ) T) {s : Tm Γ S} →
   (var' x {mid-weaken-var Θ v}) [ multi⊹ Θ (s / y) ]tm ≡ var' x {v}
 var-weaken-subst-trivial-multi ◇ v = refl
 var-weaken-subst-trivial-multi (Θ ,, x ∈ T) vzero = refl
 var-weaken-subst-trivial-multi (◇ ,, x ∈ T) (vsuc v) = refl
 var-weaken-subst-trivial-multi (Θ ,, x ∈ T ,, y ∈ S) (vsuc v) = cong weaken-tm (var-weaken-subst-trivial-multi (Θ ,, x ∈ T) v)
 
-tm-weaken-subst-trivial-multi : (Θ : Ctx) (t : Tm (Γ ++ctx Θ) T) {s : Tm Γ S} → (mid-weaken-tm Θ t) [ multi⊹ Θ (s / x) ]tm ≡ t
+tm-weaken-subst-trivial-multi : (Θ : Ctx) (t : Tm (Γ ++tel Θ) T) {s : Tm Γ S} → (mid-weaken-tm Θ t) [ multi⊹ Θ (s / x) ]tm ≡ t
 tm-weaken-subst-trivial-multi ◇ (var' x {_}) = refl
 tm-weaken-subst-trivial-multi ◇ (lam[ _ ∈ _ ] t) = cong (lam[ _ ∈ _ ]_) (tm-weaken-subst-trivial-multi (◇ ,, _ ∈ _) t)
 tm-weaken-subst-trivial-multi ◇ (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-multi ◇ f) (tm-weaken-subst-trivial-multi ◇ t)
