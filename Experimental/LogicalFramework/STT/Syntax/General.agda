@@ -15,7 +15,7 @@ open import Experimental.LogicalFramework.STT.Syntax.Types
 
 private variable
   m n o p : Mode
-  μ ρ : Modality m n
+  μ ρ κ : Modality m n
   T S : Ty m
   x y : Name
 
@@ -27,33 +27,28 @@ infixl 4 _,,_∣_∈_
 data Ctx (m : Mode) : Set where
   ◇ : Ctx m
   _,,_∣_∈_ : (Γ : Ctx m) (μ : Modality n m) (x : Name) (T : Ty n) → Ctx m
-    -- ^ All variables have a name of type Name.
+    -- ^ All variables have a name of type Name and appear under a modality.
   _,lock⟨_⟩ : (Γ : Ctx n) (μ : Modality m n) → Ctx m
-
 
 private variable
   Γ Δ Θ : Ctx m
 
 
--- The predicate Var x Γ T expresses that a variable named x is
--- present in context Γ and has type T. Note that this is a
+-- The predicate Var x μ T κ Γ expresses that a variable named x is
+-- present in context Γ under modality μ with type T and with κ the
+-- composition of all locks to the right of x. Note that this is a
 -- proof-relevant predicate and names in Γ may not be unique (but this
 -- is of course discouraged).  As a result, STT terms internally
 -- represent variables using De Bruijn indices, but we do keep track
 -- of the names of the variables.
-data Var : Name → Ctx m → Modality n o → Ty p → Set where
-  vzero : Var x (Γ ,, μ ∣ x ∈ T) μ T
-  vsuc : Var x Γ μ T → Var x (Γ ,, ρ ∣ y ∈ S) μ T
-  skip-lock : (ρ : Modality m n) → Var x Γ μ T → Var x (Γ ,lock⟨ ρ ⟩) μ T
-
-locks : {Γ : Ctx m} {μ : Modality n o} → Var x Γ μ T → Modality m o
-locks vzero = 𝟙
-locks (vsuc v) = locks v
-locks (skip-lock ρ v) = locks v ⓜ ρ
+data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → Set where
+  vzero : Var x μ T 𝟙 (Γ ,, μ ∣ x ∈ T)
+  vsuc : Var x μ T κ Γ → Var x μ T κ (Γ ,, ρ ∣ y ∈ S)
+  skip-lock : (ρ : Modality m p) → Var x μ T κ Γ → Var x μ T (κ ⓜ ρ) (Γ ,lock⟨ ρ ⟩)
 
 infixl 50 _∙_
 data Tm (Γ : Ctx m) : Ty m → Set where
-  var' : (x : Name) {μ : Modality m n} {v : Var x Γ μ T} → TwoCell μ (locks v) → Tm Γ T
+  var' : (x : Name) {μ : Modality m n} {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
   -- ^ When writing programs, one should not directly use var' but rather combine
   --   it with a decision procedure for Var, which will resolve the name.
   lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, 𝟙 ∣ x ∈ T) S → Tm Γ (T ⇛ S)
