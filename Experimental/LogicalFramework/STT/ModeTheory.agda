@@ -1,13 +1,15 @@
 module Experimental.LogicalFramework.STT.ModeTheory where
 
 open import Data.Nat
+open import Data.Nat.Properties using (+-identityʳ; +-assoc)
+open import Relation.Binary.PropositionalEquality
 
 
 data Mode : Set where
   ★ ω : Mode
 
 private variable
-  m n o : Mode
+  m n o p : Mode
 
 
 data Modality : Mode → Mode → Set where
@@ -43,6 +45,50 @@ later^[ k ] ⓜ later^[ l ]ⓜconstantlyⓜforever = later^[ k + l ]ⓜconstantl
 later^[ k ]ⓜconstantlyⓜforever ⓜ later^[ l ]ⓜconstantly = later^[ k ]ⓜconstantly
 later^[ k ]ⓜconstantlyⓜforever ⓜ later^[ l ] = later^[ k ]ⓜconstantlyⓜforever
 later^[ k ]ⓜconstantlyⓜforever ⓜ later^[ l ]ⓜconstantlyⓜforever = later^[ k ]ⓜconstantlyⓜforever
+
+mod-unitˡ : {μ : Modality m n} → 𝟙 ⓜ μ ≡ μ
+mod-unitˡ {n = ★} {μ} = refl
+mod-unitˡ {n = ω} {later^[ k ]ⓜconstantly} = refl
+mod-unitˡ {n = ω} {later^[ k ]} = refl
+mod-unitˡ {n = ω} {later^[ k ]ⓜconstantlyⓜforever} = refl
+
+mod-unitʳ : {μ : Modality m n} → μ ⓜ 𝟙 ≡ μ
+mod-unitʳ {μ = 𝟙★} = refl
+mod-unitʳ {μ = forever} = refl
+mod-unitʳ {μ = later^[ k ]ⓜconstantly} = refl
+mod-unitʳ {μ = later^[ k ]} = cong later^[_] (+-identityʳ k)
+mod-unitʳ {μ = later^[ k ]ⓜconstantlyⓜforever} = refl
+
+mod-assoc : {μ : Modality o p} {ρ : Modality n o} {κ : Modality m n} → (μ ⓜ ρ) ⓜ κ ≡ μ ⓜ (ρ ⓜ κ)
+mod-assoc {μ = 𝟙★} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]ⓜconstantly} {κ = 𝟙★} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]ⓜconstantly} {κ = forever} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]} {κ = later^[ l ]ⓜconstantly} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]} {κ = later^[ l ]} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]} {κ = later^[ l ]ⓜconstantlyⓜforever} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]ⓜconstantlyⓜforever} {κ = later^[ l ]ⓜconstantly} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]ⓜconstantlyⓜforever} {κ = later^[ l ]} = refl
+mod-assoc {μ = forever} {ρ = later^[ k ]ⓜconstantlyⓜforever} {κ = later^[ l ]ⓜconstantlyⓜforever} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantly} {ρ = 𝟙★} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantly} {ρ = forever} {κ = later^[ l ]ⓜconstantly} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantly} {ρ = forever} {κ = later^[ l ]} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantly} {ρ = forever} {κ = later^[ l ]ⓜconstantlyⓜforever} = refl
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]ⓜconstantly} {κ = 𝟙★} = refl
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]ⓜconstantly} {κ = forever} = refl
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]} {κ = later^[ m ]ⓜconstantly} = cong later^[_]ⓜconstantly (+-assoc k l m)
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]} {κ = later^[ m ]} = cong later^[_] (+-assoc k l m)
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]} {κ = later^[ m ]ⓜconstantlyⓜforever} = cong later^[_]ⓜconstantlyⓜforever (+-assoc k l m)
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]ⓜconstantly} = refl
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]} = refl
+mod-assoc {μ = later^[ k ]} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]ⓜconstantlyⓜforever} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantly} {κ = 𝟙★} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantly} {κ = forever} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]} {κ = later^[ m ]ⓜconstantly} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]} {κ = later^[ m ]} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]} {κ = later^[ m ]ⓜconstantlyⓜforever} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]ⓜconstantly} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]} = refl
+mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]ⓜconstantlyⓜforever} = refl
 
 infixl 5 _ⓣ-hor_
 infixl 6 _ⓣ-vert_
