@@ -8,14 +8,14 @@
 module Experimental.LogicalFramework.STT.Syntax.General (Name : Set) where
 
 open import Data.Maybe
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality as Ag
 
 open import Experimental.LogicalFramework.STT.ModeTheory
 open import Experimental.LogicalFramework.STT.Syntax.Types
 
 private variable
   m n o p : Mode
-  μ ρ κ : Modality m n
+  μ ρ κ φ : Modality m n
   T S : Ty m
   x y : Name
 
@@ -36,11 +36,12 @@ private variable
 
 -- The predicate Var x μ T κ Γ expresses that a variable named x is
 -- present in context Γ under modality μ with type T and with κ the
--- composition of all locks to the right of x. Note that this is a
--- proof-relevant predicate and names in Γ may not be unique (but this
--- is of course discouraged).  As a result, STT terms internally
--- represent variables using De Bruijn indices, but we do keep track
--- of the names of the variables.
+-- composition of all locks to the right of x. In other words,
+-- Γ = Δ ,, μ ∣ x ∈ T ,, Θ for some Δ and Θ with locks(Θ) = κ. Note
+-- that this is a proof-relevant predicate and names in Γ may not be
+-- unique (but this is of course discouraged).  As a result, STT terms
+-- internally represent variables using De Bruijn indices, but we do
+-- keep track of the names of the variables.
 data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → Set where
   vzero : Var x μ T 𝟙 (Γ ,, μ ∣ x ∈ T)
   vsuc : Var x μ T κ Γ → Var x μ T κ (Γ ,, ρ ∣ y ∈ S)
@@ -48,9 +49,13 @@ data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → 
 
 infixl 50 _∙_
 data Tm (Γ : Ctx m) : Ty m → Set where
-  var' : (x : Name) {μ : Modality m n} {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
+  var' : {μ : Modality m n} (x : Name) {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
   -- ^ When writing programs, one should not directly use var' but rather combine
   --   it with a decision procedure for Var, which will resolve the name.
+  mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
+  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : Name)
+             (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) →
+             Tm Γ S
   lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, 𝟙 ∣ x ∈ T) S → Tm Γ (T ⇛ S)
   _∙_ : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
   zero : Tm Γ Nat'
@@ -61,42 +66,20 @@ data Tm (Γ : Ctx m) : Ty m → Set where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   snd : Tm Γ (T ⊠ S) → Tm Γ S
-  mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
-  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : Name)
-             (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) →
-             Tm Γ S
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
 mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
-mod-elim' = {!mod-elim 𝟙!}
+mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
+  mod-elim 𝟙 μ x {!t!} (Ag.subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
 
 syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
-
-
-private
-  coe[_]_ : Name → TwoCell μ ρ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
-  coe[_]_ {μ = μ} {ρ = ρ} x α t = let' mod⟨ μ ⟩ x ← t in' (mod⟨ ρ ⟩ var' x {_} {skip-lock ρ vzero} {!α!})
-
-  triv : Tm Γ T → Tm Γ ⟨ 𝟙 ∣ T ⟩
-  triv t = mod⟨ 𝟙 ⟩ {!t!}
-
-  triv⁻¹ : Name → Tm Γ ⟨ 𝟙 ∣ T ⟩ → Tm Γ T
-  triv⁻¹ x t = let' mod⟨ 𝟙 ⟩ x ← t in' var' x {_} {vzero} id-cell
-
-  comp : Name → Name → Tm Γ ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩ → Tm Γ ⟨ μ ⓜ ρ ∣ T ⟩
-  comp {μ = μ} {ρ = ρ} x y t =
-    let' mod⟨ μ ⟩ x ← t in'
-    let⟨ μ ⟩ mod⟨ ρ ⟩ y ← var' x {_} {skip-lock _ vzero} {!id-cell!} in'
-    (mod⟨ μ ⓜ ρ ⟩ var' y {_} {skip-lock _ vzero} {!id-cell!})
-
-  comp⁻¹ : Name → Tm Γ ⟨ μ ⓜ ρ ∣ T ⟩ → Tm Γ ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩
-  comp⁻¹ {μ = μ} {ρ = ρ} x t = let' mod⟨ μ ⓜ ρ ⟩ x ← t in' (mod⟨ μ ⟩ (mod⟨ ρ ⟩ var' x {_} {skip-lock _ (skip-lock _ vzero)} {!id-cell!}))
 
 
 --------------------------------------------------
 -- Weakening of terms
 
+{-
 data Telescope : (m n : Mode) → Set where
   ◇t : Telescope m m
   _,,_∣_∈_ : Telescope m n → Modality o n → Name → Ty o → Telescope m n
@@ -106,7 +89,7 @@ _++tel_ : Ctx m → Telescope m n → Ctx n
 Γ ++tel ◇t = Γ
 Γ ++tel (Δ ,, μ ∣ x ∈ T) = (Γ ++tel Δ) ,, μ ∣ x ∈ T
 Γ ++tel (Δ ,lock⟨ μ ⟩) = (Γ ++tel Δ) ,lock⟨ μ ⟩
-{-
+
 mid-weaken-var : {Γ : Ctx m} {φ : Modality n m} (Δ : Telescope m n φ) →
                  Var x μ T (κ ⓜ φ) (Γ ++tel Δ) →
                  Var x μ T (κ ⓜ φ) ((Γ ,, ρ ∣ y ∈ S) ++tel Δ)
@@ -172,7 +155,7 @@ _⊚π : Subst Δ Γ → Subst (Δ ,, μ ∣ x ∈ T) Γ
 σ ⊚π = σ ⊚πs⟨ _ ⟩
 
 _⊹⟨_⟩ : Subst Δ Γ → (x : Name) → Subst (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
-σ ⊹⟨ x ⟩ = (σ ⊚π) ∷ var' x {_} {skip-lock _ vzero} {!id-cell!} / x
+σ ⊹⟨ x ⟩ = (σ ⊚π) ∷ var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell) / x
 
 _/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Subst Γ (Γ ,, μ ∣ x ∈ T)
 t / x = id-subst _ ∷ t / x
@@ -200,13 +183,13 @@ is-special-subst? (key α) = nothing
 
 subst-var : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
             (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → Subst Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
-subst-var {x = x} v ρ α (id-subst _) = var' x {_} {skip-lock ρ v} α
+subst-var {x = x} v ρ α (id-subst _) = var' x {skip-lock ρ v} α
 subst-var v ρ α (σ ⊚πs⟨ ◇t ⟩) = subst-var v ρ α σ
 subst-var v ρ α (σ ⊚πs⟨ Θ ,, _ ∣ _ ∈ _ ⟩) = {!!}
 subst-var vzero ρ α (σ ∷ t / x) = {!t [ key α ]tm!}
 subst-var (vsuc v) ρ α (σ ∷ t / x) = subst-var v ρ α σ
 subst-var (skip-lock .μ v) ρ α (σ ,lock⟨ μ ⟩) = {!subst-var v (μ ⓜ ρ) {!α!} σ!}
-subst-var {x = x} (skip-lock _ v) ρ α (key β) = var' x {_} {skip-lock _ (skip-lock _ v)} (((id-cell ⓣ-hor β) ⓣ-hor id-cell {_}{_}{ρ}) ⓣ-vert α)
+subst-var {x = x} (skip-lock _ v) ρ α (key β) = var' x {skip-lock _ (skip-lock _ v)} (((id-cell ⓣ-hor β) ⓣ-hor id-cell {_}{_}{ρ}) ⓣ-vert α)
 
 {-
 subst-var : (v : Var x μ T κ Γ) → TwoCell μ κ → Subst Δ Γ → Tm Δ T
@@ -229,7 +212,7 @@ _[_]tm : Tm Γ T → Subst Δ Γ → Tm Δ T
 t [ σ ]tm with is-special-subst? σ
 (t [ .(id-subst Γ) ]tm)  | just (id-subst Γ) = t
 (t [ .(σ ⊚πs⟨ Θ ⟩) ]tm)  | just (σ ⊚πs⟨ Θ ⟩) = {!multi-weaken-tm Θ (t [ σ ]tm)!}
-(var' x {_}{v} α) [ σ ]tm | nothing = {!subst-var v α σ!}
+(var' x {v} α) [ σ ]tm   | nothing = {!subst-var v α σ!}
 (lam[ x ∈ T ] t) [ σ ]tm | nothing = lam[ x ∈ T ] (t [ σ ⊹⟨ x ⟩ ]tm)
 (f ∙ t) [ σ ]tm          | nothing = (f [ σ ]tm) ∙ (t [ σ ]tm)
 zero [ σ ]tm             | nothing = zero
