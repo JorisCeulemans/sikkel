@@ -1,8 +1,8 @@
 --------------------------------------------------
--- Definition of STT contexts, terms and their associated operations
+-- Definition of MSTT contexts, terms and their associated operations
 --   The general syntax is parametrised by a type of names to represent
 --   variables. It is not recommended to directly import this module,
---   but rather use STT.Syntax.Named.
+--   but rather use MSTT.Syntax.Named.
 --------------------------------------------------
 
 module Experimental.LogicalFramework.STT.Syntax.General (Name : Set) where
@@ -21,7 +21,7 @@ private variable
 
 
 --------------------------------------------------
--- Definition of STT contexts and terms
+-- Definition of MSTT contexts and terms
 
 infixl 4 _,,_∣_∈_
 data Ctx (m : Mode) : Set where
@@ -39,7 +39,7 @@ private variable
 -- composition of all locks to the right of x. In other words,
 -- Γ = Δ ,, μ ∣ x ∈ T ,, Θ for some Δ and Θ with locks(Θ) = κ. Note
 -- that this is a proof-relevant predicate and names in Γ may not be
--- unique (but this is of course discouraged).  As a result, STT terms
+-- unique (but this is of course discouraged).  As a result, MSTT terms
 -- internally represent variables using De Bruijn indices, but we do
 -- keep track of the names of the variables.
 data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → Set where
@@ -69,60 +69,200 @@ data Tm (Γ : Ctx m) : Ty m → Set where
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
-mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
-mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
-  mod-elim 𝟙 μ x {!t!} (Ag.subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
 
-syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
+--------------------------------------------------
+-- Traversals of MSTT terms
+
+-- An element of type Trav Δ Γ can be used to tranform terms in Γ to
+-- terms in Δ. For this to work, we must specify how such a traversal
+-- acts on variables and provide a weakening (of both domain and
+-- codomain) and lock operation for such traversals.
+record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
+  field
+    vr : Var x μ T κ Γ → TwoCell μ κ → Trav Δ Γ → Tm Δ T
+    wk : Trav Δ Γ → Trav (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
+    lck : Trav Δ Γ → Trav (Δ ,lock⟨ μ ⟩) (Γ ,lock⟨ μ ⟩)
+
+module _ (Trav : ∀ {m} → Ctx m → Ctx m → Set) (TS : TravStruct Trav) where
+  open TravStruct TS
+
+  traverse-tm : Tm Γ T → Trav Δ Γ → Tm Δ T
+  traverse-tm (var' x {v} α) σ = vr v α σ
+  traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lck σ)
+  traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lck σ)) (traverse-tm s (wk σ))
+  traverse-tm (lam[ x ∈ T ] s) σ = lam[ x ∈ T ] traverse-tm s (wk σ)
+  traverse-tm (f ∙ t) σ = traverse-tm f σ ∙ traverse-tm t σ
+  traverse-tm zero σ = zero
+  traverse-tm suc σ = suc
+  traverse-tm (nat-elim z s) σ = nat-elim (traverse-tm z σ) (traverse-tm s σ)
+  traverse-tm true σ = true
+  traverse-tm false σ = false
+  traverse-tm (if b t f) σ = if (traverse-tm b σ) (traverse-tm t σ) (traverse-tm f σ)
+  traverse-tm (pair t s) σ = pair (traverse-tm t σ) (traverse-tm s σ)
+  traverse-tm (fst p) σ = fst (traverse-tm p σ)
+  traverse-tm (snd p) σ = snd (traverse-tm p σ)
 
 
 --------------------------------------------------
--- Weakening of terms
+-- Telescopes of locks and/or variables
 
-{-
-data Telescope : (m n : Mode) → Set where
-  ◇t : Telescope m m
+data Telescope : Mode → Mode → Set where
+  ◇ : Telescope m m
   _,,_∣_∈_ : Telescope m n → Modality o n → Name → Ty o → Telescope m n
-  _,lock⟨_⟩ : Telescope m n → Modality o n → Telescope m o
+  _,lock⟨_⟩ : Telescope m o → Modality n o → Telescope m n
 
 _++tel_ : Ctx m → Telescope m n → Ctx n
-Γ ++tel ◇t = Γ
-Γ ++tel (Δ ,, μ ∣ x ∈ T) = (Γ ++tel Δ) ,, μ ∣ x ∈ T
-Γ ++tel (Δ ,lock⟨ μ ⟩) = (Γ ++tel Δ) ,lock⟨ μ ⟩
+Γ ++tel ◇ = Γ
+Γ ++tel (Θ ,, μ ∣ x ∈ T) = (Γ ++tel Θ) ,, μ ∣ x ∈ T
+Γ ++tel (Θ ,lock⟨ μ ⟩) = (Γ ++tel Θ) ,lock⟨ μ ⟩
 
-mid-weaken-var : {Γ : Ctx m} {φ : Modality n m} (Δ : Telescope m n φ) →
-                 Var x μ T (κ ⓜ φ) (Γ ++tel Δ) →
-                 Var x μ T (κ ⓜ φ) ((Γ ,, ρ ∣ y ∈ S) ++tel Δ)
-mid-weaken-var ◇t v = vsuc v
-mid-weaken-var (Δ ,, _ ∣ _ ∈ _) vzero = vzero
-mid-weaken-var (Δ ,, _ ∣ _ ∈ _) (vsuc v) = vsuc (mid-weaken-var Δ v)
-mid-weaken-var (Δ ,lock⟨ μ ⟩) v = {!skip-lock μ {!!}!}
+locks-tel : Telescope m n → Modality n m
+locks-tel ◇ = 𝟙
+locks-tel (Θ ,, μ ∣ x ∈ T) = locks-tel Θ
+locks-tel (Θ ,lock⟨ μ ⟩) = locks-tel Θ ⓜ μ
 
-mid-weaken-var ◇            v        = vsuc v
-mid-weaken-var (Δ ,, _ ∈ R) vzero    = vzero
-mid-weaken-var (Δ ,, _ ∈ R) (vsuc v) = vsuc (mid-weaken-var Δ v)
+-- A telescope consisting of only locks, no variables.
+-- TODO: we might be able to unify this definition with that of
+-- Telescope, by constructing a general Telescope data type that is
+-- parametrized by a "permission" to use variables and/or locks.
+data LockTele : Mode → Mode → Set where
+  ◇ : LockTele m m
+  _,lock⟨_⟩ : LockTele m o → Modality n o → LockTele m n
 
-mid-weaken-tm : ∀ (Δ : Ctx) → Tm (Γ ++tel Δ) T → Tm ((Γ ,, x ∈ S) ++tel Δ) T
-mid-weaken-tm Δ (var' x {v}) = var' x {mid-weaken-var Δ v}
-mid-weaken-tm Δ (lam[ y ∈ T ] t) = lam[ y ∈ T ] mid-weaken-tm (Δ ,, y ∈ T) t
-mid-weaken-tm Δ (f ∙ t) = mid-weaken-tm Δ f ∙ mid-weaken-tm Δ t
-mid-weaken-tm Δ zero = zero
-mid-weaken-tm Δ suc = suc
-mid-weaken-tm Δ (nat-elim a f) = nat-elim (mid-weaken-tm Δ a) (mid-weaken-tm Δ f)
-mid-weaken-tm Δ true = true
-mid-weaken-tm Δ false = false
-mid-weaken-tm Δ (if b t f) = if (mid-weaken-tm Δ b) (mid-weaken-tm Δ t) (mid-weaken-tm Δ f)
-mid-weaken-tm Δ (pair t s) = pair (mid-weaken-tm Δ t) (mid-weaken-tm Δ s)
-mid-weaken-tm Δ (fst p) = fst (mid-weaken-tm Δ p)
-mid-weaken-tm Δ (snd p) = snd (mid-weaken-tm Δ p)
+_++ltel_ : Ctx m → LockTele m n → Ctx n
+Γ ++ltel ◇ = Γ
+Γ ++ltel (Θ ,lock⟨ μ ⟩) = (Γ ++ltel Θ) ,lock⟨ μ ⟩
 
-weaken-tm : Tm Γ T → Tm (Γ ,, x ∈ S) T
-weaken-tm t = mid-weaken-tm ◇ t
+locks-ltel : LockTele m n → Modality n m
+locks-ltel ◇ = 𝟙
+locks-ltel (Θ ,lock⟨ μ ⟩) = locks-ltel Θ ⓜ μ
 
-multi-weaken-tm : (Δ : Ctx) → Tm Γ T → Tm (Γ ++tel Δ) T
-multi-weaken-tm ◇            t = t
-multi-weaken-tm (Δ ,, x ∈ T) t = weaken-tm (multi-weaken-tm Δ t)
--}
+
+--------------------------------------------------
+-- Renamings of MSTT terms
+
+data Renaming : Ctx m → Ctx m → Set where
+  [] : Renaming Γ ◇
+  _∷_,_/_ : Renaming Δ Γ → (y : Name) → Var y μ T 𝟙 Δ → (x : Name) → Renaming Δ (Γ ,, μ ∣ x ∈ T)
+  -- ^ This is maybe too restrictive? We might want to consider
+  --   renamings that do not necessarily preserve modalities of
+  --   variables or that do not enforce the locks to be 𝟙.
+  lock-ren : {Δ Γ : Ctx m} → Renaming Δ Γ → (Θ : Telescope m n) (Λ : LockTele m n) →
+             TwoCell (locks-ltel Λ) (locks-tel Θ) →
+             Renaming (Δ ++tel Θ) (Γ ++ltel Λ)
+
+syntax lock-ren σ Θ Λ α = σ ∷ α ∈ Λ ⇒ Θ
+
+-- Some special renamings and operations acting on renamings
+_,rlock⟨_⟩ : {Δ Γ : Ctx m} → Renaming Δ Γ → (μ : Modality n m) → Renaming (Δ ,lock⟨ μ ⟩) (Γ ,lock⟨ μ ⟩)
+σ ,rlock⟨ μ ⟩ = σ ∷ id-cell ∈ (◇ ,lock⟨ μ ⟩) ⇒ (◇ ,lock⟨ μ ⟩)
+
+rweaken : Renaming Δ Γ → Renaming (Δ ,, μ ∣ x ∈ T) Γ
+rweaken [] = []
+rweaken (σ ∷ y , v / x) = rweaken σ ∷ y , vsuc v / x
+rweaken (lock-ren σ Θ Λ α) = lock-ren σ (Θ ,, _ ∣ _ ∈ _) Λ α
+
+_r⊹⟨_⟩ : Renaming Δ Γ → (x : Name) → Renaming (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
+σ r⊹⟨ x ⟩ = rweaken σ ∷ x , vzero / x
+
+id-ren : (Γ : Ctx m) → Renaming Γ Γ
+id-ren ◇ = []
+id-ren (Γ ,, μ ∣ x ∈ T) = rweaken (id-ren Γ) ∷ x , vzero / x
+id-ren (Γ ,lock⟨ μ ⟩) = id-ren Γ ,rlock⟨ μ ⟩
+
+weaken-ren : (Γ : Ctx m) → Renaming (Γ ,, μ ∣ x ∈ T) Γ
+weaken-ren Γ = rweaken (id-ren Γ)
+
+key : TwoCell μ ρ → Renaming (Γ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⟩)
+key {μ = μ} {ρ = ρ} α = id-ren _ ∷ (id-cell ⓣ-hor α) ∈ (◇ ,lock⟨ μ ⟩) ⇒ (◇ ,lock⟨ ρ ⟩)
+
+lock𝟙-ren : Renaming (Γ ,lock⟨ 𝟙 ⟩) Γ
+lock𝟙-ren = id-ren _ ∷ Ag.subst (TwoCell 𝟙) (sym mod-unitʳ) id-cell ∈ ◇ ⇒ (◇ ,lock⟨ 𝟙 ⟩)
+
+unlock𝟙-ren : Renaming Γ (Γ ,lock⟨ 𝟙 ⟩)
+unlock𝟙-ren = id-ren _ ∷ Ag.subst (λ - → TwoCell - 𝟙) (sym mod-unitʳ) id-cell ∈ (◇ ,lock⟨ 𝟙 ⟩) ⇒ ◇
+
+lockⓜ-ren : Renaming (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
+lockⓜ-ren {μ = μ} {ρ = ρ} = id-ren _ ∷ Ag.subst (TwoCell _) (mod-assoc {μ = 𝟙}) id-cell ∈ (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) ⇒ (◇ ,lock⟨ μ ⓜ ρ ⟩)
+
+unlockⓜ-ren : Renaming (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
+unlockⓜ-ren {μ = μ} {ρ = ρ} = id-ren _ ∷ Ag.subst (TwoCell _) (sym (mod-assoc {μ = 𝟙})) id-cell ∈ (◇ ,lock⟨ μ ⓜ ρ ⟩) ⇒ (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
+
+-- Proving that Renaming has a TravStruct structure. The hardest part
+-- is the implementation of the action of a renaming on a variable.
+
+-- If we have a variable in Γ ++ltel Λ, we actually have a variable in
+-- Γ with less locks.
+record SplitLtelVar (Γ : Ctx m) (Λ : LockTele m n) (x : Name) (μ : Modality o p) (T : Ty o) (κ : Modality n p) : Set where
+  constructor ltel-splitting
+  field
+    κ' : Modality m p
+    v' : Var x μ T κ' Γ
+    same-locks : κ' ⓜ locks-ltel Λ ≡ κ
+
+split-ltel-var : (Λ : LockTele m n) → Var x μ T κ (Γ ++ltel Λ) → SplitLtelVar Γ Λ x μ T κ
+split-ltel-var {κ = κ} ◇ v = ltel-splitting κ v mod-unitʳ
+split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock .ρ v) =
+  let ltel-splitting κ' v' same-locks = split-ltel-var Λ v
+  in ltel-splitting κ' v' (trans (sym (mod-assoc {μ = κ'})) (cong (_ⓜ ρ) same-locks))
+
+-- Adding a telescope to a context does not affect the presence of
+-- variables, but it does affect the locks to the right of variables.
+var-tel : ∀ {κ'} (Θ : Telescope m n) → Var x μ T κ' Γ → Var x μ T (κ' ⓜ locks-tel Θ) (Γ ++tel Θ)
+var-tel ◇ v = Ag.subst (λ - → Var _ _ _ - _) (sym mod-unitʳ) v
+var-tel (Θ ,, ρ ∣ y ∈ S) v = vsuc (var-tel Θ v)
+var-tel {κ' = κ'} (Θ ,lock⟨ ρ ⟩) v = Ag.subst (λ - → Var _ _ _ - _) (mod-assoc {μ = κ'}) (skip-lock ρ (var-tel Θ v))
+
+-- When a renaming acts on a variable, it does not need to have the
+-- same name or the same locks to the right in the context. However,
+-- when the locks change, we can provide a two-cell between the old
+-- and new locks.
+record RenameVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Δ : Ctx m) : Set where
+  constructor renvar
+  field
+    new-name : Name
+    new-locks : Modality m n
+    two-cell : TwoCell κ new-locks
+    v : Var new-name μ T new-locks Δ
+
+rename-var : Var x μ T κ Γ → Renaming Δ Γ → RenameVarResult μ T κ Δ
+rename-var v (lock-ren σ Θ Λ α) =
+  let ltel-splitting κΓ v' same-locks = split-ltel-var Λ v
+      renvar y κΔ β w = rename-var v' σ
+  in renvar y (κΔ ⓜ locks-tel Θ) (Ag.subst (λ - → TwoCell - (κΔ ⓜ locks-tel Θ)) same-locks (β ⓣ-hor α)) (var-tel Θ w)
+rename-var vzero (σ ∷ y , w / x) = renvar y 𝟙 id-cell w
+rename-var (vsuc v) (σ ∷ z , w / y) = rename-var v σ
+
+rename-var-tm : Var x μ T κ Γ → TwoCell μ κ → Renaming Δ Γ → Tm Δ T
+rename-var-tm {x = x} v α σ = let renvar y κ' β w = rename-var v σ in var' y {w} (β ⓣ-vert α)
+
+-- The actual proof that Renaming has a TravStruct structure
+renTravStruct : TravStruct Renaming
+TravStruct.vr renTravStruct = rename-var-tm
+TravStruct.wk renTravStruct {x = x} σ = σ r⊹⟨ x ⟩
+TravStruct.lck renTravStruct {μ = μ} σ = σ ,rlock⟨ μ ⟩
+
+-- Using renamings to traverse terms
+rename-tm : Tm Γ T → Renaming Δ Γ → Tm Δ T
+rename-tm = traverse-tm Renaming renTravStruct
+
+weaken-tm : Tm Γ T → Tm (Γ ,, μ ∣ x ∈ S) T
+weaken-tm t = rename-tm t (weaken-ren _)
+
+lock𝟙-tm : Tm Γ T → Tm (Γ ,lock⟨ 𝟙 ⟩) T
+lock𝟙-tm t = rename-tm t (lock𝟙-ren)
+
+unlock𝟙-tm : Tm (Γ ,lock⟨ 𝟙 ⟩) T → Tm Γ T
+unlock𝟙-tm t = rename-tm t (unlock𝟙-ren)
+
+lockⓜ-tm : Tm (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T
+lockⓜ-tm t = rename-tm t lockⓜ-ren
+
+unlockⓜ-tm : Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) T
+unlockⓜ-tm t = rename-tm t unlockⓜ-ren
+
+
+{-
 
 --------------------------------------------------
 -- Syntactic substitutions
@@ -226,7 +366,7 @@ false [ σ ]tm            | nothing = false
 (snd p) [ σ ]tm          | nothing = snd (p [ σ ]tm)
 (mod⟨ μ ⟩ t) [ σ ]tm      | nothing = mod⟨ μ ⟩ (t [ σ ,lock⟨ μ ⟩ ]tm)
 (mod-elim ρ μ x t s) [ σ ]tm | nothing = mod-elim ρ μ x (t [ σ ,lock⟨ ρ ⟩ ]tm) (s [ σ ⊹⟨ x ⟩ ]tm)
-{-
+
 
 --------------------------------------------------
 -- Proving that substituting the most recently added variable in a
@@ -279,4 +419,12 @@ tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (snd p) = cong snd (tm-weaken-subs
 
 tm-weaken-subst-trivial : (t : Tm Γ T) (s : Tm Γ S) → (t [ π ]tm) [ s / x ]tm ≡ t
 tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-multi ◇ t
+-}
+
+{-
+mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
+mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
+  mod-elim 𝟙 μ x {!!} (Ag.subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
+
+syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 -}
