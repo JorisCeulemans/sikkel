@@ -137,62 +137,13 @@ locks-ltel : LockTele m n → Modality n m
 locks-ltel ◇ = 𝟙
 locks-ltel (Θ ,lock⟨ μ ⟩) = locks-ltel Θ ⓜ μ
 
-
---------------------------------------------------
--- Renamings of MSTT terms
-
-data Renaming : Ctx m → Ctx m → Set where
-  [] : Renaming Γ ◇
-  _∷_,_/_ : Renaming Δ Γ → (y : Name) → Var y μ T 𝟙 Δ → (x : Name) → Renaming Δ (Γ ,, μ ∣ x ∈ T)
-  -- ^ This is maybe too restrictive? We might want to consider
-  --   renamings that do not necessarily preserve modalities of
-  --   variables or that do not enforce the locks to be 𝟙.
-  lock-ren : {Δ Γ : Ctx m} → Renaming Δ Γ → (Θ : Telescope m n) (Λ : LockTele m n) →
-             TwoCell (locks-ltel Λ) (locks-tel Θ) →
-             Renaming (Δ ++tel Θ) (Γ ++ltel Λ)
-
-syntax lock-ren σ Θ Λ α = σ ∷ α ∈ Λ ⇒ Θ
-
--- Some special renamings and operations acting on renamings
-_,rlock⟨_⟩ : {Δ Γ : Ctx m} → Renaming Δ Γ → (μ : Modality n m) → Renaming (Δ ,lock⟨ μ ⟩) (Γ ,lock⟨ μ ⟩)
-σ ,rlock⟨ μ ⟩ = σ ∷ id-cell ∈ (◇ ,lock⟨ μ ⟩) ⇒ (◇ ,lock⟨ μ ⟩)
-
-rweaken : Renaming Δ Γ → Renaming (Δ ,, μ ∣ x ∈ T) Γ
-rweaken [] = []
-rweaken (σ ∷ y , v / x) = rweaken σ ∷ y , vsuc v / x
-rweaken (lock-ren σ Θ Λ α) = lock-ren σ (Θ ,, _ ∣ _ ∈ _) Λ α
-
-_r⊹⟨_⟩ : Renaming Δ Γ → (x : Name) → Renaming (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
-σ r⊹⟨ x ⟩ = rweaken σ ∷ x , vzero / x
-
-id-ren : (Γ : Ctx m) → Renaming Γ Γ
-id-ren ◇ = []
-id-ren (Γ ,, μ ∣ x ∈ T) = rweaken (id-ren Γ) ∷ x , vzero / x
-id-ren (Γ ,lock⟨ μ ⟩) = id-ren Γ ,rlock⟨ μ ⟩
-
-weaken-ren : (Γ : Ctx m) → Renaming (Γ ,, μ ∣ x ∈ T) Γ
-weaken-ren Γ = rweaken (id-ren Γ)
-
-key : TwoCell μ ρ → Renaming (Γ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⟩)
-key {μ = μ} {ρ = ρ} α = id-ren _ ∷ (id-cell ⓣ-hor α) ∈ (◇ ,lock⟨ μ ⟩) ⇒ (◇ ,lock⟨ ρ ⟩)
-
-lock𝟙-ren : Renaming (Γ ,lock⟨ 𝟙 ⟩) Γ
-lock𝟙-ren = id-ren _ ∷ Ag.subst (TwoCell 𝟙) (sym mod-unitʳ) id-cell ∈ ◇ ⇒ (◇ ,lock⟨ 𝟙 ⟩)
-
-unlock𝟙-ren : Renaming Γ (Γ ,lock⟨ 𝟙 ⟩)
-unlock𝟙-ren = id-ren _ ∷ Ag.subst (λ - → TwoCell - 𝟙) (sym mod-unitʳ) id-cell ∈ (◇ ,lock⟨ 𝟙 ⟩) ⇒ ◇
-
-lockⓜ-ren : Renaming (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-lockⓜ-ren {μ = μ} {ρ = ρ} = id-ren _ ∷ Ag.subst (TwoCell _) (mod-assoc {μ = 𝟙}) id-cell ∈ (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) ⇒ (◇ ,lock⟨ μ ⓜ ρ ⟩)
-
-unlockⓜ-ren : Renaming (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
-unlockⓜ-ren {μ = μ} {ρ = ρ} = id-ren _ ∷ Ag.subst (TwoCell _) (sym (mod-assoc {μ = 𝟙})) id-cell ∈ (◇ ,lock⟨ μ ⓜ ρ ⟩) ⇒ (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-
--- Proving that Renaming has a TravStruct structure. The hardest part
--- is the implementation of the action of a renaming on a variable.
+skip-locks : {Γ : Ctx m} (Λ : LockTele m n) → Var x μ T κ Γ → Var x μ T (κ ⓜ locks-ltel Λ) (Γ ++ltel Λ)
+skip-locks ◇ v = Ag.subst (λ - → Var _ _ _ - _) (sym mod-unitʳ) v
+skip-locks {κ = κ} (Λ ,lock⟨ μ ⟩) v =
+  Ag.subst (λ - → Var _ _ _ - _) (mod-assoc {μ = κ}) (skip-lock μ (skip-locks Λ v))
 
 -- If we have a variable in Γ ++ltel Λ, we actually have a variable in
--- Γ with less locks.
+-- Γ with less locks to the right of it.
 record SplitLtelVar (Γ : Ctx m) (Λ : LockTele m n) (x : Name) (μ : Modality o p) (T : Ty o) (κ : Modality n p) : Set where
   constructor ltel-splitting
   field
@@ -206,48 +157,123 @@ split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock .ρ v) =
   let ltel-splitting κ' v' same-locks = split-ltel-var Λ v
   in ltel-splitting κ' v' (trans (sym (mod-assoc {μ = κ'})) (cong (_ⓜ ρ) same-locks))
 
--- Adding a telescope to a context does not affect the presence of
--- variables, but it does affect the locks to the right of variables.
-var-tel : ∀ {κ'} (Θ : Telescope m n) → Var x μ T κ' Γ → Var x μ T (κ' ⓜ locks-tel Θ) (Γ ++tel Θ)
-var-tel ◇ v = Ag.subst (λ - → Var _ _ _ - _) (sym mod-unitʳ) v
-var-tel (Θ ,, ρ ∣ y ∈ S) v = vsuc (var-tel Θ v)
-var-tel {κ' = κ'} (Θ ,lock⟨ ρ ⟩) v = Ag.subst (λ - → Var _ _ _ - _) (mod-assoc {μ = κ'}) (skip-lock ρ (var-tel Θ v))
 
--- When a renaming acts on a variable, it does not need to have the
--- same name or the same locks to the right in the context. However,
--- when the locks change, we can provide a two-cell between the old
--- and new locks.
-record RenameVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Δ : Ctx m) : Set where
+--------------------------------------------------
+-- Renamings of MSTT terms
+
+-- In order to avoid termination issues, we first define atomic
+-- renamings and specify how they can be applied to terms. A genuine
+-- renaming will then consist of a (possibly empty) well-typed list of
+-- atomic renamigs, representing the composition of these atomic
+-- renamings. Note that in this way, renamings are not uniquely
+-- represented by values of the data type Ren, which seems to be
+-- impossible.
+data AtomicRen : Ctx m → Ctx m → Set where
+  [] : AtomicRen Γ ◇
+  _∷_,_/_ : AtomicRen Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) → AtomicRen Γ (Δ ,, μ ∣ x ∈ T)
+  _⊚π : AtomicRen Γ Δ → AtomicRen (Γ ,, μ ∣ x ∈ T) Δ
+  _,lock⟨_⟩ : AtomicRen Γ Δ → (μ : Modality n m) → AtomicRen (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+  atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicRen (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
+
+id-atomic-ren : AtomicRen Γ Γ
+id-atomic-ren = atomic-key ◇ ◇ id-cell
+
+lift-atomic-ren : AtomicRen Γ Δ → AtomicRen (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+lift-atomic-ren {x = x} σ = (σ ⊚π) ∷ x , vzero / x
+
+-- When a (atomic) renaming acts on a variable, it does not need to
+-- have the same name or the same locks to the right in the
+-- context. However, when the locks change, we can provide a two-cell
+-- between the old and new locks.
+record RenVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Γ : Ctx m) : Set where
   constructor renvar
   field
     new-name : Name
     new-locks : Modality m n
     two-cell : TwoCell κ new-locks
-    v : Var new-name μ T new-locks Δ
+    v : Var new-name μ T new-locks Γ
 
-rename-var : Var x μ T κ Γ → Renaming Δ Γ → RenameVarResult μ T κ Δ
-rename-var v (lock-ren σ Θ Λ α) =
-  let ltel-splitting κΓ v' same-locks = split-ltel-var Λ v
-      renvar y κΔ β w = rename-var v' σ
-  in renvar y (κΔ ⓜ locks-tel Θ) (Ag.subst (λ - → TwoCell - (κΔ ⓜ locks-tel Θ)) same-locks (β ⓣ-hor α)) (var-tel Θ w)
-rename-var vzero (σ ∷ y , w / x) = renvar y 𝟙 id-cell w
-rename-var (vsuc v) (σ ∷ z , w / y) = rename-var v σ
+atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
+atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
+  let ltel-splitting κ' v' same-locks = split-ltel-var Λ₂ v
+  in renvar x (κ' ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ' ⓜ locks-ltel Λ₁)) same-locks (id-cell ⓣ-hor α)) (skip-locks Λ₁ v')
+atomic-ren-var' vzero (σ ∷ y , w / x) = renvar y _ id-cell w
+atomic-ren-var' (vsuc v) (σ ∷ y , w / x) = atomic-ren-var' v σ
+atomic-ren-var' v (σ ⊚π) = let renvar y κ' α w = atomic-ren-var' v σ in renvar y κ' α (vsuc w)
+atomic-ren-var' (skip-lock .μ v) (σ ,lock⟨ μ ⟩) =
+  let renvar y κ' α w = atomic-ren-var' v σ
+  in renvar y (κ' ⓜ μ) (α ⓣ-hor id-cell) (skip-lock μ w)
 
-rename-var-tm : Var x μ T κ Γ → TwoCell μ κ → Renaming Δ Γ → Tm Δ T
-rename-var-tm {x = x} v α σ = let renvar y κ' β w = rename-var v σ in var' y {w} (β ⓣ-vert α)
+atomic-ren-var : Var x μ T κ Δ → TwoCell μ κ → AtomicRen Γ Δ → Tm Γ T
+atomic-ren-var v α σ = let renvar y κ' β w = atomic-ren-var' v σ in var' y {w} (β ⓣ-vert α)
 
--- The actual proof that Renaming has a TravStruct structure
-renTravStruct : TravStruct Renaming
-TravStruct.vr renTravStruct = rename-var-tm
-TravStruct.wk renTravStruct {x = x} σ = σ r⊹⟨ x ⟩
-TravStruct.lck renTravStruct {μ = μ} σ = σ ,rlock⟨ μ ⟩
+-- The type family AtomicRen has enough structure to traverse terms.
+AtomicRenTrav : TravStruct AtomicRen
+TravStruct.vr AtomicRenTrav = atomic-ren-var
+TravStruct.wk AtomicRenTrav = lift-atomic-ren
+TravStruct.lck AtomicRenTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
 
--- Using renamings to traverse terms
-rename-tm : Tm Γ T → Renaming Δ Γ → Tm Δ T
-rename-tm = traverse-tm Renaming renTravStruct
+atomic-rename-tm : Tm Δ T → AtomicRen Γ Δ → Tm Γ T
+atomic-rename-tm = traverse-tm AtomicRen AtomicRenTrav
 
+
+-- An actual renaming is a well-typed (snoc) list of atomic renamings.
+data Ren : Ctx m → Ctx m → Set where
+  id : Ren Γ Γ
+  _⊚a_ : Ren Δ Θ → AtomicRen Γ Δ → Ren Γ Θ
+
+rename-tm : Tm Δ T → Ren Γ Δ → Tm Γ T
+rename-tm t id = t
+rename-tm t (τ ⊚a σᵃ) = atomic-rename-tm (rename-tm t τ) σᵃ
+
+lift-ren : Ren Γ Δ → Ren (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+lift-ren id = id
+lift-ren (σ ⊚a τᵃ) = lift-ren σ ⊚a lift-atomic-ren τᵃ
+
+-- All MTT constructors for producing renamings, can be implemented as
+-- operations producing something of type Ren.
+[]r : Ren Γ ◇
+[]r = id ⊚a []
+
+π-ren : Ren (Γ ,, μ ∣ x ∈ T) Γ
+π-ren = id ⊚a (id-atomic-ren ⊚π)
+
+_∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) → Ren Γ (Δ ,, μ ∣ x ∈ T)
+σ ∷ʳ y , w / x = lift-ren σ ⊚a (id-atomic-ren ∷ y , w / x)
+
+_,rlock⟨_⟩ : Ren Γ Δ → (μ : Modality m n) → Ren (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+id ,rlock⟨ μ ⟩ = id
+(σ ⊚a τᵃ) ,rlock⟨ μ ⟩ = (σ ,rlock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
+
+key-ren : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → Ren (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
+key-ren Λ₁ Λ₂ α = id ⊚a atomic-key Λ₁ Λ₂ α
+
+_⊚r_ : Ren Δ Θ → Ren Γ Δ → Ren Γ Θ
+τ ⊚r id = τ
+τ ⊚r (σ ⊚a σᵃ) = (τ ⊚r σ) ⊚a σᵃ
+
+rename-tm-⊚ : {τ : Ren Δ Θ} (σ : Ren Γ Δ) {t : Tm Θ T} → rename-tm (rename-tm t τ) σ ≡ rename-tm t (τ ⊚r σ)
+rename-tm-⊚ id = refl
+rename-tm-⊚ (σ ⊚a σᵃ) = cong (λ - → atomic-rename-tm - σᵃ) (rename-tm-⊚ σ)
+
+-- Some special renamings for introducing/removing a trivial lock and
+-- for (un)fusing locks.
+lock𝟙-ren : Ren (Γ ,lock⟨ 𝟙 ⟩) Γ
+lock𝟙-ren = id ⊚a atomic-key (◇ ,lock⟨ 𝟙 ⟩) ◇ (Ag.subst (TwoCell 𝟙) (sym mod-unitʳ) id-cell)
+
+unlock𝟙-ren : Ren Γ (Γ ,lock⟨ 𝟙 ⟩)
+unlock𝟙-ren = id ⊚a atomic-key ◇ (◇ ,lock⟨ 𝟙 ⟩) (Ag.subst (λ - → TwoCell - 𝟙) (sym mod-unitʳ) id-cell)
+
+lockⓜ-ren : Ren (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
+lockⓜ-ren {μ = μ} {ρ = ρ} = id ⊚a atomic-key (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Ag.subst (TwoCell _) (mod-assoc {μ = 𝟙}) id-cell)
+
+unlockⓜ-ren : Ren (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
+unlockⓜ-ren {μ = μ} {ρ = ρ} = id ⊚a atomic-key (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⓜ ρ ⟩) (Ag.subst (TwoCell _) (sym (mod-assoc {μ = 𝟙})) id-cell)
+
+-- Specific opertations for weakening a term and for the functorial
+-- behaviour of locks.
 weaken-tm : Tm Γ T → Tm (Γ ,, μ ∣ x ∈ S) T
-weaken-tm t = rename-tm t (weaken-ren _)
+weaken-tm t = rename-tm t π-ren
 
 lock𝟙-tm : Tm Γ T → Tm (Γ ,lock⟨ 𝟙 ⟩) T
 lock𝟙-tm t = rename-tm t (lock𝟙-ren)
