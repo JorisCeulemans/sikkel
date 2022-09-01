@@ -23,7 +23,7 @@ private variable
 --------------------------------------------------
 -- Definition of MSTT contexts and terms
 
-infixl 4 _,,_∣_∈_
+infixl 4 _,,_∣_∈_ _,lock⟨_⟩
 data Ctx (m : Mode) : Set where
   ◇ : Ctx m
   _,,_∣_∈_ : (Γ : Ctx m) (μ : Modality n m) (x : Name) (T : Ty n) → Ctx m
@@ -79,14 +79,14 @@ syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 -- codomain) and lock operation for such traversals.
 record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
-    vr : Var x μ T κ Γ → TwoCell μ κ → Trav Δ Γ → Tm Δ T
-    wk : Trav Δ Γ → Trav (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
-    lck : Trav Δ Γ → Trav (Δ ,lock⟨ μ ⟩) (Γ ,lock⟨ μ ⟩)
+    vr : Var x μ T κ Δ → TwoCell μ κ → Trav Γ Δ → Tm Γ T
+    wk : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+    lck : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
 module _ (Trav : ∀ {m} → Ctx m → Ctx m → Set) (TS : TravStruct Trav) where
   open TravStruct TS
 
-  traverse-tm : Tm Γ T → Trav Δ Γ → Tm Δ T
+  traverse-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
   traverse-tm (var' x {v} α) σ = vr v α σ
   traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lck σ)
   traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lck σ)) (traverse-tm s (wk σ))
@@ -159,116 +159,173 @@ split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock {κ = κ} .ρ v) =
 
 
 --------------------------------------------------
--- Renamings of MSTT terms
+-- Common structure of MSTT renaming and substitution
+--   Renaming and substitution can be seen as very similar operations,
+--   where the former assigns variables to variables and the latter
+--   terms to variables (taking into account the modal structure of
+--   contexts). Hence, we describe them at once with a parameter V
+--   that will later be instatiated with variables to obtain renamings
+--   and terms to obtain substitutions.
 
--- In order to avoid termination issues, we first define atomic
--- renamings and specify how they can be applied to terms. A genuine
--- renaming will then consist of a (possibly empty) well-typed list of
--- atomic renamigs, representing the composition of these atomic
--- renamings. Note that in this way, renamings are not uniquely
--- represented by values of the data type Ren, which seems to be
--- impossible.
-data AtomicRen : Ctx m → Ctx m → Set where
-  [] : AtomicRen Γ ◇
-  _∷_,_/_ : AtomicRen Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) → AtomicRen Γ (Δ ,, μ ∣ x ∈ T)
-  _⊚π : AtomicRen Γ Δ → AtomicRen (Γ ,, μ ∣ x ∈ T) Δ
-  _,lock⟨_⟩ : AtomicRen Γ Δ → (μ : Modality n m) → AtomicRen (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-  atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicRen (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
+module AtomicRenSub (V : {m n : Mode} → Modality n m → Ty n → Ctx m → Set) where
 
-id-atomic-ren : AtomicRen Γ Γ
-id-atomic-ren = atomic-key ◇ ◇ id-cell
+  -- In order to avoid termination issues, we first define atomic
+  -- renamings/substitutions and specify how they can be applied to
+  -- terms. A genuine renaming/substitution will then consist of a
+  -- (possibly empty) well-typed list of atomic
+  -- renamigs/substitutions, representing the composition of these
+  -- atomic renamings/substitutions. Note that in this way,
+  -- renamings/substitutions are not uniquely represented by values of
+  -- the data type RenSub, which seems to be impossible.
+  data AtomicRenSub : Ctx m → Ctx m → Set where
+    [] : AtomicRenSub Γ ◇
+    _∷_/_ : AtomicRenSub Γ Δ → V μ T Γ → (x : Name) → AtomicRenSub Γ (Δ ,, μ ∣ x ∈ T)
+    _⊚π : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) Δ
+    _,lock⟨_⟩ : AtomicRenSub Γ Δ → (μ : Modality n m) → AtomicRenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+    atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicRenSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
 
-lift-atomic-ren : AtomicRen Γ Δ → AtomicRen (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-lift-atomic-ren {x = x} σ = (σ ⊚π) ∷ x , vzero / x
 
--- When a (atomic) renaming acts on a variable, it does not need to
--- have the same name or the same locks to the right in the
--- context. However, when the locks change, we can provide a two-cell
--- between the old and new locks.
-record RenVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Γ : Ctx m) : Set where
-  constructor renvar
+-- In order to obtain useful results for renamings/substitutions, the
+-- parameter V must be equipped with some extra structure.
+module RenSub
+  (V : {m n : Mode} → Modality n m → Ty n → Ctx m → Set)
+  (newV : ∀ {x m n} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → V μ T (Γ ,, μ ∣ x ∈ T))
+  (atomic-rensub-var : ∀ {x m n} {Γ Δ : Ctx m} {μ κ : Modality m n} {T : Ty m} →
+                       Var x μ T κ Δ → TwoCell μ κ → AtomicRenSub.AtomicRenSub V Γ Δ → Tm Γ T)
+  where
+
+  open AtomicRenSub V
+
+  id-atomic-rensub : AtomicRenSub Γ Γ
+  id-atomic-rensub = atomic-key ◇ ◇ id-cell
+
+  lift-atomic-rensub : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+  lift-atomic-rensub {x = x} σ = (σ ⊚π) ∷ newV / x
+
+  AtomicRenSubTrav : TravStruct AtomicRenSub
+  TravStruct.vr AtomicRenSubTrav = atomic-rensub-var
+  TravStruct.wk AtomicRenSubTrav = lift-atomic-rensub
+  TravStruct.lck AtomicRenSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
+
+  atomic-rensub-tm : Tm Δ T → AtomicRenSub Γ Δ → Tm Γ T
+  atomic-rensub-tm = traverse-tm AtomicRenSub AtomicRenSubTrav
+
+  -- An actual renaming/substitution is a well-typed (snoc) list of atomic renamings/substitutions.
+  data RenSub : Ctx m → Ctx m → Set where
+    id : RenSub Γ Γ
+    _⊚a_ : RenSub Δ Θ → AtomicRenSub Γ Δ → RenSub Γ Θ
+
+  rensub-tm : Tm Δ T → RenSub Γ Δ → Tm Γ T
+  rensub-tm t id = t
+  rensub-tm t (τ ⊚a σᵃ) = atomic-rensub-tm (rensub-tm t τ) σᵃ
+
+  lift-rensub : RenSub Γ Δ → RenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+  lift-rensub id = id
+  lift-rensub (σ ⊚a τᵃ) = lift-rensub σ ⊚a lift-atomic-rensub τᵃ
+
+  -- All MTT constructors for producing renamings/substitutions, can
+  -- be implemented as operations producing something of type RenSub.
+  []rs : RenSub Γ ◇
+  []rs = id ⊚a []
+
+  π-rensub : RenSub (Γ ,, μ ∣ x ∈ T) Γ
+  π-rensub = id ⊚a (id-atomic-rensub ⊚π)
+
+  _∷ʳˢ_/_ : RenSub Γ Δ → V μ T Γ → (x : Name) → RenSub Γ (Δ ,, μ ∣ x ∈ T)
+  σ ∷ʳˢ v / x = lift-rensub σ ⊚a (id-atomic-rensub ∷ v / x)
+
+  _,rslock⟨_⟩ : RenSub Γ Δ → (μ : Modality m n) → RenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+  id ,rslock⟨ μ ⟩ = id
+  (σ ⊚a τᵃ) ,rslock⟨ μ ⟩ = (σ ,rslock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
+
+  key-rensub : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → RenSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
+  key-rensub Λ₁ Λ₂ α = id ⊚a atomic-key Λ₁ Λ₂ α
+
+  _⊚rs_ : RenSub Δ Θ → RenSub Γ Δ → RenSub Γ Θ
+  τ ⊚rs id = τ
+  τ ⊚rs (σ ⊚a σᵃ) = (τ ⊚rs σ) ⊚a σᵃ
+
+  rensub-tm-⊚ : {τ : RenSub Δ Θ} (σ : RenSub Γ Δ) {t : Tm Θ T} → rensub-tm (rensub-tm t τ) σ ≡ rensub-tm t (τ ⊚rs σ)
+  rensub-tm-⊚ id = refl
+  rensub-tm-⊚ (σ ⊚a σᵃ) = cong (λ - → atomic-rensub-tm - σᵃ) (rensub-tm-⊚ σ)
+
+
+--------------------------------------------------
+-- Renaming for MSTT
+
+record RenData (μ : Modality n m) (T : Ty n) (Γ : Ctx m) : Set where
+  constructor rendata
   field
     new-name : Name
-    new-locks : Modality m n
-    two-cell : TwoCell κ new-locks
-    v : Var new-name μ T new-locks Γ
+    new-var : Var new-name μ T 𝟙 Γ
 
-atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
-atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
-  let ltel-splitting κ/Λ₂ v' lock-div = split-ltel-var Λ₂ v
-  in renvar x (κ/Λ₂ ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ/Λ₂ ⓜ locks-ltel Λ₁)) lock-div (id-cell ⓣ-hor α)) (skip-locks Λ₁ v')
-atomic-ren-var' vzero (σ ∷ y , w / x) = renvar y _ id-cell w
-atomic-ren-var' (vsuc v) (σ ∷ y , w / x) = atomic-ren-var' v σ
-atomic-ren-var' v (σ ⊚π) = let renvar y κ' α w = atomic-ren-var' v σ in renvar y κ' α (vsuc w)
-atomic-ren-var' (skip-lock .μ v) (σ ,lock⟨ μ ⟩) =
-  let renvar y κ' α w = atomic-ren-var' v σ
-  in renvar y (κ' ⓜ μ) (α ⓣ-hor id-cell) (skip-lock μ w)
-
-atomic-ren-var : Var x μ T κ Δ → TwoCell μ κ → AtomicRen Γ Δ → Tm Γ T
-atomic-ren-var v α σ = let renvar y κ' β w = atomic-ren-var' v σ in var' y {w} (β ⓣ-vert α)
-
--- The type family AtomicRen has enough structure to traverse terms.
-AtomicRenTrav : TravStruct AtomicRen
-TravStruct.vr AtomicRenTrav = atomic-ren-var
-TravStruct.wk AtomicRenTrav = lift-atomic-ren
-TravStruct.lck AtomicRenTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
-
-atomic-rename-tm : Tm Δ T → AtomicRen Γ Δ → Tm Γ T
-atomic-rename-tm = traverse-tm AtomicRen AtomicRenTrav
+newRenData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → RenData μ T (Γ ,, μ ∣ x ∈ T)
+newRenData {x = x} = rendata x vzero
 
 
--- An actual renaming is a well-typed (snoc) list of atomic renamings.
-data Ren : Ctx m → Ctx m → Set where
-  id : Ren Γ Γ
-  _⊚a_ : Ren Δ Θ → AtomicRen Γ Δ → Ren Γ Θ
+module AtomicRenVar where
 
-rename-tm : Tm Δ T → Ren Γ Δ → Tm Γ T
-rename-tm t id = t
-rename-tm t (τ ⊚a σᵃ) = atomic-rename-tm (rename-tm t τ) σᵃ
+  open AtomicRenSub RenData renaming (AtomicRenSub to AtomicRen)
 
-lift-ren : Ren Γ Δ → Ren (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-lift-ren id = id
-lift-ren (σ ⊚a τᵃ) = lift-ren σ ⊚a lift-atomic-ren τᵃ
+  -- When a (atomic) renaming acts on a variable, it does not need to
+  -- have the same name or the same locks to the right in the
+  -- context. However, when the locks change, we can provide a two-cell
+  -- between the old and new locks.
+  record RenVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Γ : Ctx m) : Set where
+    constructor renvar
+    field
+      new-name : Name
+      new-locks : Modality m n
+      two-cell : TwoCell κ new-locks
+      v : Var new-name μ T new-locks Γ
 
--- All MTT constructors for producing renamings, can be implemented as
--- operations producing something of type Ren.
-[]r : Ren Γ ◇
-[]r = id ⊚a []
+  atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
+  atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
+    let ltel-splitting κ/Λ₂ v' lock-div = split-ltel-var Λ₂ v
+    in renvar x (κ/Λ₂ ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ/Λ₂ ⓜ locks-ltel Λ₁)) lock-div (id-cell ⓣ-hor α)) (skip-locks Λ₁ v')
+  atomic-ren-var' vzero (σ ∷ rendata y w / x) = renvar y _ id-cell w
+  atomic-ren-var' (vsuc v) (σ ∷ rendata y w / x) = atomic-ren-var' v σ
+  atomic-ren-var' v (σ ⊚π) = let renvar y κ' α w = atomic-ren-var' v σ in renvar y κ' α (vsuc w)
+  atomic-ren-var' (skip-lock .μ v) (σ ,lock⟨ μ ⟩) =
+    let renvar y κ' α w = atomic-ren-var' v σ
+    in renvar y (κ' ⓜ μ) (α ⓣ-hor id-cell) (skip-lock μ w)
 
-π-ren : Ren (Γ ,, μ ∣ x ∈ T) Γ
-π-ren = id ⊚a (id-atomic-ren ⊚π)
+  atomic-ren-var : Var x μ T κ Δ → TwoCell μ κ → AtomicRen Γ Δ → Tm Γ T
+  atomic-ren-var v α σ = let renvar y κ' β w = atomic-ren-var' v σ in var' y {w} (β ⓣ-vert α)
+
+module RenM = RenSub RenData newRenData AtomicRenVar.atomic-ren-var
+
+open RenM
+  renaming
+    ( RenSub to Ren
+    ; id to id-ren
+    ; rensub-tm to rename-tm
+    ; lift-rensub to lift-ren
+    ; []rs to []r
+    ; π-rensub to π-ren
+    ; _,rslock⟨_⟩ to _,rlock⟨_⟩
+    ; key-rensub to key-ren
+    ; _⊚rs_ to _⊚r_
+    ; rensub-tm-⊚ to ren-tm-⊚)
+  using ()
+  public
 
 _∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) → Ren Γ (Δ ,, μ ∣ x ∈ T)
-σ ∷ʳ y , w / x = lift-ren σ ⊚a (id-atomic-ren ∷ y , w / x)
-
-_,rlock⟨_⟩ : Ren Γ Δ → (μ : Modality m n) → Ren (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-id ,rlock⟨ μ ⟩ = id
-(σ ⊚a τᵃ) ,rlock⟨ μ ⟩ = (σ ,rlock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
-
-key-ren : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → Ren (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
-key-ren Λ₁ Λ₂ α = id ⊚a atomic-key Λ₁ Λ₂ α
-
-_⊚r_ : Ren Δ Θ → Ren Γ Δ → Ren Γ Θ
-τ ⊚r id = τ
-τ ⊚r (σ ⊚a σᵃ) = (τ ⊚r σ) ⊚a σᵃ
-
-rename-tm-⊚ : {τ : Ren Δ Θ} (σ : Ren Γ Δ) {t : Tm Θ T} → rename-tm (rename-tm t τ) σ ≡ rename-tm t (τ ⊚r σ)
-rename-tm-⊚ id = refl
-rename-tm-⊚ (σ ⊚a σᵃ) = cong (λ - → atomic-rename-tm - σᵃ) (rename-tm-⊚ σ)
+σ ∷ʳ y , v / x = σ RenM.∷ʳˢ rendata y v / x
 
 -- Some special renamings for introducing/removing a trivial lock and
 -- for (un)fusing locks.
 lock𝟙-ren : Ren (Γ ,lock⟨ 𝟙 ⟩) Γ
-lock𝟙-ren = id ⊚a atomic-key (◇ ,lock⟨ 𝟙 ⟩) ◇ (Ag.subst (TwoCell 𝟙) (sym mod-unitʳ) id-cell)
+lock𝟙-ren = key-ren (◇ ,lock⟨ 𝟙 ⟩) ◇ (Ag.subst (TwoCell 𝟙) (sym mod-unitʳ) id-cell)
 
 unlock𝟙-ren : Ren Γ (Γ ,lock⟨ 𝟙 ⟩)
-unlock𝟙-ren = id ⊚a atomic-key ◇ (◇ ,lock⟨ 𝟙 ⟩) (Ag.subst (λ - → TwoCell - 𝟙) (sym mod-unitʳ) id-cell)
+unlock𝟙-ren = key-ren ◇ (◇ ,lock⟨ 𝟙 ⟩) (Ag.subst (λ - → TwoCell - 𝟙) (sym mod-unitʳ) id-cell)
 
 lockⓜ-ren : Ren (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-lockⓜ-ren {μ = μ} {ρ = ρ} = id ⊚a atomic-key (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Ag.subst (TwoCell _) (mod-assoc {μ = 𝟙}) id-cell)
+lockⓜ-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Ag.subst (TwoCell _) (mod-assoc {μ = 𝟙}) id-cell)
 
 unlockⓜ-ren : Ren (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
-unlockⓜ-ren {μ = μ} {ρ = ρ} = id ⊚a atomic-key (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⓜ ρ ⟩) (Ag.subst (TwoCell _) (sym (mod-assoc {μ = 𝟙})) id-cell)
+unlockⓜ-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⓜ ρ ⟩) (Ag.subst (TwoCell _) (sym (mod-assoc {μ = 𝟙})) id-cell)
 
 -- Specific opertations for weakening a term and for the functorial
 -- behaviour of locks.
@@ -288,137 +345,64 @@ unlockⓜ-tm : Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⟩ ,lock
 unlockⓜ-tm t = rename-tm t unlockⓜ-ren
 
 
---------------------------------------------------
--- Syntactic substitutions
+-- A simpler version of modal elimination (making use of lock𝟙-tm)
+mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
+mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
+  mod-elim 𝟙 μ x (lock𝟙-tm t) (Ag.subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
 
-data AtomicSub : Ctx m → Ctx m → Set where
-  [] : AtomicSub Γ ◇
-  _∷_/_ : AtomicSub Γ Δ → Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → AtomicSub Γ (Δ ,, μ ∣ x ∈ T)
-  _⊚π : AtomicSub Γ Δ → AtomicSub (Γ ,, μ ∣ x ∈ T) Δ
-  _,lock⟨_⟩ : AtomicSub Γ Δ → (μ : Modality n m) → AtomicSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-  atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
-
-lift-atomic-sub : AtomicSub Γ Δ → AtomicSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-lift-atomic-sub {x = x} σ = (σ ⊚π) ∷ var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell) / x
-
-atomic-sub-var : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
-                 (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
-atomic-sub-var {x = x} v ρ α (atomic-key Λ₁ Λ₂ β) =
-  let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
-  in var' x {skip-lock ρ (skip-locks Λ₁ w)}
-          (((id-cell {μ = κ/Λ₂}) ⓣ-hor β ⓣ-hor (id-cell {μ = ρ})) ⓣ-vert Ag.subst (TwoCell _) (cong (_ⓜ ρ) (sym lock-div)) α)
-atomic-sub-var vzero    ρ α (σ ∷ t / x) = rename-tm t (key-ren (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - _) (sym mod-unitˡ) α))
-atomic-sub-var (vsuc v) ρ α (σ ∷ t / x) = atomic-sub-var v ρ α σ
-atomic-sub-var v ρ α (σ ⊚π) = rename-tm (atomic-sub-var v ρ α σ) (π-ren ,rlock⟨ _ ⟩)
-atomic-sub-var (skip-lock {κ = κ} .μ v) ρ α (σ ,lock⟨ μ ⟩) = unlockⓜ-tm (atomic-sub-var v (μ ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α) σ)
-
-AtomicSubTrav : TravStruct AtomicSub
-TravStruct.vr AtomicSubTrav v α σ = unlock𝟙-tm (atomic-sub-var v 𝟙 (Ag.subst (TwoCell _) (sym mod-unitʳ) α) σ)
-TravStruct.wk AtomicSubTrav = lift-atomic-sub
-TravStruct.lck AtomicSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
-
-{-
-data LockFreeTele (m : Mode) : Set where
-  ◇t : LockFreeTele m
-  _,,_∣_∈_ : LockFreeTele m → Modality n m → Name → Ty n → LockFreeTele m
-
-_++lft_ : Ctx m → LockFreeTele m → Ctx m
-Γ ++lft ◇t = Γ
-Γ ++lft (Δ ,, μ ∣ x ∈ T) = (Γ ++lft Δ) ,, μ ∣ x ∈ T
-
--- With the following data type, there are multiple ways to represent
--- the same substitution. This is not a problem since we will never
--- compare substitutions (only apply them to terms and compute
--- immediately). Having a constructor for e.g. the identity seems more
--- efficient than implementing it (but this claim needs justification).
-data Subst : Ctx m → Ctx m → Set where
-  [] : Subst Γ ◇
-  _∷_/_ : Subst Δ Γ → Tm (Δ ,lock⟨ μ ⟩) T → (x : Name) → Subst Δ (Γ ,, μ ∣ x ∈ T)
-  id-subst : (Γ : Ctx m) → Subst Γ Γ
-  _⊚πs⟨_⟩ : Subst Δ Γ → (Θ : LockFreeTele m) → Subst (Δ ++lft Θ) Γ
-  _,lock⟨_⟩ : Subst Δ Γ → (μ : Modality m n) → Subst (Δ ,lock⟨ μ ⟩) (Γ ,lock⟨ μ ⟩)
-  key : TwoCell μ ρ → Subst (Γ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⟩)
-
-π : Subst (Γ ,, μ ∣ x ∈ T) Γ
-π = id-subst _ ⊚πs⟨ _ ⟩
-
-_⊚π : Subst Δ Γ → Subst (Δ ,, μ ∣ x ∈ T) Γ
-σ ⊚π = σ ⊚πs⟨ _ ⟩
-
-_⊹⟨_⟩ : Subst Δ Γ → (x : Name) → Subst (Δ ,, μ ∣ x ∈ T) (Γ ,, μ ∣ x ∈ T)
-σ ⊹⟨ x ⟩ = (σ ⊚π) ∷ var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell) / x
-
-_/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Subst Γ (Γ ,, μ ∣ x ∈ T)
-t / x = id-subst _ ∷ t / x
+syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 
 
 --------------------------------------------------
--- Applying a substitution to a term
---   Note that the operation _[_]tm is automatically capture-avoiding
---   since it only makes use of the De Bruijn indices, not of names.
+-- MSTT substitutions
 
--- We will use the following view pattern in the implementation of
--- substitution for terms, in order to treat some substitutions
--- specially.
-data SpecialSubst : Subst Γ Δ → Set where
-  id-subst : (Γ : Ctx m) → SpecialSubst (id-subst Γ)
-  _⊚πs⟨_⟩ : {Γ Δ : Ctx m} (σ : Subst Γ Δ) → (Θ : LockFreeTele m) → SpecialSubst (σ ⊚πs⟨ Θ ⟩)
+SubData : Modality n m → Ty n → Ctx m → Set
+SubData μ T Γ = Tm (Γ ,lock⟨ μ ⟩) T
 
-is-special-subst? : (σ : Subst Γ Δ) → Maybe (SpecialSubst σ)
-is-special-subst? []           = nothing
-is-special-subst? (σ ∷ t / x)  = nothing
-is-special-subst? (id-subst Γ) = just (id-subst Γ)
-is-special-subst? (σ ⊚πs⟨ Θ ⟩) = just (σ ⊚πs⟨ Θ ⟩)
-is-special-subst? (σ ,lock⟨ μ ⟩) = nothing
-is-special-subst? (key α) = nothing
+newSubData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → SubData μ T (Γ ,, μ ∣ x ∈ T)
+newSubData {x = x} = var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell)
 
-subst-var : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
-            (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → Subst Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
-subst-var {x = x} v ρ α (id-subst _) = var' x {skip-lock ρ v} α
-subst-var v ρ α (σ ⊚πs⟨ ◇t ⟩) = subst-var v ρ α σ
-subst-var v ρ α (σ ⊚πs⟨ Θ ,, _ ∣ _ ∈ _ ⟩) = {!!}
-subst-var vzero ρ α (σ ∷ t / x) = {!t [ key α ]tm!}
-subst-var (vsuc v) ρ α (σ ∷ t / x) = subst-var v ρ α σ
-subst-var (skip-lock .μ v) ρ α (σ ,lock⟨ μ ⟩) = {!subst-var v (μ ⓜ ρ) {!α!} σ!}
-subst-var {x = x} (skip-lock _ v) ρ α (key β) = var' x {skip-lock _ (skip-lock _ v)} (((id-cell ⓣ-hor β) ⓣ-hor id-cell {_}{_}{ρ}) ⓣ-vert α)
+
+module AtomicSubVar where
+
+  open AtomicRenSub SubData renaming (AtomicRenSub to AtomicSub)
+
+  atomic-sub-var' : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
+                   (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
+  atomic-sub-var' {x = x} v ρ α (atomic-key Λ₁ Λ₂ β) =
+    let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
+    in var' x {skip-lock ρ (skip-locks Λ₁ w)}
+            (((id-cell {μ = κ/Λ₂}) ⓣ-hor β ⓣ-hor (id-cell {μ = ρ})) ⓣ-vert Ag.subst (TwoCell _) (cong (_ⓜ ρ) (sym lock-div)) α)
+  atomic-sub-var' vzero    ρ α (σ ∷ t / x) = rename-tm t (key-ren (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - _) (sym mod-unitˡ) α))
+  atomic-sub-var' (vsuc v) ρ α (σ ∷ t / x) = atomic-sub-var' v ρ α σ
+  atomic-sub-var' v ρ α (σ ⊚π) = rename-tm (atomic-sub-var' v ρ α σ) (π-ren ,rlock⟨ _ ⟩)
+  atomic-sub-var' (skip-lock {κ = κ} .μ v) ρ α (σ ,lock⟨ μ ⟩) = unlockⓜ-tm (atomic-sub-var' v (μ ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α) σ)
+
+  atomic-sub-var : Var x μ T κ Δ → TwoCell μ κ → AtomicSub Γ Δ → Tm Γ T
+  atomic-sub-var v α σ = unlock𝟙-tm (atomic-sub-var' v 𝟙 (Ag.subst (TwoCell _) (sym mod-unitʳ) α) σ)
+
+module SubM = RenSub SubData newSubData AtomicSubVar.atomic-sub-var
+
+open SubM
+  renaming
+    ( RenSub to Sub
+    ; id to id-sub
+    ; rensub-tm to _[_]tm
+    ; lift-rensub to lift-sub
+    ; []rs to []s
+    ; _∷ʳˢ_/_ to _∷ˢ_/_
+    ; π-rensub to π
+    ; _,rslock⟨_⟩ to _,slock⟨_⟩
+    ; key-rensub to key-sub
+    ; _⊚rs_ to _⊚s_
+    ; rensub-tm-⊚ to sub-tm-⊚)
+  using ()
+  public
+
+_/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Sub Γ (Γ ,, μ ∣ x ∈ T)
+t / x = id-sub ∷ˢ t / x
 
 {-
-subst-var : (v : Var x μ T κ Γ) → TwoCell μ κ → Subst Δ Γ → Tm Δ T
-subst-var {x = x} v α (id-subst _) = var' x {v = v} α
-subst-var v α (σ ⊚πs⟨ ◇t ⟩) = subst-var v α σ
-subst-var v α (σ ⊚πs⟨ Θ ,, _ ∣ _ ∈ _ ⟩) = {!!}
-subst-var vzero α (σ ∷ t / x) = {!t [ key α ]tm!}
-subst-var (vsuc v) α (σ ∷ t / x) = subst-var v α σ
-subst-var (skip-lock .μ v) α (σ ,lock⟨ μ ⟩) = {!subst-var v ? ?!}
-subst-var {x = x} (skip-lock μ v) α (key {ρ = ρ} β) = var' x {v = skip-lock ρ v} ((id-cell ⓣ-hor β) ⓣ-vert α)
--}
-{-
-subst-var {x = x} v (id-subst Γ) = var' x {v}
-subst-var v         (σ ⊚πs⟨ ◇ ⟩) = subst-var v σ
-subst-var v         (σ ⊚πs⟨ Δ ,, _ ∈ T ⟩) = weaken-tm (subst-var v (σ ⊚πs⟨ Δ ⟩))
-subst-var vzero     (σ ∷ t / x) = t
-subst-var (vsuc v)  (σ ∷ s / x) = subst-var v σ
--}
-_[_]tm : Tm Γ T → Subst Δ Γ → Tm Δ T
-t [ σ ]tm with is-special-subst? σ
-(t [ .(id-subst Γ) ]tm)  | just (id-subst Γ) = t
-(t [ .(σ ⊚πs⟨ Θ ⟩) ]tm)  | just (σ ⊚πs⟨ Θ ⟩) = {!multi-weaken-tm Θ (t [ σ ]tm)!}
-(var' x {v} α) [ σ ]tm   | nothing = {!subst-var v α σ!}
-(lam[ x ∈ T ] t) [ σ ]tm | nothing = lam[ x ∈ T ] (t [ σ ⊹⟨ x ⟩ ]tm)
-(f ∙ t) [ σ ]tm          | nothing = (f [ σ ]tm) ∙ (t [ σ ]tm)
-zero [ σ ]tm             | nothing = zero
-suc [ σ ]tm              | nothing = suc
-(nat-elim a f) [ σ ]tm   | nothing = nat-elim (a [ σ ]tm) (f [ σ ]tm)
-true [ σ ]tm             | nothing = true
-false [ σ ]tm            | nothing = false
-(if b t f) [ σ ]tm       | nothing = if (b [ σ ]tm) (t [ σ ]tm) (f [ σ ]tm)
-(pair t s) [ σ ]tm       | nothing = pair (t [ σ ]tm) (s [ σ ]tm)
-(fst p) [ σ ]tm          | nothing = fst (p [ σ ]tm)
-(snd p) [ σ ]tm          | nothing = snd (p [ σ ]tm)
-(mod⟨ μ ⟩ t) [ σ ]tm      | nothing = mod⟨ μ ⟩ (t [ σ ,lock⟨ μ ⟩ ]tm)
-(mod-elim ρ μ x t s) [ σ ]tm | nothing = mod-elim ρ μ x (t [ σ ,lock⟨ ρ ⟩ ]tm) (s [ σ ⊹⟨ x ⟩ ]tm)
-
-
 --------------------------------------------------
 -- Proving that substituting the most recently added variable in a
 --   weakened term has no effect.
@@ -470,12 +454,4 @@ tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (snd p) = cong snd (tm-weaken-subs
 
 tm-weaken-subst-trivial : (t : Tm Γ T) (s : Tm Γ S) → (t [ π ]tm) [ s / x ]tm ≡ t
 tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-multi ◇ t
--}
-
-{-
-mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
-mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
-  mod-elim 𝟙 μ x {!!} (Ag.subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
-
-syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 -}
