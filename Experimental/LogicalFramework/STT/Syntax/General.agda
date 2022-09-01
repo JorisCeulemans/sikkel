@@ -147,15 +147,15 @@ skip-locks {κ = κ} (Λ ,lock⟨ μ ⟩) v =
 record SplitLtelVar (Γ : Ctx m) (Λ : LockTele m n) (x : Name) (μ : Modality o p) (T : Ty o) (κ : Modality n p) : Set where
   constructor ltel-splitting
   field
-    κ' : Modality m p
-    v' : Var x μ T κ' Γ
-    same-locks : κ' ⓜ locks-ltel Λ ≡ κ
+    κ/Λ : Modality m p
+    v' : Var x μ T κ/Λ Γ
+    lock-div : κ/Λ ⓜ locks-ltel Λ ≡ κ
 
 split-ltel-var : (Λ : LockTele m n) → Var x μ T κ (Γ ++ltel Λ) → SplitLtelVar Γ Λ x μ T κ
 split-ltel-var {κ = κ} ◇ v = ltel-splitting κ v mod-unitʳ
-split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock .ρ v) =
-  let ltel-splitting κ' v' same-locks = split-ltel-var Λ v
-  in ltel-splitting κ' v' (trans (sym (mod-assoc {μ = κ'})) (cong (_ⓜ ρ) same-locks))
+split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock {κ = κ} .ρ v) =
+  let ltel-splitting κ/Λ v' lock-div = split-ltel-var Λ v
+  in  ltel-splitting κ/Λ v' (trans (sym (mod-assoc {μ = κ/Λ})) (cong (_ⓜ ρ) lock-div))
 
 
 --------------------------------------------------
@@ -195,8 +195,8 @@ record RenVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Γ : Ctx
 
 atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
 atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
-  let ltel-splitting κ' v' same-locks = split-ltel-var Λ₂ v
-  in renvar x (κ' ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ' ⓜ locks-ltel Λ₁)) same-locks (id-cell ⓣ-hor α)) (skip-locks Λ₁ v')
+  let ltel-splitting κ/Λ₂ v' lock-div = split-ltel-var Λ₂ v
+  in renvar x (κ/Λ₂ ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ/Λ₂ ⓜ locks-ltel Λ₁)) lock-div (id-cell ⓣ-hor α)) (skip-locks Λ₁ v')
 atomic-ren-var' vzero (σ ∷ y , w / x) = renvar y _ id-cell w
 atomic-ren-var' (vsuc v) (σ ∷ y , w / x) = atomic-ren-var' v σ
 atomic-ren-var' v (σ ⊚π) = let renvar y κ' α w = atomic-ren-var' v σ in renvar y κ' α (vsuc w)
@@ -288,11 +288,36 @@ unlockⓜ-tm : Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⟩ ,lock
 unlockⓜ-tm t = rename-tm t unlockⓜ-ren
 
 
-{-
-
 --------------------------------------------------
 -- Syntactic substitutions
 
+data AtomicSub : Ctx m → Ctx m → Set where
+  [] : AtomicSub Γ ◇
+  _∷_/_ : AtomicSub Γ Δ → Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → AtomicSub Γ (Δ ,, μ ∣ x ∈ T)
+  _⊚π : AtomicSub Γ Δ → AtomicSub (Γ ,, μ ∣ x ∈ T) Δ
+  _,lock⟨_⟩ : AtomicSub Γ Δ → (μ : Modality n m) → AtomicSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+  atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
+
+lift-atomic-sub : AtomicSub Γ Δ → AtomicSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+lift-atomic-sub {x = x} σ = (σ ⊚π) ∷ var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell) / x
+
+atomic-sub-var : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
+                 (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
+atomic-sub-var {x = x} v ρ α (atomic-key Λ₁ Λ₂ β) =
+  let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
+  in var' x {skip-lock ρ (skip-locks Λ₁ w)}
+          (((id-cell {μ = κ/Λ₂}) ⓣ-hor β ⓣ-hor (id-cell {μ = ρ})) ⓣ-vert Ag.subst (TwoCell _) (cong (_ⓜ ρ) (sym lock-div)) α)
+atomic-sub-var vzero    ρ α (σ ∷ t / x) = rename-tm t (key-ren (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - _) (sym mod-unitˡ) α))
+atomic-sub-var (vsuc v) ρ α (σ ∷ t / x) = atomic-sub-var v ρ α σ
+atomic-sub-var v ρ α (σ ⊚π) = rename-tm (atomic-sub-var v ρ α σ) (π-ren ,rlock⟨ _ ⟩)
+atomic-sub-var (skip-lock {κ = κ} .μ v) ρ α (σ ,lock⟨ μ ⟩) = unlockⓜ-tm (atomic-sub-var v (μ ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α) σ)
+
+AtomicSubTrav : TravStruct AtomicSub
+TravStruct.vr AtomicSubTrav v α σ = unlock𝟙-tm (atomic-sub-var v 𝟙 (Ag.subst (TwoCell _) (sym mod-unitʳ) α) σ)
+TravStruct.wk AtomicSubTrav = lift-atomic-sub
+TravStruct.lck AtomicSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
+
+{-
 data LockFreeTele (m : Mode) : Set where
   ◇t : LockFreeTele m
   _,,_∣_∈_ : LockFreeTele m → Modality n m → Name → Ty n → LockFreeTele m
