@@ -80,17 +80,17 @@ syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
     vr : Var x μ T κ Δ → TwoCell μ κ → Trav Γ Δ → Tm Γ T
-    wk : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-    lck : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+    lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+    lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
 module _ (Trav : ∀ {m} → Ctx m → Ctx m → Set) (TS : TravStruct Trav) where
   open TravStruct TS
 
   traverse-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
   traverse-tm (var' x {v} α) σ = vr v α σ
-  traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lck σ)
-  traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lck σ)) (traverse-tm s (wk σ))
-  traverse-tm (lam[ x ∈ T ] s) σ = lam[ x ∈ T ] traverse-tm s (wk σ)
+  traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lock σ)
+  traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lock σ)) (traverse-tm s (lift σ))
+  traverse-tm (lam[ x ∈ T ] s) σ = lam[ x ∈ T ] traverse-tm s (lift σ)
   traverse-tm (f ∙ t) σ = traverse-tm f σ ∙ traverse-tm t σ
   traverse-tm zero σ = zero
   traverse-tm suc σ = suc
@@ -204,8 +204,8 @@ module RenSub
 
   AtomicRenSubTrav : TravStruct AtomicRenSub
   TravStruct.vr AtomicRenSubTrav = atomic-rensub-var
-  TravStruct.wk AtomicRenSubTrav = lift-atomic-rensub
-  TravStruct.lck AtomicRenSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
+  TravStruct.lift AtomicRenSubTrav = lift-atomic-rensub
+  TravStruct.lock AtomicRenSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
 
   atomic-rensub-tm : Tm Δ T → AtomicRenSub Γ Δ → Tm Γ T
   atomic-rensub-tm = traverse-tm AtomicRenSub AtomicRenSubTrav
