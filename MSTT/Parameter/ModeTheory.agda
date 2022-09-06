@@ -8,7 +8,7 @@ open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory
-open import Model.Modality as M hiding (𝟙; _ⓜ_)
+open import Model.Modality as M hiding (𝟙; _ⓜ_; id-cell)
 
 open import MSTT.TCMonad
 

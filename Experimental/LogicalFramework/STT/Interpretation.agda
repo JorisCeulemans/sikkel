@@ -10,21 +10,26 @@ open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory
-open import Model.CwF-Structure as M using (Ctx; Ty; Tm)
+open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+import Model.Modality as M
 import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Discrete as M
 
 open import Experimental.ClosedTypes as M
+open import Experimental.ClosedTypes.Modal as M
 
-open import Experimental.LogicalFramework.STT.Syntax.Named
+open import Experimental.LogicalFramework.STT.ModeTheory
+open import Experimental.LogicalFramework.STT.Syntax.Named as Syn
 import Experimental.LogicalFramework.STT.Syntax.Nameless as DB
 open import Experimental.LogicalFramework.STT.AlphaEquivalence
 open import Experimental.LogicalFramework.STT.Interpretation.Nameless as DBInt
+open import Experimental.LogicalFramework.STT.Interpretation.ModeTheory
 
 private variable
-  Γ Δ : CtxExpr
-  T S : TyExpr
+  m n : Mode
+  Γ Δ : Ctx m
+  T S : Ty m
 
 
 --------------------------------------------------
@@ -39,21 +44,21 @@ open DBInt public using (⟦_⟧ty)
 --   nameless syntax. This will make it almost trivial to prove that
 --   α-equivalent terms have the same interpretation.
 
-⟦_⟧ctx : CtxExpr → Ctx ★
+⟦_⟧ctx : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ Γ ⟧ctx = ⟦ erase-names-ctx Γ ⟧ctx-nmls
 
-⟦_⟧tm : TmExpr Γ T → SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
+⟦_⟧tm : Tm Γ T → SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 ⟦ t ⟧tm = ⟦ erase-names-tm t ⟧tm-nmls
 
-
+{-
 --------------------------------------------------
 -- Proof that weakening a term semantically corresponds to applying a π substitution
 
-mid-weaken-sem-subst : (x : String) {Γ : CtxExpr} (S : TyExpr) (Δ : CtxExpr) → ⟦ (Γ ,, x ∈ S) ++ctx Δ ⟧ctx M.⇒ ⟦ Γ ++ctx Δ ⟧ctx
+mid-weaken-sem-subst : (x : String) {Γ : Ctx} (S : Ty) (Δ : Ctx) → ⟦ (Γ ,, x ∈ S) ++ctx Δ ⟧ctx M.⇒ ⟦ Γ ++ctx Δ ⟧ctx
 mid-weaken-sem-subst _ S ◇ = M.π
 mid-weaken-sem-subst x S (Δ ,, _ ∈ T) = mid-weaken-sem-subst x S Δ s⊹
 
-mid-weaken-var-sound : ∀ {x y} {Γ : CtxExpr} (Δ : CtxExpr) (v : Var x (Γ ++ctx Δ) T) →
+mid-weaken-var-sound : ∀ {x y} {Γ : Ctx} (Δ : Ctx) (v : Var x (Γ ++ctx Δ) T) →
                        (⟦ var' x {v} ⟧tm [ mid-weaken-sem-subst y S Δ ]s) M.≅ᵗᵐ ⟦ var' x {mid-weaken-var Δ v} ⟧tm
 mid-weaken-var-sound ◇ vzero    = M.≅ᵗᵐ-refl
 mid-weaken-var-sound ◇ (vsuc v) = M.≅ᵗᵐ-refl
@@ -64,7 +69,7 @@ mid-weaken-var-sound (Δ ,, _ ∈ T) (vsuc v) =
                            (M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (stm-subst-comp _ _ M.π))
                                         (stm-subst-cong-tm (mid-weaken-var-sound Δ v) M.π)))
 
-mid-weaken-tm-sound : ∀ {x} {S : TyExpr} (Δ : CtxExpr) (t : TmExpr (Γ ++ctx Δ) T) →
+mid-weaken-tm-sound : ∀ {x} {S : Ty} (Δ : Ctx) (t : Tm (Γ ++ctx Δ) T) →
                       (⟦ t ⟧tm [ mid-weaken-sem-subst x S Δ ]s) M.≅ᵗᵐ ⟦ mid-weaken-tm {S = S} Δ t ⟧tm
 mid-weaken-tm-sound Δ (var' x {v}) = mid-weaken-var-sound Δ v
 mid-weaken-tm-sound Δ (lam[ _ ∈ _ ] t) = M.≅ᵗᵐ-trans (sλ-natural _) (sλ-cong (mid-weaken-tm-sound (Δ ,, _ ∈ _) t))
@@ -80,25 +85,47 @@ mid-weaken-tm-sound Δ (pair t s) = M.≅ᵗᵐ-trans (spair-natural _) (spair-c
 mid-weaken-tm-sound Δ (fst p) = M.≅ᵗᵐ-trans (sfst-natural _) (sfst-cong (mid-weaken-tm-sound Δ p))
 mid-weaken-tm-sound Δ (snd p) = M.≅ᵗᵐ-trans (ssnd-natural _) (ssnd-cong (mid-weaken-tm-sound Δ p))
 
-weaken-tm-sound : ∀ {x} {S : TyExpr} (t : TmExpr Γ T) → (⟦ t ⟧tm [ M.π ]s) M.≅ᵗᵐ ⟦ weaken-tm {x = x} {S = S} t ⟧tm
+weaken-tm-sound : ∀ {x} {S : Ty} (t : Tm Γ T) → (⟦ t ⟧tm [ M.π ]s) M.≅ᵗᵐ ⟦ weaken-tm {x = x} {S = S} t ⟧tm
 weaken-tm-sound t = mid-weaken-tm-sound ◇ t
-
+-}
 
 --------------------------------------------------
 -- Interpretation of substitutions as presheaf morphisms
 --   and soundness proof of term substitution
 
-⟦_⟧subst : SubstExpr Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
+⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ++ltel Λ ⟧ctx M.≅ᶜ M.lock ⟦ locks-ltel Λ ⟧mod ⟦ Γ ⟧ctx
+⟦⟧ltel {m} ◇ = M.eq-lock (M.≅ᵐ-sym (⟦𝟙⟧-sound {m})) _
+⟦⟧ltel (Λ ,lock⟨ μ ⟩) =
+  M.≅ᶜ-trans (M.ctx-functor-cong (M.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
+             (M.≅ᶜ-sym (M.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
+
+open Syn.AtomicRenSub Syn.SubData renaming (AtomicRenSub to AtomicSub)
+open Syn.RenSub Syn.SubData
+⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
+⟦ [] ⟧asub = M.!◇ _
+⟦ _∷_/_ {μ = μ} σ t x ⟧asub = ⟦ σ ⟧asub ,ₛ M.smod-intro ⟦ μ ⟧mod ⟦ t ⟧tm
+⟦ σ ⊚π ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
+⟦ σ ,lock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
+⟦ atomic-key Λ₁ Λ₂ α ⟧asub =
+  M.to (⟦⟧ltel Λ₂)
+  M.⊚ (M.transf-op (M.transf ⟦ α ⟧two-cell) _)
+  M.⊚ M.from (⟦⟧ltel Λ₁)
+
+⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
+⟦ id ⟧sub = M.id-subst _
+⟦ σ ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
+
+{-
 ⟦ [] ⟧subst = M.!◇ _
 ⟦ _∷_/_ {_} {T} σ t _ ⟧subst = ⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm
 ⟦ id-subst Γ ⟧subst = M.id-subst _
 ⟦ σ ⊚πs⟨ ◇ ⟩      ⟧subst = ⟦ σ ⟧subst
 ⟦ σ ⊚πs⟨ Δ ,, _ ∈ T ⟩ ⟧subst = ⟦ σ ⊚πs⟨ Δ ⟩ ⟧subst M.⊚ M.π
 
-⊹-sound : ∀ {x} (σ : SubstExpr Δ Γ) {T : TyExpr} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst
+⊹-sound : ∀ {x} (σ : Subst Δ Γ) {T : Ty} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst
 ⊹-sound σ = M.≅ˢ-refl
 
-subst-var-sound : ∀ {x} (v : Var x Γ T) (σ : SubstExpr Δ Γ) → (⟦ var' x {v} ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ subst-var v σ ⟧tm
+subst-var-sound : ∀ {x} (v : Var x Γ T) (σ : Subst Δ Γ) → (⟦ var' x {v} ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ subst-var v σ ⟧tm
 subst-var-sound vzero    (σ ∷ t / x) = ,ₛ-β2 ⟦ σ ⟧subst ⟦ t ⟧tm
 subst-var-sound (vsuc v) (σ ∷ t / x) =
   M.≅ᵗᵐ-trans (stm-subst-comp _ M.π (⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm))
@@ -111,7 +138,7 @@ subst-var-sound v (σ ⊚πs⟨ Δ ,, _ ∈ T ⟩) =
               (M.≅ᵗᵐ-trans (stm-subst-cong-tm (subst-var-sound v (σ ⊚πs⟨ Δ ⟩)) _)
                            (weaken-tm-sound (subst-var v (σ ⊚πs⟨ Δ ⟩))))
 
-tm-subst-sound : (t : TmExpr Γ T) (σ : SubstExpr Δ Γ) → (⟦ t ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ t [ σ ]tm ⟧tm
+tm-subst-sound : (t : Tm Γ T) (σ : Subst Δ Γ) → (⟦ t ⟧tm [ ⟦ σ ⟧subst ]s) M.≅ᵗᵐ ⟦ t [ σ ]tm ⟧tm
 tm-subst-sound t σ with is-special-subst? σ
 tm-subst-sound t .(id-subst Γ)          | just (id-subst Γ) = stm-subst-id ⟦ t ⟧tm
 tm-subst-sound t .(σ ⊚πs⟨ ◇ ⟩)          | just (σ ⊚πs⟨ ◇ ⟩) = tm-subst-sound t σ
@@ -142,7 +169,7 @@ tm-subst-sound (snd p) σ                | nothing = M.≅ᵗᵐ-trans (ssnd-nat
 --------------------------------------------------
 -- Proof of a lemma needed in the soundness proof of the logical framework
 
-subst-lemma : (Δ : CtxExpr) {Γ : M.Ctx ★} {T : ClosedTy ★}
+subst-lemma : (Δ : Ctx) {Γ : M.Ctx ★} {T : ClosedTy ★}
               (σ : Γ M.⇒ ⟦ Δ ⟧ctx) (t : SimpleTm ⟦ Δ ⟧ctx T) →
               (⟦ id-subst Δ ⟧subst ,ₛ t) M.⊚ σ M.≅ˢ (σ s⊹) M.⊚ (M.id-subst Γ ,ₛ (t [ σ ]s))
 subst-lemma Δ σ t =
@@ -152,3 +179,4 @@ subst-lemma Δ σ t =
                                                (M.≅ˢ-trans (M.,ₛ-cong2 _ (M.,ₛ-β2 _ _))
                                                            (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _))
                                                                                                          (M.⊚-id-substʳ _))) _)))))
+-}

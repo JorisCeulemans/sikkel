@@ -414,6 +414,10 @@ module _ {μ ρ : Modality C D} (α : TwoCell μ ρ) where
   coe-closed {T = T} t = ι⁻¹[ mod-cong ρ (closed-natural {U = T} (transf-op (transf α) _)) ] coe t
 
 
+-- The identity 2-cell.
+id-cell : {μ : Modality C D} → TwoCell μ μ
+transf id-cell = id-ctx-transf _
+
 -- Composition of 2-cells (both vertical and horizontal)
 _ⓣ-vert_ : {μ ρ κ : Modality C D} → TwoCell μ ρ → TwoCell κ μ → TwoCell κ ρ
 transf (α ⓣ-vert β) = transf β ⓝ-vert transf α

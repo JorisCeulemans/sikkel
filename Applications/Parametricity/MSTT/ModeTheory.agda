@@ -9,7 +9,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M hiding (★; ⋀)
 open import Model.CwF-Structure as M
-open import Model.Modality as M hiding (𝟙; _ⓜ_)
+open import Model.Modality as M hiding (𝟙; _ⓜ_; id-cell)
 open import Applications.Parametricity.Model as M hiding (forget-left; forget-right)
 
 open import MSTT.TCMonad

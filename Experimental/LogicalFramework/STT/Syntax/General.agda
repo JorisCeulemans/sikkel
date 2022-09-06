@@ -368,7 +368,7 @@ module AtomicSubVar where
   open AtomicRenSub SubData renaming (AtomicRenSub to AtomicSub)
 
   atomic-sub-var' : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
-                   (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
+                    (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
   atomic-sub-var' {x = x} v ρ α (atomic-key Λ₁ Λ₂ β) =
     let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
     in var' x {skip-lock ρ (skip-locks Λ₁ w)}

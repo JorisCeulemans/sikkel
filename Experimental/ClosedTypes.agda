@@ -13,6 +13,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Model.BaseCategory
 open import Model.CwF-Structure.Context
+open import Model.CwF-Structure.ContextEquivalence
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
 open import Model.CwF-Structure.ContextExtension
@@ -43,6 +44,12 @@ private variable
 SimpleTm : Ctx C → ClosedTy C → Set
 SimpleTm Γ T = Tm Γ (T [ !◇ Γ ])
 
+sι[_]_ : T ≅ᵗʸ S → SimpleTm Γ S → SimpleTm Γ T
+sι[ e ] s = ι[ ty-subst-cong-ty _ e ] s
+
+sι⁻¹[_]_ : T ≅ᵗʸ S → SimpleTm Γ T → SimpleTm Γ S
+sι⁻¹[ e ] t = ι⁻¹[ ty-subst-cong-ty _ e ] t
+
 _[_]s : SimpleTm Γ T → (Δ ⇒ Γ) → SimpleTm Δ T
 _[_]s {T = T} t σ = ι⁻¹[ closed-ty-natural T σ ] (t [ σ ]')
 
@@ -62,6 +69,9 @@ eq (stm-subst-cong-tm {T = T} e σ) γ = cong (T ⟪ _ , refl ⟫_) (eq e (func 
 infixl 15 _,,ₛ_
 _,,ₛ_ : Ctx C → ClosedTy C → Ctx C
 Γ ,,ₛ T = Γ ,, (T [ !◇ Γ ])
+
+,,ₛ-cong : {Γ : Ctx C} → T ≅ᵗʸ S → Γ ,,ₛ T ≅ᶜ Γ ,,ₛ S
+,,ₛ-cong T=S = ,,-cong (ty-subst-cong-ty _ T=S)
 
 sξ : SimpleTm (Γ ,,ₛ T) T
 sξ ⟨ x , [ γ , t ] ⟩' = t
