@@ -1,8 +1,8 @@
 --------------------------------------------------
--- Instantiation of the general STT syntax with strings as names
+-- Instantiation of the general MSTT syntax with strings as names
 --------------------------------------------------
 
-module Experimental.LogicalFramework.STT.Syntax.Named where
+module Experimental.LogicalFramework.MSTT.Syntax.Named where
 
 open import Data.Empty
 open import Data.Product
@@ -15,9 +15,9 @@ open import Relation.Binary.PropositionalEquality
 --------------------------------------------------
 -- Re-exporting the definitions of types, contexts, terms and associated operations.
 
-open import Experimental.LogicalFramework.STT.ModeTheory
-open import Experimental.LogicalFramework.STT.Syntax.Types public
-open import Experimental.LogicalFramework.STT.Syntax.General String public
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Syntax.Types public
+open import Experimental.LogicalFramework.MSTT.Syntax.General String public
 
 private variable
   m n : Mode

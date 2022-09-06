@@ -5,13 +5,13 @@
 --   but rather use MSTT.Syntax.Named.
 --------------------------------------------------
 
-module Experimental.LogicalFramework.STT.Syntax.General (Name : Set) where
+module Experimental.LogicalFramework.MSTT.Syntax.General (Name : Set) where
 
 open import Data.Maybe
 open import Relation.Binary.PropositionalEquality as Ag
 
-open import Experimental.LogicalFramework.STT.ModeTheory
-open import Experimental.LogicalFramework.STT.Syntax.Types
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Syntax.Types
 
 private variable
   m n o p : Mode

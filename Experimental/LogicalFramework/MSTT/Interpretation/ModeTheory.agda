@@ -1,4 +1,4 @@
-module Experimental.LogicalFramework.STT.Interpretation.ModeTheory where
+module Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory where
 
 open import Data.Nat
 
@@ -11,7 +11,7 @@ import Model.Type.Discrete as M
 
 import Applications.GuardedRecursion.Model.Modalities as M
 
-open import Experimental.LogicalFramework.STT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.ModeTheory
 
 
 private variable

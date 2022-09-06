@@ -1,9 +1,8 @@
 --------------------------------------------------
--- Interpretation of STT contexts and terms in the presheaf
---   model over the trivial base category
+-- Interpretation of MSTT contexts and terms in a presheaf model
 --------------------------------------------------
 
-module Experimental.LogicalFramework.STT.Interpretation where
+module Experimental.LogicalFramework.MSTT.Interpretation where
 
 open import Data.Maybe
 open import Data.String
@@ -19,12 +18,12 @@ import Model.Type.Discrete as M
 open import Experimental.ClosedTypes as M
 open import Experimental.ClosedTypes.Modal as M
 
-open import Experimental.LogicalFramework.STT.ModeTheory
-open import Experimental.LogicalFramework.STT.Syntax.Named as Syn
-import Experimental.LogicalFramework.STT.Syntax.Nameless as DB
-open import Experimental.LogicalFramework.STT.AlphaEquivalence
-open import Experimental.LogicalFramework.STT.Interpretation.Nameless as DBInt
-open import Experimental.LogicalFramework.STT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Syntax.Named as Syn
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless as DB
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless as DBInt
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
 private variable
   m n : Mode

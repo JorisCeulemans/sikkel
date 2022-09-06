@@ -1,10 +1,10 @@
 --------------------------------------------------
--- Definition of STT types
+-- Definition of MSTT types
 --------------------------------------------------
 
-module Experimental.LogicalFramework.STT.Syntax.Types where
+module Experimental.LogicalFramework.MSTT.Syntax.Types where
 
-open import Experimental.LogicalFramework.STT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.ModeTheory
 
 private variable
   m n : Mode

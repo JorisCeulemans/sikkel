@@ -1,9 +1,9 @@
 --------------------------------------------------
--- Interpretation of nameless STT types, contexts and terms in the
---   presheaf model over the trivial base category
+-- Interpretation of nameless MSTT types, contexts and terms in a
+--   presheaf model
 --------------------------------------------------
 
-module Experimental.LogicalFramework.STT.Interpretation.Nameless where
+module Experimental.LogicalFramework.MSTT.Interpretation.Nameless where
 
 open import Relation.Binary.PropositionalEquality
 
@@ -18,10 +18,10 @@ import Model.Modality as M
 open import Experimental.ClosedTypes as M
 open import Experimental.ClosedTypes.Modal as M
 
-open import Experimental.LogicalFramework.STT.ModeTheory
-open import Experimental.LogicalFramework.STT.Syntax.Nameless
-open import Experimental.LogicalFramework.STT.AlphaEquivalence
-open import Experimental.LogicalFramework.STT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
 private variable
   m n o : Mode

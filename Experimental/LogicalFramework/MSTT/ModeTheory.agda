@@ -1,4 +1,4 @@
-module Experimental.LogicalFramework.STT.ModeTheory where
+module Experimental.LogicalFramework.MSTT.ModeTheory where
 
 open import Data.Nat
 open import Data.Nat.Properties using (+-identityʳ; +-assoc)
