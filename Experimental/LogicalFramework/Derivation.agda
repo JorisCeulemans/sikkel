@@ -12,7 +12,7 @@ import Relation.Binary.PropositionalEquality as Ag
 -- we want it to be in scope so that the inference rules refl and
 -- withAlpha can use it as instance argument when writing proofs.
 open Ag public using (refl)
-open import Relation.Nullary
+open import Relation.Nullary as Ag using (Dec; yes; no)
 open import Relation.Nullary.Decidable.Core
 
 open import Model.BaseCategory
@@ -27,6 +27,7 @@ import Experimental.DependentTypes.Model.Function as MDF
 import Experimental.ClosedTypes as M
 import Experimental.ClosedTypes.Pi as M
 import Experimental.ClosedTypes.Identity as M
+import Experimental.ClosedTypes.Discrete as M
 
 open import Experimental.LogicalFramework.STT
 open import Experimental.LogicalFramework.Formula
@@ -73,7 +74,7 @@ data Assumption : String → ProofCtx → Set where
 assump-vpred : Assumption x (Ξ ∷ᵛ y ∈ T) → Assumption x Ξ
 assump-vpred (skip-var a) = a
 
-assump-apred : ¬ (x Ag.≡ y) → Assumption x (Ξ ∷ᶠ y ∈ φ) → Assumption x Ξ
+assump-apred : Ag.¬ (x Ag.≡ y) → Assumption x (Ξ ∷ᶠ y ∈ φ) → Assumption x Ξ
 assump-apred ¬x=y azero    = ⊥-elim (¬x=y Ag.refl)
 assump-apred ¬x=y (asuc a) = a
 
@@ -108,8 +109,11 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
           (Ξ ⊢ φ [ t1 / x ]frm) →
           (Ξ ⊢ φ [ t2 / x ]frm)
 
-  -- Introduction and elimination for logical combinators ⊃, ∧ and ∀.
+  -- Introduction and elimination for logical combinators ⊤ᶠ, ⊥ᶠ, ⊃, ∧ and ∀.
+  ⊤ᶠ-intro : Ξ ⊢ ⊤ᶠ
+  ⊥ᶠ-elim : Ξ ⊢ ⊥ᶠ ⊃ φ
   assume[_]_ : (x : String) → (Ξ ∷ᶠ x ∈ φ ⊢ ψ) → (Ξ ⊢ φ ⊃ ψ)
+  ⊃-elim : (Ξ ⊢ φ ⊃ ψ) → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
   assumption' : (x : String) {a : Assumption x Ξ} → (Ξ ⊢ lookup-assumption a)
   ∧-intro : (Ξ ⊢ φ) → (Ξ ⊢ ψ) → (Ξ ⊢ φ ∧ ψ)
   ∧-elimˡ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ φ)
@@ -132,6 +136,11 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
                (Ξ ⊢ fst (pair t s) ≡ᶠ t)
   pair-β-snd : {t : TmExpr (to-ctx Ξ) T} {s : TmExpr (to-ctx Ξ) S} →
                (Ξ ⊢ snd (pair t s) ≡ᶠ s)
+
+  -- Axioms specifying distinctness of booleans and natural numbers.
+  true≠false : Ξ ⊢ ¬ (true ≡ᶠ false)
+  suc-inj : Ξ ⊢ ∀[ "m" ∈ Nat' ] ∀[ "n" ∈ Nat' ] (suc ∙ (var "m") ≡ᶠ suc ∙ (var "n")) ⊃ (var "m" ≡ᶠ var "n")
+  zero≠sucn : Ξ ⊢ ∀[ "n" ∈ Nat' ] ¬ (zero ≡ᶠ suc ∙ var "n")
 
   -- Induction schemata for Bool' and Nat'.
   bool-induction : (Ξ ⊢ φ [ true / x ]frm) →
@@ -355,7 +364,10 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
                                         (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)))
      ]
   ⟦ d ⟧der)
+⟦ ⊤ᶠ-intro ⟧der = M.tt' M.[ _ ]'
+⟦ ⊥ᶠ-elim ⟧der = (M.empty-elim _) M.[ _ ]'
 ⟦ assume[ _ ] d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
+⟦ ⊃-elim d1 d2 ⟧der = M.app (M.ι⁻¹[ M.⇛-natural _ ] ⟦ d1 ⟧der) ⟦ d2 ⟧der
 ⟦ assumption' _ {a} ⟧der = interpret-assumption a
 ⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
@@ -373,6 +385,9 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
 ⟦ if-β-false ⟧der = (M.≅ᵗᵐ-to-Id (M.sif-β-false _ _)) M.[ _ ]'
 ⟦ pair-β-fst ⟧der = (M.≅ᵗᵐ-to-Id (M.sprod-β-fst _ _)) M.[ _ ]'
 ⟦ pair-β-snd ⟧der = (M.≅ᵗᵐ-to-Id (M.sprod-β-snd _ _)) M.[ _ ]'
+⟦ true≠false ⟧der = M.strue≠sfalse M.[ _ ]'
+⟦ suc-inj ⟧der = M.ssuc-inj M.[ _ ]'
+⟦ zero≠sucn ⟧der = M.szero≠ssucn M.[ _ ]'
 ⟦ bool-induction {Ξ = Ξ} {x = x} {φ = φ} d1 d2 ⟧der =
   M.sbool-induction _ (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
                                                            (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))

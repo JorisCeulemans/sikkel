@@ -10,6 +10,7 @@ open import Model.BaseCategory
 module Model.Type.Discrete {C : BaseCategory} where
 
 open import Data.Bool using (Bool; true; false; if_then_else_; _∧_; _∨_)
+open import Data.Empty
 open import Data.Nat hiding (_⊔_)
 open import Data.Product renaming (_,_ to [_,_])
 open import Data.Unit using (⊤; tt)
@@ -108,6 +109,18 @@ eq (β-unit t) _ = refl
 
 η-unit : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
 eq (η-unit t) _ = refl
+
+
+--------------------------------------------------
+-- The empty type
+
+Empty' : Ty Γ
+Empty' = Discr ⊥
+
+empty-elim : (T : Ty Γ) → Tm Γ (Empty' ⇛ T)
+empty-elim T ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ ()
+naturality (empty-elim T ⟨ x , γ ⟩') {t = ()}
+naturality (empty-elim T) f eγ = to-pshfun-eq (λ _ _ ())
 
 
 --------------------------------------------------

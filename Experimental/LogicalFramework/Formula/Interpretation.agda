@@ -8,6 +8,7 @@ module Experimental.LogicalFramework.Formula.Interpretation where
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
 import Model.Type.Function as M
 import Model.Type.Product as M
+import Model.Type.Discrete as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.ClosedTypes
@@ -29,6 +30,8 @@ private variable
 ⟦ φ ⟧frm = ⟦ erase-names-frm φ ⟧frm-nmls
 
 frm-subst-sound : (φ : Formula Γ) (σ : SubstExpr Δ Γ) → ⟦ φ ⟧frm M.[ ⟦ σ ⟧subst ] ≅ᵗʸ ⟦ φ [ σ ]frm ⟧frm
+frm-subst-sound ⊤ᶠ σ = M.Discr-natural _ _
+frm-subst-sound ⊥ᶠ σ = M.Discr-natural _ _
 frm-subst-sound (t1 ≡ᶠ t2) σ =
   M.≅ᵗʸ-trans (M.Id-natural _) (M.Id-cong (closed-ty-natural _ _) (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t1 σ))
                                                                   (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))

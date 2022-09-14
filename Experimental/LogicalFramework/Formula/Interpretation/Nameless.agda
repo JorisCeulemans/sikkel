@@ -8,6 +8,7 @@ module Experimental.LogicalFramework.Formula.Interpretation.Nameless where
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; _≅ᵗʸ_)
 import Model.Type.Function as M
 import Model.Type.Product as M
+import Model.Type.Discrete as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 open import Experimental.ClosedTypes
@@ -22,6 +23,8 @@ private variable
 
 
 ⟦_⟧frm-nmls : Formula Γ → Ty ⟦ Γ ⟧ctx-nmls
+⟦ ⊤ᶠ ⟧frm-nmls = M.Unit'
+⟦ ⊥ᶠ ⟧frm-nmls = M.Empty'
 ⟦ t1 ≡ᶠ t2 ⟧frm-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
 ⟦ φ ⊃ ψ ⟧frm-nmls = ⟦ φ ⟧frm-nmls M.⇛ ⟦ ψ ⟧frm-nmls
 ⟦ φ ∧ ψ ⟧frm-nmls = ⟦ φ ⟧frm-nmls M.⊠ ⟦ ψ ⟧frm-nmls
