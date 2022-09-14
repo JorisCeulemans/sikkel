@@ -15,6 +15,8 @@ private variable
 
 
 erase-names-frm : Formula Γ → NMLS.Formula (erase-names-ctx Γ)
+erase-names-frm ⊤ᶠ = NMLS.⊤ᶠ
+erase-names-frm ⊥ᶠ = NMLS.⊥ᶠ
 erase-names-frm (t1 ≡ᶠ t2) = erase-names-tm t1 NMLS.≡ᶠ erase-names-tm t2
 erase-names-frm (φ ⊃ ψ) = erase-names-frm φ NMLS.⊃ erase-names-frm ψ
 erase-names-frm (φ ∧ ψ) = erase-names-frm φ NMLS.∧ erase-names-frm ψ
