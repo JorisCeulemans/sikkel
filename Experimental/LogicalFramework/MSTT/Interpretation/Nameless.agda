@@ -79,4 +79,3 @@ private variable
 ⟦ pair t s ⟧tm-nmls = spair ⟦ t ⟧tm-nmls ⟦ s ⟧tm-nmls
 ⟦ fst p ⟧tm-nmls = sfst ⟦ p ⟧tm-nmls
 ⟦ snd p ⟧tm-nmls = ssnd ⟦ p ⟧tm-nmls
-
