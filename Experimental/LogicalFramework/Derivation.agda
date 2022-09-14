@@ -113,6 +113,7 @@ data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
   ⊤ᶠ-intro : Ξ ⊢ ⊤ᶠ
   ⊥ᶠ-elim : Ξ ⊢ ⊥ᶠ ⊃ φ
   assume[_]_ : (x : String) → (Ξ ∷ᶠ x ∈ φ ⊢ ψ) → (Ξ ⊢ φ ⊃ ψ)
+  ⊃-elim : (Ξ ⊢ φ ⊃ ψ) → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
   assumption' : (x : String) {a : Assumption x Ξ} → (Ξ ⊢ lookup-assumption a)
   ∧-intro : (Ξ ⊢ φ) → (Ξ ⊢ ψ) → (Ξ ⊢ φ ∧ ψ)
   ∧-elimˡ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ φ)
@@ -366,6 +367,7 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
 ⟦ ⊤ᶠ-intro ⟧der = M.tt' M.[ _ ]'
 ⟦ ⊥ᶠ-elim ⟧der = (M.empty-elim _) M.[ _ ]'
 ⟦ assume[ _ ] d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
+⟦ ⊃-elim d1 d2 ⟧der = M.app (M.ι⁻¹[ M.⇛-natural _ ] ⟦ d1 ⟧der) ⟦ d2 ⟧der
 ⟦ assumption' _ {a} ⟧der = interpret-assumption a
 ⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
