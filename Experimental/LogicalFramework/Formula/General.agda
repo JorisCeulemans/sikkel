@@ -17,7 +17,10 @@ open import Experimental.LogicalFramework.MSTT.Syntax.General Name
 
 private variable
   m n : Mode
+  μ ρ : Modality m n
+  x : Name
   Γ Δ : Ctx m
+  T : Ty m
 
 
 infixl 3 ∀[_∣_∈_]_
@@ -25,6 +28,7 @@ infixr 6 _⊃_
 infixl 9 _∧_
 infix 12 _≡ᶠ_
 
+-- TODO: include connective for disjunction and existential quantification.
 data Formula (Γ : Ctx m) : Set where
   ⊤ᶠ ⊥ᶠ : Formula Γ
   _≡ᶠ_ : {T : Ty m} (t1 t2 : Tm Γ T) → Formula Γ
@@ -35,12 +39,53 @@ data Formula (Γ : Ctx m) : Set where
 ¬ : Formula Γ → Formula Γ
 ¬ φ = φ ⊃ ⊥ᶠ
 
--- Applying a substitution to a formula.
+
+-- A formula can be traversed whenever terms can be traversed
+record FrmTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
+  field
+    trav-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
+    lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+    lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+
+  traverse-frm : Formula Δ → Trav Γ Δ → Formula Γ
+  traverse-frm ⊤ᶠ σ = ⊤ᶠ
+  traverse-frm ⊥ᶠ σ = ⊥ᶠ
+  traverse-frm (t1 ≡ᶠ t2) σ = trav-tm t1 σ ≡ᶠ trav-tm t2 σ
+  traverse-frm (φ ⊃ ψ) σ = traverse-frm φ σ ⊃ traverse-frm ψ σ
+  traverse-frm (φ ∧ ψ) σ = traverse-frm φ σ ∧ traverse-frm ψ σ
+  traverse-frm (∀[ μ ∣ x ∈ T ] φ) σ = ∀[ μ ∣ x ∈ T ] traverse-frm φ (lift σ)
+  traverse-frm ⟨ μ ∣ φ ⟩ σ = ⟨ μ ∣ traverse-frm φ (lock σ) ⟩
+
+open FrmTravStruct using (traverse-frm)
+
+
+renFrmTrav : FrmTravStruct Ren
+FrmTravStruct.trav-tm renFrmTrav = rename-tm
+FrmTravStruct.lift renFrmTrav = lift-ren
+FrmTravStruct.lock renFrmTrav = λ σ → σ ,rlock⟨ _ ⟩
+
+rename-frm : Formula Δ → Ren Γ Δ → Formula Γ
+rename-frm = traverse-frm renFrmTrav
+
+
+subFrmTrav : FrmTravStruct Sub
+FrmTravStruct.trav-tm subFrmTrav = _[_]tm
+FrmTravStruct.lift subFrmTrav = lift-sub
+FrmTravStruct.lock subFrmTrav = λ σ → σ ,slock⟨ _ ⟩
+
 _[_]frm : Formula Δ → Sub Γ Δ → Formula Γ
-⊤ᶠ [ σ ]frm = ⊤ᶠ
-⊥ᶠ [ σ ]frm = ⊥ᶠ
-(t1 ≡ᶠ t2) [ σ ]frm = (t1 [ σ ]tm) ≡ᶠ (t2 [ σ ]tm)
-(φ ⊃ ψ) [ σ ]frm = (φ [ σ ]frm) ⊃ (ψ [ σ ]frm)
-(φ ∧ ψ) [ σ ]frm = (φ [ σ ]frm) ∧ (ψ [ σ ]frm)
-(∀[ μ ∣ x ∈ T ] φ) [ σ ]frm = ∀[ μ ∣ x ∈ T ] (φ [ lift-sub σ ]frm)
-⟨ μ ∣ φ ⟩ [ σ ]frm = ⟨ μ ∣ φ [ σ ,slock⟨ μ ⟩ ]frm ⟩
+φ [ σ ]frm = traverse-frm subFrmTrav φ σ
+
+
+-- Isomorphisms witnessing the functoriality of locks (wrt formulas)
+lock𝟙-frm : Formula Γ → Formula (Γ ,lock⟨ 𝟙 ⟩)
+lock𝟙-frm t = rename-frm t (lock𝟙-ren)
+
+unlock𝟙-frm : Formula (Γ ,lock⟨ 𝟙 ⟩) → Formula Γ
+unlock𝟙-frm t = rename-frm t (unlock𝟙-ren)
+
+lockⓜ-frm : Formula (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) → Formula (Γ ,lock⟨ μ ⓜ ρ ⟩)
+lockⓜ-frm t = rename-frm t lockⓜ-ren
+
+unlockⓜ-frm : Formula (Γ ,lock⟨ μ ⓜ ρ ⟩) → Formula (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
+unlockⓜ-frm t = rename-frm t unlockⓜ-ren

@@ -16,8 +16,8 @@ open import Relation.Nullary as Ag using (Dec; yes; no)
 open import Relation.Nullary.Decidable.Core
 
 open import Model.BaseCategory
-open import Model.CwF-Structure as M using (Ctx; Ty; Tm)
-open import Model.CwF-Structure.Reflection.SubstitutionSequence renaming (_∷_ to _∷ˢ_)
+open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+open import Model.CwF-Structure.Reflection.SubstitutionSequence renaming (_∷_ to _∷ˢˢ_)
 import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Discrete as M
@@ -29,14 +29,16 @@ import Experimental.ClosedTypes.Pi as M
 import Experimental.ClosedTypes.Identity as M
 import Experimental.ClosedTypes.Discrete as M
 
-open import Experimental.LogicalFramework.STT
+open import Experimental.LogicalFramework.MSTT
 open import Experimental.LogicalFramework.Formula
 open import Experimental.LogicalFramework.Formula.Interpretation.Nameless using (⟦_⟧frm-nmls)
-open import Experimental.LogicalFramework.STT.Interpretation.Nameless using (⟦_⟧tm-nmls)
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless using (⟦_⟧tm-nmls)
 
 private variable
-  Γ Δ : CtxExpr
-  T S R U : TyExpr
+  m n o p : Mode
+  μ ρ κ : Modality m n
+  Γ Δ : Ctx m
+  T S R U : Ty m
   φ ψ : Formula Γ
   x y : String
 
@@ -44,33 +46,40 @@ private variable
 --------------------------------------------------
 -- Definition of proof judgments and inference rules
 
--- A proof context can, apart from STT variables, also consist of formulas (assumptions).
-data ProofCtx : Set
-to-ctx : ProofCtx → CtxExpr
+-- A proof context can, apart from MSTT variables, also consist of formulas (assumptions).
+data ProofCtx (m : Mode) : Set
+to-ctx : ProofCtx m → Ctx m
 
-infixl 2 _∷ᵛ_∈_ _∷ᶠ_∈_
-data ProofCtx where
-  [] : ProofCtx
-  _∷ᵛ_∈_ : (Ξ : ProofCtx) (x : String) (T : TyExpr) → ProofCtx
-  _∷ᶠ_∈_ : (Ξ : ProofCtx) (x : String) (φ : Formula (to-ctx Ξ)) → ProofCtx
+infixl 2 _∷ᵛ_∣_∈_ _∷ᶠ_∣_∈_
+data ProofCtx m where
+  [] : ProofCtx m
+  _∷ᵛ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → ProofCtx m
+  _∷ᶠ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)) → ProofCtx m
+  _,lock⟨_⟩ : (Ξ : ProofCtx n) (μ : Modality m n) → ProofCtx m
 
-to-ctx []       = ◇
-to-ctx (Ξ ∷ᵛ x ∈ T) = to-ctx Ξ ,, x ∈ T
-to-ctx (Ξ ∷ᶠ _ ∈ φ) = to-ctx Ξ
+to-ctx []               = ◇
+to-ctx (Ξ ∷ᵛ μ ∣ x ∈ T) = to-ctx Ξ ,, μ ∣ x ∈ T
+to-ctx (Ξ ∷ᶠ _ ∣ _ ∈ φ) = to-ctx Ξ
+to-ctx (Ξ ,lock⟨ μ ⟩)   = (to-ctx Ξ) ,lock⟨ μ ⟩
 
 private variable
-  Ξ : ProofCtx
+  Ξ : ProofCtx m
 
 
--- In the same way as variables in STT, assumptions are internally
+-- In the same way as variables in MSTT, assumptions are internally
 --  referred to using De Bruijn indices, but we keep track of their
---  names. The (proof-relevant) predicate Assumption x Ξ expresses
---  that an assumption with name x is present in proof context Ξ.
-data Assumption : String → ProofCtx → Set where
-  azero : Assumption x (Ξ ∷ᶠ x ∈ φ)
-  asuc  : Assumption x Ξ → Assumption x (Ξ ∷ᶠ y ∈ ψ)
-  skip-var : Assumption x Ξ → Assumption x (Ξ ∷ᵛ y ∈ T)
+--  names. The (proof-relevant) predicate Assumption x μ κ Ξ expresses
+--  that an assumption with name x is present in proof context Ξ under
+--  modality μ and with κ the composition of all locks to the right of
+--  x. Note that we do not keep track of the formula in the Assumption
+--  type (in contrast to the type of variables in MSTT).
+data Assumption (x : String) (μ : Modality n o) : Modality m o → ProofCtx m → Set where
+  azero : Assumption x μ 𝟙 (Ξ ∷ᶠ μ ∣ x ∈ φ)
+  asuc  : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ∷ᶠ ρ ∣ y ∈ ψ)
+  skip-var : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ∷ᵛ ρ ∣ y ∈ T)
+  skip-lock : (ρ : Modality m p) → Assumption x μ κ Ξ → Assumption x μ (κ ⓜ ρ) (Ξ ,lock⟨ ρ ⟩)
 
+{-
 assump-vpred : Assumption x (Ξ ∷ᵛ y ∈ T) → Assumption x Ξ
 assump-vpred (skip-var a) = a
 
@@ -84,76 +93,93 @@ assumption? x (Ξ ∷ᵛ y ∈ T) = map′ skip-var assump-vpred (assumption? x 
 assumption? x (Ξ ∷ᶠ y ∈ φ) with x Str.≟ y
 assumption? x (Ξ ∷ᶠ .x ∈ φ) | yes Ag.refl = yes azero
 assumption? x (Ξ ∷ᶠ y ∈ φ)  | no ¬x=y = map′ asuc (assump-apred ¬x=y) (assumption? x Ξ)
+-}
 
-lookup-assumption : Assumption x Ξ → Formula (to-ctx Ξ)
-lookup-assumption (azero {φ = φ}) = φ
-lookup-assumption (asuc a)        = lookup-assumption a
-lookup-assumption (skip-var a)    = (lookup-assumption a) [ π ]frm
+lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
+                     TwoCell μ (κ ⓜ ρ) → Formula ((to-ctx Ξ) ,lock⟨ ρ ⟩)
+lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - (𝟙 ⓜ ρ)) (Ag.sym mod-unitˡ) α) ]frm
+lookup-assumption' (asuc a) ρ α = lookup-assumption' a ρ α
+lookup-assumption' (skip-var a) ρ α = (lookup-assumption' a ρ α) [ π ,slock⟨ ρ ⟩ ]frm
+lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unlockⓜ-frm (lookup-assumption' a (ρ' ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α))
+
+lookup-assumption : Assumption x μ κ Ξ → TwoCell μ κ → Formula (to-ctx Ξ)
+lookup-assumption a α = unlock𝟙-frm (lookup-assumption' a 𝟙 (Ag.subst (TwoCell _) (Ag.sym mod-unitʳ) α))
 
 
 infix 1 _⊢_
-data _⊢_ : (Ξ : ProofCtx) → Formula (to-ctx Ξ) → Set where
+data _⊢_ : (Ξ : ProofCtx m) → Formula (to-ctx Ξ) → Set where
   -- Making sure that derivability respects alpha equivalence. This is
   --  not ideal, we would like to bake this into assumption' below.
   --  However see comment on withTmAlpha below for problems with that.
   withAlpha : {{ φ ≈αᶠ ψ }} → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
 
   -- Structural rules for ≡ᶠ
-  refl : {t s : TmExpr (to-ctx Ξ) T} → {{ t ≈α s }} → Ξ ⊢ t ≡ᶠ s
-  sym : {t1 t2 : TmExpr (to-ctx Ξ) T} → (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t1)
-  trans : {t1 t2 t3 : TmExpr (to-ctx Ξ) T} →
+  refl : {t s : Tm (to-ctx Ξ) T} → {{ t ≈α s }} → Ξ ⊢ t ≡ᶠ s
+  sym : {t1 t2 : Tm (to-ctx Ξ) T} → (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t1)
+  trans : {t1 t2 t3 : Tm (to-ctx Ξ) T} →
           (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t3) →
           (Ξ ⊢ t1 ≡ᶠ t3)
-  subst : (φ : Formula (to-ctx (Ξ ∷ᵛ x ∈ T))) {t1 t2 : TmExpr (to-ctx Ξ) T} →
-          (Ξ ⊢ t1 ≡ᶠ t2) →
+  subst : (φ : Formula (to-ctx (Ξ ∷ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
+          (Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᶠ t2) →
           (Ξ ⊢ φ [ t1 / x ]frm) →
           (Ξ ⊢ φ [ t2 / x ]frm)
 
-  -- Introduction and elimination for logical combinators ⊤ᶠ, ⊥ᶠ, ⊃, ∧ and ∀.
+  -- Introduction and elimination for logical combinators ⊤ᶠ, ⊥ᶠ, ⊃, ∧ and ∀
   ⊤ᶠ-intro : Ξ ⊢ ⊤ᶠ
   ⊥ᶠ-elim : Ξ ⊢ ⊥ᶠ ⊃ φ
-  assume[_]_ : (x : String) → (Ξ ∷ᶠ x ∈ φ ⊢ ψ) → (Ξ ⊢ φ ⊃ ψ)
-  ⊃-elim : (Ξ ⊢ φ ⊃ ψ) → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
-  assumption' : (x : String) {a : Assumption x Ξ} → (Ξ ⊢ lookup-assumption a)
+  assume[_∣_]_ : (μ : Modality m n) {φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)} (x : String) →
+                 (Ξ ∷ᶠ μ ∣ x ∈ φ ⊢ ψ) →
+                 (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ)
+  ⊃-elim : (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ) → (Ξ ,lock⟨ μ ⟩ ⊢ φ) → (Ξ ⊢ ψ)
+  assumption' : (x : String) {a : Assumption x μ κ Ξ} (α : TwoCell μ κ)→ (Ξ ⊢ lookup-assumption a α)
   ∧-intro : (Ξ ⊢ φ) → (Ξ ⊢ ψ) → (Ξ ⊢ φ ∧ ψ)
   ∧-elimˡ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ φ)
   ∧-elimʳ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ ψ)
-  ∀-intro : (Ξ ∷ᵛ x ∈ T ⊢ φ) → (Ξ ⊢ ∀[ x ∈ T ] φ)
-  ∀-elim : (Ξ ⊢ ∀[ x ∈ T ] φ) → (t : TmExpr (to-ctx Ξ) T) → (Ξ ⊢ φ [ t / x ]frm)
+  ∀-intro : (Ξ ∷ᵛ μ ∣ x ∈ T ⊢ φ) → (Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ)
+  ∀-elim : (Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ) → (t : Tm ((to-ctx Ξ) ,lock⟨ μ ⟩) T) → (Ξ ⊢ φ [ t / x ]frm)
 
-  -- Specific computation rules for term formers (currently no eta rules).
-  fun-β : {b : TmExpr (to-ctx Ξ ,, x ∈ T) S} {t : TmExpr (to-ctx Ξ) T} →
-          (Ξ ⊢ (lam[ x ∈ T ] b) ∙ t ≡ᶠ b [ t / x ]tm)
-  nat-elim-β-zero : {A : TyExpr} {a : TmExpr (to-ctx Ξ) A} {f : TmExpr (to-ctx Ξ) (A ⇛ A)} →
+  -- Modal reasoning principles
+  mod⟨_⟩_ : (μ : Modality m n) {φ : Formula (to-ctx (Ξ ,lock⟨ μ ⟩))} →
+            (Ξ ,lock⟨ μ ⟩ ⊢ φ) →
+            (Ξ ⊢ ⟨ μ ∣ φ ⟩)
+  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : String) {φ : Formula _} →
+             (Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩) →
+             (Ξ ∷ᶠ ρ ⓜ μ ∣ x ∈ lockⓜ-frm φ ⊢ ψ) →
+             (Ξ ⊢ ψ)
+
+  -- Specific computation rules for term formers (currently no eta rules)
+  fun-β : {b : Tm (to-ctx Ξ ,, 𝟙 ∣ x ∈ T) S} {t : Tm (to-ctx Ξ) T} →
+          (Ξ ⊢ (lam[ x ∈ T ] b) ∙ t ≡ᶠ b [ lock𝟙-tm t / x ]tm)
+  nat-elim-β-zero : {A : Ty m} {a : Tm (to-ctx Ξ) A} {f : Tm (to-ctx Ξ) (A ⇛ A)} →
                     (Ξ ⊢ nat-elim a f ∙ zero ≡ᶠ a)
-  nat-elim-β-suc : {A : TyExpr} {a : TmExpr (to-ctx Ξ) A} {f : TmExpr (to-ctx Ξ) (A ⇛ A)} {n : TmExpr (to-ctx Ξ) Nat'} →
+  nat-elim-β-suc : {A : Ty m} {a : Tm (to-ctx Ξ) A} {f : Tm (to-ctx Ξ) (A ⇛ A)} {n : Tm (to-ctx Ξ) Nat'} →
                    (Ξ ⊢ nat-elim a f ∙ (suc ∙ n) ≡ᶠ f ∙ (nat-elim a f ∙ n))
-  if-β-true : {t f : TmExpr (to-ctx Ξ) T} →
+  if-β-true : {t f : Tm (to-ctx Ξ) T} →
               (Ξ ⊢ if true t f ≡ᶠ t)
-  if-β-false : {t f : TmExpr (to-ctx Ξ) T} →
+  if-β-false : {t f : Tm (to-ctx Ξ) T} →
                (Ξ ⊢ if false t f ≡ᶠ f)
-  pair-β-fst : {t : TmExpr (to-ctx Ξ) T} {s : TmExpr (to-ctx Ξ) S} →
+  pair-β-fst : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
                (Ξ ⊢ fst (pair t s) ≡ᶠ t)
-  pair-β-snd : {t : TmExpr (to-ctx Ξ) T} {s : TmExpr (to-ctx Ξ) S} →
+  pair-β-snd : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
                (Ξ ⊢ snd (pair t s) ≡ᶠ s)
 
-  -- Axioms specifying distinctness of booleans and natural numbers.
+  -- Axioms specifying distinctness of booleans and natural numbers
   true≠false : Ξ ⊢ ¬ (true ≡ᶠ false)
-  suc-inj : Ξ ⊢ ∀[ "m" ∈ Nat' ] ∀[ "n" ∈ Nat' ] (suc ∙ (var "m") ≡ᶠ suc ∙ (var "n")) ⊃ (var "m" ≡ᶠ var "n")
-  zero≠sucn : Ξ ⊢ ∀[ "n" ∈ Nat' ] ¬ (zero ≡ᶠ suc ∙ var "n")
+  suc-inj : {Ξ : ProofCtx m} → Ξ ⊢ ∀[ 𝟙 ∣ "m" ∈ Nat' ] ∀[ 𝟙 ∣ "n" ∈ Nat' ] (suc ∙ (svar "m") ≡ᶠ suc ∙ (svar "n")) ⊃ (svar "m" ≡ᶠ svar "n")
+  zero≠sucn : Ξ ⊢ ∀[ 𝟙 ∣ "n" ∈ Nat' ] ¬ (zero ≡ᶠ suc ∙ svar "n")
 
-  -- Induction schemata for Bool' and Nat'.
+  -- Induction schemata for Bool' and Nat'
   bool-induction : (Ξ ⊢ φ [ true / x ]frm) →
                    (Ξ ⊢ φ [ false / x ]frm) →
-                   (Ξ ∷ᵛ x ∈ Bool' ⊢ φ)
+                   (Ξ ∷ᵛ μ ∣ x ∈ Bool' ⊢ φ)
   nat-induction : (hyp : String) →
                   (Ξ ⊢ φ [ zero / x ]frm) →
-                  (Ξ ∷ᵛ x ∈ Nat' ∷ᶠ hyp ∈ φ ⊢ φ [ π ∷ (suc ∙ var' x {vzero}) / x ]frm) →
-                  (Ξ ∷ᵛ x ∈ Nat' ⊢ φ)
-
+                  (Ξ ∷ᵛ μ ∣ x ∈ Nat' ∷ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ ⊢ φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm) →
+                  (Ξ ∷ᵛ μ ∣ x ∈ Nat' ⊢ φ)
+{-
 assumption : (x : String) {a : True (assumption? x Ξ)} → (Ξ ⊢ lookup-assumption (toWitness a))
 assumption x {a} = assumption' x {toWitness a}
-
+-}
 
 --------------------------------------------------
 -- Some rules derivable from the basic ones
@@ -167,12 +193,12 @@ assumption x {a} = assumption' x {toWitness a}
 --  cannot infer the intermediate formulas in a chain of equalities
 --  (using trans) any more. We should investigate if reflection might
 --  provide a solution.
-withTmAlpha : {t s s' : TmExpr (to-ctx Ξ) T} →
+withTmAlpha : {t s s' : Tm (to-ctx Ξ) T} →
               (Ξ ⊢ t ≡ᶠ s) →
               {{ s ≈α s' }} →
               (Ξ ⊢ t ≡ᶠ s')
 withTmAlpha t=s = trans t=s refl
-
+{-
 TmConstructor₁ : (Γ : CtxExpr) (T S : TyExpr) → Set
 TmConstructor₁ Γ T S = ∀ {Δ} → SubstExpr Δ Γ → TmExpr Δ T → TmExpr Δ S
 
@@ -415,3 +441,4 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
       (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))))) _)
                   (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sdiscr-func-natural _) (M.,ₛ-β2 _ _)))))))
       (M.≅ˢ-sym (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
+-}

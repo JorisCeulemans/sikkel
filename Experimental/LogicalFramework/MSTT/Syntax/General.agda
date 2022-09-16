@@ -83,9 +83,6 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
     lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
     lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
-module _ (Trav : ∀ {m} → Ctx m → Ctx m → Set) (TS : TravStruct Trav) where
-  open TravStruct TS
-
   traverse-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
   traverse-tm (var' x {v} α) σ = vr v α σ
   traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lock σ)
@@ -101,6 +98,8 @@ module _ (Trav : ∀ {m} → Ctx m → Ctx m → Set) (TS : TravStruct Trav) whe
   traverse-tm (pair t s) σ = pair (traverse-tm t σ) (traverse-tm s σ)
   traverse-tm (fst p) σ = fst (traverse-tm p σ)
   traverse-tm (snd p) σ = snd (traverse-tm p σ)
+
+open TravStruct using (traverse-tm)
 
 
 --------------------------------------------------
@@ -208,7 +207,7 @@ module RenSub
   TravStruct.lock AtomicRenSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
 
   atomic-rensub-tm : Tm Δ T → AtomicRenSub Γ Δ → Tm Γ T
-  atomic-rensub-tm = traverse-tm AtomicRenSub AtomicRenSubTrav
+  atomic-rensub-tm = traverse-tm AtomicRenSubTrav
 
   -- An actual renaming/substitution is a well-typed (snoc) list of atomic renamings/substitutions.
   data RenSub : Ctx m → Ctx m → Set where
