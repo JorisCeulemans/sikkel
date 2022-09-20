@@ -84,8 +84,8 @@ lock𝟙-frm t = rename-frm t (lock𝟙-ren)
 unlock𝟙-frm : Formula (Γ ,lock⟨ 𝟙 ⟩) → Formula Γ
 unlock𝟙-frm t = rename-frm t (unlock𝟙-ren)
 
-lockⓜ-frm : Formula (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) → Formula (Γ ,lock⟨ μ ⓜ ρ ⟩)
-lockⓜ-frm t = rename-frm t lockⓜ-ren
+fuselocks-frm : Formula (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) → Formula (Γ ,lock⟨ μ ⓜ ρ ⟩)
+fuselocks-frm t = rename-frm t fuselocks-ren
 
-unlockⓜ-frm : Formula (Γ ,lock⟨ μ ⓜ ρ ⟩) → Formula (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-unlockⓜ-frm t = rename-frm t unlockⓜ-ren
+unfuselocks-frm : Formula (Γ ,lock⟨ μ ⓜ ρ ⟩) → Formula (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
+unfuselocks-frm t = rename-frm t unfuselocks-ren

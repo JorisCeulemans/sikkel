@@ -50,16 +50,16 @@ private variable
 data ProofCtx (m : Mode) : Set
 to-ctx : ProofCtx m → Ctx m
 
-infixl 2 _∷ᵛ_∣_∈_ _∷ᶠ_∣_∈_
+infixl 2 _,,ᵛ_∣_∈_ _,,ᶠ_∣_∈_
 data ProofCtx m where
   [] : ProofCtx m
-  _∷ᵛ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → ProofCtx m
-  _∷ᶠ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)) → ProofCtx m
+  _,,ᵛ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → ProofCtx m
+  _,,ᶠ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)) → ProofCtx m
   _,lock⟨_⟩ : (Ξ : ProofCtx n) (μ : Modality m n) → ProofCtx m
 
 to-ctx []               = ◇
-to-ctx (Ξ ∷ᵛ μ ∣ x ∈ T) = to-ctx Ξ ,, μ ∣ x ∈ T
-to-ctx (Ξ ∷ᶠ _ ∣ _ ∈ φ) = to-ctx Ξ
+to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T) = to-ctx Ξ ,, μ ∣ x ∈ T
+to-ctx (Ξ ,,ᶠ _ ∣ _ ∈ φ) = to-ctx Ξ
 to-ctx (Ξ ,lock⟨ μ ⟩)   = (to-ctx Ξ) ,lock⟨ μ ⟩
 
 private variable
@@ -74,25 +74,25 @@ private variable
 --  x. Note that we do not keep track of the formula in the Assumption
 --  type (in contrast to the type of variables in MSTT).
 data Assumption (x : String) (μ : Modality n o) : Modality m o → ProofCtx m → Set where
-  azero : Assumption x μ 𝟙 (Ξ ∷ᶠ μ ∣ x ∈ φ)
-  asuc  : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ∷ᶠ ρ ∣ y ∈ ψ)
-  skip-var : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ∷ᵛ ρ ∣ y ∈ T)
+  azero : Assumption x μ 𝟙 (Ξ ,,ᶠ μ ∣ x ∈ φ)
+  asuc  : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ,,ᶠ ρ ∣ y ∈ ψ)
+  skip-var : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ,,ᵛ ρ ∣ y ∈ T)
   skip-lock : (ρ : Modality m p) → Assumption x μ κ Ξ → Assumption x μ (κ ⓜ ρ) (Ξ ,lock⟨ ρ ⟩)
 
 {-
-assump-vpred : Assumption x (Ξ ∷ᵛ y ∈ T) → Assumption x Ξ
+assump-vpred : Assumption x (Ξ ,,ᵛ y ∈ T) → Assumption x Ξ
 assump-vpred (skip-var a) = a
 
-assump-apred : Ag.¬ (x Ag.≡ y) → Assumption x (Ξ ∷ᶠ y ∈ φ) → Assumption x Ξ
+assump-apred : Ag.¬ (x Ag.≡ y) → Assumption x (Ξ ,,ᶠ y ∈ φ) → Assumption x Ξ
 assump-apred ¬x=y azero    = ⊥-elim (¬x=y Ag.refl)
 assump-apred ¬x=y (asuc a) = a
 
 assumption? : (x : String) (Ξ : ProofCtx) → Dec (Assumption x Ξ)
 assumption? x [] = no (λ ())
-assumption? x (Ξ ∷ᵛ y ∈ T) = map′ skip-var assump-vpred (assumption? x Ξ)
-assumption? x (Ξ ∷ᶠ y ∈ φ) with x Str.≟ y
-assumption? x (Ξ ∷ᶠ .x ∈ φ) | yes Ag.refl = yes azero
-assumption? x (Ξ ∷ᶠ y ∈ φ)  | no ¬x=y = map′ asuc (assump-apred ¬x=y) (assumption? x Ξ)
+assumption? x (Ξ ,,ᵛ y ∈ T) = map′ skip-var assump-vpred (assumption? x Ξ)
+assumption? x (Ξ ,,ᶠ y ∈ φ) with x Str.≟ y
+assumption? x (Ξ ,,ᶠ .x ∈ φ) | yes Ag.refl = yes azero
+assumption? x (Ξ ,,ᶠ y ∈ φ)  | no ¬x=y = map′ asuc (assump-apred ¬x=y) (assumption? x Ξ)
 -}
 
 lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
@@ -100,7 +100,7 @@ lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
 lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - (𝟙 ⓜ ρ)) (Ag.sym mod-unitˡ) α) ]frm
 lookup-assumption' (asuc a) ρ α = lookup-assumption' a ρ α
 lookup-assumption' (skip-var a) ρ α = (lookup-assumption' a ρ α) [ π ,slock⟨ ρ ⟩ ]frm
-lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unlockⓜ-frm (lookup-assumption' a (ρ' ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α))
+lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unfuselocks-frm (lookup-assumption' a (ρ' ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α))
 
 lookup-assumption : Assumption x μ κ Ξ → TwoCell μ κ → Formula (to-ctx Ξ)
 lookup-assumption a α = unlock𝟙-frm (lookup-assumption' a 𝟙 (Ag.subst (TwoCell _) (Ag.sym mod-unitʳ) α))
@@ -113,13 +113,19 @@ data _⊢_ : (Ξ : ProofCtx m) → Formula (to-ctx Ξ) → Set where
   --  However see comment on withTmAlpha below for problems with that.
   withAlpha : {{ φ ≈αᶠ ψ }} → (Ξ ⊢ φ) → (Ξ ⊢ ψ)
 
+  -- Functoriality of the locks in a proof context
+  lock𝟙-der : (Ξ ⊢ φ) → (Ξ ,lock⟨ 𝟙 ⟩ ⊢ lock𝟙-frm φ)
+  unlock𝟙-der : (Ξ ,lock⟨ 𝟙 ⟩ ⊢ φ) → (Ξ ⊢ unlock𝟙-frm φ)
+  fuselocks-der : (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ fuselocks-frm φ)
+  unfuselocks-der : (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ unfuselocks-frm φ)
+
   -- Structural rules for ≡ᶠ
   refl : {t s : Tm (to-ctx Ξ) T} → {{ t ≈α s }} → Ξ ⊢ t ≡ᶠ s
   sym : {t1 t2 : Tm (to-ctx Ξ) T} → (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t1)
   trans : {t1 t2 t3 : Tm (to-ctx Ξ) T} →
           (Ξ ⊢ t1 ≡ᶠ t2) → (Ξ ⊢ t2 ≡ᶠ t3) →
           (Ξ ⊢ t1 ≡ᶠ t3)
-  subst : (φ : Formula (to-ctx (Ξ ∷ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
+  subst : (φ : Formula (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
           (Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᶠ t2) →
           (Ξ ⊢ φ [ t1 / x ]frm) →
           (Ξ ⊢ φ [ t2 / x ]frm)
@@ -128,14 +134,14 @@ data _⊢_ : (Ξ : ProofCtx m) → Formula (to-ctx Ξ) → Set where
   ⊤ᶠ-intro : Ξ ⊢ ⊤ᶠ
   ⊥ᶠ-elim : Ξ ⊢ ⊥ᶠ ⊃ φ
   assume[_∣_]_ : (μ : Modality m n) {φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)} (x : String) →
-                 (Ξ ∷ᶠ μ ∣ x ∈ φ ⊢ ψ) →
+                 (Ξ ,,ᶠ μ ∣ x ∈ φ ⊢ ψ) →
                  (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ)
   ⊃-elim : (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ) → (Ξ ,lock⟨ μ ⟩ ⊢ φ) → (Ξ ⊢ ψ)
   assumption' : (x : String) {a : Assumption x μ κ Ξ} (α : TwoCell μ κ)→ (Ξ ⊢ lookup-assumption a α)
   ∧-intro : (Ξ ⊢ φ) → (Ξ ⊢ ψ) → (Ξ ⊢ φ ∧ ψ)
   ∧-elimˡ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ φ)
   ∧-elimʳ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ ψ)
-  ∀-intro : (Ξ ∷ᵛ μ ∣ x ∈ T ⊢ φ) → (Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ)
+  ∀-intro : (Ξ ,,ᵛ μ ∣ x ∈ T ⊢ φ) → (Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ)
   ∀-elim : (Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ) → (t : Tm ((to-ctx Ξ) ,lock⟨ μ ⟩) T) → (Ξ ⊢ φ [ t / x ]frm)
 
   -- Modal reasoning principles
@@ -144,7 +150,7 @@ data _⊢_ : (Ξ : ProofCtx m) → Formula (to-ctx Ξ) → Set where
             (Ξ ⊢ ⟨ μ ∣ φ ⟩)
   mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : String) {φ : Formula _} →
              (Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩) →
-             (Ξ ∷ᶠ ρ ⓜ μ ∣ x ∈ lockⓜ-frm φ ⊢ ψ) →
+             (Ξ ,,ᶠ ρ ⓜ μ ∣ x ∈ fuselocks-frm φ ⊢ ψ) →
              (Ξ ⊢ ψ)
 
   -- Specific computation rules for term formers (currently no eta rules)
@@ -171,11 +177,11 @@ data _⊢_ : (Ξ : ProofCtx m) → Formula (to-ctx Ξ) → Set where
   -- Induction schemata for Bool' and Nat'
   bool-induction : (Ξ ⊢ φ [ true / x ]frm) →
                    (Ξ ⊢ φ [ false / x ]frm) →
-                   (Ξ ∷ᵛ μ ∣ x ∈ Bool' ⊢ φ)
+                   (Ξ ,,ᵛ μ ∣ x ∈ Bool' ⊢ φ)
   nat-induction : (hyp : String) →
                   (Ξ ⊢ φ [ zero / x ]frm) →
-                  (Ξ ∷ᵛ μ ∣ x ∈ Nat' ∷ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ ⊢ φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm) →
-                  (Ξ ∷ᵛ μ ∣ x ∈ Nat' ⊢ φ)
+                  (Ξ ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ ⊢ φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm) →
+                  (Ξ ,,ᵛ μ ∣ x ∈ Nat' ⊢ φ)
 {-
 assumption : (x : String) {a : True (assumption? x Ξ)} → (Ξ ⊢ lookup-assumption (toWitness a))
 assumption x {a} = assumption' x {toWitness a}
@@ -198,6 +204,7 @@ withTmAlpha : {t s s' : Tm (to-ctx Ξ) T} →
               {{ s ≈α s' }} →
               (Ξ ⊢ t ≡ᶠ s')
 withTmAlpha t=s = trans t=s refl
+
 {-
 TmConstructor₁ : (Γ : CtxExpr) (T S : TyExpr) → Set
 TmConstructor₁ Γ T S = ∀ {Δ} → SubstExpr Δ Γ → TmExpr Δ T → TmExpr Δ S
@@ -355,12 +362,12 @@ if-cong = tm-constructor-cong₃ (λ _ → if) (λ _ _ _ _ → Ag.refl)
 to-ctx-subst : (Ξ : ProofCtx) → ⟦ Ξ ⟧pctx M.⇒ ⟦ to-ctx Ξ ⟧ctx
 
 ⟦ [] ⟧pctx = M.◇
-⟦ Ξ ∷ᵛ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,,ₛ ⟦ T ⟧ty
-⟦ Ξ ∷ᶠ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
+⟦ Ξ ,,ᵛ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,,ₛ ⟦ T ⟧ty
+⟦ Ξ ,,ᶠ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
 
 to-ctx-subst [] = M.id-subst M.◇
-to-ctx-subst (Ξ ∷ᵛ _ ∈ T) = to-ctx-subst Ξ M.s⊹
-to-ctx-subst (Ξ ∷ᶠ _ ∈ φ) = to-ctx-subst Ξ M.⊚ M.π
+to-ctx-subst (Ξ ,,ᵛ _ ∈ T) = to-ctx-subst Ξ M.s⊹
+to-ctx-subst (Ξ ,,ᶠ _ ∈ φ) = to-ctx-subst Ξ M.⊚ M.π
 
 interpret-assumption : (a : Assumption x Ξ) → Tm ⟦ Ξ ⟧pctx (⟦ lookup-assumption a ⟧frm M.[ to-ctx-subst Ξ ])
 interpret-assumption azero = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] M.ξ
