@@ -9,7 +9,12 @@ open import Data.Product
 open import Data.String as Str
 open import Relation.Nullary
 open import Relation.Nullary.Decidable.Core
-open import Relation.Binary.PropositionalEquality
+import Relation.Binary.PropositionalEquality as PropEq
+open PropEq hiding (refl)
+open PropEq using (refl) public
+-- ^ refl is re-exported so that it becomes available for instance
+--   search when using the functions var and svar defined in this
+--   module.
 
 
 --------------------------------------------------

@@ -79,22 +79,6 @@ data Assumption (x : String) (μ : Modality n o) : Modality m o → ProofCtx m �
   skip-var : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ,,ᵛ ρ ∣ y ∈ T)
   skip-lock : (ρ : Modality m p) → Assumption x μ κ Ξ → Assumption x μ (κ ⓜ ρ) (Ξ ,lock⟨ ρ ⟩)
 
-{-
-assump-vpred : Assumption x (Ξ ,,ᵛ y ∈ T) → Assumption x Ξ
-assump-vpred (skip-var a) = a
-
-assump-apred : Ag.¬ (x Ag.≡ y) → Assumption x (Ξ ,,ᶠ y ∈ φ) → Assumption x Ξ
-assump-apred ¬x=y azero    = ⊥-elim (¬x=y Ag.refl)
-assump-apred ¬x=y (asuc a) = a
-
-assumption? : (x : String) (Ξ : ProofCtx) → Dec (Assumption x Ξ)
-assumption? x [] = no (λ ())
-assumption? x (Ξ ,,ᵛ y ∈ T) = map′ skip-var assump-vpred (assumption? x Ξ)
-assumption? x (Ξ ,,ᶠ y ∈ φ) with x Str.≟ y
-assumption? x (Ξ ,,ᶠ .x ∈ φ) | yes Ag.refl = yes azero
-assumption? x (Ξ ,,ᶠ y ∈ φ)  | no ¬x=y = map′ asuc (assump-apred ¬x=y) (assumption? x Ξ)
--}
-
 lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
                      TwoCell μ (κ ⓜ ρ) → Formula ((to-ctx Ξ) ,lock⟨ ρ ⟩)
 lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - (𝟙 ⓜ ρ)) (Ag.sym mod-unitˡ) α) ]frm
@@ -182,10 +166,65 @@ data _⊢_ : (Ξ : ProofCtx m) → Formula (to-ctx Ξ) → Set where
                   (Ξ ⊢ φ [ zero / x ]frm) →
                   (Ξ ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ ⊢ φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm) →
                   (Ξ ,,ᵛ μ ∣ x ∈ Nat' ⊢ φ)
-{-
-assumption : (x : String) {a : True (assumption? x Ξ)} → (Ξ ⊢ lookup-assumption (toWitness a))
-assumption x {a} = assumption' x {toWitness a}
--}
+
+
+--------------------------------------------------
+-- Referring to an assumption by name
+
+record ContainsAssump (x : String) (Γ : ProofCtx m) : Set where
+  constructor contains-assump
+  field
+    {middle-mode assump-mode} : Mode
+    mod : Modality assump-mode middle-mode
+    locks : Modality m middle-mode
+    a : Assumption x mod locks Γ
+
+assump-skip-var : ContainsAssump x Ξ → ContainsAssump x (Ξ ,,ᵛ μ ∣ y ∈ T)
+assump-skip-var (contains-assump mod locks a) = contains-assump mod locks (skip-var a)
+
+assump-unskip-var : ContainsAssump x (Ξ ,,ᵛ μ ∣ y ∈ T) → ContainsAssump x Ξ
+assump-unskip-var (contains-assump mod locks (skip-var a)) = contains-assump mod locks a
+
+assump-asuc : ContainsAssump x Ξ → ContainsAssump x (Ξ ,,ᶠ μ ∣ y ∈ φ)
+assump-asuc (contains-assump mod locks a) = contains-assump mod locks (asuc a)
+
+assump-apred : Ag.¬ (x Ag.≡ y) → ContainsAssump x (Ξ ,,ᶠ μ ∣ y ∈ φ) → ContainsAssump x Ξ
+assump-apred ¬x=y (contains-assump mod .𝟙    azero) = ⊥-elim (¬x=y refl)
+assump-apred ¬x=y (contains-assump mod locks (asuc a)) = contains-assump mod locks a
+
+assump-skip-lock : ContainsAssump x Ξ → ContainsAssump x (Ξ ,lock⟨ μ ⟩)
+assump-skip-lock {μ = μ} (contains-assump mod locks a) = contains-assump mod (locks ⓜ μ) (skip-lock μ a)
+
+assump-unskip-lock : ContainsAssump x (Ξ ,lock⟨ μ ⟩) → ContainsAssump x Ξ
+assump-unskip-lock (contains-assump mod .(κ ⓜ μ) (skip-lock {κ = κ} μ a)) = contains-assump mod κ a
+
+assumption? : (x : String) (Ξ : ProofCtx m) → Dec (ContainsAssump x Ξ)
+assumption? x [] = no (λ ())
+assumption? x (Ξ ,,ᵛ μ ∣ y ∈ T) = map′ assump-skip-var assump-unskip-var (assumption? x Ξ)
+assumption? x (Ξ ,,ᶠ μ ∣ y ∈ φ) with x Str.≟ y
+assumption? x (Ξ ,,ᶠ μ ∣ .x ∈ φ) | yes refl = yes (contains-assump μ 𝟙 azero)
+assumption? x (Ξ ,,ᶠ μ ∣ y ∈ φ)  | no ¬x=y = map′ assump-asuc (assump-apred ¬x=y) (assumption? x Ξ)
+assumption? x (Ξ ,lock⟨ μ ⟩) = map′ assump-skip-lock assump-unskip-lock (assumption? x Ξ)
+
+AssumptionResult : (x : String) {Ξ : ProofCtx m} (c : ContainsAssump x Ξ) →
+                   let contains-assump {o} {p} μ κ a = c in
+                   (p Ag.≡ m) → Set
+AssumptionResult x {Ξ = Ξ} (contains-assump μ κ a) refl = (α : TwoCell μ κ) → (Ξ ⊢ lookup-assumption a α)
+
+-- Note that the instance argument mode-eq is intended to be solved as
+-- refl by instance search, and hence the two instances of subst in
+-- the type will reduce.
+assumption : (x : String) {Ξ : ProofCtx m} {v : True (assumption? x Ξ)} →
+             let c = toWitness v
+                 contains-assump {o} {p} μ κ a = c
+             in {{mode-eq : p Ag.≡ m}} → AssumptionResult x c mode-eq
+assumption x {v = v} {{e}} = assumption-helper x (toWitness v) e
+  where
+    open ContainsAssump
+    assumption-helper : (x : String) {Ξ : ProofCtx m} (c : ContainsAssump x Ξ) (e : assump-mode c Ag.≡ m) →
+                        AssumptionResult x c e
+    assumption-helper x (contains-assump μ κ a) refl α = assumption' x {a} α
+
 
 --------------------------------------------------
 -- Some rules derivable from the basic ones
