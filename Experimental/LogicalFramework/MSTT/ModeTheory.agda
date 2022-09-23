@@ -1,7 +1,7 @@
 module Experimental.LogicalFramework.MSTT.ModeTheory where
 
 open import Data.Nat
-open import Data.Nat.Properties using (+-identityʳ; +-assoc)
+open import Data.Nat.Properties using (+-identityʳ; +-assoc; ≤-refl; ≤-trans; +-mono-≤; ≤-stepsʳ)
 open import Relation.Binary.PropositionalEquality
 
 
@@ -10,6 +10,7 @@ data Mode : Set where
 
 private variable
   m n o p : Mode
+  k l : ℕ
 
 
 data Modality : Mode → Mode → Set where
@@ -90,6 +91,7 @@ mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstant
 mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]} = refl
 mod-assoc {μ = later^[ k ]ⓜconstantlyⓜforever} {ρ = later^[ l ]ⓜconstantlyⓜforever} {κ = later^[ m ]ⓜconstantlyⓜforever} = refl
 
+{-
 infixl 5 _ⓣ-hor_
 infixl 6 _ⓣ-vert_
 data TwoCell : (μ ρ : Modality m n) → Set where
@@ -101,3 +103,52 @@ data TwoCell : (μ ρ : Modality m n) → Set where
     -- ^ Horizontal composition of 2-cells
   𝟙≤later : TwoCell 𝟙 later
   constantly∘forever≤𝟙 : TwoCell (constantly ⓜ forever) 𝟙
+-}
+
+data TwoCell : (μ ρ : Modality m n) → Set where
+  id𝟙★ : TwoCell 𝟙★ 𝟙★
+  ltrⓜcst : k ≤ l → TwoCell later^[ k ]ⓜconstantly later^[ l ]ⓜconstantly
+  id-frv : TwoCell forever forever
+  ltr : k ≤ l → TwoCell later^[ k ] later^[ l ]
+  ltrⓜcstⓜfrv : k ≤ l → TwoCell later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜforever
+  cstⓜfrv≤𝟙 : k ≤ l → TwoCell later^[ k ]ⓜconstantlyⓜforever later^[ l ]
+
+id-cell : TwoCell μ μ
+id-cell {μ = 𝟙★} = id𝟙★
+id-cell {μ = forever} = id-frv
+id-cell {μ = later^[ k ]ⓜconstantly} = ltrⓜcst ≤-refl
+id-cell {μ = later^[ k ]} = ltr ≤-refl
+id-cell {μ = later^[ k ]ⓜconstantlyⓜforever} = ltrⓜcstⓜfrv ≤-refl
+
+infixl 6 _ⓣ-vert_
+_ⓣ-vert_ : TwoCell ρ κ → TwoCell μ ρ → TwoCell μ κ
+id𝟙★ ⓣ-vert β = β
+ltrⓜcst l≤m ⓣ-vert ltrⓜcst k≤l = ltrⓜcst (≤-trans k≤l l≤m)
+id-frv ⓣ-vert β = β
+ltr l≤m ⓣ-vert ltr k≤l = ltr (≤-trans k≤l l≤m)
+ltr l≤m ⓣ-vert cstⓜfrv≤𝟙 k≤l = cstⓜfrv≤𝟙 (≤-trans k≤l l≤m)
+ltrⓜcstⓜfrv l≤m ⓣ-vert ltrⓜcstⓜfrv k≤l = ltrⓜcstⓜfrv (≤-trans k≤l l≤m)
+cstⓜfrv≤𝟙 l≤m ⓣ-vert ltrⓜcstⓜfrv k≤l = cstⓜfrv≤𝟙 (≤-trans k≤l l≤m)
+
+infixl 5 _ⓣ-hor_
+_ⓣ-hor_ : {μ1 ρ1 : Modality n o} {μ2 ρ2 : Modality m n} →
+          TwoCell μ1 ρ1 → TwoCell μ2 ρ2 → TwoCell (μ1 ⓜ μ2) (ρ1 ⓜ ρ2)
+id𝟙★ ⓣ-hor β = β
+ltrⓜcst k≤l ⓣ-hor id𝟙★ = ltrⓜcst k≤l
+ltrⓜcst k≤l ⓣ-hor id-frv = ltrⓜcstⓜfrv k≤l
+id-frv ⓣ-hor ltrⓜcst _ = id𝟙★
+id-frv ⓣ-hor ltr _ = id-frv
+id-frv ⓣ-hor ltrⓜcstⓜfrv _ = id-frv
+id-frv ⓣ-hor cstⓜfrv≤𝟙 _ = id-frv
+ltr k≤l ⓣ-hor ltrⓜcst m≤n = ltrⓜcst (+-mono-≤ k≤l m≤n)
+ltr k≤l ⓣ-hor ltr m≤n = ltr (+-mono-≤ k≤l m≤n)
+ltr k≤l ⓣ-hor ltrⓜcstⓜfrv m≤n = ltrⓜcstⓜfrv (+-mono-≤ k≤l m≤n)
+ltr k≤l ⓣ-hor cstⓜfrv≤𝟙 m≤n = cstⓜfrv≤𝟙 (+-mono-≤ k≤l m≤n)
+ltrⓜcstⓜfrv k≤l ⓣ-hor ltrⓜcst _ = ltrⓜcst k≤l
+ltrⓜcstⓜfrv k≤l ⓣ-hor ltr _ = ltrⓜcstⓜfrv k≤l
+ltrⓜcstⓜfrv k≤l ⓣ-hor ltrⓜcstⓜfrv _ = ltrⓜcstⓜfrv k≤l
+ltrⓜcstⓜfrv k≤l ⓣ-hor cstⓜfrv≤𝟙 _ = ltrⓜcstⓜfrv k≤l
+cstⓜfrv≤𝟙 k≤l ⓣ-hor ltrⓜcst _ = ltrⓜcst (≤-stepsʳ _ k≤l)
+cstⓜfrv≤𝟙 k≤l ⓣ-hor ltr _ = cstⓜfrv≤𝟙 (≤-stepsʳ _ k≤l)
+cstⓜfrv≤𝟙 k≤l ⓣ-hor ltrⓜcstⓜfrv _ = ltrⓜcstⓜfrv (≤-stepsʳ _ k≤l)
+cstⓜfrv≤𝟙 k≤l ⓣ-hor cstⓜfrv≤𝟙 _ = cstⓜfrv≤𝟙 (≤-stepsʳ _ k≤l)

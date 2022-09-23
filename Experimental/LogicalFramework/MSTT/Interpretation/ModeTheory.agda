@@ -92,9 +92,17 @@ private variable
   M.≅ᵐ-trans (M.ⓜ-congˡ _ (⟦ⓜ⟧-sound later^[ n ]ⓜconstantlyⓜforever later^[ m ]ⓜconstantlyⓜforever)) (M.≅ᵐ-sym (M.ⓜ-assoc _ _ _))
 
 ⟦_⟧two-cell : TwoCell μ κ → M.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
-⟦ id-cell ⟧two-cell = M.id-cell
-⟦ α ⓣ-vert β ⟧two-cell = ⟦ α ⟧two-cell M.ⓣ-vert ⟦ β ⟧two-cell
-⟦ _ⓣ-hor_ {μ1 = μ1} {ρ1 = ρ1} {μ2 = μ2} {ρ2 = ρ2} α β ⟧two-cell =
-  M.≅ᵐ-to-2-cell (M.≅ᵐ-sym (⟦ⓜ⟧-sound ρ1 ρ2)) M.ⓣ-vert (⟦ α ⟧two-cell M.ⓣ-hor ⟦ β ⟧two-cell) M.ⓣ-vert M.≅ᵐ-to-2-cell (⟦ⓜ⟧-sound μ1 μ2)
-⟦ 𝟙≤later ⟧two-cell = M.≅ᵐ-to-2-cell (M.≅ᵐ-sym (M.𝟙-identityʳ _)) M.ⓣ-vert M.𝟙≤later
-⟦ constantly∘forever≤𝟙 ⟧two-cell = M.constantly∘forever≤𝟙
+⟦ id𝟙★ ⟧two-cell = M.id-cell
+⟦ ltrⓜcst {l = zero } z≤n ⟧two-cell = M.id-cell
+⟦ ltrⓜcst {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later M.ⓣ-hor ⟦ ltrⓜcst {l = l} z≤n ⟧two-cell) M.ⓣ-vert M.≅ᵐ-to-2-cell (M.≅ᵐ-sym (M.𝟙-identityˡ _))
+⟦ ltrⓜcst (s≤s k≤l) ⟧two-cell = M.id-cell M.ⓣ-hor ⟦ ltrⓜcst k≤l ⟧two-cell
+⟦ id-frv ⟧two-cell = M.id-cell
+⟦ ltr {l = zero } z≤n ⟧two-cell = M.id-cell
+⟦ ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later M.ⓣ-hor ⟦ ltr {l = l} z≤n ⟧two-cell) M.ⓣ-vert M.≅ᵐ-to-2-cell (M.≅ᵐ-sym (M.𝟙-identityˡ _))
+⟦ ltr (s≤s k≤l) ⟧two-cell = M.id-cell M.ⓣ-hor ⟦ ltr k≤l ⟧two-cell
+⟦ ltrⓜcstⓜfrv {l = zero } z≤n ⟧two-cell = M.id-cell
+⟦ ltrⓜcstⓜfrv {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later M.ⓣ-hor ⟦ ltrⓜcstⓜfrv {l = l} z≤n ⟧two-cell) M.ⓣ-vert M.≅ᵐ-to-2-cell (M.≅ᵐ-sym (M.𝟙-identityˡ _))
+⟦ ltrⓜcstⓜfrv (s≤s k≤l) ⟧two-cell = M.id-cell M.ⓣ-hor ⟦ ltrⓜcstⓜfrv k≤l ⟧two-cell
+⟦ cstⓜfrv≤𝟙 {l = zero } z≤n ⟧two-cell = M.constantly∘forever≤𝟙
+⟦ cstⓜfrv≤𝟙 {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later M.ⓣ-hor ⟦ cstⓜfrv≤𝟙 {l = l} z≤n ⟧two-cell) M.ⓣ-vert M.≅ᵐ-to-2-cell (M.≅ᵐ-sym (M.𝟙-identityˡ _))
+⟦ cstⓜfrv≤𝟙 (s≤s k≤l) ⟧two-cell = M.id-cell M.ⓣ-hor ⟦ cstⓜfrv≤𝟙 k≤l ⟧two-cell
