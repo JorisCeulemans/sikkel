@@ -44,6 +44,10 @@ erase-names-tm (if b t f) = NMLS.if (erase-names-tm b) (erase-names-tm t) (erase
 erase-names-tm (pair t s) = NMLS.pair (erase-names-tm t) (erase-names-tm s)
 erase-names-tm (fst p) = NMLS.fst (erase-names-tm p)
 erase-names-tm (snd p) = NMLS.snd (erase-names-tm p)
+erase-names-tm (löb[later∣ x ∈ T ] t) = NMLS.löb[later∣ _ ∈ T ] erase-names-tm t
+erase-names-tm (g-head s) = NMLS.g-head (erase-names-tm s)
+erase-names-tm (g-tail s) = NMLS.g-tail (erase-names-tm s)
+erase-names-tm (g-cons a s) = NMLS.g-cons (erase-names-tm a) (erase-names-tm s)
 
 infix 2 _≈α_
 _≈α_ : (t s : Tm Γ T) → Set

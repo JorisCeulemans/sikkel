@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 --------------------------------------------------
 -- Interpretation of nameless MSTT types, contexts and terms in a
 --   presheaf model
@@ -14,6 +16,9 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Discrete as M
 import Model.Modality as M
+
+import Applications.GuardedRecursion.Model.Streams.Guarded as M
+import Applications.GuardedRecursion.Model.Modalities as M
 
 open import Experimental.ClosedTypes as M
 open import Experimental.ClosedTypes.Modal as M
@@ -38,6 +43,7 @@ private variable
 ⟦ T ⇛ S ⟧ty = ⟦ T ⟧ty M.⇛ ⟦ S ⟧ty
 ⟦ T ⊠ S ⟧ty = ⟦ T ⟧ty M.⊠ ⟦ S ⟧ty
 ⟦ ⟨ μ ∣ T ⟩ ⟧ty = M.s⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦ GStream A ⟧ty = M.GStream (⟦ A ⟧ty M.[ M.!◇ _ ])
 
 ⟦_⟧ctx-nmls : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ ◇ ⟧ctx-nmls = M.◇
@@ -79,3 +85,7 @@ private variable
 ⟦ pair t s ⟧tm-nmls = spair ⟦ t ⟧tm-nmls ⟦ s ⟧tm-nmls
 ⟦ fst p ⟧tm-nmls = sfst ⟦ p ⟧tm-nmls
 ⟦ snd p ⟧tm-nmls = ssnd ⟦ p ⟧tm-nmls
+⟦ löb[later∣ _ ∈ T ] t ⟧tm-nmls = M.löb' _ {!⟦ t ⟧tm-nmls!}
+⟦ g-head s ⟧tm-nmls = {!M.g-head!}
+⟦ g-tail s ⟧tm-nmls = {!!}
+⟦ g-cons a s ⟧tm-nmls = {!!}

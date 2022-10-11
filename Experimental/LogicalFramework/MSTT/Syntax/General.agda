@@ -48,7 +48,7 @@ data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → 
   skip-lock : (ρ : Modality m p) → Var x μ T κ Γ → Var x μ T (κ ⓜ ρ) (Γ ,lock⟨ ρ ⟩)
 
 infixl 50 _∙_
-data Tm (Γ : Ctx m) : Ty m → Set where
+data Tm : Ctx m → Ty m → Set where
   var' : {μ : Modality m n} (x : Name) {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
   -- ^ When writing programs, one should not directly use var' but rather combine
   --   it with a decision procedure for Var, which will resolve the name.
@@ -66,6 +66,10 @@ data Tm (Γ : Ctx m) : Ty m → Set where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   snd : Tm Γ (T ⊠ S) → Tm Γ S
+  löb[later∣_∈_]_ : (x : Name) (T : Ty ω) → Tm (Γ ,, later ∣ x ∈ T) T → Tm Γ T
+  g-head : ∀ {A} → Tm Γ (GStream A) → Tm Γ ⟨ constantly ∣ A ⟩
+  g-tail : ∀ {A} → Tm Γ (GStream A) → Tm Γ ⟨ later ∣ GStream A ⟩
+  g-cons : ∀ {A} → Tm (Γ ,lock⟨ constantly ⟩) A → Tm (Γ ,lock⟨ later ⟩) (GStream A) → Tm Γ (GStream A)
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
@@ -98,6 +102,10 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (pair t s) σ = pair (traverse-tm t σ) (traverse-tm s σ)
   traverse-tm (fst p) σ = fst (traverse-tm p σ)
   traverse-tm (snd p) σ = snd (traverse-tm p σ)
+  traverse-tm (löb[later∣ x ∈ T ] t) σ = löb[later∣ x ∈ T ] traverse-tm t (lift σ)
+  traverse-tm (g-head s) σ = g-head (traverse-tm s σ)
+  traverse-tm (g-tail s) σ = g-tail (traverse-tm s σ)
+  traverse-tm (g-cons a s) σ = g-cons (traverse-tm a (lock σ)) (traverse-tm s (lock σ))
 
 open TravStruct using (traverse-tm)
 

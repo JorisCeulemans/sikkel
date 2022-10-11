@@ -120,6 +120,12 @@ id-cell {μ = later^[ k ]ⓜconstantly} = ltrⓜcst ≤-refl
 id-cell {μ = later^[ k ]} = ltr ≤-refl
 id-cell {μ = later^[ k ]ⓜconstantlyⓜforever} = ltrⓜcstⓜfrv ≤-refl
 
+𝟙≤later : TwoCell 𝟙 later
+𝟙≤later = ltr z≤n
+
+constantlyⓜforever≤𝟙 : TwoCell (constantly ⓜ forever) 𝟙
+constantlyⓜforever≤𝟙 = cstⓜfrv≤𝟙 z≤n
+
 infixl 6 _ⓣ-vert_
 _ⓣ-vert_ : TwoCell ρ κ → TwoCell μ ρ → TwoCell μ κ
 id𝟙★ ⓣ-vert β = β

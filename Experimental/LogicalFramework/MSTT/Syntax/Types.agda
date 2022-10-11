@@ -12,9 +12,10 @@ private variable
 
 infixr 6 _⇛_
 infixl 5 _⊠_
-data Ty (m : Mode) : Set where
+data Ty : Mode → Set where
   Nat' : Ty m
   Bool' : Ty m
   _⇛_ : Ty m → Ty m → Ty m
   _⊠_ : Ty m → Ty m → Ty m
   ⟨_∣_⟩ : Modality n m → Ty n → Ty m 
+  GStream : Ty ★ → Ty ω
