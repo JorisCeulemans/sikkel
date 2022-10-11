@@ -36,6 +36,7 @@ comp⁻¹ {μ = μ} {ρ = ρ} t =
   (mod⟨ μ ⟩ (mod⟨ ρ ⟩ var "dummy" (subst (TwoCell _) (cong (_ⓜ ρ) (sym mod-unitˡ)) id-cell)))
 
 -- Applicative operator for modalities (every modality satisfies the K axiom).
+infixl 50 _⊛_
 _⊛_ : Tm Γ ⟨ μ ∣ T ⇛ S ⟩ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ μ ∣ S ⟩
 _⊛_ {μ = μ} f t =
   let' mod⟨ μ ⟩ "dummy f" ← f in'
@@ -46,5 +47,6 @@ _⊛_ {μ = μ} f t =
 lam[_∣_∈_]_ : (μ : Modality m n) (x : String) (T : Ty m) → Tm (Γ ,, μ ∣ x ∈ T) S → Tm Γ (⟨ μ ∣ T ⟩ ⇛ S)
 lam[ μ ∣ x ∈ T ] s = lam[ x ∈ ⟨ μ ∣ T ⟩ ] let' mod⟨ μ ⟩ x ← var' x {vzero} id-cell in' (s [ lift-sub π ]tm)
 
+infixl 50 _∙ₘ_
 _∙ₘ_ : Tm Γ (⟨ μ ∣ T ⟩ ⇛ S) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ S
 f ∙ₘ t = f ∙ (mod⟨ _ ⟩ t)
