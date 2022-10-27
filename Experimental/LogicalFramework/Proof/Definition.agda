@@ -140,3 +140,4 @@ data Proof {m : Mode} : ProofCtx m → Set where
 
   fun-cong : {Ξ : ProofCtx m} → Proof Ξ → Tm (to-ctx Ξ) T → Proof Ξ
   cong : {Ξ : ProofCtx m} {T S : Ty m} → Tm (to-ctx Ξ) (T ⇛ S) → Proof Ξ → Proof Ξ
+  hole : {Ξ : ProofCtx m} → String → Proof Ξ
