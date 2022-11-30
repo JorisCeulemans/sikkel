@@ -194,6 +194,7 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
 
 test-plus-comm : {Ξ : ProofCtx ★} → check-proof Ξ proof-plus-comm plus-comm ≡ return _
 test-plus-comm = refl
+
 {-
 {-
 proof-plus-comm : {Ξ : ProofCtx} → Ξ ⊢ plus-comm

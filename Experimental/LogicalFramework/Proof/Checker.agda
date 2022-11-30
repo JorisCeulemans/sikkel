@@ -1,6 +1,7 @@
 module Experimental.LogicalFramework.Proof.Checker where
 
-open import Data.String as Str hiding (_≟_)
+open import Data.List
+open import Data.String as Str hiding (_≟_; _++_)
 open import Data.Unit
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
@@ -124,24 +125,25 @@ contains-assumption? x μ (Ξ ,,ᶠ ρ ∣ y ∈ φ) | no ¬x=y = map-contains i
 contains-assumption? x μ (Ξ ,lock⟨ ρ ⟩) = map-contains (_ⓜ ρ) (skip-lock ρ) <$> contains-assumption? x μ Ξ
 
 
-check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → Formula (to-ctx Ξ) → PCM ⊤
+check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → Formula (to-ctx Ξ) → PCM (List Goal)
 check-proof Ξ refl φ = do
   is-eq t1 t2 ← is-eq? φ
   t1 =t? t2
-  return tt
+  return []
 check-proof Ξ (sym p) φ = do
   is-eq t1 t2 ← is-eq? φ
   check-proof Ξ p (t2 ≡ᶠ t1)
 check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
   is-eq {T = T} t s ← is-eq? φ
   refl ← T =T? T'
-  check-proof Ξ p1 (t ≡ᶠ middle-tm) <|,|> check-proof Ξ p2 (middle-tm ≡ᶠ s)
-  return tt
+  goals1 ← check-proof Ξ p1 (t ≡ᶠ middle-tm)
+  goals2 ← check-proof Ξ p2 (middle-tm ≡ᶠ s)
+  return (goals1 ++ goals2)
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
   refl ← κ' =mod? κ
   φ =f? lookup-assumption a α
-  return tt
+  return []
 check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   is-forall {n = n'} κ y S φ' ← is-forall? φ
   refl ← n =m? n'
@@ -150,42 +152,41 @@ check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   refl ← T =T? S
   check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
 check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
-  check-proof Ξ p ψ
   is-forall {n = n'} κ y S ψ' ← is-forall? ψ
   refl ← n =m? n'
   refl ← μ =mod? κ
   refl ← T =T? S
   φ =f? (ψ' [ t / y ]frm)
-  return tt
+  check-proof Ξ p ψ
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   lam x b ← is-lam? f
   rhs =t? (b [ lock𝟙-tm t / x ]tm)
-  return tt
+  return []
 check-proof Ξ nat-elim-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   nat-elim z s ← is-nat-elim? f
   t =t? zero
   rhs =t? z
-  return tt
+  return []
 check-proof Ξ nat-elim-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   nat-elim z s ← is-nat-elim? f
   suc-tm t' ← is-suc-tm? t
   rhs =t? s ∙ (nat-elim z s ∙ t')
-  return tt
+  return []
 check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ends-in-var Ξ' μ x T ← ends-in-var? Ξ
   refl ← return Δ=Γ,μ∣x∈T -- Pattern matching on this proof only works since we already established that Ξ is of the form Ξ' ,,ᵛ μ ∣ x ∈ T.
                           -- Otherwise, unification would fail.
-  check-proof Ξ' p0 (φ [ zero / x ]frm) <|,|>
-    check-proof (Ξ' ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ)
-                ps
-                (φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm)
-  return tt
+  goals1 ← check-proof Ξ' p0 (φ [ zero / x ]frm)
+  goals2 ← check-proof (Ξ' ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ)
+                       ps
+                       (φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm)
+  return (goals1 ++ goals2)
 check-proof Ξ (fun-cong {T = T} p t) φ = do
   is-eq lhs rhs ← is-eq? φ
   app {T = T2} f s ← is-app? lhs
@@ -205,4 +206,4 @@ check-proof Ξ (cong {T = T} {S = S} f p) φ = do
   g =t? f
   g' =t? f
   check-proof Ξ p (t ≡ᶠ s)
-check-proof Ξ (hole id) φ = goal-fail (goal id Ξ φ)
+check-proof Ξ (hole name) φ = return [ goal name Ξ φ ]
