@@ -64,8 +64,8 @@ proof-plus-zeroʳ = ∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] nat-induction "ind-hyp" (
                 (cong suc (assumption' "ind-hyp" azero id-cell))))
 -}
 
-proof-plus-zeroʳ : {Ξ : ProofCtx ★} → Proof Ξ
-proof-plus-zeroʳ = ∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] nat-induction "ind-hyp" (plus ∙ var' "n" {vzero} id-cell ∙ zero ≡ᶠ var' "n" {vzero} id-cell)
+proof-plus-zeroʳ : {Γ : Ctx ★} → Proof Γ
+proof-plus-zeroʳ = ∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] nat-induction "ind-hyp"
   (trans (id ∙ zero) (fun-cong nat-elim-β-zero zero) fun-β)
   (trans ((lam[ "n" ∈ Nat' ] (suc ∙ (plus ∙ var' "n" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell))) ∙ zero)
          (fun-cong (trans ((lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] (suc ∙ (var' "f" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell)))) ∙ (plus ∙ var' "n" {vzero} id-cell))
@@ -73,7 +73,7 @@ proof-plus-zeroʳ = ∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] nat-induction "ind-hyp" (
                           fun-β) zero)
          (trans (suc ∙ (plus ∙ var' "n" {vzero} id-cell ∙ zero))
                 fun-β
-                (cong suc (assumption' "ind-hyp" azero id-cell))))
+                (cong suc (assumption' "ind-hyp" {𝟙} {𝟙} id-cell))))
 
 test-plus-zeroʳ : {Ξ : ProofCtx ★} → check-proof Ξ proof-plus-zeroʳ plus-zeroʳ ≡ return _
 test-plus-zeroʳ = refl
@@ -112,8 +112,8 @@ plus-sucʳ = ∀[ 𝟙 ∣ "m" ∈ Nat' ] (∀[ 𝟙 ∣ "n" ∈ Nat' ] (
   plus ∙ svar "m" ∙ (suc ∙ svar "n") ≡ᶠ suc ∙ (plus ∙ svar "m" ∙ svar "n")))
 
 {-
-proof-plus-sucʳ : {Ξ : ProofCtx ★} → Proof Ξ
-proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus ∙ svar "m" ∙ (suc ∙ svar "n") ≡ᶠ suc ∙ (plus ∙ svar "m" ∙ svar "n"))
+proof-plus-sucʳ : {Γ : Ctx ★} → Proof Γ
+proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans (id ∙ (suc ∙ svar "n")) (fun-cong nat-elim-β-zero (suc ∙ svar "n")) (trans (suc ∙ svar "n") fun-β (sym (cong suc (trans (id ∙ svar "n") (fun-cong nat-elim-β-zero (svar "n")) fun-β)))))
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans ((lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] (suc ∙ (svar "f" ∙ svar "n")))) ∙ (plus ∙ svar "m") ∙ (suc ∙ svar "n"))
                                    (fun-cong nat-elim-β-suc (suc ∙ svar "n"))
@@ -122,7 +122,7 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (�
                                           (trans (suc ∙ (plus ∙ svar "m" ∙ (suc ∙ svar "n")))
                                                  fun-β
                                                  (cong suc (trans (suc ∙ (plus ∙ svar "m" ∙ svar "n"))
-                                                                  (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus ∙ svar "m" ∙ (suc ∙ svar "n") ≡ᶠ suc ∙ (plus ∙ svar "m" ∙ svar "n")) (assumption' "ind-hyp" (skip-var azero) id-cell) (svar "n"))
+                                                                  (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus ∙ svar "m" ∙ (suc ∙ svar "n") ≡ᶠ suc ∙ (plus ∙ svar "m" ∙ svar "n")) (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (svar "n"))
                                                                   (sym (trans ((lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] (suc ∙ (svar "f" ∙ svar "n")))) ∙ (plus ∙ svar "m") ∙ svar "n")
                                                                               (fun-cong nat-elim-β-suc (svar "n"))
                                                                               (trans ((lam[ "n" ∈ Nat' ] suc ∙ (plus ∙ svar "m" ∙ svar "n")) ∙ svar "n")
@@ -130,8 +130,8 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (�
                                                                                      fun-β))))))))
 -}
 
-proof-plus-sucʳ : {Ξ : ProofCtx ★} → Proof Ξ
-proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus ∙ var' "m" {vsuc vzero} id-cell ∙ (suc ∙ var' "n" {vzero} id-cell) ≡ᶠ suc ∙ (plus ∙ var' "m" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell))
+proof-plus-sucʳ : {Γ : Ctx ★} → Proof Γ
+proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans (id ∙ (suc ∙ var' "n" {vzero} id-cell)) (fun-cong nat-elim-β-zero (suc ∙ var' "n" {vzero} id-cell)) (trans (suc ∙ var' "n" {vzero} id-cell) fun-β (sym (cong suc (trans (id ∙ var' "n" {vzero} id-cell) (fun-cong nat-elim-β-zero (var' "n" {vzero} id-cell)) fun-β)))))
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans ((lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] (suc ∙ (var' "f" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell)))) ∙ (plus ∙ var' "m" {vsuc vzero} id-cell) ∙ (suc ∙ var' "n" {vzero} id-cell))
                                    (fun-cong nat-elim-β-suc (suc ∙ var' "n" {vzero} id-cell))
@@ -140,12 +140,13 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (�
                                           (trans (suc ∙ (plus ∙ var' "m" {vsuc vzero} id-cell ∙ (suc ∙ var' "n" {vzero} id-cell)))
                                                  fun-β
                                                  (cong suc (trans (suc ∙ (plus ∙ var' "m" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell))
-                                                                  (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ (suc ∙ var' "n" {vzero} id-cell) ≡ᶠ suc ∙ (plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ var' "n" {vzero} id-cell)) (assumption' "ind-hyp" (skip-var azero) id-cell) (var' "n" {skip-lock 𝟙 vzero} id-cell))
+                                                                  (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ (suc ∙ var' "n" {vzero} id-cell) ≡ᶠ suc ∙ (plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ var' "n" {vzero} id-cell)) (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (var' "n" {skip-lock 𝟙 vzero} id-cell))
                                                                   (sym (trans ((lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] (suc ∙ (var' "f" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell)))) ∙ (plus ∙ var' "m" {vsuc vzero} id-cell) ∙ var' "n" {vzero} id-cell)
                                                                               (fun-cong nat-elim-β-suc (var' "n" {vzero} id-cell))
                                                                               (trans ((lam[ "n" ∈ Nat' ] suc ∙ (plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ var' "n" {vzero} id-cell)) ∙ var' "n" {vzero} id-cell)
                                                                                      (fun-cong fun-β (var' "n" {vzero} id-cell))
                                                                                      fun-β))))))))
+
 
 test-plus-sucʳ : {Ξ : ProofCtx ★} → check-proof Ξ proof-plus-sucʳ plus-sucʳ ≡ return _
 test-plus-sucʳ = refl
@@ -179,8 +180,8 @@ plus-comm : Formula Γ
 plus-comm = ∀[ 𝟙 ∣ "m" ∈ Nat' ] (∀[ 𝟙 ∣ "n" ∈ Nat' ] (
   plus ∙ svar "m" ∙ svar "n" ≡ᶠ plus ∙ svar "n" ∙ svar "m"))
 
-proof-plus-comm : {Ξ : ProofCtx ★} → Proof Ξ
-proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (∀[ 𝟙 ∣ "n" ∈ Nat' ] (plus ∙ var' "m" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell ≡ᶠ plus ∙ var' "n" {vzero} id-cell ∙ var' "m" {vsuc vzero} id-cell))
+proof-plus-comm : {Γ : Ctx ★} → Proof Γ
+proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans (id ∙ var' "n" {vzero} id-cell) (fun-cong nat-elim-β-zero (var' "n" {vzero} id-cell)) (trans (var' "n" {vzero} id-cell) fun-β (sym (∀-elim 𝟙 plus-zeroʳ proof-plus-zeroʳ (var' "n" {skip-lock 𝟙 vzero} id-cell)))))
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans ((lam[ "f" ∈ Nat' ⇛ Nat' ] lam[ "n" ∈ Nat' ] suc ∙ (var' "f" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell)) ∙ (plus ∙ var' "m" {vsuc vzero} id-cell) ∙ var' "n" {vzero} id-cell)
                                    (fun-cong nat-elim-β-suc (var' "n" {vzero} id-cell))
@@ -188,12 +189,12 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp" (�
                                           (fun-cong fun-β (var' "n" {vzero} id-cell))
                                           (trans (suc ∙ (plus ∙ var' "m" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell)) fun-β
                                             (trans (suc ∙ (plus ∙ var' "n" {vzero} id-cell ∙ var' "m" {vsuc vzero} id-cell))
-                                                   (cong suc (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] (plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ var' "n" {vzero} id-cell ≡ᶠ plus ∙ var' "n" {vzero} id-cell ∙ var' "m" {vsuc (vsuc vzero)} id-cell)) (assumption' "ind-hyp" (skip-var azero) id-cell) (var' "n" {skip-lock 𝟙 vzero} id-cell)))
+                                                   (cong suc (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] (plus ∙ var' "m" {vsuc (vsuc vzero)} id-cell ∙ var' "n" {vzero} id-cell ≡ᶠ plus ∙ var' "n" {vzero} id-cell ∙ var' "m" {vsuc (vsuc vzero)} id-cell)) (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (var' "n" {skip-lock 𝟙 vzero} id-cell)))
                                                    (sym (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] (plus ∙ var' "n" {vsuc vzero} id-cell ∙ (suc ∙ var' "n" {vzero} id-cell) ≡ᶠ suc ∙ (plus ∙ var' "n" {vsuc vzero} id-cell ∙ var' "n" {vzero} id-cell))) (∀-elim 𝟙 plus-sucʳ proof-plus-sucʳ (var' "n" {skip-lock 𝟙 vzero} id-cell)) (var' "m" {skip-lock 𝟙 (vsuc vzero)} id-cell)))))))
 
 test-plus-comm : {Ξ : ProofCtx ★} → check-proof Ξ proof-plus-comm plus-comm ≡ return _
 test-plus-comm = refl
-
+{-
 {-
 proof-plus-comm : {Ξ : ProofCtx} → Ξ ⊢ plus-comm
 proof-plus-comm = ∀-intro (nat-induction "ind-hyp"
@@ -231,4 +232,5 @@ proof-plus-comm-with-β = ∀-intro (nat-induction "ind-hyp"
 α-test4 : [] ⊢ (∀[ "n" ∈ Nat' ] (lam[ "m" ∈ Nat' ] var "n") ≡ᶠ (lam[ "n" ∈ Nat' ] var "n"))
                  ⊃ (∀[ "m" ∈ Nat' ] (lam[ "n" ∈ Nat' ] var "m") ≡ᶠ lam[ "x" ∈ Nat' ] var "x")
 α-test4 = assume[ "silly assumption" ] withAlpha (assumption "silly assumption")
+-}
 -}
