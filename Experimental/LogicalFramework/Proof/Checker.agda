@@ -146,7 +146,7 @@ check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   is-forall {n = n'} κ y S φ' ← is-forall? φ
   refl ← n =m? n'
   refl ← μ =mod? κ
-  refl ← from-dec (x Str.≟ y)
+  refl ← from-dec "Alpha equivalence is currently not supported" (x Str.≟ y)
   refl ← T =T? S
   check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
 check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do

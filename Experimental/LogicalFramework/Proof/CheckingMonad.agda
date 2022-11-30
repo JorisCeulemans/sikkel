@@ -44,6 +44,8 @@ censor f (pcm x goals) = pcm x (f goals)
 
 cons-goal : Goal → PCM A → PCM A
 cons-goal g = censor (g ∷_)
+ErrorMsg : Set
+ErrorMsg = String
 
 throw-error : String → PCM A
 throw-error msg = pcm (error msg) []
@@ -95,8 +97,8 @@ pcm mf gf <|*|> pcm ma ga = pcm (fst-err-applicative mf ma) (gf ++ ga)
 
 _<|,|>_ : PCM A → PCM B → PCM (A × B)
 ma <|,|> mb = _,_ <$> ma <|*|> mb
+from-dec : ErrorMsg → Dec A → PCM A
+from-dec msg (yes a) = return a
+from-dec msg (no ¬a) = throw-error msg
 
 
-from-dec : Dec A → PCM A
-from-dec (yes a) = return a
-from-dec (no ¬a) = throw-error "Element of decidable type does not exist"

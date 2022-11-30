@@ -23,19 +23,23 @@ _=m?_ : (m n : Mode) → PCM (m Ag.≡ n)
 ω =m? ω = return refl
 _ =m? _ = throw-error "Modes are not equal."
 
+
+modality-msg : ErrorMsg
+modality-msg = "Modalities are not equal."
+
 _=mod?_ : (μ κ : Modality m n) → PCM (μ Ag.≡ κ)
 𝟙★ =mod? 𝟙★ = return refl
 forever =mod? forever = return refl
 later^[ k ]ⓜconstantly =mod? later^[ l ]ⓜconstantly = do
-  refl ← from-dec (k Nat.≟ l)
+  refl ← from-dec modality-msg (k Nat.≟ l)
   return refl
 later^[ k ] =mod? later^[ l ] = do
-  refl ← from-dec (k Nat.≟ l)
+  refl ← from-dec modality-msg (k Nat.≟ l)
   return refl
 later^[ k ]ⓜconstantlyⓜforever =mod? later^[ l ]ⓜconstantlyⓜforever = do
-  refl ← from-dec (k Nat.≟ l)
+  refl ← from-dec modality-msg (k Nat.≟ l)
   return refl
-_ =mod? _ = throw-error "Modalities are not equal."
+_ =mod? _ = throw-error modality-msg
 
 _=c?_ : (α β : TwoCell μ κ) → PCM (α Ag.≡ β)
 id𝟙★ =c? id𝟙★ = return refl
@@ -106,9 +110,13 @@ skip-lock {κ = κ} ρ v =v? w = do
   return (Ag.trans (bisubst-uip (Var _ _ _) mod-eq refl (skip-lock ρ v)) var-eq)
 _ =v? _ = throw-error "Variables are not equal."
 
+
+tm-msg : ErrorMsg
+tm-msg = "Terms are not equal."
+
 _=t?_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
 var' {n = n} {κ = κ} {μ = μ} x {v} α =t? var' {n = n'} {κ = κ'} {μ = μ'} y {w} β = do
-  refl ← from-dec (x Str.≟ y)
+  refl ← from-dec tm-msg (x Str.≟ y)
   refl ← n =m? n'
   refl ← κ =mod? κ'
   refl ← μ =mod? μ'
@@ -123,13 +131,13 @@ mod-elim {o = o} {n = n} {T = T} ρ1 ρ2 x t1 t2 =t? mod-elim {o = o'} {n = n'} 
   refl ← n =m? n'
   refl ← ρ1 =mod? κ1
   refl ← ρ2 =mod? κ2
-  refl ← from-dec (x Str.≟ y)
+  refl ← from-dec tm-msg (x Str.≟ y)
   refl ← T =T? T'
   refl ← t1 =t? s1
   refl ← t2 =t? s2
   return refl
 (lam[ x ∈ T ] t) =t? (lam[ y ∈ S ] s) = do
-  refl ← from-dec (x Str.≟ y)
+  refl ← from-dec tm-msg (x Str.≟ y)
   refl ← T =T? S
   refl ← t =t? s
   return refl
@@ -163,7 +171,11 @@ snd {T = T} p =t? snd {T = T'} p' = do
   refl ← T =T? T'
   refl ← p =t? p'
   return refl
-_ =t? _ = throw-error "Terms are not equal."
+_ =t? _ = throw-error tm-msg
+
+
+frm-msg : ErrorMsg
+frm-msg = "Formulas are not equal."
 
 _=f?_ : (φ ψ : Formula Γ) → PCM (φ Ag.≡ ψ)
 ⊤ᶠ =f? ⊤ᶠ = return refl
@@ -184,7 +196,7 @@ _=f?_ : (φ ψ : Formula Γ) → PCM (φ Ag.≡ ψ)
 (∀[_∣_∈_]_ {n = n} μ x T φ) =f? (∀[_∣_∈_]_ {n = n'} κ y S ψ) = do
   refl ← n =m? n'
   refl ← μ =mod? κ
-  refl ← from-dec (x Str.≟ y)
+  refl ← from-dec frm-msg (x Str.≟ y)
   refl ← T =T? S
   refl ← φ =f? ψ
   return refl
@@ -193,4 +205,4 @@ _=f?_ : (φ ψ : Formula Γ) → PCM (φ Ag.≡ ψ)
   refl ← μ =mod? κ
   refl ← φ =f? ψ
   return refl
-_ =f? _ = throw-error "Formulas are not equal."
+_ =f? _ = throw-error frm-msg
