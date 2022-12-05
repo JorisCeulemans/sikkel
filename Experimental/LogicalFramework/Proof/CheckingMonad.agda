@@ -6,10 +6,6 @@ open import Data.String hiding (_++_)
 open import Level
 open import Relation.Nullary as Ag using (Dec; yes; no)
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.Formula
-open import Experimental.LogicalFramework.Proof.Definition
-
 private variable
   ℓ : Level
   A B : Set ℓ
@@ -54,15 +50,3 @@ error msg >> _  = error msg
 from-dec : ErrorMsg → Dec A → PCM A
 from-dec msg (yes a) = return a
 from-dec msg (no ¬a) = throw-error msg
-
-
--- If a proof is incomplete (i.e. it contains one or more holes), the
--- proof checker should output the remaining goals to solve (i.e. the
--- goal proposition to prove and the proof context at that point).
-record Goal : Set where
-  constructor goal
-  field
-    gl-identifier : String
-    {gl-mode} : Mode
-    gl-ctx    : ProofCtx gl-mode
-    gl-prop   : Formula (to-ctx gl-ctx)

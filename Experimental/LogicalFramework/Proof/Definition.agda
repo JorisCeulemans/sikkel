@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Definition of proof contexts and proofs
+-- Definition of proofs
 --------------------------------------------------
 
 module Experimental.LogicalFramework.Proof.Definition where
@@ -16,27 +16,6 @@ private variable
   Γ Δ : Ctx m
   T S R U : Ty m
   φ ψ : Formula Γ
-  x y : String
-
-
--- A proof context can, apart from MSTT variables, also consist of formulas (assumptions).
-data ProofCtx (m : Mode) : Set
-to-ctx : ProofCtx m → Ctx m
-
-infixl 2 _,,ᵛ_∣_∈_ _,,ᶠ_∣_∈_
-data ProofCtx m where
-  [] : ProofCtx m
-  _,,ᵛ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → ProofCtx m
-  _,,ᶠ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)) → ProofCtx m
-  _,lock⟨_⟩ : (Ξ : ProofCtx n) (μ : Modality m n) → ProofCtx m
-
-to-ctx []               = ◇
-to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T) = (to-ctx Ξ) ,, μ ∣ x ∈ T
-to-ctx (Ξ ,,ᶠ _ ∣ _ ∈ _) = to-ctx Ξ
-to-ctx (Ξ ,lock⟨ μ ⟩)   = (to-ctx Ξ) ,lock⟨ μ ⟩
-
-private variable
-  Ξ : ProofCtx m
 
 
 data Proof {m : Mode} : Ctx m → Set where
