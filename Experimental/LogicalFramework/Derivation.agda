@@ -277,16 +277,6 @@ if-cong = tm-constructor-cong₃ (λ _ → if) (λ _ _ _ _ → Ag.refl)
 --------------------------------------------------
 -- Soundness proof of the logical framework w.r.t. a trivial presheaf model
 
-⟦_⟧pctx : ProofCtx → Ctx ★
-to-ctx-subst : (Ξ : ProofCtx) → ⟦ Ξ ⟧pctx M.⇒ ⟦ to-ctx Ξ ⟧ctx
-
-⟦ [] ⟧pctx = M.◇
-⟦ Ξ ,,ᵛ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,,ₛ ⟦ T ⟧ty
-⟦ Ξ ,,ᶠ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
-
-to-ctx-subst [] = M.id-subst M.◇
-to-ctx-subst (Ξ ,,ᵛ _ ∈ T) = to-ctx-subst Ξ M.s⊹
-to-ctx-subst (Ξ ,,ᶠ _ ∈ φ) = to-ctx-subst Ξ M.⊚ M.π
 
 interpret-assumption : (a : Assumption x Ξ) → Tm ⟦ Ξ ⟧pctx (⟦ lookup-assumption a ⟧frm M.[ to-ctx-subst Ξ ])
 interpret-assumption azero = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] M.ξ

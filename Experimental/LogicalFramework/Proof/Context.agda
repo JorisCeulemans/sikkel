@@ -5,6 +5,11 @@ open import Function using (id)
 import Relation.Binary.PropositionalEquality as Ag
 open import Relation.Nullary
 
+open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+import Model.Modality as M
+import Experimental.ClosedTypes as M
+import Experimental.ClosedTypes.Modal as M
+
 open import Experimental.LogicalFramework.MSTT
 open import Experimental.LogicalFramework.Formula
 open import Experimental.LogicalFramework.Proof.CheckingMonad
@@ -87,3 +92,17 @@ contains-assumption? {n = n} {o} {m} x μ (_,,ᶠ_∣_∈_ {n = n'} Ξ ρ .x φ)
   return (contains-assumption 𝟙 azero)
 contains-assumption? x μ (Ξ ,,ᶠ ρ ∣ y ∈ φ) | no ¬x=y = map-contains id asuc <$> contains-assumption? x μ Ξ
 contains-assumption? x μ (Ξ ,lock⟨ ρ ⟩) = map-contains (_ⓜ ρ) (skip-lock ρ) <$> contains-assumption? x μ Ξ
+
+
+⟦_⟧pctx : ProofCtx m → SemCtx ⟦ m ⟧mode
+to-ctx-subst : (Ξ : ProofCtx m) → ⟦ Ξ ⟧pctx M.⇒ ⟦ to-ctx Ξ ⟧ctx
+
+⟦ [] ⟧pctx = M.◇
+⟦ Ξ ,,ᵛ μ ∣ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,,ₛ M.s⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦ Ξ ,,ᶠ μ ∣ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, ((M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧frm ⟩ M.[ to-ctx-subst Ξ ]))
+⟦ Ξ ,lock⟨ μ ⟩ ⟧pctx = M.lock ⟦ μ ⟧mod ⟦ Ξ ⟧pctx
+
+to-ctx-subst [] = M.id-subst M.◇
+to-ctx-subst (Ξ ,,ᵛ _ ∣ _ ∈ _) = (to-ctx-subst Ξ) M.s⊹
+to-ctx-subst (Ξ ,,ᶠ _ ∣ _ ∈ _) = to-ctx-subst Ξ M.⊚ M.π
+to-ctx-subst (Ξ ,lock⟨ μ ⟩) = M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ)

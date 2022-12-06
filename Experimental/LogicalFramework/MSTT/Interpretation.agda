@@ -23,7 +23,7 @@ open import Experimental.LogicalFramework.MSTT.Syntax.Named as Syn
 import Experimental.LogicalFramework.MSTT.Syntax.Nameless as DB
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence
 open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless as DBInt
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory as MTInt
 
 private variable
   m n : Mode
@@ -32,9 +32,10 @@ private variable
 
 
 --------------------------------------------------
--- Re-export interpretation of types
+-- Re-export interpretation of modes, modalities, and types
 
 open DBInt public using (⟦_⟧ty)
+open MTInt public
 
 
 --------------------------------------------------
