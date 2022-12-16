@@ -20,6 +20,7 @@ open import Experimental.ClosedTypes.Modal as M
 
 open import Experimental.LogicalFramework.MSTT.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Syntax.Named as Syn
+open Syn.AtomicSub
 import Experimental.LogicalFramework.MSTT.Syntax.Nameless as DB
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence
 open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless as DBInt
@@ -99,29 +100,22 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
   M.≅ᶜ-trans (M.ctx-functor-cong (M.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
              (M.≅ᶜ-sym (M.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
 
-open Syn.AtomicRenSub Syn.SubData renaming (AtomicRenSub to AtomicSub)
-open Syn.RenSub Syn.SubData
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ [] ⟧asub = M.!◇ _
-⟦ _∷_/_ {μ = μ} σ t x ⟧asub = ⟦ σ ⟧asub ,ₛ M.smod-intro ⟦ μ ⟧mod ⟦ t ⟧tm
-⟦ σ ⊚π ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
-⟦ σ ,lock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
-⟦ atomic-key Λ₁ Λ₂ α ⟧asub =
+⟦ []as ⟧asub = M.!◇ _
+⟦ _∷ᵃˢ_/_ {μ = μ} σ t x ⟧asub = ⟦ σ ⟧asub ,ₛ M.smod-intro ⟦ μ ⟧mod ⟦ t ⟧tm
+⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
+⟦ σ ,aslock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
+⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
   M.to (⟦⟧ltel Λ₂)
   M.⊚ (M.transf-op (M.transf ⟦ α ⟧two-cell) _)
   M.⊚ M.from (⟦⟧ltel Λ₁)
 
 ⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ id ⟧sub = M.id-subst _
+⟦ id-sub ⟧sub = M.id-subst _
 ⟦ σ ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
 
-{-
-⟦ [] ⟧subst = M.!◇ _
-⟦ _∷_/_ {_} {T} σ t _ ⟧subst = ⟦ σ ⟧subst ,ₛ ⟦ t ⟧tm
-⟦ id-subst Γ ⟧subst = M.id-subst _
-⟦ σ ⊚πs⟨ ◇ ⟩      ⟧subst = ⟦ σ ⟧subst
-⟦ σ ⊚πs⟨ Δ ,, _ ∈ T ⟩ ⟧subst = ⟦ σ ⊚πs⟨ Δ ⟩ ⟧subst M.⊚ M.π
 
+{-
 ⊹-sound : ∀ {x} (σ : Subst Δ Γ) {T : Ty} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst
 ⊹-sound σ = M.≅ˢ-refl
 

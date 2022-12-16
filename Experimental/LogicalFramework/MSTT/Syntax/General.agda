@@ -75,8 +75,8 @@ syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
 -- An element of type Trav Δ Γ can be used to tranform terms in Γ to
 -- terms in Δ. For this to work, we must specify how such a traversal
--- acts on variables and provide a weakening (of both domain and
--- codomain) and lock operation for such traversals.
+-- acts on variables and provide a lifting and lock operation for such
+-- traversals.
 record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
     vr : Var x μ T κ Δ → TwoCell μ κ → Trav Γ Δ → Tm Γ T
@@ -158,15 +158,18 @@ split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock {κ = κ} .ρ v) =
 
 
 --------------------------------------------------
--- Common structure of MSTT renaming and substitution
---   Renaming and substitution can be seen as very similar operations,
---   where the former assigns variables to variables and the latter
---   terms to variables (taking into account the modal structure of
---   contexts). Hence, we describe them at once with a parameter V
---   that will later be instatiated with variables to obtain renamings
---   and terms to obtain substitutions.
+-- Common structure of MSTT renaming and substitution Renaming and
+--   substitution can be seen as very similar operations, where the
+--   former assigns variables to variables and the latter terms to
+--   variables (taking into account the modal structure of
+--   contexts). Hence, we describe them at once with a parameter of
+--   type RenSubData that will later be instatiated with variables to
+--   obtain renamings and terms to obtain substitutions.
 
-module AtomicRenSub (V : {m n : Mode} → Modality n m → Ty n → Ctx m → Set) where
+RenSubData : Set₁
+RenSubData = {m n : Mode} → Modality n m → Ty n → Ctx m → Set
+
+module AtomicRenSubDef (V : RenSubData) where
 
   -- In order to avoid termination issues, we first define atomic
   -- renamings/substitutions and specify how they can be applied to
@@ -183,17 +186,22 @@ module AtomicRenSub (V : {m n : Mode} → Modality n m → Ty n → Ctx m → Se
     _,lock⟨_⟩ : AtomicRenSub Γ Δ → (μ : Modality n m) → AtomicRenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
     atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicRenSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
 
-
 -- In order to obtain useful results for renamings/substitutions, the
--- parameter V must be equipped with some extra structure.
-module RenSub
-  (V : {m n : Mode} → Modality n m → Ty n → Ctx m → Set)
-  (newV : ∀ {x m n} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → V μ T (Γ ,, μ ∣ x ∈ T))
-  (atomic-rensub-var : ∀ {x m n} {Γ Δ : Ctx m} {μ κ : Modality m n} {T : Ty m} →
-                       Var x μ T κ Δ → TwoCell μ κ → AtomicRenSub.AtomicRenSub V Γ Δ → Tm Γ T)
+-- type family representing the data assigned to variables must be
+-- equipped with some extra structure.
+record RenSubDataStructure (V : RenSubData) : Set where
+  field
+    newV : ∀ {x m n} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → V μ T (Γ ,, μ ∣ x ∈ T)
+    atomic-rensub-lookup-var : ∀ {x m n} {Γ Δ : Ctx m} {μ κ : Modality m n} {T : Ty m} →
+                               Var x μ T κ Δ → TwoCell μ κ → AtomicRenSubDef.AtomicRenSub V Γ Δ → Tm Γ T
+
+module AtomicRenSub
+  (V : RenSubData)
+  (rensub-struct : RenSubDataStructure V)
   where
 
-  open AtomicRenSub V
+  open AtomicRenSubDef V public
+  open RenSubDataStructure rensub-struct
 
   id-atomic-rensub : AtomicRenSub Γ Γ
   id-atomic-rensub = atomic-key ◇ ◇ id-cell
@@ -202,12 +210,20 @@ module RenSub
   lift-atomic-rensub {x = x} σ = (σ ⊚π) ∷ newV / x
 
   AtomicRenSubTrav : TravStruct AtomicRenSub
-  TravStruct.vr AtomicRenSubTrav = atomic-rensub-var
+  TravStruct.vr AtomicRenSubTrav = atomic-rensub-lookup-var
   TravStruct.lift AtomicRenSubTrav = lift-atomic-rensub
   TravStruct.lock AtomicRenSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
 
   atomic-rensub-tm : Tm Δ T → AtomicRenSub Γ Δ → Tm Γ T
   atomic-rensub-tm = traverse-tm AtomicRenSubTrav
+
+
+module RenSub
+  (V : RenSubData)
+  (rensub-struct : RenSubDataStructure V)
+  where
+
+  open AtomicRenSub V rensub-struct
 
   -- An actual renaming/substitution is a well-typed (snoc) list of atomic renamings/substitutions.
   data RenSub : Ctx m → Ctx m → Set where
@@ -259,12 +275,13 @@ record RenData (μ : Modality n m) (T : Ty n) (Γ : Ctx m) : Set where
     new-var : Var new-name μ T 𝟙 Γ
 
 newRenData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → RenData μ T (Γ ,, μ ∣ x ∈ T)
-newRenData {x = x} = rendata x vzero
+newRenData = rendata _ vzero
 
+
+module AtomicRenDef = AtomicRenSubDef RenData renaming (AtomicRenSub to AtomicRen)
 
 module AtomicRenVar where
-
-  open AtomicRenSub RenData renaming (AtomicRenSub to AtomicRen)
+  open AtomicRenDef
 
   -- When a (atomic) renaming acts on a variable, it does not need to
   -- have the same name or the same locks to the right in the
@@ -292,7 +309,23 @@ module AtomicRenVar where
   atomic-ren-var : Var x μ T κ Δ → TwoCell μ κ → AtomicRen Γ Δ → Tm Γ T
   atomic-ren-var v α σ = let renvar y κ' β w = atomic-ren-var' v σ in var' y {w} (β ⓣ-vert α)
 
-module RenM = RenSub RenData newRenData AtomicRenVar.atomic-ren-var
+  ren-data-struct : RenSubDataStructure RenData
+  RenSubDataStructure.newV ren-data-struct = newRenData
+  RenSubDataStructure.atomic-rensub-lookup-var ren-data-struct = atomic-ren-var
+
+module AtomicRen = AtomicRenSub RenData AtomicRenVar.ren-data-struct
+  renaming
+    ( AtomicRenSub to AtomicRen
+    ; [] to []ar
+    ; _∷_/_ to _∷ᵃʳ_/_
+    ; _⊚π to _⊚ᵃʳπ
+    ; _,lock⟨_⟩ to _,arlock⟨_⟩
+    ; atomic-key to atomic-key-ren
+    ; id-atomic-rensub to id-atomic-ren
+    ; atomic-rensub-tm to atomic-rename-tm
+    ; lift-atomic-rensub to lift-atomic-ren)
+
+module RenM = RenSub RenData AtomicRenVar.ren-data-struct
 
 open RenM
   renaming
@@ -362,9 +395,11 @@ newSubData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → SubData μ T (Γ ,,
 newSubData {x = x} = var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell)
 
 
+module AtomicSubDef = AtomicRenSubDef SubData renaming (AtomicRenSub to AtomicSub)
+
 module AtomicSubVar where
 
-  open AtomicRenSub SubData renaming (AtomicRenSub to AtomicSub)
+  open AtomicSubDef
 
   atomic-sub-var' : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
                     (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
@@ -380,7 +415,23 @@ module AtomicSubVar where
   atomic-sub-var : Var x μ T κ Δ → TwoCell μ κ → AtomicSub Γ Δ → Tm Γ T
   atomic-sub-var v α σ = unlock𝟙-tm (atomic-sub-var' v 𝟙 (Ag.subst (TwoCell _) (sym mod-unitʳ) α) σ)
 
-module SubM = RenSub SubData newSubData AtomicSubVar.atomic-sub-var
+  sub-data-struct : RenSubDataStructure SubData
+  RenSubDataStructure.newV sub-data-struct = newSubData
+  RenSubDataStructure.atomic-rensub-lookup-var sub-data-struct = atomic-sub-var
+
+module AtomicSub = AtomicRenSub SubData AtomicSubVar.sub-data-struct
+  renaming
+    ( AtomicRenSub to AtomicSub
+    ; [] to []as
+    ; _∷_/_ to _∷ᵃˢ_/_
+    ; _⊚π to _⊚ᵃˢπ
+    ; _,lock⟨_⟩ to _,aslock⟨_⟩
+    ; atomic-key to atomic-key-sub
+    ; id-atomic-rensub to id-atomic-sub
+    ; atomic-rensub-tm to atomic-sub-tm
+    ; lift-atomic-rensub to lift-atomic-sub)
+
+module SubM = RenSub SubData AtomicSubVar.sub-data-struct
 
 open SubM
   renaming
@@ -395,7 +446,7 @@ open SubM
     ; key-rensub to key-sub
     ; _⊚rs_ to _⊚s_
     ; rensub-tm-⊚ to sub-tm-⊚)
-  using ()
+  using (_⊚a_)
   public
 
 _/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Sub Γ (Γ ,, μ ∣ x ∈ T)

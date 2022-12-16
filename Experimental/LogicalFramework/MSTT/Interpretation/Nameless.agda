@@ -30,8 +30,6 @@ private variable
   T : Ty m
 
 
-
-
 ⟦_⟧ty : Ty m → ClosedTy ⟦ m ⟧mode
 ⟦ Nat' ⟧ty = M.Nat'
 ⟦ Bool' ⟧ty = M.Bool'
