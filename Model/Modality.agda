@@ -10,7 +10,7 @@ open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Type.Function
 open import Model.Type.Product
-open import Model.Type.Discrete
+open import Model.Type.Constant
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
 
 private

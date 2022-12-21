@@ -8,7 +8,7 @@ open import Model.BaseCategory
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm)
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as MDF
 
@@ -119,7 +119,7 @@ interpret-assumption (asuc x) = M.ι⁻¹[ M.ty-subst-comp _ _ _ ] (interpret-as
 ⟦ ∀-intro d ⟧der = {!!}
 ⟦ ∀-elim d t ⟧der = {!!}
 ⟦ fun-β ⟧der = {!!} M.[ _ ]'
-⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-discr M.[ _ ]'
+⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-const M.[ _ ]'
 ⟦ nat-elim-β-zero {a = a} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-zero ⟦ a ⟧tm _) M.[ _ ]'
 ⟦ nat-elim-β-suc {a = a} {f = f} {n = n} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-suc ⟦ a ⟧tm ⟦ f ⟧tm ⟦ n ⟧tm) M.[ _ ]'
 ⟦ if-β-true {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-true ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'

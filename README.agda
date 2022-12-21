@@ -126,7 +126,7 @@ import Model.CwF-Structure.ClosedType
 import Model.Type.Function
 import Model.Type.Product
 import Model.Type.Sum
-import Model.Type.Discrete
+import Model.Type.Constant
 
 {-
   The definition of a DRA, together with the unit DRA, composition,

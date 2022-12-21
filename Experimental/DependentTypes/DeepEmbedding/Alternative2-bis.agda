@@ -9,7 +9,7 @@ open import Relation.Nullary
 
 open import Model.BaseCategory as M
 open import Model.CwF-Structure as M hiding (_,,_)
-open import Model.Type.Discrete as M
+open import Model.Type.Constant as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
@@ -149,7 +149,7 @@ interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
   -- Andreas: Could this be solved by having a substitution operation in the syntax?
 interpret-tm (app .(T₁ ⇛ T₂) f t) S S-ok (fun-ty T₁ T₂ , (T₁-ok , T₂-ok) , Γ⊢f∈T , Γ⊢t∈T₁ , S≃T₂) =
   ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] M.app (interpret-tm f (T₁ ⇛ T₂) (T₁-ok , T₂-ok) Γ⊢f∈T) (interpret-tm t T₁ T₁-ok Γ⊢t∈T₁)
-interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound T-ok tt T=Nat ] M.discr n
+interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound T-ok tt T=Nat ] M.const n
 interpret-tm suc (Nat ⇛ Nat) T-ok T=Nat⇛Nat = M.suc'
 interpret-tm plus (Nat ⇛ Nat ⇛ Nat) T-ok T=Nat⇛Nat⇛Nat = M.nat-sum
 interpret-tm true T T-ok T=Bool = ι[ ≃ᵗʸ-sound T-ok tt T=Bool ] M.true'

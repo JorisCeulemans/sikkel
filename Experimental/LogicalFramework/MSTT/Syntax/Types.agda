@@ -17,4 +17,4 @@ data Ty (m : Mode) : Set where
   Bool' : Ty m
   _⇛_ : Ty m → Ty m → Ty m
   _⊠_ : Ty m → Ty m → Ty m
-  ⟨_∣_⟩ : Modality n m → Ty n → Ty m 
+  ⟨_∣_⟩ : Modality n m → Ty n → Ty m

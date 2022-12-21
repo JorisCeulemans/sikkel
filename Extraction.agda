@@ -15,7 +15,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory
 open import Model.CwF-Structure
-open import Model.Type.Discrete
+open import Model.Type.Constant
 open import Model.Type.Function
 open import Model.Type.Product
 open import Model.Type.Sum
@@ -38,13 +38,13 @@ translate-type T = translated-type {T = T}
 
 --------------------------------------------------
 -- Instances of Extractable for Sikkel's built-in types & type
--- constructors (discrete types, products, sums, functions)
+-- constructors (constant types, products, sums, functions)
 
 instance
-  extract-discr : {A : Set} → Extractable (Discr A)
-  translated-type {{extract-discr {A = A}}} = A
-  extract-term {{extract-discr {A = A}}} t = t ⟨ tt , tt ⟩'
-  embed-term {{extract-discr {A = A}}} a = discr a
+  extract-const : {A : Set} → Extractable (Const A)
+  translated-type {{extract-const {A = A}}} = A
+  extract-term {{extract-const {A = A}}} t = t ⟨ tt , tt ⟩'
+  embed-term {{extract-const {A = A}}} a = const a
 
   extract-prod : {T : ClosedTy ★} {{_ : Extractable T}}
                  {S : ClosedTy ★} {{_ : Extractable S}} →

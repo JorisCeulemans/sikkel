@@ -12,7 +12,7 @@ open import Model.CwF-Structure as M
   renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Model.Modality as M
 
 open import Experimental.ClosedTypes as M

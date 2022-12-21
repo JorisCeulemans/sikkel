@@ -7,7 +7,7 @@ open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.CwF-Structure
-open import Model.Type.Discrete
+open import Model.Type.Constant
 open import Experimental.DependentTypes.Model.IdentityType.AlternativeVar
 
 private

@@ -9,7 +9,7 @@ open import Model.CwF-Structure as M using (Ctx; Ty; Tm)
 open import Model.CwF-Structure.Reflection.SubstitutionSequence renaming (_∷_ to _∷ˢ_)
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as MDF
 
@@ -136,7 +136,7 @@ interpret-assumption (skip-var x) = {!interpret-assumption x!}
                               (M.≅ˢ-sym (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.⊚-id-substʳ _))))
 ⟦ ∀-elim d t ⟧der = {!!}
 ⟦ fun-β ⟧der = {!!}
-⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-discr M.[ _ ]'
+⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-const M.[ _ ]'
 ⟦ nat-elim-β-zero {a = a} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-zero ⟦ a ⟧tm ⟦ f ⟧tm) M.[ _ ]'
 ⟦ nat-elim-β-suc {a = a} {f = f} {n = n} ⟧der = M.≅ᵗᵐ-to-Id (M.β-nat-suc ⟦ a ⟧tm ⟦ f ⟧tm ⟦ n ⟧tm) M.[ _ ]'
 ⟦ if-β-true {t = t} {f = f} ⟧der = M.≅ᵗᵐ-to-Id (M.β-bool-true ⟦ t ⟧tm ⟦ f ⟧tm) M.[ _ ]'

@@ -4,7 +4,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M
 open import Model.CwF-Structure as M hiding (_,,_)
-open import Model.Type.Discrete as M
+open import Model.Type.Constant as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 

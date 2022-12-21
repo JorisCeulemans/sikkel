@@ -12,7 +12,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.BaseCategory
 open import Model.CwF-Structure
-open import Model.Type.Discrete
+open import Model.Type.Constant
 
 private
   variable

@@ -12,7 +12,7 @@ open import Model.BaseCategory
 open import Model.CwF-Structure as M using (Ctx; Ty; Tm; ClosedTy)
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 
 
 --------------------------------------------------
@@ -74,8 +74,8 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
 ⟦ Γ ,, T ⟧ctx = ⟦ Γ ⟧ctx M.,, ⟦ T ⟧ty
 
 ty-closed : (T : TyExpr) {Δ Γ : Ctx ★} {σ : Δ M.⇒ Γ} → ⟦ T ⟧ty M.[ σ ] M.≅ᵗʸ ⟦ T ⟧ty
-ty-closed Nat' = M.Discr-natural ℕ _
-ty-closed Bool' = M.Discr-natural _ _
+ty-closed Nat' = M.Const-natural ℕ _
+ty-closed Bool' = M.Const-natural _ _
 ty-closed (T ⇛ S) = M.≅ᵗʸ-trans (M.⇛-natural _) (M.⇛-cong (ty-closed T) (ty-closed S))
 ty-closed (T ⊠ S) = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (ty-closed T) (ty-closed S))
 
@@ -87,7 +87,7 @@ ty-closed (T ⊠ S) = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (ty-closed 
 ⟦ var x ⟧tm = ⟦ x ⟧var
 ⟦ lam {_} {S} t ⟧tm = M.lam _ (M.ι[ ty-closed S ] ⟦ t ⟧tm)
 ⟦ f ∙ t ⟧tm = M.app ⟦ f ⟧tm ⟦ t ⟧tm
-⟦ lit n ⟧tm = M.discr n
+⟦ lit n ⟧tm = M.const n
 ⟦ suc ⟧tm = M.suc'
 ⟦ nat-elim a f ⟧tm = M.nat-elim _ ⟦ a ⟧tm ⟦ f ⟧tm
 ⟦ true ⟧tm = M.true'
@@ -188,11 +188,11 @@ tm-subst-sound {T = T} (var vzero)    (σ ∷ t) = record { eq = {!!} }
 tm-subst-sound (var (vsuc x)) (σ ∷ t) = record { eq = {!!} }
 tm-subst-sound (lam t) σ = record { eq = λ _ → M.to-pshfun-eq {!!} }
 tm-subst-sound (f ∙ t) σ = {!!}
-tm-subst-sound (lit n) σ = M.≅ᵗᵐ-sym (M.discr-natural n ⟦ σ ⟧subst)
+tm-subst-sound (lit n) σ = M.≅ᵗᵐ-sym (M.const-natural n ⟦ σ ⟧subst)
 tm-subst-sound suc σ = {!!}
 tm-subst-sound (nat-elim a f) σ = {!!}
-tm-subst-sound true σ = M.≅ᵗᵐ-sym (M.discr-natural _ _)
-tm-subst-sound false σ = M.≅ᵗᵐ-sym (M.discr-natural _ _)
+tm-subst-sound true σ = M.≅ᵗᵐ-sym (M.const-natural _ _)
+tm-subst-sound false σ = M.≅ᵗᵐ-sym (M.const-natural _ _)
 tm-subst-sound (if b t f) σ = {!!}
 tm-subst-sound (pair t s) σ = {!!}
 tm-subst-sound (fst {T = T} {S = S} p) σ = {!!} -- M.≅ᵗᵐ-trans (M.prim-fst-ι (ty-closed T) (ty-closed S) ⟦ p [ σ ]tm ⟧tm) {!tm-subst-sound p σ!}

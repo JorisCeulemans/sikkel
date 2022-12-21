@@ -133,7 +133,7 @@ valid-tm-to-ctx (d-tm-subst dt dσ) = valid-subst-to-ctx dσ
 
 open import Model.CwF-Structure as M
 open import Model.BaseCategory
-open import Model.Type.Discrete as M
+open import Model.Type.Constant as M
 open import Model.Type.Function as M
 open import Model.Type.Product as M
 

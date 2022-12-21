@@ -82,7 +82,7 @@ import Experimental.ClosedTypes as M
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst ⟦ d ⟧der
 ⟦ ∧-elimʳ d ⟧der = M.prim-snd ⟦ d ⟧der
 ⟦ ∀-intro d ⟧der = M.lam _ ⟦ d ⟧der
-⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.ssuc-sdiscr
+⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.ssuc-sconst
 ⟦ nat-elim-β-zero ⟧der = M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)
 ⟦ nat-elim-β-suc ⟧der = M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)
 ⟦ if-β-true ⟧der = M.≅ᵗᵐ-to-Id (M.sif-β-true _ _)

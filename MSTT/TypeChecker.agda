@@ -21,7 +21,7 @@ open import Relation.Binary.PropositionalEquality
 open import Model.CwF-Structure as M hiding (◇; _,,_)
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
 open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim; coe)
-open import Model.Type.Discrete as M hiding (Nat'; Bool')
+open import Model.Type.Constant as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
 
@@ -135,7 +135,7 @@ infer-interpret (t1 ∙ t2) Γ = do
   T2 , ⟦t2⟧ ← infer-interpret t2 Γ
   dom=T2 ← dom ≃ᵗʸ? T2
   return (cod , M.app ⟦t1⟧ (ι[ dom=T2 ] ⟦t2⟧))
-infer-interpret (lit n) Γ = return (Nat' , discr n)
+infer-interpret (lit n) Γ = return (Nat' , const n)
 infer-interpret suc Γ = return (Nat' ⇛ Nat' , suc')
 infer-interpret plus Γ = return (Nat' ⇛ Nat' ⇛ Nat' , nat-sum)
 infer-interpret (nat-elim z s) Γ = do

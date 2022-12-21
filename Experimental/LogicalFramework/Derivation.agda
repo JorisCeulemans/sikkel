@@ -21,14 +21,14 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 open import Model.CwF-Structure.Reflection.SubstitutionSequence renaming (_∷_ to _∷ˢˢ_)
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as MDF
 
 import Experimental.ClosedTypes as M
 import Experimental.ClosedTypes.Pi as M
 import Experimental.ClosedTypes.Identity as M
-import Experimental.ClosedTypes.Discrete as M
+import Experimental.ClosedTypes.Constant as M
 
 open import Experimental.LogicalFramework.MSTT
 open import Experimental.LogicalFramework.Formula
@@ -332,18 +332,18 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
 ⟦ zero≠sucn ⟧der = M.szero≠ssucn M.[ _ ]'
 ⟦ bool-induction {Ξ = Ξ} {x = x} {φ = φ} d1 d2 ⟧der =
   M.sbool-induction _ (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
-                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
+                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sconst-natural _))))
                                                                        (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.strue))))
                                         (M.ty-subst-cong-ty _ (frm-subst-sound φ (true / x)))
                           ] ⟦ d1 ⟧der)
                       (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
-                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
+                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sconst-natural _))))
                                                                        (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.sfalse))))
                                         (M.ty-subst-cong-ty _ (frm-subst-sound φ (false / x)))
                           ] ⟦ d2 ⟧der)
 ⟦ nat-induction {Ξ = Ξ} {x = n} {φ = φ} x d1 d2 ⟧der =
   M.snat-induction _ (M.ι[ M.≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
-                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sdiscr-natural _))))
+                                                           (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-cong2 _ (M.≅ᵗᵐ-sym (M.sconst-natural _))))
                                                                        (M.≅ˢ-sym (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.szero))))
                                        (M.ty-subst-cong-ty _ (frm-subst-sound φ (zero / n)))
                          ] ⟦ d1 ⟧der)
@@ -355,6 +355,6 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
     subst-eq-proof =
       M.≅ˢ-trans (M.≅ˢ-sym M.⊚-assoc) (M.≅ˢ-trans (M.⊚-congʳ (M.≅ˢ-trans (M.,ₛ-⊚ _ _ _) (M.≅ˢ-trans
       (M.≅ˢ-trans (M.,ₛ-cong1 (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.≅ˢ-trans (M.≅ˢ-sym (M.,ₛ-β1 _ _)) (M.⊚-congʳ (M.≅ˢ-sym (M.⊚-id-substˡ _)))))) _)
-                  (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sdiscr-func-natural _) (M.,ₛ-β2 _ _)))))))
+                  (M.,ₛ-cong2 _ (M.≅ᵗᵐ-trans (M.,ₛ-β2 _ _) (M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sconst-func-natural _) (M.,ₛ-β2 _ _)))))))
       (M.≅ˢ-sym (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
 -}

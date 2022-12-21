@@ -13,7 +13,7 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 import Model.Modality as M
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 
 open import Experimental.ClosedTypes as M
 open import Experimental.ClosedTypes.Modal as M
@@ -75,11 +75,11 @@ mid-weaken-tm-sound : ∀ {x} {S : Ty} (Δ : Ctx) (t : Tm (Γ ++ctx Δ) T) →
 mid-weaken-tm-sound Δ (var' x {v}) = mid-weaken-var-sound Δ v
 mid-weaken-tm-sound Δ (lam[ _ ∈ _ ] t) = M.≅ᵗᵐ-trans (sλ-natural _) (sλ-cong (mid-weaken-tm-sound (Δ ,, _ ∈ _) t))
 mid-weaken-tm-sound Δ (f ∙ t) = M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (mid-weaken-tm-sound Δ f) (mid-weaken-tm-sound Δ t))
-mid-weaken-tm-sound Δ zero = sdiscr-natural _
-mid-weaken-tm-sound Δ suc = sdiscr-func-natural _
+mid-weaken-tm-sound Δ zero = sconst-natural _
+mid-weaken-tm-sound Δ suc = sconst-func-natural _
 mid-weaken-tm-sound Δ (nat-elim a f) = M.≅ᵗᵐ-trans (snat-elim-natural _) (snat-elim-cong (mid-weaken-tm-sound Δ a) (mid-weaken-tm-sound Δ f))
-mid-weaken-tm-sound Δ true = sdiscr-natural _
-mid-weaken-tm-sound Δ false = sdiscr-natural _
+mid-weaken-tm-sound Δ true = sconst-natural _
+mid-weaken-tm-sound Δ false = sconst-natural _
 mid-weaken-tm-sound Δ (if b t f) =
   M.≅ᵗᵐ-trans (sif-natural _) (sif-cong (mid-weaken-tm-sound Δ b) (mid-weaken-tm-sound Δ t) (mid-weaken-tm-sound Δ f))
 mid-weaken-tm-sound Δ (pair t s) = M.≅ᵗᵐ-trans (spair-natural _) (spair-cong (mid-weaken-tm-sound Δ t) (mid-weaken-tm-sound Δ s))
@@ -146,12 +146,12 @@ tm-subst-sound (lam[ x ∈ _ ] t) σ       | nothing =
               (sλ-cong (tm-subst-sound t (σ ⊹⟨ x ⟩)))
 tm-subst-sound (f ∙ t) σ                | nothing =
   M.≅ᵗᵐ-trans (∙ₛ-natural _) (∙ₛ-cong (tm-subst-sound f σ) (tm-subst-sound t σ))
-tm-subst-sound zero σ                   | nothing = sdiscr-natural _
-tm-subst-sound suc σ                    | nothing = sdiscr-func-natural _
+tm-subst-sound zero σ                   | nothing = sconst-natural _
+tm-subst-sound suc σ                    | nothing = sconst-func-natural _
 tm-subst-sound (nat-elim a f) σ         | nothing =
   M.≅ᵗᵐ-trans (snat-elim-natural _) (snat-elim-cong (tm-subst-sound a σ) (tm-subst-sound f σ))
-tm-subst-sound true σ                   | nothing = sdiscr-natural _
-tm-subst-sound false σ                  | nothing = sdiscr-natural _
+tm-subst-sound true σ                   | nothing = sconst-natural _
+tm-subst-sound false σ                  | nothing = sconst-natural _
 tm-subst-sound (if b t f) σ             | nothing =
   M.≅ᵗᵐ-trans (sif-natural _) (sif-cong (tm-subst-sound b σ) (tm-subst-sound t σ) (tm-subst-sound f σ))
 tm-subst-sound (pair t s) σ             | nothing =

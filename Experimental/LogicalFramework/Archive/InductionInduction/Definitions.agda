@@ -112,7 +112,7 @@ import Model.CwF-Structure as M hiding (ClosedTy)
 import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Sum as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Experimental.ClosedTypes as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
@@ -139,8 +139,8 @@ import Experimental.DependentTypes.Model.Function as M
 ⟦ var x ⟧tm = ⟦ x ⟧var
 ⟦ lam t ⟧tm = M.sλ[ _ ] ⟦ t ⟧tm
 ⟦ f ∙ t ⟧tm = ⟦ f ⟧tm M.∙ₛ ⟦ t ⟧tm
-⟦ lit n ⟧tm = M.sdiscr n
-⟦ suc ⟧tm = M.sdiscr-func suc
+⟦ lit n ⟧tm = M.sconst n
+⟦ suc ⟧tm = M.sconst-func suc
 ⟦ nat-elim a f ⟧tm = M.snat-elim ⟦ a ⟧tm ⟦ f ⟧tm
 ⟦ true ⟧tm = M.strue
 ⟦ false ⟧tm = M.sfalse

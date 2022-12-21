@@ -5,7 +5,7 @@ open import Function.Nary.NonDependent
 
 open import Model.CwF-Structure as M hiding (◇)
 open import Model.BaseCategory
-open import Model.Type.Discrete
+open import Model.Type.Constant
 
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 

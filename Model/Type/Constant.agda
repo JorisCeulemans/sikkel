@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Discrete types
+-- Constant presheaves
 --
 -- Every Agda type can be turned into a presheaf type in any context.
 -- This lets us define the types of booleans, natural numbers, ...
@@ -7,7 +7,7 @@
 
 open import Model.BaseCategory
 
-module Model.Type.Discrete {C : BaseCategory} where
+module Model.Type.Constant {C : BaseCategory} where
 
 open import Data.Bool using (Bool; true; false; if_then_else_; _∧_; _∨_)
 open import Data.Empty
@@ -29,68 +29,68 @@ private
 
 
 --------------------------------------------------
--- General description of discrete types
+-- General description of constant presheaves
 
-Discr : (A : Set) → Ty Γ
-Discr A ⟨ _ , _ ⟩ = A
-Discr A ⟪ _ , _ ⟫ a = a
-ty-cong (Discr A) _ = refl
-ty-id (Discr A) = refl
-ty-comp (Discr A) = refl
+Const : (A : Set) → Ty Γ
+Const A ⟨ _ , _ ⟩ = A
+Const A ⟪ _ , _ ⟫ a = a
+ty-cong (Const A) _ = refl
+ty-id (Const A) = refl
+ty-comp (Const A) = refl
 
-discr : {A : Set} → A → Tm Γ (Discr A)
-discr a ⟨ _ , _ ⟩' = a
-naturality (discr a) _ _ = refl
+const : {A : Set} → A → Tm Γ (Const A)
+const a ⟨ _ , _ ⟩' = a
+naturality (const a) _ _ = refl
 
-discr-func : {A B : Set} → (A → B) → Tm Γ (Discr A ⇛ Discr B)
-(discr-func f ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ a = f a
-naturality (discr-func f ⟨ _ , _ ⟩') = refl
-naturality (discr-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
+const-func : {A B : Set} → (A → B) → Tm Γ (Const A ⇛ Const B)
+(const-func f ⟨ _ , _ ⟩') $⟨ _ , _ ⟩ a = f a
+naturality (const-func f ⟨ _ , _ ⟩') = refl
+naturality (const-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
 
-discr-func₂ : {A B C : Set} → (A → B → C) → Tm Γ (Discr A ⇛ Discr B ⇛ Discr C)
-(discr-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ a) $⟨ _ , _ ⟩ b = f a b
-naturality (discr-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ _) = refl
-naturality (discr-func₂ f ⟨ _ , _ ⟩') = to-pshfun-eq (λ _ _ _ → refl)
-naturality (discr-func₂ f) _ _ = to-pshfun-eq (λ _ _ _ → refl)
+const-func₂ : {A B C : Set} → (A → B → C) → Tm Γ (Const A ⇛ Const B ⇛ Const C)
+(const-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ a) $⟨ _ , _ ⟩ b = f a b
+naturality (const-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ _) = refl
+naturality (const-func₂ f ⟨ _ , _ ⟩') = to-pshfun-eq (λ _ _ _ → refl)
+naturality (const-func₂ f) _ _ = to-pshfun-eq (λ _ _ _ → refl)
 
 {-
 -- The following works if C = ω. In general, it will work if C has a
 -- terminal or initial object. These results are however never used,
 -- and therefore not yet generalized.
-undiscr : {A : Set 0ℓ} → Tm ◇ (Discr A) → A
-undiscr t = t ⟨ {!!} , lift tt ⟩'
+unconst : {A : Set 0ℓ} → Tm ◇ (Const A) → A
+unconst t = t ⟨ {!!} , lift tt ⟩'
 
-undiscr-discr : {A : Set 0ℓ} (a : A) → undiscr (discr a) ≡ a
-undiscr-discr a = refl
+unconst-const : {A : Set 0ℓ} (a : A) → unconst (const a) ≡ a
+unconst-const a = refl
 
-discr-undiscr : {A : Set 0ℓ} (t : Tm ◇ (Discr A)) → discr (undiscr t) ≅ᵗᵐ t
-eq (discr-undiscr t) _ = sym (naturality t z≤n refl)
+const-unconst : {A : Set 0ℓ} (t : Tm ◇ (Const A)) → const (unconst t) ≅ᵗᵐ t
+eq (const-unconst t) _ = sym (naturality t z≤n refl)
 -}
 
-Discr-natural : (A : Set) (σ : Δ ⇒ Γ) → Discr A [ σ ] ≅ᵗʸ Discr A
-func (from (Discr-natural A σ)) = id
-naturality (from (Discr-natural A σ)) = refl
-func (to (Discr-natural A σ)) = id
-naturality (to (Discr-natural A σ)) = refl
-eq (isoˡ (Discr-natural A σ)) _ = refl
-eq (isoʳ (Discr-natural A σ)) _ = refl
+Const-natural : (A : Set) (σ : Δ ⇒ Γ) → Const A [ σ ] ≅ᵗʸ Const A
+func (from (Const-natural A σ)) = id
+naturality (from (Const-natural A σ)) = refl
+func (to (Const-natural A σ)) = id
+naturality (to (Const-natural A σ)) = refl
+eq (isoˡ (Const-natural A σ)) _ = refl
+eq (isoʳ (Const-natural A σ)) _ = refl
 
-discr-natural : {A : Set} (a : A) (σ : Δ ⇒ Γ) → (discr a) [ σ ]' ≅ᵗᵐ ι[ Discr-natural A σ ] (discr a)
-eq (discr-natural a σ) _ = refl
+const-natural : {A : Set} (a : A) (σ : Δ ⇒ Γ) → (const a) [ σ ]' ≅ᵗᵐ ι[ Const-natural A σ ] (const a)
+eq (const-natural a σ) _ = refl
 
 instance
-  discr-closed : {A : Set} → IsClosedNatural {C} (Discr A)
-  closed-natural {{discr-closed {A = A}}} = Discr-natural A
+  const-closed : {A : Set} → IsClosedNatural {C} (Const A)
+  closed-natural {{const-closed {A = A}}} = Const-natural A
 
 
 --------------------------------------------------
 -- The unit type
 
 Unit' : Ty Γ
-Unit' = Discr ⊤
+Unit' = Const ⊤
 
 tt' : Tm Γ Unit'
-tt' = discr tt
+tt' = const tt
 
 !unit : T ↣ Unit'
 func !unit _ = tt
@@ -115,7 +115,7 @@ eq (η-unit t) _ = refl
 -- The empty type
 
 Empty' : Ty Γ
-Empty' = Discr ⊥
+Empty' = Const ⊥
 
 empty-elim : (T : Ty Γ) → Tm Γ (Empty' ⇛ T)
 empty-elim T ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ ()
@@ -127,13 +127,13 @@ naturality (empty-elim T) f eγ = to-pshfun-eq (λ _ _ ())
 -- Booleans
 
 Bool' : Ty Γ
-Bool' = Discr Bool
+Bool' = Const Bool
 
 true' : Tm Γ Bool'
-true' = discr true
+true' = const true
 
 false' : Tm Γ Bool'
-false' = discr false
+false' = const false
 
 if'_then'_else'_ : Tm Γ Bool' → Tm Γ T → Tm Γ T → Tm Γ T
 (if' c then' t else' f) ⟨ x , γ ⟩' = if c ⟨ x , γ ⟩' then t ⟨ x , γ ⟩' else f ⟨ x , γ ⟩'
@@ -166,19 +166,19 @@ naturality (t && s) f eγ = cong₂ _∧_ (naturality t f eγ) (naturality s f e
 -- Natural numbers
 
 Nat' : Ty Γ
-Nat' = Discr ℕ
+Nat' = Const ℕ
 
 zero' : Tm Γ Nat'
-zero' = discr zero
+zero' = const zero
 
 one' : Tm Γ Nat'
-one' = discr (suc zero)
+one' = const (suc zero)
 
 suc' : Tm Γ (Nat' ⇛ Nat')
-suc' = discr-func suc
+suc' = const-func suc
 
-suc'-discr : {n : ℕ} {Γ : Ctx C} → app {Γ = Γ} suc' (discr n) ≅ᵗᵐ discr (suc n)
-eq suc'-discr γ = refl
+suc'-const : {n : ℕ} {Γ : Ctx C} → app {Γ = Γ} suc' (const n) ≅ᵗᵐ const (suc n)
+eq suc'-const γ = refl
 
 prim-nat-elim : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm (Γ ,, Nat') (T [ π ])
 prim-nat-elim T t f ⟨ x , [ γ , zero  ] ⟩' = t ⟨ x , γ ⟩'
@@ -209,4 +209,4 @@ eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
 -- However, with the following definition the extraction mechanism will produce Agda programs
 -- that make use of Agda's `_+_` instead of a custom Sikkel definition, which leads to better performance.
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
-nat-sum = discr-func₂ _+_
+nat-sum = const-func₂ _+_

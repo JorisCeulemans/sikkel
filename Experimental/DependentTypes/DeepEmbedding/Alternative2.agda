@@ -8,7 +8,7 @@ open import Relation.Nullary
 
 open import Model.BaseCategory as M
 open import Model.CwF-Structure as M hiding (_,,_)
-open import Model.Type.Discrete as M
+open import Model.Type.Constant as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
@@ -143,7 +143,7 @@ interpret-tm (var x) T T-ok t∈T = {!!}
 interpret-tm (lam A t) {Γ} S S-ok t∈T with infer-type t (Γ ,, A) in t∈T
 interpret-tm (TmExpr.lam A t) {Γ} .(A ⇛ T) (A-ok , T-ok) refl | ok T = M.lam _ {!interpret-tm t {!T!} {!!} {!t∈T!}!}
 interpret-tm (f ∙ t) S T-ok t∈T = {!!}
-interpret-tm (lit n) .Nat T-ok refl = M.discr n
+interpret-tm (lit n) .Nat T-ok refl = M.const n
 interpret-tm suc .(Nat ⇛ Nat) T-ok refl = M.suc'
 interpret-tm plus .(Nat ⇛ Nat ⇛ Nat) T-ok refl = M.nat-sum
 interpret-tm true .Bool T-ok refl = M.true'

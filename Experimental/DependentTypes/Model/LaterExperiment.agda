@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.BaseCategory
 open import Model.CwF-Structure
-open import Model.Type.Discrete
+open import Model.Type.Constant
 open import Experimental.DependentTypes.Model.SigmaType
 open import Applications.GuardedRecursion.Model.Modalities
 
@@ -48,7 +48,7 @@ ty-cong (▻'[ m ] T) = {!!}
 ty-id (▻'[ m ] T) = {!!}
 ty-comp (▻'[ m ] T) = {!!}
 
-▻'[]-natural : (σ : Δ ⇒ Γ) (m : Tm Γ Nat') (T : Ty Γ) → (▻'[ m ] T) [ σ ] ≅ᵗʸ ▻'[ ι⁻¹[ Discr-natural ℕ σ ] (m [ σ ]') ] (T [ σ ])
+▻'[]-natural : (σ : Δ ⇒ Γ) (m : Tm Γ Nat') (T : Ty Γ) → (▻'[ m ] T) [ σ ] ≅ᵗʸ ▻'[ ι⁻¹[ Const-natural ℕ σ ] (m [ σ ]') ] (T [ σ ])
 ▻'[]-natural σ m T = {!!}
 
 ▻'[]-cong : (m : Tm Γ Nat') {T S : Ty Γ} → T ≅ᵗʸ S → ▻'[ m ] T ≅ᵗʸ ▻'[ m ] S
@@ -57,7 +57,7 @@ ty-comp (▻'[ m ] T) = {!!}
 nat-fixp : (t : Tm {C = ω} ◇ Nat') → Σ[ k ∈ ℕ ] t ⟨ k , tt ⟩' ≡ k
 nat-fixp t = [ t ⟨ 0 , tt ⟩' , Tm.naturality t z≤n refl ]
 
-module Contradiction (p : Tm {C = ω} ◇ (Sigma Nat' (▻'[ ι⁻¹[ Discr-natural _ π ] ξ ] Empty))) where
+module Contradiction (p : Tm {C = ω} ◇ (Sigma Nat' (▻'[ ι⁻¹[ Const-natural _ π ] ξ ] Empty))) where
 
   fst-nat : ℕ
   fst-nat = proj₁ (nat-fixp (fst p))

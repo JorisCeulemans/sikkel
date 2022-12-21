@@ -15,7 +15,7 @@ open import Extraction
 
 open import Model.BaseCategory hiding (★; ω)
 import Model.CwF-Structure as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Model.Type.Function as M
 import Experimental.DependentTypes.Model.Function as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M

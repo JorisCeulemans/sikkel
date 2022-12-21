@@ -1,4 +1,4 @@
-module Experimental.ClosedTypes.Discrete where
+module Experimental.ClosedTypes.Constant where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
@@ -7,7 +7,7 @@ open import Model.Helpers
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Type.Function
-open import Model.Type.Discrete
+open import Model.Type.Constant
 
 open import Experimental.ClosedTypes
 open import Experimental.ClosedTypes.Pi

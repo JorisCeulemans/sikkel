@@ -9,7 +9,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M
 open import Model.CwF-Structure as M hiding (_,,_)
-open import Model.Type.Discrete as M
+open import Model.Type.Constant as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
@@ -181,7 +181,7 @@ interpret-tm (var zero) T (Γ ,, .T) refl vT (vΓ , vS) = ι[ {!!} ] ξ
 interpret-tm (var (suc x)) T (Γ ,, S) vt vT (vΓ , vS) = ι[ {!!} ] (interpret-tm (var x) T Γ vt {!!} vΓ [ π ]')
 interpret-tm (lam x t) T Γ vt vT vΓ = {!!}
 interpret-tm (f ∙ t) T Γ vt vT vΓ = {!!}
-interpret-tm (lit n) .Nat Γ refl vT vΓ = discr n
+interpret-tm (lit n) .Nat Γ refl vT vΓ = const n
 interpret-tm suc .(Nat ⇛ Nat) Γ refl vT vΓ = suc'
 interpret-tm plus .(Nat ⇛ Nat ⇛ Nat) Γ refl vT vΓ = nat-sum
 interpret-tm true .Bool Γ refl vT vΓ = true'

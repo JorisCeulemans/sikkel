@@ -12,7 +12,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure renaming (◇ to ′◇) hiding (_⇒_)
 open import Model.Modality renaming (⟨_∣_⟩ to ′⟨_∣_⟩) using ()
-open import Model.Type.Discrete renaming (Nat' to ′Nat'; Bool' to ′Bool')
+open import Model.Type.Constant renaming (Nat' to ′Nat'; Bool' to ′Bool')
 open import Model.Type.Function hiding (lam; lam[_∈_]_) renaming (_⇛_ to _′⇛_)
 open import Model.Type.Product hiding (pair; fst; snd) renaming (_⊠_ to _′⊠_)
 open import Applications.GuardedRecursion.Model.Modalities

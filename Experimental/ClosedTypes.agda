@@ -17,7 +17,7 @@ open import Model.CwF-Structure.ContextEquivalence
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
 open import Model.CwF-Structure.ContextExtension
-open import Model.Type.Discrete
+open import Model.Type.Constant
 open import Model.Type.Function
 open import Model.Type.Product
 
@@ -159,33 +159,33 @@ eq (sfun-η {C = C} {Γ = Γ} {T = T} {S = S} f) γ = to-pshfun-eq λ { ρ refl 
 
 
 --------------------------------------------------
--- All discrete types are closed
+-- All embedded agda types are closed
 
-sdiscr : {A : Set} → A → SimpleTm Γ (Discr A)
-sdiscr a = (discr a) [ !◇ _ ]'
+sconst : {A : Set} → A → SimpleTm Γ (Const A)
+sconst a = (const a) [ !◇ _ ]'
 
-sdiscr-func : {A B : Set} → (A → B) → SimpleTm Γ (Discr A ⇛ Discr B)
-sdiscr-func f = (discr-func f) [ !◇ _ ]'
+sconst-func : {A B : Set} → (A → B) → SimpleTm Γ (Const A ⇛ Const B)
+sconst-func f = (const-func f) [ !◇ _ ]'
 
-sdiscr-func₂ : {A B C : Set} → (A → B → C) → SimpleTm Γ (Discr A ⇛ Discr B ⇛ Discr C)
-sdiscr-func₂ f = (discr-func₂ f) [ !◇ _ ]'
+sconst-func₂ : {A B C : Set} → (A → B → C) → SimpleTm Γ (Const A ⇛ Const B ⇛ Const C)
+sconst-func₂ f = (const-func₂ f) [ !◇ _ ]'
 
-sdiscr-natural : {A : Set} {a : A} (σ : Δ ⇒ Γ) → (sdiscr a) [ σ ]s ≅ᵗᵐ sdiscr a
-eq (sdiscr-natural σ) _ = refl
+sconst-natural : {A : Set} {a : A} (σ : Δ ⇒ Γ) → (sconst a) [ σ ]s ≅ᵗᵐ sconst a
+eq (sconst-natural σ) _ = refl
 
-sdiscr-func-natural : {A B : Set} {f : A → B} (σ : Δ ⇒ Γ) → (sdiscr-func f) [ σ ]s ≅ᵗᵐ sdiscr-func f
-eq (sdiscr-func-natural σ) _ = to-pshfun-eq (λ _ _ _ → refl)
+sconst-func-natural : {A B : Set} {f : A → B} (σ : Δ ⇒ Γ) → (sconst-func f) [ σ ]s ≅ᵗᵐ sconst-func f
+eq (sconst-func-natural σ) _ = to-pshfun-eq (λ _ _ _ → refl)
 
-sdiscr-func₂-natural : {A B C : Set} {f : A → B → C} (σ : Δ ⇒ Γ) →
-                       (sdiscr-func₂ f) [ σ ]s ≅ᵗᵐ sdiscr-func₂ f
-eq (sdiscr-func₂-natural σ) _ = to-pshfun-eq (λ _ _ _ → to-pshfun-eq (λ _ _ _ → refl))
+sconst-func₂-natural : {A B C : Set} {f : A → B → C} (σ : Δ ⇒ Γ) →
+                       (sconst-func₂ f) [ σ ]s ≅ᵗᵐ sconst-func₂ f
+eq (sconst-func₂-natural σ) _ = to-pshfun-eq (λ _ _ _ → to-pshfun-eq (λ _ _ _ → refl))
 
 strue sfalse : SimpleTm Γ Bool'
-strue = sdiscr true
-sfalse = sdiscr false
+strue = sconst true
+sfalse = sconst false
 
 sif : SimpleTm Γ Bool' → SimpleTm Γ T → SimpleTm Γ T → SimpleTm Γ T
-sif b t f = if' (ι⁻¹[ Discr-natural _ _ ] b) then' t else' f
+sif b t f = if' (ι⁻¹[ Const-natural _ _ ] b) then' t else' f
 
 sif-natural : {b : SimpleTm Γ Bool'} {t f : SimpleTm Γ T} (σ : Δ ⇒ Γ) →
               (sif b t f) [ σ ]s ≅ᵗᵐ sif (b [ σ ]s) (t [ σ ]s) (f [ σ ]s)
@@ -196,10 +196,10 @@ sif-cong : {b1 b2 : SimpleTm Γ Bool'} {t1 t2 f1 f2 : SimpleTm Γ T} →
            sif b1 t1 f1 ≅ᵗᵐ sif b2 t2 f2
 eq (sif-cong eb et ef) γ = congₙ 3 if_then_else_ (eq eb γ) (eq et γ) (eq ef γ)
 
-sif-β-true : (t f : SimpleTm Γ T) → sif (sdiscr true) t f ≅ᵗᵐ t
+sif-β-true : (t f : SimpleTm Γ T) → sif (sconst true) t f ≅ᵗᵐ t
 sif-β-true t f = record { eq = λ _ → refl }
 
-sif-β-false : (t f : SimpleTm Γ T) → sif (sdiscr false) t f ≅ᵗᵐ f
+sif-β-false : (t f : SimpleTm Γ T) → sif (sconst false) t f ≅ᵗᵐ f
 sif-β-false t f = record { eq = λ _ → refl }
 
 sbool-induction : (T : Ty (Γ ,,ₛ Bool')) →
@@ -211,13 +211,13 @@ naturality (sbool-induction T t f) {γy = [ _ , false ]} {γx = [ _ , false ]} �
 naturality (sbool-induction T t f) {γy = [ _ , true  ]} {γx = [ _ , true  ]} ρ refl = naturality t ρ refl
 
 szero : SimpleTm Γ Nat'
-szero = sdiscr 0
+szero = sconst 0
 
 ssuc : SimpleTm Γ (Nat' ⇛ Nat')
-ssuc = sdiscr-func suc
+ssuc = sconst-func suc
 
-ssuc-sdiscr : {n : ℕ} → ssuc {Γ = Γ} ∙ₛ (sdiscr n) ≅ᵗᵐ sdiscr (suc n)
-eq ssuc-sdiscr _ = refl
+ssuc-sconst : {n : ℕ} → ssuc {Γ = Γ} ∙ₛ (sconst n) ≅ᵗᵐ sconst (suc n)
+eq ssuc-sconst _ = refl
 
 -- This can also be implemented in terms of prim-nat-elim. However,
 -- now it is easier to prove prim-snat-elim-natural and prim-snat-elim-cong.

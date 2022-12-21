@@ -11,7 +11,7 @@ open import Data.List
 open import Data.Product using (_×_; proj₁; proj₂)
 
 open import Model.CwF-Structure as M hiding (◇; _,,_)
-open import Model.Type.Discrete as M hiding (Nat'; Bool')
+open import Model.Type.Constant as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
 open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim)
@@ -52,8 +52,8 @@ interpret-ext-ty {m ∷ margs} F args = interpret-ext-ty (F ⟦ proj₁ args ⟧
 interpret-ext-ty-natural : {F : TyConstructor margs m} → TyConstructorNatural F → (args : TyExtArgs margs) →
                            IsClosedNatural (interpret-ext-ty F args)
 
-⟦⟧ty-natural Nat' = M.discr-closed
-⟦⟧ty-natural Bool' = M.discr-closed
+⟦⟧ty-natural Nat' = M.const-closed
+⟦⟧ty-natural Bool' = M.const-closed
 ⟦⟧ty-natural (T1 ⇛ T2) = M.fun-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
 ⟦⟧ty-natural (T1 ⊠ T2) = M.prod-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
 ⟦⟧ty-natural ⟨ μ ∣ T ⟩ = M.mod-closed {μ = ⟦ μ ⟧modality} {{⟦⟧ty-natural T}}

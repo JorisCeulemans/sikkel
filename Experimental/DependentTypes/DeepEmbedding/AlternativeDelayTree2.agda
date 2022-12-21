@@ -13,7 +13,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M
 open import Model.CwF-Structure as M hiding (_,,_)
-open import Model.Type.Discrete as M
+open import Model.Type.Constant as M
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
@@ -329,7 +329,7 @@ interpret-ty (Id T t₁ t₂) Γ Γ-ok IdTt₁t₂-ok | tt , T-ok , _ | T₁ , t
 -- -- -- infer-interpret-tm (var x) Γ sΓ Γ-ok = {!!}
 -- -- -- infer-interpret-tm (TmExpr.lam x t) Γ sΓ Γ-ok = {!!}
 -- -- -- infer-interpret-tm (t ∙ t₁) Γ sΓ Γ-ok = {!!}
--- -- -- infer-interpret-tm (lit x) Γ sΓ Γ-ok = return (tm-result Nat M.Nat' refl (discr x))
+-- -- -- infer-interpret-tm (lit x) Γ sΓ Γ-ok = return (tm-result Nat M.Nat' refl (const x))
 -- -- -- infer-interpret-tm suc Γ sΓ Γ-ok = return (tm-result (Nat ⇛ Nat) (Nat' M.⇛ Nat') refl M.suc')
 -- -- -- infer-interpret-tm plus Γ sΓ Γ-ok = return (tm-result (Nat ⇛ Nat ⇛ Nat) (Nat' M.⇛ Nat' M.⇛ Nat') refl M.nat-sum)
 -- -- -- infer-interpret-tm true Γ sΓ Γ-ok = return (tm-result Bool M.Bool' refl M.true')

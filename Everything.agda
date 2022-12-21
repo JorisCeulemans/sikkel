@@ -6,7 +6,7 @@ import Model.CwF-Structure
 import Model.CwF-Structure.LiftingFunctors
 import Model.CwF-Structure.Reflection.Substitution
 import Model.CwF-Structure.Reflection.SubstitutionSequence
-import Model.Type.Discrete
+import Model.Type.Constant
 import Model.Type.Function
 import Model.Type.Product
 import Model.Type.Sum

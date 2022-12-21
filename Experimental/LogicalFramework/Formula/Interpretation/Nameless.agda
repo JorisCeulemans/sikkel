@@ -8,7 +8,7 @@ module Experimental.LogicalFramework.Formula.Interpretation.Nameless where
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy)
 import Model.Type.Function as M
 import Model.Type.Product as M
-import Model.Type.Discrete as M
+import Model.Type.Constant as M
 import Model.Modality as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
