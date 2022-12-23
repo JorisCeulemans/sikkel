@@ -131,3 +131,6 @@ instance
   prod-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                 IsClosedNatural (A ⊠ B)
   closed-natural {{prod-closed}} σ = ≅ᵗʸ-trans (⊠-natural σ) (⊠-cong (closed-natural σ) (closed-natural σ))
+  eq (from-eq (closed-id {{ prod-closed }})) [ a , b ] = cong₂ [_,_] (eq (from-eq closed-id) a) (eq (from-eq closed-id) b)
+  eq (from-eq (closed-⊚ {{ prod-closed }} σ τ)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-⊚ σ τ)) a) (eq (from-eq (closed-⊚ σ τ)) b)
+  eq (from-eq (closed-subst-eq {{ prod-closed }} ε)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-subst-eq ε)) a) (eq (from-eq (closed-subst-eq ε)) b)

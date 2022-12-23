@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 --------------------------------------------------
 -- (Non-dependent) function types
 --------------------------------------------------
@@ -370,3 +372,14 @@ instance
   fun-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                IsClosedNatural (A ⇛ B)
   closed-natural {{fun-closed}} σ = ≅ᵗʸ-trans (⇛-natural σ) (⇛-cong (closed-natural σ) (closed-natural σ))
+  eq (from-eq (closed-id {{ fun-closed {{clA}} {{clB}} }})) f = to-pshfun-eq (λ ρ eγ a →
+    trans (eq (from-eq (closed-id {{clB}})) _)
+          (trans ($-cong f refl)
+                 (cong (f $⟨ ρ , eγ ⟩_) (eq (to-eq (closed-id {{clA}})) a))))
+  eq (from-eq (closed-⊚ {{ fun-closed {{clA}} {{clB}} }} σ τ)) f = to-pshfun-eq (λ ρ eγ a →
+    trans (eq (from-eq (closed-⊚ {{clB}} σ τ)) _)
+          (cong (func (from (closed-natural {{clB}} (σ ⊚ τ))))
+            (trans ($-cong f refl)
+                   (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-⊚ {{clA}} σ τ)) a)))))
+  eq (from-eq (closed-subst-eq {{ fun-closed {A = A} {{clA}} {{clB}} }} {σ = σ} {τ} ε)) f = to-pshfun-eq (λ ρ eγ a →
+    {!trans (cong (func (from (closed-natural {{clB}} τ)) ∘ f $⟨ hom-id ∙ ρ , _ ⟩_) (trans (sym (strong-ty-id A)) {!eq (to-eq (closed-subst-eq {{clA}} ε)) a!})) {!!}!})

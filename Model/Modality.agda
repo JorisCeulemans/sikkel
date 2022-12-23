@@ -99,6 +99,9 @@ _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 mod-closed : {μ : Modality C D} {T : ClosedTy C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
 IsClosedNatural.closed-natural (mod-closed {μ = μ} {T = T}) σ =
   ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (closed-natural {U = T} (ctx-fmap (ctx-functor μ) σ)))
+eq (from-eq (IsClosedNatural.closed-id (mod-closed {μ = μ} {T = T}))) = {!!}
+IsClosedNatural.closed-⊚ (mod-closed {μ = μ} {T = T}) = {!!}
+IsClosedNatural.closed-subst-eq (mod-closed {μ = μ} {T = T}) = {!!}
 
 
 --------------------------------------------------

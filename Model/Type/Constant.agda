@@ -81,6 +81,9 @@ eq (const-natural a σ) _ = refl
 instance
   const-closed : {A : Set} → IsClosedNatural {C} (Const A)
   closed-natural {{const-closed {A = A}}} = Const-natural A
+  eq (from-eq (closed-id {{ const-closed {A = A} }})) _ = refl
+  eq (from-eq (closed-⊚ {{ const-closed {A = A} }} σ τ)) _ = refl
+  eq (from-eq (closed-subst-eq {{ const-closed {A = A} }} ε)) _ = refl
 
 
 --------------------------------------------------
