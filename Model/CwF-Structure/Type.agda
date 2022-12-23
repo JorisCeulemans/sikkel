@@ -289,6 +289,41 @@ module ≅ᵗʸ-Reasoning where
   syntax step-≅˘ T S≅R S≅T = T ≅˘⟨ S≅T ⟩ S≅R
 
 
+-- Ty Γ is a groupoid and not a setoid (i.e. T ≅ᵗʸ S is not necessarily a proposition).
+-- Therefore, we want to express equalities of natural isomorphisms of types.
+record _≅ᵉ_ {T S : Ty Γ} (e1 e2 : T ≅ᵗʸ S) : Set where
+  no-eta-equality
+  field
+    from-eq : from e1 ≅ⁿ from e2
+open _≅ᵉ_ public
+
+to-eq : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → to e1 ≅ⁿ to e2
+to-eq {e1 = e1} {e2} ε = begin
+  to e1
+   ≅˘⟨ ⊙-id-transʳ (to e1) ⟩
+  to e1 ⊙ id-trans _
+   ≅˘⟨ ⊙-congˡ _ (isoʳ e2) ⟩
+  to e1 ⊙ (from e2 ⊙ to e2)
+   ≅˘⟨ ⊙-assoc _ _ _ ⟩
+  (to e1 ⊙ from e2) ⊙ to e2
+   ≅⟨ ⊙-congʳ _ (⊙-congˡ _ (≅ⁿ-sym (from-eq ε))) ⟩
+  (to e1 ⊙ from e1) ⊙ to e2
+   ≅⟨ ⊙-congʳ _ (isoˡ e1) ⟩
+  id-trans _ ⊙ to e2
+   ≅⟨ ⊙-id-transˡ _ ⟩
+  to e2 ∎
+  where open ≅ⁿ-Reasoning
+
+≅ᵉ-refl : {e : T ≅ᵗʸ S} → e ≅ᵉ e
+from-eq ≅ᵉ-refl = ≅ⁿ-refl
+
+≅ᵉ-sym : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → e2 ≅ᵉ e1
+from-eq (≅ᵉ-sym ε) = ≅ⁿ-sym (from-eq ε)
+
+≅ᵉ-trans : {e1 e2 e3 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → e2 ≅ᵉ e3 → e1 ≅ᵉ e3
+from-eq (≅ᵉ-trans ε ε') = ≅ⁿ-trans (from-eq ε) (from-eq ε')
+
+
 --------------------------------------------------
 -- Substitution of types
 
