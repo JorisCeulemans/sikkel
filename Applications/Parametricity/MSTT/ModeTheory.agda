@@ -67,9 +67,9 @@ show-modality forget-right = "forget-right"
 
 ⓜ-interpretation : (μ : ModalityExpr m' m'') (ρ : ModalityExpr m m') →
                    ⟦ μ ⓜ ρ ⟧modality ≅ᵐ ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
-ⓜ-interpretation 𝟙 ρ = ≅ᵐ-sym (𝟙-identityˡ ⟦ ρ ⟧modality)
-ⓜ-interpretation forget-left 𝟙 = ≅ᵐ-sym (𝟙-identityʳ M.forget-left)
-ⓜ-interpretation forget-right 𝟙 = ≅ᵐ-sym (𝟙-identityʳ M.forget-right)
+ⓜ-interpretation 𝟙 ρ = symᵐ (𝟙-identityˡ ⟦ ρ ⟧modality)
+ⓜ-interpretation forget-left 𝟙 = symᵐ (𝟙-identityʳ M.forget-left)
+ⓜ-interpretation forget-right 𝟙 = symᵐ (𝟙-identityʳ M.forget-right)
 
 
 --------------------------------------------------
@@ -90,7 +90,7 @@ forget-right ≟modality forget-right = return refl
 _≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
 μ ≃ᵐ? ρ = do
   refl ← μ ≟modality ρ
-  return ≅ᵐ-refl
+  return reflᵐ
 
 
 --------------------------------------------------
@@ -115,7 +115,7 @@ ModeTheory.𝟙 par-mode-theory = 𝟙
 ModeTheory._ⓜ_ par-mode-theory = _ⓜ_
 ModeTheory.show-modality par-mode-theory = show-modality
 ModeTheory.⟦_⟧modality par-mode-theory = ⟦_⟧modality
-ModeTheory.𝟙-interpretation par-mode-theory = ≅ᵐ-refl
+ModeTheory.𝟙-interpretation par-mode-theory = reflᵐ
 ModeTheory.ⓜ-interpretation par-mode-theory = ⓜ-interpretation
 ModeTheory._≃ᵐ?_ par-mode-theory = _≃ᵐ?_
 ModeTheory.TwoCellExpr par-mode-theory = TwoCellExpr

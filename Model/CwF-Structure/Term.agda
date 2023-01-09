@@ -51,14 +51,14 @@ record _≅ᵗᵐ_ {Γ : Ctx C} {T : Ty Γ} (t s : Tm Γ T) : Set where
     eq : ∀ {x} γ → t ⟨ x , γ ⟩' ≡ s ⟨ x , γ ⟩'
 open _≅ᵗᵐ_ public
 
-≅ᵗᵐ-refl : t ≅ᵗᵐ t
-eq ≅ᵗᵐ-refl _ = refl
+reflᵗᵐ : t ≅ᵗᵐ t
+eq reflᵗᵐ _ = refl
 
-≅ᵗᵐ-sym : t ≅ᵗᵐ t' → t' ≅ᵗᵐ t
-eq (≅ᵗᵐ-sym t=t') γ = sym (eq t=t' γ)
+symᵗᵐ : t ≅ᵗᵐ t' → t' ≅ᵗᵐ t
+eq (symᵗᵐ t=t') γ = sym (eq t=t' γ)
 
-≅ᵗᵐ-trans : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
-eq (≅ᵗᵐ-trans t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
+transᵗᵐ : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
+eq (transᵗᵐ t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
 
 module ≅ᵗᵐ-Reasoning where
   infix  3 _∎
@@ -72,13 +72,13 @@ module ≅ᵗᵐ-Reasoning where
   _ ≅⟨⟩ t=s = t=s
 
   step-≅ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t2 → t1 ≅ᵗᵐ t3
-  step-≅ _ t2=t3 t1=t2 = ≅ᵗᵐ-trans t1=t2 t2=t3
+  step-≅ _ t2=t3 t1=t2 = transᵗᵐ t1=t2 t2=t3
 
   step-≅˘ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t2 ≅ᵗᵐ t1 → t1 ≅ᵗᵐ t3
-  step-≅˘ _ t2=t3 t2=t1 = ≅ᵗᵐ-trans (≅ᵗᵐ-sym t2=t1) t2=t3
+  step-≅˘ _ t2=t3 t2=t1 = transᵗᵐ (symᵗᵐ t2=t1) t2=t3
 
   _∎ : ∀ (t : Tm Γ T) → t ≅ᵗᵐ t
-  _∎ _ = ≅ᵗᵐ-refl
+  _∎ _ = reflᵗᵐ
 
   syntax step-≅  t1 t2≅t3 t1≅t2 = t1 ≅⟨  t1≅t2 ⟩ t2≅t3
   syntax step-≅˘ t1 t2≅t3 t2≅t1 = t1 ≅˘⟨ t2≅t1 ⟩ t2≅t3
@@ -109,43 +109,43 @@ eq (convert-term-cong η t=t') γ = cong (func η) (eq t=t' γ)
          s ≅ᵗᵐ s' → ι[ T=S ] s ≅ᵗᵐ ι[ T=S ] s'
 ι-cong T=S s=s' = convert-term-cong (to T=S) s=s'
 
-ι-refl : (t : Tm Γ T) → ι[ ≅ᵗʸ-refl ] t ≅ᵗᵐ t
+ι-refl : (t : Tm Γ T) → ι[ reflᵗʸ ] t ≅ᵗᵐ t
 eq (ι-refl t) _ = refl
 
 ι-symˡ : (T=S : T ≅ᵗʸ S) (s : Tm Γ S) →
-         ι[ ≅ᵗʸ-sym T=S ] (ι[ T=S ] s) ≅ᵗᵐ s
+         ι[ symᵗʸ T=S ] (ι[ T=S ] s) ≅ᵗᵐ s
 eq (ι-symˡ T=S s) γ = eq (isoʳ T=S) (s ⟨ _ , γ ⟩')
 
 ι-symʳ : (T=S : T ≅ᵗʸ S) (t : Tm Γ T) →
-         ι[ T=S ] (ι[ ≅ᵗʸ-sym T=S ] t) ≅ᵗᵐ t
+         ι[ T=S ] (ι[ symᵗʸ T=S ] t) ≅ᵗᵐ t
 eq (ι-symʳ T=S t) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
 
 ι⁻¹[_]_ : T ≅ᵗʸ S → Tm Γ T → Tm Γ S
-ι⁻¹[ T=S ] t = ι[ ≅ᵗʸ-sym T=S ] t
+ι⁻¹[ T=S ] t = ι[ symᵗʸ T=S ] t
 
 ι⁻¹-cong : (T=S : T ≅ᵗʸ S) →
            t ≅ᵗᵐ t' → ι⁻¹[ T=S ] t ≅ᵗᵐ ι⁻¹[ T=S ] t'
-ι⁻¹-cong T=S = ι-cong (≅ᵗʸ-sym T=S)
+ι⁻¹-cong T=S = ι-cong (symᵗʸ T=S)
 
 ι-trans : (T=S : T ≅ᵗʸ S) (S=R : S ≅ᵗʸ R) (r : Tm Γ R) →
-          ι[ ≅ᵗʸ-trans T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
+          ι[ transᵗʸ T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
 eq (ι-trans T=S S=R r) γ = refl
 
 move-ι-right : (T=S : T ≅ᵗʸ S) {t : Tm Γ T} {s : Tm Γ S} →
                ι⁻¹[ T=S ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι[ T=S ] s
-move-ι-right T=S t=s = ≅ᵗᵐ-trans (≅ᵗᵐ-sym (ι-symʳ T=S _)) (ι-cong T=S t=s)
+move-ι-right T=S t=s = transᵗᵐ (symᵗᵐ (ι-symʳ T=S _)) (ι-cong T=S t=s)
 
 move-ι-left : (S=T : S ≅ᵗʸ T) {t : Tm Γ T} {s : Tm Γ S} →
               t ≅ᵗᵐ ι⁻¹[ S=T ] s → ι[ S=T ] t ≅ᵗᵐ s
-move-ι-left S=T t=s = ≅ᵗᵐ-trans (ι-cong S=T t=s) (ι-symʳ S=T _)
+move-ι-left S=T t=s = transᵗᵐ (ι-cong S=T t=s) (ι-symʳ S=T _)
 
 move-ι⁻¹-right : (S=T : S ≅ᵗʸ T) {t : Tm Γ T} {s : Tm Γ S} →
                 ι[ S=T ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι⁻¹[ S=T ] s
-move-ι⁻¹-right S=T t=s = ≅ᵗᵐ-trans (≅ᵗᵐ-sym (ι-symˡ S=T _)) (ι⁻¹-cong S=T t=s)
+move-ι⁻¹-right S=T t=s = transᵗᵐ (symᵗᵐ (ι-symˡ S=T _)) (ι⁻¹-cong S=T t=s)
 
 move-ι⁻¹-left : (T=S : T ≅ᵗʸ S) {t : Tm Γ T} {s : Tm Γ S} →
                  t ≅ᵗᵐ ι[ T=S ] s → ι⁻¹[ T=S ] t ≅ᵗᵐ s
-move-ι⁻¹-left T=S t=s = ≅ᵗᵐ-trans (ι⁻¹-cong T=S t=s) (ι-symˡ T=S _)
+move-ι⁻¹-left T=S t=s = transᵗᵐ (ι⁻¹-cong T=S t=s) (ι-symˡ T=S _)
 
 
 --------------------------------------------------

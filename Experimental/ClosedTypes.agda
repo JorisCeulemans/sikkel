@@ -35,7 +35,7 @@ ClosedTy : BaseCategory → Set₁
 ClosedTy C = Ty {C = C} ◇
 
 closed-ty-natural : {Δ Γ : Ctx C} (T : ClosedTy C) (σ : Δ ⇒ Γ) → ((T [ !◇ Γ ]) [ σ ]) ≅ᵗʸ (T [ !◇ Δ ])
-closed-ty-natural T σ = ≅ᵗʸ-trans (ty-subst-comp T _ σ) (ty-subst-cong-subst (◇-terminal _ _ _) T)
+closed-ty-natural T σ = transᵗʸ (ty-subst-comp T _ σ) (ty-subst-cong-subst (◇-terminal _ _ _) T)
 
 private variable
   T S : ClosedTy C
@@ -96,7 +96,7 @@ eq (,ₛ-cong1 {T = T} e t) δ = cong [_, T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩' ]
 eq (,ₛ-cong2 {T = T} σ e) δ = cong (λ x → [ func σ δ , T ⟪ _ , refl ⟫ x ]) (eq e δ)
 
 ,ₛ-η-id : id-subst (Γ ,,ₛ T) ≅ˢ (π ,ₛ sξ)
-,ₛ-η-id {Γ = Γ} {T = T} = ≅ˢ-trans (,ₛ-η (id-subst (Γ ,,ₛ T))) (≅ˢ-trans (,ₛ-cong1 (⊚-id-substʳ _) _) (,ₛ-cong2 _ (stm-subst-id sξ)))
+,ₛ-η-id {Γ = Γ} {T = T} = transˢ (,ₛ-η (id-subst (Γ ,,ₛ T))) (transˢ (,ₛ-cong1 (⊚-id-substʳ _) _) (,ₛ-cong2 _ (stm-subst-id sξ)))
 
 -- The following is also provable from the η and β laws for _,ₛ_.
 ,ₛ-⊚ : (σ : Δ ⇒ Γ) (t : SimpleTm Δ T) (τ : Θ ⇒ Δ) → ((σ ,ₛ t) ⊚ τ) ≅ˢ ((σ ⊚ τ) ,ₛ (t [ τ ]s))
@@ -246,17 +246,17 @@ eq (prim-snat-elim-cong {f2 = f2} ea ef) [ γ , suc n ] = trans (eq ef _) (cong 
 snat-elim-natural : {A : ClosedTy C} {a : SimpleTm Γ A} {f : SimpleTm Γ (A ⇛ A)} (σ : Δ ⇒ Γ) →
                     (snat-elim a f) [ σ ]s ≅ᵗᵐ snat-elim (a [ σ ]s) (f [ σ ]s)
 snat-elim-natural {f = f} σ =
-  ≅ᵗᵐ-trans (sλ-natural σ)
-            (sλ-cong (≅ᵗᵐ-trans (prim-snat-elim-natural σ)
-                                (prim-snat-elim-cong ≅ᵗᵐ-refl (≅ᵗᵐ-trans (∙ₛ-natural (σ s⊹))
-                                                                         (∙ₛ-cong ⊹-lemma (,ₛ-β2 _ _))))))
+  transᵗᵐ (sλ-natural σ)
+          (sλ-cong (transᵗᵐ (prim-snat-elim-natural σ)
+                            (prim-snat-elim-cong reflᵗᵐ (transᵗᵐ (∙ₛ-natural (σ s⊹))
+                                                                 (∙ₛ-cong ⊹-lemma (,ₛ-β2 _ _))))))
   where
     ⊹-lemma : (f [ π ]s) [ σ s⊹ ]s ≅ᵗᵐ (f [ σ ]s) [ π ]s
-    ⊹-lemma = ≅ᵗᵐ-trans (stm-subst-comp _ _ _) (≅ᵗᵐ-trans (stm-subst-cong-subst _ (,ₛ-β1 _ _)) (≅ᵗᵐ-sym (stm-subst-comp _ _ _)))
+    ⊹-lemma = transᵗᵐ (stm-subst-comp _ _ _) (transᵗᵐ (stm-subst-cong-subst _ (,ₛ-β1 _ _)) (symᵗᵐ (stm-subst-comp _ _ _)))
 
 snat-elim-cong : {A : ClosedTy C} {a1 a2 : SimpleTm Γ A} {f1 f2 : SimpleTm Γ (A ⇛ A)} →
                  a1 ≅ᵗᵐ a2 → f1 ≅ᵗᵐ f2 → snat-elim a1 f1 ≅ᵗᵐ snat-elim a2 f2
-snat-elim-cong ea ef = sλ-cong (prim-snat-elim-cong ea (∙ₛ-cong (stm-subst-cong-tm ef π) ≅ᵗᵐ-refl))
+snat-elim-cong ea ef = sλ-cong (prim-snat-elim-cong ea (∙ₛ-cong (stm-subst-cong-tm ef π) reflᵗᵐ))
 
 snat-β-zero : {A : ClosedTy C} (a : SimpleTm Γ A) (f : SimpleTm Γ (A ⇛ A)) → snat-elim a f ∙ₛ szero ≅ᵗᵐ a
 eq (snat-β-zero {Γ = Γ} {A = A} a f) γ =

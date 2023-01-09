@@ -371,7 +371,7 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
 instance
   fun-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                IsClosedNatural (A ⇛ B)
-  closed-natural {{fun-closed}} σ = ≅ᵗʸ-trans (⇛-natural σ) (⇛-cong (closed-natural σ) (closed-natural σ))
+  closed-natural {{fun-closed}} σ = transᵗʸ (⇛-natural σ) (⇛-cong (closed-natural σ) (closed-natural σ))
   eq (from-eq (closed-id {{ fun-closed {{clA}} {{clB}} }})) f = to-pshfun-eq (λ ρ eγ a →
     trans (eq (from-eq (closed-id {{clB}})) _)
           (trans ($-cong f refl)

@@ -49,8 +49,8 @@ instance
   id-is-ctx-functor : ∀ {C} → IsCtxFunctor {C = C} (λ Γ → Γ)
   ctx-map {{id-is-ctx-functor}} σ = σ
   ctx-map-cong {{id-is-ctx-functor}} e = e
-  ctx-map-id {{id-is-ctx-functor}} = ≅ˢ-refl
-  ctx-map-⊚ {{id-is-ctx-functor}} _ _ = ≅ˢ-refl
+  ctx-map-id {{id-is-ctx-functor}} = reflˢ
+  ctx-map-⊚ {{id-is-ctx-functor}} _ _ = reflˢ
 
 -- This operation is not made available for instance resolution because otherwise
 --   there would be infinitely many instances of IsCtxFunctor for any context
@@ -59,8 +59,8 @@ composed-functor : {C1 C2 C3 : BaseCategory} {Φ : CtxOp C2 C3} {Ψ : CtxOp C1 C
                    IsCtxFunctor Φ → IsCtxFunctor Ψ → IsCtxFunctor (λ Γ → Φ (Ψ Γ))
 ctx-map {{composed-functor φ ψ}} σ = ctx-map {{φ}} (ctx-map {{ψ}} σ)
 ctx-map-cong {{composed-functor φ ψ}} e = ctx-map-cong {{φ}} (ctx-map-cong {{ψ}} e)
-ctx-map-id {{composed-functor φ ψ}} = ≅ˢ-trans (ctx-map-cong {{φ}} (ctx-map-id {{ψ}})) (ctx-map-id {{φ}})
-ctx-map-⊚ {{composed-functor φ ψ}} τ σ = ≅ˢ-trans (ctx-map-cong {{φ}} (ctx-map-⊚ {{ψ}} τ σ)) (ctx-map-⊚ {{φ}} _ _)
+ctx-map-id {{composed-functor φ ψ}} = transˢ (ctx-map-cong {{φ}} (ctx-map-id {{ψ}})) (ctx-map-id {{φ}})
+ctx-map-⊚ {{composed-functor φ ψ}} τ σ = transˢ (ctx-map-cong {{φ}} (ctx-map-⊚ {{ψ}} τ σ)) (ctx-map-⊚ {{φ}} _ _)
 
 
 record CtxFunctor (C D : BaseCategory) : Set₁ where
@@ -105,8 +105,8 @@ open CtxNatTransf public
 
 id-ctx-transf : (Φ : CtxFunctor C D) → CtxNatTransf Φ Φ
 transf-op (id-ctx-transf Φ) Γ = id-subst (ctx-op Φ Γ)
-naturality (id-ctx-transf Φ) σ = ≅ˢ-trans (⊚-id-substˡ (ctx-fmap Φ σ))
-                                          (≅ˢ-sym (⊚-id-substʳ (ctx-fmap Φ σ)))
+naturality (id-ctx-transf Φ) σ = transˢ (⊚-id-substˡ (ctx-fmap Φ σ))
+                                        (symˢ (⊚-id-substʳ (ctx-fmap Φ σ)))
 
 -- Vertical composition of natural transformations.
 _ⓝ-vert_ : {Φ Ψ Ω : CtxFunctor C D} → CtxNatTransf Ψ Ω → CtxNatTransf Φ Ψ → CtxNatTransf Φ Ω

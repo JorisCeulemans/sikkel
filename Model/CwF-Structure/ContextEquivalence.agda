@@ -26,22 +26,22 @@ record _≅ᶜ_ (Δ : Ctx C) (Γ : Ctx C) : Set where
     isoʳ : from ⊚ to ≅ˢ id-subst Γ
 open _≅ᶜ_ public
 
-≅ᶜ-refl : Γ ≅ᶜ Γ
-from (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-to (≅ᶜ-refl {Γ = Γ}) = id-subst Γ
-eq (isoˡ ≅ᶜ-refl) _ = refl
-eq (isoʳ ≅ᶜ-refl) _ = refl
+reflᶜ : Γ ≅ᶜ Γ
+from (reflᶜ {Γ = Γ}) = id-subst Γ
+to (reflᶜ {Γ = Γ}) = id-subst Γ
+eq (isoˡ reflᶜ) _ = refl
+eq (isoʳ reflᶜ) _ = refl
 
-≅ᶜ-sym : Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
-from (≅ᶜ-sym Δ=Γ) = to Δ=Γ
-to (≅ᶜ-sym Δ=Γ) = from Δ=Γ
-isoˡ (≅ᶜ-sym Δ=Γ) = isoʳ Δ=Γ
-isoʳ (≅ᶜ-sym Δ=Γ) = isoˡ Δ=Γ
+symᶜ : Δ ≅ᶜ Γ → Γ ≅ᶜ Δ
+from (symᶜ Δ=Γ) = to Δ=Γ
+to (symᶜ Δ=Γ) = from Δ=Γ
+isoˡ (symᶜ Δ=Γ) = isoʳ Δ=Γ
+isoʳ (symᶜ Δ=Γ) = isoˡ Δ=Γ
 
-≅ᶜ-trans : Δ ≅ᶜ Γ → Γ ≅ᶜ Θ → Δ ≅ᶜ Θ
-from (≅ᶜ-trans Δ=Γ Γ=Θ) = from Γ=Θ ⊚ from Δ=Γ
-to (≅ᶜ-trans Δ=Γ Γ=Θ) = to Δ=Γ ⊚ to Γ=Θ
-isoˡ (≅ᶜ-trans Δ=Γ Γ=Θ) =
+transᶜ : Δ ≅ᶜ Γ → Γ ≅ᶜ Θ → Δ ≅ᶜ Θ
+from (transᶜ Δ=Γ Γ=Θ) = from Γ=Θ ⊚ from Δ=Γ
+to (transᶜ Δ=Γ Γ=Θ) = to Δ=Γ ⊚ to Γ=Θ
+isoˡ (transᶜ Δ=Γ Γ=Θ) =
   begin
     (to Δ=Γ ⊚ to Γ=Θ) ⊚ (from Γ=Θ ⊚ from Δ=Γ)
   ≅⟨ subst-reflect ((val (var (to Δ=Γ)) ⊚' val (var (to Γ=Θ))) ⊚' (val (var (from Γ=Θ)) ⊚' val (var (from Δ=Γ))))
@@ -55,7 +55,7 @@ isoˡ (≅ᶜ-trans Δ=Γ Γ=Θ) =
   ≅⟨ isoˡ Δ=Γ ⟩
     id-subst _ ∎
   where open ≅ˢ-Reasoning
-isoʳ (≅ᶜ-trans Δ=Γ Γ=Θ) =
+isoʳ (transᶜ Δ=Γ Γ=Θ) =
   begin
     (from Γ=Θ ⊚ from Δ=Γ) ⊚ (to Δ=Γ ⊚ to Γ=Θ)
   ≅⟨ subst-reflect ((val (var (from Γ=Θ)) ⊚' val (var (from Δ=Γ))) ⊚' (val (var (to Δ=Γ)) ⊚' val (var (to Γ=Θ))))
@@ -82,13 +82,13 @@ module ≅ᶜ-Reasoning where
   _ ≅⟨⟩ Γ=Δ = Γ=Δ
 
   step-≅ : (Γ : Ctx C) → Δ ≅ᶜ Θ → Γ ≅ᶜ Δ → Γ ≅ᶜ Θ
-  step-≅ _ Δ≅Θ Γ≅Δ = ≅ᶜ-trans Γ≅Δ Δ≅Θ
+  step-≅ _ Δ≅Θ Γ≅Δ = transᶜ Γ≅Δ Δ≅Θ
 
   step-≅˘ : (Γ : Ctx C) → Δ ≅ᶜ Θ → Δ ≅ᶜ Γ → Γ ≅ᶜ Θ
-  step-≅˘ _ Δ≅Θ Δ≅Γ = ≅ᶜ-trans (≅ᶜ-sym Δ≅Γ) Δ≅Θ
+  step-≅˘ _ Δ≅Θ Δ≅Γ = transᶜ (symᶜ Δ≅Γ) Δ≅Θ
 
   _∎ : (Γ : Ctx C) → Γ ≅ᶜ Γ
-  _∎ _ = ≅ᶜ-refl
+  _∎ _ = reflᶜ
 
   syntax step-≅  Γ Δ≅Θ Γ≅Δ = Γ ≅⟨  Γ≅Δ ⟩ Δ≅Θ
   syntax step-≅˘ Γ Δ≅Θ Δ≅Γ = Γ ≅˘⟨ Δ≅Γ ⟩ Δ≅Θ

@@ -128,7 +128,7 @@ eq (isoʳ (forever-ty-natural σ {T})) _ = to-ω-limit-eq (λ _ → refl)
 
 instance
   forever-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (forever-ty A)
-  closed-natural {{forever-closed}} σ = ≅ᵗʸ-trans (forever-ty-natural σ) (forever-ty-cong (closed-natural (constantly-subst σ)))
+  closed-natural {{forever-closed}} σ = transᵗʸ (forever-ty-natural σ) (forever-ty-cong (closed-natural (constantly-subst σ)))
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (constantly-ctx Γ)} where
   forever-tm-natural : (t : Tm (constantly-ctx Γ) T) →

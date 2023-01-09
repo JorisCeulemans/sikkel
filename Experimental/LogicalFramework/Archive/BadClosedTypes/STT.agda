@@ -76,8 +76,8 @@ data TmExpr (Γ : CtxExpr) : TyExpr → Set where
 ty-closed : (T : TyExpr) {Δ Γ : Ctx ★} {σ : Δ M.⇒ Γ} → ⟦ T ⟧ty M.[ σ ] M.≅ᵗʸ ⟦ T ⟧ty
 ty-closed Nat' = M.Const-natural ℕ _
 ty-closed Bool' = M.Const-natural _ _
-ty-closed (T ⇛ S) = M.≅ᵗʸ-trans (M.⇛-natural _) (M.⇛-cong (ty-closed T) (ty-closed S))
-ty-closed (T ⊠ S) = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (ty-closed T) (ty-closed S))
+ty-closed (T ⇛ S) = M.transᵗʸ (M.⇛-natural _) (M.⇛-cong (ty-closed T) (ty-closed S))
+ty-closed (T ⊠ S) = M.transᵗʸ (M.⊠-natural _) (M.⊠-cong (ty-closed T) (ty-closed S))
 
 ⟦_⟧var : Var Γ T → Tm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 ⟦ vzero {_} {T} ⟧var = M.ι⁻¹[ ty-closed T ] M.ξ
@@ -180,20 +180,20 @@ _⊚_ : SubstExpr Γ Θ → SubstExpr Δ Γ → SubstExpr Δ Θ
 
 tm-subst-sound : (t : TmExpr Γ T) (σ : SubstExpr Δ Γ) → (M.ι[ ty-closed T ] ⟦ t [ σ ]tm ⟧tm) M.≅ᵗᵐ ⟦ t ⟧tm M.[ ⟦ σ ⟧subst ]'
 tm-subst-sound {T = T} (var vzero)    (σ ∷ t) = record { eq = {!!} }
-  -- M.≅ᵗᵐ-sym (M.≅ᵗᵐ-trans (M.≅ᵗᵐ-sym (M.ι-subst-commute ⟦ σ ∷ t ⟧subst (M.≅ᵗʸ-sym (ty-closed T)) M.ξ)) (M.≅ᵗᵐ-trans (M.ι-cong α (M.ctx-ext-subst-β₂ _ _)) {!!}))
+  -- M.symᵗᵐ (M.transᵗᵐ (M.symᵗᵐ (M.ι-subst-commute ⟦ σ ∷ t ⟧subst (M.symᵗʸ (ty-closed T)) M.ξ)) (M.transᵗᵐ (M.ι-cong α (M.ctx-ext-subst-β₂ _ _)) {!!}))
   -- where
   --   α = M.ty-subst-cong-ty
   --      (M.to-ext-subst ⟦ T ⟧ty ⟦ σ ⟧subst (M.ι[ ty-closed T ] ⟦ t ⟧tm))
-  --      (M.≅ᵗʸ-sym (ty-closed T))
+  --      (M.symᵗʸ (ty-closed T))
 tm-subst-sound (var (vsuc x)) (σ ∷ t) = record { eq = {!!} }
 tm-subst-sound (lam t) σ = record { eq = λ _ → M.to-pshfun-eq {!!} }
 tm-subst-sound (f ∙ t) σ = {!!}
-tm-subst-sound (lit n) σ = M.≅ᵗᵐ-sym (M.const-natural n ⟦ σ ⟧subst)
+tm-subst-sound (lit n) σ = M.symᵗᵐ (M.const-natural n ⟦ σ ⟧subst)
 tm-subst-sound suc σ = {!!}
 tm-subst-sound (nat-elim a f) σ = {!!}
-tm-subst-sound true σ = M.≅ᵗᵐ-sym (M.const-natural _ _)
-tm-subst-sound false σ = M.≅ᵗᵐ-sym (M.const-natural _ _)
+tm-subst-sound true σ = M.symᵗᵐ (M.const-natural _ _)
+tm-subst-sound false σ = M.symᵗᵐ (M.const-natural _ _)
 tm-subst-sound (if b t f) σ = {!!}
 tm-subst-sound (pair t s) σ = {!!}
-tm-subst-sound (fst {T = T} {S = S} p) σ = {!!} -- M.≅ᵗᵐ-trans (M.prim-fst-ι (ty-closed T) (ty-closed S) ⟦ p [ σ ]tm ⟧tm) {!tm-subst-sound p σ!}
+tm-subst-sound (fst {T = T} {S = S} p) σ = {!!} -- M.transᵗᵐ (M.prim-fst-ι (ty-closed T) (ty-closed S) ⟦ p [ σ ]tm ⟧tm) {!tm-subst-sound p σ!}
 tm-subst-sound (snd p) σ = {!!}

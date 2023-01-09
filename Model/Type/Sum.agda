@@ -124,7 +124,7 @@ eq (η-⊞ t) γ | inj₂ b = refl
 instance
   sum-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                IsClosedNatural (A ⊞ B)
-  closed-natural {{sum-closed}} σ = ≅ᵗʸ-trans (⊞-natural σ) (⊞-cong (closed-natural σ) (closed-natural σ))
+  closed-natural {{sum-closed}} σ = transᵗʸ (⊞-natural σ) (⊞-cong (closed-natural σ) (closed-natural σ))
   eq (from-eq (closed-id {{ sum-closed {{clA}} {{clB}} }})) (inj₁ a) = cong inj₁ (eq (from-eq (closed-id {{clA}})) a)
   eq (from-eq (closed-id {{ sum-closed {{clA}} {{clB}} }})) (inj₂ b) = cong inj₂ (eq (from-eq (closed-id {{clB}})) b)
   eq (from-eq (closed-⊚ {{ sum-closed {{clA}} {{clB}} }} σ τ)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-⊚ {{clA}} σ τ)) a)

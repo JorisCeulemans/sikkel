@@ -40,7 +40,7 @@ _[_]frm : Formula Γ → SubstExpr Δ Γ → Formula Δ
 (∀[ T ] φ) [ σ ]frm = ∀[ T ] (φ [ σ ⊹ ]frm)
 
 frm-subst-sound : (φ : Formula Γ) (σ : SubstExpr Δ Γ) → ⟦ φ [ σ ]frm ⟧frm ≅ᵗʸ ⟦ φ ⟧frm M.[ ⟦ σ ⟧subst ]
-frm-subst-sound (t1 ≡ᶠ t2) σ = M.≅ᵗʸ-sym (M.≅ᵗʸ-trans (M.Id-natural _) {!!})
+frm-subst-sound (t1 ≡ᶠ t2) σ = M.symᵗʸ (M.transᵗʸ (M.Id-natural _) {!!})
 frm-subst-sound (φ ⊃ ψ) σ = {!!}
 frm-subst-sound (φ ∧ ψ) σ = {!!}
 frm-subst-sound (∀[ T ] φ) σ = {!!}

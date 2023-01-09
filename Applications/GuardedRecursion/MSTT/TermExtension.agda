@@ -47,21 +47,21 @@ infer-interpret-gr-code constantly-if-code = λ infer-c infer-t infer-f Γ → d
   T , ⟦t⟧ ← infer-t Γ
   F , ⟦f⟧ ← infer-f Γ
   T=F ← T ≃ᵗʸ? F
-  return (T , constantly-if' ι[ ≅ᵗʸ-trans (constantly-ty-cong Bool'=B) (eq-mod-closed constantly=μ ⟦ B ⟧ty {{⟦⟧ty-natural B}}) ] ⟦c⟧
+  return (T , constantly-if' ι[ transᵗʸ (constantly-ty-cong Bool'=B) (eq-mod-closed constantly=μ ⟦ B ⟧ty {{⟦⟧ty-natural B}}) ] ⟦c⟧
               then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
 infer-interpret-gr-code (löb-code x T) = λ infer-t Γ → do
   S , ⟦t⟧ ← infer-t (Γ , later ∣ x ∈ T)
   T=S ← T ≃ᵗʸ? S
-  return (T , löb' ⟦ T ⟧ty (ι[ ≅ᵗʸ-trans (closed-natural {{⟦⟧ty-natural T}} π) T=S ]
+  return (T , löb' ⟦ T ⟧ty (ι[ transᵗʸ (closed-natural {{⟦⟧ty-natural T}} π) T=S ]
                             ι⁻¹[ closed-natural {{⟦⟧ty-natural S}} _ ]
                             ιc[ ,,-cong (▻-cong (closed-natural {{⟦⟧ty-natural T}} (from-earlier _))) ]' ⟦t⟧))
 infer-interpret-gr-code (g-cons-code A) = λ Γ →
   return (⟨ constantly ∣ A ⟩ ⇛ ▻ (GStream A) ⇛ GStream A
-         , ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (⇛-cong (▻-cong (closed-natural {{⟦⟧ty-natural (GStream A)}} _)) ≅ᵗʸ-refl) ] M.g-cons)
+         , ι⁻¹[ ⇛-cong reflᵗʸ (⇛-cong (▻-cong (closed-natural {{⟦⟧ty-natural (GStream A)}} _)) reflᵗʸ) ] M.g-cons)
 infer-interpret-gr-code (g-head-code A) = λ Γ → return (GStream A ⇛ ⟨ constantly ∣ A ⟩ , M.g-head)
 infer-interpret-gr-code (g-tail-code A) = λ Γ →
   return (GStream A ⇛ ▻ (GStream A)
-         , (ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (▻-cong (closed-natural {{⟦⟧ty-natural (GStream A)}} (from-earlier _))) ] M.g-tail))
+         , (ι⁻¹[ ⇛-cong reflᵗʸ (▻-cong (closed-natural {{⟦⟧ty-natural (GStream A)}} (from-earlier _))) ] M.g-tail))
 
 GR-tm-ext : TmExt
 TmExt.TmExtCode GR-tm-ext = GRTmCode

@@ -274,7 +274,7 @@ module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} (T=T' : T ≅ᵗʸ T
 löb-ι : {T : Ty Γ} {T' : Ty Γ} (T=T' : T ≅ᵗʸ T') (f : Tm Γ (▻' T' ⇛ T')) →
         ι[ T=T' ] (löb T' f) ≅ᵗᵐ löb T (ι[ ⇛-cong (▻'-cong T=T') T=T' ] f)
 eq (löb-ι T=T' f) {zero} _ = refl
-eq (löb-ι {Γ = Γ}{T = T}{T' = T'} T=T' f) {suc n} γ = cong (func (to T=T')) (€-cong (≅ᵗᵐ-refl {t = f}) (
+eq (löb-ι {Γ = Γ}{T = T}{T' = T'} T=T' f) {suc n} γ = cong (func (to T=T')) (€-cong (reflᵗᵐ {t = f}) (
   begin
     löb T' f ⟨ n , _ ⟩'
   ≡˘⟨ eq (isoʳ T=T') _ ⟩
@@ -326,7 +326,7 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
     where open ≅ᵗʸ-Reasoning
 
   löb-natural : (f : Tm Γ (▻' T ⇛ T)) →
-                (löb T f) [ σ ]' ≅ᵗᵐ löb (T [ σ ]) (ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]')))
+                (löb T f) [ σ ]' ≅ᵗᵐ löb (T [ σ ]) (ι⁻¹[ ⇛-cong ▻'-natural reflᵗʸ ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]')))
   eq (löb-natural f) {zero} δ = $-cong (f ⟨ 0 , func σ δ ⟩') refl
   eq (löb-natural f) {suc n} δ =
     begin
@@ -342,14 +342,14 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
       α = _
       β = _
       g : Tm Δ (▻' (T [ σ ]) ⇛ (T [ σ ]))
-      g = ι⁻¹[ ⇛-cong ▻'-natural ≅ᵗʸ-refl ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
+      g = ι⁻¹[ ⇛-cong ▻'-natural reflᵗʸ ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
 instance
   ▻'-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻' A)
-  closed-natural {{▻'-closed}} σ = ≅ᵗʸ-trans (▻'-natural σ) (▻'-cong (closed-natural σ))
+  closed-natural {{▻'-closed}} σ = transᵗʸ (▻'-natural σ) (▻'-cong (closed-natural σ))
 
   ▻-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻ A)
-  closed-natural {{▻-closed}} σ = ≅ᵗʸ-trans (▻-natural σ) (▻-cong (closed-natural (◄-subst σ)))
+  closed-natural {{▻-closed}} σ = transᵗʸ (▻-natural σ) (▻-cong (closed-natural (◄-subst σ)))
 
 -- ▻' is an applicative functor as well (but this requires ▻-cong).
 module _ {T : Ty Γ} {S : Ty Γ} where
@@ -379,7 +379,7 @@ lift▻' {Γ = Γ} f = lift▻ (ι⁻¹[ ⇛-natural (from-earlier Γ) ] (f [ fr
 
 lift2▻' : {T S R : Ty Γ} → Tm Γ (T ⇛ S ⇛ R) → Tm Γ (▻' T ⇛ ▻' S ⇛ ▻' R)
 lift2▻' {Γ = Γ} f =
-  lift2▻ (ι⁻¹[ ⇛-cong ≅ᵗʸ-refl (⇛-natural (from-earlier Γ)) ] ι⁻¹[ ⇛-natural (from-earlier Γ) ] (f [ from-earlier Γ ]'))
+  lift2▻ (ι⁻¹[ ⇛-cong reflᵗʸ (⇛-natural (from-earlier Γ)) ] ι⁻¹[ ⇛-natural (from-earlier Γ) ] (f [ from-earlier Γ ]'))
 
 
 --------------------------------------------------

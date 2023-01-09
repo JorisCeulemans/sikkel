@@ -171,8 +171,8 @@ interpret-tm (refl T t) {Γ-ok = Γ-ok} (Id R x y) IdRxy-ok@(R-ok , x-ok , y-ok)
   --   (or that any two proofs of well-typedness for the same term, context and type are equal).
   -- Andreas: The latter is probably true.
 
-≃ᵗʸ-sound {T = Nat} {S = Nat} T-ok S-ok e = ≅ᵗʸ-refl
-≃ᵗʸ-sound {T = Bool} {S = Bool} T-ok S-ok e = ≅ᵗʸ-refl
+≃ᵗʸ-sound {T = Nat} {S = Nat} T-ok S-ok e = reflᵗʸ
+≃ᵗʸ-sound {T = Bool} {S = Bool} T-ok S-ok e = reflᵗʸ
 ≃ᵗʸ-sound {T = T1 ⇛ T2} {S = S1 ⇛ S2} T-ok S-ok e with T1 ≟ty S1 in T1=S1
 ≃ᵗʸ-sound {T = T1 ⇛ T2} {S = S1 ⇛ S2} (T1-ok , T2-ok) (S1-ok , S2-ok) T2=S2 | ok tt =
   ⇛-cong (≃ᵗʸ-sound T1-ok S1-ok T1=S1) (≃ᵗʸ-sound T2-ok S2-ok T2=S2)
