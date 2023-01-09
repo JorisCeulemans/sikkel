@@ -107,7 +107,7 @@ eq (prim-η-⊠ p) _ = refl
 pair : Tm Γ (T ⇛ S ⇛ T ⊠ S)
 pair {T = T}{S = S} =
   lam T (ι[ ⇛-natural π ]
-    lam (S [ π ]) (ι[ ≅ᵗʸ-trans (ty-subst-cong-ty π (⊠-natural π)) (⊠-natural π) ]
+    lam (S [ π ]) (ι[ transᵗʸ (ty-subst-cong-ty π (⊠-natural π)) (⊠-natural π) ]
       prim-pair (ξ [ π ]') ξ))
 
 fst : Tm Γ (T ⊠ S ⇛ T)
@@ -130,4 +130,4 @@ eq (η-⊠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-
 instance
   prod-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                 IsClosedNatural (A ⊠ B)
-  closed-natural {{prod-closed}} σ = ≅ᵗʸ-trans (⊠-natural σ) (⊠-cong (closed-natural σ) (closed-natural σ))
+  closed-natural {{prod-closed}} σ = transᵗʸ (⊠-natural σ) (⊠-cong (closed-natural σ) (closed-natural σ))

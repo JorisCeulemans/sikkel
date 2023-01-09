@@ -194,11 +194,11 @@ Pi-cong : (eT : T ≅ᵗʸ T') → S ≅ᵗʸ ιc[ ,,-cong eT ] S' → Pi T S �
 from (Pi-cong {S = S} {S' = S'} eT eS) = Pi-dimap (to eT) (from proof)
   where
     proof : (S [ ,,-map (to eT) ]) ≅ᵗʸ S'
-    proof = ≅ᵗʸ-trans (ty-subst-cong-ty (,,-map (to eT)) eS)
-                      (≅ᵗʸ-trans (ty-subst-comp S' _ _)
-                                 (≅ᵗʸ-trans (ty-subst-cong-subst (≅ˢ-trans (≅ˢ-sym (,,-map-comp _ _))
-                                                                           (≅ˢ-trans (,,-map-cong (isoʳ eT)) ,,-map-id)) S')
-                                            (ty-subst-id S')))
+    proof = transᵗʸ (ty-subst-cong-ty (,,-map (to eT)) eS)
+                    (transᵗʸ (ty-subst-comp S' _ _)
+                             (transᵗʸ (ty-subst-cong-subst (transˢ (symˢ (,,-map-comp _ _))
+                                                                   (transˢ (,,-map-cong (isoʳ eT)) ,,-map-id)) S')
+                                      (ty-subst-id S')))
 to (Pi-cong eT eS) = Pi-dimap (from eT) (to eS)
 eq (isoˡ (Pi-cong {S = S} {S' = S'} eT eS)) f = to-pshfun-eq (λ ρ eγ t →
   begin
@@ -427,5 +427,5 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
 instance
   fun-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
                IsClosedNatural (A ⇛ B)
-  closed-natural {{fun-closed}} σ = ≅ᵗʸ-trans (⇛-natural σ) (⇛-cong (closed-natural σ) (closed-natural σ))
+  closed-natural {{fun-closed}} σ = transᵗʸ (⇛-natural σ) (⇛-cong (closed-natural σ) (closed-natural σ))
 -}

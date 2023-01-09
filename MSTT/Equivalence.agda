@@ -47,8 +47,8 @@ _≃ᵗʸ?_ : (T S : TyExpr m) → TCM (∀ {Γ} → ⟦ T ⟧ty {Γ} ≅ᵗʸ �
 ≃ᵗʸ?-ext-args : {F G : TyConstructor margs m} → TyConstructorEquiv F G → (args1 args2 : TyExtArgs margs) →
                TCM (∀ {Γ} → interpret-ext-ty F args1 {Γ} ≅ᵗʸ interpret-ext-ty G args2)
 
-Nat' ≃ᵗʸ? Nat' = return ≅ᵗʸ-refl
-Bool' ≃ᵗʸ? Bool' = return ≅ᵗʸ-refl
+Nat' ≃ᵗʸ? Nat' = return reflᵗʸ
+Bool' ≃ᵗʸ? Bool' = return reflᵗʸ
 (T1 ⇛ S1) ≃ᵗʸ? (T2 ⇛ S2) = do
   T1=T2 ← T1 ≃ᵗʸ? T2
   S1=S2 ← S1 ≃ᵗʸ? S2
@@ -61,8 +61,8 @@ Bool' ≃ᵗʸ? Bool' = return ≅ᵗʸ-refl
   refl ← mT ≟mode mS
   μ=ρ ← μ ≃ᵐ? ρ
   T=S ← T ≃ᵗʸ? S
-  return (≅ᵗʸ-trans (eq-mod-closed μ=ρ ⟦ T ⟧ty {{⟦⟧ty-natural T}})
-                    (mod-cong ⟦ ρ ⟧modality T=S))
+  return (transᵗʸ (eq-mod-closed μ=ρ ⟦ T ⟧ty {{⟦⟧ty-natural T}})
+                  (mod-cong ⟦ ρ ⟧modality T=S))
 (Ext {margs1} c1 args1) ≃ᵗʸ? (Ext {margs2} c2 args2) = do
   refl ← margs1 ≟list-mode margs2
   refl ← c1 ≟code c2

@@ -34,7 +34,7 @@ sdapp f t = sap f [ id-subst _ ,ₛ t ]'
 sPi-natural : {T : ClosedTy C} {S : Ty (Γ ,,ₛ T)} (σ : Δ ⇒ Γ) →
               (sPi T S) [ σ ] ≅ᵗʸ sPi T (S [ σ s⊹ ])
 sPi-natural {T = T} {S} σ =
-  ≅ᵗʸ-trans (Pi-natural σ) (Pi-cong (closed-ty-natural T σ) (ty-subst-seq-cong (_ ◼) (_ ∷ _ ◼) S subst-eq-proof))
+  transᵗʸ (Pi-natural σ) (Pi-cong (closed-ty-natural T σ) (ty-subst-seq-cong (_ ◼) (_ ∷ _ ◼) S subst-eq-proof))
   where
     subst-eq-proof : _ ≅ˢ _
     eq subst-eq-proof δ = cong (func σ _ ,_) (sym (trans (ty-id T) (ty-id T)))
@@ -42,4 +42,4 @@ sPi-natural {T = T} {S} σ =
 sPi-cong₂ : {T : ClosedTy C} {S1 S2 : Ty (Γ ,,ₛ T)} →
             S1 ≅ᵗʸ S2 → sPi T S1 ≅ᵗʸ sPi T S2
 sPi-cong₂ {S2 = S2} eS =
-  Pi-cong ≅ᵗʸ-refl (≅ᵗʸ-trans eS (≅ᵗʸ-sym (≅ᵗʸ-trans (ty-subst-cong-subst (record { eq = λ _ → refl }) S2) (ty-subst-id S2))))
+  Pi-cong reflᵗʸ (transᵗʸ eS (symᵗʸ (transᵗʸ (ty-subst-cong-subst (record { eq = λ _ → refl }) S2) (ty-subst-id S2))))

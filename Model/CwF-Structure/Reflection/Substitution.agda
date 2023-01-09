@@ -64,13 +64,13 @@ flatten (val σ)    = σ ∷ []
 flatten (e1 ⊚' e2) = flatten e1 ++ flatten e2
 
 reduce-sound : (σs : ValSeq Δ Γ) → ⟦ reduce σs ⟧vs ≅ˢ ⟦ σs ⟧vs
-reduce-sound []           = ≅ˢ-refl
+reduce-sound []           = reflˢ
 reduce-sound (var σ ∷ σs) = ⊚-congˡ (reduce-sound σs)
-reduce-sound (id'   ∷ σs) = ≅ˢ-trans (reduce-sound σs) (≅ˢ-sym (⊚-id-substˡ ⟦ σs ⟧vs))
+reduce-sound (id'   ∷ σs) = transˢ (reduce-sound σs) (symˢ (⊚-id-substˡ ⟦ σs ⟧vs))
 reduce-sound (!◇'   ∷ σs) = ◇-terminal _ _ _
 
 concat-denote : (σs : ValSeq Γ Θ) (τs : ValSeq Δ Γ) → ⟦ σs ++ τs ⟧vs ≅ˢ ⟦ σs ⟧vs ⊚ ⟦ τs ⟧vs
-concat-denote []       τs = ≅ˢ-sym (⊚-id-substˡ ⟦ τs ⟧vs)
+concat-denote []       τs = symˢ (⊚-id-substˡ ⟦ τs ⟧vs)
 concat-denote (σ ∷ σs) τs =
   begin
     ⟦ σ ⟧v ⊚ ⟦ σs ++ τs ⟧vs
@@ -94,7 +94,7 @@ flatten-sound (e1 ⊚' e2) =
   where open ≅ˢ-Reasoning
 
 vs-cong : {σs τs : ValSeq Δ Γ} → σs ≡ τs → ⟦ σs ⟧vs ≅ˢ ⟦ τs ⟧vs
-vs-cong refl = ≅ˢ-refl
+vs-cong refl = reflˢ
 
 subst-reflect : (e1 e2 : Exp Δ Γ) → reduce (flatten e1) ≡ reduce (flatten e2) → ⟦ e1 ⟧e ≅ˢ ⟦ e2 ⟧e
 subst-reflect e1 e2 eq =

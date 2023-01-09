@@ -116,24 +116,24 @@ interpret-assumption (skip-var x) = {!interpret-assumption x!}
 ⟦ sym d ⟧der = M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)
 ⟦ trans d1 d2 ⟧der = M.ι[ M.Id-natural _ ] M.trans' (M.ι⁻¹[ M.Id-natural _ ] ⟦ d1 ⟧der) (M.ι⁻¹[ M.Id-natural _ ] ⟦ d2 ⟧der)
 ⟦ cong f {t1} {t2} d ⟧der =
-  M.ι[ M.≅ᵗʸ-trans (M.Id-natural _ {M.app ⟦ f ⟧tm ⟦ t1 ⟧tm} {M.app ⟦ f ⟧tm ⟦ t2 ⟧tm}) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t1 ⟧tm) (M.app-natural _ ⟦ f ⟧tm ⟦ t2 ⟧tm)) ]
+  M.ι[ M.transᵗʸ (M.Id-natural _ {M.app ⟦ f ⟧tm ⟦ t1 ⟧tm} {M.app ⟦ f ⟧tm ⟦ t2 ⟧tm}) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t1 ⟧tm) (M.app-natural _ ⟦ f ⟧tm ⟦ t2 ⟧tm)) ]
     M.cong' (M.ι⁻¹[ M.⇛-natural _ ] (⟦ f ⟧tm M.[ _ ]')) {⟦ t1 ⟧tm M.[ _ ]'} {⟦ t2 ⟧tm M.[ _ ]'} (M.ι⁻¹[ M.Id-natural _ {⟦ t1 ⟧tm} {⟦ t2 ⟧tm} ] ⟦ d ⟧der)
 ⟦ fun-cong {f = f} {g = g} d t ⟧der =
-  M.ι[ M.≅ᵗʸ-trans (M.Id-natural _) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t ⟧tm) (M.app-natural _ ⟦ g ⟧tm ⟦ t ⟧tm)) ]
+  M.ι[ M.transᵗʸ (M.Id-natural _) (M.Id-cong' (M.app-natural _ ⟦ f ⟧tm ⟦ t ⟧tm) (M.app-natural _ ⟦ g ⟧tm ⟦ t ⟧tm)) ]
     M.fun-cong' (M.≅ᵗᵐ-to-Id (M.ι⁻¹-cong (M.⇛-natural _) (M.eq-reflect (M.ι⁻¹[ M.Id-natural _ ] ⟦ d ⟧der)))) (⟦ t ⟧tm M.[ _ ]')
 ⟦ assume d ⟧der = M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦ d ⟧der)
 ⟦ assumption x ⟧der = interpret-assumption x
 ⟦ ∧-intro d1 d2 ⟧der = M.ι[ M.⊠-natural _ ] M.prim-pair ⟦ d1 ⟧der ⟦ d2 ⟧der
 ⟦ ∧-elimˡ d ⟧der = M.prim-fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
 ⟦ ∧-elimʳ d ⟧der = M.prim-snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦ d ⟧der)
-⟦ ∀-intro {Ξ = Ξ} {T = T} {φ = φ} d ⟧der = M.ι[ M.≅ᵗʸ-trans (MDF.Pi-natural _) (MDF.Pi-cong (ty-closed T) proof) ] (MDF.lam _ ⟦ d ⟧der)
+⟦ ∀-intro {Ξ = Ξ} {T = T} {φ = φ} d ⟧der = M.ι[ M.transᵗʸ (MDF.Pi-natural _) (MDF.Pi-cong (ty-closed T) proof) ] (MDF.lam _ ⟦ d ⟧der)
   where
     proof : ⟦ φ ⟧frm M.[ (to-ctx-subst Ξ) M.⊹ ] M.≅ᵗʸ
               (⟦ φ ⟧frm M.[ ((to-ctx-subst Ξ) M.⊹) M.⊚ M.to (M.,,-cong (ty-closed T)) ]) M.[ M.from (M.,,-cong (ty-closed T)) ]
     proof = ty-subst-seq-cong (((to-ctx-subst Ξ) M.⊹) ◼)
                               (((to-ctx-subst Ξ) M.⊹) M.⊚ M.to (M.,,-cong (ty-closed T)) ∷ˢ M.from (M.,,-cong (ty-closed T)) ◼)
                               ⟦ φ ⟧frm
-                              (M.≅ˢ-sym (M.≅ˢ-trans M.⊚-assoc (M.≅ˢ-trans (M.⊚-congˡ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.⊚-id-substʳ _))))
+                              (M.symˢ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congˡ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.⊚-id-substʳ _))))
 ⟦ ∀-elim d t ⟧der = {!!}
 ⟦ fun-β ⟧der = {!!}
 ⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-const M.[ _ ]'

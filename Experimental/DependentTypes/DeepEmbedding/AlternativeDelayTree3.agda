@@ -235,7 +235,7 @@ interpret-tm (var x) Γ Γ-ok T-ok t-ok = interpret-var x Γ Γ-ok T-ok t-ok
 interpret-tm (TmExpr.lam _ t) Γ Γ-ok (tt , T₁-ok , T₂-ok) (fun-ty T₁ T₂ , lift refl , t-ok) =
   M.lam (interpret-ty T₁ Γ Γ-ok T₁-ok) {!interpret-tm t (Γ ,, T₁) (tt , Γ-ok , T₁-ok) ? t-ok!}
 interpret-tm (TmExpr.app T t₁ t₂) Γ {T₂} Γ-ok T₂-ok (tt , (tt , T₁-ok , T₂′-ok) , fun-ty T₁ T₂′ , lift refl , tt , eq₂ , tt , t₁-ok , t₂-ok) =
-  M.app (ι[ ⇛-cong M.≅ᵗʸ-refl (interpret-ty-eq T₂ T₂′ Γ Γ-ok T₂-ok T₂′-ok eq₂) ] interpret-tm t₁ Γ {T₁ ⇛ T₂′} Γ-ok (tt , T₁-ok , T₂′-ok) t₁-ok)
+  M.app (ι[ ⇛-cong M.reflᵗʸ (interpret-ty-eq T₂ T₂′ Γ Γ-ok T₂-ok T₂′-ok eq₂) ] interpret-tm t₁ Γ {T₁ ⇛ T₂′} Γ-ok (tt , T₁-ok , T₂′-ok) t₁-ok)
     (interpret-tm t₂ Γ {T₁} Γ-ok T₁-ok t₂-ok)
 interpret-tm (lit x) Γ {T} Γ-ok T-ok t-ok = ι[ interpret-ty-eq T Nat Γ Γ-ok T-ok (lift refl) t-ok ] const x
 interpret-tm suc Γ {Nat ⇛ Nat} Γ-ok T-ok t-ok = M.suc'
@@ -252,8 +252,8 @@ interpret-tm (refl T′ t) Γ {T} Γ-ok T-ok (tt , T′-ok , tt , t-ok , eq-ok) 
   ι[ interpret-ty-eq T (Id T′ t t) Γ Γ-ok T-ok (tt , T′-ok , tt , t-ok , t-ok) eq-ok ]
   M.refl' (interpret-tm t Γ Γ-ok T′-ok t-ok)
 
-interpret-ty-eq Nat Nat Γ Γ-ok T-ok S-ok eq-ok = M.≅ᵗʸ-refl
-interpret-ty-eq Bool Bool Γ Γ-ok T-ok S-ok eq-ok = M.≅ᵗʸ-refl
+interpret-ty-eq Nat Nat Γ Γ-ok T-ok S-ok eq-ok = M.reflᵗʸ
+interpret-ty-eq Bool Bool Γ Γ-ok T-ok S-ok eq-ok = M.reflᵗʸ
 interpret-ty-eq (T₁ ⇛ T₂) (S₁ ⇛ S₂) Γ Γ-ok (tt , T₁-ok , T₂-ok) (tt , S₁-ok , S₂-ok) (tt , eq₁-ok , eq₂-ok) =
   M.⇛-cong (interpret-ty-eq T₁ S₁ Γ Γ-ok T₁-ok S₁-ok eq₁-ok)
     (interpret-ty-eq T₂ S₂ Γ Γ-ok T₂-ok S₂-ok eq₂-ok)
@@ -275,7 +275,7 @@ interpret-ty-eq (Id T t₁ t₂) (Id S s₁ s₂) Γ Γ-ok (tt , T-ok , tt , t�
 -- interpret-tm-eq suc suc Γ (Nat ⇛ Nat) (Nat ⇛ Nat) Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok =
 --   {!!}
 -- interpret-tm-eq plus plus Γ (Nat ⇛ Nat ⇛ Nat) (Nat ⇛ Nat ⇛ Nat) Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
-interpret-tm-eq true true Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!≅ᵗᵐ-refl!}
-interpret-tm-eq false false Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!≅ᵗᵐ-refl!}
+interpret-tm-eq true true Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!reflᵗᵐ!}
+interpret-tm-eq false false Γ Bool Bool Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!reflᵗᵐ!}
 -- interpret-tm-eq (if t₁ t₃ t₄) (if t₂ t₅ t₆) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}
 -- interpret-tm-eq (refl x t₁) (refl x₁ t₂) Γ T₁ T₂ Γ-ok T₁-ok T₂-ok t₁-ok t₂-ok ty-eq-ok tm-eq-ok = {!!}

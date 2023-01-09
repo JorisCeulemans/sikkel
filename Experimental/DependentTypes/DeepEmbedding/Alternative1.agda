@@ -57,8 +57,8 @@ interpret-ty (Id t s) Γ sΓ Γ-ok = do
   sT=sS ← ty-eq? T S Γ sΓ Γ-ok sT sS T-ok S-ok
   return (M.Id ⟦t⟧ (ι[ sT=sS ] ⟦s⟧))
 
-ty-eq? Nat Nat Γ sΓ Γ-ok .Nat' .Nat' refl refl = return ≅ᵗʸ-refl
-ty-eq? Bool Bool Γ sΓ Γ-ok .Bool' .Bool' refl refl = return ≅ᵗʸ-refl
+ty-eq? Nat Nat Γ sΓ Γ-ok .Nat' .Nat' refl refl = return reflᵗʸ
+ty-eq? Bool Bool Γ sΓ Γ-ok .Bool' .Bool' refl refl = return reflᵗʸ
 ty-eq? (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok sT sS T-ok S-ok with interpret-ty T1 Γ sΓ Γ-ok in eqT1 | interpret-ty T2 Γ sΓ Γ-ok in eqT2 | interpret-ty S1 Γ sΓ Γ-ok in eqS1 | interpret-ty S2 Γ sΓ Γ-ok in eqS2
 ty-eq? (T1 ⇛ T2) (S1 ⇛ S2) Γ sΓ Γ-ok .(sT1 M.⇛ sT2) .(sS1 M.⇛ sS2) refl refl | ok sT1 | ok sT2 | ok sS1 | ok sS2 = do
   T1=S1 ← ty-eq? T1 S1 Γ sΓ Γ-ok sT1 sS1 eqT1 eqS1

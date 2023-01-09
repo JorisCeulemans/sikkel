@@ -98,7 +98,7 @@ _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 
 mod-closed : {μ : Modality C D} {T : ClosedTy C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
 IsClosedNatural.closed-natural (mod-closed {μ = μ} {T = T}) σ =
-  ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (closed-natural {U = T} (ctx-fmap (ctx-functor μ) σ)))
+  transᵗʸ (mod-natural μ σ) (mod-cong μ (closed-natural {U = T} (ctx-fmap (ctx-functor μ) σ)))
 
 
 --------------------------------------------------
@@ -192,22 +192,22 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
 ctx-functor 𝟙 = id-ctx-functor
 ⟨ 𝟙 ∣ T ⟩ = T
 mod-cong 𝟙 T=S = T=S
-mod-natural 𝟙 σ = ≅ᵗʸ-refl
+mod-natural 𝟙 σ = reflᵗʸ
 mod-intro 𝟙 t = t
 mod-intro-cong 𝟙 t=t' = t=t'
-mod-intro-natural 𝟙 σ t = ≅ᵗᵐ-sym (ι-refl (t [ σ ]'))
-mod-intro-ι 𝟙 T=S t = ≅ᵗᵐ-refl
+mod-intro-natural 𝟙 σ t = symᵗᵐ (ι-refl (t [ σ ]'))
+mod-intro-ι 𝟙 T=S t = reflᵗᵐ
 mod-elim 𝟙 t = t
 mod-elim-cong 𝟙 t=t' = t=t'
-mod-β 𝟙 t = ≅ᵗᵐ-refl
-mod-η 𝟙 t = ≅ᵗᵐ-refl
+mod-β 𝟙 t = reflᵗᵐ
+mod-η 𝟙 t = reflᵗᵐ
 
 -- Composition of modalities
 _ⓜ_ : {C1 C2 C3 : BaseCategory} → Modality C2 C3 → Modality C1 C2 → Modality C1 C3
 ctx-functor (μ ⓜ ρ) = ctx-functor ρ ⓕ ctx-functor μ
 ⟨ μ ⓜ ρ ∣ T ⟩ = ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩
 mod-cong (μ ⓜ ρ) e = mod-cong μ (mod-cong ρ e)
-mod-natural (μ ⓜ ρ) σ = ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ _))
+mod-natural (μ ⓜ ρ) σ = transᵗʸ (mod-natural μ σ) (mod-cong μ (mod-natural ρ _))
 mod-intro (μ ⓜ ρ) t = mod-intro μ (mod-intro ρ t)
 mod-intro-cong (μ ⓜ ρ) e = mod-intro-cong μ (mod-intro-cong ρ e)
 mod-intro-natural (μ ⓜ ρ) σ t = begin
@@ -219,13 +219,13 @@ mod-intro-natural (μ ⓜ ρ) σ t = begin
     ≅˘⟨ ι-cong (mod-natural μ σ) (mod-intro-ι μ _ _) ⟩
   ι[ mod-natural μ σ ] (ι[ mod-cong μ (mod-natural ρ _) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')))
     ≅˘⟨ ι-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ _)) _ ⟩
-  ι[ ≅ᵗʸ-trans (mod-natural μ σ) (mod-cong μ (mod-natural ρ (lock-fmap μ σ))) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')) ∎
+  ι[ transᵗʸ (mod-natural μ σ) (mod-cong μ (mod-natural ρ (lock-fmap μ σ))) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')) ∎
   where open ≅ᵗᵐ-Reasoning
-mod-intro-ι (μ ⓜ ρ) T=S t = ≅ᵗᵐ-trans (mod-intro-ι μ _ _) (mod-intro-cong μ (mod-intro-ι ρ _ _))
+mod-intro-ι (μ ⓜ ρ) T=S t = transᵗᵐ (mod-intro-ι μ _ _) (mod-intro-cong μ (mod-intro-ι ρ _ _))
 mod-elim (μ ⓜ ρ) t = mod-elim ρ (mod-elim μ t)
 mod-elim-cong (μ ⓜ ρ) e = mod-elim-cong ρ (mod-elim-cong μ e)
-mod-β (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-elim-cong ρ (mod-β μ _)) (mod-β ρ t)
-mod-η (μ ⓜ ρ) t = ≅ᵗᵐ-trans (mod-intro-cong μ (mod-η ρ _)) (mod-η μ t)
+mod-β (μ ⓜ ρ) t = transᵗᵐ (mod-elim-cong ρ (mod-β μ _)) (mod-β ρ t)
+mod-η (μ ⓜ ρ) t = transᵗᵐ (mod-intro-cong μ (mod-η ρ _)) (mod-η μ t)
 
 
 --------------------------------------------------
@@ -287,19 +287,19 @@ record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
 
 open _≅ᵐ_ public
 
-≅ᵐ-refl : ∀ {C D} → {μ : Modality C D} → μ ≅ᵐ μ
-eq-lock (≅ᵐ-refl {μ = μ}) Γ = ≅ᶜ-refl
-eq-lock-natural-to (≅ᵐ-refl {μ = μ}) σ = ≅ˢ-trans (⊚-id-substˡ _) (≅ˢ-sym (⊚-id-substʳ _))
-eq-mod-tyʳ (≅ᵐ-refl {μ = μ}) T = mod-cong μ (≅ᵗʸ-sym (ty-subst-id T))
+reflᵐ : ∀ {C D} → {μ : Modality C D} → μ ≅ᵐ μ
+eq-lock (reflᵐ {μ = μ}) Γ = reflᶜ
+eq-lock-natural-to (reflᵐ {μ = μ}) σ = transˢ (⊚-id-substˡ _) (symˢ (⊚-id-substʳ _))
+eq-mod-tyʳ (reflᵐ {μ = μ}) T = mod-cong μ (symᵗʸ (ty-subst-id T))
 
-≅ᵐ-sym : ∀ {C D} {μ ρ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ μ
-eq-lock (≅ᵐ-sym e) Γ = ≅ᶜ-sym (eq-lock e Γ)
-eq-lock-natural-to (≅ᵐ-sym e) σ = eq-lock-natural-from e σ
-eq-mod-tyʳ (≅ᵐ-sym e) T = ≅ᵗʸ-sym (eq-mod-tyˡ e T)
+symᵐ : ∀ {C D} {μ ρ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ μ
+eq-lock (symᵐ e) Γ = symᶜ (eq-lock e Γ)
+eq-lock-natural-to (symᵐ e) σ = eq-lock-natural-from e σ
+eq-mod-tyʳ (symᵐ e) T = symᵗʸ (eq-mod-tyˡ e T)
 
-≅ᵐ-trans : ∀ {C D} {μ ρ κ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ κ → μ ≅ᵐ κ
-eq-lock (≅ᵐ-trans μ=ρ ρ=κ) Γ = ≅ᶜ-trans (eq-lock μ=ρ Γ) (eq-lock ρ=κ Γ)
-eq-lock-natural-to (≅ᵐ-trans {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
+transᵐ : ∀ {C D} {μ ρ κ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ κ → μ ≅ᵐ κ
+eq-lock (transᵐ μ=ρ ρ=κ) Γ = transᶜ (eq-lock μ=ρ Γ) (eq-lock ρ=κ Γ)
+eq-lock-natural-to (transᵐ {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
   (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ⊚ lock-fmap κ σ
     ≅⟨ ⊚-assoc ⟩
   to (eq-lock μ=ρ _) ⊚ (to (eq-lock ρ=κ _) ⊚ lock-fmap κ σ)
@@ -312,7 +312,7 @@ eq-lock-natural-to (≅ᵐ-trans {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
     ≅⟨ ⊚-assoc ⟩
   lock-fmap μ σ ⊚ (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ∎
   where open ≅ˢ-Reasoning
-eq-mod-tyʳ (≅ᵐ-trans {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T = begin
+eq-mod-tyʳ (transᵐ {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T = begin
   ⟨ μ ∣ T ⟩
     ≅⟨ eq-mod-tyʳ μ=ρ T ⟩
   ⟨ ρ ∣ T [ to (eq-lock μ=ρ Γ) ] ⟩
@@ -323,21 +323,21 @@ eq-mod-tyʳ (≅ᵐ-trans {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T
   where open ≅ᵗʸ-Reasoning
 
 𝟙-identityʳ : (μ : Modality C D) → μ ⓜ 𝟙 ≅ᵐ μ
-eq-lock (𝟙-identityʳ μ) Γ = ≅ᶜ-refl
+eq-lock (𝟙-identityʳ μ) Γ = reflᶜ
 eq (eq-lock-natural-to (𝟙-identityʳ μ) σ) _ = refl
-eq-mod-tyʳ (𝟙-identityʳ μ) T = ≅ᵗʸ-sym (mod-cong μ (ty-subst-id T))
+eq-mod-tyʳ (𝟙-identityʳ μ) T = symᵗʸ (mod-cong μ (ty-subst-id T))
 
 𝟙-identityˡ : (μ : Modality C D) → 𝟙 ⓜ μ ≅ᵐ μ
-eq-lock (𝟙-identityˡ μ) Γ = ≅ᶜ-refl
+eq-lock (𝟙-identityˡ μ) Γ = reflᶜ
 eq (eq-lock-natural-to (𝟙-identityˡ μ) σ) _ = refl
-eq-mod-tyʳ (𝟙-identityˡ μ) T = ≅ᵗʸ-sym (mod-cong μ (ty-subst-id T))
+eq-mod-tyʳ (𝟙-identityˡ μ) T = symᵗʸ (mod-cong μ (ty-subst-id T))
 
 ⓜ-assoc : {C₁ C₂ C₃ C₄ : BaseCategory}
            (μ₃₄ : Modality C₃ C₄) (μ₂₃ : Modality C₂ C₃) (μ₁₂ : Modality C₁ C₂) →
            (μ₃₄ ⓜ μ₂₃) ⓜ μ₁₂ ≅ᵐ μ₃₄ ⓜ (μ₂₃ ⓜ μ₁₂)
-eq-lock (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) Γ = ≅ᶜ-refl
+eq-lock (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) Γ = reflᶜ
 eq (eq-lock-natural-to (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) σ) _ = refl
-eq-mod-tyʳ (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) T = ≅ᵗʸ-sym (mod-cong μ₃₄ (mod-cong μ₂₃ (mod-cong μ₁₂ (ty-subst-id T))))
+eq-mod-tyʳ (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) T = symᵗʸ (mod-cong μ₃₄ (mod-cong μ₂₃ (mod-cong μ₁₂ (ty-subst-id T))))
 
 ⓜ-congˡ : (ρ : Modality D E) {μ μ' : Modality C D} → μ ≅ᵐ μ' → ρ ⓜ μ ≅ᵐ ρ ⓜ μ'
 eq-lock (ⓜ-congˡ ρ μ=μ') Γ = eq-lock μ=μ' (Γ ,lock⟨ ρ ⟩)
@@ -378,13 +378,13 @@ module ≅ᵐ-Reasoning where
   _ ≅⟨⟩ μ=ρ = μ=ρ
 
   step-≅ : ∀ (μ {ρ κ} : Modality C D) → ρ ≅ᵐ κ → μ ≅ᵐ ρ → μ ≅ᵐ κ
-  step-≅ _ ρ≅κ μ≅ρ = ≅ᵐ-trans μ≅ρ ρ≅κ
+  step-≅ _ ρ≅κ μ≅ρ = transᵐ μ≅ρ ρ≅κ
 
   step-≅˘ : ∀ (μ {ρ κ} : Modality C D) → ρ ≅ᵐ κ → ρ ≅ᵐ μ → μ ≅ᵐ κ
-  step-≅˘ _ ρ≅κ ρ≅μ = ≅ᵐ-trans (≅ᵐ-sym ρ≅μ) ρ≅κ
+  step-≅˘ _ ρ≅κ ρ≅μ = transᵐ (symᵐ ρ≅μ) ρ≅κ
 
   _∎ : ∀ (μ : Modality C D) → μ ≅ᵐ μ
-  _∎ _ = ≅ᵐ-refl
+  _∎ _ = reflᵐ
 
   syntax step-≅  μ ρ≅κ μ≅ρ = μ ≅⟨  μ≅ρ ⟩ ρ≅κ
   syntax step-≅˘ μ ρ≅κ ρ≅μ = μ ≅˘⟨ ρ≅μ ⟩ ρ≅κ

@@ -141,14 +141,14 @@ record _≅ⁿ_ {Γ : Ctx C} {T : Ty Γ} {S : Ty Γ} (η φ : T ↣ S) : Set whe
     eq : ∀ {x γ} (t : T ⟨ x , γ ⟩) → func η t ≡ func φ t
 open _≅ⁿ_ public
 
-≅ⁿ-refl : {η : T ↣ S} → η ≅ⁿ η
-eq ≅ⁿ-refl _ = refl
+reflⁿ : {η : T ↣ S} → η ≅ⁿ η
+eq reflⁿ _ = refl
 
-≅ⁿ-sym : {η φ : T ↣ S} → η ≅ⁿ φ → φ ≅ⁿ η
-eq (≅ⁿ-sym η=φ) t = sym (eq η=φ t)
+symⁿ : {η φ : T ↣ S} → η ≅ⁿ φ → φ ≅ⁿ η
+eq (symⁿ η=φ) t = sym (eq η=φ t)
 
-≅ⁿ-trans : {η φ µ : T ↣ S} → η ≅ⁿ φ → φ ≅ⁿ µ → η ≅ⁿ µ
-eq (≅ⁿ-trans η=φ φ=µ) t = trans (eq η=φ t) (eq φ=µ t)
+transⁿ : {η φ µ : T ↣ S} → η ≅ⁿ φ → φ ≅ⁿ µ → η ≅ⁿ µ
+eq (transⁿ η=φ φ=µ) t = trans (eq η=φ t) (eq φ=µ t)
 
 module ≅ⁿ-Reasoning where
   infix  3 _∎
@@ -162,13 +162,13 @@ module ≅ⁿ-Reasoning where
   _ ≅⟨⟩ η=φ = η=φ
 
   step-≅ : ∀ (η {φ µ} : T ↣ S) → φ ≅ⁿ µ → η ≅ⁿ φ → η ≅ⁿ µ
-  step-≅ _ φ≅µ η≅φ = ≅ⁿ-trans η≅φ φ≅µ
+  step-≅ _ φ≅µ η≅φ = transⁿ η≅φ φ≅µ
 
   step-≅˘ : ∀ (η {φ µ} : T ↣ S) → φ ≅ⁿ µ → φ ≅ⁿ η → η ≅ⁿ µ
-  step-≅˘ _ φ≅µ φ≅η = ≅ⁿ-trans (≅ⁿ-sym φ≅η) φ≅µ
+  step-≅˘ _ φ≅µ φ≅η = transⁿ (symⁿ φ≅η) φ≅µ
 
   _∎ : ∀ (η : T ↣ S) → η ≅ⁿ η
-  _∎ _ = ≅ⁿ-refl
+  _∎ _ = reflⁿ
 
   syntax step-≅  η φ≅µ η≅φ = η ≅⟨  η≅φ ⟩ φ≅µ
   syntax step-≅˘ η φ≅µ φ≅η = η ≅˘⟨ φ≅η ⟩ φ≅µ
@@ -221,22 +221,22 @@ record _≅ᵗʸ_ {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) : Set where
     isoʳ : from ⊙ to ≅ⁿ id-trans S
 open _≅ᵗʸ_ public
 
-≅ᵗʸ-refl : T ≅ᵗʸ T
-from (≅ᵗʸ-refl {T = T}) = id-trans T
-to (≅ᵗʸ-refl {T = T}) = id-trans T
-eq (isoˡ ≅ᵗʸ-refl) _ = refl
-eq (isoʳ ≅ᵗʸ-refl) _ = refl
+reflᵗʸ : T ≅ᵗʸ T
+from (reflᵗʸ {T = T}) = id-trans T
+to (reflᵗʸ {T = T}) = id-trans T
+eq (isoˡ reflᵗʸ) _ = refl
+eq (isoʳ reflᵗʸ) _ = refl
 
-≅ᵗʸ-sym : S ≅ᵗʸ T → T ≅ᵗʸ S
-from (≅ᵗʸ-sym S=T) = to S=T
-to (≅ᵗʸ-sym S=T) = from S=T
-isoˡ (≅ᵗʸ-sym S=T) = isoʳ S=T
-isoʳ (≅ᵗʸ-sym S=T) = isoˡ S=T
+symᵗʸ : S ≅ᵗʸ T → T ≅ᵗʸ S
+from (symᵗʸ S=T) = to S=T
+to (symᵗʸ S=T) = from S=T
+isoˡ (symᵗʸ S=T) = isoʳ S=T
+isoʳ (symᵗʸ S=T) = isoˡ S=T
 
-≅ᵗʸ-trans : S ≅ᵗʸ T → T ≅ᵗʸ R → S ≅ᵗʸ R
-from (≅ᵗʸ-trans S=T T=R) = from T=R ⊙ from S=T
-to (≅ᵗʸ-trans S=T T=R) = to S=T ⊙ to T=R
-isoˡ (≅ᵗʸ-trans S=T T=R) =
+transᵗʸ : S ≅ᵗʸ T → T ≅ᵗʸ R → S ≅ᵗʸ R
+from (transᵗʸ S=T T=R) = from T=R ⊙ from S=T
+to (transᵗʸ S=T T=R) = to S=T ⊙ to T=R
+isoˡ (transᵗʸ S=T T=R) =
   begin
     (to S=T ⊙ to T=R) ⊙ (from T=R ⊙ from S=T)
   ≅⟨ ⊙-assoc (to S=T) (to T=R) _ ⟩
@@ -250,7 +250,7 @@ isoˡ (≅ᵗʸ-trans S=T T=R) =
   ≅⟨ isoˡ S=T ⟩
     id-trans _ ∎
   where open ≅ⁿ-Reasoning
-isoʳ (≅ᵗʸ-trans S=T T=R) =
+isoʳ (transᵗʸ S=T T=R) =
   begin
     (from T=R ⊙ from S=T) ⊙ (to S=T ⊙ to T=R)
   ≅⟨ ⊙-assoc (from T=R) (from S=T) _ ⟩
@@ -277,13 +277,13 @@ module ≅ᵗʸ-Reasoning where
   _ ≅⟨⟩ T=S = T=S
 
   step-≅ : (T : Ty Γ) → S ≅ᵗʸ R → T ≅ᵗʸ S → T ≅ᵗʸ R
-  step-≅ _ S≅R T≅S = ≅ᵗʸ-trans T≅S S≅R
+  step-≅ _ S≅R T≅S = transᵗʸ T≅S S≅R
 
   step-≅˘ : (T : Ty Γ) → S ≅ᵗʸ R → S ≅ᵗʸ T → T ≅ᵗʸ R
-  step-≅˘ _ S≅R S≅T = ≅ᵗʸ-trans (≅ᵗʸ-sym S≅T) S≅R
+  step-≅˘ _ S≅R S≅T = transᵗʸ (symᵗʸ S≅T) S≅R
 
   _∎ : (T : Ty Γ) → T ≅ᵗʸ T
-  _∎ _ = ≅ᵗʸ-refl
+  _∎ _ = reflᵗʸ
 
   syntax step-≅  T S≅R T≅S = T ≅⟨  T≅S ⟩ S≅R
   syntax step-≅˘ T S≅R S≅T = T ≅˘⟨ S≅T ⟩ S≅R

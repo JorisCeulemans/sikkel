@@ -35,9 +35,9 @@ frm-subst-sound : (φ : Formula Γ) (σ : SubstExpr Δ Γ) → ⟦ φ ⟧frm M.[
 frm-subst-sound ⊤ᶠ σ = M.Const-natural _ _
 frm-subst-sound ⊥ᶠ σ = M.Const-natural _ _
 frm-subst-sound (t1 ≡ᶠ t2) σ =
-  M.≅ᵗʸ-trans (M.Id-natural _) (M.Id-cong (closed-ty-natural _ _) (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t1 σ))
-                                                                  (M.move-ι⁻¹-right (M.≅ᵗʸ-sym (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))
-frm-subst-sound (φ ⊃ ψ) σ = M.≅ᵗʸ-trans (M.⇛-natural _) (M.⇛-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
-frm-subst-sound (φ ∧ ψ) σ = M.≅ᵗʸ-trans (M.⊠-natural _) (M.⊠-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
-frm-subst-sound (∀[ x ∈ T ] φ) σ = M.≅ᵗʸ-trans (sPi-natural _) (sPi-cong₂ (frm-subst-sound φ (σ ⊹⟨ x ⟩)))
+  M.transᵗʸ (M.Id-natural _) (M.Id-cong (closed-ty-natural _ _) (M.move-ι⁻¹-right (M.symᵗʸ (closed-ty-natural _ _)) (tm-subst-sound t1 σ))
+                                                                  (M.move-ι⁻¹-right (M.symᵗʸ (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))
+frm-subst-sound (φ ⊃ ψ) σ = M.transᵗʸ (M.⇛-natural _) (M.⇛-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
+frm-subst-sound (φ ∧ ψ) σ = M.transᵗʸ (M.⊠-natural _) (M.⊠-cong (frm-subst-sound φ σ) (frm-subst-sound ψ σ))
+frm-subst-sound (∀[ x ∈ T ] φ) σ = M.transᵗʸ (sPi-natural _) (sPi-cong₂ (frm-subst-sound φ (σ ⊹⟨ x ⟩)))
 -}

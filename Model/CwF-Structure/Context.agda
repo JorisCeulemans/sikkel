@@ -94,14 +94,14 @@ module _ {C : BaseCategory} where
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
   open _≅ˢ_ public
 
-  ≅ˢ-refl : {σ : Δ ⇒ Γ} → σ ≅ˢ σ
-  eq ≅ˢ-refl _ = refl
+  reflˢ : {σ : Δ ⇒ Γ} → σ ≅ˢ σ
+  eq reflˢ _ = refl
 
-  ≅ˢ-sym : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ σ
-  eq (≅ˢ-sym σ=τ) δ = sym (eq σ=τ δ)
+  symˢ : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ σ
+  eq (symˢ σ=τ) δ = sym (eq σ=τ δ)
 
-  ≅ˢ-trans : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
-  eq (≅ˢ-trans σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
+  transˢ : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
+  eq (transˢ σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
   module ≅ˢ-Reasoning where
     infix  3 _∎
@@ -115,13 +115,13 @@ module _ {C : BaseCategory} where
     _ ≅⟨⟩ σ=τ = σ=τ
 
     step-≅ : ∀ (σ {τ ψ} : Δ ⇒ Γ) → τ ≅ˢ ψ → σ ≅ˢ τ → σ ≅ˢ ψ
-    step-≅ _ τ≅ψ σ≅τ = ≅ˢ-trans σ≅τ τ≅ψ
+    step-≅ _ τ≅ψ σ≅τ = transˢ σ≅τ τ≅ψ
 
     step-≅˘ : ∀ (σ {τ ψ} : Δ ⇒ Γ) → τ ≅ˢ ψ → τ ≅ˢ σ → σ ≅ˢ ψ
-    step-≅˘ _ τ≅ψ τ≅σ = ≅ˢ-trans (≅ˢ-sym τ≅σ) τ≅ψ
+    step-≅˘ _ τ≅ψ τ≅σ = transˢ (symˢ τ≅σ) τ≅ψ
 
     _∎ : ∀ (σ : Δ ⇒ Γ) → σ ≅ˢ σ
-    _∎ _ = ≅ˢ-refl
+    _∎ _ = reflˢ
 
     syntax step-≅  σ τ≅ψ σ≅τ = σ ≅⟨  σ≅τ ⟩ τ≅ψ
     syntax step-≅˘ σ τ≅ψ τ≅σ = σ ≅˘⟨ τ≅σ ⟩ τ≅ψ

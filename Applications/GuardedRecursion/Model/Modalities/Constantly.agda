@@ -136,7 +136,7 @@ eq (isoʳ (constantly-ty-natural σ {T})) t =
 
 instance
   constantly-closed : {A : ClosedTy ★} {{_ : IsClosedNatural A}} → IsClosedNatural (constantly-ty A)
-  closed-natural {{constantly-closed}} σ = ≅ᵗʸ-trans (constantly-ty-natural σ) (constantly-ty-cong (closed-natural (now-subst σ)))
+  closed-natural {{constantly-closed}} σ = transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (closed-natural (now-subst σ)))
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
   constantly-tm-natural : (t : Tm (now Γ) T) →

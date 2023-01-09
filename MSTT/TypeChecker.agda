@@ -70,7 +70,7 @@ apply-lock-seq Γ (locks ,, μ) = (apply-lock-seq Γ locks) ,lock⟨ μ ⟩
 
 apply-compose-lock-seq : (Γ : CtxExpr m') (locks : LockSeq m m') →
                          ⟦ apply-lock-seq Γ locks ⟧ctx ≅ᶜ ⟦ Γ ,lock⟨ compose-lock-seq locks ⟩ ⟧ctx
-apply-compose-lock-seq Γ [] = ≅ᶜ-sym (eq-lock 𝟙-interpretation ⟦ Γ ⟧ctx)
+apply-compose-lock-seq Γ [] = symᶜ (eq-lock 𝟙-interpretation ⟦ Γ ⟧ctx)
 apply-compose-lock-seq Γ (locks ,, μ) = begin
   lock ⟦ μ ⟧modality ⟦ apply-lock-seq Γ locks ⟧ctx
     ≅⟨ ctx-functor-cong (ctx-functor ⟦ μ ⟧modality) (apply-compose-lock-seq Γ locks) ⟩
@@ -106,7 +106,7 @@ infer-interpret-var {m = m} x α Γ = do
   prune-ctx-result n Γ' n' μ T locks σ ← prune-ctx-until-var x Γ
   refl ← m ≟mode n'
   ⟦α⟧ ← ⟦ α ∈ μ ⇒ compose-lock-seq locks ⟧two-cell
-  return (T , ι⁻¹[ ≅ᵗʸ-trans (ty-subst-seq-cong (_ ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty ≅ˢ-refl) (closed-natural {{⟦⟧ty-natural T}} _) ] (
+  return (T , ι⁻¹[ transᵗʸ (ty-subst-seq-cong (_ ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty reflˢ) (closed-natural {{⟦⟧ty-natural T}} _) ] (
               (ιc[ apply-compose-lock-seq (Γ' , μ ∣ x ∈ T) locks ]' (
                 Modality.mod-elim ⟦ μ ⟧modality
                 (ι⁻¹[ closed-natural {{⟦⟧ty-natural ⟨ μ ∣ T ⟩}} _ ] ξ) [ transf-op (transf ⟦α⟧) ⟦ Γ' , μ ∣ x ∈ T ⟧ctx ]'))
@@ -127,7 +127,7 @@ infer-interpret (ann t ∈ T) Γ = do
 infer-interpret (var x α) Γ = infer-interpret-var x α Γ
 infer-interpret (lam[ x ∈ T ] b) Γ = do
   S , ⟦b⟧ ← infer-interpret b (Γ , 𝟙 ∣ x ∈ T)
-  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-mod-closed 𝟙-interpretation ⟦ T ⟧ty {{⟦⟧ty-natural T}}) ≅ᵗʸ-refl ]
+  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-mod-closed 𝟙-interpretation ⟦ T ⟧ty {{⟦⟧ty-natural T}}) reflᵗʸ ]
                   M.lam ⟦ ⟨ 𝟙 ∣ T ⟩ ⟧ty (ι[ closed-natural {{⟦⟧ty-natural S}} π ] ⟦b⟧))
 infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ

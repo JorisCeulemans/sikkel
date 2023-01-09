@@ -41,7 +41,7 @@ interpret-par-code-natural : (c : ParTyCode margs m) → TyConstructorNatural (i
 interpret-par-code-natural (FromRel-code c) = fromrel-natural
 
 interpret-par-code-cong : (c : ParTyCode margs m) → TyConstructorCong (interpret-par-code c)
-interpret-par-code-cong (FromRel-code c) = ≅ᵗʸ-refl
+interpret-par-code-cong (FromRel-code c) = reflᵗʸ
 
 par-ty-ext : TyExt
 TyExt.TyExtCode par-ty-ext = ParTyCode

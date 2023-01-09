@@ -66,7 +66,7 @@ private variable
   let m = _
       ⟦t⟧ = ⟦_⟧tm-nmls {m} t
   in
-  sλ[ _ ] (⟦t⟧ M.[ M.to (M.,,ₛ-cong (M.≅ᵗʸ-trans (seq-mod _ (⟦𝟙⟧-sound {m})) M.s⟨𝟙∣-⟩)) ]s)
+  sλ[ _ ] (⟦t⟧ M.[ M.to (M.,,ₛ-cong (M.transᵗʸ (seq-mod _ (⟦𝟙⟧-sound {m})) M.s⟨𝟙∣-⟩)) ]s)
 ⟦ f ∙ t ⟧tm-nmls = ⟦ f ⟧tm-nmls ∙ₛ ⟦ t ⟧tm-nmls
 ⟦ zero ⟧tm-nmls = szero
 ⟦ suc ⟧tm-nmls = ssuc

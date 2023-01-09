@@ -74,8 +74,8 @@ import Experimental.ClosedTypes as M
 ⟦ cong' f d ⟧der = M.cong' _ ⟦ d ⟧der
 ⟦ fun-cong d t ⟧der =
   M.fun-cong' (M.ι⁻¹[ M.Id-cong (M.⇛-natural _)
-                                (M.≅ᵗᵐ-sym (M.ι-symʳ (M.⇛-natural _) _))
-                                (M.≅ᵗᵐ-sym (M.ι-symʳ (M.⇛-natural _) _))
+                                (M.symᵗᵐ (M.ι-symʳ (M.⇛-natural _) _))
+                                (M.symᵗᵐ (M.ι-symʳ (M.⇛-natural _) _))
                     ] ⟦ d ⟧der)
               ⟦ t ⟧tm
 ⟦ ∧-intro dφ dψ ⟧der = M.prim-pair ⟦ dφ ⟧der ⟦ dψ ⟧der

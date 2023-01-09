@@ -55,4 +55,4 @@ sym' = J (Id [ exchange ⊚ π ]) (ι[ proof2 ] (ξ [ refl' ]'))
     eq proof _ = refl
 
     proof2 : (Id [ exchange ⊚ π ]) [ refl' ] ≅ᵗʸ (Id [ π ]) [ refl' ]
-    proof2 = ≅ᵗʸ-trans (ty-subst-comp Id (exchange ⊚ π) refl') (≅ᵗʸ-trans (ty-subst-cong-subst proof Id) (≅ᵗʸ-sym (ty-subst-comp Id π refl')))
+    proof2 = transᵗʸ (ty-subst-comp Id (exchange ⊚ π) refl') (transᵗʸ (ty-subst-cong-subst proof Id) (symᵗʸ (ty-subst-comp Id π refl')))

@@ -4,7 +4,7 @@
 
 module Applications.GuardedRecursion.MSTT.ModeTheory where
 
-open import Model.Modality using (≅ᵐ-refl)
+open import Model.Modality using (reflᵐ)
 
 open import MSTT.Parameter.ModeTheory
 
@@ -24,8 +24,8 @@ ModeTheory.𝟙 GR-mode-theory = 𝟙
 ModeTheory._ⓜ_ GR-mode-theory = _ⓜ_
 ModeTheory.show-modality GR-mode-theory = show-modality
 ModeTheory.⟦_⟧modality GR-mode-theory = ⟦_⟧modality
-ModeTheory.𝟙-interpretation GR-mode-theory = ≅ᵐ-refl
-ModeTheory.ⓜ-interpretation GR-mode-theory = λ _ _ → ≅ᵐ-refl
+ModeTheory.𝟙-interpretation GR-mode-theory = reflᵐ
+ModeTheory.ⓜ-interpretation GR-mode-theory = λ _ _ → reflᵐ
 ModeTheory._≃ᵐ?_ GR-mode-theory = _≃ᵐ?_
 ModeTheory.TwoCellExpr GR-mode-theory = TwoCellExpr
 ModeTheory.id-cell GR-mode-theory = id-cell
