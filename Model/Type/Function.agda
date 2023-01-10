@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 --------------------------------------------------
 -- (Non-dependent) function types
 --------------------------------------------------
@@ -381,5 +379,10 @@ instance
           (cong (func (from (closed-natural {{clB}} (σ ⊚ τ))))
             (trans ($-cong f refl)
                    (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-⊚ {{clA}} σ τ)) a)))))
-  eq (from-eq (closed-subst-eq {{ fun-closed {A = A} {{clA}} {{clB}} }} {σ = σ} {τ} ε)) f = to-pshfun-eq (λ ρ eγ a →
-    {!trans (cong (func (from (closed-natural {{clB}} τ)) ∘ f $⟨ hom-id ∙ ρ , _ ⟩_) (trans (sym (strong-ty-id A)) {!eq (to-eq (closed-subst-eq {{clA}} ε)) a!})) {!!}!})
+  eq (from-eq (closed-subst-eq {{ fun-closed {A = A} {B = B} {{clA}} {{clB}} }} {Δ = Δ} {σ = σ} {τ} ε)) f = to-pshfun-eq (λ ρ eγ a →
+    trans (cong (func (from (closed-natural {{clB}} τ))) (sym (trans (ty-cong-2-1 B hom-idˡ {eg = trans (ctx-id Δ) (sym (eq ε _))}) (ty-id B))))
+          (trans (eq (from-eq (closed-subst-eq {{clB}} ε)) _)
+                 (cong (func (from (closed-natural {{clB}} σ)))
+                       (trans (sym (naturality f))
+                              (trans ($-cong f (trans hom-idʳ hom-idˡ))
+                                     (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-subst-eq {{clA}} ε)) a)))))))
