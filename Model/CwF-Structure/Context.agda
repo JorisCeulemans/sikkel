@@ -90,6 +90,7 @@ module _ {C : BaseCategory} where
   -- Two substitutions σ, τ : Δ ⇒ Γ are equivalent if they map every value of
   -- Δ ⟨ x ⟩ (for any object x) to propositionally equal values of Γ ⟨ x ⟩.
   record _≅ˢ_ {Δ : Ctx C} {Γ : Ctx C} (σ τ : Δ ⇒ Γ) : Set where
+    no-eta-equality
     field
       eq : ∀ {x} δ → func σ {x} δ ≡ func τ δ
   open _≅ˢ_ public

@@ -252,6 +252,22 @@ eq (isoʳ (▻-cong T=T')) {suc n} = eq (isoʳ T=T')
 ▻'-cong : {T : Ty Γ} {T' : Ty Γ} → T ≅ᵗʸ T' → ▻' T ≅ᵗʸ ▻' T'
 ▻'-cong {Γ = Γ} T=T' = ▻-cong (ty-subst-cong-ty (from-earlier Γ) T=T')
 
+▻-cong-refl : {T : Ty (◄ Γ)} → ▻-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
+eq (from-eq ▻-cong-refl) {zero}  _ = refl
+eq (from-eq ▻-cong-refl) {suc n} _ = refl
+
+▻-cong-sym : {T S : Ty (◄ Γ)} (e : T ≅ᵗʸ S) → ▻-cong (symᵗʸ e) ≅ᵉ symᵗʸ (▻-cong e)
+eq (from-eq (▻-cong-sym _)) {zero}  _ = refl
+eq (from-eq (▻-cong-sym _)) {suc n} _ = refl
+
+▻-cong-trans : {R S T : Ty (◄ Γ)} (e1 : R ≅ᵗʸ S) (e2 : S ≅ᵗʸ T) → ▻-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (▻-cong e1) (▻-cong e2)
+eq (from-eq (▻-cong-trans _ _)) {zero}  _ = refl
+eq (from-eq (▻-cong-trans _ _)) {suc n} _ = refl
+
+▻-cong-cong : {T S : Ty (◄ Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → ▻-cong e ≅ᵉ ▻-cong e'
+eq (from-eq (▻-cong-cong 𝑒)) {zero}  _ = refl
+eq (from-eq (▻-cong-cong 𝑒)) {suc n} t = eq (from-eq 𝑒) t
+
 next-cong : {T : Ty (◄ Γ)} {t t' : Tm (◄ Γ) T} → t ≅ᵗᵐ t' → next t ≅ᵗᵐ next t'
 eq (next-cong t=t') {zero} _ = refl
 eq (next-cong t=t') {suc n} = eq t=t'
@@ -314,6 +330,36 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty (◄ Γ)} where
   prev-natural : (t : Tm Γ (▻ T)) → (prev t) [ ◄-subst σ ]' ≅ᵗᵐ prev (ι⁻¹[ ▻-natural ] (t [ σ ]'))
   eq (prev-natural t) _ = refl
 
+later-natural-ty-eq : (σ : Γ ⇒ Δ) {T S : Ty (◄ Δ)} (e : T ≅ᵗʸ S) →
+                      transᵗʸ (▻-natural σ) (▻-cong (ty-subst-cong-ty (◄-subst σ) e))
+                        ≅ᵉ
+                      transᵗʸ (ty-subst-cong-ty σ (▻-cong e)) (▻-natural σ)
+eq (from-eq (later-natural-ty-eq σ e)) {zero}  _ = refl
+eq (from-eq (later-natural-ty-eq σ e)) {suc n} _ = refl
+
+later-natural-id : {T : Ty (◄ Γ)} →
+                   transᵗʸ (▻-natural (id-subst Γ)) (▻-cong (transᵗʸ (ty-subst-cong-subst ◄-subst-id T) (ty-subst-id T))) ≅ᵉ ty-subst-id (▻ T)
+eq (from-eq later-natural-id)           {zero}  _ = refl
+eq (from-eq (later-natural-id {T = T})) {suc n} _ = strong-ty-id T
+
+later-natural-⊚ : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (◄ Θ)} →
+                  transᵗʸ (ty-subst-cong-ty σ (▻-natural τ))
+                          (transᵗʸ (▻-natural σ)
+                                   (▻-cong (ty-subst-comp T (◄-subst τ) (◄-subst σ))))
+                    ≅ᵉ
+                  transᵗʸ (ty-subst-comp (▻ T) τ σ)
+                          (transᵗʸ (▻-natural (τ ⊚ σ))
+                                   (▻-cong (ty-subst-cong-subst (◄-subst-⊚ τ σ) T)))
+eq (from-eq (later-natural-⊚ τ σ))     {zero}  _ = refl
+eq (from-eq (later-natural-⊚ τ σ {T})) {suc n} _ = sym (strong-ty-id T)
+
+later-natural-subst-eq : {σ τ : Γ ⇒ Δ} {T : Ty (◄ Δ)} (ε : σ ≅ˢ τ) →
+                         transᵗʸ (ty-subst-cong-subst ε (▻ T)) (▻-natural τ)
+                           ≅ᵉ
+                         transᵗʸ (▻-natural σ) (▻-cong (ty-subst-cong-subst (◄-subst-cong ε) T))
+eq (from-eq (later-natural-subst-eq _)) {zero}  _ = refl
+eq (from-eq (later-natural-subst-eq _)) {suc n} _ = refl
+
 module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
   ▻'-natural : (▻' T) [ σ ] ≅ᵗʸ ▻' (T [ σ ])
   ▻'-natural =
@@ -344,12 +390,14 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
       g : Tm Δ (▻' (T [ σ ]) ⇛ (T [ σ ]))
       g = ι⁻¹[ ⇛-cong ▻'-natural reflᵗʸ ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
+{-
 instance
   ▻'-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻' A)
   closed-natural {{▻'-closed}} σ = transᵗʸ (▻'-natural σ) (▻'-cong (closed-natural σ))
 
   ▻-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻ A)
   closed-natural {{▻-closed}} σ = transᵗʸ (▻-natural σ) (▻-cong (closed-natural (◄-subst σ)))
+-}
 
 -- ▻' is an applicative functor as well (but this requires ▻-cong).
 module _ {T : Ty Γ} {S : Ty Γ} where

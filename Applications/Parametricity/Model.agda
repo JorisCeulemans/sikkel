@@ -20,6 +20,8 @@ open import Model.Modality
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
 open import Extraction
 
+open BaseCategory ⋀
+
 private
   variable
     Γ : Ctx ⋀
@@ -210,7 +212,15 @@ forget-right : Modality ⋀ ★
 ctx-functor forget-right = just-left-functor
 ⟨_∣_⟩ forget-right = forget-right-ty
 mod-cong forget-right = forget-right-ty-cong
+eq (from-eq (mod-cong-refl forget-right)) _ = refl
+eq (from-eq (mod-cong-sym forget-right _)) _ = refl
+eq (from-eq (mod-cong-trans forget-right _ _)) _ = refl
+eq (from-eq (mod-cong-cong forget-right 𝑒)) t = eq (from-eq 𝑒) t
 mod-natural forget-right = forget-right-ty-natural
+eq (from-eq (mod-natural-ty-eq forget-right _ _)) _ = refl
+eq (from-eq (mod-natural-id forget-right {T = T})) _ = ty-id T
+eq (from-eq (mod-natural-⊚ forget-right _ _ {T = T})) _ = sym (ty-id T)
+eq (from-eq (mod-natural-subst-eq forget-right {T = T} _)) _ = ty-cong T refl
 mod-intro forget-right = forget-right-tm
 mod-intro-cong forget-right = forget-right-tm-cong
 mod-intro-natural forget-right = forget-right-tm-natural
@@ -329,7 +339,15 @@ forget-left : Modality ⋀ ★
 ctx-functor forget-left = just-right-functor
 ⟨_∣_⟩ forget-left = forget-left-ty
 mod-cong forget-left = forget-left-ty-cong
+eq (from-eq (mod-cong-refl forget-left)) _ = refl
+eq (from-eq (mod-cong-sym forget-left _)) _ = refl
+eq (from-eq (mod-cong-trans forget-left _ _)) _ = refl
+eq (from-eq (mod-cong-cong forget-left 𝑒)) t = eq (from-eq 𝑒) t
 mod-natural forget-left = forget-left-ty-natural
+eq (from-eq (mod-natural-ty-eq forget-left _ _)) _ = refl
+eq (from-eq (mod-natural-id forget-left {T = T})) _ = ty-id T
+eq (from-eq (mod-natural-⊚ forget-left _ _ {T = T})) _ = sym (ty-id T)
+eq (from-eq (mod-natural-subst-eq forget-left {T = T} _)) _ = ty-cong T refl
 mod-intro forget-left = forget-left-tm
 mod-intro-cong forget-left = forget-left-tm-cong
 mod-intro-natural forget-left = forget-left-tm-natural

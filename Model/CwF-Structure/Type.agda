@@ -54,6 +54,7 @@ open Ty public renaming (ty-cell to infix 15 _⟨_,_⟩; ty-hom to infixr 11 _�
 private
   variable
     T S R : Ty Γ
+    T1 T2 T3 T4 : Ty Γ
 
 strong-ty-id : (T : Ty Γ) {γ : Γ ⟨ x ⟩} {eγ : Γ ⟪ hom-id ⟫ γ ≡ γ} {t : T ⟨ x , γ ⟩} →
                T ⟪ hom-id , eγ ⟫ t ≡ t
@@ -323,6 +324,33 @@ from-eq (symᵉ ε) = symⁿ (from-eq ε)
 transᵉ : {e1 e2 e3 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → e2 ≅ᵉ e3 → e1 ≅ᵉ e3
 from-eq (transᵉ ε ε') = transⁿ (from-eq ε) (from-eq ε')
 
+-- symᵗʸ and transᵗʸ respect equality of natural isomorphisms.
+symᵗʸ-cong : {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → symᵗʸ e ≅ᵉ symᵗʸ e'
+from-eq (symᵗʸ-cong 𝑒) = to-eq 𝑒
+
+transᵗʸ-congˡ : {e1 e1' : T ≅ᵗʸ S} {e2 : S ≅ᵗʸ R} → e1 ≅ᵉ e1' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1' e2
+from-eq (transᵗʸ-congˡ 𝑒) = ⊙-congˡ _ (from-eq 𝑒)
+
+transᵗʸ-congʳ : {e1 : T ≅ᵗʸ S} {e2 e2' : S ≅ᵗʸ R} → e2 ≅ᵉ e2' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1 e2'
+from-eq (transᵗʸ-congʳ 𝑒) = ⊙-congʳ _ (from-eq 𝑒)
+
+-- Groupoid laws for the groupoid Ty Γ
+transᵗʸ-assoc : {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} {e'' : T3 ≅ᵗʸ T4} →
+                transᵗʸ (transᵗʸ e e') e'' ≅ᵉ transᵗʸ e (transᵗʸ e' e'')
+from-eq transᵗʸ-assoc = symⁿ (⊙-assoc _ _ _)
+
+reflᵗʸ-unitˡ : {e : T ≅ᵗʸ S} → transᵗʸ reflᵗʸ e ≅ᵉ e
+from-eq reflᵗʸ-unitˡ = ⊙-id-transʳ _
+
+reflᵗʸ-unitʳ : {e : T ≅ᵗʸ S} → transᵗʸ e reflᵗʸ ≅ᵉ e
+from-eq reflᵗʸ-unitʳ = ⊙-id-transˡ _
+
+symᵗʸ-invˡ : {e : T ≅ᵗʸ S} → transᵗʸ (symᵗʸ e) e ≅ᵉ reflᵗʸ
+from-eq (symᵗʸ-invˡ {e = e}) = isoʳ e
+
+symᵗʸ-invʳ : {e : T ≅ᵗʸ S} → transᵗʸ e (symᵗʸ e) ≅ᵉ reflᵗʸ
+from-eq (symᵗʸ-invʳ {e = e}) = isoˡ e
+
 
 --------------------------------------------------
 -- Substitution of types
@@ -397,6 +425,35 @@ eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
   ≡⟨ ty-id T ⟩
     t ∎
   where open ≡-Reasoning
+
+-- Substitution by σ : Γ ⇒ Δ constitutes a groupoid morphism from Ty Δ to Ty Γ.
+ty-subst-cong-ty-cong : {T S : Ty Δ} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → (σ : Γ ⇒ Δ) →
+                        ty-subst-cong-ty σ e ≅ᵉ ty-subst-cong-ty σ e'
+from-eq (ty-subst-cong-ty-cong 𝑒 σ) = ty-subst-map-cong (from-eq 𝑒)
+
+ty-subst-cong-ty-refl : {σ : Γ ⇒ Δ} {T : Ty Δ} → ty-subst-cong-ty σ (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
+from-eq ty-subst-cong-ty-refl = ty-subst-map-id _
+
+ty-subst-cong-ty-sym : {σ : Γ ⇒ Δ} {e : T ≅ᵗʸ S} → ty-subst-cong-ty σ (symᵗʸ e) ≅ᵉ symᵗʸ (ty-subst-cong-ty σ e)
+from-eq ty-subst-cong-ty-sym = reflⁿ
+
+ty-subst-cong-ty-trans : {σ : Γ ⇒ Δ} {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} →
+                         ty-subst-cong-ty σ (transᵗʸ e e') ≅ᵉ transᵗʸ (ty-subst-cong-ty σ e) (ty-subst-cong-ty σ e')
+from-eq ty-subst-cong-ty-trans = ty-subst-map-comp _ _ _
+
+ty-subst-cong-natural : {σ τ : Γ ⇒ Δ} (ε : σ ≅ˢ τ) (e : T ≅ᵗʸ S) →
+                        transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-ty τ e) ≅ᵉ transᵗʸ (ty-subst-cong-ty σ e) (ty-subst-cong-subst ε S)
+eq (from-eq (ty-subst-cong-natural ε e)) _ = sym (naturality (from e))
+
+ty-subst-cong-subst-refl : {σ : Γ ⇒ Δ} → ty-subst-cong-subst (reflˢ {σ = σ}) T ≅ᵉ reflᵗʸ
+eq (from-eq (ty-subst-cong-subst-refl {T = T})) _ = strong-ty-id T
+
+ty-subst-cong-subst-sym : {σ τ : Γ ⇒ Δ} {ε : σ ≅ˢ τ} → ty-subst-cong-subst (symˢ ε) T ≅ᵉ symᵗʸ (ty-subst-cong-subst ε T)
+eq (from-eq ty-subst-cong-subst-sym) _ = refl
+
+ty-subst-cong-subst-trans : {σ1 σ2 σ3 : Γ ⇒ Δ} {ε : σ1 ≅ˢ σ2} {ε' : σ2 ≅ˢ σ3} →
+                      ty-subst-cong-subst (transˢ ε ε') T ≅ᵉ transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-subst ε' T)
+eq (from-eq (ty-subst-cong-subst-trans {T = T})) _ = sym (ty-cong-2-1 T hom-idʳ)
 
 -- Nicer syntax for substitutions coming from context equality
 ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ → Ty Γ

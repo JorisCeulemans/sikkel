@@ -96,6 +96,18 @@ _↣_.naturality (to (constantly-ty-cong T=S)) = _↣_.naturality (to T=S)
 eq (isoˡ (constantly-ty-cong T=S)) = eq (isoˡ T=S)
 eq (isoʳ (constantly-ty-cong T=S)) = eq (isoʳ T=S)
 
+constantly-ty-cong-refl : {T : Ty (now Γ)} → constantly-ty-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
+eq (from-eq constantly-ty-cong-refl) _ = refl
+
+constantly-ty-cong-sym : {T S : Ty (now Γ)} (e : T ≅ᵗʸ S) → constantly-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (constantly-ty-cong e)
+eq (from-eq (constantly-ty-cong-sym _)) _ = refl
+
+constantly-ty-cong-trans : {R S T : Ty (now Γ)} (e1 : R ≅ᵗʸ S) (e2 : S ≅ᵗʸ T) → constantly-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (constantly-ty-cong e1) (constantly-ty-cong e2)
+eq (from-eq (constantly-ty-cong-trans _ _)) _ = refl
+
+constantly-ty-cong-cong : {T S : Ty (now Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → constantly-ty-cong e ≅ᵉ constantly-ty-cong e'
+eq (from-eq (constantly-ty-cong-cong 𝑒)) t = eq (from-eq 𝑒) t
+
 module _ {T : Ty (now Γ)} where
   constantly-tm-cong : {t s : Tm (now Γ) T} → t ≅ᵗᵐ s → constantly-tm t ≅ᵗᵐ constantly-tm s
   eq (constantly-tm-cong t=s) γ = eq t=s (Γ ⟪ z≤n ⟫ γ)
@@ -134,9 +146,39 @@ eq (isoʳ (constantly-ty-natural σ {T})) t =
     t ∎
   where open ≡-Reasoning
 
+constantly-ty-natural-ty-eq : (σ : Γ ⇒ Δ) {T S : Ty (now Δ)} (e : T ≅ᵗʸ S) →
+  transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (ty-subst-cong-ty (now-subst σ) e))
+    ≅ᵉ
+  transᵗʸ (ty-subst-cong-ty σ (constantly-ty-cong e)) (constantly-ty-natural σ)
+eq (from-eq (constantly-ty-natural-ty-eq σ e)) _ = sym (_↣_.naturality (from e))
+
+constantly-ty-natural-id : {T : Ty (now Γ)} →
+  transᵗʸ (constantly-ty-natural (id-subst Γ)) (constantly-ty-cong (transᵗʸ (ty-subst-cong-subst now-subst-id T) (ty-subst-id T)))
+    ≅ᵉ
+  ty-subst-id (constantly-ty T)
+eq (from-eq (constantly-ty-natural-id {T = T})) _ = trans (ty-id T) (ty-id T)
+
+constantly-ty-natural-⊚ : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (now Θ)} →
+  transᵗʸ (ty-subst-cong-ty σ (constantly-ty-natural τ))
+          (transᵗʸ (constantly-ty-natural σ)
+                   (constantly-ty-cong (ty-subst-comp T (now-subst τ) (now-subst σ))))
+    ≅ᵉ
+  transᵗʸ (ty-subst-comp (constantly-ty T) τ σ)
+          (transᵗʸ (constantly-ty-natural (τ ⊚ σ))
+                   (constantly-ty-cong (ty-subst-cong-subst (now-subst-⊚ τ σ) T)))
+eq (from-eq (constantly-ty-natural-⊚ τ σ {T})) _ = ty-cong-2-2 T refl
+
+constantly-ty-natural-subst-eq : {σ τ : Γ ⇒ Δ} {T : Ty (now Δ)} (ε : σ ≅ˢ τ) →
+  transᵗʸ (ty-subst-cong-subst ε (constantly-ty T)) (constantly-ty-natural τ)
+    ≅ᵉ
+  transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (ty-subst-cong-subst (now-subst-cong ε) T))
+eq (from-eq (constantly-ty-natural-subst-eq {T = T} _)) _ = ty-cong-2-2 T refl
+
+{-
 instance
   constantly-closed : {A : ClosedTy ★} {{_ : IsClosedNatural A}} → IsClosedNatural (constantly-ty A)
   closed-natural {{constantly-closed}} σ = transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (closed-natural (now-subst σ)))
+-}
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
   constantly-tm-natural : (t : Tm (now Γ) T) →

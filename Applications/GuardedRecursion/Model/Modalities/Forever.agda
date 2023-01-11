@@ -102,6 +102,18 @@ _↣_.naturality (to (forever-ty-cong T=S)) = to-ω-limit-eq (λ n → _↣_.nat
 eq (isoˡ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoˡ T=S) _)
 eq (isoʳ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoʳ T=S) _)
 
+forever-ty-cong-refl : {T : Ty (constantly-ctx Γ)} → forever-ty-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
+eq (from-eq forever-ty-cong-refl) _ = to-ω-limit-eq (λ _ → refl)
+
+forever-ty-cong-sym : {T S : Ty (constantly-ctx Γ)} (e : T ≅ᵗʸ S) → forever-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (forever-ty-cong e)
+eq (from-eq (forever-ty-cong-sym _)) _ = refl
+
+forever-ty-cong-trans : {R S T : Ty (constantly-ctx Γ)} (e1 : R ≅ᵗʸ S) (e2 : S ≅ᵗʸ T) → forever-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (forever-ty-cong e1) (forever-ty-cong e2)
+eq (from-eq (forever-ty-cong-trans _ _)) _ = to-ω-limit-eq (λ _ → refl)
+
+forever-ty-cong-cong : {T S : Ty (constantly-ctx Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → forever-ty-cong e ≅ᵉ forever-ty-cong e'
+eq (from-eq (forever-ty-cong-cong 𝑒)) t = to-ω-limit-eq (λ n → eq (from-eq 𝑒) (limit t n))
+
 module _ {T : Ty (constantly-ctx Γ)} where
   forever-tm-cong : {t s : Tm (constantly-ctx Γ) T} → t ≅ᵗᵐ s → forever-tm t ≅ᵗᵐ forever-tm s
   eq (forever-tm-cong t=s) γ = to-ω-limit-eq (λ n → eq t=s γ)
@@ -126,9 +138,42 @@ _↣_.naturality (to (forever-ty-natural σ {T})) = to-ω-limit-eq (λ _ → ty-
 eq (isoˡ (forever-ty-natural σ {T})) _ = to-ω-limit-eq (λ _ → refl)
 eq (isoʳ (forever-ty-natural σ {T})) _ = to-ω-limit-eq (λ _ → refl)
 
+forever-ty-natural-ty-eq : (σ : Γ ⇒ Δ) {T S : Ty (constantly-ctx Δ)} (e : T ≅ᵗʸ S) →
+  transᵗʸ (forever-ty-natural σ) (forever-ty-cong (ty-subst-cong-ty (constantly-subst σ) e))
+    ≅ᵉ
+  transᵗʸ (ty-subst-cong-ty σ (forever-ty-cong e)) (forever-ty-natural σ)
+eq (from-eq (forever-ty-natural-ty-eq σ e)) _ = to-ω-limit-eq (λ _ → refl)
+
+forever-ty-natural-id : {T : Ty (constantly-ctx Γ)} →
+  transᵗʸ (forever-ty-natural (id-subst Γ)) (forever-ty-cong (transᵗʸ (ty-subst-cong-subst constantly-subst-id T) (ty-subst-id T)))
+    ≅ᵉ
+  ty-subst-id (forever-ty T)
+eq (from-eq (forever-ty-natural-id {T = T})) _ = to-ω-limit-eq (λ _ → ty-id T)
+
+forever-ty-natural-⊚ : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (constantly-ctx Θ)} →
+  transᵗʸ (ty-subst-cong-ty σ (forever-ty-natural τ))
+          (transᵗʸ (forever-ty-natural σ)
+                   (forever-ty-cong (ty-subst-comp T (constantly-subst τ) (constantly-subst σ))))
+    ≅ᵉ
+  transᵗʸ (ty-subst-comp (forever-ty T) τ σ)
+          (transᵗʸ (forever-ty-natural (τ ⊚ σ))
+                   (forever-ty-cong (ty-subst-cong-subst (constantly-subst-⊚ τ σ) T)))
+eq (from-eq (forever-ty-natural-⊚ τ σ {T})) _ = to-ω-limit-eq (λ _ → sym (ty-id T))
+
+forever-ty-natural-subst-eq : {σ τ : Γ ⇒ Δ} {T : Ty (constantly-ctx Δ)} (ε : σ ≅ˢ τ) →
+  transᵗʸ (ty-subst-cong-subst ε (forever-ty T)) (forever-ty-natural τ)
+    ≅ᵉ
+  transᵗʸ (forever-ty-natural σ) (forever-ty-cong (ty-subst-cong-subst (constantly-subst-cong ε) T))
+eq (from-eq (forever-ty-natural-subst-eq {T = T} _)) _ = to-ω-limit-eq (λ _ → ty-cong T refl)
+
+{-
 instance
   forever-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (forever-ty A)
   closed-natural {{forever-closed}} σ = transᵗʸ (forever-ty-natural σ) (forever-ty-cong (closed-natural (constantly-subst σ)))
+  closed-id {{forever-closed}} = {!!}
+  closed-⊚ {{forever-closed}} σ τ = {!!}
+  closed-subst-eq {{forever-closed}} ε = {!!}
+-}
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (constantly-ctx Γ)} where
   forever-tm-natural : (t : Tm (constantly-ctx Γ) T) →
