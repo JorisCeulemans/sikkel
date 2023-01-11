@@ -56,6 +56,12 @@ FromRel A B R {Γ = Γ} = PrimFromRel A B R [ !◇ Γ ]
 instance
   fromrel-natural : {A B : Set} {R : REL A B 0ℓ} → IsClosedNatural (FromRel A B R)
   closed-natural {{fromrel-natural}} σ = ty-subst-seq-cong (!◇ _ ∷ σ ◼) (!◇ _ ◼) (PrimFromRel _ _ _) (◇-terminal _ _ _)
+  eq (from-eq (closed-id {{fromrel-natural {A} {B} {R}}})) {x = x} _ =
+    ty-id (PrimFromRel A B R) {x = x}
+  eq (from-eq (closed-⊚ {{fromrel-natural {A} {B} {R}}} σ τ)) {x = x} t =
+    ty-cong-2-1 {x = x} (PrimFromRel A B R) {f = hom-id} {g = hom-id} hom-idʳ
+  eq (from-eq (closed-subst-eq {{fromrel-natural {A} {B} {R}}} ε)) {x = x} t =
+    ty-cong-2-1 {x = x} (PrimFromRel A B R) {f = hom-id} {g = hom-id} hom-idʳ
 
 from-rel : {A B : Set} {R : REL A B 0ℓ} (a : A) (b : B) → R a b → Tm Γ (FromRel A B R)
 from-rel a b r ⟨ left  , _ ⟩' = a
