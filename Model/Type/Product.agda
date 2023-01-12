@@ -127,10 +127,9 @@ module _ (t : Tm Γ T) (s : Tm Γ S) where
 eq (η-⊠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
                                                 (trans (ty-cong-2-1 S hom-idʳ) (ty-id S)))
 
-instance
-  prod-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
-                IsClosedNatural (A ⊠ B)
-  closed-natural {{prod-closed}} σ = transᵗʸ (⊠-natural σ) (⊠-cong (closed-natural σ) (closed-natural σ))
-  eq (from-eq (closed-id {{ prod-closed }})) [ a , b ] = cong₂ [_,_] (eq (from-eq closed-id) a) (eq (from-eq closed-id) b)
-  eq (from-eq (closed-⊚ {{ prod-closed }} σ τ)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-⊚ σ τ)) a) (eq (from-eq (closed-⊚ σ τ)) b)
-  eq (from-eq (closed-subst-eq {{ prod-closed }} ε)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-subst-eq ε)) a) (eq (from-eq (closed-subst-eq ε)) b)
+prod-closed : {A B : ClosedTy C} → IsClosedNatural A → IsClosedNatural B →
+              IsClosedNatural (A ⊠ B)
+closed-natural (prod-closed clA clB) σ = transᵗʸ (⊠-natural σ) (⊠-cong (closed-natural clA σ) (closed-natural clB σ))
+eq (from-eq (closed-id (prod-closed clA clB))) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-id clA)) a) (eq (from-eq (closed-id clB)) b)
+eq (from-eq (closed-⊚ (prod-closed clA clB) σ τ)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-⊚ clA σ τ)) a) (eq (from-eq (closed-⊚ clB σ τ)) b)
+eq (from-eq (closed-subst-eq (prod-closed clA clB) ε)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-subst-eq clA ε)) a) (eq (from-eq (closed-subst-eq clB ε)) b)

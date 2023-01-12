@@ -128,24 +128,24 @@ open Modality public
 _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 Γ ,lock⟨ μ ⟩ = lock μ Γ
 
-mod-closed : {μ : Modality C D} {T : ClosedTy C} {{_ : IsClosedNatural T}} → IsClosedNatural ⟨ μ ∣ T ⟩
-IsClosedNatural.closed-natural (mod-closed {μ = μ} {T = T}) σ =
-  transᵗʸ (mod-natural μ σ) (mod-cong μ (closed-natural {U = T} (ctx-fmap (ctx-functor μ) σ)))
-IsClosedNatural.closed-id (mod-closed {μ = μ} {T = T}) =
-  transᵉ (transᵗʸ-congʳ (mod-cong-cong μ (transᵉ (symᵉ (closed-subst-eq {U = T} (lock-fmap-id μ)))
-                                                 (transᵗʸ-congʳ (closed-id {U = T})))))
+mod-closed : {μ : Modality C D} {T : ClosedTy C} → IsClosedNatural T → IsClosedNatural ⟨ μ ∣ T ⟩
+IsClosedNatural.closed-natural (mod-closed {μ = μ} clT) σ =
+  transᵗʸ (mod-natural μ σ) (mod-cong μ (closed-natural clT (ctx-fmap (ctx-functor μ) σ)))
+IsClosedNatural.closed-id (mod-closed {μ = μ} clT) =
+  transᵉ (transᵗʸ-congʳ (mod-cong-cong μ (transᵉ (symᵉ (closed-subst-eq clT (lock-fmap-id μ)))
+                                                 (transᵗʸ-congʳ (closed-id clT)))))
          (mod-natural-id μ)
-IsClosedNatural.closed-⊚ (mod-closed {μ = μ} {T = T}) τ σ  =
+IsClosedNatural.closed-⊚ (mod-closed {μ = μ} clT) τ σ  =
   transᵉ (transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-trans) (transᵉ transᵗʸ-assoc (transᵉ (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc)) (transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ (mod-natural-ty-eq μ σ _)))) (transᵉ (transᵗʸ-congʳ transᵗʸ-assoc) (symᵉ transᵗʸ-assoc))))))
-         (transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ _ _)) (transᵉ (mod-cong-cong μ (closed-⊚ {U = T} _ _)) (mod-cong-trans μ _ _))))
+         (transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ _ _)) (transᵉ (mod-cong-cong μ (closed-⊚ clT _ _)) (mod-cong-trans μ _ _))))
                  (transᵉ (transᵉ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ transᵗʸ-assoc)) (transᵗʸ-congˡ (mod-natural-⊚ μ τ σ)))
-                         (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ transᵗʸ-assoc)) (transᵗʸ-congʳ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ _ _)) (mod-cong-cong μ (closed-subst-eq {U = T} (lock-fmap-⊚ μ τ σ)))))))))
-IsClosedNatural.closed-subst-eq (mod-closed {μ = μ} {T = T}) ε =
+                         (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ transᵗʸ-assoc)) (transᵗʸ-congʳ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ _ _)) (mod-cong-cong μ (closed-subst-eq clT (lock-fmap-⊚ μ τ σ)))))))))
+IsClosedNatural.closed-subst-eq (mod-closed {μ = μ} clT) ε =
   transᵉ (symᵉ transᵗʸ-assoc)
          (transᵉ (transᵗʸ-congˡ (mod-natural-subst-eq μ ε))
                  (transᵉ transᵗʸ-assoc
                          (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ _ _))
-                                                (mod-cong-cong μ (closed-subst-eq {U = T} (lock-fmap-cong μ ε)))))))
+                                                (mod-cong-cong μ (closed-subst-eq clT (lock-fmap-cong μ ε)))))))
 
 
 --------------------------------------------------
@@ -364,12 +364,12 @@ record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
     ⟨ ρ ∣ T ⟩ ∎
     where open ≅ᵗʸ-Reasoning
 
-  eq-mod-closed : (A : ClosedTy C) {{_ : IsClosedNatural A}} {Γ : Ctx D} → ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
-  eq-mod-closed A = begin
+  eq-mod-closed : {A : ClosedTy C} → IsClosedNatural A → {Γ : Ctx D} → ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
+  eq-mod-closed {A = A} clA = begin
     ⟨ μ ∣ A ⟩
       ≅⟨ eq-mod-tyʳ A ⟩
     ⟨ ρ ∣ A [ to (eq-lock _) ] ⟩
-      ≅⟨ mod-cong ρ (closed-natural {U = A} (to (eq-lock _))) ⟩
+      ≅⟨ mod-cong ρ (closed-natural clA (to (eq-lock _))) ⟩
     ⟨ ρ ∣ A ⟩ ∎
     where open ≅ᵗʸ-Reasoning
 
@@ -498,8 +498,8 @@ module _ {μ ρ : Modality C D} (α : TwoCell μ ρ) where
   coe : {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ coe-ty T ⟩
   coe t = mod-intro ρ ((mod-elim μ t) [ transf-op (transf α) _ ]')
 
-  coe-closed : {T : ClosedTy C} {{_ : IsClosedNatural T}} {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
-  coe-closed {T = T} t = ι⁻¹[ mod-cong ρ (closed-natural {U = T} (transf-op (transf α) _)) ] coe t
+  coe-closed : {T : ClosedTy C} → IsClosedNatural T → {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
+  coe-closed {T = T} clT t = ι⁻¹[ mod-cong ρ (closed-natural clT (transf-op (transf α) _)) ] coe t
 
 
 -- The identity 2-cell.

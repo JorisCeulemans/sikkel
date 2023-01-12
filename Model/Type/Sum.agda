@@ -121,13 +121,12 @@ eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
 eq (η-⊞ t) γ | inj₁ a = refl
 eq (η-⊞ t) γ | inj₂ b = refl
 
-instance
-  sum-closed : {A B : ClosedTy C} {{_ : IsClosedNatural A}} {{_ : IsClosedNatural B}} →
-               IsClosedNatural (A ⊞ B)
-  closed-natural {{sum-closed}} σ = transᵗʸ (⊞-natural σ) (⊞-cong (closed-natural σ) (closed-natural σ))
-  eq (from-eq (closed-id {{ sum-closed {{clA}} {{clB}} }})) (inj₁ a) = cong inj₁ (eq (from-eq (closed-id {{clA}})) a)
-  eq (from-eq (closed-id {{ sum-closed {{clA}} {{clB}} }})) (inj₂ b) = cong inj₂ (eq (from-eq (closed-id {{clB}})) b)
-  eq (from-eq (closed-⊚ {{ sum-closed {{clA}} {{clB}} }} σ τ)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-⊚ {{clA}} σ τ)) a)
-  eq (from-eq (closed-⊚ {{ sum-closed {{clA}} {{clB}} }} σ τ)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-⊚ {{clB}} σ τ)) b)
-  eq (from-eq (closed-subst-eq {{ sum-closed {{clA}} {{clB}} }} ε)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-subst-eq {{clA}} ε)) a)
-  eq (from-eq (closed-subst-eq {{ sum-closed {{clA}} {{clB}} }} ε)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-subst-eq {{clB}} ε)) b)
+sum-closed : {A B : ClosedTy C} → IsClosedNatural A → IsClosedNatural B →
+             IsClosedNatural (A ⊞ B)
+closed-natural (sum-closed clA clB) σ = transᵗʸ (⊞-natural σ) (⊞-cong (closed-natural clA σ) (closed-natural clB σ))
+eq (from-eq (closed-id (sum-closed clA clB))) (inj₁ a) = cong inj₁ (eq (from-eq (closed-id clA)) a)
+eq (from-eq (closed-id (sum-closed clA clB))) (inj₂ b) = cong inj₂ (eq (from-eq (closed-id clB)) b)
+eq (from-eq (closed-⊚ (sum-closed clA clB) σ τ)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-⊚ clA σ τ)) a)
+eq (from-eq (closed-⊚ (sum-closed clA clB) σ τ)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-⊚ clB σ τ)) b)
+eq (from-eq (closed-subst-eq (sum-closed clA clB) ε)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-subst-eq clA ε)) a)
+eq (from-eq (closed-subst-eq (sum-closed clA clB) ε)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-subst-eq clB ε)) b)

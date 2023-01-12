@@ -45,11 +45,11 @@ data ParTmCode : List ModeExpr → ModeExpr → Set where
 infer-interpret-par-code : ParTmCode margs m → InferInterpretExt margs m
 infer-interpret-par-code (from-rel-code c a b r) = λ Γ → return (FromRel c , M.from-rel a b r)
 infer-interpret-par-code (from-rel1-code c1 c2 f g r) = λ Γ →
-  return (FromRel c1 ⇛ FromRel c2 , M.lam _ (ι[ closed-natural {{⟦⟧ty-natural (FromRel c2)}} π ] M.from-rel1 f g r))
+  return (FromRel c1 ⇛ FromRel c2 , M.lam _ (ι[ closed-natural (⟦⟧ty-natural (FromRel c2)) π ] M.from-rel1 f g r))
 infer-interpret-par-code (from-rel2-code c1 c2 c3 f g r) = λ Γ → return
   (FromRel c1 ⇛ FromRel c2 ⇛ FromRel c3
-  , M.lam _ (ι[ closed-natural {{⟦⟧ty-natural (FromRel c2 ⇛ FromRel c3)}} π ]
-      M.lam _ (ι[ closed-natural {{⟦⟧ty-natural (FromRel c3)}} π ]
+  , M.lam _ (ι[ closed-natural (⟦⟧ty-natural (FromRel c2 ⇛ FromRel c3)) π ]
+      M.lam _ (ι[ closed-natural (⟦⟧ty-natural (FromRel c3)) π ]
         M.from-rel2 f g r)))
 
 

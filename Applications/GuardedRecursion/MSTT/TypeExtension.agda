@@ -32,7 +32,7 @@ interpret-gr-code : GRTyCode margs m → TyConstructor margs m
 interpret-gr-code GStream-code = λ A → M.GStream A
 
 interpret-gr-code-natural : (c : GRTyCode margs m) → TyConstructorNatural (interpret-gr-code c)
-interpret-gr-code-natural GStream-code = λ A-natural → gstream-closed {{A-natural}}
+interpret-gr-code-natural GStream-code = gstream-closed
 
 interpret-gr-code-cong : (c : GRTyCode margs m) → TyConstructorCong (interpret-gr-code c)
 interpret-gr-code-cong GStream-code = λ A=B → gstream-cong A=B

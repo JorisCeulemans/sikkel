@@ -60,30 +60,29 @@ vecs-to-stream : ∀ {ℓ} {A : Set ℓ} → (∀ n → Vec A (suc n)) → Strea
 head (vecs-to-stream f) = Vec.head (f 0)
 tail (vecs-to-stream f) = vecs-to-stream (λ n → Vec.tail (f (suc n)))
 
-instance
-  extract-stream : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {{_ : Extractable A}} → Extractable (Stream' A)
-  translated-type {{extract-stream {A = A}}} = Stream (translate-type A)
-  extract-term {{extract-stream {A = A}}} s = vecs-to-stream (λ n → Vec.map (extract-term {A} ∘ to-◇A-term) (unforever-tm s ⟨ n , tt ⟩'))
-    where
-      to-★-nowtmlss◇-term : A {now (constantly-ctx ◇)} ⟨ tt , tt ⟩ → Tm (now (constantly-ctx ◇)) A
-      to-★-nowtmlss◇-term a ⟨ tt , tt ⟩' = a
-      Tm.naturality (to-★-nowtmlss◇-term a) tt refl = ty-id A
+extract-stream : {A : ClosedTy ★} → IsClosedNatural A → Extractable A → Extractable (Stream' A)
+translated-type (extract-stream clA exA) = Stream (translated-type exA)
+extract-term (extract-stream {A} clA exA) s = vecs-to-stream (λ n → Vec.map (extract-term exA ∘ to-◇A-term) (unforever-tm s ⟨ n , tt ⟩'))
+  where
+    to-★-nowtmlss◇-term : A {now (constantly-ctx ◇)} ⟨ tt , tt ⟩ → Tm (now (constantly-ctx ◇)) A
+    to-★-nowtmlss◇-term a ⟨ tt , tt ⟩' = a
+    Tm.naturality (to-★-nowtmlss◇-term a) tt refl = ty-id A
 
-      to-◇A-term : A {now (constantly-ctx ◇)} ⟨ tt , tt ⟩ → Tm ◇ A
-      to-◇A-term = ι⁻¹[ closed-natural {U = A} _ ]_ ∘ _[ to (now-constantly-ctx ◇) ]' ∘ to-★-nowtmlss◇-term
-  embed-term {{extract-stream {A = A}}} s = forever-tm (MkTm (λ n _ → Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩')
-                                                                              (take (suc n) s))
-                                                             (λ { m≤n refl → nat (s≤s m≤n) s }))
-    where
-      open ≡-Reasoning
-      nat : ∀ {m n} (m≤n : m ≤ n) (s' : Stream (translate-type A)) →
-        Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩') (take n s')))
-          ≡ Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩') (take m s')
-      nat {m}{n} m≤n s' = begin
-          Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩') (take n s')))
-        ≡⟨ trans (map-cong (λ _ → ty-id A) _) (map-id _) ⟩
-          first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩') (take n s'))
-        ≡˘⟨ map-first-≤ ⟩
-          Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
-        ≡⟨ cong (Vec.map _) (take-first m≤n s') ⟩
-          Vec.map (λ a → now-constantly-ctx-intro {A = A} (embed-term a) ⟨ tt , tt ⟩') (take m s') ∎
+    to-◇A-term : A {now (constantly-ctx ◇)} ⟨ tt , tt ⟩ → Tm ◇ A
+    to-◇A-term = ι⁻¹[ closed-natural clA _ ]_ ∘ _[ to (now-constantly-ctx ◇) ]' ∘ to-★-nowtmlss◇-term
+embed-term (extract-stream {A = A} clA exA) s = forever-tm (MkTm (λ n _ → Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩')
+                                                                            (take (suc n) s))
+                                                           (λ { m≤n refl → nat (s≤s m≤n) s }))
+  where
+    open ≡-Reasoning
+    nat : ∀ {m n} (m≤n : m ≤ n) (s' : Stream (translated-type exA)) →
+      Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take n s')))
+        ≡ Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take m s')
+    nat {m}{n} m≤n s' = begin
+        Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take n s')))
+      ≡⟨ trans (map-cong (λ _ → ty-id A) _) (map-id _) ⟩
+        first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take n s'))
+      ≡˘⟨ map-first-≤ ⟩
+        Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
+      ≡⟨ cong (Vec.map _) (take-first m≤n s') ⟩
+        Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take m s') ∎

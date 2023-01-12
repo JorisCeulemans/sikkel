@@ -32,7 +32,7 @@ record IsClosedNatural {C} (U : ClosedTy C) : Set₁ where
     closed-subst-eq : {Γ Δ : Ctx C} {σ τ : Γ ⇒ Δ} (ε : σ ≅ˢ τ) →
                       transᵗʸ (ty-subst-cong-subst ε U) (closed-natural τ) ≅ᵉ closed-natural σ
 
-open IsClosedNatural {{...}} public
+open IsClosedNatural public
 
 
 -- A type in the empty context gives rise to a closed type.

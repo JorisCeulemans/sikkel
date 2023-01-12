@@ -156,11 +156,22 @@ subtract★-left = liftA2 forget-right ℤ ℤ ℤ ∙⟨ forget-right ⟩ subtr
 subtract★-right : TmExpr ★
 subtract★-right = liftA2 forget-left ℤ ℤ ℤ ∙⟨ forget-left ⟩ subtract ℤ
 
+-- Ad hoc solution: we manually prove that the (semantic types) of the
+-- above two functions are extractable.  A more principled approach
+-- would be to prove that all the interpretation of every syntactic
+-- type is extractable.
+
+subtract★-left-extractable : Extractable ⟦ ⟨ forget-right ∣ ℤ ⟩ ⇛ ⟨ forget-right ∣ ℤ ⟩ ⇛ ⟨ forget-right ∣ ℤ ⟩ ⟧ty
+subtract★-left-extractable = extract-func M.extract-forget-right-rel (extract-func M.extract-forget-right-rel M.extract-forget-right-rel)
+
+subtract★-right-extractable : Extractable ⟦ ⟨ forget-left ∣ ℤ ⟩ ⇛ ⟨ forget-left ∣ ℤ ⟩ ⇛ ⟨ forget-left ∣ ℤ ⟩ ⟧ty
+subtract★-right-extractable = extract-func M.extract-forget-left-rel (extract-func M.extract-forget-left-rel M.extract-forget-left-rel)
+
 subtract-DiffNat : DiffNat → DiffNat → DiffNat
-subtract-DiffNat = extract-term (⟦ subtract★-left ⟧tm)
+subtract-DiffNat = extract-term subtract★-left-extractable (⟦ subtract★-left ⟧tm)
 
 subtract-SignNat : SignNat → SignNat → SignNat
-subtract-SignNat = extract-term (⟦ subtract★-right ⟧tm)
+subtract-SignNat = extract-term subtract★-right-extractable (⟦ subtract★-right ⟧tm)
 
 subtract-∼ : (_∼_ ⟨→⟩ _∼_ ⟨→⟩ _∼_) subtract-DiffNat subtract-SignNat
 subtract-∼ r1 r2 =

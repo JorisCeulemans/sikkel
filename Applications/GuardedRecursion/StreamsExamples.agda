@@ -369,7 +369,7 @@ nats-sem : Tm ′◇ (′Stream' ′Nat')
 nats-sem = ⟦ nats ⟧tm
 
 nats-agda : Stream ℕ
-nats-agda = extract-term nats-sem
+nats-agda = extract-term (extract-stream const-closed extract-const) nats-sem
 
 nats-test : take 10 nats-agda ≡ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ []
 nats-test = refl
@@ -387,7 +387,7 @@ paperfolds-sem : Tm ′◇ (′Stream' ′Nat')
 paperfolds-sem = ⟦ paperfolds ⟧tm
 
 paperfolds-agda : Stream ℕ
-paperfolds-agda = extract-term paperfolds-sem
+paperfolds-agda = extract-term (extract-stream const-closed extract-const) paperfolds-sem
 
 paperfolds-test : take 10 paperfolds-agda ≡ 1 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ []
 paperfolds-test = refl
@@ -400,7 +400,7 @@ thue-morse-sem : Tm ′◇ (′Stream' ′Bool')
 thue-morse-sem = ⟦ thue-morse ⟧tm
 
 thue-morse-agda : Stream Bool
-thue-morse-agda = extract-term thue-morse-sem
+thue-morse-agda = extract-term (extract-stream const-closed extract-const) thue-morse-sem
 
 thue-morse-test : take 10 thue-morse-agda ≡ false ∷ true ∷ true ∷ false ∷ true ∷ false ∷ false ∷ true ∷ true ∷ false ∷ []
 thue-morse-test = refl
@@ -413,7 +413,7 @@ fibonacci-word-sem : Tm ′◇ (′Stream' ′Bool')
 fibonacci-word-sem = ⟦ fibonacci-word ⟧tm
 
 fibonacci-word-agda : Stream Bool
-fibonacci-word-agda = extract-term fibonacci-word-sem
+fibonacci-word-agda = extract-term (extract-stream const-closed extract-const) fibonacci-word-sem
 
 fibonacci-word-test : take 10 fibonacci-word-agda ≡ false ∷ true ∷ false ∷ false ∷ true ∷ false ∷ true ∷ false ∷ false ∷ true ∷ []
 fibonacci-word-test = refl
@@ -429,7 +429,7 @@ head-nats : TmExpr ★
 head-nats = head' Nat' ∙ nats
 
 head-nats-agda : ℕ
-head-nats-agda = extract-term (⟦ head-nats ⟧tm)
+head-nats-agda = extract-term extract-const (⟦ head-nats ⟧tm)
 
 head-nats-test : head-nats-agda ≡ 0
 head-nats-test = refl
@@ -491,7 +491,7 @@ every2nd A =
 every2ndN-sem : Tm ′◇ (′Stream' ′Nat' ′⇛ ′Stream' ′Nat')
 every2ndN-sem = ⟦ every2nd Nat' ⟧tm
 
-every2nd-test : take 6 (extract-term (every2ndN-sem $ nats-sem))
+every2nd-test : take 6 (extract-term (extract-stream const-closed extract-const) (every2ndN-sem $ nats-sem))
                 ≡ 0 ∷ 2 ∷ 4 ∷ 6 ∷ 8 ∷ 10 ∷ []
 every2nd-test = refl
 
@@ -528,7 +528,7 @@ fibs-sem : Tm ′◇ (′Stream' ′Nat')
 fibs-sem = ⟦ fibs ⟧tm
 
 fibs-agda : Stream ℕ
-fibs-agda = extract-term fibs-sem
+fibs-agda = extract-term (extract-stream const-closed extract-const) fibs-sem
 
 fibs-test : take 10 fibs-agda ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
 fibs-test = refl

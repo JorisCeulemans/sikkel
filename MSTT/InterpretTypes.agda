@@ -54,9 +54,9 @@ interpret-ext-ty-natural : {F : TyConstructor margs m} → TyConstructorNatural 
 
 ⟦⟧ty-natural Nat' = M.const-closed
 ⟦⟧ty-natural Bool' = M.const-closed
-⟦⟧ty-natural (T1 ⇛ T2) = M.fun-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
-⟦⟧ty-natural (T1 ⊠ T2) = M.prod-closed {{⟦⟧ty-natural T1}} {{⟦⟧ty-natural T2}}
-⟦⟧ty-natural ⟨ μ ∣ T ⟩ = M.mod-closed {μ = ⟦ μ ⟧modality} {{⟦⟧ty-natural T}}
+⟦⟧ty-natural (T1 ⇛ T2) = M.fun-closed (⟦⟧ty-natural T1) (⟦⟧ty-natural T2)
+⟦⟧ty-natural (T1 ⊠ T2) = M.prod-closed (⟦⟧ty-natural T1) (⟦⟧ty-natural T2)
+⟦⟧ty-natural ⟨ μ ∣ T ⟩ = M.mod-closed {μ = ⟦ μ ⟧modality} (⟦⟧ty-natural T)
 ⟦⟧ty-natural (Ext code args) = interpret-ext-ty-natural (interpret-code-natural code) args
 
 interpret-ext-ty-natural {[]}        nat args = nat

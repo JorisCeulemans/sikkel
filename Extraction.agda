@@ -30,28 +30,22 @@ record Extractable (T : ClosedTy ★) : Set₁ where
     extract-term : Tm ◇ T → translated-type
     embed-term : translated-type → Tm ◇ T
 
-open Extractable {{...}} public
-
-translate-type : (T : ClosedTy ★) → {{Extractable T}} → Set
-translate-type T = translated-type {T = T}
+open Extractable public
 
 
 --------------------------------------------------
 -- Instances of Extractable for Sikkel's built-in types & type
 -- constructors (constant types, products, sums, functions)
 
-instance
-  extract-const : {A : Set} → Extractable (Const A)
-  translated-type {{extract-const {A = A}}} = A
-  extract-term {{extract-const {A = A}}} t = t ⟨ tt , tt ⟩'
-  embed-term {{extract-const {A = A}}} a = const a
+extract-const : {A : Set} → Extractable (Const A)
+translated-type (extract-const {A = A}) = A
+extract-term (extract-const {A = A}) t = t ⟨ tt , tt ⟩'
+embed-term (extract-const {A = A}) a = const a
 
-  extract-prod : {T : ClosedTy ★} {{_ : Extractable T}}
-                 {S : ClosedTy ★} {{_ : Extractable S}} →
-                 Extractable (T ⊠ S)
-  translated-type {{extract-prod {T = T} {S = S}}} = translate-type T × translate-type S
-  extract-term {{extract-prod {T = T} {S = S}}} p = [ extract-term (fst $ p) , extract-term (snd $ p) ]
-  embed-term {{extract-prod {T = T} {S = S}}} [ t , s ] = pair $ embed-term t $ embed-term s
+extract-prod : {T S : ClosedTy ★} → Extractable T → Extractable S → Extractable (T ⊠ S)
+translated-type (extract-prod exT exS) = translated-type exT × translated-type exS
+extract-term (extract-prod exT exS) p = [ extract-term exT (fst $ p) , extract-term exS (snd $ p) ]
+embed-term (extract-prod exT exS) [ t , s ] = pair $ embed-term exT t $ embed-term exS s
 
 expose-sum-term : {A : Ty {C = ★} ◇} {B : Ty ◇} →
                   Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B
@@ -59,14 +53,11 @@ expose-sum-term {A = A}{B = B} p with p ⟨ tt , tt ⟩'
 ... | inj₁ a = inj₁ (MkTm (λ { tt tt → a }) (λ { tt refl → ty-id A }))
 ... | inj₂ b = inj₂ (MkTm (λ { tt tt → b }) (λ { tt refl → ty-id B }))
 
-instance
-  extract-sum : {T : ClosedTy ★} {{_ : Extractable T}}
-                {S : ClosedTy ★} {{_ : Extractable S}} →
-                Extractable (T ⊞ S)
-  translated-type {{extract-sum {T = T} {S = S}}} = translate-type T ⊎ translate-type S
-  extract-term {{extract-sum {T = T} {S = S}}} p = map extract-term extract-term (expose-sum-term p)
-  embed-term {{extract-sum {T = T} {S = S}}} (inj₁ t) = inl (embed-term t)
-  embed-term {{extract-sum {T = T} {S = S}}} (inj₂ s) = inr (embed-term s)
+extract-sum : {T S : ClosedTy ★} → Extractable T → Extractable S → Extractable (T ⊞ S)
+translated-type (extract-sum exT exS) = translated-type exT ⊎ translated-type exS
+extract-term (extract-sum exT exS) p = map (extract-term exT) (extract-term exS) (expose-sum-term p)
+embed-term (extract-sum exT exS) (inj₁ t) = inl (embed-term exT t)
+embed-term (extract-sum exT exS) (inj₂ s) = inr (embed-term exS s)
 
 -- A term in the empty context in mode ★ is nothing more than an Agda value.
 to-★-◇-term : {T : Ty {C = ★} ◇} → T ⟨ tt , tt ⟩ → Tm ◇ T
@@ -81,10 +72,7 @@ PshFun.naturality (func-★-◇ {T = T}{S = S} f ⟨ _ , _ ⟩') {ρ-xy = _} {e�
   trans (cong (λ x → f (to-★-◇-term x) ⟨ tt , tt ⟩') (ty-id T)) (sym (ty-id S))
 Tm.naturality (func-★-◇ f) _ refl = to-pshfun-eq (λ { _ refl _ → refl })
 
-instance
-  extract-func : {T : ClosedTy ★} {{_ : Extractable T}}
-                 {S : ClosedTy ★} {{_ : Extractable S}} →
-                 Extractable (T ⇛ S)
-  translated-type {{extract-func {T = T} {S = S}}} = translate-type T → translate-type S
-  extract-term {{extract-func {T = T} {S = S}}} f t = extract-term (app f (embed-term t))
-  embed-term {{extract-func {T = T} {S = S}}} f = func-★-◇ (embed-term ∘ f ∘ extract-term)
+extract-func : {T S : ClosedTy ★} → Extractable T → Extractable S → Extractable (T ⇛ S)
+translated-type (extract-func exT exS) = translated-type exT → translated-type exS
+extract-term (extract-func exT exS) f t = extract-term exS (app f (embed-term exT t))
+embed-term (extract-func exT exS) f = func-★-◇ (embed-term exS ∘ f ∘ extract-term exT)

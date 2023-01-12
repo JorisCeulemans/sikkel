@@ -89,9 +89,9 @@ eq-lock forever-constantly = now-constantly-ctx
 eq (eq-lock-natural-to forever-constantly σ) δ = refl
 eq-mod-tyʳ forever-constantly = forever-constantly-tyʳ
 
-now-constantly-ctx-intro : {A : ClosedTy ★} {{_ : IsClosedNatural A}} {Γ : Ctx ★} →
+now-constantly-ctx-intro : {A : ClosedTy ★} → IsClosedNatural A → {Γ : Ctx ★} →
                            Tm Γ A → Tm (now (constantly-ctx Γ)) A
-now-constantly-ctx-intro {A} t = unconstantly-tm (unforever-tm (ι[ eq-mod-closed forever-constantly A ] t))
+now-constantly-ctx-intro clA t = unconstantly-tm (unforever-tm (ι[ eq-mod-closed forever-constantly clA ] t))
 
 to-constantly-now-ctx : (Γ : Ctx ω) → (Γ ⇒ constantly-ctx (now Γ))
 func (to-constantly-now-ctx Γ) = Γ ⟪ z≤n ⟫_
