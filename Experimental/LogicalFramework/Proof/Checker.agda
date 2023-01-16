@@ -181,7 +181,7 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]frm)
   ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ)
                                   ps
-                                  (φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} (Ag.subst (TwoCell μ) (Ag.sym mod-unitˡ) id-cell) / x ]frm)
+                                  (φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} id-cell / x ]frm)
   return ⟅ goals1 ++ goals2 , sgoals ↦ {!!} ⟆
   -- {!return (goals1 ++ goals2)!}
 check-proof Ξ (fun-cong {T = T} p t) φ = do

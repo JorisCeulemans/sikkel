@@ -28,26 +28,28 @@ modality-msg : ErrorMsg
 modality-msg = "Modalities are not equal."
 
 _=mod?_ : (μ κ : Modality m n) → PCM (μ Ag.≡ κ)
-𝟙★ =mod? 𝟙★ = return refl
-forever =mod? forever = return refl
-later^[ k ]ⓜconstantly =mod? later^[ l ]ⓜconstantly = do
+𝟙 =mod? 𝟙 = return refl
+non-triv nt-forever =mod? non-triv nt-forever = return refl
+non-triv later^[ k ]ⓜconstantly =mod? non-triv later^[ l ]ⓜconstantly = do
   refl ← from-dec modality-msg (k Nat.≟ l)
   return refl
-later^[ k ] =mod? later^[ l ] = do
+non-triv later^[1+ k ] =mod? non-triv later^[1+ l ] = do
   refl ← from-dec modality-msg (k Nat.≟ l)
   return refl
-later^[ k ]ⓜconstantlyⓜforever =mod? later^[ l ]ⓜconstantlyⓜforever = do
+non-triv later^[ k ]ⓜconstantlyⓜforever =mod? non-triv later^[ l ]ⓜconstantlyⓜforever = do
   refl ← from-dec modality-msg (k Nat.≟ l)
   return refl
 _ =mod? _ = throw-error modality-msg
 
 _=c?_ : (α β : TwoCell μ κ) → PCM (α Ag.≡ β)
-id𝟙★ =c? id𝟙★ = return refl
+id𝟙 =c? id𝟙 = return refl
 ltrⓜcst ineq1 =c? ltrⓜcst ineq2 = return (Ag.cong ltrⓜcst (≤-irrelevant ineq1 ineq2))
 id-frv =c? id-frv = return refl
 ltr ineq1 =c? ltr ineq2 = return (Ag.cong ltr (≤-irrelevant ineq1 ineq2))
+𝟙≤ltr =c? 𝟙≤ltr = return refl
 ltrⓜcstⓜfrv ineq1 =c? ltrⓜcstⓜfrv ineq2 = return (Ag.cong ltrⓜcstⓜfrv (≤-irrelevant ineq1 ineq2))
-cstⓜfrv≤𝟙 ineq1 =c? cstⓜfrv≤𝟙 ineq2 = return (Ag.cong cstⓜfrv≤𝟙 (≤-irrelevant ineq1 ineq2))
+cstⓜfrv≤𝟙 =c? cstⓜfrv≤𝟙 = return refl
+cstⓜfrv≤ltr ineq1 =c? cstⓜfrv≤ltr ineq2 = return (Ag.cong cstⓜfrv≤ltr (≤-irrelevant ineq1 ineq2))
 
 show-ty : Ty m → String
 show-ty Nat' = "ℕ"

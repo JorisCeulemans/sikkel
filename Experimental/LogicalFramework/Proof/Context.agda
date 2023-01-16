@@ -59,10 +59,10 @@ data Assumption (x : String) (μ : Modality n o) : Modality m o → ProofCtx m �
 
 lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
                      TwoCell μ (κ ⓜ ρ) → Formula ((to-ctx Ξ) ,lock⟨ ρ ⟩)
-lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - _) (Ag.sym mod-unitˡ) α) ]frm
+lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) α ]frm
 lookup-assumption' (asuc a) ρ α = lookup-assumption' a ρ α
 lookup-assumption' (skip-var a) ρ α = (lookup-assumption' a ρ α) [ π ,slock⟨ ρ ⟩ ]frm
-lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unfuselocks-frm (lookup-assumption' a (ρ' ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α))
+lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unfuselocks-frm (lookup-assumption' a (ρ' ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc κ) α))
 
 lookup-assumption : Assumption x μ κ Ξ → TwoCell μ κ → Formula (to-ctx Ξ)
 lookup-assumption a α = unlock𝟙-frm (lookup-assumption' a 𝟙 (Ag.subst (TwoCell _) (Ag.sym mod-unitʳ) α))

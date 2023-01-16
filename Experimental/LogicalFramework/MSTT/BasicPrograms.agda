@@ -15,7 +15,7 @@ private variable
 
 -- Every 2-cell gives rise to a coercion function
 coe[_]_ : TwoCell μ ρ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
-coe[_]_ {μ = μ} {ρ = ρ} α t = let' mod⟨ μ ⟩ "dummy" ← t in' (mod⟨ ρ ⟩ var "dummy" (subst (TwoCell μ) (sym mod-unitˡ) α))
+coe[_]_ {μ = μ} {ρ = ρ} α t = let' mod⟨ μ ⟩ "dummy" ← t in' (mod⟨ ρ ⟩ var "dummy" α)
 
 -- Operations witnessing functoriality of modalities (up to isomorphism)
 triv : Tm Γ T → Tm Γ ⟨ 𝟙 ∣ T ⟩
@@ -27,13 +27,13 @@ triv⁻¹ t = let' mod⟨ 𝟙 ⟩ "dummy" ← t in' svar "dummy"
 comp : Tm Γ ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩ → Tm Γ ⟨ μ ⓜ ρ ∣ T ⟩
 comp {μ = μ} {ρ = ρ} t =
   let' mod⟨ μ ⟩ "dummy x" ← t in'
-  let⟨ μ ⟩ mod⟨ ρ ⟩ "dummy y" ← var "dummy x" (subst (TwoCell μ) (sym mod-unitˡ) id-cell) in'
-  (mod⟨ μ ⓜ ρ ⟩ var "dummy y" (subst (TwoCell _) (sym mod-unitˡ) id-cell))
+  let⟨ μ ⟩ mod⟨ ρ ⟩ "dummy y" ← svar "dummy x" in'
+  (mod⟨ μ ⓜ ρ ⟩ svar "dummy y")
 
 comp⁻¹ : Tm Γ ⟨ μ ⓜ ρ ∣ T ⟩ → Tm Γ ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩
 comp⁻¹ {μ = μ} {ρ = ρ} t =
   let' mod⟨ μ ⓜ ρ ⟩ "dummy" ← t in'
-  (mod⟨ μ ⟩ (mod⟨ ρ ⟩ var "dummy" (subst (TwoCell _) (cong (_ⓜ ρ) (sym mod-unitˡ)) id-cell)))
+  (mod⟨ μ ⟩ (mod⟨ ρ ⟩ svar "dummy"))
 
 -- Applicative operator for modalities (every modality satisfies the K axiom).
 infixl 50 _⊛_
@@ -41,7 +41,7 @@ _⊛_ : Tm Γ ⟨ μ ∣ T ⇛ S ⟩ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ μ
 _⊛_ {μ = μ} f t =
   let' mod⟨ μ ⟩ "dummy f" ← f in'
   let' mod⟨ μ ⟩ "dummy t" ← t [ π ]tm in'
-  (mod⟨ μ ⟩ (var "dummy f" (subst (TwoCell μ) (sym mod-unitˡ) id-cell) ∙ var "dummy t" (subst (TwoCell μ) (sym mod-unitˡ) id-cell)))
+  (mod⟨ μ ⟩ (svar "dummy f" ∙ svar "dummy t"))
 
 -- Implementation of modal lambda abstraction and function application
 lam[_∣_∈_]_ : (μ : Modality m n) (x : String) (T : Ty m) → Tm (Γ ,, μ ∣ x ∈ T) S → Tm Γ (⟨ μ ∣ T ⟩ ⇛ S)

@@ -139,7 +139,7 @@ locks-ltel (Θ ,lock⟨ μ ⟩) = locks-ltel Θ ⓜ μ
 skip-locks : {Γ : Ctx m} (Λ : LockTele m n) → Var x μ T κ Γ → Var x μ T (κ ⓜ locks-ltel Λ) (Γ ++ltel Λ)
 skip-locks ◇ v = Ag.subst (λ - → Var _ _ _ - _) (sym mod-unitʳ) v
 skip-locks {κ = κ} (Λ ,lock⟨ μ ⟩) v =
-  Ag.subst (λ - → Var _ _ _ - _) (mod-assoc {μ = κ}) (skip-lock μ (skip-locks Λ v))
+  Ag.subst (λ - → Var _ _ _ - _) (mod-assoc κ) (skip-lock μ (skip-locks Λ v))
 
 -- If we have a variable in Γ ++ltel Λ, we actually have a variable in
 -- Γ with less locks to the right of it.
@@ -154,7 +154,7 @@ split-ltel-var : (Λ : LockTele m n) → Var x μ T κ (Γ ++ltel Λ) → SplitL
 split-ltel-var {κ = κ} ◇ v = ltel-splitting κ v mod-unitʳ
 split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock {κ = κ} .ρ v) =
   let ltel-splitting κ/Λ v' lock-div = split-ltel-var Λ v
-  in  ltel-splitting κ/Λ v' (trans (sym (mod-assoc {μ = κ/Λ})) (cong (_ⓜ ρ) lock-div))
+  in  ltel-splitting κ/Λ v' (trans (sym (mod-assoc κ/Λ)) (cong (_ⓜ ρ) lock-div))
 
 
 --------------------------------------------------
@@ -298,7 +298,7 @@ module AtomicRenVar where
   atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
   atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
     let ltel-splitting κ/Λ₂ v' lock-div = split-ltel-var Λ₂ v
-    in renvar x (κ/Λ₂ ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ/Λ₂ ⓜ locks-ltel Λ₁)) lock-div (id-cell ⓣ-hor α)) (skip-locks Λ₁ v')
+    in renvar x (κ/Λ₂ ⓜ locks-ltel Λ₁) (Ag.subst (λ - → TwoCell - (κ/Λ₂ ⓜ locks-ltel Λ₁)) lock-div (id-cell {μ = κ/Λ₂} ⓣ-hor α)) (skip-locks Λ₁ v')
   atomic-ren-var' vzero (σ ∷ rendata y w / x) = renvar y _ id-cell w
   atomic-ren-var' (vsuc v) (σ ∷ rendata y w / x) = atomic-ren-var' v σ
   atomic-ren-var' v (σ ⊚π) = let renvar y κ' α w = atomic-ren-var' v σ in renvar y κ' α (vsuc w)
@@ -354,10 +354,10 @@ unlock𝟙-ren : Ren Γ (Γ ,lock⟨ 𝟙 ⟩)
 unlock𝟙-ren = key-ren ◇ (◇ ,lock⟨ 𝟙 ⟩) (Ag.subst (λ - → TwoCell - 𝟙) (sym mod-unitʳ) id-cell)
 
 fuselocks-ren : Ren (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-fuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Ag.subst (TwoCell _) (mod-assoc {μ = 𝟙}) id-cell)
+fuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) id-cell
 
 unfuselocks-ren : Ren (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
-unfuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⓜ ρ ⟩) (Ag.subst (TwoCell _) (sym (mod-assoc {μ = 𝟙})) id-cell)
+unfuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⓜ ρ ⟩) id-cell
 
 -- Specific opertations for weakening a term and for the functorial
 -- behaviour of locks.
@@ -380,7 +380,7 @@ unfuselocks-tm t = rename-tm t unfuselocks-ren
 -- A simpler version of modal elimination (making use of lock𝟙-tm)
 mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
 mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
-  mod-elim 𝟙 μ x (lock𝟙-tm t) (Ag.subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
+  mod-elim 𝟙 μ x (lock𝟙-tm t) s
 
 syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 
@@ -392,7 +392,7 @@ SubData : Modality n m → Ty n → Ctx m → Set
 SubData μ T Γ = Tm (Γ ,lock⟨ μ ⟩) T
 
 newSubData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → SubData μ T (Γ ,, μ ∣ x ∈ T)
-newSubData {x = x} = var' x {skip-lock _ vzero} (Ag.subst (TwoCell _) (sym mod-unitˡ) id-cell)
+newSubData {x = x} = var' x {skip-lock _ vzero} id-cell
 
 
 module AtomicSubDef = AtomicRenSubDef SubData renaming (AtomicRenSub to AtomicSub)
@@ -407,10 +407,10 @@ module AtomicSubVar where
     let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
     in var' x {skip-lock ρ (skip-locks Λ₁ w)}
             (((id-cell {μ = κ/Λ₂}) ⓣ-hor β ⓣ-hor (id-cell {μ = ρ})) ⓣ-vert Ag.subst (TwoCell _) (cong (_ⓜ ρ) (sym lock-div)) α)
-  atomic-sub-var' vzero    ρ α (σ ∷ t / x) = rename-tm t (key-ren (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) (Ag.subst (λ - → TwoCell - _) (sym mod-unitˡ) α))
+  atomic-sub-var' vzero    ρ α (σ ∷ t / x) = rename-tm t (key-ren (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) α)
   atomic-sub-var' (vsuc v) ρ α (σ ∷ t / x) = atomic-sub-var' v ρ α σ
   atomic-sub-var' v ρ α (σ ⊚π) = rename-tm (atomic-sub-var' v ρ α σ) (π-ren ,rlock⟨ _ ⟩)
-  atomic-sub-var' (skip-lock {κ = κ} .μ v) ρ α (σ ,lock⟨ μ ⟩) = unfuselocks-tm (atomic-sub-var' v (μ ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc {μ = κ}) α) σ)
+  atomic-sub-var' (skip-lock {κ = κ} .μ v) ρ α (σ ,lock⟨ μ ⟩) = unfuselocks-tm (atomic-sub-var' v (μ ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc κ) α) σ)
 
   atomic-sub-var : Var x μ T κ Δ → TwoCell μ κ → AtomicSub Γ Δ → Tm Γ T
   atomic-sub-var v α σ = unlock𝟙-tm (atomic-sub-var' v 𝟙 (Ag.subst (TwoCell _) (sym mod-unitʳ) α) σ)

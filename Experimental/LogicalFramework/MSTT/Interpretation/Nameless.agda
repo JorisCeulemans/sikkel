@@ -45,10 +45,10 @@ private variable
 ⟦⟧var-helper : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var _ μ T κ Γ) →
                (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → SimpleTm ⟦ Γ ,lock⟨ ρ ⟩ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦⟧var-helper {μ = μ} vzero ρ α =
-  (smod-elim ⟦ μ ⟧mod sξ) M.[ M.transf-op (M.transf ⟦ subst (TwoCell _) mod-unitˡ α ⟧two-cell) _ ]s
+  (smod-elim ⟦ μ ⟧mod sξ) M.[ M.transf-op (M.transf ⟦ α ⟧two-cell) _ ]s
 ⟦⟧var-helper (vsuc v) ρ α = (⟦⟧var-helper v ρ α) M.[ M.lock-fmap ⟦ ρ ⟧mod M.π ]s
 ⟦⟧var-helper (skip-lock {κ = κ} φ v) ρ α =
-  (⟦⟧var-helper v (φ ⓜ ρ) (subst (TwoCell _) (mod-assoc {μ = κ}) α)) M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]s
+  (⟦⟧var-helper v (φ ⓜ ρ) (subst (TwoCell _) (mod-assoc κ) α)) M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]s
 
 ⟦_,_⟧var-nmls : {μ κ : Modality m n} → (v : Var _ μ T κ Γ) → TwoCell μ κ → SimpleTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦_,_⟧var-nmls {m = m} v α = (⟦⟧var-helper v 𝟙 (subst (TwoCell _) (sym mod-unitʳ) α)) M.[ M.to (M.eq-lock (⟦𝟙⟧-sound {m}) _) ]s
