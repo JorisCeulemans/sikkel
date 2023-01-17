@@ -47,14 +47,14 @@ is-forall? (∀[ μ ∣ x ∈ T ] φ) = return (is-forall μ x T φ)
 is-forall? φ = throw-error "Formula is not of the form ∀ x ..."
 
 data IsLam : Tm Γ T → Set where
-  lam : (x : String) (b : Tm (Γ ,, 𝟙 ∣ x ∈ T) S) → IsLam (lam[ x ∈ T ] b)
+  lam : (μ : Modality n m) (x : String) (b : Tm (Γ ,, μ ∣ x ∈ T) S) → IsLam (lam[ μ ∣ x ∈ T ] b)
 
 is-lam? : (t : Tm Γ T) → PCM (IsLam t)
-is-lam? (lam[ x ∈ T ] b) = return (lam x b)
+is-lam? (lam[ μ ∣ x ∈ T ] b) = return (lam μ x b)
 is-lam? _ = throw-error "Lambda expected"
 
 data IsApp : Tm Γ T → Set where
-  app : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) → IsApp (f ∙ t)
+  app : {μ : Modality m n} (f : Tm Γ (⟨ μ ∣ T ⟩⇛ S)) (t : Tm (Γ ,lock⟨ μ ⟩) T) → IsApp (f ∙ t)
 
 is-app? : (t : Tm Γ T) → PCM (IsApp t)
 is-app? (f ∙ t) = return (app f t)
@@ -157,8 +157,8 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
-  lam x b ← is-lam? f
-  rhs =t? (b [ lock𝟙-tm t / x ]tm)
+  lam μ x b ← is-lam? f
+  rhs =t? (b [ t / x ]tm)
   return ⟅ [] , _ ↦ {!!} ⟆
 check-proof Ξ nat-elim-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
@@ -170,8 +170,8 @@ check-proof Ξ nat-elim-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-elim z s n ← is-nat-elim? lhs
   suc-tm n' ← is-suc-tm? n
-  refl ← rhs =t? s ∙ (nat-elim z s n')
-  return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]' ⟆
+  refl ← rhs =t? s ∙¹ (nat-elim z s n')
+  return ⟅ [] , _ ↦ {!(M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]'!} ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ends-in-var Ξ' μ x T ← ends-in-var? Ξ
   refl ← return Δ=Γ,μ∣x∈T -- Pattern matching on this proof only works since we already established that Ξ is of the form Ξ' ,,ᵛ μ ∣ x ∈ T.
@@ -182,25 +182,33 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
                                   (φ [ π ∷ˢ suc (var' x {skip-lock μ vzero} id-cell) / x ]frm)
   return ⟅ goals1 ++ goals2 , sgoals ↦ {!!} ⟆
   -- {!return (goals1 ++ goals2)!}
-check-proof Ξ (fun-cong {T = T} p t) φ = do
+check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do
   is-eq lhs rhs ← is-eq? φ
-  app {T = T2} f s ← is-app? lhs
-  app {T = T3} g s' ← is-app? rhs
+  app {T = T2} {μ = ρ}  f s  ← is-app? lhs
+  app {T = T3} {μ = ρ'} g s' ← is-app? rhs
+  refl ← mod-dom μ =m? mod-dom ρ
+  refl ← μ =mod? ρ
+  refl ← mod-dom μ =m? mod-dom ρ'
+  refl ← μ =mod? ρ'
   refl ← T =T? T2
   refl ← T =T? T3
   refl ← s =t? t
   refl ← s' =t? t
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (f ≡ᶠ g)
   return ⟅ goals , sgoals ↦ {!!} ⟆
-check-proof Ξ (cong {T = T} {S = S} f p) φ = do
+check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   is-eq {T = S'} lhs rhs ← is-eq? φ
-  app {T = T2} g t ← is-app? lhs
-  app {T = T3} g' s ← is-app? rhs
+  app {T = T2} {μ = ρ}  g  t ← is-app? lhs
+  app {T = T3} {μ = ρ'} g' s ← is-app? rhs
+  refl ← mod-dom μ =m? mod-dom ρ
+  refl ← μ =mod? ρ
+  refl ← mod-dom μ =m? mod-dom ρ'
+  refl ← μ =mod? ρ'
   refl ← S =T? S'
   refl ← T =T? T2
   refl ← T =T? T3
   refl ← g =t? f
   refl ← g' =t? f
-  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (t ≡ᶠ s)
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᶠ s)
   return ⟅ goals , sgoals ↦ {!!} ⟆
 check-proof Ξ (hole name) φ = return ⟅ [ goal name Ξ φ ] , (λ (sgl , _) → sgl) ⟆

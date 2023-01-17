@@ -33,7 +33,7 @@ erase-names-tm : Tm Γ T → NMLS.Tm (erase-names-ctx Γ) T
 erase-names-tm (var' x {v} α) = NMLS.var' _ {erase-names-var v} α
 erase-names-tm (mod⟨ μ ⟩ t) = NMLS.mod⟨ μ ⟩ erase-names-tm t
 erase-names-tm (mod-elim ρ μ x t s) = NMLS.mod-elim ρ μ _ (erase-names-tm t) (erase-names-tm s)
-erase-names-tm (lam[ x ∈ T ] t) = NMLS.lam[ _ ∈ T ] erase-names-tm t
+erase-names-tm (lam[ μ ∣ x ∈ T ] t) = NMLS.lam[ μ ∣ _ ∈ T ] erase-names-tm t
 erase-names-tm (f ∙ t) = (erase-names-tm f) NMLS.∙ (erase-names-tm t)
 erase-names-tm zero = NMLS.zero
 erase-names-tm (suc n) = NMLS.suc (erase-names-tm n)

@@ -93,8 +93,8 @@ data Proof {m : Mode} : Ctx m → Set where
   nat-induction' : {Γ Δ : Ctx m} {μ : Modality n m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, μ ∣ x ∈ Nat') →
                    Proof Γ → Proof Δ → Proof Δ
 
-  fun-cong : Proof Γ → Tm Γ T → Proof Γ
-  cong : {T S : Ty m} → Tm Γ (T ⇛ S) → Proof Γ → Proof Γ
+  fun-cong : Proof Γ → Tm (Γ ,lock⟨ μ ⟩) T → Proof Γ
+  cong : {T S : Ty m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Proof (Γ ,lock⟨ μ ⟩) → Proof Γ
   hole : String → Proof Γ
 
 nat-induction : {Γ : Ctx m} {μ : Modality n m} {x : String} (hyp : String) →

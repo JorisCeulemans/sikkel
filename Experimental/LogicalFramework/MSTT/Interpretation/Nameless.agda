@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 --------------------------------------------------
 -- Interpretation of nameless MSTT types, contexts and terms in a
 --   presheaf model
@@ -33,7 +35,7 @@ private variable
 ⟦_⟧ty : Ty m → ClosedTy ⟦ m ⟧mode
 ⟦ Nat' ⟧ty = M.Nat'
 ⟦ Bool' ⟧ty = M.Bool'
-⟦ T ⇛ S ⟧ty = ⟦ T ⟧ty M.⇛ ⟦ S ⟧ty
+⟦ ⟨ μ ∣ T ⟩⇛ S ⟧ty = M.s⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩ M.⇛ ⟦ S ⟧ty
 ⟦ T ⊠ S ⟧ty = ⟦ T ⟧ty M.⊠ ⟦ S ⟧ty
 ⟦ ⟨ μ ∣ T ⟩ ⟧ty = M.s⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
 
@@ -58,7 +60,7 @@ private variable
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = smod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim ρ μ _ t s ⟧tm-nmls =
   smtt-mod-elim ⟦ ρ ⟧mod ⟦ μ ⟧mod ⟦ t ⟧tm-nmls (⟦ s ⟧tm-nmls [ M.to (M.,,ₛ-cong (seq-mod _ (⟦ⓜ⟧-sound ρ μ))) ]s)
-⟦ lam[_∈_]_ _ _ t ⟧tm-nmls =
+⟦ lam[_∣_∈_]_ μ _ _ t ⟧tm-nmls =
   -- The following let binding is only necessary because Agda cannot
   -- infer the mode in ⟦𝟙⟧sound, and we cannot introduce the mode in
   -- the LHS because it is a parameter and not an index in the
@@ -66,11 +68,11 @@ private variable
   let m = _
       ⟦t⟧ = ⟦_⟧tm-nmls {m} t
   in
-  sλ[ _ ] (⟦t⟧ M.[ M.to (M.,,ₛ-cong (M.transᵗʸ (seq-mod _ (⟦𝟙⟧-sound {m})) M.s⟨𝟙∣-⟩)) ]s)
-⟦ f ∙ t ⟧tm-nmls = ⟦ f ⟧tm-nmls ∙ₛ ⟦ t ⟧tm-nmls
+  {!sλ[ _ ] (⟦t⟧ M.[ M.to (M.,,ₛ-cong (M.transᵗʸ (seq-mod _ (⟦𝟙⟧-sound {m})) M.s⟨𝟙∣-⟩)) ]s)!}
+⟦ _∙_ {μ = μ} f t ⟧tm-nmls = ⟦ f ⟧tm-nmls ∙ₛ M.smod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ zero ⟧tm-nmls = szero
 ⟦ suc n ⟧tm-nmls = ssuc ∙ₛ ⟦ n ⟧tm-nmls
-⟦ nat-elim a f n ⟧tm-nmls = snat-elim ⟦ a ⟧tm-nmls ⟦ f ⟧tm-nmls ∙ₛ ⟦ n ⟧tm-nmls
+⟦ nat-elim a f n ⟧tm-nmls = snat-elim ⟦ a ⟧tm-nmls {!⟦ f ⟧tm-nmls!} ∙ₛ ⟦ n ⟧tm-nmls
 ⟦ true ⟧tm-nmls = strue
 ⟦ false ⟧tm-nmls = sfalse
 ⟦ if b t f ⟧tm-nmls = sif ⟦ b ⟧tm-nmls ⟦ t ⟧tm-nmls ⟦ f ⟧tm-nmls

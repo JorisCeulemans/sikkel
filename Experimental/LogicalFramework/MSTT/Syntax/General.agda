@@ -56,8 +56,8 @@ data Tm (Γ : Ctx m) : Ty m → Set where
   mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : Name)
              (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) →
              Tm Γ S
-  lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, 𝟙 ∣ x ∈ T) S → Tm Γ (T ⇛ S)
-  _∙_ : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
+  lam[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → Tm (Γ ,, μ ∣ x ∈ T) S → Tm Γ (⟨ μ ∣ T ⟩⇛ S)
+  _∙_ : {μ : Modality n m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ S
   zero : Tm Γ Nat'
   suc : Tm Γ Nat' → Tm Γ Nat'
   nat-elim : {A : Ty m} → Tm Γ A → Tm Γ (A ⇛ A) → Tm Γ Nat' → Tm Γ A
@@ -87,8 +87,8 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (var' x {v} α) σ = vr v α σ
   traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lock σ)
   traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lock σ)) (traverse-tm s (lift σ))
-  traverse-tm (lam[ x ∈ T ] s) σ = lam[ x ∈ T ] traverse-tm s (lift σ)
-  traverse-tm (f ∙ t) σ = traverse-tm f σ ∙ traverse-tm t σ
+  traverse-tm (lam[ μ ∣ x ∈ T ] s) σ = lam[ μ ∣ x ∈ T ] traverse-tm s (lift σ)
+  traverse-tm (f ∙ t) σ = traverse-tm f σ ∙ traverse-tm t (lock σ)
   traverse-tm zero σ = zero
   traverse-tm (suc t) σ = suc (traverse-tm t σ)
   traverse-tm (nat-elim z s n) σ = nat-elim (traverse-tm z σ) (traverse-tm s σ) (traverse-tm n σ)
@@ -377,12 +377,20 @@ unfuselocks-tm : Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⟩ ,lo
 unfuselocks-tm t = rename-tm t unfuselocks-ren
 
 
--- A simpler version of modal elimination (making use of lock𝟙-tm)
+-- Some simpler term formers than the ones in the original syntax. The
+-- implementation depends on the functoriality of locks proved above.
 mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
 mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
   mod-elim 𝟙 μ x (lock𝟙-tm t) s
 
 syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
+
+lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, 𝟙 ∣ x ∈ T) S → Tm Γ (T ⇛ S)
+lam[ x ∈ T ] b = lam[ 𝟙 ∣ x ∈ T ] b
+
+infixl 50 _∙¹_
+_∙¹_ : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
+f ∙¹ t = f ∙ lock𝟙-tm t
 
 
 --------------------------------------------------

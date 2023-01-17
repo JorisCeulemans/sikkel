@@ -41,12 +41,4 @@ _⊛_ : Tm Γ ⟨ μ ∣ T ⇛ S ⟩ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ μ
 _⊛_ {μ = μ} f t =
   let' mod⟨ μ ⟩ "dummy f" ← f in'
   let' mod⟨ μ ⟩ "dummy t" ← t [ π ]tm in'
-  (mod⟨ μ ⟩ (svar "dummy f" ∙ svar "dummy t"))
-
--- Implementation of modal lambda abstraction and function application
-lam[_∣_∈_]_ : (μ : Modality m n) (x : String) (T : Ty m) → Tm (Γ ,, μ ∣ x ∈ T) S → Tm Γ (⟨ μ ∣ T ⟩ ⇛ S)
-lam[ μ ∣ x ∈ T ] s = lam[ x ∈ ⟨ μ ∣ T ⟩ ] let' mod⟨ μ ⟩ x ← var' x {vzero} id-cell in' (s [ lift-sub π ]tm)
-
-infixl 50 _∙ₘ_
-_∙ₘ_ : Tm Γ (⟨ μ ∣ T ⟩ ⇛ S) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ S
-f ∙ₘ t = f ∙ (mod⟨ _ ⟩ t)
+  (mod⟨ μ ⟩ (svar "dummy f" ∙¹ svar "dummy t"))

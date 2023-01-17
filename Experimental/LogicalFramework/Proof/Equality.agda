@@ -54,14 +54,16 @@ cstⓜfrv≤ltr ineq1 =c? cstⓜfrv≤ltr ineq2 = return (Ag.cong cstⓜfrv≤lt
 show-ty : Ty m → String
 show-ty Nat' = "ℕ"
 show-ty Bool' = "Bool"
-show-ty (T ⇛ S) = show-ty T ++ " → " ++ show-ty S
+show-ty (⟨ μ ∣ T ⟩⇛ S) = "⟨ _ ∣ " ++ show-ty T ++ " ⟩→ " ++ show-ty S
 show-ty (T ⊠ S) = show-ty T ++ " × " ++ show-ty S
 show-ty ⟨ μ ∣ T ⟩ = "⟨ _ ∣ " ++ show-ty T ++ " ⟩"
 
 _=T?_ : (T S : Ty m) → PCM (T Ag.≡ S)
 Nat' =T? Nat' = return refl
 Bool' =T? Bool' = return refl
-(T1 ⇛ T2) =T? (S1 ⇛ S2) = do
+(⟨ μ ∣ T1 ⟩⇛ T2) =T? (⟨ ρ ∣ S1 ⟩⇛ S2) = do
+  refl ← mod-dom μ =m? mod-dom ρ
+  refl ← μ =mod? ρ
   refl ← T1 =T? S1
   refl ← T2 =T? S2
   return refl
@@ -138,12 +140,14 @@ mod-elim {o = o} {n = n} {T = T} ρ1 ρ2 x t1 t2 =t? mod-elim {o = o'} {n = n'} 
   refl ← t1 =t? s1
   refl ← t2 =t? s2
   return refl
-(lam[ x ∈ T ] t) =t? (lam[ y ∈ S ] s) = do
+(lam[ μ ∣ x ∈ T ] t) =t? (lam[ ρ ∣ y ∈ S ] s) = do
   refl ← from-dec tm-msg (x Str.≟ y)
   refl ← T =T? S
   refl ← t =t? s
   return refl
-(_∙_ {T = T} f t) =t? (_∙_ {T = T'} f' t') = do
+(_∙_ {T = T} {μ = μ} f t) =t? (_∙_ {T = T'} {μ = μ'} f' t') = do
+  refl ← mod-dom μ =m? mod-dom μ'
+  refl ← μ =mod? μ'
   refl ← T =T? T'
   refl ← f =t? f'
   refl ← t =t? t'

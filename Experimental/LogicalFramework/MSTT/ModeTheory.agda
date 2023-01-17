@@ -29,6 +29,9 @@ data Modality : Mode → Mode → Set where
   𝟙 : Modality m m
   non-triv : NonTrivModality m n → Modality m n
 
+mod-dom mod-cod : Modality m n → Mode
+mod-dom {m} μ = m
+mod-cod {_} {n} μ = n
 
 private variable
   μ ρ κ : Modality m n
