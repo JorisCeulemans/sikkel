@@ -69,8 +69,8 @@ private variable
   sλ[ _ ] (⟦t⟧ M.[ M.to (M.,,ₛ-cong (M.transᵗʸ (seq-mod _ (⟦𝟙⟧-sound {m})) M.s⟨𝟙∣-⟩)) ]s)
 ⟦ f ∙ t ⟧tm-nmls = ⟦ f ⟧tm-nmls ∙ₛ ⟦ t ⟧tm-nmls
 ⟦ zero ⟧tm-nmls = szero
-⟦ suc ⟧tm-nmls = ssuc
-⟦ nat-elim a f ⟧tm-nmls = snat-elim ⟦ a ⟧tm-nmls ⟦ f ⟧tm-nmls
+⟦ suc n ⟧tm-nmls = ssuc ∙ₛ ⟦ n ⟧tm-nmls
+⟦ nat-elim a f n ⟧tm-nmls = snat-elim ⟦ a ⟧tm-nmls ⟦ f ⟧tm-nmls ∙ₛ ⟦ n ⟧tm-nmls
 ⟦ true ⟧tm-nmls = strue
 ⟦ false ⟧tm-nmls = sfalse
 ⟦ if b t f ⟧tm-nmls = sif ⟦ b ⟧tm-nmls ⟦ t ⟧tm-nmls ⟦ f ⟧tm-nmls

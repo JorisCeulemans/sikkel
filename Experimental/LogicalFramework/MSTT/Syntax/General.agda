@@ -59,8 +59,8 @@ data Tm (Γ : Ctx m) : Ty m → Set where
   lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, 𝟙 ∣ x ∈ T) S → Tm Γ (T ⇛ S)
   _∙_ : Tm Γ (T ⇛ S) → Tm Γ T → Tm Γ S
   zero : Tm Γ Nat'
-  suc : Tm Γ (Nat' ⇛ Nat')
-  nat-elim : {A : Ty m} → Tm Γ A → Tm Γ (A ⇛ A) → Tm Γ (Nat' ⇛ A)
+  suc : Tm Γ Nat' → Tm Γ Nat'
+  nat-elim : {A : Ty m} → Tm Γ A → Tm Γ (A ⇛ A) → Tm Γ Nat' → Tm Γ A
   true false : Tm Γ Bool'
   if : {A : Ty m} → Tm Γ Bool' → (t f : Tm Γ A) → Tm Γ A
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
@@ -90,8 +90,8 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (lam[ x ∈ T ] s) σ = lam[ x ∈ T ] traverse-tm s (lift σ)
   traverse-tm (f ∙ t) σ = traverse-tm f σ ∙ traverse-tm t σ
   traverse-tm zero σ = zero
-  traverse-tm suc σ = suc
-  traverse-tm (nat-elim z s) σ = nat-elim (traverse-tm z σ) (traverse-tm s σ)
+  traverse-tm (suc t) σ = suc (traverse-tm t σ)
+  traverse-tm (nat-elim z s n) σ = nat-elim (traverse-tm z σ) (traverse-tm s σ) (traverse-tm n σ)
   traverse-tm true σ = true
   traverse-tm false σ = false
   traverse-tm (if b t f) σ = if (traverse-tm b σ) (traverse-tm t σ) (traverse-tm f σ)

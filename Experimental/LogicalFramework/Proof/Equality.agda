@@ -149,10 +149,13 @@ mod-elim {o = o} {n = n} {T = T} ρ1 ρ2 x t1 t2 =t? mod-elim {o = o'} {n = n'} 
   refl ← t =t? t'
   return refl
 zero =t? zero = return refl
-suc =t? suc = return refl
-nat-elim z s =t? nat-elim z' s' = do
+suc m =t? suc n = do
+  refl ← m =t? n
+  return refl
+nat-elim z s n =t? nat-elim z' s' n' = do
   refl ← z =t? z'
   refl ← s =t? s'
+  refl ← n =t? n'
   return refl
 true =t? true = return refl
 false =t? false = return refl

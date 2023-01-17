@@ -61,17 +61,17 @@ is-app? (f ∙ t) = return (app f t)
 is-app? _ = throw-error "Function application expected"
 
 data IsNatElim : Tm Γ T → Set where
-  nat-elim : ∀ {A} (z : Tm Γ A) (s : Tm Γ (A ⇛ A)) → IsNatElim (nat-elim z s)
+  nat-elim : ∀ {A} (z : Tm Γ A) (s : Tm Γ (A ⇛ A)) (n : Tm Γ Nat') → IsNatElim (nat-elim z s n)
 
 is-nat-elim? : (t : Tm Γ T) → PCM (IsNatElim t)
-is-nat-elim? (nat-elim z s) = return (nat-elim z s)
+is-nat-elim? (nat-elim z s n) = return (nat-elim z s n)
 is-nat-elim? _ = throw-error "Natural number recursor expected"
 
 data IsSucTm : Tm Γ T → Set where
-  suc-tm : (t : Tm Γ Nat') → IsSucTm (suc ∙ t)
+  suc-tm : (n : Tm Γ Nat') → IsSucTm (suc n)
 
 is-suc-tm? : (t : Tm Γ T) → PCM (IsSucTm t)
-is-suc-tm? (suc ∙ t) = return (suc-tm t)
+is-suc-tm? (suc n) = return (suc-tm n)
 is-suc-tm? _ = throw-error "successor of natural number expected"
 
 data EndsInVar : ProofCtx m → Set where
@@ -162,17 +162,15 @@ check-proof Ξ fun-β φ = do
   return ⟅ [] , _ ↦ {!!} ⟆
 check-proof Ξ nat-elim-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
-  app f t ← is-app? lhs
-  nat-elim z s ← is-nat-elim? f
-  refl ← t =t? zero
+  nat-elim z s n ← is-nat-elim? lhs
+  refl ← n =t? zero
   refl ← rhs =t? z
   return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)) M.[ _ ]' ⟆
 check-proof Ξ nat-elim-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
-  app f t ← is-app? lhs
-  nat-elim z s ← is-nat-elim? f
-  suc-tm t' ← is-suc-tm? t
-  refl ← rhs =t? s ∙ (nat-elim z s ∙ t')
+  nat-elim z s n ← is-nat-elim? lhs
+  suc-tm n' ← is-suc-tm? n
+  refl ← rhs =t? s ∙ (nat-elim z s n')
   return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]' ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ends-in-var Ξ' μ x T ← ends-in-var? Ξ
@@ -181,7 +179,7 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]frm)
   ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ)
                                   ps
-                                  (φ [ π ∷ˢ suc ∙ var' x {skip-lock μ vzero} id-cell / x ]frm)
+                                  (φ [ π ∷ˢ suc (var' x {skip-lock μ vzero} id-cell) / x ]frm)
   return ⟅ goals1 ++ goals2 , sgoals ↦ {!!} ⟆
   -- {!return (goals1 ++ goals2)!}
 check-proof Ξ (fun-cong {T = T} p t) φ = do
