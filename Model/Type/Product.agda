@@ -38,42 +38,39 @@ to (⊠-cong T=T' S=S') = ⊠-bimap (to T=T') (to S=S')
 eq (isoˡ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoˡ T=T') t) (eq (isoˡ S=S') s)
 eq (isoʳ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoʳ T=T') t) (eq (isoʳ S=S') s)
 
--- The term constructors prim-pair, prim-fst and prim-snd take one or more Sikkel terms
---   to produce a new Sikkel term. These operations are also available as Sikkel functions
---   (i.e. terms of Sikkel's function type) named pair, fst and snd defined below.
-prim-pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
-prim-pair t s ⟨ x , γ ⟩' = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
-naturality (prim-pair t s) f eγ = cong₂ [_,_] (naturality t f eγ) (naturality s f eγ)
+pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
+pair t s ⟨ x , γ ⟩' = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
+naturality (pair t s) f eγ = cong₂ [_,_] (naturality t f eγ) (naturality s f eγ)
 
-prim-fst : Tm Γ (T ⊠ S) → Tm Γ T
-prim-fst p ⟨ x , γ ⟩' = proj₁ (p ⟨ x , γ ⟩')
-naturality (prim-fst p) f eγ = cong proj₁ (naturality p f eγ)
+fst : Tm Γ (T ⊠ S) → Tm Γ T
+fst p ⟨ x , γ ⟩' = proj₁ (p ⟨ x , γ ⟩')
+naturality (fst p) f eγ = cong proj₁ (naturality p f eγ)
 
-prim-snd : Tm Γ (T ⊠ S) → Tm Γ S
-prim-snd p ⟨ x , γ ⟩' = proj₂ (p ⟨ x , γ ⟩')
-naturality (prim-snd p) f eγ = cong proj₂ (naturality p f eγ)
+snd : Tm Γ (T ⊠ S) → Tm Γ S
+snd p ⟨ x , γ ⟩' = proj₂ (p ⟨ x , γ ⟩')
+naturality (snd p) f eγ = cong proj₂ (naturality p f eγ)
 
-prim-pair-cong : {t t' : Tm Γ T} {s s' : Tm Γ S} → t ≅ᵗᵐ t' → s ≅ᵗᵐ s' → prim-pair t s ≅ᵗᵐ prim-pair t' s'
-eq (prim-pair-cong t=t' s=s') γ = cong₂ [_,_] (eq t=t' γ) (eq s=s' γ)
+pair-cong : {t t' : Tm Γ T} {s s' : Tm Γ S} → t ≅ᵗᵐ t' → s ≅ᵗᵐ s' → pair t s ≅ᵗᵐ pair t' s'
+eq (pair-cong t=t' s=s') γ = cong₂ [_,_] (eq t=t' γ) (eq s=s' γ)
 
-prim-fst-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → prim-fst p ≅ᵗᵐ prim-fst p'
-eq (prim-fst-cong p=p') γ = cong proj₁ (eq p=p' γ)
+fst-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → fst p ≅ᵗᵐ fst p'
+eq (fst-cong p=p') γ = cong proj₁ (eq p=p' γ)
 
-prim-snd-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → prim-snd p ≅ᵗᵐ prim-snd p'
-eq (prim-snd-cong p=p') γ = cong proj₂ (eq p=p' γ)
+snd-cong : {p p' : Tm Γ (T ⊠ S)} → p ≅ᵗᵐ p' → snd p ≅ᵗᵐ snd p'
+eq (snd-cong p=p') γ = cong proj₂ (eq p=p' γ)
 
 module _
   {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
   (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
   where
-  prim-pair-ι : (t : Tm Γ T') (s : Tm Γ S') → ι[ ⊠-cong T=T' S=S' ] prim-pair t s ≅ᵗᵐ prim-pair (ι[ T=T' ] t) (ι[ S=S' ] s)
-  eq (prim-pair-ι t s) _ = refl
+  pair-ι : (t : Tm Γ T') (s : Tm Γ S') → ι[ ⊠-cong T=T' S=S' ] pair t s ≅ᵗᵐ pair (ι[ T=T' ] t) (ι[ S=S' ] s)
+  eq (pair-ι t s) _ = refl
 
-  prim-fst-ι : (p : Tm Γ (T' ⊠ S')) → ι[ T=T' ] prim-fst p ≅ᵗᵐ prim-fst (ι[ ⊠-cong T=T' S=S' ] p)
-  eq (prim-fst-ι p) _ = refl
+  fst-ι : (p : Tm Γ (T' ⊠ S')) → ι[ T=T' ] fst p ≅ᵗᵐ fst (ι[ ⊠-cong T=T' S=S' ] p)
+  eq (fst-ι p) _ = refl
 
-  prim-snd-ι : (p : Tm Γ (T' ⊠ S')) → ι[ S=S' ] prim-snd p ≅ᵗᵐ prim-snd (ι[ ⊠-cong T=T' S=S' ] p)
-  eq (prim-snd-ι p) _ = refl
+  snd-ι : (p : Tm Γ (T' ⊠ S')) → ι[ S=S' ] snd p ≅ᵗᵐ snd (ι[ ⊠-cong T=T' S=S' ] p)
+  eq (snd-ι p) _ = refl
 
 module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊠-natural : (T ⊠ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊠ (S [ σ ])
@@ -84,48 +81,53 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   eq (isoˡ ⊠-natural) _ = refl
   eq (isoʳ ⊠-natural) _ = refl
 
-  prim-pair-natural : (t : Tm Γ T) (s : Tm Γ S) → (prim-pair t s) [ σ ]' ≅ᵗᵐ ι[ ⊠-natural ] (prim-pair (t [ σ ]') (s [ σ ]'))
-  eq (prim-pair-natural t s) _ = refl
+  pair-natural : (t : Tm Γ T) (s : Tm Γ S) → (pair t s) [ σ ]' ≅ᵗᵐ ι[ ⊠-natural ] (pair (t [ σ ]') (s [ σ ]'))
+  eq (pair-natural t s) _ = refl
 
-  prim-fst-natural : (p : Tm Γ (T ⊠ S)) → (prim-fst p) [ σ ]' ≅ᵗᵐ prim-fst (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
-  eq (prim-fst-natural p) _ = refl
+  fst-natural : (p : Tm Γ (T ⊠ S)) → (fst p) [ σ ]' ≅ᵗᵐ fst (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
+  eq (fst-natural p) _ = refl
 
-  prim-snd-natural : (p : Tm Γ (T ⊠ S)) → (prim-snd p) [ σ ]' ≅ᵗᵐ prim-snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
-  eq (prim-snd-natural p) _ = refl
+  snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≅ᵗᵐ snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
+  eq (snd-natural p) _ = refl
 
 module _ (t : Tm Γ T) (s : Tm Γ S) where
-  β-⊠-prim-fst : prim-fst (prim-pair t s) ≅ᵗᵐ t
-  eq β-⊠-prim-fst _ = refl
+  β-⊠-fst : fst (pair t s) ≅ᵗᵐ t
+  eq β-⊠-fst _ = refl
 
-  β-⊠-prim-snd : prim-snd (prim-pair t s) ≅ᵗᵐ s
-  eq β-⊠-prim-snd _ = refl
+  β-⊠-snd : snd (pair t s) ≅ᵗᵐ s
+  eq β-⊠-snd _ = refl
 
-prim-η-⊠ : (p : Tm Γ (T ⊠ S)) →
-      p ≅ᵗᵐ prim-pair (prim-fst p) (prim-snd p)
-eq (prim-η-⊠ p) _ = refl
+η-⊠ : (p : Tm Γ (T ⊠ S)) →
+      p ≅ᵗᵐ pair (fst p) (snd p)
+eq (η-⊠ p) _ = refl
 
-pair : Tm Γ (T ⇛ S ⇛ T ⊠ S)
-pair {T = T}{S = S} =
+-- Versions of the term constructors pair, fst and snd as Sikkel
+--   functions (i.e. terms of Sikkel's function type) instead of
+--   operations that take one or more Sikkel terms to produce a new
+--   Sikkel term.
+
+pairᶠ : Tm Γ (T ⇛ S ⇛ T ⊠ S)
+pairᶠ {T = T}{S = S} =
   lam T (ι[ ⇛-natural π ]
     lam (S [ π ]) (ι[ transᵗʸ (ty-subst-cong-ty π (⊠-natural π)) (⊠-natural π) ]
-      prim-pair (ξ [ π ]') ξ))
+      pair (ξ [ π ]') ξ))
 
-fst : Tm Γ (T ⊠ S ⇛ T)
-fst {T = T}{S = S} = lam (T ⊠ S) (prim-fst (ι⁻¹[ ⊠-natural π ] ξ))
+fstᶠ : Tm Γ (T ⊠ S ⇛ T)
+fstᶠ {T = T}{S = S} = lam (T ⊠ S) (fst (ι⁻¹[ ⊠-natural π ] ξ))
 
-snd : Tm Γ (T ⊠ S ⇛ S)
-snd {T = T}{S = S} = lam (T ⊠ S) (prim-snd (ι⁻¹[ ⊠-natural π ] ξ))
+sndᶠ : Tm Γ (T ⊠ S ⇛ S)
+sndᶠ {T = T}{S = S} = lam (T ⊠ S) (snd (ι⁻¹[ ⊠-natural π ] ξ))
 
 module _ (t : Tm Γ T) (s : Tm Γ S) where
-  β-⊠-fst : (app fst (app (app pair t) s)) ≅ᵗᵐ t
-  eq β-⊠-fst γ = trans (ty-cong-2-1 T hom-idʳ) (ty-id T)
+  β-⊠-fstᶠ : (app fstᶠ (app (app pairᶠ t) s)) ≅ᵗᵐ t
+  eq β-⊠-fstᶠ γ = trans (ty-cong-2-1 T hom-idʳ) (ty-id T)
 
-  β-⊠-snd : (app snd (app (app pair t) s)) ≅ᵗᵐ s
-  eq β-⊠-snd γ = trans (ty-cong-2-1 S hom-idʳ) (ty-id S)
+  β-⊠-sndᶠ : (app sndᶠ (app (app pairᶠ t) s)) ≅ᵗᵐ s
+  eq β-⊠-sndᶠ γ = trans (ty-cong-2-1 S hom-idʳ) (ty-id S)
 
-η-⊠ : (p : Tm Γ (T ⊠ S)) → p ≅ᵗᵐ app (app pair (app fst p)) (app snd p)
-eq (η-⊠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
-                                                (trans (ty-cong-2-1 S hom-idʳ) (ty-id S)))
+η-⊠ᶠ : (p : Tm Γ (T ⊠ S)) → p ≅ᵗᵐ app (app pairᶠ (app fstᶠ p)) (app sndᶠ p)
+eq (η-⊠ᶠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
+                                                 (trans (ty-cong-2-1 S hom-idʳ) (ty-id S)))
 
 prod-closed : {A B : ClosedTy C} → IsClosedNatural A → IsClosedNatural B →
               IsClosedNatural (A ⊠ B)

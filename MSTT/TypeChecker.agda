@@ -155,15 +155,15 @@ infer-interpret (if c t f) Γ = do
 infer-interpret (pair t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t Γ
   S , ⟦s⟧ ← infer-interpret s Γ
-  return (T ⊠ S , M.pair $ ⟦t⟧ $ ⟦s⟧)
+  return (T ⊠ S , M.pair ⟦t⟧ ⟦s⟧)
 infer-interpret (fst p) Γ = do
   P , ⟦p⟧ ← infer-interpret p Γ
   prod-ty T S ← is-prod-ty P
-  return (T , M.fst $ ⟦p⟧)
+  return (T , M.fst ⟦p⟧)
 infer-interpret (snd p) Γ = do
   P , ⟦p⟧ ← infer-interpret p Γ
   prod-ty T S ← is-prod-ty P
-  return (S , M.snd $ ⟦p⟧)
+  return (S , M.snd ⟦p⟧)
 infer-interpret (mod⟨ μ ⟩ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
   return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)

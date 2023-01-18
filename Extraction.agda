@@ -44,8 +44,8 @@ embed-term (extract-const {A = A}) a = const a
 
 extract-prod : {T S : ClosedTy ★} → Extractable T → Extractable S → Extractable (T ⊠ S)
 translated-type (extract-prod exT exS) = translated-type exT × translated-type exS
-extract-term (extract-prod exT exS) p = [ extract-term exT (fst $ p) , extract-term exS (snd $ p) ]
-embed-term (extract-prod exT exS) [ t , s ] = pair $ embed-term exT t $ embed-term exS s
+extract-term (extract-prod exT exS) p = [ extract-term exT (fst p) , extract-term exS (snd p) ]
+embed-term (extract-prod exT exS) [ t , s ] = pair (embed-term exT t) (embed-term exS s)
 
 expose-sum-term : {A : Ty {C = ★} ◇} {B : Ty ◇} →
                   Tm ◇ (A ⊞ B) → Tm ◇ A ⊎ Tm ◇ B

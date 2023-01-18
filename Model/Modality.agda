@@ -171,46 +171,46 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
 
     -- Modalities preserve products (up to isomorphism).
     from-mod-⊠ : Tm Γ ⟨ μ ∣ T ⊠ S ⟩ → Tm Γ (⟨ μ ∣ T ⟩ ⊠ ⟨ μ ∣ S ⟩)
-    from-mod-⊠ p = prim-pair (mod-intro μ (prim-fst (mod-elim μ p))) (mod-intro μ (prim-snd (mod-elim μ p)))
+    from-mod-⊠ p = pair (mod-intro μ (fst (mod-elim μ p))) (mod-intro μ (snd (mod-elim μ p)))
 
     to-mod-⊠ : Tm Γ (⟨ μ ∣ T ⟩ ⊠ ⟨ μ ∣ S ⟩) → Tm Γ ⟨ μ ∣ T ⊠ S ⟩
-    to-mod-⊠ p = mod-intro μ (prim-pair (mod-elim μ (prim-fst p)) (mod-elim μ (prim-snd p)))
+    to-mod-⊠ p = mod-intro μ (pair (mod-elim μ (fst p)) (mod-elim μ (snd p)))
 
     from-to-mod-⊠ : (p : Tm Γ (⟨ μ ∣ T ⟩ ⊠ ⟨ μ ∣ S ⟩)) → from-mod-⊠ (to-mod-⊠ p) ≅ᵗᵐ p
-    from-to-mod-⊠ p = let p' = prim-pair (mod-elim μ (prim-fst p)) (mod-elim μ (prim-snd p)) in
+    from-to-mod-⊠ p = let p' = pair (mod-elim μ (fst p)) (mod-elim μ (snd p)) in
       begin
-        prim-pair (mod-intro μ (prim-fst (mod-elim μ (mod-intro μ p'))))
-                  (mod-intro μ (prim-snd (mod-elim μ (mod-intro μ p'))))
-      ≅⟨ prim-pair-cong (mod-intro-cong μ (prim-fst-cong (mod-β μ p')))
-                        (mod-intro-cong μ (prim-snd-cong (mod-β μ p'))) ⟩
-        prim-pair (mod-intro μ (prim-fst p'))
-                  (mod-intro μ (prim-snd p'))
-      ≅⟨ prim-pair-cong (mod-intro-cong μ (β-⊠-prim-fst _ (mod-elim μ (prim-snd p))))
-                        (mod-intro-cong μ (β-⊠-prim-snd (mod-elim μ (prim-fst p)) _)) ⟩
-        prim-pair (mod-intro μ (mod-elim μ (prim-fst p)))
-                  (mod-intro μ (mod-elim μ (prim-snd p)))
-      ≅⟨ prim-pair-cong (mod-η μ (prim-fst p)) (mod-η μ (prim-snd p)) ⟩
-        prim-pair (prim-fst p)
-                  (prim-snd p)
-      ≅˘⟨ prim-η-⊠ p ⟩
+        pair (mod-intro μ (fst (mod-elim μ (mod-intro μ p'))))
+             (mod-intro μ (snd (mod-elim μ (mod-intro μ p'))))
+      ≅⟨ pair-cong (mod-intro-cong μ (fst-cong (mod-β μ p')))
+                   (mod-intro-cong μ (snd-cong (mod-β μ p'))) ⟩
+        pair (mod-intro μ (fst p'))
+             (mod-intro μ (snd p'))
+      ≅⟨ pair-cong (mod-intro-cong μ (β-⊠-fst _ (mod-elim μ (snd p))))
+                   (mod-intro-cong μ (β-⊠-snd (mod-elim μ (fst p)) _)) ⟩
+        pair (mod-intro μ (mod-elim μ (fst p)))
+             (mod-intro μ (mod-elim μ (snd p)))
+      ≅⟨ pair-cong (mod-η μ (fst p)) (mod-η μ (snd p)) ⟩
+        pair (fst p)
+             (snd p)
+      ≅˘⟨ η-⊠ p ⟩
         p ∎
       where open ≅ᵗᵐ-Reasoning
 
     to-from-mod-⊠ : (p : Tm Γ ⟨ μ ∣ T ⊠ S ⟩) → to-mod-⊠ (from-mod-⊠ p) ≅ᵗᵐ p
     to-from-mod-⊠ p =
-      let t = mod-intro μ (prim-fst (mod-elim μ p))
-          s = mod-intro μ (prim-snd (mod-elim μ p))
+      let t = mod-intro μ (fst (mod-elim μ p))
+          s = mod-intro μ (snd (mod-elim μ p))
       in begin
-        mod-intro μ (prim-pair (mod-elim μ (prim-fst (prim-pair t s)))
-                               (mod-elim μ (prim-snd (prim-pair t s))))
-      ≅⟨ mod-intro-cong μ (prim-pair-cong (mod-elim-cong μ (β-⊠-prim-fst t s))
-                                          (mod-elim-cong μ (β-⊠-prim-snd t s))) ⟩
-        mod-intro μ (prim-pair (mod-elim μ t)
-                               (mod-elim μ s))
-      ≅⟨ mod-intro-cong μ (prim-pair-cong (mod-β μ _) (mod-β μ _)) ⟩
-        mod-intro μ (prim-pair (prim-fst (mod-elim μ p))
-                               (prim-snd (mod-elim μ p)))
-      ≅˘⟨ mod-intro-cong μ (prim-η-⊠ (mod-elim μ p)) ⟩
+        mod-intro μ (pair (mod-elim μ (fst (pair t s)))
+                          (mod-elim μ (snd (pair t s))))
+      ≅⟨ mod-intro-cong μ (pair-cong (mod-elim-cong μ (β-⊠-fst t s))
+                                     (mod-elim-cong μ (β-⊠-snd t s))) ⟩
+        mod-intro μ (pair (mod-elim μ t)
+                          (mod-elim μ s))
+      ≅⟨ mod-intro-cong μ (pair-cong (mod-β μ _) (mod-β μ _)) ⟩
+        mod-intro μ (pair (fst (mod-elim μ p))
+                          (snd (mod-elim μ p)))
+      ≅˘⟨ mod-intro-cong μ (η-⊠ (mod-elim μ p)) ⟩
         mod-intro μ (mod-elim μ p)
       ≅⟨ mod-η μ p ⟩
         p ∎
