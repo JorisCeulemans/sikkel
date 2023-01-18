@@ -11,9 +11,6 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
-open import Experimental.ClosedTypes
-open import Experimental.ClosedTypes.Pi
-
 open import Experimental.LogicalFramework.MSTT
 open import Experimental.LogicalFramework.Formula.Named
 open import Experimental.LogicalFramework.Formula.AlphaEquivalence

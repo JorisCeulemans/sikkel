@@ -15,9 +15,6 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Constant as M
 
-open import Experimental.ClosedTypes as M
-open import Experimental.ClosedTypes.Modal as M
-
 open import Experimental.LogicalFramework.MSTT.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Syntax.Named as Syn
 open Syn.AtomicSub
@@ -35,7 +32,7 @@ private variable
 --------------------------------------------------
 -- Re-export interpretation of modes, modalities, and types
 
-open DBInt public using (⟦_⟧ty)
+open DBInt public using (⟦_⟧ty; ty-natural; ty-closed-natural)
 open MTInt public
 
 
@@ -48,7 +45,7 @@ open MTInt public
 ⟦_⟧ctx : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ Γ ⟧ctx = ⟦ erase-names-ctx Γ ⟧ctx-nmls
 
-⟦_⟧tm : Tm Γ T → SimpleTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
+⟦_⟧tm : Tm Γ T → SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 ⟦ t ⟧tm = ⟦ erase-names-tm t ⟧tm-nmls
 
 {-
@@ -95,19 +92,19 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 --   and soundness proof of term substitution
 
 ⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ++ltel Λ ⟧ctx M.≅ᶜ M.lock ⟦ locks-ltel Λ ⟧mod ⟦ Γ ⟧ctx
-⟦⟧ltel {m} ◇ = M.eq-lock (M.symᵐ (⟦𝟙⟧-sound {m})) _
+⟦⟧ltel {m} ◇ = M.reflᶜ
 ⟦⟧ltel (Λ ,lock⟨ μ ⟩) =
   M.transᶜ (M.ctx-functor-cong (M.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
-             (M.symᶜ (M.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
+           (M.symᶜ (M.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _
-⟦ _∷ᵃˢ_/_ {μ = μ} σ t x ⟧asub = ⟦ σ ⟧asub ,ₛ M.smod-intro ⟦ μ ⟧mod ⟦ t ⟧tm
+⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = M.to-ext-subst _ ⟦ σ ⟧asub (M.ι[ ty-natural ⟨ μ ∣ T ⟩ ] M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
 ⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
 ⟦ σ ,aslock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
 ⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
   M.to (⟦⟧ltel Λ₂)
-  M.⊚ (M.transf-op (M.transf ⟦ α ⟧two-cell) _)
+  M.⊚ (M.key-subst ⟦ α ⟧two-cell _)
   M.⊚ M.from (⟦⟧ltel Λ₁)
 
 ⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)

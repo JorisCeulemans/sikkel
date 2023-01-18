@@ -489,17 +489,19 @@ record TwoCell (μ ρ : Modality C D) : Set₁ where
   field
     transf : CtxNatTransf (ctx-functor ρ) (ctx-functor μ)
 
-open TwoCell public
+  key-subst : (Γ : Ctx D) → Γ ,lock⟨ ρ ⟩ ⇒ Γ ,lock⟨ μ ⟩
+  key-subst Γ = transf-op transf Γ
 
-module _ {μ ρ : Modality C D} (α : TwoCell μ ρ) where
   coe-ty : {Γ : Ctx D} → Ty (Γ ,lock⟨ μ ⟩) → Ty (Γ ,lock⟨ ρ ⟩)
-  coe-ty {Γ} T = T [ transf-op (transf α) Γ ]
+  coe-ty {Γ} T = T [ key-subst Γ ]
 
   coe : {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ coe-ty T ⟩
-  coe t = mod-intro ρ ((mod-elim μ t) [ transf-op (transf α) _ ]')
+  coe t = mod-intro ρ ((mod-elim μ t) [ key-subst _ ]')
 
   coe-closed : {T : ClosedTy C} → IsClosedNatural T → {Γ : Ctx D} → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ ρ ∣ T ⟩
-  coe-closed {T = T} clT t = ι⁻¹[ mod-cong ρ (closed-natural clT (transf-op (transf α) _)) ] coe t
+  coe-closed {T = T} clT t = ι⁻¹[ mod-cong ρ (closed-natural clT (key-subst _)) ] coe t
+
+open TwoCell public
 
 
 -- The identity 2-cell.

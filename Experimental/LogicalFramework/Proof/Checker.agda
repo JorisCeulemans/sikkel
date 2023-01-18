@@ -10,8 +10,7 @@ open import Relation.Nullary
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
-import Experimental.ClosedTypes as M
-import Experimental.ClosedTypes.Pi as M
+import Experimental.DependentTypes.Model.Function as M
 
 open import Experimental.LogicalFramework.MSTT
 open import Experimental.LogicalFramework.Formula
@@ -145,7 +144,7 @@ check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   refl ← from-dec "Alpha equivalence is currently not supported" (x Str.≟ y)
   refl ← T =T? S
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
-  return ⟅ goals , sgoals ↦ M.ι[ M.sPi-natural _ ] (M.sdλ[ _ ] ⟦p⟧ sgoals) ⟆
+  return ⟅ goals , sgoals ↦ M.ι[ M.Pi-natural _ ] {!M.dλ[ _ ] ⟦p⟧ sgoals!} ⟆
 check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   is-forall {n = n'} κ y S ψ' ← is-forall? ψ
   refl ← n =m? n'
@@ -165,7 +164,7 @@ check-proof Ξ nat-elim-β-zero φ = do
   nat-elim z s n ← is-nat-elim? lhs
   refl ← n =t? zero
   refl ← rhs =t? z
-  return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.snat-β-zero _ _)) M.[ _ ]' ⟆
+  return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id {!M.nat-β-zero _ _!}) M.[ _ ]' ⟆
 check-proof Ξ nat-elim-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-elim z s n ← is-nat-elim? lhs

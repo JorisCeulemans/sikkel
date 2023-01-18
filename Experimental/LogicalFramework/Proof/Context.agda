@@ -7,8 +7,6 @@ open import Relation.Nullary
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 import Model.Modality as M
-import Experimental.ClosedTypes as M
-import Experimental.ClosedTypes.Modal as M
 
 open import Experimental.LogicalFramework.MSTT
 open import Experimental.LogicalFramework.Formula
@@ -98,11 +96,11 @@ contains-assumption? x μ (Ξ ,lock⟨ ρ ⟩) = map-contains (_ⓜ ρ) (skip-lo
 to-ctx-subst : (Ξ : ProofCtx m) → ⟦ Ξ ⟧pctx M.⇒ ⟦ to-ctx Ξ ⟧ctx
 
 ⟦ [] ⟧pctx = M.◇
-⟦ Ξ ,,ᵛ μ ∣ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,,ₛ M.s⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦ Ξ ,,ᶠ μ ∣ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, ((M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧frm ⟩ M.[ to-ctx-subst Ξ ]))
+⟦ Ξ ,,ᵛ μ ∣ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,, M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦ Ξ ,,ᶠ μ ∣ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, (M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧frm ⟩ M.[ to-ctx-subst Ξ ])
 ⟦ Ξ ,lock⟨ μ ⟩ ⟧pctx = M.lock ⟦ μ ⟧mod ⟦ Ξ ⟧pctx
 
 to-ctx-subst [] = M.id-subst M.◇
-to-ctx-subst (Ξ ,,ᵛ _ ∣ _ ∈ _) = (to-ctx-subst Ξ) M.s⊹
+to-ctx-subst (Ξ ,,ᵛ μ ∣ _ ∈ T) = ((to-ctx-subst Ξ) M.⊹) M.⊚ M._≅ᶜ_.to (M.,,-cong (ty-natural ⟨ μ ∣ T ⟩))
 to-ctx-subst (Ξ ,,ᶠ _ ∣ _ ∈ _) = to-ctx-subst Ξ M.⊚ M.π
 to-ctx-subst (Ξ ,lock⟨ μ ⟩) = M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ)
