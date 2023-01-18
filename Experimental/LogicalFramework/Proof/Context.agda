@@ -60,10 +60,10 @@ lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
 lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) α ]frm
 lookup-assumption' (asuc a) ρ α = lookup-assumption' a ρ α
 lookup-assumption' (skip-var a) ρ α = (lookup-assumption' a ρ α) [ π ,slock⟨ ρ ⟩ ]frm
-lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unfuselocks-frm (lookup-assumption' a (ρ' ⓜ ρ) (Ag.subst (TwoCell _) (mod-assoc κ) α))
+lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unfuselocks-frm (lookup-assumption' a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α))
 
 lookup-assumption : Assumption x μ κ Ξ → TwoCell μ κ → Formula (to-ctx Ξ)
-lookup-assumption a α = unlock𝟙-frm (lookup-assumption' a 𝟙 (Ag.subst (TwoCell _) (Ag.sym mod-unitʳ) α))
+lookup-assumption a α = unlock𝟙-frm (lookup-assumption' a 𝟙 (transp-cellʳ (Ag.sym mod-unitʳ) α))
 
 record ContainsAssumption (x : String) (μ : Modality n o) (Ξ : ProofCtx m) : Set where
   constructor contains-assumption

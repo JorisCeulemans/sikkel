@@ -57,10 +57,10 @@ ty-natural T = closed-natural (ty-closed-natural T) _
     ((M.mod-elim ⟦ μ ⟧mod (M.ι⁻¹[ ty-natural ⟨ μ ∣ T ⟩ ] M.ξ)) M.[ M.key-subst ⟦ α ⟧two-cell _ ]')
 ⟦⟧var-helper {T = T} (vsuc v) ρ α = M.ι⁻¹[ ty-natural T ] ((⟦⟧var-helper v ρ α) M.[ M.lock-fmap ⟦ ρ ⟧mod M.π ]')
 ⟦⟧var-helper {T = T} (skip-lock {κ = κ} φ v) ρ α =
-  M.ι⁻¹[ ty-natural T ] ((⟦⟧var-helper v (φ ⓜ ρ) (subst (TwoCell _) (mod-assoc κ) α)) M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]')
+  M.ι⁻¹[ ty-natural T ] ((⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]')
 
 ⟦_,_⟧var-nmls : {μ κ : Modality m n} → (v : Var _ μ T κ Γ) → TwoCell μ κ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
-⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (subst (TwoCell _) (sym mod-unitʳ) α)
+⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
 
 ⟦_⟧tm-nmls : Tm Γ T → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦ var' _ {v} α ⟧tm-nmls = ⟦ v , α ⟧var-nmls

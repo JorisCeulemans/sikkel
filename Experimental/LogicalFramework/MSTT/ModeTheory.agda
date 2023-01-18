@@ -143,6 +143,15 @@ id-cell {μ = non-triv later^[ k ]ⓜconstantly} = ltrⓜcst ≤-refl
 id-cell {μ = non-triv later^[1+ k ]} = ltr ≤-refl
 id-cell {μ = non-triv later^[ k ]ⓜconstantlyⓜforever} = ltrⓜcstⓜfrv ≤-refl
 
+eq-cell : {μ ρ : Modality m n} → μ ≡ ρ → TwoCell μ ρ
+eq-cell refl = id-cell
+
+transp-cellʳ : {μ ρ ρ' : Modality m n} → ρ ≡ ρ' → TwoCell μ ρ → TwoCell μ ρ'
+transp-cellʳ refl α = α
+
+transp-cellˡ : {μ μ' ρ : Modality m n} → μ ≡ μ' → TwoCell μ ρ → TwoCell μ' ρ
+transp-cellˡ refl α = α
+
 infixl 6 _ⓣ-vert_
 _ⓣ-vert_ : TwoCell ρ κ → TwoCell μ ρ → TwoCell μ κ
 id𝟙 ⓣ-vert β = β
