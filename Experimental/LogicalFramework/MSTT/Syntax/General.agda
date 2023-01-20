@@ -48,7 +48,7 @@ data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → 
   skip-lock : (ρ : Modality m p) → Var x μ T κ Γ → Var x μ T (κ ⓜ ρ) (Γ ,lock⟨ ρ ⟩)
 
 infixl 50 _∙_
-data Tm (Γ : Ctx m) : Ty m → Set where
+data Tm : Ctx m → Ty m → Set where
   var' : {μ : Modality m n} (x : Name) {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
   -- ^ When writing programs, one should not directly use var' but rather combine
   --   it with a decision procedure for Var, which will resolve the name.

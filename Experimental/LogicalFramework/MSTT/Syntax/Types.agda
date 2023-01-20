@@ -22,3 +22,5 @@ data Ty (m : Mode) : Set where
 infixr 6 _⇛_
 _⇛_ : Ty m → Ty m → Ty m
 T ⇛ S = ⟨ 𝟙 ∣ T ⟩⇛ S
+
+{-# DISPLAY ⟨_∣_⟩⇛_ 𝟙 T S = _⇛_ T S #-}
