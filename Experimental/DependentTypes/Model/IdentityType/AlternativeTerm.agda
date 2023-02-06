@@ -112,6 +112,6 @@ private
                                                    (ty-subst-cong-subst (ctx-ext-subst-proj₁ _ _) A))
                                           (ctx-ext-subst-β₂ _ _)
                                           (transᵗᵐ (tm-subst-comp a _ _)
-                                                   (transᵗᵐ (ι-cong (ty-subst-comp _ _ _) (tm-subst-cong-subst a (ctx-ext-subst-proj₁ _ _)))
-                                                            (symᵗᵐ (ι-trans (ty-subst-comp _ _ _) (ty-subst-cong-subst _ _) (a [ id-subst _ ]'))))))
+                                                   (transᵗᵐ (ι-cong (tm-subst-cong-subst a (ctx-ext-subst-proj₁ _ _)))
+                                                            (symᵗᵐ ι-trans))))
                                  (Id-cong (ty-subst-id _) (tm-subst-id t) (tm-subst-id a)))

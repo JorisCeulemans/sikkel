@@ -195,7 +195,7 @@ module _ {Γ : Ctx ★} {T : Ty (just-left Γ)} where
   forget-right-η : (t : Tm Γ (forget-right-ty T)) → forget-right-tm (unforget-right-tm t) ≅ᵗᵐ t
   eq (forget-right-η t) _ = refl
 
-module _ {Γ : Ctx ★} {T S : Ty (just-left Γ)} (T=S : T ≅ᵗʸ S) where
+module _ {Γ : Ctx ★} {T S : Ty (just-left Γ)} {T=S : T ≅ᵗʸ S} where
   forget-right-tm-ι : (s : Tm (just-left Γ) S) → ι[ forget-right-ty-cong T=S ] forget-right-tm s ≅ᵗᵐ forget-right-tm (ι[ T=S ] s)
   eq (forget-right-tm-ι s) _ = refl
 
@@ -218,8 +218,8 @@ ctx-functor forget-right = just-left-functor
 ⟨_∣_⟩ forget-right = forget-right-ty
 mod-cong forget-right = forget-right-ty-cong
 eq (from-eq (mod-cong-refl forget-right)) _ = refl
-eq (from-eq (mod-cong-sym forget-right _)) _ = refl
-eq (from-eq (mod-cong-trans forget-right _ _)) _ = refl
+eq (from-eq (mod-cong-sym forget-right)) _ = refl
+eq (from-eq (mod-cong-trans forget-right)) _ = refl
 eq (from-eq (mod-cong-cong forget-right 𝑒)) t = eq (from-eq 𝑒) t
 mod-natural forget-right = forget-right-ty-natural
 eq (from-eq (mod-natural-ty-eq forget-right _ _)) _ = refl
@@ -322,7 +322,7 @@ module _ {Γ : Ctx ★} {T : Ty (just-right Γ)} where
   forget-left-η : (t : Tm Γ (forget-left-ty T)) → forget-left-tm (unforget-left-tm t) ≅ᵗᵐ t
   eq (forget-left-η t) _ = refl
 
-module _ {Γ : Ctx ★} {T S : Ty (just-right Γ)} (T=S : T ≅ᵗʸ S) where
+module _ {Γ : Ctx ★} {T S : Ty (just-right Γ)} {T=S : T ≅ᵗʸ S} where
   forget-left-tm-ι : (s : Tm (just-right Γ) S) → ι[ forget-left-ty-cong T=S ] forget-left-tm s ≅ᵗᵐ forget-left-tm (ι[ T=S ] s)
   eq (forget-left-tm-ι s) _ = refl
 
@@ -345,8 +345,8 @@ ctx-functor forget-left = just-right-functor
 ⟨_∣_⟩ forget-left = forget-left-ty
 mod-cong forget-left = forget-left-ty-cong
 eq (from-eq (mod-cong-refl forget-left)) _ = refl
-eq (from-eq (mod-cong-sym forget-left _)) _ = refl
-eq (from-eq (mod-cong-trans forget-left _ _)) _ = refl
+eq (from-eq (mod-cong-sym forget-left)) _ = refl
+eq (from-eq (mod-cong-trans forget-left)) _ = refl
 eq (from-eq (mod-cong-cong forget-left 𝑒)) t = eq (from-eq 𝑒) t
 mod-natural forget-left = forget-left-ty-natural
 eq (from-eq (mod-natural-ty-eq forget-left _ _)) _ = refl

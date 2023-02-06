@@ -99,11 +99,11 @@ eq (isoʳ (constantly-ty-cong T=S)) = eq (isoʳ T=S)
 constantly-ty-cong-refl : {T : Ty (now Γ)} → constantly-ty-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
 eq (from-eq constantly-ty-cong-refl) _ = refl
 
-constantly-ty-cong-sym : {T S : Ty (now Γ)} (e : T ≅ᵗʸ S) → constantly-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (constantly-ty-cong e)
-eq (from-eq (constantly-ty-cong-sym _)) _ = refl
+constantly-ty-cong-sym : {T S : Ty (now Γ)} {e : T ≅ᵗʸ S} → constantly-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (constantly-ty-cong e)
+eq (from-eq constantly-ty-cong-sym) _ = refl
 
-constantly-ty-cong-trans : {R S T : Ty (now Γ)} (e1 : R ≅ᵗʸ S) (e2 : S ≅ᵗʸ T) → constantly-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (constantly-ty-cong e1) (constantly-ty-cong e2)
-eq (from-eq (constantly-ty-cong-trans _ _)) _ = refl
+constantly-ty-cong-trans : {R S T : Ty (now Γ)} {e1 : R ≅ᵗʸ S} {e2 : S ≅ᵗʸ T} → constantly-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (constantly-ty-cong e1) (constantly-ty-cong e2)
+eq (from-eq constantly-ty-cong-trans) _ = refl
 
 constantly-ty-cong-cong : {T S : Ty (now Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → constantly-ty-cong e ≅ᵉ constantly-ty-cong e'
 eq (from-eq (constantly-ty-cong-cong 𝑒)) t = eq (from-eq 𝑒) t
@@ -116,13 +116,13 @@ module _ {T : Ty (now Γ)} where
   eq (unconstantly-tm-cong t=s) γ = cong (T ⟪ tt , _ ⟫_) (eq t=s γ)
 
 module _ {T S : Ty (now Γ)} where
-  constantly-tm-ι : (T=S : T ≅ᵗʸ S) (s : Tm (now Γ) S) →
+  constantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm (now Γ) S) →
                     ι[ constantly-ty-cong T=S ] constantly-tm s ≅ᵗᵐ constantly-tm (ι[ T=S ] s)
-  eq (constantly-tm-ι T=S s) _ = refl
+  eq (constantly-tm-ι s) _ = refl
 
-  unconstantly-tm-ι : (T=S : T ≅ᵗʸ S) (s : Tm Γ (constantly-ty S)) →
+  unconstantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm Γ (constantly-ty S)) →
                       ι[ T=S ] unconstantly-tm s ≅ᵗᵐ unconstantly-tm (ι[ constantly-ty-cong T=S ] s)
-  eq (unconstantly-tm-ι T=S s) γ = sym (_↣_.naturality (to T=S))
+  eq (unconstantly-tm-ι {T=S = T=S} s) γ = sym (_↣_.naturality (to T=S))
 
 constantly-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ)} → (constantly-ty T) [ σ ] ≅ᵗʸ constantly-ty (T [ now-subst σ ])
 func (from (constantly-ty-natural σ {T})) = ty-ctx-subst T (_⇒_.naturality σ)

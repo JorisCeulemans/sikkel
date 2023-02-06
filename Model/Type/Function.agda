@@ -210,7 +210,7 @@ eq (app-cong f=f' t=t') γ = €-cong f=f' (eq t=t' γ)
 
 module _
   {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
-  (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
+  {T=T' : T ≅ᵗʸ T'} {S=S' : S ≅ᵗʸ S'}
   where
 
   lam-ι : (b : Tm (Γ ,, T') (S' [ π ])) →

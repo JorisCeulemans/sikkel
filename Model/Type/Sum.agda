@@ -67,7 +67,7 @@ module _ {T S : Ty Γ} where
 
 module _
   {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
-  (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
+  {T=T' : T ≅ᵗʸ T'} {S=S' : S ≅ᵗʸ S'}
   where
 
   inl-ι : (t : Tm Γ T') → ι[ ⊞-cong T=T' S=S' ] inl t ≅ᵗᵐ inl (ι[ T=T' ] t)

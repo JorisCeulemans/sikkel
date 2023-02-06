@@ -61,7 +61,7 @@ eq (snd-cong p=p') γ = cong proj₂ (eq p=p' γ)
 
 module _
   {T : Ty Γ} {T' : Ty Γ} {S : Ty Γ} {S' : Ty Γ}
-  (T=T' : T ≅ᵗʸ T') (S=S' : S ≅ᵗʸ S')
+  {T=T' : T ≅ᵗʸ T'} {S=S' : S ≅ᵗʸ S'}
   where
   pair-ι : (t : Tm Γ T') (s : Tm Γ S') → ι[ ⊠-cong T=T' S=S' ] pair t s ≅ᵗᵐ pair (ι[ T=T' ] t) (ι[ S=S' ] s)
   eq (pair-ι t s) _ = refl

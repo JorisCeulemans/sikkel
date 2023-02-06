@@ -87,65 +87,68 @@ module ≅ᵗᵐ-Reasoning where
 --------------------------------------------------
 -- Reindexing maps (cf. Dybjer's internal type theory)
 
-convert-term : (T ↣ S) → Tm Γ T → Tm Γ S
-convert-term η t ⟨ x , γ ⟩' = func η (t ⟨ x , γ ⟩')
-naturality (convert-term {T = T}{S = S} η t) f eγ =
+-- The reindexing map ι can be implemented in terms of a similar
+-- operation for the more primitive transformation T ↣ S. However, the
+-- following version enables Agda to infer the type equality proofs
+-- when using the properties of ι below.
+ι[_]_ : T ≅ᵗʸ S → Tm Γ S → Tm Γ T
+(ι[ T=S ] s) ⟨ x , γ ⟩' = func (to T=S) (s ⟨ x , γ ⟩')
+naturality (ι[_]_ {T = T} {S = S} T=S s) f eγ =
   begin
-    S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
-  ≡⟨ naturality η ⟩
-    func η (T ⟪ f , eγ ⟫ (t ⟨ _ , _ ⟩'))
-  ≡⟨ cong (func η) (naturality t f eγ) ⟩
-    func η (t ⟨ _ , _ ⟩') ∎
+    T ⟪ f , eγ ⟫ func (to T=S) (s ⟨ _ , _ ⟩')
+  ≡⟨ naturality (to T=S) ⟩
+    func (to T=S) (S ⟪ f , eγ ⟫ (s ⟨ _ , _ ⟩'))
+  ≡⟨ cong (func (to T=S)) (naturality s f eγ) ⟩
+    func (to T=S) (s ⟨ _ , _ ⟩') ∎
   where open ≡-Reasoning
 
-convert-term-cong : (η : T ↣ S) → t ≅ᵗᵐ t' →
-                    convert-term η t ≅ᵗᵐ convert-term η t'
-eq (convert-term-cong η t=t') γ = cong (func η) (eq t=t' γ)
-
-ι[_]_ : T ≅ᵗʸ S → Tm Γ S → Tm Γ T
-ι[ T=S ] s = convert-term (to T=S) s
-
-ι-cong : (T=S : T ≅ᵗʸ S) →
+ι-cong : {T=S : T ≅ᵗʸ S} →
          s ≅ᵗᵐ s' → ι[ T=S ] s ≅ᵗᵐ ι[ T=S ] s'
-ι-cong T=S s=s' = convert-term-cong (to T=S) s=s'
+eq (ι-cong {T=S = T=S} s=s') γ = cong (func (to T=S)) (eq s=s' γ)
 
-ι-refl : (t : Tm Γ T) → ι[ reflᵗʸ ] t ≅ᵗᵐ t
-eq (ι-refl t) _ = refl
+ι-congᵉ : {e e' : T ≅ᵗʸ S} {t : Tm Γ S} → e ≅ᵉ e' → ι[ e ] t ≅ᵗᵐ ι[ e' ] t
+eq (ι-congᵉ 𝑒) γ = eq (to-eq 𝑒) _
 
-ι-symˡ : (T=S : T ≅ᵗʸ S) (s : Tm Γ S) →
+ι-refl : {t : Tm Γ T} → ι[ reflᵗʸ ] t ≅ᵗᵐ t
+eq ι-refl _ = refl
+
+ι-symˡ : {T=S : T ≅ᵗʸ S} {s : Tm Γ S} →
          ι[ symᵗʸ T=S ] (ι[ T=S ] s) ≅ᵗᵐ s
-eq (ι-symˡ T=S s) γ = eq (isoʳ T=S) (s ⟨ _ , γ ⟩')
+eq (ι-symˡ {T=S = T=S} {s}) γ = eq (isoʳ T=S) (s ⟨ _ , γ ⟩')
 
-ι-symʳ : (T=S : T ≅ᵗʸ S) (t : Tm Γ T) →
+ι-symʳ : {T=S : T ≅ᵗʸ S} {t : Tm Γ T} →
          ι[ T=S ] (ι[ symᵗʸ T=S ] t) ≅ᵗᵐ t
-eq (ι-symʳ T=S t) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
+eq (ι-symʳ {T=S = T=S} {t}) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
 
 ι⁻¹[_]_ : T ≅ᵗʸ S → Tm Γ T → Tm Γ S
 ι⁻¹[ T=S ] t = ι[ symᵗʸ T=S ] t
 
-ι⁻¹-cong : (T=S : T ≅ᵗʸ S) →
+ι⁻¹-cong : {T=S : T ≅ᵗʸ S} →
            t ≅ᵗᵐ t' → ι⁻¹[ T=S ] t ≅ᵗᵐ ι⁻¹[ T=S ] t'
-ι⁻¹-cong T=S = ι-cong (symᵗʸ T=S)
+ι⁻¹-cong = ι-cong
 
-ι-trans : (T=S : T ≅ᵗʸ S) (S=R : S ≅ᵗʸ R) (r : Tm Γ R) →
+ι⁻¹-congᵉ : {e e' : T ≅ᵗʸ S} {t : Tm Γ T} → e ≅ᵉ e' → ι⁻¹[ e ] t ≅ᵗᵐ ι⁻¹[ e' ] t
+eq (ι⁻¹-congᵉ 𝑒) γ = eq (from-eq 𝑒) _
+
+ι-trans : {T=S : T ≅ᵗʸ S} {S=R : S ≅ᵗʸ R} {r : Tm Γ R} →
           ι[ transᵗʸ T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
-eq (ι-trans T=S S=R r) γ = refl
+eq ι-trans γ = refl
 
-move-ι-right : (T=S : T ≅ᵗʸ S) {t : Tm Γ T} {s : Tm Γ S} →
+move-ι-right : {T=S : T ≅ᵗʸ S} {t : Tm Γ T} {s : Tm Γ S} →
                ι⁻¹[ T=S ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι[ T=S ] s
-move-ι-right T=S t=s = transᵗᵐ (symᵗᵐ (ι-symʳ T=S _)) (ι-cong T=S t=s)
+move-ι-right t=s = transᵗᵐ (symᵗᵐ ι-symʳ) (ι-cong t=s)
 
-move-ι-left : (S=T : S ≅ᵗʸ T) {t : Tm Γ T} {s : Tm Γ S} →
+move-ι-left : {S=T : S ≅ᵗʸ T} {t : Tm Γ T} {s : Tm Γ S} →
               t ≅ᵗᵐ ι⁻¹[ S=T ] s → ι[ S=T ] t ≅ᵗᵐ s
-move-ι-left S=T t=s = transᵗᵐ (ι-cong S=T t=s) (ι-symʳ S=T _)
+move-ι-left t=s = transᵗᵐ (ι-cong t=s) ι-symʳ
 
-move-ι⁻¹-right : (S=T : S ≅ᵗʸ T) {t : Tm Γ T} {s : Tm Γ S} →
+move-ι⁻¹-right : {S=T : S ≅ᵗʸ T} {t : Tm Γ T} {s : Tm Γ S} →
                 ι[ S=T ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι⁻¹[ S=T ] s
-move-ι⁻¹-right S=T t=s = transᵗᵐ (symᵗᵐ (ι-symˡ S=T _)) (ι⁻¹-cong S=T t=s)
+move-ι⁻¹-right t=s = transᵗᵐ (symᵗᵐ ι-symˡ) (ι⁻¹-cong t=s)
 
-move-ι⁻¹-left : (T=S : T ≅ᵗʸ S) {t : Tm Γ T} {s : Tm Γ S} →
+move-ι⁻¹-left : {T=S : T ≅ᵗʸ S} {t : Tm Γ T} {s : Tm Γ S} →
                  t ≅ᵗᵐ ι[ T=S ] s → ι⁻¹[ T=S ] t ≅ᵗᵐ s
-move-ι⁻¹-left T=S t=s = transᵗᵐ (ι⁻¹-cong T=S t=s) (ι-symˡ T=S _)
+move-ι⁻¹-left t=s = transᵗᵐ (ι⁻¹-cong t=s) ι-symˡ
 
 
 --------------------------------------------------
@@ -158,13 +161,9 @@ naturality (t [ σ ]') f eγ = naturality t f _
 tm-subst-cong-tm : (σ : Δ ⇒ Γ) → t ≅ᵗᵐ s → t [ σ ]' ≅ᵗᵐ s [ σ ]'
 eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
 
-convert-subst-commute : (σ : Δ ⇒ Γ) (η : T ↣ S) (t : Tm Γ T) →
-                        convert-term (ty-subst-map σ η) (t [ σ ]') ≅ᵗᵐ (convert-term η t) [ σ ]'
-eq (convert-subst-commute σ η t) δ = refl
-
-ι-subst-commute : (σ : Δ ⇒ Γ) (T=S : T ≅ᵗʸ S) (s : Tm Γ S) →
+ι-subst-commute : {σ : Δ ⇒ Γ} {T=S : T ≅ᵗʸ S} {s : Tm Γ S} →
                   ι[ ty-subst-cong-ty σ T=S ] (s [ σ ]') ≅ᵗᵐ (ι[ T=S ] s) [ σ ]'
-ι-subst-commute σ T=S s = convert-subst-commute σ (to T=S) s
+eq ι-subst-commute _ = refl
 
 tm-subst-cong-subst : {σ τ : Δ ⇒ Γ} (t : Tm Γ T) →
                       (σ=τ : σ ≅ˢ τ) → t [ σ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst σ=τ T ] (t [ τ ]')

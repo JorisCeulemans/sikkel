@@ -256,13 +256,13 @@ eq (isoʳ (▻-cong T=T')) {suc n} = eq (isoʳ T=T')
 eq (from-eq ▻-cong-refl) {zero}  _ = refl
 eq (from-eq ▻-cong-refl) {suc n} _ = refl
 
-▻-cong-sym : {T S : Ty (◄ Γ)} (e : T ≅ᵗʸ S) → ▻-cong (symᵗʸ e) ≅ᵉ symᵗʸ (▻-cong e)
-eq (from-eq (▻-cong-sym _)) {zero}  _ = refl
-eq (from-eq (▻-cong-sym _)) {suc n} _ = refl
+▻-cong-sym : {T S : Ty (◄ Γ)} {e : T ≅ᵗʸ S} → ▻-cong (symᵗʸ e) ≅ᵉ symᵗʸ (▻-cong e)
+eq (from-eq ▻-cong-sym) {zero}  _ = refl
+eq (from-eq ▻-cong-sym) {suc n} _ = refl
 
-▻-cong-trans : {R S T : Ty (◄ Γ)} (e1 : R ≅ᵗʸ S) (e2 : S ≅ᵗʸ T) → ▻-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (▻-cong e1) (▻-cong e2)
-eq (from-eq (▻-cong-trans _ _)) {zero}  _ = refl
-eq (from-eq (▻-cong-trans _ _)) {suc n} _ = refl
+▻-cong-trans : {R S T : Ty (◄ Γ)} {e1 : R ≅ᵗʸ S} {e2 : S ≅ᵗʸ T} → ▻-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (▻-cong e1) (▻-cong e2)
+eq (from-eq ▻-cong-trans) {zero}  _ = refl
+eq (from-eq ▻-cong-trans) {suc n} _ = refl
 
 ▻-cong-cong : {T S : Ty (◄ Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → ▻-cong e ≅ᵉ ▻-cong e'
 eq (from-eq (▻-cong-cong 𝑒)) {zero}  _ = refl
@@ -279,7 +279,7 @@ löb-cong : (T : Ty Γ) {f f' : Tm Γ (▻' T ⇛ T)} → f ≅ᵗᵐ f' → lö
 eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ tt) (eq f=f' γ)
 eq (löb-cong T f=f') {suc n} _ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
 
-module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} (T=T' : T ≅ᵗʸ T') where
+module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} {T=T' : T ≅ᵗʸ T'} where
   next-ι : (t : Tm (◄ Γ) T') → ι[ ▻-cong T=T' ] next t ≅ᵗᵐ next (ι[ T=T' ] t)
   eq (next-ι t) {zero}  _ = refl
   eq (next-ι t) {suc n} _ = refl
@@ -287,15 +287,15 @@ module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} (T=T' : T ≅ᵗʸ T
   prev-ι : (t : Tm Γ (▻ T')) → ι[ T=T' ] (prev t) ≅ᵗᵐ prev (ι[ ▻-cong T=T' ] t)
   eq (prev-ι t) _ = refl
 
-löb-ι : {T : Ty Γ} {T' : Ty Γ} (T=T' : T ≅ᵗʸ T') (f : Tm Γ (▻' T' ⇛ T')) →
+löb-ι : {T : Ty Γ} {T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} (f : Tm Γ (▻' T' ⇛ T')) →
         ι[ T=T' ] (löb T' f) ≅ᵗᵐ löb T (ι[ ⇛-cong (▻'-cong T=T') T=T' ] f)
-eq (löb-ι T=T' f) {zero} _ = refl
-eq (löb-ι {Γ = Γ}{T = T}{T' = T'} T=T' f) {suc n} γ = cong (func (to T=T')) (€-cong (reflᵗᵐ {t = f}) (
+eq (löb-ι f) {zero} _ = refl
+eq (löb-ι {Γ = Γ}{T = T}{T' = T'}{T=T' = T=T'} f) {suc n} γ = cong (func (to T=T')) (€-cong (reflᵗᵐ {t = f}) (
   begin
     löb T' f ⟨ n , _ ⟩'
   ≡˘⟨ eq (isoʳ T=T') _ ⟩
     func (from T=T') (func (to T=T') (löb T' f ⟨ n , _ ⟩'))
-  ≡⟨ cong (func (from T=T')) (eq (löb-ι T=T' f) {n} _) ⟩
+  ≡⟨ cong (func (from T=T')) (eq (löb-ι f) {n} _) ⟩
     func (from T=T') (löb T g ⟨ n , _ ⟩') ∎))
   where
     open ≡-Reasoning

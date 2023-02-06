@@ -53,15 +53,15 @@ ty-subst-seq-fold (σ ∷ σs) T = transᵗʸ (ty-subst-seq-fold σs (T [ σ ]))
 
 tm-subst-seq-fold : (σs : Δ ⇒⁺ Γ) {T : Ty Γ} (t : Tm Γ T) →
                     t ⟦ σs ⟧' ≅ᵗᵐ ι[ ty-subst-seq-fold σs T ] (t [ fold σs ]')
-tm-subst-seq-fold (σ ◼) t = symᵗᵐ (ι-refl _)
+tm-subst-seq-fold (σ ◼) t = symᵗᵐ ι-refl
 tm-subst-seq-fold {Δ = Δ}{Γ} (σ ∷ σs) {T} t =
   begin
     (t [ σ ]') ⟦ σs ⟧'
   ≅⟨ tm-subst-seq-fold σs (t [ σ ]') ⟩
     ι[ ty-subst-seq-fold σs (T [ σ ]) ] ((t [ σ ]') [ fold σs ]')
-  ≅⟨ ι-cong (ty-subst-seq-fold σs (T [ σ ])) (tm-subst-comp t σ (fold σs)) ⟩
+  ≅⟨ ι-cong (tm-subst-comp t σ (fold σs)) ⟩
     ι[ ty-subst-seq-fold σs (T [ σ ]) ] (ι[ ty-subst-comp T σ (fold σs) ] (t [ σ ⊚ fold σs ]'))
-  ≅˘⟨ ι-trans (ty-subst-seq-fold σs (T [ σ ])) (ty-subst-comp T σ (fold σs)) (t [ σ ⊚ fold σs ]') ⟩
+  ≅˘⟨ ι-trans ⟩
     ι[ transᵗʸ (ty-subst-seq-fold σs (T [ σ ])) (ty-subst-comp T σ (fold σs)) ] (t [ σ ⊚ fold σs ]') ∎
   where open ≅ᵗᵐ-Reasoning
 
@@ -87,19 +87,19 @@ tm-subst-seq-cong {Δ = Δ} {T = T} σs τs t e =
     t ⟦ σs ⟧'
   ≅⟨ tm-subst-seq-fold σs t ⟩
     ι[ ty-subst-seq-fold σs T ] (t [ fold σs ]')
-  ≅⟨ ι-cong (ty-subst-seq-fold σs T) (tm-subst-cong-subst t e) ⟩
+  ≅⟨ ι-cong (tm-subst-cong-subst t e) ⟩
     ι[ ty-subst-seq-fold σs T ] (ι[ ty-subst-cong-subst e T ] (t [ fold τs ]'))
-  ≅˘⟨ ι-cong (ty-subst-seq-fold σs T) (ι-cong (ty-subst-cong-subst e T) (ι-symˡ (ty-subst-seq-fold τs T) (t [ fold τs ]'))) ⟩
+  ≅˘⟨ ι-cong (ι-cong ι-symˡ) ⟩
     ι[ ty-subst-seq-fold σs T ] (ι[ ty-subst-cong-subst e T ] (ι[ symᵗʸ (ty-subst-seq-fold τs T) ] (ι[ ty-subst-seq-fold τs T ] (t [ fold τs ]'))))
-  ≅˘⟨ ι-cong (ty-subst-seq-fold σs T) (ι-cong (ty-subst-cong-subst e T) (ι-cong (symᵗʸ (ty-subst-seq-fold τs T)) (tm-subst-seq-fold τs t))) ⟩
+  ≅˘⟨ ι-cong (ι-cong (ι-cong (tm-subst-seq-fold τs t))) ⟩
     ι[ ty-subst-seq-fold σs T ] (ι[ ty-subst-cong-subst e T ] (ι[ symᵗʸ (ty-subst-seq-fold τs T) ] (t ⟦ τs ⟧')))
-  ≅˘⟨ ι-cong (ty-subst-seq-fold σs T) (ι-cong (ty-subst-cong-subst e T) (ι-cong (symᵗʸ (ty-subst-seq-fold τs T)) (ι-refl _))) ⟩
+  ≅˘⟨ ι-cong (ι-cong (ι-cong ι-refl)) ⟩
     ι[ ty-subst-seq-fold σs T ] (ι[ ty-subst-cong-subst e T ] (ι[ symᵗʸ (ty-subst-seq-fold τs T) ] (ι[ reflᵗʸ ] (t ⟦ τs ⟧'))))
-  ≅˘⟨ ι-cong (ty-subst-seq-fold σs T) (ι-cong (ty-subst-cong-subst e T) (ι-trans (symᵗʸ (ty-subst-seq-fold τs T)) reflᵗʸ (t ⟦ τs ⟧'))) ⟩
+  ≅˘⟨ ι-cong (ι-cong ι-trans) ⟩
     ι[ ty-subst-seq-fold σs T ] (ι[ ty-subst-cong-subst e T ] (ι[ transᵗʸ (symᵗʸ (ty-subst-seq-fold τs T)) reflᵗʸ ] (t ⟦ τs ⟧')))
-  ≅˘⟨ ι-cong (ty-subst-seq-fold σs T) (ι-trans (ty-subst-cong-subst e T) (transᵗʸ (symᵗʸ (ty-subst-seq-fold τs T)) reflᵗʸ) (t ⟦ τs ⟧')) ⟩
+  ≅˘⟨ ι-cong ι-trans ⟩
     ι[ ty-subst-seq-fold σs T ] (ι[ transᵗʸ (ty-subst-cong-subst e T) (transᵗʸ (symᵗʸ (ty-subst-seq-fold τs T)) reflᵗʸ) ] (t ⟦ τs ⟧'))
-  ≅˘⟨ ι-trans (ty-subst-seq-fold σs T) (transᵗʸ (ty-subst-cong-subst e T) (transᵗʸ (symᵗʸ (ty-subst-seq-fold τs T)) reflᵗʸ)) (t ⟦ τs ⟧') ⟩
+  ≅˘⟨ ι-trans ⟩
     ι[ transᵗʸ (ty-subst-seq-fold σs T) (transᵗʸ (ty-subst-cong-subst e T) (transᵗʸ (symᵗʸ (ty-subst-seq-fold τs T)) reflᵗʸ)) ] (t ⟦ τs ⟧')
   ≅⟨⟩
     ι[ ty-subst-seq-cong σs τs T e ] (t ⟦ τs ⟧') ∎

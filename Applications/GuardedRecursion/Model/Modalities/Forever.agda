@@ -105,11 +105,11 @@ eq (isoʳ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoʳ T=S) _)
 forever-ty-cong-refl : {T : Ty (constantly-ctx Γ)} → forever-ty-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
 eq (from-eq forever-ty-cong-refl) _ = to-ω-limit-eq (λ _ → refl)
 
-forever-ty-cong-sym : {T S : Ty (constantly-ctx Γ)} (e : T ≅ᵗʸ S) → forever-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (forever-ty-cong e)
-eq (from-eq (forever-ty-cong-sym _)) _ = refl
+forever-ty-cong-sym : {T S : Ty (constantly-ctx Γ)} {e : T ≅ᵗʸ S} → forever-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (forever-ty-cong e)
+eq (from-eq forever-ty-cong-sym) _ = refl
 
-forever-ty-cong-trans : {R S T : Ty (constantly-ctx Γ)} (e1 : R ≅ᵗʸ S) (e2 : S ≅ᵗʸ T) → forever-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (forever-ty-cong e1) (forever-ty-cong e2)
-eq (from-eq (forever-ty-cong-trans _ _)) _ = to-ω-limit-eq (λ _ → refl)
+forever-ty-cong-trans : {R S T : Ty (constantly-ctx Γ)} {e1 : R ≅ᵗʸ S} {e2 : S ≅ᵗʸ T} → forever-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (forever-ty-cong e1) (forever-ty-cong e2)
+eq (from-eq forever-ty-cong-trans) _ = to-ω-limit-eq (λ _ → refl)
 
 forever-ty-cong-cong : {T S : Ty (constantly-ctx Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → forever-ty-cong e ≅ᵉ forever-ty-cong e'
 eq (from-eq (forever-ty-cong-cong 𝑒)) t = to-ω-limit-eq (λ n → eq (from-eq 𝑒) (limit t n))
@@ -121,7 +121,7 @@ module _ {T : Ty (constantly-ctx Γ)} where
   unforever-tm-cong : {t s : Tm Γ (forever-ty T)} → t ≅ᵗᵐ s → unforever-tm t ≅ᵗᵐ unforever-tm s
   eq (unforever-tm-cong t=s) γ = cong (λ x → limit x _) (eq t=s γ)
 
-module _ {T S : Ty (constantly-ctx Γ)} (T=S : T ≅ᵗʸ S) where
+module _ {T S : Ty (constantly-ctx Γ)} {T=S : T ≅ᵗʸ S} where
   forever-tm-ι : (s : Tm (constantly-ctx Γ) S) → ι[ forever-ty-cong T=S ] forever-tm s ≅ᵗᵐ forever-tm (ι[ T=S ] s)
   eq (forever-tm-ι s) _ = to-ω-limit-eq (λ _ → refl)
 
