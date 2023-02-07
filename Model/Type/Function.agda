@@ -216,7 +216,7 @@ module _
   lam-ι : (b : Tm (Γ ,, T') (S' [ π ])) →
           ι[ ⇛-cong T=T' S=S' ] (lam T' b) ≅ᵗᵐ
             lam T (ι[ ty-subst-cong-ty π S=S' ] (
-                   ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-proj₁ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ)) S' ] (
+                   ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-β₁ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ)) S' ] (
                    ι⁻¹[ ty-subst-comp S' π (ty-eq-to-ext-subst Γ T=T') ] (
                    b [ ty-eq-to-ext-subst Γ T=T' ]'))))
   eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym (cong (func (to S=S')) (strong-ty-id S')))

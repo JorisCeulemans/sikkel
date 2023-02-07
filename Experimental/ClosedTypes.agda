@@ -81,7 +81,7 @@ _,ₛ_ : (Δ ⇒ Γ) → SimpleTm Δ T → (Δ ⇒ Γ ,,ₛ T)
 σ ,ₛ t = to-ext-subst _ σ (ι[ closed-ty-natural _ σ ] t)
 
 ,ₛ-β1 : (σ : Δ ⇒ Γ) (t : SimpleTm Δ T) → π ⊚ (σ ,ₛ t) ≅ˢ σ
-,ₛ-β1 σ t = ctx-ext-subst-proj₁ σ _
+,ₛ-β1 σ t = ctx-ext-subst-β₁ σ _
 
 ,ₛ-β2 : (σ : Δ ⇒ Γ) (t : SimpleTm Δ T) → (sξ [ σ ,ₛ t ]s) ≅ᵗᵐ t
 eq (,ₛ-β2 {T = T} σ t) δ = trans (ty-id T) (ty-id T)

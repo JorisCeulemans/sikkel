@@ -109,9 +109,9 @@ private
       proof : (t : Tm Γ A) → (Id ξ (a [ π ]')) [ ⟨ id-subst Γ , t [ id-subst Γ ]' ∈ A ⟩ ] ≅ᵗʸ Id t a
       proof t = transᵗʸ (Id-natural _)
                         (transᵗʸ (Id-cong (transᵗʸ (ty-subst-comp A _ _)
-                                                   (ty-subst-cong-subst (ctx-ext-subst-proj₁ _ _) A))
+                                                   (ty-subst-cong-subst (ctx-ext-subst-β₁ _ _) A))
                                           (ctx-ext-subst-β₂ _ _)
                                           (transᵗᵐ (tm-subst-comp a _ _)
-                                                   (transᵗᵐ (ι-cong (tm-subst-cong-subst a (ctx-ext-subst-proj₁ _ _)))
+                                                   (transᵗᵐ (ι-cong (tm-subst-cong-subst a (ctx-ext-subst-β₁ _ _)))
                                                             (symᵗᵐ ι-trans))))
                                  (Id-cong (ty-subst-id _) (tm-subst-id t) (tm-subst-id a)))

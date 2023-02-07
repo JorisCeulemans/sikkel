@@ -62,20 +62,20 @@ naturality (to-ext-subst {Δ = Δ} T σ t) {δ = δ} = to-Σ-ty-eq T (naturality
 
 syntax to-ext-subst T σ t = ⟨ σ , t ∈ T ⟩
 
-ctx-ext-subst-proj₁ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ , t ∈ T ⟩ ≅ˢ σ
-eq (ctx-ext-subst-proj₁ σ t) δ = refl
+ctx-ext-subst-β₁ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ , t ∈ T ⟩ ≅ˢ σ
+eq (ctx-ext-subst-β₁ σ t) δ = refl
 
-ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
-                      ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T ] t
-eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (strong-ty-id T)
-
--- Reformulation of ctx-ext-subst-proj₂
 ctx-ext-subst-β₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
-                   ξ [ ⟨ σ , t ∈ T ⟩ ]' ≅ᵗᵐ ι[ transᵗʸ (ty-subst-comp T π _) (ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) T) ] t
+                   ξ [ ⟨ σ , t ∈ T ⟩ ]' ≅ᵗᵐ ι[ transᵗʸ (ty-subst-comp T π _) (ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) T) ] t
 eq (ctx-ext-subst-β₂ {T = T} σ t) _ = sym (strong-ty-id T)
 
 ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≅ˢ τ
 eq (ctx-ext-subst-η τ) δ = refl
+
+-- Some consequences of the properties above
+ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
+                      ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) T ] t
+eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (strong-ty-id T)
 
 ctx-ext-subst-comp : (σ : Γ ⇒ Θ) (t : Tm Γ (T [ σ ])) (τ : Δ ⇒ Γ) →
                      ⟨ σ , t ∈ T ⟩ ⊚ τ ≅ˢ ⟨ σ ⊚ τ , ι⁻¹[ ty-subst-comp T σ τ ] (t [ τ ]') ∈ T ⟩
@@ -101,7 +101,7 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
   S [ π ] [ ⟨ σ , t ∈ T ⟩ ]
     ≅⟨ ty-subst-comp S π ⟨ σ , t ∈ T ⟩ ⟩
   S [ π ⊚ ⟨ σ , t ∈ T ⟩ ]
-    ≅⟨ ty-subst-cong-subst (ctx-ext-subst-proj₁ σ t) S ⟩
+    ≅⟨ ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) S ⟩
   S [ σ ] ∎
   where open ≅ᵗʸ-Reasoning
 
