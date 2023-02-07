@@ -334,7 +334,7 @@ from-eq (transᵗʸ-congˡ 𝑒) = ⊙-congˡ _ (from-eq 𝑒)
 transᵗʸ-congʳ : {e1 : T ≅ᵗʸ S} {e2 e2' : S ≅ᵗʸ R} → e2 ≅ᵉ e2' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1 e2'
 from-eq (transᵗʸ-congʳ 𝑒) = ⊙-congʳ _ (from-eq 𝑒)
 
--- Groupoid laws for the groupoid Ty Γ
+-- Groupoid laws for the groupoid Ty Γ and some consequences
 transᵗʸ-assoc : {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} {e'' : T3 ≅ᵗʸ T4} →
                 transᵗʸ (transᵗʸ e e') e'' ≅ᵉ transᵗʸ e (transᵗʸ e' e'')
 from-eq transᵗʸ-assoc = symⁿ (⊙-assoc _ _ _)
@@ -350,6 +350,9 @@ from-eq (symᵗʸ-invˡ {e = e}) = isoʳ e
 
 symᵗʸ-invʳ : {e : T ≅ᵗʸ S} → transᵗʸ e (symᵗʸ e) ≅ᵉ reflᵗʸ
 from-eq (symᵗʸ-invʳ {e = e}) = isoˡ e
+
+symᵗʸ-transᵗʸ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → symᵗʸ (transᵗʸ e e') ≅ᵉ transᵗʸ (symᵗʸ e') (symᵗʸ e)
+from-eq symᵗʸ-transᵗʸ = reflⁿ
 
 
 --------------------------------------------------

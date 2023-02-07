@@ -21,7 +21,7 @@ private
   variable
     x : Ob
     Γ Δ Θ : Ctx C
-    T S R : Ty Γ
+    T S S' R : Ty Γ
 
 
 --------------------------------------------------
@@ -120,6 +120,10 @@ eq (ι-symˡ {T=S = T=S} {s}) γ = eq (isoʳ T=S) (s ⟨ _ , γ ⟩')
          ι[ T=S ] (ι[ symᵗʸ T=S ] t) ≅ᵗᵐ t
 eq (ι-symʳ {T=S = T=S} {t}) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
 
+ι-trans : {T=S : T ≅ᵗʸ S} {S=R : S ≅ᵗʸ R} {r : Tm Γ R} →
+          ι[ transᵗʸ T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
+eq ι-trans γ = refl
+
 ι⁻¹[_]_ : T ≅ᵗʸ S → Tm Γ T → Tm Γ S
 ι⁻¹[ T=S ] t = ι[ symᵗʸ T=S ] t
 
@@ -130,9 +134,9 @@ eq (ι-symʳ {T=S = T=S} {t}) γ = eq (isoˡ T=S) (t ⟨ _ , γ ⟩')
 ι⁻¹-congᵉ : {e e' : T ≅ᵗʸ S} {t : Tm Γ T} → e ≅ᵉ e' → ι⁻¹[ e ] t ≅ᵗᵐ ι⁻¹[ e' ] t
 eq (ι⁻¹-congᵉ 𝑒) γ = eq (from-eq 𝑒) _
 
-ι-trans : {T=S : T ≅ᵗʸ S} {S=R : S ≅ᵗʸ R} {r : Tm Γ R} →
-          ι[ transᵗʸ T=S S=R ] r ≅ᵗᵐ ι[ T=S ] (ι[ S=R ] r)
-eq ι-trans γ = refl
+ι⁻¹-trans : {T=S : T ≅ᵗʸ S} {S=R : S ≅ᵗʸ R} {t : Tm Γ T} →
+            ι⁻¹[ transᵗʸ T=S S=R ] t ≅ᵗᵐ ι⁻¹[ S=R ] (ι⁻¹[ T=S ] t)
+eq ι⁻¹-trans _ = refl
 
 move-ι-right : {T=S : T ≅ᵗʸ S} {t : Tm Γ T} {s : Tm Γ S} →
                ι⁻¹[ T=S ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι[ T=S ] s
@@ -143,12 +147,32 @@ move-ι-left : {S=T : S ≅ᵗʸ T} {t : Tm Γ T} {s : Tm Γ S} →
 move-ι-left t=s = transᵗᵐ (ι-cong t=s) ι-symʳ
 
 move-ι⁻¹-right : {S=T : S ≅ᵗʸ T} {t : Tm Γ T} {s : Tm Γ S} →
-                ι[ S=T ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι⁻¹[ S=T ] s
+                 ι[ S=T ] t ≅ᵗᵐ s → t ≅ᵗᵐ ι⁻¹[ S=T ] s
 move-ι⁻¹-right t=s = transᵗᵐ (symᵗᵐ ι-symˡ) (ι⁻¹-cong t=s)
 
 move-ι⁻¹-left : {T=S : T ≅ᵗʸ S} {t : Tm Γ T} {s : Tm Γ S} →
-                 t ≅ᵗᵐ ι[ T=S ] s → ι⁻¹[ T=S ] t ≅ᵗᵐ s
+                t ≅ᵗᵐ ι[ T=S ] s → ι⁻¹[ T=S ] t ≅ᵗᵐ s
 move-ι⁻¹-left t=s = transᵗᵐ (ι⁻¹-cong t=s) ι-symˡ
+
+ι-congᵉ-2-1 : {R=S : R ≅ᵗʸ S} {S=T : S ≅ᵗʸ T} {R=T : R ≅ᵗʸ T} {t : Tm Γ T} →
+              transᵗʸ R=S S=T ≅ᵉ R=T →
+              ι[ R=S ] (ι[ S=T ] t) ≅ᵗᵐ ι[ R=T ] t
+ι-congᵉ-2-1 𝑒 = transᵗᵐ (symᵗᵐ ι-trans) (ι-congᵉ 𝑒)
+
+ι⁻¹-congᵉ-2-1 : {R=S : R ≅ᵗʸ S} {S=T : S ≅ᵗʸ T} {R=T : R ≅ᵗʸ T} {r : Tm Γ R} →
+                transᵗʸ R=S S=T ≅ᵉ R=T →
+                ι⁻¹[ S=T ] (ι⁻¹[ R=S ] r) ≅ᵗᵐ ι⁻¹[ R=T ] r
+ι⁻¹-congᵉ-2-1 𝑒 = transᵗᵐ (symᵗᵐ ι⁻¹-trans) (ι⁻¹-congᵉ 𝑒)
+
+ι-congᵉ-2-2 : {R=S : R ≅ᵗʸ S} {S=T : S ≅ᵗʸ T} {R=S' : R ≅ᵗʸ S'} {S'=T : S' ≅ᵗʸ T} {t : Tm Γ T} →
+              transᵗʸ R=S S=T ≅ᵉ transᵗʸ R=S' S'=T →
+              ι[ R=S ] (ι[ S=T ] t) ≅ᵗᵐ ι[ R=S' ] (ι[ S'=T ] t)
+ι-congᵉ-2-2 𝑒 = transᵗᵐ (symᵗᵐ ι-trans) (transᵗᵐ (ι-congᵉ 𝑒) ι-trans)
+
+ι⁻¹-congᵉ-2-2 : {R=S : R ≅ᵗʸ S} {S=T : S ≅ᵗʸ T} {R=S' : R ≅ᵗʸ S'} {S'=T : S' ≅ᵗʸ T} {r : Tm Γ R} →
+                transᵗʸ R=S S=T ≅ᵉ transᵗʸ R=S' S'=T →
+                ι⁻¹[ S=T ] (ι⁻¹[ R=S ] r) ≅ᵗᵐ ι⁻¹[ S'=T ] (ι⁻¹[ R=S' ] r)
+ι⁻¹-congᵉ-2-2 𝑒 = transᵗᵐ (symᵗᵐ ι⁻¹-trans) (transᵗᵐ (ι⁻¹-congᵉ 𝑒) ι⁻¹-trans)
 
 
 --------------------------------------------------
@@ -164,6 +188,10 @@ eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
 ι-subst-commute : {σ : Δ ⇒ Γ} {T=S : T ≅ᵗʸ S} {s : Tm Γ S} →
                   ι[ ty-subst-cong-ty σ T=S ] (s [ σ ]') ≅ᵗᵐ (ι[ T=S ] s) [ σ ]'
 eq ι-subst-commute _ = refl
+
+ι⁻¹-subst-commute : {σ : Δ ⇒ Γ} {T=S : T ≅ᵗʸ S} {t : Tm Γ T} →
+                    ι⁻¹[ ty-subst-cong-ty σ T=S ] (t [ σ ]') ≅ᵗᵐ (ι⁻¹[ T=S ] t) [ σ ]'
+eq ι⁻¹-subst-commute _ = refl
 
 tm-subst-cong-subst : {σ τ : Δ ⇒ Γ} (t : Tm Γ T) →
                       (σ=τ : σ ≅ˢ τ) → t [ σ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst σ=τ T ] (t [ τ ]')

@@ -73,6 +73,9 @@ ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term �
 eq (ctx-ext-subst-η τ) δ = refl
 
 -- Some consequences of the properties above
+ctx-ext-subst-congʳ : (σ : Δ ⇒ Γ) {t t' : Tm Δ (T [ σ ])} → t ≅ᵗᵐ t' → ⟨ σ , t ∈ T ⟩ ≅ˢ ⟨ σ , t' ∈ T ⟩
+eq (ctx-ext-subst-congʳ σ e) δ = cong [ _ ,_] (eq e δ)
+
 ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) T ] t
 eq (ctx-ext-subst-proj₂ {Γ = Γ}{T = T} σ t) δ = sym (strong-ty-id T)
