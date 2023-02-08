@@ -221,8 +221,19 @@ module _
                    b [ ty-eq-to-ext-subst Γ T=T' ]'))))
   eq (lam-ι b) γ = to-pshfun-eq (λ _ _ _ → sym (cong (func (to S=S')) (strong-ty-id S')))
 
+  lam-ι⁻¹ : (b : Tm (Γ ,, T) (S [ π ])) →
+            ι⁻¹[ ⇛-cong T=T' S=S' ] (lam T b) ≅ᵗᵐ
+              lam T' (ι⁻¹[ ty-subst-cong-ty π S=S' ] (
+                      ι⁻¹[ ty-subst-cong-subst (ctx-ext-subst-β₁ π (ι[ ty-subst-cong-ty π T=T' ] ξ)) S ] (
+                      ι⁻¹[ ty-subst-comp S π _ ] (
+                      b [ _ ]'))))
+  eq (lam-ι⁻¹ b) γ = to-pshfun-eq (λ _ _ _ → cong (func (from S=S')) (sym (strong-ty-id S)))
+
   app-ι : (f : Tm Γ (T' ⇛ S')) (t : Tm Γ T') → app (ι[ ⇛-cong T=T' S=S' ] f) (ι[ T=T' ] t) ≅ᵗᵐ ι[ S=S' ] (app f t)
   eq (app-ι f t) γ = cong (func (to S=S') ∘ f ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩_) (eq (isoʳ T=T') (t ⟨ _ , γ ⟩'))
+
+  app-ι⁻¹ : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) → app (ι⁻¹[ ⇛-cong T=T' S=S' ] f) (ι⁻¹[ T=T' ] t) ≅ᵗᵐ ι⁻¹[ S=S' ] (app f t)
+  eq (app-ι⁻¹ f t) γ = cong (func (from S=S') ∘ f ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩_) (eq (isoˡ T=T') (t ⟨ _ , γ ⟩'))
 
 
 --------------------------------------------------
@@ -312,7 +323,7 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   lam-natural : (b : Tm (Γ ,, T) (S [ π ])) →
                 (lam T b) [ σ ]' ≅ᵗᵐ
                   ι[ ⇛-natural ] (
-                  lam (T [ σ ]) (ι⁻¹[ ty-subst-seq-cong (π ∷ σ ⊹ ◼) (σ ∷ π ◼) S (⊹-π-comm σ) ] (b [ σ ⊹ ]')))
+                  lam (T [ σ ]) (ι⁻¹[ transᵗʸ (ty-subst-comp S π (σ ⊹)) (transᵗʸ (ty-subst-cong-subst (⊹-π-comm σ) S) (symᵗʸ (ty-subst-comp S σ π))) ] (b [ σ ⊹ ]')))
   eq (lam-natural b) δ = to-pshfun-eq (λ ρ {γ'} eγ t → sym (
     let α : Γ ⟪ hom-id ⟫ func σ (Δ ⟪ ρ ⟫ δ) ≡ γ'
         α = trans (ctx-id Γ) (trans (sym (naturality σ)) eγ)
@@ -364,24 +375,64 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
 
 
 --------------------------------------------------
--- Instance of ClosedType
+-- Relating function types and closed types
 
-fun-closed : {A B : ClosedTy C} → IsClosedNatural A → IsClosedNatural B →
-             IsClosedNatural (A ⇛ B)
-closed-natural (fun-closed clA clB) σ = transᵗʸ (⇛-natural σ) (⇛-cong (closed-natural clA σ) (closed-natural clB σ))
-eq (from-eq (closed-id (fun-closed clA clB))) f = to-pshfun-eq (λ ρ eγ a →
-  trans (eq (from-eq (closed-id clB)) _)
-        (trans ($-cong f refl)
-               (cong (f $⟨ ρ , eγ ⟩_) (eq (to-eq (closed-id clA)) a))))
-eq (from-eq (closed-⊚ (fun-closed clA clB) σ τ)) f = to-pshfun-eq (λ ρ eγ a →
-  trans (eq (from-eq (closed-⊚ clB σ τ)) _)
-        (cong (func (from (closed-natural clB (σ ⊚ τ))))
+lamcl : {A : Ty Γ} {B : ClosedTy C} → IsClosedNatural B → Tm (Γ ,, A) B → Tm Γ (A ⇛ B)
+lamcl clB b = lam _ (ι[ closed-natural clB π ] b)
+
+module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where
+  fun-closed : IsClosedNatural (A ⇛ B)
+  closed-natural fun-closed σ = transᵗʸ (⇛-natural σ) (⇛-cong (closed-natural clA σ) (closed-natural clB σ))
+  eq (from-eq (closed-id fun-closed)) f = to-pshfun-eq (λ ρ eγ a →
+    trans (eq (from-eq (closed-id clB)) _)
           (trans ($-cong f refl)
-                 (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-⊚ clA σ τ)) a)))))
-eq (from-eq (closed-subst-eq (fun-closed {A = A} {B = B} clA clB) {Δ = Δ} {σ = σ} {τ} ε)) f = to-pshfun-eq (λ ρ eγ a →
-  trans (cong (func (from (closed-natural clB τ))) (sym (trans (ty-cong-2-1 B hom-idˡ {eg = trans (ctx-id Δ) (sym (eq ε _))}) (ty-id B))))
-        (trans (eq (from-eq (closed-subst-eq clB ε)) _)
-               (cong (func (from (closed-natural clB σ)))
-                     (trans (sym (naturality f))
-                            (trans ($-cong f (trans hom-idʳ hom-idˡ))
-                                   (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-subst-eq clA ε)) a)))))))
+                 (cong (f $⟨ ρ , eγ ⟩_) (eq (to-eq (closed-id clA)) a))))
+  eq (from-eq (closed-⊚ fun-closed σ τ)) f = to-pshfun-eq (λ ρ eγ a →
+    trans (eq (from-eq (closed-⊚ clB σ τ)) _)
+          (cong (func (from (closed-natural clB (σ ⊚ τ))))
+            (trans ($-cong f refl)
+                   (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-⊚ clA σ τ)) a)))))
+  eq (from-eq (closed-subst-eq fun-closed {Δ = Δ} {σ = σ} {τ} ε)) f = to-pshfun-eq (λ ρ eγ a →
+    trans (cong (func (from (closed-natural clB τ))) (sym (trans (ty-cong-2-1 B hom-idˡ {eg = trans (ctx-id Δ) (sym (eq ε _))}) (ty-id B))))
+          (trans (eq (from-eq (closed-subst-eq clB ε)) _)
+                 (cong (func (from (closed-natural clB σ)))
+                       (trans (sym (naturality f))
+                              (trans ($-cong f (trans hom-idʳ hom-idˡ))
+                                     (cong (f $⟨ ρ , _ ⟩_) (eq (to-eq (closed-subst-eq clA ε)) a)))))))
+
+  lamcl-natural : {σ : Γ ⇒ Δ} {b : Tm (Δ ,, A) B} → (lamcl clB b) [ fun-closed ∣ σ ]cl ≅ᵗᵐ lamcl clB (b [ clB ∣ lift-cl-subst clA σ ]cl)
+  lamcl-natural {σ = σ} =
+    transᵗᵐ (ι⁻¹-cong (lam-natural _ _))
+    (transᵗᵐ ι⁻¹-trans
+    (transᵗᵐ (ι⁻¹-cong ι-symˡ)
+    (transᵗᵐ (lam-ι⁻¹ _)
+    (lam-cong A (transᵗᵐ (ι⁻¹-cong (ι⁻¹-cong (ι⁻¹-cong (transᵗᵐ (symᵗᵐ ι⁻¹-subst-commute) (transᵗᵐ (ι⁻¹-cong (tm-subst-comp _ _ _)) (ι⁻¹-cong (ι-cong (symᵗᵐ ι-subst-commute))))))))
+                (transᵗᵐ (symᵗᵐ ι⁻¹-trans)
+                (transᵗᵐ (symᵗᵐ ι⁻¹-trans)
+                (transᵗᵐ (symᵗᵐ ι⁻¹-trans)
+                (transᵗᵐ (symᵗᵐ ι-trans)
+                (transᵗᵐ (ι-congᵉ-2-2 e-proof)
+                (transᵗᵐ (ι-cong (symᵗᵐ (tm-subst-cong-subst _ (transˢ s-proof (symˢ (ctx-ext-subst-comp _ _ _)))))) ι-trans)))))))))))
+    where
+      e-proof : _ ≅ᵉ _
+      eq (from-eq e-proof) t =
+        let α = _
+        in sym
+          (trans (cong (λ x → ty-ctx-subst B α (func (to (closed-natural clB (lift-cl-subst clA σ))) (func (from (closed-natural clB π)) x)))
+                       (sym (eq (isoʳ (closed-natural clB σ)) t)))
+          (trans (cong (λ x → ty-ctx-subst B α (func (to (closed-natural clB (lift-cl-subst clA σ))) x))
+                 (trans (eq (from-eq (closed-⊚ clB σ π)) _)
+                 (trans (sym (eq (from-eq (closed-subst-eq clB (symˢ (lift-cl-subst-π-commute clA)))) _)) (sym (eq (from-eq (closed-⊚ clB π (lift-cl-subst clA σ))) _)))))
+          (trans (cong (ty-ctx-subst B α) (eq (isoˡ (closed-natural clB (lift-cl-subst clA σ))) _))
+          (trans (naturality (from (closed-natural clB π)))
+          (cong (func (from (closed-natural clB π))) (ty-cong-2-2 B refl))))))
+
+      s-proof : _ ≅ˢ _
+      s-proof = transˢ (symˢ (ctx-ext-subst-congˡ (transˢ ⊚-assoc (⊚-congˡ (ctx-ext-subst-β₁ π _))) _))
+                       (ctx-ext-subst-congʳ _ (record { eq = λ γ → trans (strong-ty-id A)
+                                                                   (trans (sym (eq (to-eq (closed-⊚ clA σ π)) _))
+                                                                   (cong (func (to (closed-natural clA σ))) (eq (isoˡ (closed-natural clA π)) _))) }))
+
+  app-cl-natural : {σ : Γ ⇒ Δ} {f : Tm Δ (A ⇛ B)} {a : Tm Δ A} →
+                   (app f a) [ clB ∣ σ ]cl ≅ᵗᵐ app (f [ fun-closed ∣ σ ]cl) (a [ clA ∣ σ ]cl)
+  app-cl-natural = transᵗᵐ (ι⁻¹-cong (app-natural _ _ _)) (transᵗᵐ (symᵗᵐ (app-ι⁻¹ _ _)) (app-cong (symᵗᵐ ι⁻¹-trans) reflᵗᵐ))

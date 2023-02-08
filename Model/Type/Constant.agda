@@ -84,6 +84,9 @@ eq (from-eq (closed-id (const-closed {A = A}))) _ = refl
 eq (from-eq (closed-⊚ (const-closed {A = A}) σ τ)) _ = refl
 eq (from-eq (closed-subst-eq (const-closed {A = A}) ε)) _ = refl
 
+const-cl-natural : {A : Set} {a : A} (σ : Δ ⇒ Γ) → (const a) [ const-closed ∣ σ ]cl ≅ᵗᵐ const a
+const-cl-natural σ = transᵗᵐ (ι⁻¹-cong (const-natural _ σ)) ι-symˡ
+
 
 --------------------------------------------------
 -- The unit type

@@ -66,11 +66,20 @@ module _
   pair-ι : (t : Tm Γ T') (s : Tm Γ S') → ι[ ⊠-cong T=T' S=S' ] pair t s ≅ᵗᵐ pair (ι[ T=T' ] t) (ι[ S=S' ] s)
   eq (pair-ι t s) _ = refl
 
+  pair-ι⁻¹ : (t : Tm Γ T) (s : Tm Γ S) → ι⁻¹[ ⊠-cong T=T' S=S' ] pair t s ≅ᵗᵐ pair (ι⁻¹[ T=T' ] t) (ι⁻¹[ S=S' ] s)
+  eq (pair-ι⁻¹ t s) _ = refl
+
   fst-ι : (p : Tm Γ (T' ⊠ S')) → ι[ T=T' ] fst p ≅ᵗᵐ fst (ι[ ⊠-cong T=T' S=S' ] p)
   eq (fst-ι p) _ = refl
 
+  fst-ι⁻¹ : (p : Tm Γ (T ⊠ S)) → ι⁻¹[ T=T' ] fst p ≅ᵗᵐ fst (ι⁻¹[ ⊠-cong T=T' S=S' ] p)
+  eq (fst-ι⁻¹ p) _ = refl
+
   snd-ι : (p : Tm Γ (T' ⊠ S')) → ι[ S=S' ] snd p ≅ᵗᵐ snd (ι[ ⊠-cong T=T' S=S' ] p)
   eq (snd-ι p) _ = refl
+
+  snd-ι⁻¹ : (p : Tm Γ (T ⊠ S)) → ι⁻¹[ S=S' ] snd p ≅ᵗᵐ snd (ι⁻¹[ ⊠-cong T=T' S=S' ] p)
+  eq (snd-ι⁻¹ p) _ = refl
 
 module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊠-natural : (T ⊠ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊠ (S [ σ ])
@@ -129,9 +138,21 @@ module _ (t : Tm Γ T) (s : Tm Γ S) where
 eq (η-⊠ᶠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
                                                  (trans (ty-cong-2-1 S hom-idʳ) (ty-id S)))
 
-prod-closed : {A B : ClosedTy C} → IsClosedNatural A → IsClosedNatural B →
-              IsClosedNatural (A ⊠ B)
-closed-natural (prod-closed clA clB) σ = transᵗʸ (⊠-natural σ) (⊠-cong (closed-natural clA σ) (closed-natural clB σ))
-eq (from-eq (closed-id (prod-closed clA clB))) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-id clA)) a) (eq (from-eq (closed-id clB)) b)
-eq (from-eq (closed-⊚ (prod-closed clA clB) σ τ)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-⊚ clA σ τ)) a) (eq (from-eq (closed-⊚ clB σ τ)) b)
-eq (from-eq (closed-subst-eq (prod-closed clA clB) ε)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-subst-eq clA ε)) a) (eq (from-eq (closed-subst-eq clB ε)) b)
+module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where
+  prod-closed : IsClosedNatural (A ⊠ B)
+  closed-natural prod-closed σ = transᵗʸ (⊠-natural σ) (⊠-cong (closed-natural clA σ) (closed-natural clB σ))
+  eq (from-eq (closed-id prod-closed)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-id clA)) a) (eq (from-eq (closed-id clB)) b)
+  eq (from-eq (closed-⊚ prod-closed σ τ)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-⊚ clA σ τ)) a) (eq (from-eq (closed-⊚ clB σ τ)) b)
+  eq (from-eq (closed-subst-eq prod-closed ε)) [ a , b ] = cong₂ [_,_] (eq (from-eq (closed-subst-eq clA ε)) a) (eq (from-eq (closed-subst-eq clB ε)) b)
+
+  pair-cl-natural : {σ : Γ ⇒ Δ} {a : Tm Δ A} {b : Tm Δ B} →
+                    (pair a b) [ prod-closed ∣ σ ]cl ≅ᵗᵐ pair (a [ clA ∣ σ ]cl) (b [ clB ∣ σ ]cl)
+  pair-cl-natural = transᵗᵐ (ι⁻¹-cong (pair-natural _ _ _)) (transᵗᵐ ι⁻¹-trans (transᵗᵐ (ι⁻¹-cong ι-symˡ) (pair-ι⁻¹ _ _)))
+
+  fst-cl-natural : {σ : Γ ⇒ Δ} {p : Tm Δ (A ⊠ B)} →
+                   (fst p) [ clA ∣ σ ]cl ≅ᵗᵐ fst (p [ prod-closed ∣ σ ]cl)
+  fst-cl-natural = transᵗᵐ (ι⁻¹-cong (fst-natural _ _)) (transᵗᵐ (fst-ι⁻¹ _) (fst-cong (symᵗᵐ ι⁻¹-trans)))
+
+  snd-cl-natural : {σ : Γ ⇒ Δ} {p : Tm Δ (A ⊠ B)} →
+                   (snd p) [ clB ∣ σ ]cl ≅ᵗᵐ snd (p [ prod-closed ∣ σ ]cl)
+  snd-cl-natural = transᵗᵐ (ι⁻¹-cong (snd-natural _ _)) (transᵗᵐ (snd-ι⁻¹ _) (snd-cong (symᵗᵐ ι⁻¹-trans)))

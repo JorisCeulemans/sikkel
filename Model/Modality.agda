@@ -128,24 +128,44 @@ open Modality public
 _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 Γ ,lock⟨ μ ⟩ = lock μ Γ
 
-mod-closed : {μ : Modality C D} {T : ClosedTy C} → IsClosedNatural T → IsClosedNatural ⟨ μ ∣ T ⟩
-IsClosedNatural.closed-natural (mod-closed {μ = μ} clT) σ =
-  transᵗʸ (mod-natural μ σ) (mod-cong μ (closed-natural clT (ctx-fmap (ctx-functor μ) σ)))
-IsClosedNatural.closed-id (mod-closed {μ = μ} clT) =
-  transᵉ (transᵗʸ-congʳ (mod-cong-cong μ (transᵉ (symᵉ (closed-subst-eq clT (lock-fmap-id μ)))
-                                                 (transᵗʸ-congʳ (closed-id clT)))))
-         (mod-natural-id μ)
-IsClosedNatural.closed-⊚ (mod-closed {μ = μ} clT) τ σ  =
-  transᵉ (transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-trans) (transᵉ transᵗʸ-assoc (transᵉ (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc)) (transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ (mod-natural-ty-eq μ σ _)))) (transᵉ (transᵗʸ-congʳ transᵗʸ-assoc) (symᵉ transᵗʸ-assoc))))))
-         (transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (transᵉ (mod-cong-cong μ (closed-⊚ clT _ _)) (mod-cong-trans μ))))
-                 (transᵉ (transᵉ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ transᵗʸ-assoc)) (transᵗʸ-congˡ (mod-natural-⊚ μ τ σ)))
-                         (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ transᵗʸ-assoc)) (transᵗʸ-congʳ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (mod-cong-cong μ (closed-subst-eq clT (lock-fmap-⊚ μ τ σ)))))))))
-IsClosedNatural.closed-subst-eq (mod-closed {μ = μ} clT) ε =
-  transᵉ (symᵉ transᵗʸ-assoc)
-         (transᵉ (transᵗʸ-congˡ (mod-natural-subst-eq μ ε))
-                 (transᵉ transᵗʸ-assoc
-                         (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ))
-                                                (mod-cong-cong μ (closed-subst-eq clT (lock-fmap-cong μ ε)))))))
+
+--------------------------------------------------
+-- Behaviour of DRAs with respect to semantic closed types
+
+module _ {μ : Modality C D} {T : ClosedTy C} (clT : IsClosedNatural T) where
+  mod-closed : IsClosedNatural ⟨ μ ∣ T ⟩
+  IsClosedNatural.closed-natural mod-closed σ =
+    transᵗʸ (mod-natural μ σ) (mod-cong μ (closed-natural clT (ctx-fmap (ctx-functor μ) σ)))
+  IsClosedNatural.closed-id mod-closed =
+    transᵉ (transᵗʸ-congʳ (mod-cong-cong μ (transᵉ (symᵉ (closed-subst-eq clT (lock-fmap-id μ)))
+                                                   (transᵗʸ-congʳ (closed-id clT)))))
+           (mod-natural-id μ)
+  IsClosedNatural.closed-⊚ mod-closed τ σ  =
+    transᵉ (transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-trans) (transᵉ transᵗʸ-assoc (transᵉ (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc)) (transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ (mod-natural-ty-eq μ σ _)))) (transᵉ (transᵗʸ-congʳ transᵗʸ-assoc) (symᵉ transᵗʸ-assoc))))))
+           (transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (transᵉ (mod-cong-cong μ (closed-⊚ clT _ _)) (mod-cong-trans μ))))
+                   (transᵉ (transᵉ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ transᵗʸ-assoc)) (transᵗʸ-congˡ (mod-natural-⊚ μ τ σ)))
+                           (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ transᵗʸ-assoc)) (transᵗʸ-congʳ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (mod-cong-cong μ (closed-subst-eq clT (lock-fmap-⊚ μ τ σ)))))))))
+  IsClosedNatural.closed-subst-eq mod-closed ε =
+    transᵉ (symᵉ transᵗʸ-assoc)
+           (transᵉ (transᵗʸ-congˡ (mod-natural-subst-eq μ ε))
+                   (transᵉ transᵗʸ-assoc
+                           (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ))
+                                                  (mod-cong-cong μ (closed-subst-eq clT (lock-fmap-cong μ ε)))))))
+
+  mod-intro-cl-natural : {Γ Δ : Ctx D} {σ : Γ ⇒ Δ} (t : Tm (Δ ,lock⟨ μ ⟩) T) →
+                         (mod-intro μ t) [ mod-closed ∣ σ ]cl ≅ᵗᵐ mod-intro μ (t [ clT ∣ lock-fmap μ σ ]cl)
+  mod-intro-cl-natural t =
+    transᵗᵐ (ι⁻¹-cong (mod-intro-natural μ _ t))
+    (transᵗᵐ ι⁻¹-trans
+    (transᵗᵐ (ι⁻¹-cong ι-symˡ)
+    (transᵗᵐ (ι-congᵉ (symᵉ (mod-cong-sym μ))) (mod-intro-ι μ _))))
+
+  mod-elim-cl-natural : {Γ Δ : Ctx D} {σ : Γ ⇒ Δ} (t : Tm Δ ⟨ μ ∣ T ⟩) →
+                        (mod-elim μ t) [ clT ∣ lock-fmap μ σ ]cl ≅ᵗᵐ mod-elim μ (t [ mod-closed ∣ σ ]cl)
+  mod-elim-cl-natural t =
+    transᵗᵐ (ι⁻¹-cong (mod-elim-natural μ _ t))
+    (transᵗᵐ (mod-elim-ι μ _)
+    (mod-elim-cong μ (transᵗᵐ (ι-congᵉ (mod-cong-sym μ)) (symᵗᵐ ι⁻¹-trans))))
 
 
 --------------------------------------------------

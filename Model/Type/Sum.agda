@@ -73,8 +73,14 @@ module _
   inl-ι : (t : Tm Γ T') → ι[ ⊞-cong T=T' S=S' ] inl t ≅ᵗᵐ inl (ι[ T=T' ] t)
   eq (inl-ι t) _ = refl
 
+  inl-ι⁻¹ : (t : Tm Γ T) → ι⁻¹[ ⊞-cong T=T' S=S' ] inl t ≅ᵗᵐ inl (ι⁻¹[ T=T' ] t)
+  eq (inl-ι⁻¹ t) _ = refl
+
   inr-ι : (s : Tm Γ S') → ι[ ⊞-cong T=T' S=S' ] inr s ≅ᵗᵐ inr (ι[ S=S' ] s)
   eq (inr-ι s) _ = refl
+
+  inr-ι⁻¹ : (s : Tm Γ S) → ι⁻¹[ ⊞-cong T=T' S=S' ] inr s ≅ᵗᵐ inr (ι⁻¹[ S=S' ] s)
+  eq (inr-ι⁻¹ s) _ = refl
 
 module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   ⊞-natural : (T ⊞ S) [ σ ] ≅ᵗʸ (T [ σ ]) ⊞ (S [ σ ])
@@ -121,12 +127,18 @@ eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
 eq (η-⊞ t) γ | inj₁ a = refl
 eq (η-⊞ t) γ | inj₂ b = refl
 
-sum-closed : {A B : ClosedTy C} → IsClosedNatural A → IsClosedNatural B →
-             IsClosedNatural (A ⊞ B)
-closed-natural (sum-closed clA clB) σ = transᵗʸ (⊞-natural σ) (⊞-cong (closed-natural clA σ) (closed-natural clB σ))
-eq (from-eq (closed-id (sum-closed clA clB))) (inj₁ a) = cong inj₁ (eq (from-eq (closed-id clA)) a)
-eq (from-eq (closed-id (sum-closed clA clB))) (inj₂ b) = cong inj₂ (eq (from-eq (closed-id clB)) b)
-eq (from-eq (closed-⊚ (sum-closed clA clB) σ τ)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-⊚ clA σ τ)) a)
-eq (from-eq (closed-⊚ (sum-closed clA clB) σ τ)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-⊚ clB σ τ)) b)
-eq (from-eq (closed-subst-eq (sum-closed clA clB) ε)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-subst-eq clA ε)) a)
-eq (from-eq (closed-subst-eq (sum-closed clA clB) ε)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-subst-eq clB ε)) b)
+module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where
+  sum-closed : IsClosedNatural (A ⊞ B)
+  closed-natural sum-closed σ = transᵗʸ (⊞-natural σ) (⊞-cong (closed-natural clA σ) (closed-natural clB σ))
+  eq (from-eq (closed-id sum-closed)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-id clA)) a)
+  eq (from-eq (closed-id sum-closed)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-id clB)) b)
+  eq (from-eq (closed-⊚ sum-closed σ τ)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-⊚ clA σ τ)) a)
+  eq (from-eq (closed-⊚ sum-closed σ τ)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-⊚ clB σ τ)) b)
+  eq (from-eq (closed-subst-eq sum-closed ε)) (inj₁ a) = cong inj₁ (eq (from-eq (closed-subst-eq clA ε)) a)
+  eq (from-eq (closed-subst-eq sum-closed ε)) (inj₂ b) = cong inj₂ (eq (from-eq (closed-subst-eq clB ε)) b)
+
+  inl-cl-natural : {σ : Γ ⇒ Δ} {a : Tm Δ A} → (inl a) [ sum-closed ∣ σ ]cl ≅ᵗᵐ inl (a [ clA ∣ σ ]cl)
+  inl-cl-natural = transᵗᵐ (ι⁻¹-cong (inl-natural _ _)) (transᵗᵐ ι⁻¹-trans (transᵗᵐ (ι⁻¹-cong ι-symˡ) (inl-ι⁻¹ _)))
+
+  inr-cl-natural : {σ : Γ ⇒ Δ} {b : Tm Δ B} → (inr b) [ sum-closed ∣ σ ]cl ≅ᵗᵐ inr (b [ clB ∣ σ ]cl)
+  inr-cl-natural = transᵗᵐ (ι⁻¹-cong (inr-natural _ _)) (transᵗᵐ ι⁻¹-trans (transᵗᵐ (ι⁻¹-cong ι-symˡ) (inr-ι⁻¹ _)))
