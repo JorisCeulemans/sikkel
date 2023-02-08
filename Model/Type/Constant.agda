@@ -203,28 +203,33 @@ eq suc'-const γ = refl
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = const-func suc
 
-prim-nat-elim : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm (Γ ,, Nat') (T [ π ])
-prim-nat-elim T t f ⟨ x , [ γ , zero  ] ⟩' = t ⟨ x , γ ⟩'
-prim-nat-elim T t f ⟨ x , [ γ , suc n ] ⟩' = f ⟨ x , [ γ , prim-nat-elim T t f ⟨ x , [ γ , n ] ⟩' ] ⟩'
-naturality (prim-nat-elim T t f) {γy = [ _ , zero ]} {γx = [ _ , zero ]} ρ refl = naturality t ρ refl
-naturality (prim-nat-elim T t f) {γy = [ _ , suc n ]} {γx = [ _ , suc n ]} ρ refl =
-  trans (ty-cong T refl) (naturality f ρ (cong [ _ ,_] (naturality (prim-nat-elim T t f) {γy = [ _ , n ]} ρ refl)))
+prim-nat-elim : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → ℕ →  Tm Γ T
+prim-nat-elim T z s zero    ⟨ x , γ ⟩' = z ⟨ x , γ ⟩'
+prim-nat-elim T z s (suc n) ⟨ x , γ ⟩' = s ⟨ x , [ γ , prim-nat-elim T z s n ⟨ x , γ ⟩' ] ⟩'
+naturality (prim-nat-elim T z s zero)    ρ refl = naturality z ρ refl
+naturality (prim-nat-elim T z s (suc n)) ρ refl =
+  trans (ty-cong T refl) (naturality s ρ (cong [ _ ,_] (naturality (prim-nat-elim T z s n) ρ refl)))
 
-nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ (Nat' ⇛ T)
-nat-elim T t f = lam Nat' (prim-nat-elim T t (ap f))
+prim-nat-elim' : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm Γ Nat' →  Tm Γ T
+prim-nat-elim' T z s n ⟨ x , γ ⟩' = prim-nat-elim T z s (n ⟨ x , γ ⟩') ⟨ x , γ ⟩'
+naturality (prim-nat-elim' {Γ = Γ} T z s n) {γy = γy} ρ refl with n ⟨ _ , γy ⟩' | n ⟨ _ , Γ ⟪ ρ ⟫ γy ⟩' | naturality n {γy = γy} ρ refl
+naturality (prim-nat-elim' {Γ = Γ} T z s n) {γy = γy} ρ refl | m | .m | refl = naturality (prim-nat-elim T z s m) ρ refl
 
-module _ {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
-  β-nat-zero : app (nat-elim T t f) zero' ≅ᵗᵐ t
+nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ Nat' →  Tm Γ T
+nat-elim T z s n = prim-nat-elim' T z (ap s) n
+
+module _ {T : Ty Γ} (z : Tm Γ T) (s : Tm Γ (T ⇛ T)) where
+  β-nat-zero : nat-elim T z s zero' ≅ᵗᵐ z
   eq β-nat-zero _ = refl
 
   β-nat-suc : (k : Tm Γ Nat') →
-              app (nat-elim T t f) (suc' k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
+              nat-elim T z s (suc' k) ≅ᵗᵐ app s (nat-elim T z s k)
   eq (β-nat-suc k) _ = refl
 
-η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ app (nat-elim Nat' zero' suc-func) k
+η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ nat-elim Nat' zero' suc-func k
 eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
   where
-    go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc-func €⟨ _ , γ ⟩ n
+    go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc-func (const n) ⟨ _ , γ ⟩'
     go zero    = refl
     go (suc n) = cong suc (go n)
 

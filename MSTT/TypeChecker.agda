@@ -142,7 +142,10 @@ infer-interpret (nat-elim z s) Γ = do
   Z , ⟦z⟧ ← infer-interpret z Γ
   S , ⟦s⟧ ← infer-interpret s Γ
   Z⇛Z=S ← (Z ⇛ Z) ≃ᵗʸ? S
-  return (Nat' ⇛ Z , M.nat-elim ⟦ Z ⟧ty ⟦z⟧ (ι[ Z⇛Z=S ] ⟦s⟧))
+  return (Nat' ⇛ Z , M.lam _ (M.nat-elim (⟦ Z ⟧ty M.[ π ])
+                                         (⟦z⟧ M.[ π ]')
+                                         (ι⁻¹[ ⇛-natural π ] (ι[ ty-subst-cong-ty π Z⇛Z=S ] (⟦s⟧ M.[ π ]')))
+                                         (ι⁻¹[ Const-natural _ π ] ξ)))
 infer-interpret true Γ = return (Bool' , true')
 infer-interpret false Γ = return (Bool' , false')
 infer-interpret (if c t f) Γ = do
