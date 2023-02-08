@@ -132,7 +132,7 @@ _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 --------------------------------------------------
 -- Behaviour of DRAs with respect to semantic closed types
 
-module _ {μ : Modality C D} {T : ClosedTy C} (clT : IsClosedNatural T) where
+module _ (μ : Modality C D) {T : ClosedTy C} (clT : IsClosedNatural T) where
   mod-closed : IsClosedNatural ⟨ μ ∣ T ⟩
   IsClosedNatural.closed-natural mod-closed σ =
     transᵗʸ (mod-natural μ σ) (mod-cong μ (closed-natural clT (ctx-fmap (ctx-functor μ) σ)))

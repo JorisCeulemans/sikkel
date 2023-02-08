@@ -26,6 +26,7 @@ ClosedTy C = {Γ : Ctx C} → Ty Γ
 -- I.e. it is a pseudonatural transformation from the terminal
 -- pseudofunctor (from Ctx to Groupoids) to the pseudofunctor Ty.
 record IsClosedNatural {C} (U : ClosedTy C) : Set₁ where
+  no-eta-equality
   field
     closed-natural : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) →
                      U [ σ ] ≅ᵗʸ U
