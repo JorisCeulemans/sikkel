@@ -47,6 +47,10 @@ const-func : {A B : Set} → (A → B) → Tm Γ (Const A ⇛ Const B)
 naturality (const-func f ⟨ _ , _ ⟩') = refl
 naturality (const-func f) _ _ = to-pshfun-eq λ _ _ _ → refl
 
+const-map : {A B : Set} → (A → B) → Tm Γ (Const A) → Tm Γ (Const B)
+const-map f t ⟨ x , γ ⟩' = f (t ⟨ x , γ ⟩')
+naturality (const-map f t) ρ eγ = cong f (naturality t ρ eγ)
+
 const-func₂ : {A B C : Set} → (A → B → C) → Tm Γ (Const A ⇛ Const B ⇛ Const C)
 (const-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ a) $⟨ _ , _ ⟩ b = f a b
 naturality (const-func₂ f ⟨ _ , _ ⟩' $⟨ _ , _ ⟩ _) = refl
@@ -78,6 +82,13 @@ eq (isoʳ (Const-natural A σ)) _ = refl
 const-natural : {A : Set} (a : A) (σ : Δ ⇒ Γ) → (const a) [ σ ]' ≅ᵗᵐ ι[ Const-natural A σ ] (const a)
 eq (const-natural a σ) _ = refl
 
+const-map-natural : {A B : Set} (f : A → B) {σ : Δ ⇒ Γ} {t : Tm Γ (Const A)} →
+                    (const-map f t) [ σ ]' ≅ᵗᵐ (ι[ Const-natural B σ ] const-map f (ι⁻¹[ Const-natural A σ ] (t [ σ ]')))
+eq (const-map-natural f) _ = refl
+
+const-map-cong : {A B : Set} (f : A → B) {t t' : Tm Γ (Const A)} → t ≅ᵗᵐ t' → const-map f t ≅ᵗᵐ const-map f t'
+eq (const-map-cong f e) γ = cong f (eq e γ)
+
 const-closed : {A : Set} → IsClosedNatural {C} (Const A)
 closed-natural (const-closed {A = A}) = Const-natural A
 eq (from-eq (closed-id (const-closed {A = A}))) _ = refl
@@ -86,6 +97,10 @@ eq (from-eq (closed-subst-eq (const-closed {A = A}) ε)) _ = refl
 
 const-cl-natural : {A : Set} {a : A} (σ : Δ ⇒ Γ) → (const a) [ const-closed ∣ σ ]cl ≅ᵗᵐ const a
 const-cl-natural σ = transᵗᵐ (ι⁻¹-cong (const-natural _ σ)) ι-symˡ
+
+const-map-cl-natural : {A B : Set} (f : A → B) {σ : Δ ⇒ Γ} {t : Tm Γ (Const A)} →
+                       (const-map f t) [ const-closed ∣ σ ]cl ≅ᵗᵐ const-map f (t [ const-closed ∣ σ ]cl)
+const-map-cl-natural f = transᵗᵐ (ι⁻¹-cong (const-map-natural f)) ι-symˡ
 
 
 --------------------------------------------------
@@ -179,11 +194,14 @@ zero' = const zero
 one' : Tm Γ Nat'
 one' = const (suc zero)
 
-suc' : Tm Γ (Nat' ⇛ Nat')
-suc' = const-func suc
+suc' : Tm Γ Nat' → Tm Γ Nat'
+suc' = const-map suc
 
-suc'-const : {n : ℕ} {Γ : Ctx C} → app {Γ = Γ} suc' (const n) ≅ᵗᵐ const (suc n)
+suc'-const : {n : ℕ} {Γ : Ctx C} → suc' {Γ} (const n) ≅ᵗᵐ const (suc n)
 eq suc'-const γ = refl
+
+suc-func : Tm Γ (Nat' ⇛ Nat')
+suc-func = const-func suc
 
 prim-nat-elim : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm (Γ ,, Nat') (T [ π ])
 prim-nat-elim T t f ⟨ x , [ γ , zero  ] ⟩' = t ⟨ x , γ ⟩'
@@ -200,13 +218,13 @@ module _ {T : Ty Γ} (t : Tm Γ T) (f : Tm Γ (T ⇛ T)) where
   eq β-nat-zero _ = refl
 
   β-nat-suc : (k : Tm Γ Nat') →
-              app (nat-elim T t f) (suc' $ k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
+              app (nat-elim T t f) (suc' k) ≅ᵗᵐ app f (app (nat-elim T t f) k)
   eq (β-nat-suc k) _ = refl
 
-η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ app (nat-elim Nat' zero' suc') k
+η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ app (nat-elim Nat' zero' suc-func) k
 eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
   where
-    go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc' €⟨ _ , γ ⟩ n
+    go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc-func €⟨ _ , γ ⟩ n
     go zero    = refl
     go (suc n) = cong suc (go n)
 

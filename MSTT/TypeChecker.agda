@@ -136,7 +136,7 @@ infer-interpret (t1 ∙ t2) Γ = do
   dom=T2 ← dom ≃ᵗʸ? T2
   return (cod , M.app ⟦t1⟧ (ι[ dom=T2 ] ⟦t2⟧))
 infer-interpret (lit n) Γ = return (Nat' , const n)
-infer-interpret suc Γ = return (Nat' ⇛ Nat' , suc')
+infer-interpret suc Γ = return (Nat' ⇛ Nat' , suc-func)
 infer-interpret plus Γ = return (Nat' ⇛ Nat' ⇛ Nat' , nat-sum)
 infer-interpret (nat-elim z s) Γ = do
   Z , ⟦z⟧ ← infer-interpret z Γ

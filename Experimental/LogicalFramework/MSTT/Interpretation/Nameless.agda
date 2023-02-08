@@ -73,7 +73,7 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦ lam[_∣_∈_]_ {S = S} _ _ _ t ⟧tm-nmls = M.lam _ (M.ι[ ty-natural S ] ⟦ t ⟧tm-nmls)
 ⟦ _∙_ {μ = μ} f t ⟧tm-nmls = M.app ⟦ f ⟧tm-nmls (M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls)
 ⟦ zero ⟧tm-nmls = M.zero'
-⟦ suc n ⟧tm-nmls = M.app M.suc' ⟦ n ⟧tm-nmls
+⟦ suc n ⟧tm-nmls = M.suc' ⟦ n ⟧tm-nmls
 ⟦ nat-elim a f n ⟧tm-nmls = M.app (M.nat-elim _ ⟦ a ⟧tm-nmls ⟦ f ⟧tm-nmls) ⟦ n ⟧tm-nmls
 ⟦ true ⟧tm-nmls = M.true'
 ⟦ false ⟧tm-nmls = M.false'
