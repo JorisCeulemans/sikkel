@@ -109,7 +109,7 @@ infer-interpret-var {m = m} x α Γ = do
   return (T , ι⁻¹[ transᵗʸ (ty-subst-seq-cong (_ ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty reflˢ) (closed-natural (⟦⟧ty-natural T) _) ] (
               (ιc[ apply-compose-lock-seq (Γ' , μ ∣ x ∈ T) locks ]' (
                 Modality.mod-elim ⟦ μ ⟧modality
-                (ι⁻¹[ closed-natural (⟦⟧ty-natural ⟨ μ ∣ T ⟩) _ ] ξ) [ key-subst ⟦α⟧ ⟦ Γ' , μ ∣ x ∈ T ⟧ctx ]'))
+                (ι⁻¹[ closed-natural (⟦⟧ty-natural ⟨ μ ∣ T ⟩) _ ] ξ) [ key-subst ⟦α⟧ ]'))
               [ σ ]'))
 
 

@@ -104,7 +104,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦ σ ,aslock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
 ⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
   M.to (⟦⟧ltel Λ₂)
-  M.⊚ (M.key-subst ⟦ α ⟧two-cell _)
+  M.⊚ (M.key-subst ⟦ α ⟧two-cell)
   M.⊚ M.from (⟦⟧ltel Λ₁)
 
 ⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)

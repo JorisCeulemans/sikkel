@@ -53,11 +53,11 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦⟧var-helper : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var _ μ T κ Γ) →
                (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → SemTm ⟦ Γ ,lock⟨ ρ ⟩ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦⟧var-helper {T = T} {μ = μ} vzero ρ α =
-  M.ι⁻¹[ ty-natural T ]
-    ((M.mod-elim ⟦ μ ⟧mod (M.ι⁻¹[ ty-natural ⟨ μ ∣ T ⟩ ] M.ξ)) M.[ M.key-subst ⟦ α ⟧two-cell _ ]')
-⟦⟧var-helper {T = T} (vsuc v) ρ α = M.ι⁻¹[ ty-natural T ] ((⟦⟧var-helper v ρ α) M.[ M.lock-fmap ⟦ ρ ⟧mod M.π ]')
+  (M.mod-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
+    M.[ ty-closed-natural T ∣ M.key-subst ⟦ α ⟧two-cell ]cl
+⟦⟧var-helper {T = T} (vsuc v) ρ α = (⟦⟧var-helper v ρ α) M.[ ty-closed-natural T ∣ M.lock-fmap ⟦ ρ ⟧mod M.π ]cl
 ⟦⟧var-helper {T = T} (skip-lock {κ = κ} φ v) ρ α =
-  M.ι⁻¹[ ty-natural T ] ((⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]')
+  (⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ ty-closed-natural T ∣ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]cl
 
 ⟦_,_⟧var-nmls : {μ κ : Modality m n} → (v : Var _ μ T κ Γ) → TwoCell μ κ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
@@ -66,11 +66,11 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦ var' _ {v} α ⟧tm-nmls = ⟦ v , α ⟧var-nmls
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim {T = T} {S = S} ρ μ _ t s ⟧tm-nmls =
-  M.ι⁻¹[ ty-natural S ] (
-    ⟦ s ⟧tm-nmls M.[ M.term-to-subst (M.ι[ M.eq-mod-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T) ]
-                                         M.mod-intro ⟦ ρ ⟧mod ⟦ t ⟧tm-nmls)
-                   ]')
-⟦ lam[_∣_∈_]_ {S = S} _ _ _ t ⟧tm-nmls = M.lam _ (M.ι[ ty-natural S ] ⟦ t ⟧tm-nmls)
+  ⟦ s ⟧tm-nmls M.[ ty-closed-natural S
+                 ∣ M.term-to-subst (M.ι[ M.eq-mod-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T) ]
+                                       M.mod-intro ⟦ ρ ⟧mod ⟦ t ⟧tm-nmls)
+                 ]cl
+⟦ lam[_∣_∈_]_ {S = S} _ _ _ t ⟧tm-nmls = M.lamcl (ty-closed-natural S) ⟦ t ⟧tm-nmls
 ⟦ _∙_ {μ = μ} f t ⟧tm-nmls = M.app ⟦ f ⟧tm-nmls (M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls)
 ⟦ zero ⟧tm-nmls = M.zero'
 ⟦ suc n ⟧tm-nmls = M.suc' ⟦ n ⟧tm-nmls
