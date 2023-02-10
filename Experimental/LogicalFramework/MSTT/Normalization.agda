@@ -94,7 +94,7 @@ normalize (suc n) (suc t) = suc <$> normalize (suc n) t
 normalize m@(suc n) (nat-elim {Γ = Γ} {A = A} z s t) = do
   nft ← normalize (suc n) t
   normalize-nat-elim (suc n) nft
-  where
+  module NormalizeNatElim where
     -- Extra argument of type ℕ is needed to pass termination checking.
     normalize-nat-elim : ℕ → NF Γ Nat' → Maybe (NF Γ A)
     normalize-nat-elim n       (neutral ne) = (λ nfz → neutral (nat-elim nfz s ne)) <$> normalize n z
@@ -104,19 +104,19 @@ normalize m@(suc n) (nat-elim {Γ = Γ} {A = A} z s t) = do
 normalize (suc n) true = just true
 normalize (suc n) false = just false
 normalize (suc n) (if b t f) = normalize-if <$> normalize (suc n) b <*> normalize (suc n) t <*> normalize (suc n) f
-  where
+  module NormalizeIf where
     normalize-if : NF Γ Bool' → NF Γ T → NF Γ T → NF Γ T
     normalize-if (neutral ne) nt nf = neutral (if ne nt nf)
     normalize-if true         nt nf = nt
     normalize-if false        nt nf = nf
 normalize (suc n) (pair t s) = pair <$> normalize (suc n) t <*> normalize (suc n) s
 normalize (suc n) (fst p) = normalize-fst <$> normalize (suc n) p
-  where
+  module NormalizeFst where
     normalize-fst : NF Γ (T ⊠ S) → NF Γ T
     normalize-fst (neutral nep) = neutral (fst nep)
     normalize-fst (pair nft _)  = nft
 normalize (suc n) (snd p) = normalize-snd <$> normalize (suc n) p
-  where
+  module NormalizeSnd where
     normalize-snd : NF Γ (T ⊠ S) → NF Γ S
     normalize-snd (neutral nep) = neutral (snd nep)
     normalize-snd (pair _ nfs)  = nfs
