@@ -25,7 +25,7 @@ open BaseCategory C
 private
   variable
     Γ Δ : Ctx C
-    T : Ty Γ
+    T S : Ty Γ
 
 
 --------------------------------------------------
@@ -161,6 +161,27 @@ naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ with c ⟨ x , γ'
 naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | false | .false | refl = naturality f φ eγ
 naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | true  | .true  | refl = naturality t φ eγ
 
+if'-cong : {b b' : Tm Γ Bool'} {t t' f f' : Tm Γ T} →
+           b ≅ᵗᵐ b' → t ≅ᵗᵐ t' → f ≅ᵗᵐ f' →
+           if' b then' t else' f ≅ᵗᵐ if' b' then' t' else' f'
+eq (if'-cong {b = b} {b'} eb et ef) γ with b ⟨ _ , γ ⟩' | b' ⟨ _ , γ ⟩' | eq eb γ
+eq (if'-cong {b = b} {b'} eb et ef) γ | false | .false | refl = eq ef γ
+eq (if'-cong {b = b} {b'} eb et ef) γ | true  | .true  | refl = eq et γ
+
+if'-natural : {σ : Γ ⇒ Δ} {b : Tm Δ Bool'} {t f : Tm Δ T} →
+              (if' b then' t else' f) [ σ ]' ≅ᵗᵐ if' ι⁻¹[ Const-natural _ σ ] (b [ σ ]') then' (t [ σ ]') else' (f [ σ ]')
+eq if'-natural γ = refl
+
+if'-ι : {T=S : T ≅ᵗʸ S} {b : Tm Γ Bool'} {t f : Tm Γ S} →
+        ι[ T=S ] (if' b then' t else' f) ≅ᵗᵐ if' b then' (ι[ T=S ] t) else' (ι[ T=S ] f)
+eq (if'-ι {b = b}) γ with b ⟨ _ , γ ⟩'
+eq (if'-ι {b = b}) γ | false = refl
+eq (if'-ι {b = b}) γ | true  = refl
+
+if'-cl-natural : {T : ClosedTy C} (clT : IsClosedNatural T) {σ : Γ ⇒ Δ} {b : Tm Δ Bool'} {t f : Tm Δ T} →
+                 (if' b then' t else' f) [ clT ∣ σ ]cl ≅ᵗᵐ if' (b [ const-closed ∣ σ ]cl) then' (t [ clT ∣ σ ]cl) else' (f [ clT ∣ σ ]cl)
+if'-cl-natural clT = transᵗᵐ (ι⁻¹-cong if'-natural) if'-ι
+
 module _ (t t' : Tm Γ T) where
   β-bool-true : if' true' then' t else' t' ≅ᵗᵐ t
   eq β-bool-true _ = refl
@@ -217,6 +238,57 @@ naturality (prim-nat-elim' {Γ = Γ} T z s n) {γy = γy} ρ refl | m | .m | ref
 
 nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ Nat' →  Tm Γ T
 nat-elim T z s n = prim-nat-elim' T z (ap s) n
+
+prim-nat-elim-cong : {z z' : Tm Γ T} {s s' : Tm (Γ ,, T) (T [ π ])} →
+                     z ≅ᵗᵐ z' → s ≅ᵗᵐ s' →
+                     (n n' : ℕ) → n ≡ n' →
+                     prim-nat-elim T z s n ≅ᵗᵐ prim-nat-elim T z' s' n'
+eq (prim-nat-elim-cong           ez es zero    .zero    refl) γ = eq ez γ
+eq (prim-nat-elim-cong {s' = s'} ez es (suc n) .(suc n) refl) γ =
+  trans (eq es _) (cong (λ x → s' ⟨ _ , [ γ , x ] ⟩') (eq (prim-nat-elim-cong ez es n n refl) γ))
+
+nat-elim-cong : {z z' : Tm Γ T} {s s' : Tm Γ (T ⇛ T)} {n n' : Tm Γ Nat'} →
+                z ≅ᵗᵐ z' → s ≅ᵗᵐ s' → n ≅ᵗᵐ n' →
+                nat-elim T z s n ≅ᵗᵐ nat-elim T z' s' n'
+eq (nat-elim-cong ez es en) γ = eq (prim-nat-elim-cong ez (ap-cong es) _ _ (eq en γ)) γ
+
+prim-nat-elim-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm (Δ ,, T) (T [ π ])} (n : ℕ) →
+                        (prim-nat-elim T z s n) [ σ ]' ≅ᵗᵐ prim-nat-elim (T [ σ ]) (z [ σ ]') (ι⁻¹[ ty-subst-cong-subst-2-2 T (⊹-π-comm σ) ] (s [ σ ⊹ ]')) n
+eq (prim-nat-elim-natural                         zero)    γ = refl
+eq (prim-nat-elim-natural {Δ = Δ} {T = T} {s = s} (suc n)) γ =
+  sym (trans (ty-cong T refl) (naturality s hom-id (to-Σ-ty-eq T (ctx-id Δ) (trans (ty-cong-2-1 T hom-idʳ) (trans (ty-id T) (sym (eq (prim-nat-elim-natural n) γ)))))))
+
+nat-elim-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm Δ (T ⇛ T)} {n : Tm Δ Nat'} →
+                   (nat-elim T z s n) [ σ ]' ≅ᵗᵐ nat-elim (T [ σ ]) (z [ σ ]') (ι⁻¹[ ⇛-natural σ ] (s [ σ ]')) (ι⁻¹[ Const-natural _ σ ] (n [ σ ]'))
+eq (nat-elim-natural {σ = σ} {n = n}) γ = trans (eq (prim-nat-elim-natural {σ = σ} (n ⟨ _ , func σ γ ⟩')) γ)
+                                                (eq (prim-nat-elim-cong reflᵗᵐ tm-proof (n ⟨ _ , func σ γ ⟩') _ refl ) γ)
+  where
+    tm-proof = transᵗᵐ (ι⁻¹-cong (ap-natural σ _)) ι-symˡ
+
+prim-nat-elim-ι : {T T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} {z : Tm Γ T'} {s : Tm (Γ ,, T') (T' [ π ])} (n : ℕ) →
+                  ι[ T=T' ] (prim-nat-elim T' z s n)
+                    ≅ᵗᵐ
+                  prim-nat-elim T (ι[ T=T' ] z)
+                                  (ι⁻¹[ ty-subst-cong-subst-2-1 T (ctx-ext-subst-β₁ _ _) ]
+                                        ((ι[ ty-subst-cong-ty π T=T' ] s) [ to-ext-subst _ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ) ]'))
+                                  n
+eq (prim-nat-elim-ι zero)                                  γ = refl
+eq (prim-nat-elim-ι {T = T} {T=T' = T=T'} {s = s} (suc n)) γ =
+  trans (cong (λ x → func (to T=T') (s ⟨ _ , [ γ , x ] ⟩')) (trans (sym (eq (isoʳ T=T') _)) (cong (func (from T=T')) (eq (prim-nat-elim-ι n) γ))))
+        (sym (strong-ty-id T))
+
+nat-elim-ι : {T T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} {z : Tm Γ T'} {s : Tm Γ (T' ⇛ T')} {n : Tm Γ Nat'} →
+             ι[ T=T' ] (nat-elim T' z s n) ≅ᵗᵐ nat-elim T (ι[ T=T' ] z) (ι[ ⇛-cong T=T' T=T' ] s) n
+eq (nat-elim-ι {T = T} {n = n}) γ = trans (eq (prim-nat-elim-ι (n ⟨ _ , γ ⟩')) γ) (eq (prim-nat-elim-cong reflᵗᵐ tm-proof _ (n ⟨ _ , γ ⟩') refl) γ)
+  where
+    tm-proof : _ ≅ᵗᵐ _
+    eq tm-proof γ = strong-ty-id T
+
+nat-elim-cl-natural : {T : ClosedTy C} (clT : IsClosedNatural T)
+                      {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm Δ (T ⇛ T)} {n : Tm Δ Nat'} →
+                      (nat-elim T z s n) [ clT ∣ σ ]cl ≅ᵗᵐ nat-elim T (z [ clT ∣ σ ]cl) (s [ fun-closed clT clT ∣ σ ]cl) (n [ const-closed ∣ σ ]cl)
+nat-elim-cl-natural clT =
+  transᵗᵐ (ι⁻¹-cong nat-elim-natural) (transᵗᵐ nat-elim-ι (nat-elim-cong reflᵗᵐ (transᵗᵐ (ι-congᵉ ⇛-cong-sym) (symᵗᵐ ι⁻¹-trans)) reflᵗᵐ))
 
 module _ {T : Ty Γ} (z : Tm Γ T) (s : Tm Γ (T ⇛ T)) where
   β-nat-zero : nat-elim T z s zero' ≅ᵗᵐ z

@@ -189,9 +189,16 @@ eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
     f $⟨ ρ , eγ ⟩ t' ∎)
   where open ≡-Reasoning
 
+⇛-cong-sym : {T=T' : T ≅ᵗʸ T'} {S=S' : S ≅ᵗʸ S'} →
+             ⇛-cong (symᵗʸ T=T') (symᵗʸ S=S') ≅ᵉ symᵗʸ (⇛-cong T=T' S=S')
+eq (from-eq ⇛-cong-sym) f = to-pshfun-eq (λ _ _ _ → refl)
+
 lam-cong : (T : Ty Γ) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
+
+ap-cong : {f f' : Tm Γ (T ⇛ S)} → f ≅ᵗᵐ f' → ap f ≅ᵗᵐ ap f'
+eq (ap-cong f=f') γ = cong (_$⟨ hom-id , _ ⟩ _) (eq f=f' (proj₁ γ))
 
 €-cong : {f f' : Tm Γ (T ⇛ S)} {γ : Γ ⟨ z ⟩} {t t' : T ⟨ z , γ ⟩} →
          f ≅ᵗᵐ f' → t ≡ t' → f €⟨ z , γ ⟩ t ≡ f' €⟨ z , γ ⟩ t'
@@ -234,6 +241,10 @@ module _
 
   app-ι⁻¹ : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) → app (ι⁻¹[ ⇛-cong T=T' S=S' ] f) (ι⁻¹[ T=T' ] t) ≅ᵗᵐ ι⁻¹[ S=S' ] (app f t)
   eq (app-ι⁻¹ f t) γ = cong (func (from S=S') ∘ f ⟨ _ , γ ⟩' $⟨ hom-id , _ ⟩_) (eq (isoˡ T=T') (t ⟨ _ , γ ⟩'))
+
+ap-ι : {T S S' : Ty Γ} {S=S' : S ≅ᵗʸ S'} (f : Tm Γ (T ⇛ S')) →
+       ι[ ty-subst-cong-ty π S=S' ] (ap f) ≅ᵗᵐ ap (ι[ ⇛-cong reflᵗʸ S=S' ] f)
+eq (ap-ι f) γ = refl
 
 
 --------------------------------------------------
@@ -343,6 +354,11 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
       b ⟨ _ , [ γ' , t ] ⟩' ∎))
     where open ≡-Reasoning
 
+  ap-natural : (f : Tm Γ (T ⇛ S)) →
+               (ap f) [ σ ⊹ ]' ≅ᵗᵐ (ι[ ty-subst-cong-subst-2-2 S (⊹-π-comm σ) ] ap (ι⁻¹[ ⇛-natural ] (f [ σ ]')))
+  eq (ap-natural f) δ = trans (sym (trans ($-cong (f ⟨ _ , _ ⟩') hom-idʳ) (cong (f €⟨ _ , _ ⟩_) (strong-ty-id T))))
+                              (naturality (f ⟨ _ , func σ (proj₁ δ) ⟩'))
+
   app-natural : (f : Tm Γ (T ⇛ S)) (t : Tm Γ T) →
                 (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
   eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl
@@ -377,8 +393,12 @@ eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
 --------------------------------------------------
 -- Relating function types and closed types
 
-lamcl : {A : Ty Γ} {B : ClosedTy C} → IsClosedNatural B → Tm (Γ ,, A) B → Tm Γ (A ⇛ B)
-lamcl clB b = lam _ (ι[ closed-natural clB π ] b)
+module _ {A : Ty Γ} {B : ClosedTy C} (clB : IsClosedNatural B ) where
+  lamcl : Tm (Γ ,, A) B → Tm Γ (A ⇛ B)
+  lamcl b = lam _ (ι[ closed-natural clB π ] b)
+
+  lamcl-cong : {b b' : Tm (Γ ,, A) B} → b ≅ᵗᵐ b' → lamcl b ≅ᵗᵐ lamcl b'
+  lamcl-cong e = lam-cong A (ι-cong e)
 
 module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where
   fun-closed : IsClosedNatural (A ⇛ B)

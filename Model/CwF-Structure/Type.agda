@@ -455,8 +455,19 @@ ty-subst-cong-subst-sym : {σ τ : Γ ⇒ Δ} {ε : σ ≅ˢ τ} → ty-subst-co
 eq (from-eq ty-subst-cong-subst-sym) _ = refl
 
 ty-subst-cong-subst-trans : {σ1 σ2 σ3 : Γ ⇒ Δ} {ε : σ1 ≅ˢ σ2} {ε' : σ2 ≅ˢ σ3} →
-                      ty-subst-cong-subst (transˢ ε ε') T ≅ᵉ transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-subst ε' T)
+                            ty-subst-cong-subst (transˢ ε ε') T ≅ᵉ transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-subst ε' T)
 eq (from-eq (ty-subst-cong-subst-trans {T = T})) _ = sym (ty-cong-2-1 T hom-idʳ)
+
+ty-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
+                          (T : Ty Θ) → σ2 ⊚ σ1 ≅ˢ τ →
+                          T [ σ2 ] [ σ1 ] ≅ᵗʸ T [ τ ]
+ty-subst-cong-subst-2-1 T ε = transᵗʸ (ty-subst-comp T _ _) (ty-subst-cong-subst ε T)
+
+ty-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
+                          (T : Ty Θ) → σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1 →
+                          T [ σ2 ] [ σ1 ] ≅ᵗʸ T [ τ2 ] [ τ1 ]
+ty-subst-cong-subst-2-2 T ε =
+  transᵗʸ (ty-subst-comp T _ _) (transᵗʸ (ty-subst-cong-subst ε T) (symᵗʸ (ty-subst-comp T _ _)))
 
 -- Nicer syntax for substitutions coming from context equality
 ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ → Ty Γ
