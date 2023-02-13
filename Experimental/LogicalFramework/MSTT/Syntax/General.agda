@@ -246,11 +246,14 @@ module RenSub
   π-rensub : RenSub (Γ ,, μ ∣ x ∈ T) Γ
   π-rensub = id ⊚a (id-atomic-rensub ⊚π)
 
+  -- Case splitting on the first argument is not strictly necessary
+  -- here, but it avoids 1 additional term traversal in the second case.
   _∷ʳˢ_/_ : RenSub Γ Δ → V μ T Γ → (x : Name) → RenSub Γ (Δ ,, μ ∣ x ∈ T)
-  σ ∷ʳˢ v / x = lift-rensub σ ⊚a (id-atomic-rensub ∷ v / x)
+  id        ∷ʳˢ v / x = id ⊚a (id-atomic-rensub ∷ v / x)
+  (σ ⊚a τᵃ) ∷ʳˢ v / x = lift-rensub σ ⊚a (τᵃ ∷ v / x)
 
   _,rslock⟨_⟩ : RenSub Γ Δ → (μ : Modality m n) → RenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-  id ,rslock⟨ μ ⟩ = id
+  id        ,rslock⟨ μ ⟩ = id
   (σ ⊚a τᵃ) ,rslock⟨ μ ⟩ = (σ ,rslock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
 
   key-rensub : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → RenSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
@@ -339,7 +342,7 @@ open RenM
     ; key-rensub to key-ren
     ; _⊚rs_ to _⊚r_
     ; rensub-tm-⊚ to ren-tm-⊚)
-  using ()
+  using (_⊚a_)
   public
 
 _∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) → Ren Γ (Δ ,, μ ∣ x ∈ T)
@@ -348,10 +351,10 @@ _∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) →
 -- Some special renamings for introducing/removing a trivial lock and
 -- for (un)fusing locks.
 lock𝟙-ren : Ren (Γ ,lock⟨ 𝟙 ⟩) Γ
-lock𝟙-ren = key-ren (◇ ,lock⟨ 𝟙 ⟩) ◇ (eq-cell (sym mod-unitʳ))
+lock𝟙-ren = key-ren (◇ ,lock⟨ 𝟙 ⟩) ◇ id-cell
 
 unlock𝟙-ren : Ren Γ (Γ ,lock⟨ 𝟙 ⟩)
-unlock𝟙-ren = key-ren ◇ (◇ ,lock⟨ 𝟙 ⟩) (eq-cell (sym mod-unitʳ))
+unlock𝟙-ren = key-ren ◇ (◇ ,lock⟨ 𝟙 ⟩) id-cell
 
 fuselocks-ren : Ren (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
 fuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) id-cell
@@ -409,7 +412,13 @@ module AtomicSubVar where
 
   open AtomicSubDef
 
-  atomic-sub-var' : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
+  -- TODO: possible performance optimizations
+  --   * Use a "reverse LockTele" (i.e. a cons list instead of a snoc list of modalities) instead of the 1 modality ρ.
+  --     This has the advantage that we do not fuse all the locks together in 1 modality, which is not really necessary,
+  --     and that we do not lock the context with 𝟙 in the final function atomic-sub-var.
+  --   * Instead of immediately applying a renaming, build up 1 renaming in the substitution process and apply it at the end.
+  --     In this way, the number of term traversals is reduced.
+  atomic-sub-var' : {Γ Δ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
                     (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
   atomic-sub-var' {x = x} v ρ α (atomic-key Λ₁ Λ₂ β) =
     let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
@@ -426,6 +435,7 @@ module AtomicSubVar where
   sub-data-struct : RenSubDataStructure SubData
   RenSubDataStructure.newV sub-data-struct = newSubData
   RenSubDataStructure.atomic-rensub-lookup-var sub-data-struct = atomic-sub-var
+
 
 module AtomicSub = AtomicRenSub SubData AtomicSubVar.sub-data-struct
   renaming
