@@ -50,28 +50,17 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls M.,, M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
 ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx-nmls = M.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx-nmls
 
--- When interpreting a variable v : Var _ μ T κ Γ in a context Γ, all
--- variables to the right of v are removed from Γ and all locks are
--- aggregated to a single modality (viz. κ).
-record PruneResult (μ : Modality n o) (T : Ty n) (κ : Modality m o) (Γ : Ctx m) : Set where
-  constructor prune-result
-  field
-    Γ-pre : Ctx o
-    from-sub : ⟦ Γ ⟧ctx-nmls M.⇒ ⟦ Γ-pre ,, μ ∣ _ ∈ T ,lock⟨ κ ⟩ ⟧ctx-nmls
+⟦⟧var-helper : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var _ μ T κ Γ) →
+               (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → SemTm ⟦ Γ ,lock⟨ ρ ⟩ ⟧ctx-nmls ⟦ T ⟧ty
+⟦⟧var-helper {T = T} {μ = μ} vzero ρ α =
+  (M.mod-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
+    M.[ ty-closed-natural T ∣ M.key-subst ⟦ α ⟧two-cell ]cl
+⟦⟧var-helper {T = T} (vsuc v) ρ α = (⟦⟧var-helper v ρ α) M.[ ty-closed-natural T ∣ M.lock-fmap ⟦ ρ ⟧mod M.π ]cl
+⟦⟧var-helper {T = T} (skip-lock {κ = κ} φ v) ρ α =
+  (⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ ty-closed-natural T ∣ M.to (M.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]cl
 
-prune-ctx : (v : Var _ μ T κ Γ) → PruneResult μ T κ Γ
-prune-ctx {Γ = Γ ,, μ ∣ _ ∈ T} vzero = prune-result Γ (M.id-subst _)
-prune-ctx (vsuc v) =
-  let prune-result Γ-pre from-sub = prune-ctx v
-  in prune-result Γ-pre (from-sub M.⊚ M.π)
-prune-ctx (skip-lock {κ = κ} ρ v) =
-  let prune-result Γ-pre from-sub = prune-ctx v
-  in prune-result Γ-pre (M.to (M.eq-lock (⟦ⓜ⟧-sound κ ρ) _) M.⊚ M.lock-fmap ⟦ ρ ⟧mod from-sub)
-
-⟦_,_⟧var-nmls : (v : Var _ μ T κ Γ) (α : TwoCell μ κ) → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
-⟦_,_⟧var-nmls {μ = μ} {T = T} v α =
-  let prune-result Γ-pre from-sub = prune-ctx v
-  in (M.mod-elim ⟦ μ ⟧mod (ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))) [ ty-closed-natural T ∣ M.key-subst ⟦ α ⟧two-cell M.⊚ from-sub ]cl
+⟦_,_⟧var-nmls : {μ κ : Modality m n} → (v : Var _ μ T κ Γ) → TwoCell μ κ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
+⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
 
 ⟦_⟧tm-nmls : Tm Γ T → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦ var' _ {v} α ⟧tm-nmls = ⟦ v , α ⟧var-nmls
