@@ -17,7 +17,7 @@ private
   variable
     C D E : BaseCategory
 
-infix 1 _≅ᵐ_
+infix 1 _≅ᵐ_ _≅ᵗᶜ_
 infixl 20 _ⓜ_ _ⓣ-vert_ _ⓣ-hor_
 
 
@@ -539,3 +539,74 @@ transf (α ⓣ-hor β) = transf β ⓝ-hor transf α
 ≅ᵐ-to-2-cell : {μ ρ : Modality C D} → μ ≅ᵐ ρ → TwoCell μ ρ
 transf-op (transf (≅ᵐ-to-2-cell μ=ρ)) Γ = to (eq-lock μ=ρ Γ)
 naturality (transf (≅ᵐ-to-2-cell μ=ρ)) = eq-lock-natural-to μ=ρ
+
+
+record _≅ᵗᶜ_ {μ ρ : Modality C D} (α β : TwoCell μ ρ) : Set₁ where
+  field
+    key-subst-eq : ∀ {Γ} → key-subst α {Γ} ≅ˢ key-subst β
+open _≅ᵗᶜ_ public
+
+module _ {μ ρ : Modality C D} where
+  reflᵗᶜ : {α : TwoCell μ ρ} → α ≅ᵗᶜ α
+  key-subst-eq reflᵗᶜ = reflˢ
+
+  symᵗᶜ : {α β : TwoCell μ ρ} → α ≅ᵗᶜ β → β ≅ᵗᶜ α
+  key-subst-eq (symᵗᶜ α=β) = symˢ (key-subst-eq α=β)
+
+  transᵗᶜ : {α1 α2 α3 : TwoCell μ ρ} → α1 ≅ᵗᶜ α2 → α2 ≅ᵗᶜ α3 → α1 ≅ᵗᶜ α3
+  key-subst-eq (transᵗᶜ e e') = transˢ (key-subst-eq e) (key-subst-eq e')
+
+  ⓣ-vert-unitˡ : {α : TwoCell μ ρ} → id-cell ⓣ-vert α ≅ᵗᶜ α
+  key-subst-eq ⓣ-vert-unitˡ = ⊚-id-substʳ _
+
+  ⓣ-vert-unitʳ : {α : TwoCell μ ρ} → α ⓣ-vert id-cell ≅ᵗᶜ α
+  key-subst-eq ⓣ-vert-unitʳ = ⊚-id-substˡ _
+
+ⓣ-vert-assoc : {μ ρ κ φ : Modality C D} {α : TwoCell μ ρ} {β : TwoCell ρ κ} {γ : TwoCell κ φ} →
+               (γ ⓣ-vert β) ⓣ-vert α ≅ᵗᶜ γ ⓣ-vert (β ⓣ-vert α)
+key-subst-eq ⓣ-vert-assoc = symˢ ⊚-assoc
+
+ⓣ-vert-congˡ : {μ ρ κ : Modality C D} {α α' : TwoCell ρ κ} {β : TwoCell μ ρ} →
+               α ≅ᵗᶜ α' → α ⓣ-vert β ≅ᵗᶜ α' ⓣ-vert β
+key-subst-eq (ⓣ-vert-congˡ e) = ⊚-congˡ (key-subst-eq e)
+
+ⓣ-vert-congʳ : {μ ρ κ : Modality C D} {α : TwoCell ρ κ} {β β' : TwoCell μ ρ} →
+               β ≅ᵗᶜ β' → α ⓣ-vert β ≅ᵗᶜ α ⓣ-vert β'
+key-subst-eq (ⓣ-vert-congʳ e) = ⊚-congʳ (key-subst-eq e)
+
+ⓣ-hor-congˡ : {μ ρ : Modality C D} {κ φ : Modality D E} {α : TwoCell μ ρ} {β β' : TwoCell κ φ} →
+              β ≅ᵗᶜ β' → β ⓣ-hor α ≅ᵗᶜ β' ⓣ-hor α
+key-subst-eq (ⓣ-hor-congˡ {ρ = ρ} e) = ⊚-congˡ (lock-fmap-cong ρ (key-subst-eq e))
+
+ⓣ-hor-congʳ : {μ ρ : Modality C D} {κ φ : Modality D E} {α α' : TwoCell μ ρ} {β : TwoCell κ φ} →
+              α ≅ᵗᶜ α' → β ⓣ-hor α ≅ᵗᶜ β ⓣ-hor α'
+key-subst-eq (ⓣ-hor-congʳ e) = ⊚-congʳ (key-subst-eq e)
+
+ⓣ-hor-id : {μ : Modality C D} {ρ : Modality D E} → id-cell {μ = ρ} ⓣ-hor id-cell {μ = μ} ≅ᵗᶜ id-cell
+key-subst-eq (ⓣ-hor-id {μ = μ}) = transˢ (⊚-id-substˡ _) (lock-fmap-id μ)
+
+2-cell-interchange : {μ μ' μ'' : Modality D E} {ρ ρ' ρ'' : Modality C D}
+                     {α : TwoCell μ μ'} {β : TwoCell μ' μ''} {γ : TwoCell ρ ρ'} {δ : TwoCell ρ' ρ''} →
+                     (β ⓣ-vert α) ⓣ-hor (δ ⓣ-vert γ) ≅ᵗᶜ (β ⓣ-hor δ) ⓣ-vert (α ⓣ-hor γ)
+key-subst-eq (2-cell-interchange {ρ'' = ρ''} {δ = δ}) =
+  transˢ (⊚-congˡ (lock-fmap-⊚ ρ'' _ _)) (
+  transˢ ⊚-assoc (
+  transˢ (⊚-congˡ (transˢ (symˢ ⊚-assoc) (⊚-congʳ (naturality (transf δ) _)))) (
+  transˢ (⊚-congˡ ⊚-assoc) (
+  symˢ ⊚-assoc))))
+
+ⓣ-hor-unitˡ : {μ ρ : Modality C D} {α : TwoCell μ ρ} →
+              ≅ᵐ-to-2-cell (𝟙-identityˡ ρ) ⓣ-vert (id-cell {μ = 𝟙} ⓣ-hor α) ≅ᵗᶜ α ⓣ-vert ≅ᵐ-to-2-cell (𝟙-identityˡ μ)
+key-subst-eq (ⓣ-hor-unitˡ {ρ = ρ}) =
+  transˢ (⊚-id-substʳ _) (transˢ (⊚-congˡ (lock-fmap-id ρ)) (transˢ (⊚-id-substʳ _) (symˢ (⊚-id-substˡ _))))
+
+ⓣ-hor-unitʳ : {μ ρ : Modality C D} {α : TwoCell μ ρ} →
+              ≅ᵐ-to-2-cell (𝟙-identityʳ ρ) ⓣ-vert (α ⓣ-hor id-cell {μ = 𝟙}) ≅ᵗᶜ α ⓣ-vert ≅ᵐ-to-2-cell (𝟙-identityʳ μ)
+key-subst-eq (ⓣ-hor-unitʳ {ρ = ρ}) = ⊚-id-substʳ _
+
+ⓣ-hor-assoc : {F : BaseCategory}
+              {μ μ' : Modality C D} {ρ ρ' : Modality D E} {κ κ' : Modality E F}
+              {α : TwoCell μ μ'} {β : TwoCell ρ ρ'} {γ : TwoCell κ κ'} →
+              ≅ᵐ-to-2-cell (ⓜ-assoc _ _ _) ⓣ-vert ((γ ⓣ-hor β) ⓣ-hor α) ≅ᵗᶜ (γ ⓣ-hor (β ⓣ-hor α)) ⓣ-vert ≅ᵐ-to-2-cell (ⓜ-assoc _ _ _)
+key-subst-eq (ⓣ-hor-assoc {μ' = μ'}) =
+  transˢ (⊚-id-substʳ _) (transˢ (⊚-congˡ (lock-fmap-⊚ μ' _ _)) (transˢ (symˢ ⊚-assoc) (symˢ (⊚-id-substˡ _))))
