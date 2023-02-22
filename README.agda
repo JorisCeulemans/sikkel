@@ -8,8 +8,8 @@ module README where
   This is the readme for the Sikkel library, as presented in the MSFP paper
     Sikkel: Multimode Simple Type Theory as an Agda Library.
 
-  We use Agda 2.6.2 and the Agda standard library (version 1.7).
-  Instructions for installing Agda can be found on https://agda.readthedocs.io/en/v2.6.2/getting-started/installation.html
+  We use Agda 2.6.3 and the Agda standard library (version 1.7.2).
+  Instructions for installing Agda can be found on https://agda.readthedocs.io/en/v2.6.3/getting-started/installation.html
   Installation instructions for the Agda standard library are located at https://github.com/agda/agda-stdlib/blob/master/notes/installation-guide.md
 
   If Agda and the standard library are installed, you can open this file in emacs and press C-c C-l to typecheck it.
