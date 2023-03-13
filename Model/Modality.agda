@@ -512,6 +512,9 @@ record TwoCell (μ ρ : Modality C D) : Set₁ where
   key-subst : {Γ : Ctx D} → Γ ,lock⟨ ρ ⟩ ⇒ Γ ,lock⟨ μ ⟩
   key-subst {Γ = Γ} = transf-op transf Γ
 
+  key-subst-natural : {Γ Δ : Ctx D} {σ : Γ ⇒ Δ} → key-subst {Δ} ⊚ lock-fmap ρ σ ≅ˢ lock-fmap μ σ ⊚ key-subst {Γ}
+  key-subst-natural {σ = σ} = naturality transf σ
+
   coe-ty : {Γ : Ctx D} → Ty (Γ ,lock⟨ μ ⟩) → Ty (Γ ,lock⟨ ρ ⟩)
   coe-ty {Γ} T = T [ key-subst ]
 

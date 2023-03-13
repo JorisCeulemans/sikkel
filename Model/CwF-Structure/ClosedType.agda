@@ -106,6 +106,12 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
                             t ≅ᵗᵐ s → t [ clT ∣ σ ]cl ≅ᵗᵐ s [ clT ∣ σ ]cl
   closed-tm-subst-cong-tm t=s = ι⁻¹-cong (tm-subst-cong-tm _ t=s)
 
+  tm-cl-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} {t : Tm Θ T} →
+                               σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1 →
+                               t [ clT ∣ σ2 ]cl [ clT ∣ σ1 ]cl ≅ᵗᵐ t [ clT ∣ τ2 ]cl [ clT ∣ τ1 ]cl
+  tm-cl-subst-cong-subst-2-2 e-subst =
+    transᵗᵐ (closed-tm-subst-⊚ _) (transᵗᵐ (closed-tm-subst-cong-subst e-subst) (symᵗᵐ (closed-tm-subst-⊚ _)))
+
   ξcl : Tm (Γ ,, T) T
   ξcl = ι⁻¹[ closed-natural clT π ] ξ
 
@@ -154,6 +160,9 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
           ι⁻¹[ closed-natural clT σ ] (ι⁻¹[ ty-subst-cong-ty σ (closed-natural clT π) ] (ξ [ σ ]'))
         ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟩
           ι⁻¹[ closed-natural clT σ ] ((ι⁻¹[ closed-natural clT π ] ξ) [ σ ]') ∎
+
+  ,cl-cong-tm : {σ : Γ ⇒ Δ} {t s : Tm Γ T} → t ≅ᵗᵐ s → σ ,cl t ≅ˢ σ ,cl s
+  ,cl-cong-tm e = ctx-ext-subst-congʳ _ (ι-cong e)
 
   lift-cl-subst : (Γ ⇒ Δ) → (Γ ,, T ⇒ Δ ,, T)
   lift-cl-subst σ = (σ ⊚ π) ,cl ξcl
