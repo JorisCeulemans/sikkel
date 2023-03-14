@@ -1,9 +1,17 @@
-module Experimental.LogicalFramework.MSTT.Normalization.Soundness where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.Normalization.Soundness
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Data.Nat
 open import Data.Maybe as Mb using (Maybe; just; nothing)
 open import Data.Unit.Polymorphic
 open import Level using (Level)
+
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M
@@ -14,12 +22,10 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Model.Modality as M
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless renaming (⟦_⟧tm-nmls to ⟦_⟧tm)
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧ renaming (⟦_⟧tm-nmls to ⟦_⟧tm)
 import Experimental.LogicalFramework.MSTT.Normalization.Helpers as Mb
-open import Experimental.LogicalFramework.MSTT.Normalization
+open import Experimental.LogicalFramework.MSTT.Normalization ℳ
 
 private variable
   ℓ ℓ' : Level

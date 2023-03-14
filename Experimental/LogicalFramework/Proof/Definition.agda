@@ -2,13 +2,17 @@
 -- Definition of proofs
 --------------------------------------------------
 
-module Experimental.LogicalFramework.Proof.Definition where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.Proof.Definition (ℳ : ModeTheory) where
 
 open import Data.String as Str hiding (_≟_)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
-open import Experimental.LogicalFramework.MSTT
-open import Experimental.LogicalFramework.Formula
+open ModeTheory ℳ
+
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ
+open import Experimental.LogicalFramework.Formula.Named ℳ
 
 private variable
   m n o p : Mode
@@ -99,4 +103,4 @@ data Proof {m : Mode} : Ctx m → Set where
 
 nat-induction : {Γ : Ctx m} {μ : Modality n m} {x : String} (hyp : String) →
                 Proof Γ → Proof (Γ ,, μ ∣ x ∈ Nat') → Proof (Γ ,, μ ∣ x ∈ Nat')
-nat-induction hyp = nat-induction' hyp refl
+nat-induction hyp = nat-induction' hyp Ag.refl

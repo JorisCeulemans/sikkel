@@ -3,10 +3,12 @@
 --   This essentially means that we have a nameless syntax.
 --------------------------------------------------
 
-module Experimental.LogicalFramework.MSTT.Syntax.Nameless where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.Syntax.Nameless (ℳ : ModeTheory) where
 
 open import Data.Unit
 
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Types public
-open import Experimental.LogicalFramework.MSTT.Syntax.General ⊤ public
+open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ public
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ ⊤ public

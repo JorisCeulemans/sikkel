@@ -2,11 +2,19 @@
 -- Interpretation of MSTT contexts and terms in a presheaf model
 --------------------------------------------------
 
-module Experimental.LogicalFramework.MSTT.Interpretation where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.Interpretation
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Data.Maybe
 open import Data.String
 open import Relation.Binary.PropositionalEquality
+
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
@@ -15,13 +23,11 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Constant as M
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Named as Syn
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ as Syn
 open Syn.AtomicSub
-import Experimental.LogicalFramework.MSTT.Syntax.Nameless as DB
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless as DBInt
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory as MTInt
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ as DB
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧ as DBInt
 
 private variable
   m n : Mode
@@ -33,7 +39,6 @@ private variable
 -- Re-export interpretation of modes, modalities, and types
 
 open DBInt public using (⟦_⟧ty; ty-natural; ty-closed-natural)
-open MTInt public
 
 
 --------------------------------------------------

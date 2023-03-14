@@ -2,14 +2,17 @@
 -- Definition of α-equivalence of MSTT terms via a translation to nameless terms
 --------------------------------------------------
 
-module Experimental.LogicalFramework.MSTT.AlphaEquivalence where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.AlphaEquivalence (ℳ : ModeTheory) where
 
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Named
-import Experimental.LogicalFramework.MSTT.Syntax.Nameless as NMLS
+open ModeTheory ℳ
+
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ as NMLS
 
 private variable
   m n : Mode

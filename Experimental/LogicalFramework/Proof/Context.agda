@@ -1,4 +1,9 @@
-module Experimental.LogicalFramework.Proof.Context where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.Proof.Context
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Data.String as Str
 open import Function using (id)
@@ -8,10 +13,13 @@ open import Relation.Nullary
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 import Model.Modality as M
 
-open import Experimental.LogicalFramework.MSTT
-open import Experimental.LogicalFramework.Formula
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
+
+open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Formula ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.Proof.CheckingMonad
-open import Experimental.LogicalFramework.Proof.Equality
+open import Experimental.LogicalFramework.Proof.Equality ℳ
 
 private variable
   m n o p : Mode

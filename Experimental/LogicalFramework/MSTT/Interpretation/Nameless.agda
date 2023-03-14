@@ -3,9 +3,17 @@
 --   presheaf model
 --------------------------------------------------
 
-module Experimental.LogicalFramework.MSTT.Interpretation.Nameless where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.Interpretation.Nameless
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Relation.Binary.PropositionalEquality
+
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M
@@ -16,10 +24,8 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Model.Modality as M
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ
 
 private variable
   m n o : Mode

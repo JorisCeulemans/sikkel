@@ -1,10 +1,13 @@
-module Experimental.LogicalFramework.MSTT.BasicPrograms where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.BasicPrograms (ℳ : ModeTheory) where
 
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Named
+open ModeTheory ℳ
+
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ
 
 private variable
   m n : Mode

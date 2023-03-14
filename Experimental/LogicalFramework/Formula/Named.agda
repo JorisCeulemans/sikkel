@@ -2,9 +2,11 @@
 -- Instantiation of the general definition of formulas with strings as names
 --------------------------------------------------
 
-module Experimental.LogicalFramework.Formula.Named where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.Formula.Named (ℳ : ModeTheory) where
 
 open import Data.String
 
 
-open import Experimental.LogicalFramework.Formula.General String public
+open import Experimental.LogicalFramework.Formula.General ℳ String public

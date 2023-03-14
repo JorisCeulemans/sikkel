@@ -2,13 +2,17 @@
 -- Definition of α-equivalence of formulas via a translation to nameless formulas
 --------------------------------------------------
 
-module Experimental.LogicalFramework.Formula.AlphaEquivalence where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.Formula.AlphaEquivalence (ℳ : ModeTheory) where
 
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.Formula.Named
-import Experimental.LogicalFramework.Formula.Nameless as NMLS
-open import Experimental.LogicalFramework.MSTT
+open ModeTheory ℳ
+
+open import Experimental.LogicalFramework.Formula.Named ℳ
+import Experimental.LogicalFramework.Formula.Nameless ℳ as NMLS
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ
 
 private variable
   m : Mode

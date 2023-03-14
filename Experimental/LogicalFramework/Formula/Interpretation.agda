@@ -3,7 +3,12 @@
 --   base category
 --------------------------------------------------
 
-module Experimental.LogicalFramework.Formula.Interpretation where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.Formula.Interpretation
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy) using (_≅ᵗʸ_)
 import Model.Type.Function as M
@@ -11,10 +16,13 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
-open import Experimental.LogicalFramework.MSTT
-open import Experimental.LogicalFramework.Formula.Named
-open import Experimental.LogicalFramework.Formula.AlphaEquivalence
-open import Experimental.LogicalFramework.Formula.Interpretation.Nameless
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
+
+open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Formula.Named ℳ
+open import Experimental.LogicalFramework.Formula.AlphaEquivalence ℳ
+open import Experimental.LogicalFramework.Formula.Interpretation.Nameless ℳ ⟦ℳ⟧
 
 private variable
   m : Mode

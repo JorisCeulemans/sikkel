@@ -1,12 +1,15 @@
-module Experimental.LogicalFramework.MSTT.Normalization where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.Normalization (ℳ : ModeTheory) where
 
 open import Data.Nat
 open import Data.Maybe
 open import Function
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
+open ModeTheory ℳ
+
 open import Experimental.LogicalFramework.MSTT.Normalization.Helpers
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ
 
 private variable
   m n o : Mode
@@ -125,5 +128,5 @@ private
   test-nat = plus ∙ suc zero ∙ suc (suc zero)
 
   open import Relation.Binary.PropositionalEquality
-  test : normalize {★} {◇} 1000000000000 test-nat ≡ just (suc (suc (suc zero)))
+  test : ∀ {m} → normalize {m} {◇} 1000000000000 test-nat ≡ just (suc (suc (suc zero)))
   test = refl

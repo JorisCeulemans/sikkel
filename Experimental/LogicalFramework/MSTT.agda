@@ -3,10 +3,10 @@
 --   type theory MSTT
 --------------------------------------------------
 
-module Experimental.LogicalFramework.MSTT where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
+module Experimental.LogicalFramework.MSTT (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ) where
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory public
-open import Experimental.LogicalFramework.MSTT.Syntax.Named public
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence public
-open import Experimental.LogicalFramework.MSTT.Interpretation public
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ public
+open import Experimental.LogicalFramework.MSTT.Interpretation ℳ ⟦ℳ⟧ public

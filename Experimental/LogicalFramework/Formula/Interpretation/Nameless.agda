@@ -3,7 +3,12 @@
 --   trivial base category
 --------------------------------------------------
 
-module Experimental.LogicalFramework.Formula.Interpretation.Nameless where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.Formula.Interpretation.Nameless
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy)
 import Model.Type.Function as M
@@ -13,11 +18,12 @@ import Model.Modality as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless
-open import Experimental.LogicalFramework.Formula.Nameless
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
+
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Formula.Nameless ℳ
 
 private variable
   m : Mode

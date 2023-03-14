@@ -1,4 +1,9 @@
-module Experimental.LogicalFramework.Proof.Checker where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+
+module Experimental.LogicalFramework.Proof.Checker
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  where
 
 open import Data.List
 open import Data.String as Str hiding (_≟_; _++_)
@@ -12,12 +17,15 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
 
-open import Experimental.LogicalFramework.MSTT
-open import Experimental.LogicalFramework.Formula
-open import Experimental.LogicalFramework.Proof.Definition
+open ModeTheory ℳ
+open ModeTheoryInterpretation ⟦ℳ⟧
+
+open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Formula ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Proof.Definition ℳ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
-open import Experimental.LogicalFramework.Proof.Equality
-open import Experimental.LogicalFramework.Proof.Context
+open import Experimental.LogicalFramework.Proof.Equality ℳ
+open import Experimental.LogicalFramework.Proof.Context ℳ ⟦ℳ⟧
 
 private variable
   m n o p : Mode

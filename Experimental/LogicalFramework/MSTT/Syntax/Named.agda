@@ -2,7 +2,9 @@
 -- Instantiation of the general MSTT syntax with strings as names
 --------------------------------------------------
 
-module Experimental.LogicalFramework.MSTT.Syntax.Named where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.MSTT.Syntax.Named (ℳ : ModeTheory) where
 
 open import Data.Empty
 open import Data.Product
@@ -16,13 +18,14 @@ open PropEq using (refl) public
 --   search when using the functions var and svar defined in this
 --   module.
 
+open ModeTheory ℳ
+
 
 --------------------------------------------------
 -- Re-exporting the definitions of types, contexts, terms and associated operations.
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Types public
-open import Experimental.LogicalFramework.MSTT.Syntax.General String public
+open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ public
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ String public
 
 private variable
   m n : Mode

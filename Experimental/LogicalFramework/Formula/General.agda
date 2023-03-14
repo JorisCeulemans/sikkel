@@ -6,14 +6,17 @@
 --   Formula.Named.
 --------------------------------------------------
 
-module Experimental.LogicalFramework.Formula.General (Name : Set) where
+open import Experimental.LogicalFramework.MSTT.ModeTheory
+
+module Experimental.LogicalFramework.Formula.General (ℳ : ModeTheory) (Name : Set) where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Syntax.Types
-open import Experimental.LogicalFramework.MSTT.Syntax.General Name
+open ModeTheory ℳ
+
+open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ Name
 
 private variable
   m n : Mode

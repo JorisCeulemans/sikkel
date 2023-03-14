@@ -1,6 +1,7 @@
 module Experimental.LogicalFramework.Proof.CheckingMonad where
 
 open import Data.List
+open import Data.Maybe using (Maybe; nothing; just)
 open import Data.Product hiding (_<*>_)
 open import Data.String hiding (_++_)
 open import Level
@@ -50,3 +51,7 @@ error msg >> _  = error msg
 from-dec : ErrorMsg → Dec A → PCM A
 from-dec msg (yes a) = return a
 from-dec msg (no ¬a) = throw-error msg
+
+from-maybe : ErrorMsg → Maybe A → PCM A
+from-maybe msg (just a) = return a
+from-maybe msg nothing  = throw-error msg
