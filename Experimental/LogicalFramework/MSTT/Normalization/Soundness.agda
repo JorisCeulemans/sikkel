@@ -18,7 +18,8 @@ open import Experimental.LogicalFramework.MSTT.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
 open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless renaming (⟦_⟧tm-nmls to ⟦_⟧tm)
-open import Experimental.LogicalFramework.MSTT.Normalization as Mb hiding (_<$>_; _<*>_) -- TODO: remove "maybe definitions" to separate module
+import Experimental.LogicalFramework.MSTT.Normalization.Helpers as Mb
+open import Experimental.LogicalFramework.MSTT.Normalization
 
 private variable
   ℓ ℓ' : Level

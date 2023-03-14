@@ -6,6 +6,7 @@ open import Function
 
 open import Experimental.LogicalFramework.MSTT.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Syntax.Nameless
+open import Experimental.LogicalFramework.MSTT.Normalization.Helpers
 
 private variable
   m n o : Mode
@@ -13,13 +14,6 @@ private variable
   T S : Ty m
   Γ Δ : Ctx m
 
-
-infixl 4 _<$>_ _<*>_
-_<$>_ : ∀ {ℓA ℓB} {A : Set ℓA} {B : Set ℓB} → (A → B) → Maybe A → Maybe B
-f <$> ma = map f ma
-
-_<*>_ : ∀ {ℓA ℓB} {A : Set ℓA} {B : Set ℓB} → Maybe (A → B) → Maybe A → Maybe B
-_<*>_ = maybe map (const nothing)
 
 data NF : Ctx m → Ty m → Set
 data NE : Ctx m → Ty m → Set
