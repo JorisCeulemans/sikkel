@@ -143,8 +143,8 @@ check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
   refl ← κ' =mod? κ
-  φ =f? lookup-assumption a α
-  return ⟅ [] , _ ↦ {!!} ⟆
+  refl ← φ =f? lookup-assumption a α
+  return ⟅ [] , _ ↦ ⟦ a , α ⟧assumption ⟆
 check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   is-forall {n = n'} κ y S φ' ← is-forall? φ
   refl ← n =m? n'

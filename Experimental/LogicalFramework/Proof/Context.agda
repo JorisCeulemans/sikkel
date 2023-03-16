@@ -20,6 +20,7 @@ open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.Formula ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality ℳ
+open import Experimental.LogicalFramework.Postulates ℳ ⟦ℳ⟧
 
 private variable
   m n o p : Mode
@@ -109,6 +110,35 @@ to-ctx-subst : (Ξ : ProofCtx m) → ⟦ Ξ ⟧pctx M.⇒ ⟦ to-ctx Ξ ⟧ctx
 ⟦ Ξ ,lock⟨ μ ⟩ ⟧pctx = M.lock ⟦ μ ⟧mod ⟦ Ξ ⟧pctx
 
 to-ctx-subst [] = M.id-subst M.◇
-to-ctx-subst (Ξ ,,ᵛ μ ∣ _ ∈ T) = ((to-ctx-subst Ξ) M.⊹) M.⊚ M._≅ᶜ_.to (M.,,-cong (ty-natural ⟨ μ ∣ T ⟩))
+to-ctx-subst (Ξ ,,ᵛ μ ∣ _ ∈ T) = M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) (to-ctx-subst Ξ)
 to-ctx-subst (Ξ ,,ᶠ _ ∣ _ ∈ _) = to-ctx-subst Ξ M.⊚ M.π
 to-ctx-subst (Ξ ,lock⟨ μ ⟩) = M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ)
+
+
+interp-assumption-helper : (a : Assumption x μ κ Ξ) (ρ : Modality _ _) (α : TwoCell μ (κ ⓜ ρ)) →
+                           SemTm ⟦ Ξ ,lock⟨ ρ ⟩ ⟧pctx (⟦ lookup-assumption' a ρ α ⟧frm M.[ to-ctx-subst (Ξ ,lock⟨ ρ ⟩) ])
+interp-assumption-helper {μ = μ} (azero {Ξ = Ξ} {φ = φ}) ρ α =
+  M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (key-sub-sound α {to-ctx Ξ}) _) (frm-sub-sound φ _)) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.key-subst-natural ⟦ α ⟧two-cell) ] (
+  M.mod-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (M.mod-natural ⟦ μ ⟧mod _) ] M.ξ)
+  M.[ M.key-subst ⟦ α ⟧two-cell ]'))
+interp-assumption-helper (asuc a) ρ α =
+  M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.symˢ (M.lock-fmap-⊚ ⟦ ρ ⟧mod _ _)) ] (
+  interp-assumption-helper a ρ α
+  M.[ M.lock-fmap ⟦ ρ ⟧mod M.π ]')
+interp-assumption-helper (skip-var {Ξ = Ξ} {ρ = ρ'} {T = T} a) ρ α =
+  let x = _
+  in
+  M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (sub-lock-sound (π {Γ = to-ctx Ξ} {μ = ρ'} {x} {T}) ρ)) _)
+                                         (frm-sub-sound (lookup-assumption' a ρ α) ((π {x = x}) ,slock⟨ ρ ⟩))) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (M.ctx-functor ⟦ ρ ⟧mod) (M.transˢ (M.⊚-congʳ (sub-π-sound {Γ = to-ctx Ξ} {x} {ρ'} {T}))
+                                                                                           (M.lift-cl-subst-π-commute (ty-closed-natural ⟨ ρ' ∣ T ⟩)))) ] (
+  interp-assumption-helper a ρ α M.[ M.lock-fmap ⟦ ρ ⟧mod M.π ]'))
+interp-assumption-helper (skip-lock {κ = κ} ρ' a) ρ α =
+  M.ι[ M.ty-subst-cong-ty _ (unfuselocks-frm-sound {μ = ρ'} (lookup-assumption' a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α))) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.eq-lock-natural-to (⟦ⓜ⟧-sound ρ' ρ) _) ] (
+  interp-assumption-helper a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)
+  M.[ _ ]'))
+
+⟦_,_⟧assumption : (a : Assumption x μ κ Ξ) (α : TwoCell μ κ) → SemTm ⟦ Ξ ⟧pctx (⟦ lookup-assumption a α ⟧frm M.[ to-ctx-subst Ξ ])
+⟦ a , α ⟧assumption = M.ι[ M.ty-subst-cong-ty _ (unlock𝟙-frm-sound (lookup-assumption' a 𝟙 _)) ] interp-assumption-helper a 𝟙 _
