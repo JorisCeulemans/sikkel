@@ -4,11 +4,15 @@
 
 module Model.CwF-Structure.ClosedType where
 
+open import Data.Product
+open import Relation.Binary.PropositionalEquality hiding ([_])
+
 open import Model.BaseCategory
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
 open import Model.CwF-Structure.ContextExtension
+open import Model.CwF-Structure.ContextEquivalence
 
 private
   variable
@@ -115,41 +119,42 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   ξcl : Tm (Γ ,, T) T
   ξcl = ι⁻¹[ closed-natural clT π ] ξ
 
-  _,cl_ : (Γ ⇒ Δ) → Tm Γ T → (Γ ⇒ Δ ,, T)
-  σ ,cl t = to-ext-subst T σ (ι[ closed-natural clT σ ] t)
+_,cl⟨_⟩_ : (Γ ⇒ Δ) → {T : ClosedTy C} → IsClosedNatural T → Tm Γ T → (Γ ⇒ Δ ,, T)
+σ ,cl⟨ clT ⟩ t = to-ext-subst _ σ (ι[ closed-natural clT σ ] t)
 
-  ,cl-β1 : (σ : Γ ⇒ Δ) (t : Tm Γ T) → π ⊚ (σ ,cl t) ≅ˢ σ
+module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
+  ,cl-β1 : (σ : Γ ⇒ Δ) (t : Tm Γ T) → π ⊚ (σ ,cl⟨ clT ⟩ t) ≅ˢ σ
   ,cl-β1 σ t = ctx-ext-subst-β₁ _ _
 
-  ,cl-β2 : (σ : Γ ⇒ Δ) (t : Tm Γ T) → (ξcl [ clT ∣ σ ,cl t ]cl) ≅ᵗᵐ t
+  ,cl-β2 : (σ : Γ ⇒ Δ) (t : Tm Γ T) → (ξcl clT [ clT ∣ σ ,cl⟨ clT ⟩ t ]cl) ≅ᵗᵐ t
   ,cl-β2 σ t =
     begin
-      ι⁻¹[ closed-natural clT (σ ,cl t) ] ((ι⁻¹[ closed-natural clT π ] ξ) [ σ ,cl t ]')
+      ι⁻¹[ closed-natural clT (σ ,cl⟨ clT ⟩ t) ] ((ι⁻¹[ closed-natural clT π ] ξ) [ σ ,cl⟨ clT ⟩ t ]')
     ≅˘⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟩
-      ι⁻¹[ closed-natural clT (σ ,cl t) ] (ι⁻¹[ ty-subst-cong-ty (σ ,cl t) (closed-natural clT π) ] (ξ [ σ ,cl t ]'))
+      ι⁻¹[ closed-natural clT (σ ,cl⟨ clT ⟩ t) ] (ι⁻¹[ ty-subst-cong-ty (σ ,cl⟨ clT ⟩ t) (closed-natural clT π) ] (ξ [ σ ,cl⟨ clT ⟩ t ]'))
     ≅⟨ ι⁻¹-cong (ι⁻¹-cong (ctx-ext-subst-β₂ σ _)) ⟩
-      ι⁻¹[ closed-natural clT (σ ,cl t) ] (ι⁻¹[ ty-subst-cong-ty (σ ,cl t) (closed-natural clT π) ]
-         (ι[ transᵗʸ (ty-subst-comp T π (σ ,cl t))
+      ι⁻¹[ closed-natural clT (σ ,cl⟨ clT ⟩ t) ] (ι⁻¹[ ty-subst-cong-ty (σ ,cl⟨ clT ⟩ t) (closed-natural clT π) ]
+         (ι[ transᵗʸ (ty-subst-comp T π (σ ,cl⟨ clT ⟩ t))
                      (ty-subst-cong-subst (ctx-ext-subst-β₁ σ (ι[ closed-natural clT σ ] t)) T)
            ] (ι[ closed-natural clT σ ] t)))
-    ≅⟨ ι⁻¹-congᵉ-2-2 (closed-⊚ clT π (σ ,cl t)) ⟩
-      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl t)) ] (ι⁻¹[ ty-subst-comp T π (σ ,cl t) ]
-         (ι[ transᵗʸ (ty-subst-comp T π (σ ,cl t))
+    ≅⟨ ι⁻¹-congᵉ-2-2 (closed-⊚ clT π (σ ,cl⟨ clT ⟩ t)) ⟩
+      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl⟨ clT ⟩ t)) ] (ι⁻¹[ ty-subst-comp T π (σ ,cl⟨ clT ⟩ t) ]
+         (ι[ transᵗʸ (ty-subst-comp T π (σ ,cl⟨ clT ⟩ t))
                      (ty-subst-cong-subst (ctx-ext-subst-β₁ σ (ι[ closed-natural clT σ ] t)) T)
            ] (ι[ closed-natural clT σ ] t)))
     ≅⟨ ι⁻¹-cong (ι⁻¹-cong ι-trans) ⟩
-      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl t)) ] (ι⁻¹[ ty-subst-comp T π (σ ,cl t) ] (ι[ ty-subst-comp T π (σ ,cl t) ]
+      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl⟨ clT ⟩ t)) ] (ι⁻¹[ ty-subst-comp T π (σ ,cl⟨ clT ⟩ t) ] (ι[ ty-subst-comp T π (σ ,cl⟨ clT ⟩ t) ]
          (ι[ ty-subst-cong-subst (ctx-ext-subst-β₁ σ (ι[ closed-natural clT σ ] t)) T
            ] (ι[ closed-natural clT σ ] t))))
     ≅⟨ ι⁻¹-cong ι-symˡ ⟩
-      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl t)) ] (ι[ ty-subst-cong-subst (ctx-ext-subst-β₁ σ (ι[ closed-natural clT σ ] t)) T ] (ι[ closed-natural clT σ ] t))
+      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl⟨ clT ⟩ t)) ] (ι[ ty-subst-cong-subst (ctx-ext-subst-β₁ σ (ι[ closed-natural clT σ ] t)) T ] (ι[ closed-natural clT σ ] t))
     ≅⟨ ι⁻¹-cong (ι-congᵉ-2-1 (closed-subst-eq clT _)) ⟩
-      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl t)) ] (ι[ closed-natural clT (π ⊚ (σ ,cl t)) ] t)
+      ι⁻¹[ closed-natural clT (π ⊚ (σ ,cl⟨ clT ⟩ t)) ] (ι[ closed-natural clT (π ⊚ (σ ,cl⟨ clT ⟩ t)) ] t)
     ≅⟨ ι-symˡ ⟩
       t ∎
     where open ≅ᵗᵐ-Reasoning
 
-  ,cl-η : (σ : Γ ⇒ Δ ,, T) → σ ≅ˢ ((π ⊚ σ) ,cl (ξcl [ clT ∣ σ ]cl))
+  ,cl-η : (σ : Γ ⇒ Δ ,, T) → σ ≅ˢ ((π ⊚ σ) ,cl⟨ clT ⟩ (ξcl clT [ clT ∣ σ ]cl))
   ,cl-η σ = transˢ (symˢ (ctx-ext-subst-η σ)) (ctx-ext-subst-congʳ (π ⊚ σ) (move-ι-right tm-proof))
     where
       open ≅ᵗᵐ-Reasoning
@@ -161,11 +166,17 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
         ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟩
           ι⁻¹[ closed-natural clT σ ] ((ι⁻¹[ closed-natural clT π ] ξ) [ σ ]') ∎
 
-  ,cl-cong-tm : {σ : Γ ⇒ Δ} {t s : Tm Γ T} → t ≅ᵗᵐ s → σ ,cl t ≅ˢ σ ,cl s
+  ,cl-cong-tm : {σ : Γ ⇒ Δ} {t s : Tm Γ T} → t ≅ᵗᵐ s → σ ,cl⟨ clT ⟩ t ≅ˢ σ ,cl⟨ clT ⟩ s
   ,cl-cong-tm e = ctx-ext-subst-congʳ _ (ι-cong e)
 
   lift-cl-subst : (Γ ⇒ Δ) → (Γ ,, T ⇒ Δ ,, T)
-  lift-cl-subst σ = (σ ⊚ π) ,cl ξcl
+  lift-cl-subst σ = (σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
 
   lift-cl-subst-π-commute : {σ : Γ ⇒ Δ} → π ⊚ (lift-cl-subst σ) ≅ˢ σ ⊚ π
   lift-cl-subst-π-commute = ctx-ext-subst-β₁ _ _
+
+  lift-cl-subst-⊹ : (σ : Γ ⇒ Δ) → (σ ⊹) ≅ˢ lift-cl-subst σ ⊚ from (,,-cong (closed-natural clT σ))
+  eq (lift-cl-subst-⊹ σ) (γ , t) =
+    cong (func σ γ ,_) (sym (trans (cong (func (to (closed-natural clT (σ ⊚ π)))) (eq (from-eq (closed-⊚ clT σ π)) t))
+                                   (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
+

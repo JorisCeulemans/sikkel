@@ -104,7 +104,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _
-⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = M.to-ext-subst _ ⟦ σ ⟧asub (M.ι[ ty-natural ⟨ μ ∣ T ⟩ ] M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
+⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
 ⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
 ⟦ σ ,aslock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
 ⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
@@ -114,7 +114,8 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 
 ⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ id-sub ⟧sub = M.id-subst _
-⟦ σ ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
+⟦ id-sub ⊚a τᵃ ⟧sub = ⟦ τᵃ ⟧asub
+⟦ σ      ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
 
 
 {-
