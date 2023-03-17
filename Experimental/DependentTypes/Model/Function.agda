@@ -147,6 +147,10 @@ naturality (ap {T = T} {S = S} f) {γy = [ γy , ty ]} {γx = [ γx , tx ]} ρ e
     eγ = proj₁ (from-Σ-ty-eq T e)
     et = proj₂ (from-Σ-ty-eq T e)
 
+cl-app : {T : ClosedTy C} (clT : IsClosedNatural T) {S : Ty (Γ ,, T)} →
+         Tm Γ (Pi T S) → (t : Tm Γ T) → Tm Γ (S [ id-subst Γ ,cl⟨ clT ⟩ t ])
+cl-app clT f t = ap f [ id-subst _ ,cl⟨ clT ⟩ t ]'
+
 {-
 app : Tm Γ (Pi T S) → Tm Γ T → Tm Γ S
 app f t ⟨ y , γ ⟩' = f €⟨ y , γ ⟩ (t ⟨ y , γ ⟩')
@@ -365,6 +369,11 @@ module _ {T : Ty Γ} {S : Ty (Γ ,, T)} (σ : Δ ⇒ Γ) where
     ≡⟨ ty-id S ⟩
       f $⟨ ρ-yz , eδ ⟩ t ∎)
     where open ≡-Reasoning
+
+Pi-natural-closed-dom : {T : ClosedTy C} (clT : IsClosedNatural T) {Γ : Ctx C} {S : Ty (Γ ,, T)} (σ : Δ ⇒ Γ) →
+                        (Pi T S) [ σ ] ≅ᵗʸ Pi T (S [ lift-cl-subst clT σ ])
+Pi-natural-closed-dom clT {S = S} σ =
+  transᵗʸ (Pi-natural σ) (Pi-cong (closed-natural clT σ) (symᵗʸ (ty-subst-cong-subst-2-1 S (symˢ (lift-cl-subst-⊹ clT σ)))))
 
 {-
   lam-natural : (b : Tm (Γ ,, T) (S [ π ])) →

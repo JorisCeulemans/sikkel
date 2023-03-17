@@ -14,8 +14,10 @@ open import Relation.Binary.PropositionalEquality as Ag using (refl)
 open import Relation.Nullary
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+import Model.Modality as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
+import Model.Type.Constant as M
 
 open ModeTheory ℳ
 open ModeTheoryInterpretation ⟦ℳ⟧
@@ -26,6 +28,7 @@ open import Experimental.LogicalFramework.Proof.Definition ℳ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality ℳ
 open import Experimental.LogicalFramework.Proof.Context ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Postulates ℳ ⟦ℳ⟧
 
 private variable
   m n o p : Mode
@@ -152,7 +155,8 @@ check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   refl ← from-dec "Alpha equivalence is currently not supported" (x Str.≟ y)
   refl ← T =T? S
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
-  return ⟅ goals , sgoals ↦ M.ι[ M.Pi-natural _ ] {!M.dλ[ _ ] ⟦p⟧ sgoals!} ⟆
+  return ⟅ goals , sgoals ↦ M.ι[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ]
+                               M.lam ⟦ ⟨ μ ∣ T ⟩ ⟧ty (⟦p⟧ sgoals) ⟆
 check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   is-forall {n = n'} κ y S ψ' ← is-forall? ψ
   refl ← n =m? n'
@@ -160,25 +164,25 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   refl ← T =T? S
   refl ← φ =f? (ψ' [ t / y ]frm)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
-  return ⟅ goals , sgoals ↦ {!!} ⟆
+  return ⟅ goals , sgoals ↦ M.ι⁻¹[ M.ty-subst-cong-ty _ (frm-sub-sound ψ' (t / y)) ] {!M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals)) (M.mod-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ? ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))!} ⟆
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   lam μ x b ← is-lam? f
-  rhs =t? (b [ t / x ]tm)
+  refl ← rhs =t? (b [ t / x ]tm)
   return ⟅ [] , _ ↦ {!!} ⟆
 check-proof Ξ nat-elim-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-elim z s n ← is-nat-elim? lhs
   refl ← n =t? zero
   refl ← rhs =t? z
-  return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id {!M.nat-β-zero _ _!}) M.[ _ ]' ⟆
+  return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.β-nat-zero _ _)) M.[ _ ]' ⟆
 check-proof Ξ nat-elim-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-elim z s n ← is-nat-elim? lhs
   suc-tm n' ← is-suc-tm? n
   refl ← rhs =t? s ∙¹ (nat-elim z s n')
-  return ⟅ [] , _ ↦ {!(M.≅ᵗᵐ-to-Id (M.snat-β-suc _ _ _)) M.[ _ ]'!} ⟆
+  return ⟅ [] , _ ↦ {!(M.≅ᵗᵐ-to-Id (M.β-nat-suc _ _ _)) M.[ _ ]'!} ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ends-in-var Ξ' μ x T ← ends-in-var? Ξ
   refl ← return Δ=Γ,μ∣x∈T -- Pattern matching on this proof only works since we already established that Ξ is of the form Ξ' ,,ᵛ μ ∣ x ∈ T.
