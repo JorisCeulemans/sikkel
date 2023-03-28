@@ -1,12 +1,12 @@
 --------------------------------------------------
--- Interpretation of nameless formulas in the presheaf model over the
+-- Interpretation of nameless propositions in the presheaf model over the
 --   trivial base category
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
-module Experimental.LogicalFramework.Formula.Interpretation.Nameless
+module Experimental.LogicalFramework.bProp.Interpretation.Nameless
   (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
   where
 
@@ -23,18 +23,18 @@ open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ
 open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧
-open import Experimental.LogicalFramework.Formula.Nameless ℳ
+open import Experimental.LogicalFramework.bProp.Nameless ℳ
 
 private variable
   m : Mode
   Γ : Ctx m
 
 
-⟦_⟧frm-nmls : Formula Γ → SemTy ⟦ Γ ⟧ctx-nmls
-⟦ ⊤ᶠ ⟧frm-nmls = M.Unit'
-⟦ ⊥ᶠ ⟧frm-nmls = M.Empty'
-⟦ t1 ≡ᶠ t2 ⟧frm-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
-⟦ φ ⊃ ψ ⟧frm-nmls = ⟦ φ ⟧frm-nmls M.⇛ ⟦ ψ ⟧frm-nmls
-⟦ φ ∧ ψ ⟧frm-nmls = ⟦ φ ⟧frm-nmls M.⊠ ⟦ ψ ⟧frm-nmls
-⟦ ∀[ μ ∣ _ ∈ T ] φ ⟧frm-nmls = M.Pi ⟦ ⟨ μ ∣ T ⟩ ⟧ty ⟦ φ ⟧frm-nmls
-⟦ ⟨ μ ∣ φ ⟩ ⟧frm-nmls = M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧frm-nmls ⟩
+⟦_⟧bprop-nmls : bProp Γ → SemTy ⟦ Γ ⟧ctx-nmls
+⟦ ⊤ᶠ ⟧bprop-nmls = M.Unit'
+⟦ ⊥ᶠ ⟧bprop-nmls = M.Empty'
+⟦ t1 ≡ᶠ t2 ⟧bprop-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
+⟦ φ ⊃ ψ ⟧bprop-nmls = ⟦ φ ⟧bprop-nmls M.⇛ ⟦ ψ ⟧bprop-nmls
+⟦ φ ∧ ψ ⟧bprop-nmls = ⟦ φ ⟧bprop-nmls M.⊠ ⟦ ψ ⟧bprop-nmls
+⟦ ∀[ μ ∣ _ ∈ T ] φ ⟧bprop-nmls = M.Pi ⟦ ⟨ μ ∣ T ⟩ ⟧ty ⟦ φ ⟧bprop-nmls
+⟦ ⟨ μ ∣ φ ⟩ ⟧bprop-nmls = M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧bprop-nmls ⟩

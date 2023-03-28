@@ -23,7 +23,7 @@ open ModeTheory ℳ
 open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
-open import Experimental.LogicalFramework.Formula ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.Proof.Definition ℳ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality ℳ
@@ -35,26 +35,26 @@ private variable
   μ ρ κ : Modality m n
   Γ Δ : Ctx m
   T S R U : Ty m
-  φ ψ : Formula Γ
+  φ ψ : bProp Γ
   x y : String
   Ξ : ProofCtx m
 
 
 
-data IsEquation : Formula Γ → Set where
+data IsEquation : bProp Γ → Set where
   is-eq : (t1 t2 : Tm Γ T) → IsEquation (t1 ≡ᶠ t2)
 
-is-eq? : (φ : Formula Γ) → PCM (IsEquation φ)
+is-eq? : (φ : bProp Γ) → PCM (IsEquation φ)
 is-eq? (t1 ≡ᶠ t2) = return (is-eq t1 t2)
-is-eq? φ = throw-error "Formula is not an equation"
+is-eq? φ = throw-error "bProp is not an equation"
 
-data IsForall : Formula Γ → Set where
-  is-forall : {Γ : Ctx m} (μ : Modality n m) (x : String) (T : Ty n) (φ : Formula (Γ ,, μ ∣ x ∈ T)) →
+data IsForall : bProp Γ → Set where
+  is-forall : {Γ : Ctx m} (μ : Modality n m) (x : String) (T : Ty n) (φ : bProp (Γ ,, μ ∣ x ∈ T)) →
               IsForall (∀[ μ ∣ x ∈ T ] φ)
 
-is-forall? : (φ : Formula Γ) → PCM (IsForall φ)
+is-forall? : (φ : bProp Γ) → PCM (IsForall φ)
 is-forall? (∀[ μ ∣ x ∈ T ] φ) = return (is-forall μ x T φ)
-is-forall? φ = throw-error "Formula is not of the form ∀ x ..."
+is-forall? φ = throw-error "bProp is not of the form ∀ x ..."
 
 data IsLam : Tm Γ T → Set where
   lam : (μ : Modality n m) (x : String) (b : Tm (Γ ,, μ ∣ x ∈ T) S) → IsLam (lam[ μ ∣ x ∈ T ] b)
@@ -101,31 +101,31 @@ record Goal : Set where
     gl-identifier : String
     {gl-mode} : Mode
     gl-ctx    : ProofCtx gl-mode
-    gl-prop   : Formula (to-ctx gl-ctx)
+    gl-prop   : bProp (to-ctx gl-ctx)
 open Goal
 
 SemGoals : List Goal → Set
 SemGoals [] = ⊤
-SemGoals (goal _ Ξ φ ∷ gls) = SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ]) × SemGoals gls
+SemGoals (goal _ Ξ φ ∷ gls) = SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ]) × SemGoals gls
 
 split-sem-goals : (gls1 gls2 : List Goal) → SemGoals (gls1 ++ gls2) → SemGoals gls1 × SemGoals gls2
 split-sem-goals []          gls2 sgls         = tt , sgls
 split-sem-goals (gl ∷ gls1) gls2 (sgl , sgls) = let (sgls1 , sgls2) = split-sem-goals gls1 gls2 sgls in (sgl , sgls1) , sgls2
 
-record PCResult (Ξ : ProofCtx m) (φ : Formula (to-ctx Ξ)) : Set where
+record PCResult (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) : Set where
   constructor ⟅_,_⟆
   field
     goals : List Goal
-    denotation : SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
+    denotation : SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])
 
 pc-result : (goals : List Goal) →
-            (SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])) →
+            (SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])) →
             PCResult Ξ φ
 pc-result = ⟅_,_⟆
 
 syntax pc-result goals (λ sgoals → b) = ⟅ goals , sgoals ↦ b ⟆
 
-check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : Formula (to-ctx Ξ)) → PCM (PCResult Ξ φ)
+check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (PCResult Ξ φ)
 check-proof Ξ refl φ = do
   is-eq t1 t2 ← is-eq? φ
   refl ← t1 =t? t2
@@ -162,9 +162,9 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   refl ← n =m? n'
   refl ← μ =mod? κ
   refl ← T =T? S
-  refl ← φ =f? (ψ' [ t / y ]frm)
+  refl ← φ =f? (ψ' [ t / y ]bprop)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
-  return ⟅ goals , sgoals ↦ M.ι⁻¹[ M.ty-subst-cong-ty _ (frm-sub-sound ψ' (t / y)) ] {!M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals)) (M.mod-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ? ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))!} ⟆
+  return ⟅ goals , sgoals ↦ M.ι⁻¹[ M.ty-subst-cong-ty _ (bprop-sub-sound ψ' (t / y)) ] {!M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals)) (M.mod-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ? ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))!} ⟆
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
@@ -187,10 +187,10 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ends-in-var Ξ' μ x T ← ends-in-var? Ξ
   refl ← return Δ=Γ,μ∣x∈T -- Pattern matching on this proof only works since we already established that Ξ is of the form Ξ' ,,ᵛ μ ∣ x ∈ T.
                           -- Otherwise, unification would fail.
-  ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]frm)
-  ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ∣ x ∈ Nat' ,,ᶠ 𝟙 ∣ hyp ∈ lock𝟙-frm φ)
+  ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]bprop)
+  ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ∣ x ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ lock𝟙-bprop φ)
                                   ps
-                                  (φ [ π ∷ˢ suc (var' x {skip-lock μ vzero} id-cell) / x ]frm)
+                                  (φ [ π ∷ˢ suc (var' x {skip-lock μ vzero} id-cell) / x ]bprop)
   return ⟅ goals1 ++ goals2 , sgoals ↦ {!!} ⟆
   -- {!return (goals1 ++ goals2)!}
 check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do

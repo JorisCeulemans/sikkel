@@ -5,11 +5,11 @@
 open import Experimental.LogicalFramework.MSTT.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
-module Experimental.LogicalFramework.Formula
+module Experimental.LogicalFramework.bProp
   (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
   where
 
 
-open import Experimental.LogicalFramework.Formula.Named ℳ public
-open import Experimental.LogicalFramework.Formula.AlphaEquivalence ℳ public
-open import Experimental.LogicalFramework.Formula.Interpretation ℳ ⟦ℳ⟧ public
+open import Experimental.LogicalFramework.bProp.Named ℳ public
+open import Experimental.LogicalFramework.bProp.AlphaEquivalence ℳ public
+open import Experimental.LogicalFramework.bProp.Interpretation ℳ ⟦ℳ⟧ public

@@ -8,7 +8,7 @@ open import Data.Nat hiding (_+_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Experimental.LogicalFramework.MSTT
-open import Experimental.LogicalFramework.Formula
+open import Experimental.LogicalFramework.bProp
 open import Experimental.LogicalFramework.Proof
 -- open import Experimental.LogicalFramework.BetaReduction
 open import Extraction
@@ -48,7 +48,7 @@ _ = refl
 -}
 
 -- ∀ n → plus n 0 = n
-plus-zeroʳ : Formula Γ
+plus-zeroʳ : bProp Γ
 plus-zeroʳ = ∀[ 𝟙 ∣ "n" ∈ Nat' ] (plus ∙ svar "n" ∙ zero ≡ᶠ svar "n")
 
 proof-plus-zeroʳ : {Γ : Ctx ★} → Proof Γ
@@ -67,7 +67,7 @@ test-plus-zeroʳ = refl
 
 
 -- ∀ m n → plus m (suc n) = suc (plus m n)
-plus-sucʳ : Formula Γ
+plus-sucʳ : bProp Γ
 plus-sucʳ = ∀[ 𝟙 ∣ "m" ∈ Nat' ] (∀[ 𝟙 ∣ "n" ∈ Nat' ] (
   plus ∙ svar "m" ∙ (suc ∙ svar "n") ≡ᶠ suc ∙ (plus ∙ svar "m" ∙ svar "n")))
 
@@ -94,7 +94,7 @@ test-plus-sucʳ = refl
 
 
 -- ∀ m n → plus m n = plus n m
-plus-comm : Formula Γ
+plus-comm : bProp Γ
 plus-comm = ∀[ 𝟙 ∣ "m" ∈ Nat' ] (∀[ 𝟙 ∣ "n" ∈ Nat' ] (
   plus ∙ svar "m" ∙ svar "n" ≡ᶠ plus ∙ svar "n" ∙ svar "m"))
 

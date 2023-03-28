@@ -12,23 +12,23 @@ open import Relation.Binary.PropositionalEquality as Ag using (refl)
 open ModeTheory ℳ
 
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ
-open import Experimental.LogicalFramework.Formula.Named ℳ
+open import Experimental.LogicalFramework.bProp.Named ℳ
 
 private variable
   m n o p : Mode
   μ ρ κ : Modality m n
   Γ Δ : Ctx m
   T S R U : Ty m
-  φ ψ : Formula Γ
+  φ ψ : bProp Γ
 
 
 data Proof {m : Mode} : Ctx m → Set where
   {-
   -- Functoriality of the locks in a proof context
-  lock𝟙-der : (Ξ ⊢ φ) → (Ξ ,lock⟨ 𝟙 ⟩ ⊢ lock𝟙-frm φ)
-  unlock𝟙-der : (Ξ ,lock⟨ 𝟙 ⟩ ⊢ φ) → (Ξ ⊢ unlock𝟙-frm φ)
-  fuselocks-der : (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ fuselocks-frm φ)
-  unfuselocks-der : (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ unfuselocks-frm φ)
+  lock𝟙-der : (Ξ ⊢ φ) → (Ξ ,lock⟨ 𝟙 ⟩ ⊢ lock𝟙-bprop φ)
+  unlock𝟙-der : (Ξ ,lock⟨ 𝟙 ⟩ ⊢ φ) → (Ξ ⊢ unlock𝟙-bprop φ)
+  fuselocks-der : (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ fuselocks-bprop φ)
+  unfuselocks-der : (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ unfuselocks-bprop φ)
   -}
 
   -- Structural rules for ≡ᶠ
@@ -37,15 +37,15 @@ data Proof {m : Mode} : Ctx m → Set where
   trans : (middle-tm : Tm Γ T) →
           Proof Γ → Proof Γ → Proof Γ
   {-
-  subst : (φ : Formula (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
+  subst : (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
           (Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᶠ t2) →
-          (Ξ ⊢ φ [ t1 / x ]frm) →
-          (Ξ ⊢ φ [ t2 / x ]frm)
+          (Ξ ⊢ φ [ t1 / x ]bprop) →
+          (Ξ ⊢ φ [ t2 / x ]bprop)
 
   -- Introduction and elimination for logical combinators ⊤ᶠ, ⊥ᶠ, ⊃, ∧ and ∀
   ⊤ᶠ-intro : Ξ ⊢ ⊤ᶠ
   ⊥ᶠ-elim : Ξ ⊢ ⊥ᶠ ⊃ φ
-  assume[_∣_]_ : (μ : Modality m n) {φ : Formula ((to-ctx Ξ) ,lock⟨ μ ⟩)} (x : String) →
+  assume[_∣_]_ : (μ : Modality m n) {φ : bProp ((to-ctx Ξ) ,lock⟨ μ ⟩)} (x : String) →
                  (Ξ ,,ᶠ μ ∣ x ∈ φ ⊢ ψ) →
                  (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ)
   ⊃-elim : (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ) → (Ξ ,lock⟨ μ ⟩ ⊢ φ) → (Ξ ⊢ ψ)
@@ -57,16 +57,16 @@ data Proof {m : Mode} : Ctx m → Set where
   ∧-elimʳ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ ψ)
   -}
   ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : String) (T : Ty n) → Proof (Γ ,, μ ∣ x ∈ T) → Proof Γ
-  ∀-elim : (μ : Modality n m) (φ : Formula Γ) → Proof Γ → (t : Tm (Γ ,lock⟨ μ ⟩) T) → Proof Γ
+  ∀-elim : (μ : Modality n m) (φ : bProp Γ) → Proof Γ → (t : Tm (Γ ,lock⟨ μ ⟩) T) → Proof Γ
   {-
 
   -- Modal reasoning principles
-  mod⟨_⟩_ : (μ : Modality m n) {φ : Formula (to-ctx (Ξ ,lock⟨ μ ⟩))} →
+  mod⟨_⟩_ : (μ : Modality m n) {φ : bProp (to-ctx (Ξ ,lock⟨ μ ⟩))} →
             (Ξ ,lock⟨ μ ⟩ ⊢ φ) →
             (Ξ ⊢ ⟨ μ ∣ φ ⟩)
-  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : String) {φ : Formula _} →
+  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : String) {φ : bProp _} →
              (Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩) →
-             (Ξ ,,ᶠ ρ ⓜ μ ∣ x ∈ fuselocks-frm φ ⊢ ψ) →
+             (Ξ ,,ᶠ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ ⊢ ψ) →
              (Ξ ⊢ ψ)
   -}
 
@@ -90,8 +90,8 @@ data Proof {m : Mode} : Ctx m → Set where
   zero≠sucn : Ξ ⊢ ∀[ 𝟙 ∣ "n" ∈ Nat' ] ¬ (zero ≡ᶠ suc ∙ svar "n")
 
   -- Induction schemata for Bool' and Nat'
-  bool-induction : (Ξ ⊢ φ [ true / x ]frm) →
-                   (Ξ ⊢ φ [ false / x ]frm) →
+  bool-induction : (Ξ ⊢ φ [ true / x ]bprop) →
+                   (Ξ ⊢ φ [ false / x ]bprop) →
                    (Ξ ,,ᵛ μ ∣ x ∈ Bool' ⊢ φ)
   -}
   nat-induction' : {Γ Δ : Ctx m} {μ : Modality n m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, μ ∣ x ∈ Nat') →

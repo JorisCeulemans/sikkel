@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality as Ag using (refl)
 open ModeTheory ℳ
 
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ
-open import Experimental.LogicalFramework.Formula.Named ℳ
+open import Experimental.LogicalFramework.bProp.Named ℳ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 private variable
@@ -18,7 +18,7 @@ private variable
   μ ρ κ : Modality m n
   Γ Δ : Ctx m
   T S R U : Ty m
-  φ ψ : Formula Γ
+  φ ψ : bProp Γ
   x y : String
 
 
@@ -170,10 +170,10 @@ snd {T = T} p =t? snd {T = T'} p' = do
 _ =t? _ = throw-error tm-msg
 
 
-frm-msg : ErrorMsg
-frm-msg = "Formulas are not equal."
+bprop-msg : ErrorMsg
+bprop-msg = "Propositions are not equal."
 
-_=f?_ : (φ ψ : Formula Γ) → PCM (φ Ag.≡ ψ)
+_=f?_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
 ⊤ᶠ =f? ⊤ᶠ = return Ag.refl
 ⊥ᶠ =f? ⊥ᶠ = return Ag.refl
 (_≡ᶠ_ {T} t1 t2) =f? (_≡ᶠ_ {S} s1 s2) = do
@@ -192,7 +192,7 @@ _=f?_ : (φ ψ : Formula Γ) → PCM (φ Ag.≡ ψ)
 (∀[_∣_∈_]_ {n = n} μ x T φ) =f? (∀[_∣_∈_]_ {n = n'} κ y S ψ) = do
   refl ← n =m? n'
   refl ← μ =mod? κ
-  refl ← from-dec frm-msg (x Str.≟ y)
+  refl ← from-dec bprop-msg (x Str.≟ y)
   refl ← T =T? S
   refl ← φ =f? ψ
   return Ag.refl
@@ -201,4 +201,4 @@ _=f?_ : (φ ψ : Formula Γ) → PCM (φ Ag.≡ ψ)
   refl ← μ =mod? κ
   refl ← φ =f? ψ
   return Ag.refl
-_ =f? _ = throw-error frm-msg
+_ =f? _ = throw-error bprop-msg

@@ -17,7 +17,7 @@ open ModeTheory ℳ
 open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
-open import Experimental.LogicalFramework.Formula ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧
 
 private variable
   m n o : Mode
@@ -28,11 +28,11 @@ private variable
 
 postulate
   tm-sub-sound : (t : Tm Δ T) (σ : Sub Γ Δ) → ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧sub ]cl M.≅ᵗᵐ ⟦ t [ σ ]tm ⟧tm
-  frm-sub-sound : (φ : Formula Δ) (σ : Sub Γ Δ) → ⟦ φ ⟧frm M.[ ⟦ σ ⟧sub ] M.≅ᵗʸ ⟦ φ [ σ ]frm ⟧frm
+  bprop-sub-sound : (φ : bProp Δ) (σ : Sub Γ Δ) → ⟦ φ ⟧bprop M.[ ⟦ σ ⟧sub ] M.≅ᵗʸ ⟦ φ [ σ ]bprop ⟧bprop
 
-  unlock𝟙-frm-sound : (φ : Formula (Γ ,lock⟨ 𝟙 ⟩)) → ⟦ unlock𝟙-frm φ ⟧frm M.≅ᵗʸ ⟦ φ ⟧frm
-  unfuselocks-frm-sound : {μ : Modality n o} {ρ : Modality m n} (φ : Formula (Γ ,lock⟨ μ ⓜ ρ ⟩)) →
-                          ⟦ unfuselocks-frm {μ = μ} φ ⟧frm M.≅ᵗʸ ⟦ φ ⟧frm M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound μ ρ) _) ]
+  unlock𝟙-bprop-sound : (φ : bProp (Γ ,lock⟨ 𝟙 ⟩)) → ⟦ unlock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
+  unfuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⓜ ρ ⟩)) →
+                            ⟦ unfuselocks-bprop {μ = μ} φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound μ ρ) _) ]
 
   key-sub-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
                   M.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ key-sub {Γ = Γ} (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⟩) α ⟧sub
