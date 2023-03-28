@@ -173,32 +173,32 @@ _ =t? _ = throw-error tm-msg
 bprop-msg : ErrorMsg
 bprop-msg = "Propositions are not equal."
 
-_=f?_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
-⊤ᶠ =f? ⊤ᶠ = return Ag.refl
-⊥ᶠ =f? ⊥ᶠ = return Ag.refl
-(_≡ᶠ_ {T} t1 t2) =f? (_≡ᶠ_ {S} s1 s2) = do
+_=b?_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
+⊤ᵇ =b? ⊤ᵇ = return Ag.refl
+⊥ᵇ =b? ⊥ᵇ = return Ag.refl
+(_≡ᵇ_ {T} t1 t2) =b? (_≡ᵇ_ {S} s1 s2) = do
   refl ← T =T? S
   refl ← t1 =t? s1
   refl ← t2 =t? s2
   return Ag.refl
-(φ1 ⊃ φ2) =f? (ψ1 ⊃ ψ2) = do
-  refl ← φ1 =f? ψ1
-  refl ← φ2 =f? ψ2
+(φ1 ⊃ φ2) =b? (ψ1 ⊃ ψ2) = do
+  refl ← φ1 =b? ψ1
+  refl ← φ2 =b? ψ2
   return Ag.refl
-(φ1 ∧ φ2) =f? (ψ1 ∧ ψ2) = do
-  refl ← φ1 =f? ψ1
-  refl ← φ2 =f? ψ2
+(φ1 ∧ φ2) =b? (ψ1 ∧ ψ2) = do
+  refl ← φ1 =b? ψ1
+  refl ← φ2 =b? ψ2
   return Ag.refl
-(∀[_∣_∈_]_ {n = n} μ x T φ) =f? (∀[_∣_∈_]_ {n = n'} κ y S ψ) = do
+(∀[_∣_∈_]_ {n = n} μ x T φ) =b? (∀[_∣_∈_]_ {n = n'} κ y S ψ) = do
   refl ← n =m? n'
   refl ← μ =mod? κ
   refl ← from-dec bprop-msg (x Str.≟ y)
   refl ← T =T? S
-  refl ← φ =f? ψ
+  refl ← φ =b? ψ
   return Ag.refl
-⟨_∣_⟩ {n = n} μ φ =f? ⟨_∣_⟩ {n = n'} κ ψ = do
+⟨_∣_⟩ {n = n} μ φ =b? ⟨_∣_⟩ {n = n'} κ ψ = do
   refl ← n =m? n'
   refl ← μ =mod? κ
-  refl ← φ =f? ψ
+  refl ← φ =b? ψ
   return Ag.refl
-_ =f? _ = throw-error bprop-msg
+_ =b? _ = throw-error bprop-msg

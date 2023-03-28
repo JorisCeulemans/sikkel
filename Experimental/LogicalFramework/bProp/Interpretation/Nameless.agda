@@ -31,9 +31,9 @@ private variable
 
 
 ⟦_⟧bprop-nmls : bProp Γ → SemTy ⟦ Γ ⟧ctx-nmls
-⟦ ⊤ᶠ ⟧bprop-nmls = M.Unit'
-⟦ ⊥ᶠ ⟧bprop-nmls = M.Empty'
-⟦ t1 ≡ᶠ t2 ⟧bprop-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
+⟦ ⊤ᵇ ⟧bprop-nmls = M.Unit'
+⟦ ⊥ᵇ ⟧bprop-nmls = M.Empty'
+⟦ t1 ≡ᵇ t2 ⟧bprop-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
 ⟦ φ ⊃ ψ ⟧bprop-nmls = ⟦ φ ⟧bprop-nmls M.⇛ ⟦ ψ ⟧bprop-nmls
 ⟦ φ ∧ ψ ⟧bprop-nmls = ⟦ φ ⟧bprop-nmls M.⊠ ⟦ ψ ⟧bprop-nmls
 ⟦ ∀[ μ ∣ _ ∈ T ] φ ⟧bprop-nmls = M.Pi ⟦ ⟨ μ ∣ T ⟩ ⟧ty ⟦ φ ⟧bprop-nmls

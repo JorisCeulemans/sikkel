@@ -29,18 +29,18 @@ private variable
 infixl 3 ∀[_∣_∈_]_
 infixr 6 _⊃_
 infixl 9 _∧_
-infix 12 _≡ᶠ_
+infix 12 _≡ᵇ_
 
 -- TODO: include connective for disjunction and existential quantification.
 data bProp (Γ : Ctx m) : Set where
-  ⊤ᶠ ⊥ᶠ : bProp Γ
-  _≡ᶠ_ : {T : Ty m} (t1 t2 : Tm Γ T) → bProp Γ
+  ⊤ᵇ ⊥ᵇ : bProp Γ
+  _≡ᵇ_ : {T : Ty m} (t1 t2 : Tm Γ T) → bProp Γ
   _⊃_ _∧_ : (φ ψ : bProp Γ) → bProp Γ
   ∀[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → bProp (Γ ,, μ ∣ x ∈ T) → bProp Γ
   ⟨_∣_⟩ : (μ : Modality n m) → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
 
 ¬ : bProp Γ → bProp Γ
-¬ φ = φ ⊃ ⊥ᶠ
+¬ φ = φ ⊃ ⊥ᵇ
 
 
 -- A proposition can be traversed whenever terms can be traversed
@@ -51,9 +51,9 @@ record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
     lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
   traverse-bprop : bProp Δ → Trav Γ Δ → bProp Γ
-  traverse-bprop ⊤ᶠ σ = ⊤ᶠ
-  traverse-bprop ⊥ᶠ σ = ⊥ᶠ
-  traverse-bprop (t1 ≡ᶠ t2) σ = trav-tm t1 σ ≡ᶠ trav-tm t2 σ
+  traverse-bprop ⊤ᵇ σ = ⊤ᵇ
+  traverse-bprop ⊥ᵇ σ = ⊥ᵇ
+  traverse-bprop (t1 ≡ᵇ t2) σ = trav-tm t1 σ ≡ᵇ trav-tm t2 σ
   traverse-bprop (φ ⊃ ψ) σ = traverse-bprop φ σ ⊃ traverse-bprop ψ σ
   traverse-bprop (φ ∧ ψ) σ = traverse-bprop φ σ ∧ traverse-bprop ψ σ
   traverse-bprop (∀[ μ ∣ x ∈ T ] φ) σ = ∀[ μ ∣ x ∈ T ] traverse-bprop φ (lift σ)

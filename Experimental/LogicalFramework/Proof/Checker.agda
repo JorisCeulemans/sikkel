@@ -42,10 +42,10 @@ private variable
 
 
 data IsEquation : bProp Γ → Set where
-  is-eq : (t1 t2 : Tm Γ T) → IsEquation (t1 ≡ᶠ t2)
+  is-eq : (t1 t2 : Tm Γ T) → IsEquation (t1 ≡ᵇ t2)
 
 is-eq? : (φ : bProp Γ) → PCM (IsEquation φ)
-is-eq? (t1 ≡ᶠ t2) = return (is-eq t1 t2)
+is-eq? (t1 ≡ᵇ t2) = return (is-eq t1 t2)
 is-eq? φ = throw-error "bProp is not an equation"
 
 data IsForall : bProp Γ → Set where
@@ -132,13 +132,13 @@ check-proof Ξ refl φ = do
   return ⟅ [] , _ ↦ M.refl' _ M.[ _ ]' ⟆
 check-proof Ξ (sym p) φ = do
   is-eq t1 t2 ← is-eq? φ
-  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (t2 ≡ᶠ t1)
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (t2 ≡ᵇ t1)
   return ⟅ goals , sgoals ↦ M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦p⟧ sgoals) ⟆
 check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
   is-eq {T = T} t s ← is-eq? φ
   refl ← T =T? T'
-  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (t ≡ᶠ middle-tm)
-  ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof Ξ p2 (middle-tm ≡ᶠ s)
+  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (t ≡ᵇ middle-tm)
+  ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof Ξ p2 (middle-tm ≡ᵇ s)
   return ⟅ goals1 ++ goals2
          , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals
                      in M.ι[ M.Id-natural _ ] M.trans' (M.ι⁻¹[ M.Id-natural _ ] ⟦p1⟧ sgoals1) (M.ι⁻¹[ M.Id-natural _ ] ⟦p2⟧ sgoals2))
@@ -146,7 +146,7 @@ check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
   refl ← κ' =mod? κ
-  refl ← φ =f? lookup-assumption a α
+  refl ← φ =b? lookup-assumption a α
   return ⟅ [] , _ ↦ ⟦ a , α ⟧assumption ⟆
 check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   is-forall {n = n'} κ y S φ' ← is-forall? φ
@@ -162,7 +162,7 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   refl ← n =m? n'
   refl ← μ =mod? κ
   refl ← T =T? S
-  refl ← φ =f? (ψ' [ t / y ]bprop)
+  refl ← φ =b? (ψ' [ t / y ]bprop)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
   return ⟅ goals , sgoals ↦ M.ι⁻¹[ M.ty-subst-cong-ty _ (bprop-sub-sound ψ' (t / y)) ] {!M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals)) (M.mod-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ? ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))!} ⟆
 check-proof Ξ fun-β φ = do
@@ -205,7 +205,7 @@ check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do
   refl ← T =T? T3
   refl ← s =t? t
   refl ← s' =t? t
-  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (f ≡ᶠ g)
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (f ≡ᵇ g)
   return ⟅ goals , sgoals ↦ {!!} ⟆
 check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   is-eq {T = S'} lhs rhs ← is-eq? φ
@@ -220,6 +220,6 @@ check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   refl ← T =T? T3
   refl ← g =t? f
   refl ← g' =t? f
-  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᶠ s)
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᵇ s)
   return ⟅ goals , sgoals ↦ {!!} ⟆
 check-proof Ξ (hole name) φ = return ⟅ [ goal name Ξ φ ] , (λ (sgl , _) → sgl) ⟆

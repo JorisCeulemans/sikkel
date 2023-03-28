@@ -31,22 +31,22 @@ data Proof {m : Mode} : Ctx m → Set where
   unfuselocks-der : (Ξ ,lock⟨ μ ⓜ ρ ⟩ ⊢ φ) → (Ξ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩ ⊢ unfuselocks-bprop φ)
   -}
 
-  -- Structural rules for ≡ᶠ
+  -- Structural rules for ≡ᵇ
   refl : Proof Γ
   sym : Proof Γ → Proof Γ
   trans : (middle-tm : Tm Γ T) →
           Proof Γ → Proof Γ → Proof Γ
   {-
   subst : (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
-          (Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᶠ t2) →
+          (Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᵇ t2) →
           (Ξ ⊢ φ [ t1 / x ]bprop) →
           (Ξ ⊢ φ [ t2 / x ]bprop)
 
-  -- Introduction and elimination for logical combinators ⊤ᶠ, ⊥ᶠ, ⊃, ∧ and ∀
-  ⊤ᶠ-intro : Ξ ⊢ ⊤ᶠ
-  ⊥ᶠ-elim : Ξ ⊢ ⊥ᶠ ⊃ φ
+  -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
+  ⊤ᵇ-intro : Ξ ⊢ ⊤ᵇ
+  ⊥ᵇ-elim : Ξ ⊢ ⊥ᵇ ⊃ φ
   assume[_∣_]_ : (μ : Modality m n) {φ : bProp ((to-ctx Ξ) ,lock⟨ μ ⟩)} (x : String) →
-                 (Ξ ,,ᶠ μ ∣ x ∈ φ ⊢ ψ) →
+                 (Ξ ,,ᵇ μ ∣ x ∈ φ ⊢ ψ) →
                  (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ)
   ⊃-elim : (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ) → (Ξ ,lock⟨ μ ⟩ ⊢ φ) → (Ξ ⊢ ψ)
   -}
@@ -66,7 +66,7 @@ data Proof {m : Mode} : Ctx m → Set where
             (Ξ ⊢ ⟨ μ ∣ φ ⟩)
   mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : String) {φ : bProp _} →
              (Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩) →
-             (Ξ ,,ᶠ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ ⊢ ψ) →
+             (Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ ⊢ ψ) →
              (Ξ ⊢ ψ)
   -}
 
@@ -76,18 +76,18 @@ data Proof {m : Mode} : Ctx m → Set where
   nat-elim-β-suc : Proof Γ
   {-
   if-β-true : {t f : Tm (to-ctx Ξ) T} →
-              (Ξ ⊢ if true t f ≡ᶠ t)
+              (Ξ ⊢ if true t f ≡ᵇ t)
   if-β-false : {t f : Tm (to-ctx Ξ) T} →
-               (Ξ ⊢ if false t f ≡ᶠ f)
+               (Ξ ⊢ if false t f ≡ᵇ f)
   pair-β-fst : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
-               (Ξ ⊢ fst (pair t s) ≡ᶠ t)
+               (Ξ ⊢ fst (pair t s) ≡ᵇ t)
   pair-β-snd : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
-               (Ξ ⊢ snd (pair t s) ≡ᶠ s)
+               (Ξ ⊢ snd (pair t s) ≡ᵇ s)
 
   -- Axioms specifying distinctness of booleans and natural numbers
-  true≠false : Ξ ⊢ ¬ (true ≡ᶠ false)
-  suc-inj : {Ξ : ProofCtx m} → Ξ ⊢ ∀[ 𝟙 ∣ "m" ∈ Nat' ] ∀[ 𝟙 ∣ "n" ∈ Nat' ] (suc ∙ (svar "m") ≡ᶠ suc ∙ (svar "n")) ⊃ (svar "m" ≡ᶠ svar "n")
-  zero≠sucn : Ξ ⊢ ∀[ 𝟙 ∣ "n" ∈ Nat' ] ¬ (zero ≡ᶠ suc ∙ svar "n")
+  true≠false : Ξ ⊢ ¬ (true ≡ᵇ false)
+  suc-inj : {Ξ : ProofCtx m} → Ξ ⊢ ∀[ 𝟙 ∣ "m" ∈ Nat' ] ∀[ 𝟙 ∣ "n" ∈ Nat' ] (suc ∙ (svar "m") ≡ᵇ suc ∙ (svar "n")) ⊃ (svar "m" ≡ᵇ svar "n")
+  zero≠sucn : Ξ ⊢ ∀[ 𝟙 ∣ "n" ∈ Nat' ] ¬ (zero ≡ᵇ suc ∙ svar "n")
 
   -- Induction schemata for Bool' and Nat'
   bool-induction : (Ξ ⊢ φ [ true / x ]bprop) →

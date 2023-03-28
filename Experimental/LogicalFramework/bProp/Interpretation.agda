@@ -37,9 +37,9 @@ private variable
 
 {-
 bprop-subst-sound : (φ : bProp Γ) (σ : SubstExpr Δ Γ) → ⟦ φ ⟧bprop M.[ ⟦ σ ⟧subst ] ≅ᵗʸ ⟦ φ [ σ ]bprop ⟧bprop
-bprop-subst-sound ⊤ᶠ σ = M.Const-natural _ _
-bprop-subst-sound ⊥ᶠ σ = M.Const-natural _ _
-bprop-subst-sound (t1 ≡ᶠ t2) σ =
+bprop-subst-sound ⊤ᵇ σ = M.Const-natural _ _
+bprop-subst-sound ⊥ᵇ σ = M.Const-natural _ _
+bprop-subst-sound (t1 ≡ᵇ t2) σ =
   M.transᵗʸ (M.Id-natural _) (M.Id-cong (closed-ty-natural _ _) (M.move-ι⁻¹-right (M.symᵗʸ (closed-ty-natural _ _)) (tm-subst-sound t1 σ))
                                                                   (M.move-ι⁻¹-right (M.symᵗʸ (closed-ty-natural _ _)) (tm-subst-sound t2 σ)))
 bprop-subst-sound (φ ⊃ ψ) σ = M.transᵗʸ (M.⇛-natural _) (M.⇛-cong (bprop-subst-sound φ σ) (bprop-subst-sound ψ σ))
