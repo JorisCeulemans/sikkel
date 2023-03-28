@@ -38,3 +38,5 @@ postulate
                   M.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ key-sub {Γ = Γ} (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⟩) α ⟧sub
   sub-lock-sound : (σ : Sub Γ Δ) (μ : Modality m n) → ⟦ σ ,slock⟨ μ ⟩ ⟧sub M.≅ˢ M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧sub
   sub-π-sound : {Γ : Ctx m} {x : String} {μ : Modality n m} {T : Ty n} → ⟦ π {Γ = Γ} {μ = μ} {x} {T} ⟧sub M.≅ˢ M.π
+  /-sound : {Γ : Ctx m} {μ : Modality n m} {T : Ty n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : String) →
+            ⟦ t / x ⟧sub M.≅ˢ M.id-subst _ M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm

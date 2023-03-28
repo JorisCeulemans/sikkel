@@ -169,6 +169,12 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   ,cl-cong-tm : {σ : Γ ⇒ Δ} {t s : Tm Γ T} → t ≅ᵗᵐ s → σ ,cl⟨ clT ⟩ t ≅ˢ σ ,cl⟨ clT ⟩ s
   ,cl-cong-tm e = ctx-ext-subst-congʳ _ (ι-cong e)
 
+  ,cl-cong-subst : {σ τ : Γ ⇒ Δ} {t : Tm Γ T} → σ ≅ˢ τ → σ ,cl⟨ clT ⟩ t ≅ˢ τ ,cl⟨ clT ⟩ t
+  ,cl-cong-subst e = transˢ (ctx-ext-subst-congʳ _ (symᵗᵐ (ι-congᵉ-2-1 (closed-subst-eq clT e)))) (ctx-ext-subst-congˡ e _)
+
+  ,cl-cong : {σ τ : Γ ⇒ Δ} {t s : Tm Γ T} → σ ≅ˢ τ → t ≅ᵗᵐ s → σ ,cl⟨ clT ⟩ t ≅ˢ τ ,cl⟨ clT ⟩ s
+  ,cl-cong eσ et = transˢ (,cl-cong-tm et) (,cl-cong-subst eσ)
+
   lift-cl-subst : (Γ ⇒ Δ) → (Γ ,, T ⇒ Δ ,, T)
   lift-cl-subst σ = (σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
 
@@ -180,3 +186,28 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     cong (func σ γ ,_) (sym (trans (cong (func (to (closed-natural clT (σ ⊚ π)))) (eq (from-eq (closed-⊚ clT σ π)) t))
                                    (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
 
+  ,cl-⊚ : (σ : Δ ⇒ Θ) (t : Tm Δ T) (τ : Γ ⇒ Δ) → (σ ,cl⟨ clT ⟩ t) ⊚ τ ≅ˢ (σ ⊚ τ) ,cl⟨ clT ⟩ (t [ clT ∣ τ ]cl)
+  ,cl-⊚ σ t τ = begin
+      (σ ,cl⟨ clT ⟩ t) ⊚ τ
+    ≅⟨ ,cl-η _ ⟩
+      (π ⊚ ((σ ,cl⟨ clT ⟩ t) ⊚ τ)) ,cl⟨ clT ⟩
+        (ξcl clT [ clT ∣ (σ ,cl⟨ clT ⟩ t) ⊚ τ ]cl)
+    ≅⟨ ,cl-cong (transˢ (symˢ ⊚-assoc) (⊚-congʳ (,cl-β1 σ t)))
+                (symᵗᵐ (closed-tm-subst-⊚ clT (ξcl clT))) ⟩
+      (σ ⊚ τ) ,cl⟨ clT ⟩ ((ξcl clT [ clT ∣ σ ,cl⟨ clT ⟩ t ]cl) [ clT ∣ τ ]cl)
+    ≅⟨ ,cl-cong-tm (closed-tm-subst-cong-tm clT (,cl-β2 σ t)) ⟩
+      (σ ⊚ τ) ,cl⟨ clT ⟩ (t [ clT ∣ τ ]cl) ∎
+    where open ≅ˢ-Reasoning
+
+  /-⊚ : (σ : Γ ⇒ Δ) (t : Tm Δ T) → (id-subst Δ ,cl⟨ clT ⟩ t) ⊚ σ ≅ˢ lift-cl-subst σ ⊚ (id-subst Γ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl))
+  /-⊚ σ t = begin
+      (id-subst _ ,cl⟨ clT ⟩ t) ⊚ σ
+    ≅⟨ ,cl-⊚ _ t σ ⟩
+      (id-subst _ ⊚ σ) ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)
+    ≅⟨ ,cl-cong (transˢ (⊚-id-substˡ _) (symˢ (transˢ (transˢ ⊚-assoc (⊚-congˡ (,cl-β1 _ _))) (⊚-id-substʳ _))))
+                (symᵗᵐ (,cl-β2 _ _)) ⟩
+      (σ ⊚ π ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl))) ,cl⟨ clT ⟩
+        (ξcl clT [ clT ∣ id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl) ]cl)
+    ≅˘⟨ ,cl-⊚ _ _ _ ⟩
+      lift-cl-subst σ ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)) ∎
+    where open ≅ˢ-Reasoning
