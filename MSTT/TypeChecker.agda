@@ -177,9 +177,9 @@ infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
   μ=μ' ← μ ≃ᵐ? μ'
   S , ⟦s⟧ ← infer-interpret s (Γ , ρ ⓜ μ ∣ x ∈ A)
   return (S , ι⁻¹[ closed-natural (⟦⟧ty-natural S) _ ] (
-              ⟦s⟧ [ term-to-subst (ι[ eq-mod-closed (ⓜ-interpretation ρ μ) (⟦⟧ty-natural A) ]
-                                   Modality.mod-intro ⟦ ρ ⟧modality (
-                                   ι[ eq-mod-closed μ=μ' (⟦⟧ty-natural A) ] ⟦t⟧))
+              ⟦s⟧ [ tm-to-subst (ι[ eq-mod-closed (ⓜ-interpretation ρ μ) (⟦⟧ty-natural A) ]
+                                 Modality.mod-intro ⟦ ρ ⟧modality (
+                                 ι[ eq-mod-closed μ=μ' (⟦⟧ty-natural A) ] ⟦t⟧))
                   ]'))
 infer-interpret (ext c args) Γ = infer-interpret-ext-args (infer-interpret-code c) args Γ
 

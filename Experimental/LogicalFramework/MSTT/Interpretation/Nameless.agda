@@ -73,8 +73,8 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim {T = T} {S = S} ρ μ _ t s ⟧tm-nmls =
   ⟦ s ⟧tm-nmls M.[ ty-closed-natural S
-                 ∣ M.term-to-subst (M.ι[ M.eq-mod-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T) ]
-                                       M.mod-intro ⟦ ρ ⟧mod ⟦ t ⟧tm-nmls)
+                 ∣ M.tm-to-subst (M.ι[ M.eq-mod-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T) ]
+                                     M.mod-intro ⟦ ρ ⟧mod ⟦ t ⟧tm-nmls)
                  ]cl
 ⟦ lam[_∣_∈_]_ {S = S} _ _ _ t ⟧tm-nmls = M.lamcl (ty-closed-natural S) ⟦ t ⟧tm-nmls
 ⟦ _∙_ {μ = μ} f t ⟧tm-nmls = M.app ⟦ f ⟧tm-nmls (M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls)

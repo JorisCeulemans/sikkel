@@ -12,7 +12,6 @@ import Experimental.ClosedTypes.Pi
 import Experimental.ClosedTypes.Identity
 
 import Experimental.LogicalFramework.MSTT
-import Experimental.LogicalFramework.Formula
---import Experimental.LogicalFramework.Derivation
---import Experimental.LogicalFramework.BetaReduction
+import Experimental.LogicalFramework.bProp
+--import Experimental.LogicalFramework.Proof
 --import Experimental.LogicalFramework.Example

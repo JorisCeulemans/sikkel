@@ -365,6 +365,16 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
 
 
 --------------------------------------------------
+-- β and η laws for functions
+
+⇛-β : (b : Tm (Γ ,, T) (S [ π ])) (t : Tm Γ T) → app (lam T b) t ≅ᵗᵐ ι⁻¹[ ty-weaken-subst t ] (b [ t /v ]')
+eq (⇛-β {S = S} b s) γ = sym (strong-ty-id S)
+
+⇛-η : (f : Tm Γ (T ⇛ S)) → f ≅ᵗᵐ lam T (app (ι⁻¹[ ⇛-natural π ] (f [ π ]')) ξ)
+eq (⇛-η f) γ = to-pshfun-eq (λ ρ eγ t → trans ($-cong (f ⟨ _ , γ ⟩') (sym hom-idʳ)) (cong (_$⟨ hom-id , _ ⟩ t) (naturality f ρ eγ)))
+
+
+--------------------------------------------------
 -- Relation between functions T ⇛ S and natural tranformations T ↣ S
 
 ⇛-to-↣ : Tm Γ (T ⇛ S) → (T ↣ S)

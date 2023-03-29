@@ -88,8 +88,10 @@ ctx-ext-subst-comp : (σ : Γ ⇒ Θ) (t : Tm Γ (T [ σ ])) (τ : Δ ⇒ Γ) �
 eq (ctx-ext-subst-comp σ t τ) δ = refl
 
 -- Substitution of the last variable in context Γ ,, T with a term in Tm Γ T.
-term-to-subst : Tm Γ T → Γ ⇒ Γ ,, T
-term-to-subst {Γ = Γ}{T = T} t = ⟨ id-subst Γ , ι[ ty-subst-id T ] t ∈ T ⟩
+tm-to-subst : Tm Γ T → Γ ⇒ Γ ,, T
+tm-to-subst {Γ = Γ}{T = T} t = ⟨ id-subst Γ , t [ id-subst Γ ]' ∈ T ⟩
+
+_/v = tm-to-subst
 
 _⊹ : (σ : Δ ⇒ Γ) → Δ ,, T [ σ ] ⇒ Γ ,, T
 _⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ ∈ T ⟩
@@ -111,21 +113,8 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
   S [ σ ] ∎
   where open ≅ᵗʸ-Reasoning
 
-{-
--- This function is currently not used anywhere. We keep it in case we need it
--- in the future.
-_⌈_⌋ : Tm (Γ ,, T) (S [ π ]) → Tm Γ T → Tm Γ S
-_⌈_⌋ {Γ = Γ}{T = T}{S = S} s t = ι⁻¹[ proof ] (s [ term-to-subst t ]')
-  where
-    open ≅ᵗʸ-Reasoning
-    proof : S [ π ] [ term-to-subst t ] ≅ᵗʸ S
-    proof =
-      S [ π ] [ term-to-subst t ]
-        ≅⟨ π-ext-comp-ty-subst (id-subst Γ) (ι[ ty-subst-id T ] t) S ⟩
-      S [ id-subst Γ ]
-        ≅⟨ ty-subst-id S ⟩
-      S ∎
--}
+ty-weaken-subst : (t : Tm Γ T) → S [ π ] [ t /v ] ≅ᵗʸ S
+ty-weaken-subst t = transᵗʸ (π-ext-comp-ty-subst _ _ _) (ty-subst-id _)
 
 -- Extending a context with two equivalent types leads to equivalent contexts.
 ,,-map : (T ↣ S) → (Γ ,, T ⇒ Γ ,, S)

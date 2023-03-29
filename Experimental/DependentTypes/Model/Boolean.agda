@@ -15,10 +15,7 @@ private
     Γ : Ctx C
 
 
-_/var0 : {T : Ty Γ} → Tm Γ T → (Γ ⇒ Γ ,, T)
-t /var0 = term-to-subst t
-
-bool-ind : (T : Ty (Γ ,, "x" ∈ Bool')) → Tm Γ (T [ true' /var0 ]) → Tm Γ (T [ false' /var0 ]) → Tm (Γ ,, Bool') T
+bool-ind : (T : Ty (Γ ,, "x" ∈ Bool')) → Tm Γ (T [ true' /v ]) → Tm Γ (T [ false' /v ]) → Tm (Γ ,, Bool') T
 bool-ind T t f ⟨ x , [ γ , false ] ⟩' = f ⟨ x , γ ⟩'
 bool-ind T t f ⟨ x , [ γ , true  ] ⟩' = t ⟨ x , γ ⟩'
 Tm.naturality (bool-ind T t f) {γy = [ γy , false ]} {γx = [ γx , false ]} ρ eγ = trans (ty-cong T refl) (Tm.naturality f ρ (cong proj₁ eγ))
