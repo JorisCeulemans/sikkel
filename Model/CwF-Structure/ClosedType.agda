@@ -211,3 +211,6 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     ≅˘⟨ ,cl-⊚ _ _ _ ⟩
       lift-cl-subst σ ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)) ∎
     where open ≅ˢ-Reasoning
+
+  /cl : (t : Tm Δ T) → (t /v) ≅ˢ (id-subst Δ ,cl⟨ clT ⟩ t)
+  /cl t = ctx-ext-subst-congʳ _ (transᵗᵐ (tm-subst-id t) (ι-congᵉ (symᵉ (closed-id clT))))

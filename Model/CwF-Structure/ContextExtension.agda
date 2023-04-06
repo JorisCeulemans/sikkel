@@ -105,13 +105,7 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
 
 π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
-π-ext-comp-ty-subst {T = T} σ t S =
-  S [ π ] [ ⟨ σ , t ∈ T ⟩ ]
-    ≅⟨ ty-subst-comp S π ⟨ σ , t ∈ T ⟩ ⟩
-  S [ π ⊚ ⟨ σ , t ∈ T ⟩ ]
-    ≅⟨ ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) S ⟩
-  S [ σ ] ∎
-  where open ≅ᵗʸ-Reasoning
+π-ext-comp-ty-subst σ t S = transᵗʸ (ty-subst-comp S π ⟨ σ , t ∈ _ ⟩) (ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) S)
 
 ty-weaken-subst : (t : Tm Γ T) → S [ π ] [ t /v ] ≅ᵗʸ S
 ty-weaken-subst t = transᵗʸ (π-ext-comp-ty-subst _ _ _) (ty-subst-id _)

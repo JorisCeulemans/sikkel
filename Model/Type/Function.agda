@@ -466,3 +466,21 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
   app-cl-natural : {σ : Γ ⇒ Δ} {f : Tm Δ (A ⇛ B)} {a : Tm Δ A} →
                    (app f a) [ clB ∣ σ ]cl ≅ᵗᵐ app (f [ fun-closed ∣ σ ]cl) (a [ clA ∣ σ ]cl)
   app-cl-natural = transᵗᵐ (ι⁻¹-cong (app-natural _ _ _)) (transᵗᵐ (symᵗᵐ (app-ι⁻¹ _ _)) (app-cong (symᵗᵐ ι⁻¹-trans) reflᵗᵐ))
+
+  ⇛-cl-β : (b : Tm (Γ ,, A) B) (a : Tm Γ A) → app (lamcl clB b) a ≅ᵗᵐ b [ clB ∣ id-subst Γ ,cl⟨ clA ⟩ a ]cl
+  ⇛-cl-β b a =
+    transᵗᵐ (⇛-β _ a) (
+    transᵗᵐ (ι⁻¹-cong (transᵗᵐ (symᵗᵐ ι-subst-commute) (ι-cong (tm-subst-cong-subst b (/cl clA a))))) (
+    transᵗᵐ (symᵗᵐ ι-trans) (
+    transᵗᵐ (symᵗᵐ ι-trans) (
+    ι-congᵉ (to-symᵗʸ-eq (
+      transᵉ transᵗʸ-assoc (
+      transᵉ (transᵗʸ-congʳ (closed-subst-eq clB _)) (
+      transᵉ transᵗʸ-assoc (
+      transᵉ (transᵗʸ-congʳ (closed-⊚ clB π (a /v))) (
+      transᵉ (transᵗʸ-congˡ (transᵉ symᵗʸ-transᵗʸ (transᵗʸ-congʳ symᵗʸ-transᵗʸ))) (
+      transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc))))) (
+      transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ transᵗʸ-cancelˡ)) (
+      transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ ty-subst-cong-subst-sym))) (
+      transᵉ (transᵗʸ-congʳ (closed-subst-eq clB _)) (
+      transᵉ (transᵗʸ-congʳ (closed-id clB)) symᵗʸ-invˡ)))))))))))))))

@@ -18,6 +18,7 @@ import Model.Modality as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
 import Model.Type.Constant as M
+import Model.Type.Function as M hiding (lam)
 
 open ModeTheory ℳ
 open ModeTheoryInterpretation ⟦ℳ⟧
@@ -172,9 +173,13 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
-  lam μ x b ← is-lam? f
+  lam {T = A} {S = B} μ x b ← is-lam? f
   refl ← rhs =t? (b [ t / x ]tm)
-  return ⟅ [] , _ ↦ {!!} ⟆
+  return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (
+         M.transᵗᵐ (M.⇛-cl-β (ty-closed-natural ⟨ μ ∣ A ⟩) (ty-closed-natural B) _ _) (
+         M.transᵗᵐ (M.closed-tm-subst-cong-subst (ty-closed-natural B) (M.symˢ (/-sound t x))) (
+         tm-sub-sound b (t / x))))
+         M.[ _ ]' ⟆
 check-proof Ξ nat-elim-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-elim z s n ← is-nat-elim? lhs

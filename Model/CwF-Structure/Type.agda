@@ -354,6 +354,15 @@ from-eq (symᵗʸ-invʳ {e = e}) = isoˡ e
 symᵗʸ-transᵗʸ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → symᵗʸ (transᵗʸ e e') ≅ᵉ transᵗʸ (symᵗʸ e') (symᵗʸ e)
 from-eq symᵗʸ-transᵗʸ = reflⁿ
 
+to-symᵗʸ-eq : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ T} → transᵗʸ e e' ≅ᵉ reflᵗʸ → e ≅ᵉ symᵗʸ e'
+to-symᵗʸ-eq 𝑒 = transᵉ (symᵉ reflᵗʸ-unitʳ) (transᵉ (transᵗʸ-congʳ (symᵉ symᵗʸ-invʳ)) (transᵉ (symᵉ transᵗʸ-assoc) (transᵉ (transᵗʸ-congˡ 𝑒) reflᵗʸ-unitˡ)))
+
+transᵗʸ-cancelʳ : {e : T ≅ᵗʸ S} {e' : R ≅ᵗʸ S} → transᵗʸ e (transᵗʸ (symᵗʸ e') e') ≅ᵉ e
+transᵗʸ-cancelʳ = transᵉ (transᵗʸ-congʳ symᵗʸ-invˡ) reflᵗʸ-unitʳ
+
+transᵗʸ-cancelˡ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → transᵗʸ (transᵗʸ (symᵗʸ e) e) e' ≅ᵉ e'
+transᵗʸ-cancelˡ = transᵉ (transᵗʸ-congˡ symᵗʸ-invˡ) reflᵗʸ-unitˡ
+
 
 --------------------------------------------------
 -- Substitution of types
