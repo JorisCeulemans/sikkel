@@ -191,7 +191,7 @@ check-proof Ξ nat-elim-β-suc φ = do
   nat-elim z s n ← is-nat-elim? lhs
   suc-tm n' ← is-suc-tm? n
   refl ← rhs =t? s ∙¹ (nat-elim z s n')
-  return ⟅ [] , _ ↦ {!(M.≅ᵗᵐ-to-Id (M.β-nat-suc _ _ _)) M.[ _ ]'!} ⟆
+  return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.β-nat-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-elim z s n')))) M.[ _ ]' ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,μ∣x∈T p0 ps) φ = do
   ends-in-var Ξ' μ x T ← ends-in-var? Ξ
   refl ← return Δ=Γ,μ∣x∈T -- Pattern matching on this proof only works since we already established that Ξ is of the form Ξ' ,,ᵛ μ ∣ x ∈ T.
