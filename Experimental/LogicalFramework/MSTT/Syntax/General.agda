@@ -33,6 +33,8 @@ data Ctx (m : Mode) : Set where
     -- ^ All variables have a name of type Name and appear under a modality.
   _,lock⟨_⟩ : (Γ : Ctx n) (μ : Modality m n) → Ctx m
 
+pattern _,,_∈_ Γ x T = Γ ,, 𝟙 ∣ x ∈ T
+
 private variable
   Γ Δ Θ : Ctx m
 
@@ -391,7 +393,7 @@ mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
 
 syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 
-lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, 𝟙 ∣ x ∈ T) S → Tm Γ (T ⇛ S)
+lam[_∈_]_ : (x : Name) (T : Ty m) → Tm (Γ ,, x ∈ T) S → Tm Γ (T ⇛ S)
 lam[ x ∈ T ] b = lam[ 𝟙 ∣ x ∈ T ] b
 
 infixl 50 _∙¹_
