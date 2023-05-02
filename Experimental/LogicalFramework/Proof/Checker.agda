@@ -177,7 +177,7 @@ check-proof Ξ fun-β φ = do
   refl ← rhs =t? (b [ t / x ]tm)
   return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (
          M.transᵗᵐ (M.⇛-cl-β (ty-closed-natural ⟨ μ ∣ A ⟩) (ty-closed-natural B) _ _) (
-         M.transᵗᵐ (M.closed-tm-subst-cong-subst (ty-closed-natural B) (M.symˢ (/-sound t x))) (
+         M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural B) (M.symˢ (/-sound t x))) (
          tm-sub-sound b (t / x))))
          M.[ _ ]' ⟆
 check-proof Ξ nat-elim-β-zero φ = do
