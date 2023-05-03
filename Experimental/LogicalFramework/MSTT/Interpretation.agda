@@ -171,9 +171,9 @@ subst-lemma : (Δ : Ctx) {Γ : M.Ctx ★} {T : ClosedTy ★}
               (⟦ id-subst Δ ⟧subst ,ₛ t) M.⊚ σ M.≅ˢ (σ s⊹) M.⊚ (M.id-subst Γ ,ₛ (t [ σ ]s))
 subst-lemma Δ σ t =
   M.transˢ (M.,ₛ-⊚ _ _ _)
-           (M.transˢ (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)
+           (M.transˢ (M.,ₛ-cong1 (M.id-subst-unitˡ _) _)
                      (M.symˢ (M.transˢ (M.,ₛ-⊚ _ _ _)
                                        (M.transˢ (M.,ₛ-cong2 _ (M.,ₛ-β2 _ _))
-                                                 (M.,ₛ-cong1 (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congˡ (M.,ₛ-β1 _ _))
-                                                                                           (M.⊚-id-substʳ _))) _)))))
+                                                 (M.,ₛ-cong1 (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.,ₛ-β1 _ _))
+                                                                                           (M.id-subst-unitʳ _))) _)))))
 -}

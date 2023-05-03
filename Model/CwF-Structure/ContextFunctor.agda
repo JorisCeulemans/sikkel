@@ -118,8 +118,8 @@ open CtxNatTransf public
 
 id-ctx-transf : (Φ : CtxFunctor C D) → CtxNatTransf Φ Φ
 transf-op (id-ctx-transf Φ) Γ = id-subst (ctx-op Φ Γ)
-naturality (id-ctx-transf Φ) σ = transˢ (⊚-id-substˡ (ctx-fmap Φ σ))
-                                        (symˢ (⊚-id-substʳ (ctx-fmap Φ σ)))
+naturality (id-ctx-transf Φ) σ = transˢ (id-subst-unitˡ (ctx-fmap Φ σ))
+                                        (symˢ (id-subst-unitʳ (ctx-fmap Φ σ)))
 
 -- Vertical composition of natural transformations.
 _ⓝ-vert_ : {Φ Ψ Ω : CtxFunctor C D} → CtxNatTransf Ψ Ω → CtxNatTransf Φ Ψ → CtxNatTransf Φ Ω
@@ -128,11 +128,11 @@ naturality (_ⓝ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
   (transf-op η Γ ⊚ transf-op ζ Γ) ⊚ ctx-fmap Φ σ
     ≅⟨ ⊚-assoc ⟩
   transf-op η Γ ⊚ (transf-op ζ Γ ⊚ ctx-fmap Φ σ)
-    ≅⟨ ⊚-congˡ (naturality ζ σ) ⟩
+    ≅⟨ ⊚-congʳ (naturality ζ σ) ⟩
   transf-op η Γ ⊚ (ctx-fmap Ψ σ ⊚ transf-op ζ Δ)
     ≅˘⟨ ⊚-assoc ⟩
   (transf-op η Γ ⊚ ctx-fmap Ψ σ) ⊚ transf-op ζ Δ
-    ≅⟨ ⊚-congʳ (naturality η σ) ⟩
+    ≅⟨ ⊚-congˡ (naturality η σ) ⟩
   (ctx-fmap Ω σ ⊚ transf-op η Δ) ⊚ transf-op ζ Δ
     ≅⟨ ⊚-assoc ⟩
   ctx-fmap Ω σ ⊚ (transf-op η Δ ⊚ transf-op ζ Δ) ∎
@@ -146,15 +146,15 @@ naturality (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begi
   (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ)
     ≅⟨ ⊚-assoc ⟩
   transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (transf-op ζ Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ))
-    ≅˘⟨ ⊚-congˡ (ctx-fmap-⊚ Φ _ _) ⟩
+    ≅˘⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
   transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ ⊚ ctx-fmap Ψ σ)
-    ≅⟨ ⊚-congˡ (ctx-fmap-cong Φ (naturality ζ σ)) ⟩
+    ≅⟨ ⊚-congʳ (ctx-fmap-cong Φ (naturality ζ σ)) ⟩
   transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ ⊚ transf-op ζ Δ)
-    ≅⟨ ⊚-congˡ (ctx-fmap-⊚ Φ _ _) ⟩
+    ≅⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
   transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (ctx-fmap Ψ' σ) ⊚ ctx-fmap Φ (transf-op ζ Δ))
     ≅˘⟨ ⊚-assoc ⟩
   (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ)) ⊚ ctx-fmap Φ (transf-op ζ Δ)
-    ≅⟨ ⊚-congʳ (naturality η (ctx-fmap Ψ' σ)) ⟩
+    ≅⟨ ⊚-congˡ (naturality η (ctx-fmap Ψ' σ)) ⟩
   (ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ (transf-op η (ctx-op Ψ' Δ)) ⊚ ctx-fmap Φ (transf-op ζ Δ))
     ≅⟨ ⊚-assoc ⟩
   ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ ((transf-op η (ctx-op Ψ' Δ) ⊚ ctx-fmap Φ (transf-op ζ Δ))) ∎

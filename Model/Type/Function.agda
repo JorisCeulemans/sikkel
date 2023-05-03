@@ -458,10 +458,10 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
           (cong (func (from (closed-natural clB π))) (ty-cong-2-2 B refl))))))
 
       s-proof : _ ≅ˢ _
-      s-proof = transˢ (symˢ (ctx-ext-subst-congˡ (transˢ ⊚-assoc (⊚-congˡ (ctx-ext-subst-β₁ π _))) _))
-                       (ctx-ext-subst-congʳ _ (record { eq = λ γ → trans (strong-ty-id A)
-                                                                   (trans (sym (eq (to-eq (closed-⊚ clA σ π)) _))
-                                                                   (cong (func (to (closed-natural clA σ))) (eq (isoˡ (closed-natural clA π)) _))) }))
+      s-proof = transˢ (symˢ (ctx-ext-subst-cong-subst (transˢ ⊚-assoc (⊚-congʳ (ctx-ext-subst-β₁ π _))) _))
+                       (ctx-ext-subst-cong-tm _ (record { eq = λ γ → trans (strong-ty-id A)
+                                                                     (trans (sym (eq (to-eq (closed-⊚ clA σ π)) _))
+                                                                     (cong (func (to (closed-natural clA σ))) (eq (isoˡ (closed-natural clA π)) _))) }))
 
   app-cl-natural : {σ : Γ ⇒ Δ} {f : Tm Δ (A ⇛ B)} {a : Tm Δ A} →
                    (app f a) [ clB ∣ σ ]cl ≅ᵗᵐ app (f [ fun-closed ∣ σ ]cl) (a [ clA ∣ σ ]cl)

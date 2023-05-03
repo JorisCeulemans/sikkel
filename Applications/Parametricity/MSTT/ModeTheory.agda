@@ -67,9 +67,9 @@ show-modality forget-right = "forget-right"
 
 ⓜ-interpretation : (μ : ModalityExpr m' m'') (ρ : ModalityExpr m m') →
                    ⟦ μ ⓜ ρ ⟧modality ≅ᵐ ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
-ⓜ-interpretation 𝟙 ρ = symᵐ (𝟙-identityˡ ⟦ ρ ⟧modality)
-ⓜ-interpretation forget-left 𝟙 = symᵐ (𝟙-identityʳ M.forget-left)
-ⓜ-interpretation forget-right 𝟙 = symᵐ (𝟙-identityʳ M.forget-right)
+ⓜ-interpretation 𝟙 ρ = symᵐ (𝟙-unitˡ ⟦ ρ ⟧modality)
+ⓜ-interpretation forget-left 𝟙 = symᵐ (𝟙-unitʳ M.forget-left)
+ⓜ-interpretation forget-right 𝟙 = symᵐ (𝟙-unitʳ M.forget-right)
 
 
 --------------------------------------------------

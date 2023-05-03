@@ -49,13 +49,13 @@ naturality ξ _ refl = refl
 -- In any cwf, there is by definition a one-to-one correspondence between substitutions
 -- Δ ⇒ Γ ,, T and pairs of type Σ[ σ : Δ ⇒ Γ ] (Tm Δ (T [ σ ])). This is worked out
 -- in the following functions.
-ext-subst-to-subst : Δ ⇒ Γ ,, T → Δ ⇒ Γ
+ext-subst-to-subst : (Δ ⇒ Γ ,, T) → (Δ ⇒ Γ)
 ext-subst-to-subst τ = π ⊚ τ
 
 ext-subst-to-term : (τ : Δ ⇒ Γ ,, T) → Tm Δ (T [ π ⊚ τ ])
 ext-subst-to-term {T = T} τ = ι⁻¹[ ty-subst-comp T π τ ] (ξ [ τ ]')
 
-to-ext-subst : (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → Δ ⇒ Γ ,, T
+to-ext-subst : (T : Ty Γ) (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → (Δ ⇒ Γ ,, T)
 func (to-ext-subst T σ t) δ = [ func σ δ , t ⟨ _ , δ ⟩' ]
 naturality (to-ext-subst {Δ = Δ} T σ t) {δ = δ} = to-Σ-ty-eq T (naturality σ)
                                                                (trans (ty-cong-2-1 T hom-idʳ) (naturality t _ refl))
@@ -73,11 +73,11 @@ ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term �
 eq (ctx-ext-subst-η τ) δ = refl
 
 -- Some consequences of the properties above
-ctx-ext-subst-congˡ : {σ σ' : Δ ⇒ Γ} (ε : σ ≅ˢ σ') (t : Tm Δ (T [ σ' ])) → ⟨ σ , ι[ ty-subst-cong-subst ε T ] t ∈ T ⟩ ≅ˢ ⟨ σ' , t ∈ T ⟩
-eq (ctx-ext-subst-congˡ {T = T} ε t) δ = to-Σ-ty-eq T (eq ε δ) (trans (ty-cong-2-1 T hom-idˡ) (ty-id T))
+ctx-ext-subst-cong-subst : {σ σ' : Δ ⇒ Γ} (ε : σ ≅ˢ σ') (t : Tm Δ (T [ σ' ])) → ⟨ σ , ι[ ty-subst-cong-subst ε T ] t ∈ T ⟩ ≅ˢ ⟨ σ' , t ∈ T ⟩
+eq (ctx-ext-subst-cong-subst {T = T} ε t) δ = to-Σ-ty-eq T (eq ε δ) (trans (ty-cong-2-1 T hom-idˡ) (ty-id T))
 
-ctx-ext-subst-congʳ : (σ : Δ ⇒ Γ) {t t' : Tm Δ (T [ σ ])} → t ≅ᵗᵐ t' → ⟨ σ , t ∈ T ⟩ ≅ˢ ⟨ σ , t' ∈ T ⟩
-eq (ctx-ext-subst-congʳ σ e) δ = cong [ _ ,_] (eq e δ)
+ctx-ext-subst-cong-tm : (σ : Δ ⇒ Γ) {t t' : Tm Δ (T [ σ ])} → t ≅ᵗᵐ t' → ⟨ σ , t ∈ T ⟩ ≅ˢ ⟨ σ , t' ∈ T ⟩
+eq (ctx-ext-subst-cong-tm σ e) δ = cong [ _ ,_] (eq e δ)
 
 ctx-ext-subst-proj₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
                       ext-subst-to-term ⟨ σ , t ∈ T ⟩ ≅ᵗᵐ ι[ ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) T ] t

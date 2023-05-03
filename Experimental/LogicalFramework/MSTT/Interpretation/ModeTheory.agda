@@ -32,8 +32,8 @@ record MTIntCompletion (ℳ : ModeTheory) (mtib : MTIntBasis ℳ) : Set₁ where
     ⟦_⟧two-cell : ∀ {m n} {μ κ : Modality m n} → TwoCell μ κ → M.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 
   ⟦ⓜ⟧-sound : ∀ {m n o} (μ : Modality n o) (κ : Modality m n) → ⟦ μ ⓜ κ ⟧mod ≅ᵐ ⟦ μ ⟧mod M.ⓜ ⟦ κ ⟧mod
-  ⟦ⓜ⟧-sound 𝟙     κ     = M.symᵐ (M.𝟙-identityˡ _)
-  ⟦ⓜ⟧-sound (‵ μ) 𝟙     = M.symᵐ (M.𝟙-identityʳ _)
+  ⟦ⓜ⟧-sound 𝟙     κ     = M.symᵐ (M.𝟙-unitˡ _)
+  ⟦ⓜ⟧-sound (‵ μ) 𝟙     = M.symᵐ (M.𝟙-unitʳ _)
   ⟦ⓜ⟧-sound (‵ μ) (‵ κ) = ⟦ⓜ⟧-non-triv-sound μ κ
     
 

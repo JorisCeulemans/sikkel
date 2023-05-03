@@ -131,7 +131,7 @@ interp-assumption-helper (skip-var {Ξ = Ξ} {ρ = ρ'} {T = T} a) ρ α =
   in
   M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (sub-lock-sound (π {Γ = to-ctx Ξ} {μ = ρ'} {x} {T}) ρ)) _)
                                          (bprop-sub-sound (lookup-assumption' a ρ α) ((π {x = x}) ,slock⟨ ρ ⟩))) ] (
-  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (M.ctx-functor ⟦ ρ ⟧mod) (M.transˢ (M.⊚-congʳ (sub-π-sound {Γ = to-ctx Ξ} {x} {ρ'} {T}))
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (M.ctx-functor ⟦ ρ ⟧mod) (M.transˢ (M.⊚-congˡ (sub-π-sound {Γ = to-ctx Ξ} {x} {ρ'} {T}))
                                                                                            (M.lift-cl-subst-π-commute (ty-closed-natural ⟨ ρ' ∣ T ⟩)))) ] (
   interp-assumption-helper a ρ α M.[ M.lock-fmap ⟦ ρ ⟧mod M.π ]'))
 interp-assumption-helper (skip-lock {κ = κ} ρ' a) ρ α =

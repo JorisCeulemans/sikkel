@@ -131,22 +131,22 @@ module _ {C : BaseCategory} where
   --------------------------------------------------
   -- Laws for the category of contexts
 
-  ⊚-id-substʳ : (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≅ˢ σ
-  eq (⊚-id-substʳ σ) _ = refl
+  id-subst-unitʳ : (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≅ˢ σ
+  eq (id-subst-unitʳ σ) _ = refl
 
-  ⊚-id-substˡ : (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
-  eq (⊚-id-substˡ σ) _ = refl
+  id-subst-unitˡ : (σ : Δ ⇒ Γ) → id-subst Γ ⊚ σ ≅ˢ σ
+  eq (id-subst-unitˡ σ) _ = refl
 
   ⊚-assoc : {Γ₁ : Ctx C} {Γ₂ : Ctx C} {Γ₃ : Ctx C} {Γ₄ : Ctx C}
              {σ₃₄ : Γ₃ ⇒ Γ₄} {σ₂₃ : Γ₂ ⇒ Γ₃} {σ₁₂ : Γ₁ ⇒ Γ₂} →
              (σ₃₄ ⊚ σ₂₃) ⊚ σ₁₂ ≅ˢ σ₃₄ ⊚ (σ₂₃ ⊚ σ₁₂)
   eq ⊚-assoc _ = refl
 
-  ⊚-congˡ : {τ : Γ ⇒ Θ} {σ σ' : Δ ⇒ Γ} → σ ≅ˢ σ' → τ ⊚ σ ≅ˢ τ ⊚ σ'
-  eq (⊚-congˡ {τ = τ} σ=σ') δ = cong (func τ) (eq σ=σ' δ)
+  ⊚-congʳ : {τ : Γ ⇒ Θ} {σ σ' : Δ ⇒ Γ} → σ ≅ˢ σ' → τ ⊚ σ ≅ˢ τ ⊚ σ'
+  eq (⊚-congʳ {τ = τ} σ=σ') δ = cong (func τ) (eq σ=σ' δ)
 
-  ⊚-congʳ : {τ τ' : Γ ⇒ Θ} {σ : Δ ⇒ Γ} → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
-  eq (⊚-congʳ {σ = σ} τ=τ') δ = eq τ=τ' (func σ δ)
+  ⊚-congˡ : {τ τ' : Γ ⇒ Θ} {σ : Δ ⇒ Γ} → τ ≅ˢ τ' → τ ⊚ σ ≅ˢ τ' ⊚ σ
+  eq (⊚-congˡ {σ = σ} τ=τ') δ = eq τ=τ' (func σ δ)
 
 
   --------------------------------------------------

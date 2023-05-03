@@ -48,9 +48,9 @@ isoˡ (transᶜ Δ=Γ Γ=Θ) =
                    (val (var (to Δ=Γ)) ⊚' ((val (var (to Γ=Θ)) ⊚' val (var (from Γ=Θ))) ⊚' val (var (from Δ=Γ))))
                    refl ⟩
     to Δ=Γ ⊚ ((to Γ=Θ ⊚ from Γ=Θ) ⊚ from Δ=Γ)
-  ≅⟨ ⊚-congˡ (⊚-congʳ (isoˡ Γ=Θ)) ⟩
+  ≅⟨ ⊚-congʳ (⊚-congˡ (isoˡ Γ=Θ)) ⟩
     to Δ=Γ ⊚ (id-subst _ ⊚ from Δ=Γ)
-  ≅⟨ ⊚-congˡ (⊚-id-substˡ (from Δ=Γ)) ⟩
+  ≅⟨ ⊚-congʳ (id-subst-unitˡ (from Δ=Γ)) ⟩
     to Δ=Γ ⊚ from Δ=Γ
   ≅⟨ isoˡ Δ=Γ ⟩
     id-subst _ ∎
@@ -62,9 +62,9 @@ isoʳ (transᶜ Δ=Γ Γ=Θ) =
                    (val (var (from Γ=Θ)) ⊚' ((val (var (from Δ=Γ)) ⊚' val (var (to Δ=Γ))) ⊚' val (var (to Γ=Θ))))
                    refl ⟩
     from Γ=Θ ⊚ ((from Δ=Γ ⊚ to Δ=Γ) ⊚ to Γ=Θ)
-  ≅⟨ ⊚-congˡ (⊚-congʳ (isoʳ Δ=Γ)) ⟩
+  ≅⟨ ⊚-congʳ (⊚-congˡ (isoʳ Δ=Γ)) ⟩
     from Γ=Θ ⊚ (id-subst _ ⊚ to Γ=Θ)
-  ≅⟨ ⊚-congˡ (⊚-id-substˡ (to Γ=Θ)) ⟩
+  ≅⟨ ⊚-congʳ (id-subst-unitˡ (to Γ=Θ)) ⟩
     from Γ=Θ ⊚ to Γ=Θ
   ≅⟨ isoʳ Γ=Θ ⟩
     id-subst _ ∎

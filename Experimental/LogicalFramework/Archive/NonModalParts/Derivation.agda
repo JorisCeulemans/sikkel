@@ -288,7 +288,7 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
   (interpret-assumption a M.[ M.π ]')
   where
     subst-eq-proof : _ M.≅ˢ _
-    subst-eq-proof = M.transˢ (M.symˢ (M.,ₛ-β1 _ M.sξ)) (M.⊚-congʳ (M.symˢ (M.⊚-id-substˡ _)))
+    subst-eq-proof = M.transˢ (M.symˢ (M.,ₛ-β1 _ M.sξ)) (M.⊚-congˡ (M.symˢ (M.id-subst-unitˡ _)))
 
 ⟦_⟧der : (Ξ ⊢ φ) → Tm ⟦ Ξ ⟧pctx (⟦ φ ⟧frm M.[ to-ctx-subst Ξ ])
 ⟦ withAlpha {Ξ = Ξ} {{ φ≈ψ }} d ⟧der = Ag.subst (λ x → Tm ⟦ Ξ ⟧pctx (⟦ x ⟧frm-nmls M.[ _ ])) φ≈ψ ⟦ d ⟧der
@@ -298,12 +298,12 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
 ⟦ subst {Ξ = Ξ} {x = x} φ {t1 = t1} {t2 = t2} e d ⟧der =
   M.ι[ M.transᵗʸ (M.ty-subst-cong-ty _ (M.symᵗʸ (frm-subst-sound φ (t2 / x))))
                    (ty-subst-seq-cong (_ ∷ˢ _ ◼) ((to-ctx-subst Ξ M.,ₛ (⟦ t2 ⟧tm M.[ to-ctx-subst Ξ ]s)) ◼) ⟦ φ ⟧frm
-                                      (M.transˢ (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)))
+                                      (M.transˢ (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.id-subst-unitˡ _) _)))
      ]
   M.ssubst' ⟦ φ ⟧frm (to-ctx-subst Ξ) ⟦ e ⟧der (
   M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-ty _ (M.symᵗʸ (frm-subst-sound φ (t1 / x))))
                      (ty-subst-seq-cong (_ ∷ˢ _ ◼) ((to-ctx-subst Ξ M.,ₛ (⟦ t1 ⟧tm M.[ to-ctx-subst Ξ ]s)) ◼) ⟦ φ ⟧frm
-                                        (M.transˢ (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.⊚-id-substˡ _) _)))
+                                        (M.transˢ (M.,ₛ-⊚ _ _ _) (M.,ₛ-cong1 (M.id-subst-unitˡ _) _)))
      ]
   ⟦ d ⟧der)
 ⟦ ⊤ᶠ-intro ⟧der = M.tt' M.[ _ ]'
@@ -332,18 +332,18 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
 ⟦ zero≠sucn ⟧der = M.szero≠ssucn M.[ _ ]'
 ⟦ bool-induction {Ξ = Ξ} {x = x} {φ = φ} d1 d2 ⟧der =
   M.sbool-induction _ (M.ι[ M.transᵗʸ (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
-                                                           (M.transˢ (M.⊚-congˡ (M.,ₛ-cong2 _ (M.symᵗᵐ (M.sconst-natural _))))
+                                                           (M.transˢ (M.⊚-congʳ (M.,ₛ-cong2 _ (M.symᵗᵐ (M.sconst-natural _))))
                                                                        (M.symˢ (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.strue))))
                                         (M.ty-subst-cong-ty _ (frm-subst-sound φ (true / x)))
                           ] ⟦ d1 ⟧der)
                       (M.ι[ M.transᵗʸ (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
-                                                           (M.transˢ (M.⊚-congˡ (M.,ₛ-cong2 _ (M.symᵗᵐ (M.sconst-natural _))))
+                                                           (M.transˢ (M.⊚-congʳ (M.,ₛ-cong2 _ (M.symᵗᵐ (M.sconst-natural _))))
                                                                        (M.symˢ (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.sfalse))))
                                         (M.ty-subst-cong-ty _ (frm-subst-sound φ (false / x)))
                           ] ⟦ d2 ⟧der)
 ⟦ nat-induction {Ξ = Ξ} {x = n} {φ = φ} x d1 d2 ⟧der =
   M.snat-induction _ (M.ι[ M.transᵗʸ (ty-subst-seq-cong (_ ∷ˢ _ ◼) (_ ∷ˢ _ ◼) ⟦ φ ⟧frm
-                                                           (M.transˢ (M.⊚-congˡ (M.,ₛ-cong2 _ (M.symᵗᵐ (M.sconst-natural _))))
+                                                           (M.transˢ (M.⊚-congʳ (M.,ₛ-cong2 _ (M.symᵗᵐ (M.sconst-natural _))))
                                                                        (M.symˢ (subst-lemma (to-ctx Ξ) (to-ctx-subst Ξ) M.szero))))
                                        (M.ty-subst-cong-ty _ (frm-subst-sound φ (zero / n)))
                          ] ⟦ d1 ⟧der)
@@ -353,8 +353,8 @@ interpret-assumption (skip-var {Ξ = Ξ} {T = T} a) =
   where
     subst-eq-proof : _ M.≅ˢ _
     subst-eq-proof =
-      M.transˢ (M.symˢ M.⊚-assoc) (M.transˢ (M.⊚-congʳ (M.transˢ (M.,ₛ-⊚ _ _ _) (M.transˢ
-      (M.transˢ (M.,ₛ-cong1 (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congˡ (M.,ₛ-β1 _ _)) (M.transˢ (M.symˢ (M.,ₛ-β1 _ _)) (M.⊚-congʳ (M.symˢ (M.⊚-id-substˡ _)))))) _)
+      M.transˢ (M.symˢ M.⊚-assoc) (M.transˢ (M.⊚-congˡ (M.transˢ (M.,ₛ-⊚ _ _ _) (M.transˢ
+      (M.transˢ (M.,ₛ-cong1 (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.,ₛ-β1 _ _)) (M.transˢ (M.symˢ (M.,ₛ-β1 _ _)) (M.⊚-congˡ (M.symˢ (M.id-subst-unitˡ _)))))) _)
                   (M.,ₛ-cong2 _ (M.transᵗᵐ (M.,ₛ-β2 _ _) (M.symᵗᵐ (M.transᵗᵐ (M.∙ₛ-natural _) (M.∙ₛ-cong (M.sconst-func-natural _) (M.,ₛ-β2 _ _)))))))
       (M.symˢ (M.,ₛ-⊚ _ _ _))))) M.⊚-assoc)
 -}

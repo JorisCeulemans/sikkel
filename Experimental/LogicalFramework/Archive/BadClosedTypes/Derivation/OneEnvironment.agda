@@ -133,7 +133,7 @@ interpret-assumption (skip-var x) = {!interpret-assumption x!}
     proof = ty-subst-seq-cong (((to-ctx-subst Ξ) M.⊹) ◼)
                               (((to-ctx-subst Ξ) M.⊹) M.⊚ M.to (M.,,-cong (ty-closed T)) ∷ˢ M.from (M.,,-cong (ty-closed T)) ◼)
                               ⟦ φ ⟧frm
-                              (M.symˢ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congˡ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.⊚-id-substʳ _))))
+                              (M.symˢ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.isoˡ (M.,,-cong (ty-closed T)))) (M.id-subst-unitʳ _))))
 ⟦ ∀-elim d t ⟧der = {!!}
 ⟦ fun-β ⟧der = {!!}
 ⟦ suc-lit ⟧der = M.≅ᵗᵐ-to-Id M.suc'-const M.[ _ ]'

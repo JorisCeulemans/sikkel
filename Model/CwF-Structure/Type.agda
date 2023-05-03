@@ -189,22 +189,22 @@ naturality (_⊙_ {S = S}{T = T}{R = R} φ η) {f = f}{eγ = eγ} {t = r} =
     func φ (func η (R ⟪ f , eγ ⟫ r)) ∎
   where open ≡-Reasoning
 
-⊙-id-transʳ : (η : T ↣ S) → η ⊙ id-trans T ≅ⁿ η
-eq (⊙-id-transʳ η) _ = refl
+id-trans-unitʳ : (η : T ↣ S) → η ⊙ id-trans T ≅ⁿ η
+eq (id-trans-unitʳ η) _ = refl
 
-⊙-id-transˡ : (η : T ↣ S) → id-trans S ⊙ η ≅ⁿ η
-eq (⊙-id-transˡ η) _ = refl
+id-trans-unitˡ : (η : T ↣ S) → id-trans S ⊙ η ≅ⁿ η
+eq (id-trans-unitˡ η) _ = refl
 
 ⊙-assoc : {T₁ : Ty Γ} {T₂ : Ty Γ} {T₃ : Ty Γ} {T₄ : Ty Γ}
-           (η₃₄ : T₃ ↣ T₄) (η₂₃ : T₂ ↣ T₃) (η₁₂ : T₁ ↣ T₂) →
-           (η₃₄ ⊙ η₂₃) ⊙ η₁₂ ≅ⁿ η₃₄ ⊙ (η₂₃ ⊙ η₁₂)
+          (η₃₄ : T₃ ↣ T₄) (η₂₃ : T₂ ↣ T₃) (η₁₂ : T₁ ↣ T₂) →
+          (η₃₄ ⊙ η₂₃) ⊙ η₁₂ ≅ⁿ η₃₄ ⊙ (η₂₃ ⊙ η₁₂)
 eq (⊙-assoc η₃₄ η₂₃ η₁₂) _ = refl
 
-⊙-congˡ : (φ : S ↣ T) {η η' : R ↣ S} → η ≅ⁿ η' → φ ⊙ η ≅ⁿ φ ⊙ η'
-eq (⊙-congˡ φ η=η') δ = cong (func φ) (eq η=η' δ)
+⊙-congʳ : (φ : S ↣ T) {η η' : R ↣ S} → η ≅ⁿ η' → φ ⊙ η ≅ⁿ φ ⊙ η'
+eq (⊙-congʳ φ η=η') δ = cong (func φ) (eq η=η' δ)
 
-⊙-congʳ : {φ φ' : S ↣ T} (η : R ↣ S) → φ ≅ⁿ φ' → φ ⊙ η ≅ⁿ φ' ⊙ η
-eq (⊙-congʳ η φ=φ') δ = eq φ=φ' (func η δ)
+⊙-congˡ : {φ φ' : S ↣ T} (η : R ↣ S) → φ ≅ⁿ φ' → φ ⊙ η ≅ⁿ φ' ⊙ η
+eq (⊙-congˡ η φ=φ') δ = eq φ=φ' (func η δ)
 
 
 --------------------------------------------------
@@ -242,11 +242,11 @@ isoˡ (transᵗʸ S=T T=R) =
     (to S=T ⊙ to T=R) ⊙ (from T=R ⊙ from S=T)
   ≅⟨ ⊙-assoc (to S=T) (to T=R) _ ⟩
     to S=T ⊙ (to T=R ⊙ (from T=R ⊙ from S=T))
-  ≅˘⟨ ⊙-congˡ (to S=T) (⊙-assoc (to T=R) (from T=R) (from S=T)) ⟩
+  ≅˘⟨ ⊙-congʳ (to S=T) (⊙-assoc (to T=R) (from T=R) (from S=T)) ⟩
     to S=T ⊙ ((to T=R ⊙ from T=R) ⊙ from S=T)
-  ≅⟨ ⊙-congˡ (to S=T) (⊙-congʳ (from S=T) (isoˡ T=R)) ⟩
+  ≅⟨ ⊙-congʳ (to S=T) (⊙-congˡ (from S=T) (isoˡ T=R)) ⟩
     to S=T ⊙ (id-trans _ ⊙ from S=T)
-  ≅⟨ ⊙-congˡ (to S=T) (⊙-id-transˡ (from S=T)) ⟩
+  ≅⟨ ⊙-congʳ (to S=T) (id-trans-unitˡ (from S=T)) ⟩
     to S=T ⊙ from S=T
   ≅⟨ isoˡ S=T ⟩
     id-trans _ ∎
@@ -256,11 +256,11 @@ isoʳ (transᵗʸ S=T T=R) =
     (from T=R ⊙ from S=T) ⊙ (to S=T ⊙ to T=R)
   ≅⟨ ⊙-assoc (from T=R) (from S=T) _ ⟩
     from T=R ⊙ (from S=T ⊙ (to S=T ⊙ to T=R))
-  ≅˘⟨ ⊙-congˡ (from T=R) (⊙-assoc (from S=T) (to S=T) (to T=R)) ⟩
+  ≅˘⟨ ⊙-congʳ (from T=R) (⊙-assoc (from S=T) (to S=T) (to T=R)) ⟩
     from T=R ⊙ ((from S=T ⊙ to S=T) ⊙ to T=R)
-  ≅⟨ ⊙-congˡ (from T=R) (⊙-congʳ (to T=R) (isoʳ S=T)) ⟩
+  ≅⟨ ⊙-congʳ (from T=R) (⊙-congˡ (to T=R) (isoʳ S=T)) ⟩
     from T=R ⊙ (id-trans _ ⊙ to T=R)
-  ≅⟨ ⊙-congˡ (from T=R) (⊙-id-transˡ (to T=R)) ⟩
+  ≅⟨ ⊙-congʳ (from T=R) (id-trans-unitˡ (to T=R)) ⟩
     from T=R ⊙ to T=R
   ≅⟨ isoʳ T=R ⟩
     id-trans _ ∎
@@ -301,17 +301,17 @@ open _≅ᵉ_ public
 to-eq : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → to e1 ≅ⁿ to e2
 to-eq {e1 = e1} {e2} ε = begin
   to e1
-   ≅˘⟨ ⊙-id-transʳ (to e1) ⟩
+   ≅˘⟨ id-trans-unitʳ (to e1) ⟩
   to e1 ⊙ id-trans _
-   ≅˘⟨ ⊙-congˡ _ (isoʳ e2) ⟩
+   ≅˘⟨ ⊙-congʳ _ (isoʳ e2) ⟩
   to e1 ⊙ (from e2 ⊙ to e2)
    ≅˘⟨ ⊙-assoc _ _ _ ⟩
   (to e1 ⊙ from e2) ⊙ to e2
-   ≅⟨ ⊙-congʳ _ (⊙-congˡ _ (symⁿ (from-eq ε))) ⟩
+   ≅⟨ ⊙-congˡ _ (⊙-congʳ _ (symⁿ (from-eq ε))) ⟩
   (to e1 ⊙ from e1) ⊙ to e2
-   ≅⟨ ⊙-congʳ _ (isoˡ e1) ⟩
+   ≅⟨ ⊙-congˡ _ (isoˡ e1) ⟩
   id-trans _ ⊙ to e2
-   ≅⟨ ⊙-id-transˡ _ ⟩
+   ≅⟨ id-trans-unitˡ _ ⟩
   to e2 ∎
   where open ≅ⁿ-Reasoning
 
@@ -329,10 +329,10 @@ symᵗʸ-cong : {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → symᵗʸ e ≅ᵉ sym�
 from-eq (symᵗʸ-cong 𝑒) = to-eq 𝑒
 
 transᵗʸ-congˡ : {e1 e1' : T ≅ᵗʸ S} {e2 : S ≅ᵗʸ R} → e1 ≅ᵉ e1' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1' e2
-from-eq (transᵗʸ-congˡ 𝑒) = ⊙-congˡ _ (from-eq 𝑒)
+from-eq (transᵗʸ-congˡ 𝑒) = ⊙-congʳ _ (from-eq 𝑒)
 
 transᵗʸ-congʳ : {e1 : T ≅ᵗʸ S} {e2 e2' : S ≅ᵗʸ R} → e2 ≅ᵉ e2' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1 e2'
-from-eq (transᵗʸ-congʳ 𝑒) = ⊙-congʳ _ (from-eq 𝑒)
+from-eq (transᵗʸ-congʳ 𝑒) = ⊙-congˡ _ (from-eq 𝑒)
 
 -- Groupoid laws for the groupoid Ty Γ and some consequences
 transᵗʸ-assoc : {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} {e'' : T3 ≅ᵗʸ T4} →
@@ -340,10 +340,10 @@ transᵗʸ-assoc : {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} {e'' : T3 ≅ᵗʸ
 from-eq transᵗʸ-assoc = symⁿ (⊙-assoc _ _ _)
 
 reflᵗʸ-unitˡ : {e : T ≅ᵗʸ S} → transᵗʸ reflᵗʸ e ≅ᵉ e
-from-eq reflᵗʸ-unitˡ = ⊙-id-transʳ _
+from-eq reflᵗʸ-unitˡ = id-trans-unitʳ _
 
 reflᵗʸ-unitʳ : {e : T ≅ᵗʸ S} → transᵗʸ e reflᵗʸ ≅ᵉ e
-from-eq reflᵗʸ-unitʳ = ⊙-id-transˡ _
+from-eq reflᵗʸ-unitʳ = id-trans-unitˡ _
 
 symᵗʸ-invˡ : {e : T ≅ᵗʸ S} → transᵗʸ (symᵗʸ e) e ≅ᵉ reflᵗʸ
 from-eq (symᵗʸ-invˡ {e = e}) = isoʳ e

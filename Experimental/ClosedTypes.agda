@@ -96,7 +96,7 @@ eq (,ₛ-cong1 {T = T} e t) δ = cong [_, T ⟪ _ , refl ⟫ t ⟨ _ , δ ⟩' ]
 eq (,ₛ-cong2 {T = T} σ e) δ = cong (λ x → [ func σ δ , T ⟪ _ , refl ⟫ x ]) (eq e δ)
 
 ,ₛ-η-id : id-subst (Γ ,,ₛ T) ≅ˢ (π ,ₛ sξ)
-,ₛ-η-id {Γ = Γ} {T = T} = transˢ (,ₛ-η (id-subst (Γ ,,ₛ T))) (transˢ (,ₛ-cong1 (⊚-id-substʳ _) _) (,ₛ-cong2 _ (stm-subst-id sξ)))
+,ₛ-η-id {Γ = Γ} {T = T} = transˢ (,ₛ-η (id-subst (Γ ,,ₛ T))) (transˢ (,ₛ-cong1 (id-subst-unitʳ _) _) (,ₛ-cong2 _ (stm-subst-id sξ)))
 
 -- The following is also provable from the η and β laws for _,ₛ_.
 ,ₛ-⊚ : (σ : Δ ⇒ Γ) (t : SimpleTm Δ T) (τ : Θ ⇒ Δ) → ((σ ,ₛ t) ⊚ τ) ≅ˢ ((σ ⊚ τ) ,ₛ (t [ τ ]s))

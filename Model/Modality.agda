@@ -364,21 +364,21 @@ record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
                          from (eq-lock Γ) ⊚ lock-fmap μ σ ≅ˢ lock-fmap ρ σ ⊚ from (eq-lock Δ)
   eq-lock-natural-from {Δ} {Γ} σ = begin
     from (eq-lock Γ) ⊚ lock-fmap μ σ
-      ≅˘⟨ ⊚-id-substʳ _ ⟩
+      ≅˘⟨ id-subst-unitʳ _ ⟩
     (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ id-subst (lock μ Δ)
-      ≅˘⟨ ⊚-congˡ (isoˡ (eq-lock Δ)) ⟩
+      ≅˘⟨ ⊚-congʳ (isoˡ (eq-lock Δ)) ⟩
     (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ (to (eq-lock Δ) ⊚ from (eq-lock Δ))
       ≅˘⟨ ⊚-assoc ⟩
     ((from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ to (eq-lock Δ)) ⊚ from (eq-lock Δ)
-      ≅⟨ ⊚-congʳ ⊚-assoc ⟩
+      ≅⟨ ⊚-congˡ ⊚-assoc ⟩
     (from (eq-lock Γ) ⊚ (lock-fmap μ σ ⊚ to (eq-lock Δ))) ⊚ from (eq-lock Δ)
-      ≅˘⟨ ⊚-congʳ (⊚-congˡ (eq-lock-natural-to σ)) ⟩
+      ≅˘⟨ ⊚-congˡ (⊚-congʳ (eq-lock-natural-to σ)) ⟩
     (from (eq-lock Γ) ⊚ (to (eq-lock Γ) ⊚ lock-fmap ρ σ)) ⊚ from (eq-lock Δ)
-      ≅˘⟨ ⊚-congʳ ⊚-assoc ⟩
+      ≅˘⟨ ⊚-congˡ ⊚-assoc ⟩
     ((from (eq-lock Γ) ⊚ to (eq-lock Γ)) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
-      ≅⟨ ⊚-congʳ (⊚-congʳ (isoʳ (eq-lock Γ))) ⟩
+      ≅⟨ ⊚-congˡ (⊚-congˡ (isoʳ (eq-lock Γ))) ⟩
     (id-subst (lock ρ Γ) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
-      ≅⟨ ⊚-congʳ (⊚-id-substˡ _) ⟩
+      ≅⟨ ⊚-congˡ (id-subst-unitˡ _) ⟩
     lock-fmap ρ σ ⊚ from (eq-lock Δ) ∎
     where open ≅ˢ-Reasoning
 
@@ -406,7 +406,7 @@ open _≅ᵐ_ public
 
 reflᵐ : ∀ {C D} → {μ : Modality C D} → μ ≅ᵐ μ
 eq-lock (reflᵐ {μ = μ}) Γ = reflᶜ
-eq-lock-natural-to (reflᵐ {μ = μ}) σ = transˢ (⊚-id-substˡ _) (symˢ (⊚-id-substʳ _))
+eq-lock-natural-to (reflᵐ {μ = μ}) σ = transˢ (id-subst-unitˡ _) (symˢ (id-subst-unitʳ _))
 eq-mod-tyʳ (reflᵐ {μ = μ}) T = mod-cong μ (symᵗʸ (ty-subst-id T))
 
 symᵐ : ∀ {C D} {μ ρ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ μ
@@ -420,11 +420,11 @@ eq-lock-natural-to (transᵐ {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
   (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ⊚ lock-fmap κ σ
     ≅⟨ ⊚-assoc ⟩
   to (eq-lock μ=ρ _) ⊚ (to (eq-lock ρ=κ _) ⊚ lock-fmap κ σ)
-    ≅⟨ ⊚-congˡ (eq-lock-natural-to ρ=κ σ) ⟩
+    ≅⟨ ⊚-congʳ (eq-lock-natural-to ρ=κ σ) ⟩
   to (eq-lock μ=ρ _) ⊚ (lock-fmap ρ σ ⊚ to (eq-lock ρ=κ _))
     ≅˘⟨ ⊚-assoc ⟩
   (to (eq-lock μ=ρ _) ⊚ lock-fmap ρ σ) ⊚ to (eq-lock ρ=κ _)
-    ≅⟨ ⊚-congʳ (eq-lock-natural-to μ=ρ σ) ⟩
+    ≅⟨ ⊚-congˡ (eq-lock-natural-to μ=ρ σ) ⟩
   (lock-fmap μ σ ⊚ to (eq-lock μ=ρ _)) ⊚ to (eq-lock ρ=κ _)
     ≅⟨ ⊚-assoc ⟩
   lock-fmap μ σ ⊚ (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ∎
@@ -439,15 +439,15 @@ eq-mod-tyʳ (transᵐ {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T = b
   ⟨ κ ∣ T [ to (eq-lock μ=ρ Γ) ⊚ to (eq-lock ρ=κ Γ) ] ⟩ ∎
   where open ≅ᵗʸ-Reasoning
 
-𝟙-identityʳ : (μ : Modality C D) → μ ⓜ 𝟙 ≅ᵐ μ
-eq-lock (𝟙-identityʳ μ) Γ = reflᶜ
-eq (eq-lock-natural-to (𝟙-identityʳ μ) σ) _ = refl
-eq-mod-tyʳ (𝟙-identityʳ μ) T = symᵗʸ (mod-cong μ (ty-subst-id T))
+𝟙-unitʳ : (μ : Modality C D) → μ ⓜ 𝟙 ≅ᵐ μ
+eq-lock (𝟙-unitʳ μ) Γ = reflᶜ
+eq (eq-lock-natural-to (𝟙-unitʳ μ) σ) _ = refl
+eq-mod-tyʳ (𝟙-unitʳ μ) T = symᵗʸ (mod-cong μ (ty-subst-id T))
 
-𝟙-identityˡ : (μ : Modality C D) → 𝟙 ⓜ μ ≅ᵐ μ
-eq-lock (𝟙-identityˡ μ) Γ = reflᶜ
-eq (eq-lock-natural-to (𝟙-identityˡ μ) σ) _ = refl
-eq-mod-tyʳ (𝟙-identityˡ μ) T = symᵗʸ (mod-cong μ (ty-subst-id T))
+𝟙-unitˡ : (μ : Modality C D) → 𝟙 ⓜ μ ≅ᵐ μ
+eq-lock (𝟙-unitˡ μ) Γ = reflᶜ
+eq (eq-lock-natural-to (𝟙-unitˡ μ) σ) _ = refl
+eq-mod-tyʳ (𝟙-unitˡ μ) T = symᵗʸ (mod-cong μ (ty-subst-id T))
 
 ⓜ-assoc : {C₁ C₂ C₃ C₄ : BaseCategory}
            (μ₃₄ : Modality C₃ C₄) (μ₂₃ : Modality C₂ C₃) (μ₁₂ : Modality C₁ C₂) →
@@ -456,17 +456,17 @@ eq-lock (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) Γ = reflᶜ
 eq (eq-lock-natural-to (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) σ) _ = refl
 eq-mod-tyʳ (ⓜ-assoc μ₃₄ μ₂₃ μ₁₂) T = symᵗʸ (mod-cong μ₃₄ (mod-cong μ₂₃ (mod-cong μ₁₂ (ty-subst-id T))))
 
-ⓜ-congˡ : (ρ : Modality D E) {μ μ' : Modality C D} → μ ≅ᵐ μ' → ρ ⓜ μ ≅ᵐ ρ ⓜ μ'
-eq-lock (ⓜ-congˡ ρ μ=μ') Γ = eq-lock μ=μ' (Γ ,lock⟨ ρ ⟩)
-eq-lock-natural-to (ⓜ-congˡ ρ {μ} {μ'} μ=μ') σ = eq-lock-natural-to μ=μ' (lock-fmap ρ σ)
-eq-mod-tyʳ (ⓜ-congˡ ρ μ=μ') T = mod-cong ρ (eq-mod-tyʳ μ=μ' T)
+ⓜ-congʳ : (ρ : Modality D E) {μ μ' : Modality C D} → μ ≅ᵐ μ' → ρ ⓜ μ ≅ᵐ ρ ⓜ μ'
+eq-lock (ⓜ-congʳ ρ μ=μ') Γ = eq-lock μ=μ' (Γ ,lock⟨ ρ ⟩)
+eq-lock-natural-to (ⓜ-congʳ ρ {μ} {μ'} μ=μ') σ = eq-lock-natural-to μ=μ' (lock-fmap ρ σ)
+eq-mod-tyʳ (ⓜ-congʳ ρ μ=μ') T = mod-cong ρ (eq-mod-tyʳ μ=μ' T)
 
-ⓜ-congʳ : {ρ ρ' : Modality D E} (μ : Modality C D) → ρ ≅ᵐ ρ' → ρ ⓜ μ ≅ᵐ ρ' ⓜ μ
-from (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = lock-fmap μ (from (eq-lock ρ=ρ' Γ))
-to (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = lock-fmap μ (to (eq-lock ρ=ρ' Γ))
-isoˡ (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoˡ (eq-lock ρ=ρ' Γ))
-isoʳ (eq-lock (ⓜ-congʳ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoʳ (eq-lock ρ=ρ' Γ))
-eq-lock-natural-to (ⓜ-congʳ {ρ = ρ} {ρ'} μ ρ=ρ') σ = begin
+ⓜ-congˡ : {ρ ρ' : Modality D E} (μ : Modality C D) → ρ ≅ᵐ ρ' → ρ ⓜ μ ≅ᵐ ρ' ⓜ μ
+from (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = lock-fmap μ (from (eq-lock ρ=ρ' Γ))
+to (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = lock-fmap μ (to (eq-lock ρ=ρ' Γ))
+isoˡ (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoˡ (eq-lock ρ=ρ' Γ))
+isoʳ (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoʳ (eq-lock ρ=ρ' Γ))
+eq-lock-natural-to (ⓜ-congˡ {ρ = ρ} {ρ'} μ ρ=ρ') σ = begin
   lock-fmap μ (to (eq-lock ρ=ρ' _)) ⊚ lock-fmap μ (lock-fmap ρ' σ)
     ≅˘⟨ lock-fmap-⊚ μ _ _ ⟩
   lock-fmap μ (to (eq-lock ρ=ρ' _) ⊚ lock-fmap ρ' σ)
@@ -475,7 +475,7 @@ eq-lock-natural-to (ⓜ-congʳ {ρ = ρ} {ρ'} μ ρ=ρ') σ = begin
     ≅⟨ lock-fmap-⊚ μ _ _ ⟩
   lock-fmap μ (lock-fmap ρ σ) ⊚ lock-fmap μ (to (eq-lock ρ=ρ' _)) ∎
   where open ≅ˢ-Reasoning
-eq-mod-tyʳ (ⓜ-congʳ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T = begin
+eq-mod-tyʳ (ⓜ-congˡ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T = begin
   ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩
     ≅⟨ eq-mod-tyʳ ρ=ρ' ⟨ μ ∣ T ⟩ ⟩
   ⟨ ρ' ∣ ⟨ μ ∣ T ⟩ [ to (eq-lock ρ=ρ' Γ) ] ⟩
@@ -569,10 +569,10 @@ module _ {μ ρ : Modality C D} where
   key-subst-eq (transᵗᶜ e e') = transˢ (key-subst-eq e) (key-subst-eq e')
 
   ⓣ-vert-unitˡ : {α : TwoCell μ ρ} → id-cell ⓣ-vert α ≅ᵗᶜ α
-  key-subst-eq ⓣ-vert-unitˡ = ⊚-id-substʳ _
+  key-subst-eq ⓣ-vert-unitˡ = id-subst-unitʳ _
 
   ⓣ-vert-unitʳ : {α : TwoCell μ ρ} → α ⓣ-vert id-cell ≅ᵗᶜ α
-  key-subst-eq ⓣ-vert-unitʳ = ⊚-id-substˡ _
+  key-subst-eq ⓣ-vert-unitʳ = id-subst-unitˡ _
 
 ⓣ-vert-assoc : {μ ρ κ φ : Modality C D} {α : TwoCell μ ρ} {β : TwoCell ρ κ} {γ : TwoCell κ φ} →
                (γ ⓣ-vert β) ⓣ-vert α ≅ᵗᶜ γ ⓣ-vert (β ⓣ-vert α)
@@ -580,45 +580,45 @@ key-subst-eq ⓣ-vert-assoc = symˢ ⊚-assoc
 
 ⓣ-vert-congˡ : {μ ρ κ : Modality C D} {α α' : TwoCell ρ κ} {β : TwoCell μ ρ} →
                α ≅ᵗᶜ α' → α ⓣ-vert β ≅ᵗᶜ α' ⓣ-vert β
-key-subst-eq (ⓣ-vert-congˡ e) = ⊚-congˡ (key-subst-eq e)
+key-subst-eq (ⓣ-vert-congˡ e) = ⊚-congʳ (key-subst-eq e)
 
 ⓣ-vert-congʳ : {μ ρ κ : Modality C D} {α : TwoCell ρ κ} {β β' : TwoCell μ ρ} →
                β ≅ᵗᶜ β' → α ⓣ-vert β ≅ᵗᶜ α ⓣ-vert β'
-key-subst-eq (ⓣ-vert-congʳ e) = ⊚-congʳ (key-subst-eq e)
+key-subst-eq (ⓣ-vert-congʳ e) = ⊚-congˡ (key-subst-eq e)
 
 ⓣ-hor-congˡ : {μ ρ : Modality C D} {κ φ : Modality D E} {α : TwoCell μ ρ} {β β' : TwoCell κ φ} →
               β ≅ᵗᶜ β' → β ⓣ-hor α ≅ᵗᶜ β' ⓣ-hor α
-key-subst-eq (ⓣ-hor-congˡ {ρ = ρ} e) = ⊚-congˡ (lock-fmap-cong ρ (key-subst-eq e))
+key-subst-eq (ⓣ-hor-congˡ {ρ = ρ} e) = ⊚-congʳ (lock-fmap-cong ρ (key-subst-eq e))
 
 ⓣ-hor-congʳ : {μ ρ : Modality C D} {κ φ : Modality D E} {α α' : TwoCell μ ρ} {β : TwoCell κ φ} →
               α ≅ᵗᶜ α' → β ⓣ-hor α ≅ᵗᶜ β ⓣ-hor α'
-key-subst-eq (ⓣ-hor-congʳ e) = ⊚-congʳ (key-subst-eq e)
+key-subst-eq (ⓣ-hor-congʳ e) = ⊚-congˡ (key-subst-eq e)
 
 ⓣ-hor-id : {μ : Modality C D} {ρ : Modality D E} → id-cell {μ = ρ} ⓣ-hor id-cell {μ = μ} ≅ᵗᶜ id-cell
-key-subst-eq (ⓣ-hor-id {μ = μ}) = transˢ (⊚-id-substˡ _) (lock-fmap-id μ)
+key-subst-eq (ⓣ-hor-id {μ = μ}) = transˢ (id-subst-unitˡ _) (lock-fmap-id μ)
 
 2-cell-interchange : {μ μ' μ'' : Modality D E} {ρ ρ' ρ'' : Modality C D}
                      {α : TwoCell μ μ'} {β : TwoCell μ' μ''} {γ : TwoCell ρ ρ'} {δ : TwoCell ρ' ρ''} →
                      (β ⓣ-vert α) ⓣ-hor (δ ⓣ-vert γ) ≅ᵗᶜ (β ⓣ-hor δ) ⓣ-vert (α ⓣ-hor γ)
 key-subst-eq (2-cell-interchange {ρ'' = ρ''} {δ = δ}) =
-  transˢ (⊚-congˡ (lock-fmap-⊚ ρ'' _ _)) (
+  transˢ (⊚-congʳ (lock-fmap-⊚ ρ'' _ _)) (
   transˢ ⊚-assoc (
-  transˢ (⊚-congˡ (transˢ (symˢ ⊚-assoc) (⊚-congʳ (naturality (transf δ) _)))) (
-  transˢ (⊚-congˡ ⊚-assoc) (
+  transˢ (⊚-congʳ (transˢ (symˢ ⊚-assoc) (⊚-congˡ (naturality (transf δ) _)))) (
+  transˢ (⊚-congʳ ⊚-assoc) (
   symˢ ⊚-assoc))))
 
 ⓣ-hor-unitˡ : {μ ρ : Modality C D} {α : TwoCell μ ρ} →
-              ≅ᵐ-to-2-cell (𝟙-identityˡ ρ) ⓣ-vert (id-cell {μ = 𝟙} ⓣ-hor α) ≅ᵗᶜ α ⓣ-vert ≅ᵐ-to-2-cell (𝟙-identityˡ μ)
+              ≅ᵐ-to-2-cell (𝟙-unitˡ ρ) ⓣ-vert (id-cell {μ = 𝟙} ⓣ-hor α) ≅ᵗᶜ α ⓣ-vert ≅ᵐ-to-2-cell (𝟙-unitˡ μ)
 key-subst-eq (ⓣ-hor-unitˡ {ρ = ρ}) =
-  transˢ (⊚-id-substʳ _) (transˢ (⊚-congˡ (lock-fmap-id ρ)) (transˢ (⊚-id-substʳ _) (symˢ (⊚-id-substˡ _))))
+  transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-id ρ)) (transˢ (id-subst-unitʳ _) (symˢ (id-subst-unitˡ _))))
 
 ⓣ-hor-unitʳ : {μ ρ : Modality C D} {α : TwoCell μ ρ} →
-              ≅ᵐ-to-2-cell (𝟙-identityʳ ρ) ⓣ-vert (α ⓣ-hor id-cell {μ = 𝟙}) ≅ᵗᶜ α ⓣ-vert ≅ᵐ-to-2-cell (𝟙-identityʳ μ)
-key-subst-eq (ⓣ-hor-unitʳ {ρ = ρ}) = ⊚-id-substʳ _
+              ≅ᵐ-to-2-cell (𝟙-unitʳ ρ) ⓣ-vert (α ⓣ-hor id-cell {μ = 𝟙}) ≅ᵗᶜ α ⓣ-vert ≅ᵐ-to-2-cell (𝟙-unitʳ μ)
+key-subst-eq (ⓣ-hor-unitʳ {ρ = ρ}) = id-subst-unitʳ _
 
 ⓣ-hor-assoc : {F : BaseCategory}
               {μ μ' : Modality C D} {ρ ρ' : Modality D E} {κ κ' : Modality E F}
               {α : TwoCell μ μ'} {β : TwoCell ρ ρ'} {γ : TwoCell κ κ'} →
               ≅ᵐ-to-2-cell (ⓜ-assoc _ _ _) ⓣ-vert ((γ ⓣ-hor β) ⓣ-hor α) ≅ᵗᶜ (γ ⓣ-hor (β ⓣ-hor α)) ⓣ-vert ≅ᵐ-to-2-cell (ⓜ-assoc _ _ _)
 key-subst-eq (ⓣ-hor-assoc {μ' = μ'}) =
-  transˢ (⊚-id-substʳ _) (transˢ (⊚-congˡ (lock-fmap-⊚ μ' _ _)) (transˢ (symˢ ⊚-assoc) (symˢ (⊚-id-substˡ _))))
+  transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-⊚ μ' _ _)) (transˢ (symˢ ⊚-assoc) (symˢ (id-subst-unitˡ _))))
