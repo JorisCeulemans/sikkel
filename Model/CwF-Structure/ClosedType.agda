@@ -19,6 +19,8 @@ private
     C : BaseCategory
     Γ Δ Θ : Ctx C
 
+infix 1 _≅ᶜᵗʸ_
+
 
 --------------------------------------------------
 -- Definition of closed types
@@ -79,7 +81,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     where open ≅ᵗᵐ-Reasoning
 
   cl-tm-subst-⊚ : {τ : Δ ⇒ Θ} {σ : Γ ⇒ Δ} (t : Tm Θ T) →
-                      (t [ clT ∣ τ ]cl) [ clT ∣ σ ]cl ≅ᵗᵐ t [ clT ∣ τ ⊚ σ ]cl
+                  (t [ clT ∣ τ ]cl) [ clT ∣ σ ]cl ≅ᵗᵐ t [ clT ∣ τ ⊚ σ ]cl
   cl-tm-subst-⊚ {τ = τ} {σ} t =
     begin
       ι⁻¹[ closed-natural clT σ ] ((ι⁻¹[ closed-natural clT τ ] (t [ τ ]')) [ σ ]')
@@ -94,7 +96,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     where open ≅ᵗᵐ-Reasoning
 
   cl-tm-subst-cong-subst : {σ τ : Γ ⇒ Δ} {t : Tm Δ T} →
-                               σ ≅ˢ τ → t [ clT ∣ σ ]cl ≅ᵗᵐ t [ clT ∣ τ ]cl
+                           σ ≅ˢ τ → t [ clT ∣ σ ]cl ≅ᵗᵐ t [ clT ∣ τ ]cl
   cl-tm-subst-cong-subst {σ = σ} {τ} {t} ε =
     begin
       ι⁻¹[ closed-natural clT σ ] (t [ σ ]')
@@ -107,7 +109,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     where open ≅ᵗᵐ-Reasoning
 
   cl-tm-subst-cong-tm : {σ : Γ ⇒ Δ} {t s : Tm Δ T} →
-                            t ≅ᵗᵐ s → t [ clT ∣ σ ]cl ≅ᵗᵐ s [ clT ∣ σ ]cl
+                        t ≅ᵗᵐ s → t [ clT ∣ σ ]cl ≅ᵗᵐ s [ clT ∣ σ ]cl
   cl-tm-subst-cong-tm t=s = ι⁻¹-cong (tm-subst-cong-tm _ t=s)
 
   cl-tm-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} {t : Tm Θ T} →
@@ -214,3 +216,26 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
 
   /cl : (t : Tm Δ T) → (t /v) ≅ˢ (id-subst Δ ,cl⟨ clT ⟩ t)
   /cl t = ctx-ext-subst-congʳ _ (transᵗᵐ (tm-subst-id t) (ι-congᵉ (symᵉ (closed-id clT))))
+
+
+--------------------------------------------------
+-- Since Ty Γ is a groupoid (and not a setoid), naturality of a closed
+-- type is in fact structure and not a property. Occasionally we will
+-- need to express equivalence of such naturality proofs (e.g. when
+-- comparing ⟨ 𝟙 ∣ T ⟩ and T).
+
+record _≅ᶜᵗʸ_ {A : ClosedTy C} (clA clA' : IsClosedNatural A) : Set₁ where
+  field
+    closed-natural-eq : (σ : Γ ⇒ Δ) → closed-natural clA σ ≅ᵉ closed-natural clA' σ
+open _≅ᶜᵗʸ_ public
+
+module _ {A : ClosedTy C} {clA clA' : IsClosedNatural A} (e : clA ≅ᶜᵗʸ clA') where
+  cl-tm-subst-cl-cong : {σ : Γ ⇒ Δ} {t : Tm Δ A} →
+                        t [ clA ∣ σ ]cl ≅ᵗᵐ t [ clA' ∣ σ ]cl
+  cl-tm-subst-cl-cong {σ = σ} = ι⁻¹-congᵉ (closed-natural-eq e σ)
+
+  ξcl-cong-cl : {Γ : Ctx C} → ξcl clA {Γ = Γ} ≅ᵗᵐ ξcl clA'
+  ξcl-cong-cl = ι⁻¹-congᵉ (closed-natural-eq e π)
+
+  ,cl-cong-cl : {σ : Γ ⇒ Δ} {t : Tm Γ A} → σ ,cl⟨ clA ⟩ t ≅ˢ σ ,cl⟨ clA' ⟩ t
+  ,cl-cong-cl = ctx-ext-subst-congʳ _ (ι-congᵉ (closed-natural-eq e _))

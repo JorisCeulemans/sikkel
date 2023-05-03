@@ -335,6 +335,15 @@ mod-elim-cong (μ ⓜ ρ) e = mod-elim-cong ρ (mod-elim-cong μ e)
 mod-β (μ ⓜ ρ) t = transᵗᵐ (mod-elim-cong ρ (mod-β μ _)) (mod-β ρ t)
 mod-η (μ ⓜ ρ) t = transᵗᵐ (mod-intro-cong μ (mod-η ρ _)) (mod-η μ t)
 
+-- The unit modality or composition of modalities preserve the
+-- structure of closed types being natural.
+𝟙-preserves-cl : {A : ClosedTy C} (clA : IsClosedNatural A) → mod-closed 𝟙 clA ≅ᶜᵗʸ clA
+closed-natural-eq (𝟙-preserves-cl clA) σ = reflᵗʸ-unitˡ
+
+ⓜ-preserves-cl : (μ : Modality D E) (ρ : Modality C D) {A : ClosedTy C} (clA : IsClosedNatural A) →
+                 mod-closed (μ ⓜ ρ) clA ≅ᶜᵗʸ mod-closed μ (mod-closed ρ clA)
+closed-natural-eq (ⓜ-preserves-cl μ ρ clA) σ = transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ (mod-cong-trans μ)))
+
 
 --------------------------------------------------
 -- Equivalence of modalities
