@@ -224,88 +224,88 @@ eq suc'-const γ = refl
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = const-func suc
 
-prim-nat-elim : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → ℕ →  Tm Γ T
-prim-nat-elim T z s zero    ⟨ x , γ ⟩' = z ⟨ x , γ ⟩'
-prim-nat-elim T z s (suc n) ⟨ x , γ ⟩' = s ⟨ x , [ γ , prim-nat-elim T z s n ⟨ x , γ ⟩' ] ⟩'
-naturality (prim-nat-elim T z s zero)    ρ refl = naturality z ρ refl
-naturality (prim-nat-elim T z s (suc n)) ρ refl =
-  trans (ty-cong T refl) (naturality s ρ (cong [ _ ,_] (naturality (prim-nat-elim T z s n) ρ refl)))
+prim-nat-rec : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → ℕ →  Tm Γ T
+prim-nat-rec T z s zero    ⟨ x , γ ⟩' = z ⟨ x , γ ⟩'
+prim-nat-rec T z s (suc n) ⟨ x , γ ⟩' = s ⟨ x , [ γ , prim-nat-rec T z s n ⟨ x , γ ⟩' ] ⟩'
+naturality (prim-nat-rec T z s zero)    ρ refl = naturality z ρ refl
+naturality (prim-nat-rec T z s (suc n)) ρ refl =
+  trans (ty-cong T refl) (naturality s ρ (cong [ _ ,_] (naturality (prim-nat-rec T z s n) ρ refl)))
 
-prim-nat-elim' : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm Γ Nat' →  Tm Γ T
-prim-nat-elim' T z s n ⟨ x , γ ⟩' = prim-nat-elim T z s (n ⟨ x , γ ⟩') ⟨ x , γ ⟩'
-naturality (prim-nat-elim' {Γ = Γ} T z s n) {γy = γy} ρ refl with n ⟨ _ , γy ⟩' | n ⟨ _ , Γ ⟪ ρ ⟫ γy ⟩' | naturality n {γy = γy} ρ refl
-naturality (prim-nat-elim' {Γ = Γ} T z s n) {γy = γy} ρ refl | m | .m | refl = naturality (prim-nat-elim T z s m) ρ refl
+prim-nat-rec' : (T : Ty Γ) → Tm Γ T → Tm (Γ ,, T) (T [ π ]) → Tm Γ Nat' →  Tm Γ T
+prim-nat-rec' T z s n ⟨ x , γ ⟩' = prim-nat-rec T z s (n ⟨ x , γ ⟩') ⟨ x , γ ⟩'
+naturality (prim-nat-rec' {Γ = Γ} T z s n) {γy = γy} ρ refl with n ⟨ _ , γy ⟩' | n ⟨ _ , Γ ⟪ ρ ⟫ γy ⟩' | naturality n {γy = γy} ρ refl
+naturality (prim-nat-rec' {Γ = Γ} T z s n) {γy = γy} ρ refl | m | .m | refl = naturality (prim-nat-rec T z s m) ρ refl
 
-nat-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ Nat' →  Tm Γ T
-nat-elim T z s n = prim-nat-elim' T z (ap s) n
+nat-rec : (T : Ty Γ) → Tm Γ T → Tm Γ (T ⇛ T) → Tm Γ Nat' →  Tm Γ T
+nat-rec T z s n = prim-nat-rec' T z (ap s) n
 
-prim-nat-elim-cong : {z z' : Tm Γ T} {s s' : Tm (Γ ,, T) (T [ π ])} →
-                     z ≅ᵗᵐ z' → s ≅ᵗᵐ s' →
-                     (n n' : ℕ) → n ≡ n' →
-                     prim-nat-elim T z s n ≅ᵗᵐ prim-nat-elim T z' s' n'
-eq (prim-nat-elim-cong           ez es zero    .zero    refl) γ = eq ez γ
-eq (prim-nat-elim-cong {s' = s'} ez es (suc n) .(suc n) refl) γ =
-  trans (eq es _) (cong (λ x → s' ⟨ _ , [ γ , x ] ⟩') (eq (prim-nat-elim-cong ez es n n refl) γ))
+prim-nat-rec-cong : {z z' : Tm Γ T} {s s' : Tm (Γ ,, T) (T [ π ])} →
+                    z ≅ᵗᵐ z' → s ≅ᵗᵐ s' →
+                    (n n' : ℕ) → n ≡ n' →
+                    prim-nat-rec T z s n ≅ᵗᵐ prim-nat-rec T z' s' n'
+eq (prim-nat-rec-cong           ez es zero    .zero    refl) γ = eq ez γ
+eq (prim-nat-rec-cong {s' = s'} ez es (suc n) .(suc n) refl) γ =
+  trans (eq es _) (cong (λ x → s' ⟨ _ , [ γ , x ] ⟩') (eq (prim-nat-rec-cong ez es n n refl) γ))
 
-nat-elim-cong : {z z' : Tm Γ T} {s s' : Tm Γ (T ⇛ T)} {n n' : Tm Γ Nat'} →
-                z ≅ᵗᵐ z' → s ≅ᵗᵐ s' → n ≅ᵗᵐ n' →
-                nat-elim T z s n ≅ᵗᵐ nat-elim T z' s' n'
-eq (nat-elim-cong ez es en) γ = eq (prim-nat-elim-cong ez (ap-cong es) _ _ (eq en γ)) γ
+nat-rec-cong : {z z' : Tm Γ T} {s s' : Tm Γ (T ⇛ T)} {n n' : Tm Γ Nat'} →
+               z ≅ᵗᵐ z' → s ≅ᵗᵐ s' → n ≅ᵗᵐ n' →
+               nat-rec T z s n ≅ᵗᵐ nat-rec T z' s' n'
+eq (nat-rec-cong ez es en) γ = eq (prim-nat-rec-cong ez (ap-cong es) _ _ (eq en γ)) γ
 
-prim-nat-elim-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm (Δ ,, T) (T [ π ])} (n : ℕ) →
-                        (prim-nat-elim T z s n) [ σ ]' ≅ᵗᵐ prim-nat-elim (T [ σ ]) (z [ σ ]') (ι⁻¹[ ty-subst-cong-subst-2-2 T (⊹-π-comm σ) ] (s [ σ ⊹ ]')) n
-eq (prim-nat-elim-natural                         zero)    γ = refl
-eq (prim-nat-elim-natural {Δ = Δ} {T = T} {s = s} (suc n)) γ =
-  sym (trans (ty-cong T refl) (naturality s hom-id (to-Σ-ty-eq T (ctx-id Δ) (trans (ty-cong-2-1 T hom-idʳ) (trans (ty-id T) (sym (eq (prim-nat-elim-natural n) γ)))))))
+prim-nat-rec-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm (Δ ,, T) (T [ π ])} (n : ℕ) →
+                       (prim-nat-rec T z s n) [ σ ]' ≅ᵗᵐ prim-nat-rec (T [ σ ]) (z [ σ ]') (ι⁻¹[ ty-subst-cong-subst-2-2 T (⊹-π-comm σ) ] (s [ σ ⊹ ]')) n
+eq (prim-nat-rec-natural                         zero)    γ = refl
+eq (prim-nat-rec-natural {Δ = Δ} {T = T} {s = s} (suc n)) γ =
+  sym (trans (ty-cong T refl) (naturality s hom-id (to-Σ-ty-eq T (ctx-id Δ) (trans (ty-cong-2-1 T hom-idʳ) (trans (ty-id T) (sym (eq (prim-nat-rec-natural n) γ)))))))
 
-nat-elim-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm Δ (T ⇛ T)} {n : Tm Δ Nat'} →
-                   (nat-elim T z s n) [ σ ]' ≅ᵗᵐ nat-elim (T [ σ ]) (z [ σ ]') (ι⁻¹[ ⇛-natural σ ] (s [ σ ]')) (ι⁻¹[ Const-natural _ σ ] (n [ σ ]'))
-eq (nat-elim-natural {σ = σ} {n = n}) γ = trans (eq (prim-nat-elim-natural {σ = σ} (n ⟨ _ , func σ γ ⟩')) γ)
-                                                (eq (prim-nat-elim-cong reflᵗᵐ tm-proof (n ⟨ _ , func σ γ ⟩') _ refl ) γ)
+nat-rec-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm Δ (T ⇛ T)} {n : Tm Δ Nat'} →
+                  (nat-rec T z s n) [ σ ]' ≅ᵗᵐ nat-rec (T [ σ ]) (z [ σ ]') (ι⁻¹[ ⇛-natural σ ] (s [ σ ]')) (ι⁻¹[ Const-natural _ σ ] (n [ σ ]'))
+eq (nat-rec-natural {σ = σ} {n = n}) γ = trans (eq (prim-nat-rec-natural {σ = σ} (n ⟨ _ , func σ γ ⟩')) γ)
+                                               (eq (prim-nat-rec-cong reflᵗᵐ tm-proof (n ⟨ _ , func σ γ ⟩') _ refl ) γ)
   where
     tm-proof = transᵗᵐ (ι⁻¹-cong (ap-natural σ _)) ι-symˡ
 
-prim-nat-elim-ι : {T T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} {z : Tm Γ T'} {s : Tm (Γ ,, T') (T' [ π ])} (n : ℕ) →
-                  ι[ T=T' ] (prim-nat-elim T' z s n)
-                    ≅ᵗᵐ
-                  prim-nat-elim T (ι[ T=T' ] z)
-                                  (ι⁻¹[ ty-subst-cong-subst-2-1 T (ctx-ext-subst-β₁ _ _) ]
-                                        ((ι[ ty-subst-cong-ty π T=T' ] s) [ to-ext-subst _ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ) ]'))
-                                  n
-eq (prim-nat-elim-ι zero)                                  γ = refl
-eq (prim-nat-elim-ι {T = T} {T=T' = T=T'} {s = s} (suc n)) γ =
-  trans (cong (λ x → func (to T=T') (s ⟨ _ , [ γ , x ] ⟩')) (trans (sym (eq (isoʳ T=T') _)) (cong (func (from T=T')) (eq (prim-nat-elim-ι n) γ))))
+prim-nat-rec-ι : {T T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} {z : Tm Γ T'} {s : Tm (Γ ,, T') (T' [ π ])} (n : ℕ) →
+                 ι[ T=T' ] (prim-nat-rec T' z s n)
+                   ≅ᵗᵐ
+                 prim-nat-rec T (ι[ T=T' ] z)
+                                 (ι⁻¹[ ty-subst-cong-subst-2-1 T (ctx-ext-subst-β₁ _ _) ]
+                                       ((ι[ ty-subst-cong-ty π T=T' ] s) [ to-ext-subst _ π (ι⁻¹[ ty-subst-cong-ty π T=T' ] ξ) ]'))
+                                 n
+eq (prim-nat-rec-ι zero)                                  γ = refl
+eq (prim-nat-rec-ι {T = T} {T=T' = T=T'} {s = s} (suc n)) γ =
+  trans (cong (λ x → func (to T=T') (s ⟨ _ , [ γ , x ] ⟩')) (trans (sym (eq (isoʳ T=T') _)) (cong (func (from T=T')) (eq (prim-nat-rec-ι n) γ))))
         (sym (strong-ty-id T))
 
-nat-elim-ι : {T T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} {z : Tm Γ T'} {s : Tm Γ (T' ⇛ T')} {n : Tm Γ Nat'} →
-             ι[ T=T' ] (nat-elim T' z s n) ≅ᵗᵐ nat-elim T (ι[ T=T' ] z) (ι[ ⇛-cong T=T' T=T' ] s) n
-eq (nat-elim-ι {T = T} {n = n}) γ = trans (eq (prim-nat-elim-ι (n ⟨ _ , γ ⟩')) γ) (eq (prim-nat-elim-cong reflᵗᵐ tm-proof _ (n ⟨ _ , γ ⟩') refl) γ)
+nat-rec-ι : {T T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} {z : Tm Γ T'} {s : Tm Γ (T' ⇛ T')} {n : Tm Γ Nat'} →
+            ι[ T=T' ] (nat-rec T' z s n) ≅ᵗᵐ nat-rec T (ι[ T=T' ] z) (ι[ ⇛-cong T=T' T=T' ] s) n
+eq (nat-rec-ι {T = T} {n = n}) γ = trans (eq (prim-nat-rec-ι (n ⟨ _ , γ ⟩')) γ) (eq (prim-nat-rec-cong reflᵗᵐ tm-proof _ (n ⟨ _ , γ ⟩') refl) γ)
   where
     tm-proof : _ ≅ᵗᵐ _
     eq tm-proof γ = strong-ty-id T
 
-nat-elim-cl-natural : {T : ClosedTy C} (clT : IsClosedNatural T)
-                      {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm Δ (T ⇛ T)} {n : Tm Δ Nat'} →
-                      (nat-elim T z s n) [ clT ∣ σ ]cl ≅ᵗᵐ nat-elim T (z [ clT ∣ σ ]cl) (s [ fun-closed clT clT ∣ σ ]cl) (n [ const-closed ∣ σ ]cl)
-nat-elim-cl-natural clT =
-  transᵗᵐ (ι⁻¹-cong nat-elim-natural) (transᵗᵐ nat-elim-ι (nat-elim-cong reflᵗᵐ (transᵗᵐ (ι-congᵉ ⇛-cong-sym) (symᵗᵐ ι⁻¹-trans)) reflᵗᵐ))
+nat-rec-cl-natural : {T : ClosedTy C} (clT : IsClosedNatural T)
+                     {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm Δ (T ⇛ T)} {n : Tm Δ Nat'} →
+                     (nat-rec T z s n) [ clT ∣ σ ]cl ≅ᵗᵐ nat-rec T (z [ clT ∣ σ ]cl) (s [ fun-closed clT clT ∣ σ ]cl) (n [ const-closed ∣ σ ]cl)
+nat-rec-cl-natural clT =
+  transᵗᵐ (ι⁻¹-cong nat-rec-natural) (transᵗᵐ nat-rec-ι (nat-rec-cong reflᵗᵐ (transᵗᵐ (ι-congᵉ ⇛-cong-sym) (symᵗᵐ ι⁻¹-trans)) reflᵗᵐ))
 
 module _ {T : Ty Γ} (z : Tm Γ T) (s : Tm Γ (T ⇛ T)) where
-  β-nat-zero : nat-elim T z s zero' ≅ᵗᵐ z
+  β-nat-zero : nat-rec T z s zero' ≅ᵗᵐ z
   eq β-nat-zero _ = refl
 
   β-nat-suc : (k : Tm Γ Nat') →
-              nat-elim T z s (suc' k) ≅ᵗᵐ app s (nat-elim T z s k)
+              nat-rec T z s (suc' k) ≅ᵗᵐ app s (nat-rec T z s k)
   eq (β-nat-suc k) _ = refl
 
-η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ nat-elim Nat' zero' suc-func k
+η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ nat-rec Nat' zero' suc-func k
 eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
   where
-    go : (n : ℕ) → n ≡ nat-elim Nat' zero' suc-func (const n) ⟨ _ , γ ⟩'
+    go : (n : ℕ) → n ≡ nat-rec Nat' zero' suc-func (const n) ⟨ _ , γ ⟩'
     go zero    = refl
     go (suc n) = cong suc (go n)
 
--- The following function could be defined inside Sikkel by using nat-elim.
+-- The following function could be defined inside Sikkel by using nat-rec.
 -- However, with the following definition the extraction mechanism will produce Agda programs
 -- that make use of Agda's `_+_` instead of a custom Sikkel definition, which leads to better performance.
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
