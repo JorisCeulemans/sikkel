@@ -25,6 +25,8 @@ import Model.Type.Constant as M
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ as Syn
 open Syn.AtomicSub
+open Syn.AtomicRen
+open Syn.AtomicRenSub
 import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ as DB
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ
 open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧ as DBInt
@@ -117,6 +119,24 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦ id-sub ⊚a τᵃ ⟧sub = ⟦ τᵃ ⟧asub
 ⟦ σ      ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
 
+⟦_⟧var : ∀ {x μ} → Syn.Var x μ T 𝟙 Γ → SemTm ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx ⟦ T ⟧ty
+⟦_⟧var {x = x} {μ = μ} v = ⟦⟧var-helper (erase-names-var v) μ (eq-cell (sym mod-unitˡ))
+
+⟦_⟧rd : ∀ {μ} → RenData μ T Γ → SemTm ⟦ Γ ⟧ctx M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦_⟧rd {μ = μ} (Syn.rendata new-name new-var) = M.mod-intro ⟦ μ ⟧mod ⟦ new-var ⟧var
+
+⟦_⟧aren : AtomicRen Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
+⟦ [] ⟧aren = M.!◇ _
+⟦ _∷_/_ {μ = μ} {T = T} σ t x ⟧aren = ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ⟦ t ⟧rd
+⟦ σ ⊚π ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
+⟦ σ ,lock⟨ μ ⟩ ⟧aren = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
+⟦ atomic-key Λ₁ Λ₂ α ⟧aren = M.to (⟦⟧ltel Λ₂)
+                             M.⊚ (M.key-subst ⟦ α ⟧two-cell)
+                             M.⊚ M.from (⟦⟧ltel Λ₁) 
+
+⟦_⟧ren : Ren Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
+⟦ Syn.Ren.id ⟧ren = M.id-subst _
+⟦ σs ⊚a σ ⟧ren = ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren
 
 {-
 ⊹-sound : ∀ {x} (σ : Subst Δ Γ) {T : Ty} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst

@@ -19,6 +19,7 @@ open ModeTheoryInterpretation ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧
+import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ as Syn
 
 private variable
   m n o : Mode
@@ -42,7 +43,30 @@ postulate
   /-sound : {Γ : Ctx m} {μ : Modality n m} {T : Ty n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : String) →
             ⟦ t / x ⟧sub M.≅ˢ M.id-subst _ M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm
 
-  lock𝟙-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) → ⟦ lock𝟙-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm
+atomic-rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : AtomicRen.AtomicRen Δ Γ) →
+                  ⟦ AtomicRen.atomic-rename-tm t σ ⟧tm M.≅ᵗᵐ (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl )
+atomic-rename-tm-sound  σ = {!!}
+
+rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : Ren Δ Γ) →
+                  ⟦ rename-tm t σ ⟧tm M.≅ᵗᵐ (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧ren ]cl )
+rename-tm-sound  {μ} {m} {Γ} {T} t Syn.RenSub.id =
+  M.symᵗᵐ (M.cl-tm-subst-id (ty-closed-natural T) ⟦ t ⟧tm)
+rename-tm-sound {Γ = Γ} {T = T} t (σs ⊚a σ) = M.transᵗᵐ step3 (M.transᵗᵐ step1 step2)
+  where step0 : ⟦ rename-tm t σs ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl
+        step0 = rename-tm-sound t σs
+        step1 : ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl M.≅ᵗᵐ
+                ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
+        step1 = M.cl-tm-subst-cong-tm (ty-closed-natural T) step0
+        step2 : ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl  M.≅ᵗᵐ
+                ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren ]cl
+        step2 = M.cl-tm-subst-⊚ (ty-closed-natural T) ⟦ t ⟧tm
+        step3 : ⟦ AtomicRen.atomic-rename-tm (rename-tm t σs) σ ⟧tm M.≅ᵗᵐ
+                  ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
+        step3 = atomic-rename-tm-sound (rename-tm t σs) σ
+
+lock𝟙-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) → ⟦ lock𝟙-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm
+lock𝟙-sound t = M.transᵗᵐ (rename-tm-sound t lock𝟙-ren)
+  {! !}
 
 ∙¹-sound : {Γ : Ctx m} {A B : Ty m} (f : Tm Γ (A ⇛ B)) (a : Tm Γ A) →
            ⟦ f ∙¹ a ⟧tm M.≅ᵗᵐ M.app ⟦ f ⟧tm ⟦ a ⟧tm
