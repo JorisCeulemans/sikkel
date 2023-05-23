@@ -221,6 +221,9 @@ suc' = const-map suc
 suc'-const : {n : ℕ} {Γ : Ctx C} → suc' {Γ} (const n) ≅ᵗᵐ const (suc n)
 eq suc'-const γ = refl
 
+suc'-cl-natural : (σ : Γ ⇒ Δ) {n : Tm Δ Nat'} → (suc' n) [ const-closed ∣ σ ]cl ≅ᵗᵐ suc' (n [ const-closed ∣ σ ]cl)
+suc'-cl-natural σ = transᵗᵐ (ι-cong (const-map-natural suc)) ι-symˡ
+
 suc-func : Tm Γ (Nat' ⇛ Nat')
 suc-func = const-func suc
 
@@ -310,3 +313,14 @@ eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
 -- that make use of Agda's `_+_` instead of a custom Sikkel definition, which leads to better performance.
 nat-sum : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 nat-sum = const-func₂ _+_
+
+-- The (dependent) induction principle for natural numbers.
+nat-ind : (T : Ty (Γ ,, Nat')) →
+          Tm Γ (T [ zero' /v ]) →
+          Tm (Γ ,, Nat' ,, T) (T [ (π ,cl⟨ const-closed ⟩ suc' (ξcl const-closed)) ⊚ π ]) →
+          Tm (Γ ,, Nat') T
+nat-ind T z s ⟨ x , [ γ , zero  ] ⟩' = z ⟨ x , γ ⟩'
+nat-ind T z s ⟨ x , [ γ , suc n ] ⟩' = s ⟨ x , [ [ γ , n ] , nat-ind T z s ⟨ x , [ γ , n ] ⟩' ] ⟩'
+naturality (nat-ind T z s) {γy = [ _ , zero  ]} ρ refl = naturality z ρ refl
+naturality (nat-ind T z s) {γy = [ _ , suc n ]} ρ refl =
+  trans (ty-cong T refl) (naturality s ρ (cong [ _ ,_] (naturality (nat-ind T z s) {γy = [ _ , n ]} ρ refl)))

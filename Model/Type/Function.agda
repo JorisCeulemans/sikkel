@@ -470,7 +470,7 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
   ⇛-cl-β : (b : Tm (Γ ,, A) B) (a : Tm Γ A) → app (lamcl clB b) a ≅ᵗᵐ b [ clB ∣ id-subst Γ ,cl⟨ clA ⟩ a ]cl
   ⇛-cl-β b a =
     transᵗᵐ (⇛-β _ a) (
-    transᵗᵐ (ι⁻¹-cong (transᵗᵐ (symᵗᵐ ι-subst-commute) (ι-cong (tm-subst-cong-subst b (/cl clA a))))) (
+    transᵗᵐ (ι⁻¹-cong (transᵗᵐ (symᵗᵐ ι-subst-commute) (ι-cong (tm-subst-cong-subst b (/v-/cl clA a))))) (
     transᵗᵐ (symᵗᵐ ι-trans) (
     transᵗᵐ (symᵗᵐ ι-trans) (
     ι-congᵉ (to-symᵗʸ-eq (

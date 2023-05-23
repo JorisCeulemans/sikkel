@@ -93,6 +93,9 @@ tm-to-subst {Γ = Γ}{T = T} t = ⟨ id-subst Γ , t [ id-subst Γ ]' ∈ T ⟩
 
 _/v = tm-to-subst
 
+/v-cong : {t t' : Tm Γ T} → t ≅ᵗᵐ t' → t /v ≅ˢ t' /v
+/v-cong e = ctx-ext-subst-cong-tm _ (tm-subst-cong-tm _ e)
+
 _⊹ : (σ : Δ ⇒ Γ) → Δ ,, T [ σ ] ⇒ Γ ,, T
 _⊹ {Δ = Δ} {T = T} σ = ⟨ σ ⊚ π , ι⁻¹[ ty-subst-comp T σ π ] ξ ∈ T ⟩
 
@@ -129,6 +132,9 @@ from (,,-cong T=S) = ,,-map (from T=S)
 to (,,-cong T=S) = ,,-map (to T=S)
 eq (isoˡ (,,-cong T=S)) [ γ , t ] = cong [ γ ,_] (eq (isoˡ T=S) t)
 eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
+
+,,-map-π : (φ : T ↣ S) → π ⊚ ,,-map φ ≅ˢ π
+eq (,,-map-π φ) _ = refl
 
 -- Context extension which includes a variable name
 _,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C

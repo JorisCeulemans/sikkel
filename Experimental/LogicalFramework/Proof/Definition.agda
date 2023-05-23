@@ -94,13 +94,16 @@ data Proof {m : Mode} : Ctx m → Set where
                    (Ξ ⊢ φ [ false / x ]bprop) →
                    (Ξ ,,ᵛ μ ∣ x ∈ Bool' ⊢ φ)
   -}
-  nat-induction' : {Γ Δ : Ctx m} {μ : Modality n m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, μ ∣ x ∈ Nat') →
+  nat-induction' : {Γ Δ : Ctx m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, x ∈ Nat') →
                    Proof Γ → Proof Δ → Proof Δ
+    -- ^ We cannot just return a proof of type Proof (Γ ,, x ∈ Nat')
+    -- because in that case pattern matching in the proof checker
+    -- would fail. Users are intended to use nat-induction defined below.
 
   fun-cong : Proof Γ → Tm (Γ ,lock⟨ μ ⟩) T → Proof Γ
   cong : {T S : Ty m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Proof (Γ ,lock⟨ μ ⟩) → Proof Γ
   hole : String → Proof Γ
 
-nat-induction : {Γ : Ctx m} {μ : Modality n m} {x : String} (hyp : String) →
-                Proof Γ → Proof (Γ ,, μ ∣ x ∈ Nat') → Proof (Γ ,, μ ∣ x ∈ Nat')
+nat-induction : {Γ : Ctx m} {x : String} (hyp : String) →
+                Proof Γ → Proof (Γ ,, x ∈ Nat') → Proof (Γ ,, x ∈ Nat')
 nat-induction hyp = nat-induction' hyp Ag.refl

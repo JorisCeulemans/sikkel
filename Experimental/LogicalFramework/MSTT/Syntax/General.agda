@@ -33,7 +33,8 @@ data Ctx (m : Mode) : Set where
     -- ^ All variables have a name of type Name and appear under a modality.
   _,lock⟨_⟩ : (Γ : Ctx n) (μ : Modality m n) → Ctx m
 
-pattern _,,_∈_ Γ x T = Γ ,, 𝟙 ∣ x ∈ T
+_,,_∈_ : Ctx m → Name → Ty m → Ctx m
+Γ ,, x ∈ T = Γ ,, 𝟙 ∣ x ∈ T
 
 private variable
   Γ Δ Θ : Ctx m
