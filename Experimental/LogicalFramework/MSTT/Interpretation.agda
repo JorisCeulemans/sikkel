@@ -81,7 +81,7 @@ mid-weaken-tm-sound Δ (lam[ _ ∈ _ ] t) = M.transᵗᵐ (sλ-natural _) (sλ-c
 mid-weaken-tm-sound Δ (f ∙ t) = M.transᵗᵐ (∙ₛ-natural _) (∙ₛ-cong (mid-weaken-tm-sound Δ f) (mid-weaken-tm-sound Δ t))
 mid-weaken-tm-sound Δ zero = sconst-natural _
 mid-weaken-tm-sound Δ suc = sconst-func-natural _
-mid-weaken-tm-sound Δ (nat-elim a f) = M.transᵗᵐ (snat-elim-natural _) (snat-elim-cong (mid-weaken-tm-sound Δ a) (mid-weaken-tm-sound Δ f))
+mid-weaken-tm-sound Δ (nat-rec a f) = M.transᵗᵐ (snat-rec-natural _) (snat-rec-cong (mid-weaken-tm-sound Δ a) (mid-weaken-tm-sound Δ f))
 mid-weaken-tm-sound Δ true = sconst-natural _
 mid-weaken-tm-sound Δ false = sconst-natural _
 mid-weaken-tm-sound Δ (if b t f) =
@@ -171,8 +171,8 @@ tm-subst-sound (f ∙ t) σ                | nothing =
   M.transᵗᵐ (∙ₛ-natural _) (∙ₛ-cong (tm-subst-sound f σ) (tm-subst-sound t σ))
 tm-subst-sound zero σ                   | nothing = sconst-natural _
 tm-subst-sound suc σ                    | nothing = sconst-func-natural _
-tm-subst-sound (nat-elim a f) σ         | nothing =
-  M.transᵗᵐ (snat-elim-natural _) (snat-elim-cong (tm-subst-sound a σ) (tm-subst-sound f σ))
+tm-subst-sound (nat-rec a f) σ         | nothing =
+  M.transᵗᵐ (snat-rec-natural _) (snat-rec-cong (tm-subst-sound a σ) (tm-subst-sound f σ))
 tm-subst-sound true σ                   | nothing = sconst-natural _
 tm-subst-sound false σ                  | nothing = sconst-natural _
 tm-subst-sound (if b t f) σ             | nothing =

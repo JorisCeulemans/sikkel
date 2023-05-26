@@ -66,7 +66,7 @@ data Tm : Ctx m → Ty m → Set where
   _∙_ : {μ : Modality n m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ S
   zero : Tm Γ Nat'
   suc : Tm Γ Nat' → Tm Γ Nat'
-  nat-elim : {A : Ty m} → Tm Γ A → Tm Γ (A ⇛ A) → Tm Γ Nat' → Tm Γ A
+  nat-rec : {A : Ty m} → Tm Γ A → Tm Γ (A ⇛ A) → Tm Γ Nat' → Tm Γ A
   true false : Tm Γ Bool'
   if : {A : Ty m} → Tm Γ Bool' → (t f : Tm Γ A) → Tm Γ A
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
@@ -97,7 +97,7 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (f ∙ t) σ = traverse-tm f σ ∙ traverse-tm t (lock σ)
   traverse-tm zero σ = zero
   traverse-tm (suc t) σ = suc (traverse-tm t σ)
-  traverse-tm (nat-elim z s n) σ = nat-elim (traverse-tm z σ) (traverse-tm s σ) (traverse-tm n σ)
+  traverse-tm (nat-rec z s n) σ = nat-rec (traverse-tm z σ) (traverse-tm s σ) (traverse-tm n σ)
   traverse-tm true σ = true
   traverse-tm false σ = false
   traverse-tm (if b t f) σ = if (traverse-tm b σ) (traverse-tm t σ) (traverse-tm f σ)
@@ -504,7 +504,7 @@ tm-weaken-subst-trivial-multi ◇ (lam[ _ ∈ _ ] t) = cong (lam[ _ ∈ _ ]_) (t
 tm-weaken-subst-trivial-multi ◇ (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-multi ◇ f) (tm-weaken-subst-trivial-multi ◇ t)
 tm-weaken-subst-trivial-multi ◇ zero = refl
 tm-weaken-subst-trivial-multi ◇ suc = refl
-tm-weaken-subst-trivial-multi ◇ (nat-elim a f) = cong₂ nat-elim (tm-weaken-subst-trivial-multi ◇ a) (tm-weaken-subst-trivial-multi ◇ f)
+tm-weaken-subst-trivial-multi ◇ (nat-rec a f) = cong₂ nat-rec (tm-weaken-subst-trivial-multi ◇ a) (tm-weaken-subst-trivial-multi ◇ f)
 tm-weaken-subst-trivial-multi ◇ true = refl
 tm-weaken-subst-trivial-multi ◇ false = refl
 tm-weaken-subst-trivial-multi ◇ (if b t f) =
@@ -517,7 +517,7 @@ tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (lam[ _ ∈ _ ] t) = cong (lam[ _ 
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) f) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) t)
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) zero = refl
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) suc = refl
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (nat-elim a f) = cong₂ nat-elim (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) a) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) f)
+tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (nat-rec a f) = cong₂ nat-rec (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) a) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) f)
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) true = refl
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) false = refl
 tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (if b t f) =

@@ -143,7 +143,7 @@ zero =t? zero = return Ag.refl
 suc m =t? suc n = do
   refl ← m =t? n
   return Ag.refl
-nat-elim z s n =t? nat-elim z' s' n' = do
+nat-rec z s n =t? nat-rec z' s' n' = do
   refl ← z =t? z'
   refl ← s =t? s'
   refl ← n =t? n'

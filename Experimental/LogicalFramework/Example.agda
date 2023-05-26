@@ -4,6 +4,7 @@
 
 module Experimental.LogicalFramework.Example where
 
+open import Data.List
 open import Data.Nat hiding (_+_; _≡ᵇ_)
 open import Relation.Binary.PropositionalEquality using (_≡_) -- ; refl)
 
@@ -38,7 +39,7 @@ plus-helper : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ Nat')
 plus-helper = lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] suc (svar "f" ∙ svar "n"))
 
 plus' : Tm Γ Nat' → Tm Γ (Nat' ⇛ Nat')
-plus' m = nat-elim id plus-helper m
+plus' m = nat-rec id plus-helper m
 
 plus : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
 plus = lam[ "m" ∈ Nat' ] plus' (svar "m")
@@ -68,16 +69,15 @@ proof-plus-zeroʳ : {Γ : Ctx ★} → Proof Γ
 proof-plus-zeroʳ {Γ = Γ} =
   ∀-intro[ 𝟙 ∣ "n" ∈ Nat' ]
   (nat-induction "ind-hyp"
-    (trans (id ∙ zero) (fun-cong {μ = 𝟙} nat-elim-β-zero zero) fun-β)
+    (trans (id ∙ zero) (fun-cong {μ = 𝟙} nat-rec-β-zero zero) fun-β)
     (trans (plus-helper ∙ plus' (svar "n") ∙ zero)
-           (fun-cong {μ = 𝟙} nat-elim-β-suc zero)
+           (fun-cong {μ = 𝟙} nat-rec-β-suc zero)
            (trans ((lam[ "n" ∈ Nat' ] suc ((plus' (var' _ {vsuc vzero} (id-cell {★}))) ∙ svar "n")) ∙ zero)
                   (fun-cong {μ = 𝟙} fun-β zero)
                   (trans (suc (plus' (svar "n") ∙ zero))
                          fun-β
                          (cong-suc (plus' (svar "n") ∙ zero) (svar "n") (assumption' "ind-hyp" {𝟙} {𝟙} (id-cell {★})))))))
 
-open import Data.List
 test-plus-zeroʳ : (PCResult.goals <$> check-proof [] proof-plus-zeroʳ plus-zeroʳ) ≡ ok []
 test-plus-zeroʳ = refl
 
@@ -91,14 +91,14 @@ proof-plus-sucʳ : {Γ : Ctx ★} → Proof Γ
 proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ]
     (trans (id ∙ suc (svar "n"))
-           (fun-cong nat-elim-β-zero (suc (svar "n")))
+           (fun-cong nat-rec-β-zero (suc (svar "n")))
            (trans (suc (svar "n"))
                   fun-β
                   (sym (cong-suc (plus' zero ∙ svar "n") (svar "n")
-                                 (trans (id ∙ svar "n") (fun-cong nat-elim-β-zero (svar "n")) fun-β))))))
+                                 (trans (id ∙ svar "n") (fun-cong nat-rec-β-zero (svar "n")) fun-β))))))
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ]
     (trans (plus-helper ∙ plus' (svar "m") ∙ suc (svar "n"))
-           (fun-cong nat-elim-β-suc (suc (svar "n")))
+           (fun-cong nat-rec-β-suc (suc (svar "n")))
            (trans ((lam[ "n" ∈ Nat' ] suc (plus' (svar "m") ∙ svar "n")) ∙ suc (svar "n"))
                   (fun-cong fun-β (suc (svar "n")))
                   (trans (suc (plus' (svar "m") ∙ suc (svar "n"))) fun-β
@@ -107,7 +107,7 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                                   (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (svar "m") ∙ suc (svar "n") ≡ᵇ suc (plus' (svar "m") ∙ svar "n"))
                                             (assumption' "ind-hyp" {𝟙} {𝟙} (id-cell {★})) (svar "n"))
                                   (sym (trans (plus-helper ∙ plus' (svar "m") ∙ svar "n")
-                                              (fun-cong nat-elim-β-suc (svar "n"))
+                                              (fun-cong nat-rec-β-suc (svar "n"))
                                               (trans ((lam[ "n" ∈ Nat' ] suc (plus' (svar "m") ∙ svar "n")) ∙ svar "n")
                                                      (fun-cong fun-β (svar "n"))
                                                      fun-β)))))))))
@@ -123,10 +123,10 @@ plus-comm = ∀[ 𝟙 ∣ "m" ∈ Nat' ] (∀[ 𝟙 ∣ "n" ∈ Nat' ] (
 
 proof-plus-comm : {Γ : Ctx ★} → Proof Γ
 proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
-  (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans (id ∙ svar "n") (fun-cong nat-elim-β-zero (svar "n")) (trans (svar "n") fun-β (sym (∀-elim 𝟙 plus-zeroʳ proof-plus-zeroʳ (svar "n")))))
+  (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ] trans (id ∙ svar "n") (fun-cong nat-rec-β-zero (svar "n")) (trans (svar "n") fun-β (sym (∀-elim 𝟙 plus-zeroʳ proof-plus-zeroʳ (svar "n")))))
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ]
     trans (plus-helper ∙ plus' (svar "m") ∙ svar "n")
-          (fun-cong nat-elim-β-suc (svar "n"))
+          (fun-cong nat-rec-β-suc (svar "n"))
           (trans ((lam[ "n" ∈ Nat' ] (suc (plus' (svar "m") ∙ svar "n"))) ∙ svar "n")
                  (fun-cong fun-β (svar "n"))
                  (trans (suc (plus' (svar "m") ∙ svar "n"))

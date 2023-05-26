@@ -37,7 +37,7 @@ data NE where
              (s : Tm (Γ ,, ρ ⓜ μ ∣ _ ∈ T) S) →
              NE Γ S
   _∙_ : {μ : Modality m n} (f : NE Γ (⟨ μ ∣ T ⟩⇛ S)) (t : NF (Γ ,lock⟨ μ ⟩) T) → NE Γ S
-  nat-elim : {A : Ty m}
+  nat-rec : {A : Ty m}
              (z : NF Γ A)→
              (s : Tm Γ (A ⇛ A)) →
              (n : NE Γ Nat') →
@@ -61,7 +61,7 @@ nf-to-tm (pair nf1 nf2) = pair (nf-to-tm nf1) (nf-to-tm nf2)
 ne-to-tm (var' v α) = var' _ {v} α
 ne-to-tm (mod-elim ρ μ ne s) = mod-elim ρ μ _ (ne-to-tm ne) s
 ne-to-tm (ne ∙ nf) = ne-to-tm ne ∙ nf-to-tm nf
-ne-to-tm (nat-elim nfz s ne) = nat-elim (nf-to-tm nfz) s (ne-to-tm ne)
+ne-to-tm (nat-rec nfz s ne) = nat-rec (nf-to-tm nfz) s (ne-to-tm ne)
 ne-to-tm (if ne nft nff) = if (ne-to-tm ne) (nf-to-tm nft) (nf-to-tm nff)
 ne-to-tm (fst ne) = fst (ne-to-tm ne)
 ne-to-tm (snd ne) = snd (ne-to-tm ne)
@@ -88,16 +88,16 @@ normalize (suc n) (f ∙ t) = do
     normalize-app (lam[ _ ∣ _ ] b) nft = normalize n (b [ nf-to-tm nft / _ ]tm)
 normalize (suc n) zero = just zero
 normalize (suc n) (suc t) = suc <$> normalize (suc n) t
-normalize m@(suc n) (nat-elim {Γ = Γ} {A = A} z s t) = do
+normalize m@(suc n) (nat-rec {Γ = Γ} {A = A} z s t) = do
   nft ← normalize (suc n) t
-  normalize-nat-elim (suc n) nft
+  normalize-nat-rec (suc n) nft
   module NormalizeNatElim where
     -- Extra argument of type ℕ is needed to pass termination checking.
-    normalize-nat-elim : ℕ → NF Γ Nat' → Maybe (NF Γ A)
-    normalize-nat-elim n       (neutral ne) = (λ nfz → neutral (nat-elim nfz s ne)) <$> normalize n z
-    normalize-nat-elim n       zero         = normalize n z
-    normalize-nat-elim zero    (suc nf)     = nothing -- not enough fuel
-    normalize-nat-elim (suc n) (suc nf)     = normalize n (s ∙¹ nat-elim z s (nf-to-tm nf))
+    normalize-nat-rec : ℕ → NF Γ Nat' → Maybe (NF Γ A)
+    normalize-nat-rec n       (neutral ne) = (λ nfz → neutral (nat-rec nfz s ne)) <$> normalize n z
+    normalize-nat-rec n       zero         = normalize n z
+    normalize-nat-rec zero    (suc nf)     = nothing -- not enough fuel
+    normalize-nat-rec (suc n) (suc nf)     = normalize n (s ∙¹ nat-rec z s (nf-to-tm nf))
 normalize (suc n) true = just true
 normalize (suc n) false = just false
 normalize (suc n) (if b t f) = normalize-if <$> normalize (suc n) b <*> normalize (suc n) t <*> normalize (suc n) f
@@ -120,9 +120,9 @@ normalize (suc n) (snd p) = normalize-snd <$> normalize (suc n) p
 
 private
   plus : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
-  plus = lam[ _ ∈ Nat' ] nat-elim (lam[ _ ∈ Nat' ] var' _ {vzero} id-cell)
-                                  (lam[ _ ∈ Nat' ⇛ Nat' ] (lam[ _ ∈ Nat' ] suc (var' _ {vsuc vzero} id-cell ∙¹ var' _ {vzero} id-cell)))
-                                  (var' _ {vzero} id-cell)
+  plus = lam[ _ ∈ Nat' ] nat-rec (lam[ _ ∈ Nat' ] var' _ {vzero} id-cell)
+                                 (lam[ _ ∈ Nat' ⇛ Nat' ] (lam[ _ ∈ Nat' ] suc (var' _ {vsuc vzero} id-cell ∙¹ var' _ {vzero} id-cell)))
+                                 (var' _ {vzero} id-cell)
 
   test-nat : Tm Γ Nat'
   test-nat = plus ∙ suc zero ∙ suc (suc zero)

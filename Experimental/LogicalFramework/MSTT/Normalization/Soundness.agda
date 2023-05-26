@@ -79,13 +79,13 @@ normalize-sound (suc n) (lam[ μ ∣ x ∈ T ] s) = return M.reflᵗᵐ
 normalize-sound (suc n) (f ∙ t) = {!!}
 normalize-sound (suc n) zero = return M.reflᵗᵐ
 normalize-sound (suc n) (suc t) = M.const-map-cong suc <$> normalize-sound (suc n) t
-normalize-sound (suc n) (nat-elim z s t) = normalize-sound (suc n) t >>= (λ {x} → normalize-nat-elim-sound n z s t {x})
+normalize-sound (suc n) (nat-rec z s t) = normalize-sound (suc n) t >>= (λ {x} → normalize-nat-rec-sound n z s t {x})
   where
-    normalize-nat-elim-sound : (n : ℕ) (z : Tm Γ T) (s : Tm Γ (T ⇛ T)) (t : Tm Γ Nat') {nft : NF Γ Nat'} →
-                               NormalizeSoundness t nft → Lift (NormalizeSoundness (nat-elim z s t)) (NormalizeNatElim.normalize-nat-elim n z s t (suc n) nft)
-    normalize-nat-elim-sound n z s t {neutral net} et = (λ ez → M.nat-rec-cong ez M.reflᵗᵐ et) <$> normalize-sound (suc n) z
-    normalize-nat-elim-sound n z s t {zero}        et = (λ ez → M.transᵗᵐ (M.symᵗᵐ (M.β-nat-zero _ _)) (M.nat-rec-cong ez M.reflᵗᵐ et)) <∙> normalize-sound (suc n) z
-    normalize-nat-elim-sound n z s t {suc nft}     et = {!{!!} <∙> normalize-sound n (s ∙¹ nat-elim z s (nf-to-tm nft))!}
+    normalize-nat-rec-sound : (n : ℕ) (z : Tm Γ T) (s : Tm Γ (T ⇛ T)) (t : Tm Γ Nat') {nft : NF Γ Nat'} →
+                              NormalizeSoundness t nft → Lift (NormalizeSoundness (nat-rec z s t)) (NormalizeNatElim.normalize-nat-rec n z s t (suc n) nft)
+    normalize-nat-rec-sound n z s t {neutral net} et = (λ ez → M.nat-rec-cong ez M.reflᵗᵐ et) <$> normalize-sound (suc n) z
+    normalize-nat-rec-sound n z s t {zero}        et = (λ ez → M.transᵗᵐ (M.symᵗᵐ (M.β-nat-zero _ _)) (M.nat-rec-cong ez M.reflᵗᵐ et)) <∙> normalize-sound (suc n) z
+    normalize-nat-rec-sound n z s t {suc nft}     et = {!{!!} <∙> normalize-sound n (s ∙¹ nat-rec z s (nf-to-tm nft))!}
 normalize-sound (suc n) true = return M.reflᵗᵐ
 normalize-sound (suc n) false = return M.reflᵗᵐ
 normalize-sound (suc n) (if b t f) =

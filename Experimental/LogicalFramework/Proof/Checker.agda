@@ -72,12 +72,12 @@ is-app? : (t : Tm Γ T) → PCM (IsApp t)
 is-app? (f ∙ t) = return (app f t)
 is-app? _ = throw-error "Function application expected"
 
-data IsNatElim : Tm Γ T → Set where
-  nat-elim : ∀ {A} (z : Tm Γ A) (s : Tm Γ (A ⇛ A)) (n : Tm Γ Nat') → IsNatElim (nat-elim z s n)
+data IsNatRec : Tm Γ T → Set where
+  nat-rec : ∀ {A} (z : Tm Γ A) (s : Tm Γ (A ⇛ A)) (n : Tm Γ Nat') → IsNatRec (nat-rec z s n)
 
-is-nat-elim? : (t : Tm Γ T) → PCM (IsNatElim t)
-is-nat-elim? (nat-elim z s n) = return (nat-elim z s n)
-is-nat-elim? _ = throw-error "Natural number recursor expected"
+is-nat-rec? : (t : Tm Γ T) → PCM (IsNatRec t)
+is-nat-rec? (nat-rec z s n) = return (nat-rec z s n)
+is-nat-rec? _ = throw-error "Natural number recursor expected"
 
 data IsSucTm : Tm Γ T → Set where
   suc-tm : (n : Tm Γ Nat') → IsSucTm (suc n)
@@ -181,18 +181,18 @@ check-proof Ξ fun-β φ = do
          M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural B) (M.symˢ (/cl-sound t x))) (
          tm-sub-sound b (t / x))))
          M.[ _ ]' ⟆
-check-proof Ξ nat-elim-β-zero φ = do
+check-proof Ξ nat-rec-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
-  nat-elim z s n ← is-nat-elim? lhs
+  nat-rec z s n ← is-nat-rec? lhs
   refl ← n =t? zero
   refl ← rhs =t? z
   return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.β-nat-zero _ _)) M.[ _ ]' ⟆
-check-proof Ξ nat-elim-β-suc φ = do
+check-proof Ξ nat-rec-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
-  nat-elim z s n ← is-nat-elim? lhs
+  nat-rec z s n ← is-nat-rec? lhs
   suc-tm n' ← is-suc-tm? n
-  refl ← rhs =t? s ∙¹ (nat-elim z s n')
-  return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.β-nat-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-elim z s n')))) M.[ _ ]' ⟆
+  refl ← rhs =t? s ∙¹ (nat-rec z s n')
+  return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.β-nat-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-rec z s n')))) M.[ _ ]' ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← mod-dom μ =m? mod-cod μ

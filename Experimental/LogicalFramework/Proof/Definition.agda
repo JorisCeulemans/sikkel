@@ -72,8 +72,8 @@ data Proof {m : Mode} : Ctx m → Set where
 
   -- Specific computation rules for term formers (currently no eta rules)
   fun-β : Proof Γ
-  nat-elim-β-zero : Proof Γ
-  nat-elim-β-suc : Proof Γ
+  nat-rec-β-zero : Proof Γ
+  nat-rec-β-suc : Proof Γ
   {-
   if-β-true : {t f : Tm (to-ctx Ξ) T} →
               (Ξ ⊢ if true t f ≡ᵇ t)
