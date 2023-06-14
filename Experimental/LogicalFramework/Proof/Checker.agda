@@ -17,9 +17,10 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 import Model.Modality as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.IdentityType.Modal as M
-import Experimental.DependentTypes.Model.Function as M
+import Experimental.DependentTypes.Model.Function as M renaming (lam to dlam)
 import Model.Type.Constant as M
-import Model.Type.Function as M hiding (lam)
+import Model.Type.Function as M
+import Model.Type.Product as M
 
 open ModeTheory ℳ
 open ModeTheoryInterpretation ⟦ℳ⟧
@@ -57,6 +58,21 @@ data IsForall : bProp Γ → Set where
 is-forall? : (φ : bProp Γ) → PCM (IsForall φ)
 is-forall? (∀[ μ ∣ x ∈ T ] φ) = return (is-forall μ x T φ)
 is-forall? φ = throw-error "bProp is not of the form ∀ x ..."
+
+data IsImplication : bProp Γ → Set where
+  is-implication : {Γ : Ctx m} (μ : Modality n m) (φ : bProp (Γ ,lock⟨ μ ⟩)) (ψ : bProp Γ) →
+                   IsImplication (⟨ μ ∣ φ ⟩⊃ ψ)
+
+is-implication? : (φ : bProp Γ) → PCM (IsImplication φ)
+is-implication? (⟨ μ ∣ φ ⟩⊃ ψ) = return (is-implication μ φ ψ)
+is-implication? φ = throw-error "bProp is not of the form ⟨ μ ∣ φ ⟩⊃ ψ."
+
+data IsConjunction : bProp Γ → Set where
+  is-conjunction : {Γ : Ctx m} (φ ψ : bProp Γ) → IsConjunction (φ ∧ ψ)
+
+is-conjunction? : (φ : bProp Γ) → PCM (IsConjunction φ)
+is-conjunction? (φ ∧ ψ) = return (is-conjunction φ ψ)
+is-conjunction? _ = throw-error "bProp is not of the form φ ∧ ψ."
 
 data IsLam : Tm Γ T → Set where
   lam : (μ : Modality n m) (x : String) (b : Tm (Γ ,, μ ∣ x ∈ T) S) → IsLam (lam[ μ ∣ x ∈ T ] b)
@@ -165,6 +181,36 @@ check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
     M.ι[ M.ty-subst-cong-subst (M./cl-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (M.mod-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (
            M.eq-reflect (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] ⟦pe⟧ sgoalse))))) _ ]
     M.ι⁻¹[ sub-to-ctx-sub Ξ φ t1 ] ⟦p1⟧ sgoals1) ⟆
+check-proof Ξ ⊤ᵇ-intro φ = do
+  refl ← φ =b? ⊤ᵇ
+  return ⟅ [] , _ ↦ M.tt' M.[ _ ]' ⟆
+check-proof Ξ ⊥ᵇ-elim φ = do
+  is-implication μ domφ codφ ← is-implication? φ
+  refl ← mod-dom μ =m? mod-cod μ
+  refl ← μ =mod? 𝟙
+  refl ← domφ =b? ⊥ᵇ
+  return ⟅ [] , _ ↦ M.empty-elim _ M.[ _ ]' ⟆
+check-proof Ξ (⊃-intro x p) φ = do
+  is-implication μ domφ codφ ← is-implication? φ
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵇ μ ∣ x ∈ domφ) p codφ
+  return ⟅ goals , sgoals ↦ M.ι[ M.⇛-natural _ ] M.lam _ (M.ι[ M.ty-subst-comp _ _ _ ] ⟦p⟧ sgoals) ⟆
+check-proof Ξ (⊃-elim μ φ p1 p2) ψ = do
+  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (⟨ μ ∣ φ ⟩⊃ ψ)
+  ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p2 φ
+  return ⟅ goals1 ++ goals2 , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals in
+    M.app (M.ι⁻¹[ M.⇛-natural _ ] ⟦p1⟧ sgoals1) (M.ι[ M.mod-natural ⟦ μ ⟧mod _ ] M.mod-intro ⟦ μ ⟧mod (⟦p2⟧ sgoals2))) ⟆
+check-proof Ξ (∧-intro p1 p2) φ = do
+  is-conjunction φ1 φ2 ← is-conjunction? φ
+  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 φ1
+  ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof Ξ p2 φ2
+  return ⟅ goals1 ++ goals2 , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals in
+    M.ι[ M.⊠-natural _ ] M.pair (⟦p1⟧ sgoals1) (⟦p2⟧ sgoals2)) ⟆
+check-proof Ξ (∧-elimˡ ψ p) φ = do
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (φ ∧ ψ)
+  return ⟅ goals , sgoals ↦ M.fst (M.ι⁻¹[ M.⊠-natural _ ] ⟦p⟧ sgoals) ⟆
+check-proof Ξ (∧-elimʳ ψ p) φ = do
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (ψ ∧ φ)
+  return ⟅ goals , sgoals ↦ M.snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦p⟧ sgoals) ⟆
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
   refl ← κ' =mod? κ
@@ -178,7 +224,7 @@ check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   refl ← T =T? S
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
   return ⟅ goals , sgoals ↦ M.ι[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ]
-                               M.lam ⟦ ⟨ μ ∣ T ⟩ ⟧ty (⟦p⟧ sgoals) ⟆
+                               M.dlam ⟦ ⟨ μ ∣ T ⟩ ⟧ty (⟦p⟧ sgoals) ⟆
 check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   is-forall {n = n'} κ y S ψ' ← is-forall? ψ
   refl ← n =m? n'

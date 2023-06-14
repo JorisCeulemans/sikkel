@@ -48,21 +48,31 @@ data Proof {m : Mode} : Ctx m → Set where
           →
           Proof Γ                 -- Ξ ⊢ φ [ t2 / x ]bprop
 
-  {-
   -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
-  ⊤ᵇ-intro : Ξ ⊢ ⊤ᵇ
-  ⊥ᵇ-elim : Ξ ⊢ ⊥ᵇ ⊃ φ
-  assume[_∣_]_ : (μ : Modality m n) {φ : bProp ((to-ctx Ξ) ,lock⟨ μ ⟩)} (x : String) →
-                 (Ξ ,,ᵇ μ ∣ x ∈ φ ⊢ ψ) →
-                 (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ)
-  ⊃-elim : (Ξ ⊢ ⟨ μ ∣ φ ⟩ ⊃ ψ) → (Ξ ,lock⟨ μ ⟩ ⊢ φ) → (Ξ ⊢ ψ)
-  -}
+  ⊤ᵇ-intro : Proof Γ  -- Ξ ⊢ ⊤ᵇ
+  ⊥ᵇ-elim : Proof Γ  -- Ξ ⊢ ⊥ᵇ ⊃ φ
+  ⊃-intro : (x : String) →
+            Proof Γ  -- Ξ ,,ᵇ μ ∣ x ∈ φ ⊢ ψ
+            →
+            Proof Γ  -- Ξ ⊢ ⟨ μ ∣ φ ⟩⊃ ψ
+  ⊃-elim : (μ : Modality n m) (φ : bProp (Γ ,lock⟨ μ ⟩)) →
+           Proof Γ →             -- Ξ ⊢ ⟨ μ ∣ φ ⟩⊃ ψ
+           Proof (Γ ,lock⟨ μ ⟩)  -- Ξ ,lock⟨ μ ⟩ ⊢ φ
+           →
+           Proof Γ               -- Ξ ⊢ ψ
   assumption' : (x : String) {μ κ : Modality m n} (α : TwoCell μ κ) → Proof Γ
-  {-
-  ∧-intro : (Ξ ⊢ φ) → (Ξ ⊢ ψ) → (Ξ ⊢ φ ∧ ψ)
-  ∧-elimˡ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ φ)
-  ∧-elimʳ : (Ξ ⊢ φ ∧ ψ) → (Ξ ⊢ ψ)
-  -}
+  ∧-intro : Proof Γ →  -- Ξ ⊢ φ
+            Proof Γ     -- Ξ ⊢ ψ
+            →
+            Proof Γ     -- Ξ ⊢ φ ∧ ψ
+  ∧-elimˡ : (ψ : bProp Γ) →
+            Proof Γ  -- Ξ ⊢ φ ∧ ψ
+            →
+            Proof Γ  -- Ξ ⊢ φ
+  ∧-elimʳ : (φ : bProp Γ) →
+            Proof Γ  -- Ξ ⊢ φ ∧ ψ
+            →
+            Proof Γ  -- Ξ ⊢ ψ
   ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : String) (T : Ty n) → Proof (Γ ,, μ ∣ x ∈ T) → Proof Γ
   ∀-elim : (μ : Modality n m) (φ : bProp Γ) → Proof Γ → (t : Tm (Γ ,lock⟨ μ ⟩) T) → Proof Γ
   {-

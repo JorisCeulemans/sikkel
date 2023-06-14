@@ -182,7 +182,9 @@ _=b?_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
   refl ← t1 =t? s1
   refl ← t2 =t? s2
   return Ag.refl
-(φ1 ⊃ φ2) =b? (ψ1 ⊃ ψ2) = do
+(⟨ μ ∣ φ1 ⟩⊃ φ2) =b? (⟨ κ ∣ ψ1 ⟩⊃ ψ2) = do
+  refl ← mod-dom μ =m? mod-dom κ
+  refl ← μ =mod? κ
   refl ← φ1 =b? ψ1
   refl ← φ2 =b? ψ2
   return Ag.refl

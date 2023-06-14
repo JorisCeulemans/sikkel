@@ -35,12 +35,10 @@ infix 12 _≡ᵇ_
 data bProp (Γ : Ctx m) : Set where
   ⊤ᵇ ⊥ᵇ : bProp Γ
   _≡ᵇ_ : {T : Ty m} (t1 t2 : Tm Γ T) → bProp Γ
-  _⊃_ _∧_ : (φ ψ : bProp Γ) → bProp Γ
+  ⟨_∣_⟩⊃_ : (μ : Modality n m) (φ : bProp (Γ ,lock⟨ μ ⟩)) (ψ : bProp Γ) → bProp Γ
+  _∧_ : (φ ψ : bProp Γ) → bProp Γ
   ∀[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → bProp (Γ ,, μ ∣ x ∈ T) → bProp Γ
   ⟨_∣_⟩ : (μ : Modality n m) → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
-
-¬ : bProp Γ → bProp Γ
-¬ φ = φ ⊃ ⊥ᵇ
 
 
 -- A proposition can be traversed whenever terms can be traversed
@@ -54,7 +52,7 @@ record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-bprop ⊤ᵇ σ = ⊤ᵇ
   traverse-bprop ⊥ᵇ σ = ⊥ᵇ
   traverse-bprop (t1 ≡ᵇ t2) σ = trav-tm t1 σ ≡ᵇ trav-tm t2 σ
-  traverse-bprop (φ ⊃ ψ) σ = traverse-bprop φ σ ⊃ traverse-bprop ψ σ
+  traverse-bprop (⟨ μ ∣ φ ⟩⊃ ψ) σ = ⟨ μ ∣ traverse-bprop φ (lock σ) ⟩⊃ traverse-bprop ψ σ
   traverse-bprop (φ ∧ ψ) σ = traverse-bprop φ σ ∧ traverse-bprop ψ σ
   traverse-bprop (∀[ μ ∣ x ∈ T ] φ) σ = ∀[ μ ∣ x ∈ T ] traverse-bprop φ (lift σ)
   traverse-bprop ⟨ μ ∣ φ ⟩ σ = ⟨ μ ∣ traverse-bprop φ (lock σ) ⟩
@@ -92,3 +90,10 @@ fuselocks-bprop t = rename-bprop t fuselocks-ren
 
 unfuselocks-bprop : bProp (Γ ,lock⟨ μ ⓜ ρ ⟩) → bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
 unfuselocks-bprop t = rename-bprop t unfuselocks-ren
+
+
+_⊃_ : (φ ψ : bProp Γ) → bProp Γ
+φ ⊃ ψ = ⟨ 𝟙 ∣ lock𝟙-bprop φ ⟩⊃ ψ
+
+¬ : bProp Γ → bProp Γ
+¬ φ = φ ⊃ ⊥ᵇ

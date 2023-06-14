@@ -34,7 +34,7 @@ private variable
 ⟦ ⊤ᵇ ⟧bprop-nmls = M.Unit'
 ⟦ ⊥ᵇ ⟧bprop-nmls = M.Empty'
 ⟦ t1 ≡ᵇ t2 ⟧bprop-nmls = M.Id ⟦ t1 ⟧tm-nmls ⟦ t2 ⟧tm-nmls
-⟦ φ ⊃ ψ ⟧bprop-nmls = ⟦ φ ⟧bprop-nmls M.⇛ ⟦ ψ ⟧bprop-nmls
+⟦ ⟨ μ ∣ φ ⟩⊃ ψ ⟧bprop-nmls = M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧bprop-nmls ⟩ M.⇛ ⟦ ψ ⟧bprop-nmls
 ⟦ φ ∧ ψ ⟧bprop-nmls = ⟦ φ ⟧bprop-nmls M.⊠ ⟦ ψ ⟧bprop-nmls
 ⟦ ∀[ μ ∣ _ ∈ T ] φ ⟧bprop-nmls = M.Pi ⟦ ⟨ μ ∣ T ⟩ ⟧ty ⟦ φ ⟧bprop-nmls
 ⟦ ⟨ μ ∣ φ ⟩ ⟧bprop-nmls = M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧bprop-nmls ⟩
