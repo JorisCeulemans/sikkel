@@ -74,6 +74,15 @@ is-conjunction? : (φ : bProp Γ) → PCM (IsConjunction φ)
 is-conjunction? (φ ∧ ψ) = return (is-conjunction φ ψ)
 is-conjunction? _ = throw-error "bProp is not of the form φ ∧ ψ."
 
+data IsModalProp : bProp Γ → Set where
+  is-modal : {Γ : Ctx m} (μ : Modality n m) (φ : bProp (Γ ,lock⟨ μ ⟩)) →
+             IsModalProp ⟨ μ ∣ φ ⟩
+
+is-modal? : (φ : bProp Γ) → PCM (IsModalProp φ)
+is-modal? ⟨ μ ∣ φ ⟩ = return (is-modal μ φ)
+is-modal? _ = throw-error "bProp is not of the form ⟨ μ ∣ φ ⟩."
+
+
 data IsLam : Tm Γ T → Set where
   lam : (μ : Modality n m) (x : String) (b : Tm (Γ ,, μ ∣ x ∈ T) S) → IsLam (lam[ μ ∣ x ∈ T ] b)
 
@@ -211,6 +220,22 @@ check-proof Ξ (∧-elimˡ ψ p) φ = do
 check-proof Ξ (∧-elimʳ ψ p) φ = do
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (ψ ∧ φ)
   return ⟅ goals , sgoals ↦ M.snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦p⟧ sgoals) ⟆
+check-proof Ξ (mod⟨ μ ⟩ p) φ = do
+  is-modal κ ψ ← is-modal? φ
+  refl ← mod-dom μ =m? mod-dom κ
+  refl ← μ =mod? κ
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p ψ
+  return ⟅ goals , sgoals ↦ M.ι[ M.mod-natural ⟦ μ ⟧mod _ ] M.mod-intro ⟦ μ ⟧mod (⟦p⟧ sgoals) ⟆
+check-proof Ξ (mod-elim ρ μ x φ p1 p2) ψ = do
+  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof (Ξ ,lock⟨ ρ ⟩) p1 ⟨ μ ∣ φ ⟩
+  ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof (Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ) p2 ψ
+  return ⟅ goals1 ++ goals2 , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals in
+    M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.ctx-ext-subst-β₁ _ _)) (M.id-subst-unitʳ _))) ] (
+    ⟦p2⟧ sgoals2
+      M.[ (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.eq-mod-tyʳ (⟦ⓜ⟧-sound ρ μ) _) (M.mod-cong ⟦ ρ ⟧mod (M.mod-cong ⟦ μ ⟧mod (fuselocks-bprop-sound φ)))) ]
+          (M.ι[ M.mod-natural ⟦ ρ ⟧mod _ ]
+          M.mod-intro ⟦ ρ ⟧mod (⟦p1⟧ sgoals1)))
+        M./v ]')) ⟆
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
   refl ← κ' =mod? κ

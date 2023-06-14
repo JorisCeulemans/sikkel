@@ -75,23 +75,25 @@ data Proof {m : Mode} : Ctx m → Set where
             Proof Γ  -- Ξ ⊢ ψ
   ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : String) (T : Ty n) → Proof (Γ ,, μ ∣ x ∈ T) → Proof Γ
   ∀-elim : (μ : Modality n m) (φ : bProp Γ) → Proof Γ → (t : Tm (Γ ,lock⟨ μ ⟩) T) → Proof Γ
-  {-
 
   -- Modal reasoning principles
-  mod⟨_⟩_ : (μ : Modality m n) {φ : bProp (to-ctx (Ξ ,lock⟨ μ ⟩))} →
-            (Ξ ,lock⟨ μ ⟩ ⊢ φ) →
-            (Ξ ⊢ ⟨ μ ∣ φ ⟩)
-  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : String) {φ : bProp _} →
-             (Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩) →
-             (Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ ⊢ ψ) →
-             (Ξ ⊢ ψ)
-  -}
+  mod⟨_⟩_ : (μ : Modality n m) →
+            Proof (Γ ,lock⟨ μ ⟩)  -- Ξ ,lock⟨ μ ⟩ ⊢ φ
+            →
+            Proof Γ               -- Ξ ⊢ ⟨ μ ∣ φ ⟩
+  mod-elim : (ρ : Modality n m) (μ : Modality o n) (x : String) (φ : bProp (Γ ,lock⟨ ρ ⟩ ,lock⟨ μ ⟩)) →
+             Proof (Γ ,lock⟨ ρ ⟩) →  -- Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩
+             Proof Γ                 -- Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ ⊢ ψ
+             →
+             Proof Γ                 -- Ξ ⊢ ψ
 
   -- Specific computation rules for term formers (currently no eta rules)
   fun-β : Proof Γ
   nat-rec-β-zero : Proof Γ
   nat-rec-β-suc : Proof Γ
+
   {-
+  -- postponed, should be handled by the normalizer
   if-β-true : {t f : Tm (to-ctx Ξ) T} →
               (Ξ ⊢ if true t f ≡ᵇ t)
   if-β-false : {t f : Tm (to-ctx Ξ) T} →
