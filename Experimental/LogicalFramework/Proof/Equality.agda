@@ -173,6 +173,7 @@ _ =t? _ = throw-error tm-msg
 bprop-msg : ErrorMsg
 bprop-msg = "Propositions are not equal."
 
+infix 10 _=b?_
 _=b?_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
 ⊤ᵇ =b? ⊤ᵇ = return Ag.refl
 ⊥ᵇ =b? ⊥ᵇ = return Ag.refl

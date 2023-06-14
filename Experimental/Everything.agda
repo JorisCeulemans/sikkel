@@ -13,5 +13,5 @@ import Experimental.ClosedTypes.Identity
 
 import Experimental.LogicalFramework.MSTT
 import Experimental.LogicalFramework.bProp
---import Experimental.LogicalFramework.Proof
---import Experimental.LogicalFramework.Example
+import Experimental.LogicalFramework.Proof
+import Experimental.LogicalFramework.Example

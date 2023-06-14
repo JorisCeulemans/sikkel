@@ -90,6 +90,10 @@ _↣_.naturality (to (Id-cong' ea eb)) = uip _ _
 eq (isoˡ (Id-cong' ea eb)) _ = uip _ _
 eq (isoʳ (Id-cong' ea eb)) _ = uip _ _
 
+Id-cl-natural : {A : ClosedTy C} (clA : IsClosedNatural A) {a b : Tm Δ A} (σ : Γ ⇒ Δ) →
+                (Id a b) [ σ ] ≅ᵗʸ Id (a [ clA ∣ σ ]cl) (b [ clA ∣ σ ]cl)
+Id-cl-natural clA σ = transᵗʸ (Id-natural σ) (Id-cong (closed-natural clA σ) (symᵗᵐ ι-symʳ) (symᵗᵐ ι-symʳ))
+
 eq-reflect : {a b : Tm Γ A} → Tm Γ (Id a b) → a ≅ᵗᵐ b
 eq (eq-reflect e) {x = x} γ = e ⟨ x , γ ⟩'
 

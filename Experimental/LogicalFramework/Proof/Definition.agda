@@ -20,6 +20,7 @@ private variable
   Γ Δ : Ctx m
   T S R U : Ty m
   φ ψ : bProp Γ
+  x y : String
 
 
 data Proof {m : Mode} : Ctx m → Set where
@@ -32,16 +33,22 @@ data Proof {m : Mode} : Ctx m → Set where
   -}
 
   -- Structural rules for ≡ᵇ
-  refl : Proof Γ
-  sym : Proof Γ → Proof Γ
-  trans : (middle-tm : Tm Γ T) →
-          Proof Γ → Proof Γ → Proof Γ
-  {-
-  subst : (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) {t1 t2 : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T} →
-          (Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᵇ t2) →
-          (Ξ ⊢ φ [ t1 / x ]bprop) →
-          (Ξ ⊢ φ [ t2 / x ]bprop)
+  refl : Proof Γ  -- Ξ ⊢ t ≡ᵇ t
+  sym : Proof Γ  -- Ξ ⊢ t ≡ᵇ s
+        →
+        Proof Γ  -- Ξ ⊢ s ≡ᵇ t
+  trans : (t : Tm Γ T) →
+          Proof Γ →  -- Ξ ⊢ r ≡ᵇ t
+          Proof Γ     -- Ξ ⊢ t ≡ᵇ s
+          →
+          Proof Γ     -- Ξ ⊢ r ≡ᵇ s
+  subst : (φ : bProp (Γ ,, μ ∣ x ∈ T)) (t1 t2 : Tm (Γ ,lock⟨ μ ⟩) T) →
+          Proof (Γ ,lock⟨ μ ⟩) →  -- Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᵇ t2
+          Proof Γ                 -- Ξ ⊢ φ [ t1 / x ]bprop
+          →
+          Proof Γ                 -- Ξ ⊢ φ [ t2 / x ]bprop
 
+  {-
   -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
   ⊤ᵇ-intro : Ξ ⊢ ⊤ᵇ
   ⊥ᵇ-elim : Ξ ⊢ ⊥ᵇ ⊃ φ

@@ -21,7 +21,6 @@ import Model.Type.Constant as M
 import Model.Type.Function as M
 import Experimental.DependentTypes.Model.Function as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
-import Experimental.ClosedTypes as M
 
 private variable
   m : Mode
