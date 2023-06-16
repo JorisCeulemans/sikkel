@@ -111,6 +111,22 @@ is-suc-tm? : (t : Tm Γ T) → PCM (IsSucTm t)
 is-suc-tm? (suc n) = return (suc-tm n)
 is-suc-tm? _ = throw-error "successor of natural number expected"
 
+
+data IsFunTy : Ty m → Set where
+  is-fun-ty : (μ : Modality n m) (T : Ty n) (S : Ty m) → IsFunTy (⟨ μ ∣ T ⟩⇛ S)
+
+is-fun-ty? : (T : Ty m) → PCM (IsFunTy T)
+is-fun-ty? (⟨ μ ∣ T ⟩⇛ S) = return (is-fun-ty μ T S)
+is-fun-ty? _  = throw-error "Function type expected"
+
+data IsProdTy : Ty m → Set where
+  is-prod-ty : (T S : Ty m) → IsProdTy (T ⊠ S)
+
+is-prod-ty? : (T : Ty m) → PCM (IsProdTy T)
+is-prod-ty? (T ⊠ S) = return (is-prod-ty T S)
+is-prod-ty? _  = throw-error "Product type expected"
+
+
 data EndsInProgVar : ProofCtx m → Set where
   ends-in-prog-var : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → EndsInProgVar (Ξ ,,ᵛ μ ∣ x ∈ T)
 
@@ -282,6 +298,22 @@ check-proof Ξ nat-rec-β-suc φ = do
   suc-tm n' ← is-suc-tm? n
   refl ← rhs =t? s ∙¹ (nat-rec z s n')
   return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.β-nat-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-rec z s n')))) M.[ _ ]' ⟆
+check-proof Ξ (fun-η x) φ = do
+  is-eq {T = T} lhs rhs ← is-eq? φ
+  is-fun-ty μ dom cod ← is-fun-ty? T
+  refl ← rhs =t? (lam[ μ ∣ x ∈ dom ] (weaken-tm lhs ∙ v0))
+  return ⟅ [] , _ ↦
+    M.≅ᵗᵐ-to-Id (M.transᵗᵐ
+      (M.⇛-cl-η (ty-closed-natural ⟨ μ ∣ dom ⟩) (ty-closed-natural cod) _)
+      (M.lamcl-cong (ty-closed-natural cod) (M.app-cong (M.symᵗᵐ (weaken-tm-sound (to-ctx Ξ) x μ dom lhs))
+                                                        (M.symᵗᵐ (M.transᵗᵐ (M.mod-intro-cong ⟦ μ ⟧mod (var0-sound (to-ctx Ξ) μ x dom))
+                                                                            (M.mod-η ⟦ μ ⟧mod _))))))
+      M.[ _ ]' ⟆
+check-proof Ξ ⊠-η φ = do
+  is-eq {T = P} lhs rhs ← is-eq? φ
+  is-prod-ty T S ← is-prod-ty? P
+  refl ← rhs =t? (pair (fst lhs) (snd lhs))
+  return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.η-⊠ ⟦ lhs ⟧tm) M.[ _ ]' ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← mod-dom μ =m? mod-cod μ
@@ -294,7 +326,7 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]bprop)
   ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ 𝟙 ∣ x ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ lock𝟙-bprop φ)
                                   ps
-                                  (φ [ π ∷ˢ suc (var' x {skip-lock μ vzero} id-cell) / x ]bprop)
+                                  (φ [ π ∷ˢ suc v0 / x ]bprop)
   return ⟅ goals1 ++ goals2 , sgoals ↦
     (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals
      in M.nat-ind _ (M.ι[ M.transᵗʸ (M.ty-subst-cong-subst (M.transˢ (M./v-cong (M.symᵗᵐ (M.transᵗᵐ (M.cl-tm-subst-cong-cl (M.𝟙-preserves-cl M.const-closed))
@@ -318,7 +350,7 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
                                                         M.⊚-assoc)) ]
                       (M.ι[ M.ty-subst-cong-ty _ (
                               M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ
-                                          (M.transˢ (∷ˢ-sound {Δ = to-ctx Ξ'} π (suc (var' x {skip-lock 𝟙 vzero} id-cell)) x)
+                                          (M.transˢ (∷ˢ-sound {Δ = to-ctx Ξ'} π (suc (v0 {μ = 𝟙} {x = x})) x)
                                                     (M.,cl-cong (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩)
                                                                 (sub-π-sound (to-ctx Ξ') x 𝟙 Nat')
                                                                 (M.const-map-cong _ (var0-sound (to-ctx Ξ') 𝟙 x Nat')))))

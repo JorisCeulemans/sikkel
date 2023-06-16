@@ -87,7 +87,7 @@ data Proof {m : Mode} : Ctx m → Set where
              →
              Proof Γ                 -- Ξ ⊢ ψ
 
-  -- Specific computation rules for term formers (currently no eta rules)
+  -- Specific computation rules for term formers
   fun-β : Proof Γ
   nat-rec-β-zero : Proof Γ
   nat-rec-β-suc : Proof Γ
@@ -102,7 +102,11 @@ data Proof {m : Mode} : Ctx m → Set where
                (Ξ ⊢ fst (pair t s) ≡ᵇ t)
   pair-β-snd : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
                (Ξ ⊢ snd (pair t s) ≡ᵇ s)
+  -}
+  fun-η : String → Proof Γ  -- Ξ ⊢ f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ svar "x")
+  ⊠-η : Proof Γ  -- Ξ ⊢ p ≡ᵇ pair (fst p) (snd p)
 
+  {-
   -- Axioms specifying distinctness of booleans and natural numbers
   true≠false : Ξ ⊢ ¬ (true ≡ᵇ false)
   suc-inj : {Ξ : ProofCtx m} → Ξ ⊢ ∀[ 𝟙 ∣ "m" ∈ Nat' ] ∀[ 𝟙 ∣ "n" ∈ Nat' ] (suc ∙ (svar "m") ≡ᵇ suc ∙ (svar "n")) ⊃ (svar "m" ≡ᵇ svar "n")

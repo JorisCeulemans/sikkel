@@ -484,3 +484,12 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
       transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ ty-subst-cong-subst-sym))) (
       transᵉ (transᵗʸ-congʳ (closed-subst-eq clB _)) (
       transᵉ (transᵗʸ-congʳ (closed-id clB)) symᵗʸ-invˡ)))))))))))))))
+
+  ⇛-cl-η : (f : Tm Γ (A ⇛ B)) → f ≅ᵗᵐ lamcl clB (app (f [ fun-closed ∣ π ]cl) (ξcl clA))
+  ⇛-cl-η f = transᵗᵐ (⇛-η f) (
+    lam-cong A (transᵗᵐ (app-cong (symᵗᵐ (ι-congᵉ-2-1 (transᵉ (transᵗʸ-congʳ symᵗʸ-transᵗʸ) (
+                                                       transᵉ (symᵉ transᵗʸ-assoc) (
+                                                       transᵉ (transᵗʸ-congˡ symᵗʸ-invʳ)
+                                                       reflᵗʸ-unitˡ)))))
+                                  (symᵗᵐ ι-symʳ))
+                        (app-ι _ _)))

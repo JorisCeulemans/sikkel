@@ -105,6 +105,7 @@ _ =v? _ = throw-error "Variables are not equal."
 tm-msg : ErrorMsg
 tm-msg = "Terms are not equal."
 
+infix 10 _=t?_
 _=t?_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
 var' {n = n} {κ = κ} {μ = μ} x {v} α =t? var' {n = n'} {κ = κ'} {μ = μ'} y {w} β = do
   refl ← from-dec tm-msg (x Str.≟ y)

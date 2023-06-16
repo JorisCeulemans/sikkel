@@ -73,6 +73,9 @@ data Tm : Ctx m → Ty m → Set where
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   snd : Tm Γ (T ⊠ S) → Tm Γ S
 
+v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
+v0 = var' _ {skip-lock _ vzero} id-cell
+
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
 
