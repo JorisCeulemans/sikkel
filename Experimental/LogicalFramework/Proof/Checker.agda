@@ -11,12 +11,13 @@ open import Data.Product
 open import Data.Unit
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
-open import Relation.Nullary
+open import Relation.Nullary hiding (¬_)
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 import Model.Modality as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.IdentityType.Modal as M
+import Experimental.DependentTypes.Model.Constant as M
 import Experimental.DependentTypes.Model.Function as M renaming (lam to dlam)
 import Model.Type.Constant as M
 import Model.Type.Function as M
@@ -306,7 +307,7 @@ check-proof Ξ (fun-η x) φ = do
     M.≅ᵗᵐ-to-Id (M.transᵗᵐ
       (M.⇛-cl-η (ty-closed-natural ⟨ μ ∣ dom ⟩) (ty-closed-natural cod) _)
       (M.lamcl-cong (ty-closed-natural cod) (M.app-cong (M.symᵗᵐ (weaken-tm-sound (to-ctx Ξ) x μ dom lhs))
-                                                        (M.symᵗᵐ (M.transᵗᵐ (M.mod-intro-cong ⟦ μ ⟧mod (var0-sound (to-ctx Ξ) μ x dom))
+                                                        (M.symᵗᵐ (M.transᵗᵐ (M.mod-intro-cong ⟦ μ ⟧mod (v0-sound (to-ctx Ξ) μ x dom))
                                                                             (M.mod-η ⟦ μ ⟧mod _))))))
       M.[ _ ]' ⟆
 check-proof Ξ ⊠-η φ = do
@@ -314,6 +315,22 @@ check-proof Ξ ⊠-η φ = do
   is-prod-ty T S ← is-prod-ty? P
   refl ← rhs =t? (pair (fst lhs) (snd lhs))
   return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.η-⊠ ⟦ lhs ⟧tm) M.[ _ ]' ⟆
+check-proof Ξ true≠false φ = do
+  refl ← φ =b? ¬⟨ 𝟙 ⟩ (true ≡ᵇ false)
+  return ⟅ [] , _ ↦ M.true≠false M.[ _ ]' ⟆
+check-proof Ξ (suc-inj m n) φ = do
+  refl ← φ =b? (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-𝟙 ≡ᵇ v0-𝟙)))
+  return ⟅ [] , _ ↦
+    (M.ι[ M.Pi-cong-cod (M.Pi-cong-cod (
+      M.⇛-cong (M.Id-cong' (M.suc'-cong (v1-sound-𝟙 (to-ctx Ξ) m Nat' 𝟙 n Nat')) (M.suc'-cong (v0-sound-𝟙 (to-ctx Ξ ,, 𝟙 ∣ m ∈ Nat') n Nat')))
+               (M.Id-cong' (v1-𝟙-sound (to-ctx Ξ) m Nat' 𝟙 n Nat') (v0-𝟙-sound (to-ctx Ξ ,, 𝟙 ∣ m ∈ Nat') n Nat')))) ]
+      M.suc-inj) M.[ _ ]' ⟆
+check-proof Ξ (zero≠sucn m) φ = do
+  refl ← φ =b? (∀[ 𝟙 ∣ m ∈ Nat' ] ¬⟨ 𝟙 ⟩ (zero ≡ᵇ suc v0))
+  return ⟅ [] , _ ↦
+    (M.ι[ M.Pi-cong-cod (M.⇛-cong (M.Id-cong' M.reflᵗᵐ (M.suc'-cong (v0-sound-𝟙 (to-ctx Ξ) m Nat')))
+                                  M.reflᵗʸ) ]
+    M.zero≠sucn) M.[ _ ]' ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← mod-dom μ =m? mod-cod μ
@@ -353,7 +370,7 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
                                           (M.transˢ (∷ˢ-sound {Δ = to-ctx Ξ'} π (suc (v0 {μ = 𝟙} {x = x})) x)
                                                     (M.,cl-cong (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩)
                                                                 (sub-π-sound (to-ctx Ξ') x 𝟙 Nat')
-                                                                (M.const-map-cong _ (var0-sound (to-ctx Ξ') 𝟙 x Nat')))))
+                                                                (M.const-map-cong _ (v0-sound (to-ctx Ξ') 𝟙 x Nat')))))
                                           _)
                                         (bprop-sub-sound φ _)) ]
                       ⟦ps⟧ sgoals2)))))) ⟆

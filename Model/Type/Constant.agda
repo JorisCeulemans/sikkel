@@ -218,6 +218,9 @@ one' = const (suc zero)
 suc' : Tm Γ Nat' → Tm Γ Nat'
 suc' = const-map suc
 
+suc'-cong : {m n : Tm Γ Nat'} → m ≅ᵗᵐ n → suc' m ≅ᵗᵐ suc' n
+suc'-cong = const-map-cong suc
+
 suc'-const : {n : ℕ} {Γ : Ctx C} → suc' {Γ} (const n) ≅ᵗᵐ const (suc n)
 eq suc'-const γ = refl
 

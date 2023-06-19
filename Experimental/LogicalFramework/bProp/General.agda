@@ -40,6 +40,9 @@ data bProp (Γ : Ctx m) : Set where
   ∀[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → bProp (Γ ,, μ ∣ x ∈ T) → bProp Γ
   ⟨_∣_⟩ : (μ : Modality n m) → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
 
+¬⟨_⟩_ : (μ : Modality m n) {Γ : Ctx n} → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
+¬⟨ μ ⟩ φ = ⟨ μ ∣ φ ⟩⊃ ⊥ᵇ
+
 
 -- A proposition can be traversed whenever terms can be traversed
 record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where

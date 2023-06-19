@@ -106,12 +106,12 @@ data Proof {m : Mode} : Ctx m → Set where
   fun-η : String → Proof Γ  -- Ξ ⊢ f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ svar "x")
   ⊠-η : Proof Γ  -- Ξ ⊢ p ≡ᵇ pair (fst p) (snd p)
 
-  {-
   -- Axioms specifying distinctness of booleans and natural numbers
-  true≠false : Ξ ⊢ ¬ (true ≡ᵇ false)
-  suc-inj : {Ξ : ProofCtx m} → Ξ ⊢ ∀[ 𝟙 ∣ "m" ∈ Nat' ] ∀[ 𝟙 ∣ "n" ∈ Nat' ] (suc ∙ (svar "m") ≡ᵇ suc ∙ (svar "n")) ⊃ (svar "m" ≡ᵇ svar "n")
-  zero≠sucn : Ξ ⊢ ∀[ 𝟙 ∣ "n" ∈ Nat' ] ¬ (zero ≡ᵇ suc ∙ svar "n")
+  true≠false : Proof Γ  -- Ξ ⊢ ¬ (true ≡ᵇ false)
+  suc-inj : (x y : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ∀[ 𝟙 ∣ y ∈ Nat' ] (suc ∙ (svar x) ≡ᵇ suc ∙ (svar y)) ⊃ (svar x ≡ᵇ svar y)
+  zero≠sucn : (x : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ¬ (zero ≡ᵇ suc ∙ svar x)
 
+  {-
   -- Induction schemata for Bool' and Nat'
   bool-induction : (Ξ ⊢ φ [ true / x ]bprop) →
                    (Ξ ⊢ φ [ false / x ]bprop) →

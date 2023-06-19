@@ -76,6 +76,15 @@ data Tm : Ctx m → Ty m → Set where
 v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
 v0 = var' _ {skip-lock _ vzero} id-cell
 
+v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
+v1 = var' _ {skip-lock _ (vsuc vzero)} id-cell
+
+v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
+v0-𝟙 = var' _ {vzero} id-cell
+
+v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
+v1-𝟙 = var' _ {vsuc vzero} id-cell
+
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
 

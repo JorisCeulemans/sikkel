@@ -120,9 +120,9 @@ normalize (suc n) (snd p) = normalize-snd <$> normalize (suc n) p
 
 private
   plus : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
-  plus = lam[ _ ∈ Nat' ] nat-rec (lam[ _ ∈ Nat' ] var' _ {vzero} id-cell)
-                                 (lam[ _ ∈ Nat' ⇛ Nat' ] (lam[ _ ∈ Nat' ] suc (var' _ {vsuc vzero} id-cell ∙¹ var' _ {vzero} id-cell)))
-                                 (var' _ {vzero} id-cell)
+  plus = lam[ _ ∈ Nat' ] nat-rec (lam[ _ ∈ Nat' ] v0-𝟙)
+                                 (lam[ _ ∈ Nat' ⇛ Nat' ] (lam[ _ ∈ Nat' ] suc (var' _ {vsuc vzero} id-cell ∙¹ v0-𝟙)))
+                                 v0-𝟙
 
   test-nat : Tm Γ Nat'
   test-nat = plus ∙ suc zero ∙ suc (suc zero)

@@ -231,6 +231,9 @@ eq (isoʳ (Pi-cong {S' = S'} eT eS)) f = to-pshfun-eq (λ ρ eγ t' →
     f $⟨ ρ , eγ ⟩ t' ∎)
   where open ≡-Reasoning
 
+Pi-cong-cod : {T : Ty Γ} {S S' : Ty (Γ ,, T)} → S ≅ᵗʸ S' → Pi T S ≅ᵗʸ Pi T S'
+Pi-cong-cod eS = Pi-cong reflᵗʸ (transᵗʸ eS (symᵗʸ (transᵗʸ (ty-subst-cong-subst ,,-map-id _) (ty-subst-id _))))
+
 {-
 lam-cong : (T : Ty Γ) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
