@@ -194,6 +194,15 @@ eq (η-bool t) γ with t ⟨ _ , γ ⟩'
 eq (η-bool t) γ | false = refl
 eq (η-bool t) γ | true  = refl
 
+bool-ind : (T : Ty (Γ ,, Bool')) →
+           Tm Γ (T [ true' /cl⟨ const-closed ⟩ ]) →
+           Tm Γ (T [ false' /cl⟨ const-closed ⟩ ]) →
+           Tm (Γ ,, Bool') T
+bool-ind T t f ⟨ x , [ γ , false ] ⟩' = f ⟨ x , γ ⟩'
+bool-ind T t f ⟨ x , [ γ , true  ] ⟩' = t ⟨ x , γ ⟩'
+naturality (bool-ind T t f) {γy = [ γy , false ]} ρ refl = naturality f ρ refl
+naturality (bool-ind T t f) {γy = [ γy , true  ]} ρ refl = naturality t ρ refl
+
 _||_ : Tm Γ Bool' → Tm Γ Bool' → Tm Γ Bool'
 t || s ⟨ x , γ ⟩' = t ⟨ x , γ ⟩' ∨ s ⟨ x , γ ⟩'
 naturality (t || s) f eγ = cong₂ _∨_ (naturality t f eγ) (naturality s f eγ)

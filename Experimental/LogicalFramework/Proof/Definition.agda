@@ -111,14 +111,17 @@ data Proof {m : Mode} : Ctx m → Set where
   suc-inj : (x y : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ∀[ 𝟙 ∣ y ∈ Nat' ] (suc ∙ (svar x) ≡ᵇ suc ∙ (svar y)) ⊃ (svar x ≡ᵇ svar y)
   zero≠sucn : (x : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ¬ (zero ≡ᵇ suc ∙ svar x)
 
-  {-
   -- Induction schemata for Bool' and Nat'
-  bool-induction : (Ξ ⊢ φ [ true / x ]bprop) →
-                   (Ξ ⊢ φ [ false / x ]bprop) →
-                   (Ξ ,,ᵛ μ ∣ x ∈ Bool' ⊢ φ)
-  -}
+  bool-induction' : {Γ Δ : Ctx m} {x : String} → Δ Ag.≡ (Γ ,, x ∈ Bool') →
+                    Proof Γ →  -- Ξ ⊢ φ [ true / x ]bprop
+                    Proof Γ     -- Ξ ⊢ φ [ false / x ]bprop
+                    →
+                    Proof Δ     -- Ξ ,,ᵛ x ∈ Bool' ⊢ φ
   nat-induction' : {Γ Δ : Ctx m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, x ∈ Nat') →
-                   Proof Γ → Proof Δ → Proof Δ
+                   Proof Γ →  -- Ξ ⊢ φ [ zero / x ]bprop
+                   Proof Δ     -- Ξ ,,ᵛ n ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ φ ⊢ φ [ suc n / n ]bprop
+                   →
+                   Proof Δ     -- Ξ ,,ᵛ n ∈ Nat' ⊢ φ
     -- ^ We cannot just return a proof of type Proof (Γ ,, x ∈ Nat')
     -- because in that case pattern matching in the proof checker
     -- would fail. Users are intended to use nat-induction defined below.
@@ -126,6 +129,10 @@ data Proof {m : Mode} : Ctx m → Set where
   fun-cong : Proof Γ → Tm (Γ ,lock⟨ μ ⟩) T → Proof Γ
   cong : {T S : Ty m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Proof (Γ ,lock⟨ μ ⟩) → Proof Γ
   hole : String → Proof Γ
+
+bool-induction : {Γ : Ctx m} {x : String} →
+                 Proof Γ → Proof Γ → Proof (Γ ,, x ∈ Bool')
+bool-induction = bool-induction' Ag.refl
 
 nat-induction : {Γ : Ctx m} {x : String} (hyp : String) →
                 Proof Γ → Proof (Γ ,, x ∈ Nat') → Proof (Γ ,, x ∈ Nat')

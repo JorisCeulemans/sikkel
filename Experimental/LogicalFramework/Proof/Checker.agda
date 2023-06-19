@@ -331,6 +331,30 @@ check-proof Ξ (zero≠sucn m) φ = do
     (M.ι[ M.Pi-cong-cod (M.⇛-cong (M.Id-cong' M.reflᵗᵐ (M.suc'-cong (v0-sound-𝟙 (to-ctx Ξ) m Nat')))
                                   M.reflᵗʸ) ]
     M.zero≠sucn) M.[ _ ]' ⟆
+check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
+  ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
+  refl ← mod-dom μ =m? mod-cod μ
+  refl ← μ =mod? 𝟙
+  refl ← T =T? Bool'
+  refl ← return Δ=Γ,x∈Bool
+  ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true / x ]bprop)
+  ⟅ goalsf , ⟦pf⟧ ⟆ ← check-proof Ξ' pf (φ [ false / x ]bprop)
+  return ⟅ goalst ++ goalsf , sgoals ↦ (let sgoalst , sgoalsf = split-sem-goals goalst goalsf sgoals in
+    M.bool-ind _
+               (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 ⟦ φ ⟧bprop (M./cl-⊚ (ty-closed-natural ⟨ 𝟙 ∣ Bool' ⟩) (to-ctx-subst Ξ') M.true'))
+                                 (M.ty-subst-cong-subst (M.transˢ (M./cl-cong-cl (M.𝟙-preserves-cl M.const-closed))
+                                                                  (M./cl-cong M.const-closed (M.transᵗᵐ (M.cl-tm-subst-cong-cl (M.𝟙-preserves-cl M.const-closed))
+                                                                                                        (M.const-cl-natural (to-ctx-subst Ξ'))))) _) ]
+                 (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound {Γ = to-ctx Ξ'} {μ = 𝟙} true x)) _)
+                                                       (bprop-sub-sound φ _)) ]
+                 ⟦pt⟧ sgoalst))
+               (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 ⟦ φ ⟧bprop (M./cl-⊚ (ty-closed-natural ⟨ 𝟙 ∣ Bool' ⟩) (to-ctx-subst Ξ') M.false'))
+                                 (M.ty-subst-cong-subst (M.transˢ (M./cl-cong-cl (M.𝟙-preserves-cl M.const-closed))
+                                                                  (M./cl-cong M.const-closed (M.transᵗᵐ (M.cl-tm-subst-cong-cl (M.𝟙-preserves-cl M.const-closed))
+                                                                                                        (M.const-cl-natural (to-ctx-subst Ξ'))))) _) ]
+                 (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound {Γ = to-ctx Ξ'} {μ = 𝟙} false x)) _)
+                                                       (bprop-sub-sound φ _)) ]
+                 ⟦pf⟧ sgoalsf))) ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← mod-dom μ =m? mod-cod μ
