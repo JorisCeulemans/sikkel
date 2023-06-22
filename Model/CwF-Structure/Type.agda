@@ -300,19 +300,19 @@ open _≅ᵉ_ public
 
 to-eq : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → to e1 ≅ⁿ to e2
 to-eq {e1 = e1} {e2} ε = begin
-  to e1
-   ≅˘⟨ id-trans-unitʳ (to e1) ⟩
-  to e1 ⊙ id-trans _
-   ≅˘⟨ ⊙-congʳ _ (isoʳ e2) ⟩
-  to e1 ⊙ (from e2 ⊙ to e2)
-   ≅˘⟨ ⊙-assoc _ _ _ ⟩
-  (to e1 ⊙ from e2) ⊙ to e2
-   ≅⟨ ⊙-congˡ _ (⊙-congʳ _ (symⁿ (from-eq ε))) ⟩
-  (to e1 ⊙ from e1) ⊙ to e2
-   ≅⟨ ⊙-congˡ _ (isoˡ e1) ⟩
-  id-trans _ ⊙ to e2
-   ≅⟨ id-trans-unitˡ _ ⟩
-  to e2 ∎
+    to e1
+  ≅˘⟨ id-trans-unitʳ (to e1) ⟩
+    to e1 ⊙ id-trans _
+  ≅˘⟨ ⊙-congʳ _ (isoʳ e2) ⟩
+    to e1 ⊙ (from e2 ⊙ to e2)
+  ≅˘⟨ ⊙-assoc _ _ _ ⟩
+    (to e1 ⊙ from e2) ⊙ to e2
+  ≅⟨ ⊙-congˡ _ (⊙-congʳ _ (symⁿ (from-eq ε))) ⟩
+    (to e1 ⊙ from e1) ⊙ to e2
+  ≅⟨ ⊙-congˡ _ (isoˡ e1) ⟩
+    id-trans _ ⊙ to e2
+  ≅⟨ id-trans-unitˡ _ ⟩
+    to e2 ∎
   where open ≅ⁿ-Reasoning
 
 reflᵉ : {e : T ≅ᵗʸ S} → e ≅ᵉ e

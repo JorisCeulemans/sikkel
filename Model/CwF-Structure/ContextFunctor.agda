@@ -34,25 +34,25 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
   ctx-map-inverse : {Δ Γ : Ctx C} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} →
                     τ ⊚ σ ≅ˢ id-subst Δ → ctx-map τ ⊚ ctx-map σ ≅ˢ id-subst (Φ Δ)
   ctx-map-inverse {Δ = Δ} {σ = σ} {τ = τ} e = begin
-    ctx-map τ ⊚ ctx-map σ
-      ≅˘⟨ ctx-map-⊚ τ σ ⟩
-    ctx-map (τ ⊚ σ)
-      ≅⟨ ctx-map-cong e ⟩
-    ctx-map (id-subst Δ)
-      ≅⟨ ctx-map-id ⟩
-    id-subst (Φ Δ) ∎
+      ctx-map τ ⊚ ctx-map σ
+    ≅˘⟨ ctx-map-⊚ τ σ ⟩
+      ctx-map (τ ⊚ σ)
+    ≅⟨ ctx-map-cong e ⟩
+      ctx-map (id-subst Δ)
+    ≅⟨ ctx-map-id ⟩
+      id-subst (Φ Δ) ∎
     where open ≅ˢ-Reasoning
 
   ctx-map-cong-2-2 : {Γ Δ Δ' Θ : Ctx C} {σ1 : Γ ⇒ Δ} {τ1 : Δ ⇒ Θ} {σ2 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} →
                      τ1 ⊚ σ1 ≅ˢ τ2 ⊚ σ2 → ctx-map τ1 ⊚ ctx-map σ1 ≅ˢ ctx-map τ2 ⊚ ctx-map σ2
   ctx-map-cong-2-2 {σ1 = σ1} {τ1} {σ2} {τ2} e = begin
-    ctx-map τ1 ⊚ ctx-map σ1
-      ≅˘⟨ ctx-map-⊚ τ1 σ1 ⟩
-    ctx-map (τ1 ⊚ σ1)
-      ≅⟨ ctx-map-cong e ⟩
-    ctx-map (τ2 ⊚ σ2)
-      ≅⟨ ctx-map-⊚ τ2 σ2 ⟩
-    ctx-map τ2 ⊚ ctx-map σ2 ∎
+      ctx-map τ1 ⊚ ctx-map σ1
+    ≅˘⟨ ctx-map-⊚ τ1 σ1 ⟩
+      ctx-map (τ1 ⊚ σ1)
+    ≅⟨ ctx-map-cong e ⟩
+      ctx-map (τ2 ⊚ σ2)
+    ≅⟨ ctx-map-⊚ τ2 σ2 ⟩
+      ctx-map τ2 ⊚ ctx-map σ2 ∎
     where open ≅ˢ-Reasoning
 
 open IsCtxFunctor {{...}} public
@@ -125,17 +125,17 @@ naturality (id-ctx-transf Φ) σ = transˢ (id-subst-unitˡ (ctx-fmap Φ σ))
 _ⓝ-vert_ : {Φ Ψ Ω : CtxFunctor C D} → CtxNatTransf Ψ Ω → CtxNatTransf Φ Ψ → CtxNatTransf Φ Ω
 transf-op (η ⓝ-vert ζ) Γ = transf-op η Γ ⊚ transf-op ζ Γ
 naturality (_ⓝ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
-  (transf-op η Γ ⊚ transf-op ζ Γ) ⊚ ctx-fmap Φ σ
-    ≅⟨ ⊚-assoc ⟩
-  transf-op η Γ ⊚ (transf-op ζ Γ ⊚ ctx-fmap Φ σ)
-    ≅⟨ ⊚-congʳ (naturality ζ σ) ⟩
-  transf-op η Γ ⊚ (ctx-fmap Ψ σ ⊚ transf-op ζ Δ)
-    ≅˘⟨ ⊚-assoc ⟩
-  (transf-op η Γ ⊚ ctx-fmap Ψ σ) ⊚ transf-op ζ Δ
-    ≅⟨ ⊚-congˡ (naturality η σ) ⟩
-  (ctx-fmap Ω σ ⊚ transf-op η Δ) ⊚ transf-op ζ Δ
-    ≅⟨ ⊚-assoc ⟩
-  ctx-fmap Ω σ ⊚ (transf-op η Δ ⊚ transf-op ζ Δ) ∎
+    (transf-op η Γ ⊚ transf-op ζ Γ) ⊚ ctx-fmap Φ σ
+  ≅⟨ ⊚-assoc ⟩
+    transf-op η Γ ⊚ (transf-op ζ Γ ⊚ ctx-fmap Φ σ)
+  ≅⟨ ⊚-congʳ (naturality ζ σ) ⟩
+    transf-op η Γ ⊚ (ctx-fmap Ψ σ ⊚ transf-op ζ Δ)
+  ≅˘⟨ ⊚-assoc ⟩
+    (transf-op η Γ ⊚ ctx-fmap Ψ σ) ⊚ transf-op ζ Δ
+  ≅⟨ ⊚-congˡ (naturality η σ) ⟩
+    (ctx-fmap Ω σ ⊚ transf-op η Δ) ⊚ transf-op ζ Δ
+  ≅⟨ ⊚-assoc ⟩
+    ctx-fmap Ω σ ⊚ (transf-op η Δ ⊚ transf-op ζ Δ) ∎
   where open ≅ˢ-Reasoning
 
 -- Horizontal composition of natural transformations
@@ -143,19 +143,19 @@ _ⓝ-hor_ : {C1 C2 C3 : BaseCategory} {Φ Φ' : CtxFunctor C2 C3} {Ψ Ψ' : CtxF
           CtxNatTransf Φ Φ' → CtxNatTransf Ψ Ψ' → CtxNatTransf (Φ ⓕ Ψ) (Φ' ⓕ Ψ')
 transf-op (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) Γ = transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)
 naturality (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begin
-  (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ)
-    ≅⟨ ⊚-assoc ⟩
-  transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (transf-op ζ Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ))
-    ≅˘⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
-  transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ ⊚ ctx-fmap Ψ σ)
-    ≅⟨ ⊚-congʳ (ctx-fmap-cong Φ (naturality ζ σ)) ⟩
-  transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ ⊚ transf-op ζ Δ)
-    ≅⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
-  transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (ctx-fmap Ψ' σ) ⊚ ctx-fmap Φ (transf-op ζ Δ))
-    ≅˘⟨ ⊚-assoc ⟩
-  (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ)) ⊚ ctx-fmap Φ (transf-op ζ Δ)
-    ≅⟨ ⊚-congˡ (naturality η (ctx-fmap Ψ' σ)) ⟩
-  (ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ (transf-op η (ctx-op Ψ' Δ)) ⊚ ctx-fmap Φ (transf-op ζ Δ))
-    ≅⟨ ⊚-assoc ⟩
-  ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ ((transf-op η (ctx-op Ψ' Δ) ⊚ ctx-fmap Φ (transf-op ζ Δ))) ∎
+    (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ)
+  ≅⟨ ⊚-assoc ⟩
+    transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (transf-op ζ Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ))
+  ≅˘⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
+    transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ ⊚ ctx-fmap Ψ σ)
+  ≅⟨ ⊚-congʳ (ctx-fmap-cong Φ (naturality ζ σ)) ⟩
+    transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ ⊚ transf-op ζ Δ)
+  ≅⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
+    transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (ctx-fmap Ψ' σ) ⊚ ctx-fmap Φ (transf-op ζ Δ))
+  ≅˘⟨ ⊚-assoc ⟩
+    (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ)) ⊚ ctx-fmap Φ (transf-op ζ Δ)
+  ≅⟨ ⊚-congˡ (naturality η (ctx-fmap Ψ' σ)) ⟩
+    (ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ (transf-op η (ctx-op Ψ' Δ)) ⊚ ctx-fmap Φ (transf-op ζ Δ))
+  ≅⟨ ⊚-assoc ⟩
+    ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ ((transf-op η (ctx-op Ψ' Δ) ⊚ ctx-fmap Φ (transf-op ζ Δ))) ∎
   where open ≅ˢ-Reasoning

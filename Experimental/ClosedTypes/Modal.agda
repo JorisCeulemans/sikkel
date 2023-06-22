@@ -45,10 +45,11 @@ smod-intro-cong μ e = ι-cong (mod-intro-cong μ (ι-cong e))
 
 smod-intro-natural : (μ : Modality C D) {Γ Δ : Ctx D} (σ : Γ ⇒ Δ) {T : ClosedTy C} {t : SimpleTm (lock μ Δ) T} →
                      (smod-intro μ t) [ σ ]s ≅ᵗᵐ smod-intro μ (t [ lock-fmap μ σ ]s)
-smod-intro-natural μ σ {t = t} = begin
-  ι⁻¹[ closed-ty-natural _ σ ] ((ι[ mod-natural μ (!◇ _) ] mod-intro μ (ι[ closed-ty-natural _ (lock-fmap μ (!◇ _)) ] t)) [ σ ]')
-    ≅⟨ {!!} ⟩
-  ι[ mod-natural μ _ ] mod-intro μ (ι[ closed-ty-natural _ (lock-fmap μ (!◇ _)) ] (ι⁻¹[ closed-ty-natural _ (lock-fmap μ σ) ] (t [ lock-fmap μ σ ]'))) ∎
+smod-intro-natural μ σ {t = t} =
+  begin
+    ι⁻¹[ closed-ty-natural _ σ ] ((ι[ mod-natural μ (!◇ _) ] mod-intro μ (ι[ closed-ty-natural _ (lock-fmap μ (!◇ _)) ] t)) [ σ ]')
+  ≅⟨ {!!} ⟩
+    ι[ mod-natural μ _ ] mod-intro μ (ι[ closed-ty-natural _ (lock-fmap μ (!◇ _)) ] (ι⁻¹[ closed-ty-natural _ (lock-fmap μ σ) ] (t [ lock-fmap μ σ ]'))) ∎
   where open ≅ᵗᵐ-Reasoning
 
 smtt-mod-elim : {Γ : Ctx E} {T : ClosedTy C} {S : ClosedTy E} (ρ : Modality D E) (μ : Modality C D)

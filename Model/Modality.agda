@@ -100,27 +100,27 @@ record Modality (C D : BaseCategory) : Set₁ where
   mod-elim-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (lock Γ)} (t : Tm Γ (⟨_∣_⟩ T)) →
                      (mod-elim t) [ lock-fmap σ ]' ≅ᵗᵐ mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]'))
   mod-elim-natural σ t = begin
-    (mod-elim t) [ lock-fmap σ ]'
-      ≅˘⟨ mod-β _ ⟩
-    mod-elim (mod-intro ((mod-elim t) [ lock-fmap σ ]'))
-      ≅˘⟨ mod-elim-cong ι-symˡ ⟩
-    mod-elim (ι⁻¹[ mod-natural σ ] (ι[ mod-natural σ ] (mod-intro ((mod-elim t) [ lock-fmap σ ]'))))
-      ≅˘⟨ mod-elim-cong (ι⁻¹-cong (mod-intro-natural σ (mod-elim t))) ⟩
-    mod-elim (ι⁻¹[ mod-natural σ ] (mod-intro (mod-elim t) [ σ ]'))
-      ≅⟨ mod-elim-cong (ι⁻¹-cong (tm-subst-cong-tm σ (mod-η t))) ⟩
-    mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]')) ∎
+      (mod-elim t) [ lock-fmap σ ]'
+    ≅˘⟨ mod-β _ ⟩
+      mod-elim (mod-intro ((mod-elim t) [ lock-fmap σ ]'))
+    ≅˘⟨ mod-elim-cong ι-symˡ ⟩
+      mod-elim (ι⁻¹[ mod-natural σ ] (ι[ mod-natural σ ] (mod-intro ((mod-elim t) [ lock-fmap σ ]'))))
+    ≅˘⟨ mod-elim-cong (ι⁻¹-cong (mod-intro-natural σ (mod-elim t))) ⟩
+      mod-elim (ι⁻¹[ mod-natural σ ] (mod-intro (mod-elim t) [ σ ]'))
+    ≅⟨ mod-elim-cong (ι⁻¹-cong (tm-subst-cong-tm σ (mod-η t))) ⟩
+      mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]')) ∎
     where open ≅ᵗᵐ-Reasoning
 
   mod-elim-ι : {Γ : Ctx D} {T S : Ty (lock Γ)} {T=S : T ≅ᵗʸ S} (t : Tm Γ (⟨_∣_⟩ S)) →
                ι[ T=S ] mod-elim t ≅ᵗᵐ mod-elim (ι[ mod-cong T=S ] t)
   mod-elim-ι {T = T} {S = S} {T=S = T=S} t = begin
-    ι[ T=S ] mod-elim t
-      ≅˘⟨ mod-β _ ⟩
-    mod-elim (mod-intro (ι[ T=S ] mod-elim t))
-      ≅˘⟨ mod-elim-cong (mod-intro-ι _) ⟩
-    mod-elim (ι[ mod-cong T=S ] mod-intro (mod-elim t))
-      ≅⟨ mod-elim-cong (ι-cong (mod-η t)) ⟩
-    mod-elim (ι[ mod-cong T=S ] t) ∎
+      ι[ T=S ] mod-elim t
+    ≅˘⟨ mod-β _ ⟩
+      mod-elim (mod-intro (ι[ T=S ] mod-elim t))
+    ≅˘⟨ mod-elim-cong (mod-intro-ι _) ⟩
+      mod-elim (ι[ mod-cong T=S ] mod-intro (mod-elim t))
+    ≅⟨ mod-elim-cong (ι-cong (mod-η t)) ⟩
+      mod-elim (ι[ mod-cong T=S ] t) ∎
     where open ≅ᵗᵐ-Reasoning
 
 open Modality public
@@ -319,15 +319,15 @@ mod-natural-subst-eq (μ ⓜ ρ) ε =
 mod-intro (μ ⓜ ρ) t = mod-intro μ (mod-intro ρ t)
 mod-intro-cong (μ ⓜ ρ) e = mod-intro-cong μ (mod-intro-cong ρ e)
 mod-intro-natural (μ ⓜ ρ) σ t = begin
-  (mod-intro μ (mod-intro ρ t)) [ σ ]'
-    ≅⟨ mod-intro-natural μ σ (mod-intro ρ t) ⟩
-  ι[ mod-natural μ σ ] mod-intro μ ((mod-intro ρ t) [ lock-fmap μ σ ]')
-    ≅⟨ ι-cong (mod-intro-cong μ (mod-intro-natural ρ (lock-fmap μ σ) t)) ⟩
-  ι[ mod-natural μ σ ] mod-intro μ (ι[ mod-natural ρ _ ] mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]'))
-    ≅˘⟨ ι-cong (mod-intro-ι μ _) ⟩
-  ι[ mod-natural μ σ ] (ι[ mod-cong μ (mod-natural ρ _) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')))
-    ≅˘⟨ ι-trans ⟩
-  ι[ transᵗʸ (mod-natural μ σ) (mod-cong μ (mod-natural ρ (lock-fmap μ σ))) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')) ∎
+    (mod-intro μ (mod-intro ρ t)) [ σ ]'
+  ≅⟨ mod-intro-natural μ σ (mod-intro ρ t) ⟩
+    ι[ mod-natural μ σ ] mod-intro μ ((mod-intro ρ t) [ lock-fmap μ σ ]')
+  ≅⟨ ι-cong (mod-intro-cong μ (mod-intro-natural ρ (lock-fmap μ σ) t)) ⟩
+    ι[ mod-natural μ σ ] mod-intro μ (ι[ mod-natural ρ _ ] mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]'))
+  ≅˘⟨ ι-cong (mod-intro-ι μ _) ⟩
+    ι[ mod-natural μ σ ] (ι[ mod-cong μ (mod-natural ρ _) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')))
+  ≅˘⟨ ι-trans ⟩
+    ι[ transᵗʸ (mod-natural μ σ) (mod-cong μ (mod-natural ρ (lock-fmap μ σ))) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')) ∎
   where open ≅ᵗᵐ-Reasoning
 mod-intro-ι (μ ⓜ ρ) t = transᵗᵐ (mod-intro-ι μ _) (mod-intro-cong μ (mod-intro-ι ρ _))
 mod-elim (μ ⓜ ρ) t = mod-elim ρ (mod-elim μ t)
@@ -363,43 +363,43 @@ record _≅ᵐ_  {C D} (μ ρ : Modality C D) : Set₁ where
   eq-lock-natural-from : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) →
                          from (eq-lock Γ) ⊚ lock-fmap μ σ ≅ˢ lock-fmap ρ σ ⊚ from (eq-lock Δ)
   eq-lock-natural-from {Δ} {Γ} σ = begin
-    from (eq-lock Γ) ⊚ lock-fmap μ σ
-      ≅˘⟨ id-subst-unitʳ _ ⟩
-    (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ id-subst (lock μ Δ)
-      ≅˘⟨ ⊚-congʳ (isoˡ (eq-lock Δ)) ⟩
-    (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ (to (eq-lock Δ) ⊚ from (eq-lock Δ))
-      ≅˘⟨ ⊚-assoc ⟩
-    ((from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ to (eq-lock Δ)) ⊚ from (eq-lock Δ)
-      ≅⟨ ⊚-congˡ ⊚-assoc ⟩
-    (from (eq-lock Γ) ⊚ (lock-fmap μ σ ⊚ to (eq-lock Δ))) ⊚ from (eq-lock Δ)
-      ≅˘⟨ ⊚-congˡ (⊚-congʳ (eq-lock-natural-to σ)) ⟩
-    (from (eq-lock Γ) ⊚ (to (eq-lock Γ) ⊚ lock-fmap ρ σ)) ⊚ from (eq-lock Δ)
-      ≅˘⟨ ⊚-congˡ ⊚-assoc ⟩
-    ((from (eq-lock Γ) ⊚ to (eq-lock Γ)) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
-      ≅⟨ ⊚-congˡ (⊚-congˡ (isoʳ (eq-lock Γ))) ⟩
-    (id-subst (lock ρ Γ) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
-      ≅⟨ ⊚-congˡ (id-subst-unitˡ _) ⟩
-    lock-fmap ρ σ ⊚ from (eq-lock Δ) ∎
+      from (eq-lock Γ) ⊚ lock-fmap μ σ
+    ≅˘⟨ id-subst-unitʳ _ ⟩
+      (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ id-subst (lock μ Δ)
+    ≅˘⟨ ⊚-congʳ (isoˡ (eq-lock Δ)) ⟩
+      (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ (to (eq-lock Δ) ⊚ from (eq-lock Δ))
+    ≅˘⟨ ⊚-assoc ⟩
+      ((from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ to (eq-lock Δ)) ⊚ from (eq-lock Δ)
+    ≅⟨ ⊚-congˡ ⊚-assoc ⟩
+      (from (eq-lock Γ) ⊚ (lock-fmap μ σ ⊚ to (eq-lock Δ))) ⊚ from (eq-lock Δ)
+    ≅˘⟨ ⊚-congˡ (⊚-congʳ (eq-lock-natural-to σ)) ⟩
+      (from (eq-lock Γ) ⊚ (to (eq-lock Γ) ⊚ lock-fmap ρ σ)) ⊚ from (eq-lock Δ)
+    ≅˘⟨ ⊚-congˡ ⊚-assoc ⟩
+      ((from (eq-lock Γ) ⊚ to (eq-lock Γ)) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
+    ≅⟨ ⊚-congˡ (⊚-congˡ (isoʳ (eq-lock Γ))) ⟩
+      (id-subst (lock ρ Γ) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
+    ≅⟨ ⊚-congˡ (id-subst-unitˡ _) ⟩
+      lock-fmap ρ σ ⊚ from (eq-lock Δ) ∎
     where open ≅ˢ-Reasoning
 
   eq-mod-tyˡ : {Γ : Ctx D} (T : Ty (lock ρ Γ)) → ⟨ μ ∣ T [ from (eq-lock Γ) ] ⟩ ≅ᵗʸ ⟨ ρ ∣ T ⟩
   eq-mod-tyˡ {Γ = Γ} T = begin
-    ⟨ μ ∣ T [ from (eq-lock Γ) ] ⟩
-      ≅⟨ eq-mod-tyʳ (T [ from (eq-lock Γ) ]) ⟩
-    ⟨ ρ ∣ (T [ from (eq-lock Γ) ]) [ to (eq-lock Γ) ] ⟩
-      ≅⟨ mod-cong ρ (ty-subst-seq-cong (from (eq-lock Γ) ∷ to (eq-lock Γ) ◼) (id-subst _ ◼) T (isoʳ (eq-lock Γ))) ⟩
-    ⟨ ρ ∣ T [ id-subst (Γ ,lock⟨ ρ ⟩) ] ⟩
-      ≅⟨ mod-cong ρ (ty-subst-id T) ⟩
-    ⟨ ρ ∣ T ⟩ ∎
+      ⟨ μ ∣ T [ from (eq-lock Γ) ] ⟩
+    ≅⟨ eq-mod-tyʳ (T [ from (eq-lock Γ) ]) ⟩
+      ⟨ ρ ∣ (T [ from (eq-lock Γ) ]) [ to (eq-lock Γ) ] ⟩
+    ≅⟨ mod-cong ρ (ty-subst-seq-cong (from (eq-lock Γ) ∷ to (eq-lock Γ) ◼) (id-subst _ ◼) T (isoʳ (eq-lock Γ))) ⟩
+      ⟨ ρ ∣ T [ id-subst (Γ ,lock⟨ ρ ⟩) ] ⟩
+    ≅⟨ mod-cong ρ (ty-subst-id T) ⟩
+      ⟨ ρ ∣ T ⟩ ∎
     where open ≅ᵗʸ-Reasoning
 
   eq-mod-closed : {A : ClosedTy C} → IsClosedNatural A → {Γ : Ctx D} → ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
   eq-mod-closed {A = A} clA = begin
-    ⟨ μ ∣ A ⟩
-      ≅⟨ eq-mod-tyʳ A ⟩
-    ⟨ ρ ∣ A [ to (eq-lock _) ] ⟩
-      ≅⟨ mod-cong ρ (closed-natural clA (to (eq-lock _))) ⟩
-    ⟨ ρ ∣ A ⟩ ∎
+      ⟨ μ ∣ A ⟩
+    ≅⟨ eq-mod-tyʳ A ⟩
+      ⟨ ρ ∣ A [ to (eq-lock _) ] ⟩
+    ≅⟨ mod-cong ρ (closed-natural clA (to (eq-lock _))) ⟩
+      ⟨ ρ ∣ A ⟩ ∎
     where open ≅ᵗʸ-Reasoning
 
 open _≅ᵐ_ public
@@ -417,26 +417,26 @@ eq-mod-tyʳ (symᵐ e) T = symᵗʸ (eq-mod-tyˡ e T)
 transᵐ : ∀ {C D} {μ ρ κ : Modality C D} → μ ≅ᵐ ρ → ρ ≅ᵐ κ → μ ≅ᵐ κ
 eq-lock (transᵐ μ=ρ ρ=κ) Γ = transᶜ (eq-lock μ=ρ Γ) (eq-lock ρ=κ Γ)
 eq-lock-natural-to (transᵐ {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
-  (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ⊚ lock-fmap κ σ
-    ≅⟨ ⊚-assoc ⟩
-  to (eq-lock μ=ρ _) ⊚ (to (eq-lock ρ=κ _) ⊚ lock-fmap κ σ)
-    ≅⟨ ⊚-congʳ (eq-lock-natural-to ρ=κ σ) ⟩
-  to (eq-lock μ=ρ _) ⊚ (lock-fmap ρ σ ⊚ to (eq-lock ρ=κ _))
-    ≅˘⟨ ⊚-assoc ⟩
-  (to (eq-lock μ=ρ _) ⊚ lock-fmap ρ σ) ⊚ to (eq-lock ρ=κ _)
-    ≅⟨ ⊚-congˡ (eq-lock-natural-to μ=ρ σ) ⟩
-  (lock-fmap μ σ ⊚ to (eq-lock μ=ρ _)) ⊚ to (eq-lock ρ=κ _)
-    ≅⟨ ⊚-assoc ⟩
-  lock-fmap μ σ ⊚ (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ∎
+    (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ⊚ lock-fmap κ σ
+  ≅⟨ ⊚-assoc ⟩
+    to (eq-lock μ=ρ _) ⊚ (to (eq-lock ρ=κ _) ⊚ lock-fmap κ σ)
+  ≅⟨ ⊚-congʳ (eq-lock-natural-to ρ=κ σ) ⟩
+    to (eq-lock μ=ρ _) ⊚ (lock-fmap ρ σ ⊚ to (eq-lock ρ=κ _))
+  ≅˘⟨ ⊚-assoc ⟩
+    (to (eq-lock μ=ρ _) ⊚ lock-fmap ρ σ) ⊚ to (eq-lock ρ=κ _)
+  ≅⟨ ⊚-congˡ (eq-lock-natural-to μ=ρ σ) ⟩
+    (lock-fmap μ σ ⊚ to (eq-lock μ=ρ _)) ⊚ to (eq-lock ρ=κ _)
+  ≅⟨ ⊚-assoc ⟩
+    lock-fmap μ σ ⊚ (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ∎
   where open ≅ˢ-Reasoning
 eq-mod-tyʳ (transᵐ {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T = begin
-  ⟨ μ ∣ T ⟩
-    ≅⟨ eq-mod-tyʳ μ=ρ T ⟩
-  ⟨ ρ ∣ T [ to (eq-lock μ=ρ Γ) ] ⟩
-    ≅⟨ eq-mod-tyʳ ρ=κ (T [ to (eq-lock μ=ρ Γ) ]) ⟩
-  ⟨ κ ∣ (T [ to (eq-lock μ=ρ Γ) ]) [ to (eq-lock ρ=κ Γ) ] ⟩
-    ≅⟨ mod-cong κ (ty-subst-comp T _ _) ⟩
-  ⟨ κ ∣ T [ to (eq-lock μ=ρ Γ) ⊚ to (eq-lock ρ=κ Γ) ] ⟩ ∎
+    ⟨ μ ∣ T ⟩
+  ≅⟨ eq-mod-tyʳ μ=ρ T ⟩
+    ⟨ ρ ∣ T [ to (eq-lock μ=ρ Γ) ] ⟩
+  ≅⟨ eq-mod-tyʳ ρ=κ (T [ to (eq-lock μ=ρ Γ) ]) ⟩
+    ⟨ κ ∣ (T [ to (eq-lock μ=ρ Γ) ]) [ to (eq-lock ρ=κ Γ) ] ⟩
+  ≅⟨ mod-cong κ (ty-subst-comp T _ _) ⟩
+    ⟨ κ ∣ T [ to (eq-lock μ=ρ Γ) ⊚ to (eq-lock ρ=κ Γ) ] ⟩ ∎
   where open ≅ᵗʸ-Reasoning
 
 𝟙-unitʳ : (μ : Modality C D) → μ ⓜ 𝟙 ≅ᵐ μ
@@ -467,20 +467,20 @@ to (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = lock-fmap μ (to (eq-lock ρ=ρ' Γ))
 isoˡ (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoˡ (eq-lock ρ=ρ' Γ))
 isoʳ (eq-lock (ⓜ-congˡ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoʳ (eq-lock ρ=ρ' Γ))
 eq-lock-natural-to (ⓜ-congˡ {ρ = ρ} {ρ'} μ ρ=ρ') σ = begin
-  lock-fmap μ (to (eq-lock ρ=ρ' _)) ⊚ lock-fmap μ (lock-fmap ρ' σ)
-    ≅˘⟨ lock-fmap-⊚ μ _ _ ⟩
-  lock-fmap μ (to (eq-lock ρ=ρ' _) ⊚ lock-fmap ρ' σ)
-    ≅⟨ lock-fmap-cong μ (eq-lock-natural-to ρ=ρ' σ) ⟩
-  lock-fmap μ (lock-fmap ρ σ ⊚ to (eq-lock ρ=ρ' _))
-    ≅⟨ lock-fmap-⊚ μ _ _ ⟩
-  lock-fmap μ (lock-fmap ρ σ) ⊚ lock-fmap μ (to (eq-lock ρ=ρ' _)) ∎
+    lock-fmap μ (to (eq-lock ρ=ρ' _)) ⊚ lock-fmap μ (lock-fmap ρ' σ)
+  ≅˘⟨ lock-fmap-⊚ μ _ _ ⟩
+    lock-fmap μ (to (eq-lock ρ=ρ' _) ⊚ lock-fmap ρ' σ)
+  ≅⟨ lock-fmap-cong μ (eq-lock-natural-to ρ=ρ' σ) ⟩
+    lock-fmap μ (lock-fmap ρ σ ⊚ to (eq-lock ρ=ρ' _))
+  ≅⟨ lock-fmap-⊚ μ _ _ ⟩
+    lock-fmap μ (lock-fmap ρ σ) ⊚ lock-fmap μ (to (eq-lock ρ=ρ' _)) ∎
   where open ≅ˢ-Reasoning
 eq-mod-tyʳ (ⓜ-congˡ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T = begin
-  ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩
-    ≅⟨ eq-mod-tyʳ ρ=ρ' ⟨ μ ∣ T ⟩ ⟩
-  ⟨ ρ' ∣ ⟨ μ ∣ T ⟩ [ to (eq-lock ρ=ρ' Γ) ] ⟩
-    ≅⟨ mod-cong ρ' (mod-natural μ (to (eq-lock ρ=ρ' Γ))) ⟩
-  ⟨ ρ' ∣ ⟨ μ ∣ T [ lock-fmap μ (to (eq-lock ρ=ρ' Γ)) ] ⟩ ⟩ ∎
+    ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩
+  ≅⟨ eq-mod-tyʳ ρ=ρ' ⟨ μ ∣ T ⟩ ⟩
+    ⟨ ρ' ∣ ⟨ μ ∣ T ⟩ [ to (eq-lock ρ=ρ' Γ) ] ⟩
+  ≅⟨ mod-cong ρ' (mod-natural μ (to (eq-lock ρ=ρ' Γ))) ⟩
+    ⟨ ρ' ∣ ⟨ μ ∣ T [ lock-fmap μ (to (eq-lock ρ=ρ' Γ)) ] ⟩ ⟩ ∎
   where open ≅ᵗʸ-Reasoning
 
 module ≅ᵐ-Reasoning where

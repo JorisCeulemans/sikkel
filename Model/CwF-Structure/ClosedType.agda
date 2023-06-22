@@ -198,7 +198,8 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
                                    (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
 
   ,cl-⊚ : (σ : Δ ⇒ Θ) (t : Tm Δ T) (τ : Γ ⇒ Δ) → (σ ,cl⟨ clT ⟩ t) ⊚ τ ≅ˢ (σ ⊚ τ) ,cl⟨ clT ⟩ (t [ clT ∣ τ ]cl)
-  ,cl-⊚ σ t τ = begin
+  ,cl-⊚ σ t τ =
+    begin
       (σ ,cl⟨ clT ⟩ t) ⊚ τ
     ≅⟨ ,cl-η _ ⟩
       (π ⊚ ((σ ,cl⟨ clT ⟩ t) ⊚ τ)) ,cl⟨ clT ⟩
@@ -211,7 +212,8 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     where open ≅ˢ-Reasoning
 
   /cl-⊚ : (σ : Γ ⇒ Δ) (t : Tm Δ T) → (t /cl⟨ clT ⟩) ⊚ σ ≅ˢ lift-cl-subst σ ⊚ ((t [ clT ∣ σ ]cl) /cl⟨ clT ⟩)
-  /cl-⊚ σ t = begin
+  /cl-⊚ σ t =
+    begin
       (id-subst _ ,cl⟨ clT ⟩ t) ⊚ σ
     ≅⟨ ,cl-⊚ _ t σ ⟩
       (id-subst _ ⊚ σ) ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)
@@ -229,7 +231,8 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
 module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) where
   lift-cl-,cl : (σ : Γ ⇒ Δ) (s : Tm (Δ ,, T) S) →
                 lift-cl-subst clS σ ⊚ (π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl)) ≅ˢ (π ,cl⟨ clS ⟩ s) ⊚ lift-cl-subst clT σ
-  lift-cl-,cl σ s = begin
+  lift-cl-,cl σ s =
+    begin
       ((σ ⊚ π) ,cl⟨ clS ⟩ ξcl clS) ⊚ (π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl))
     ≅⟨ ,cl-⊚ clS _ _ _ ⟩
       (σ ⊚ π ⊚ (π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl)))
