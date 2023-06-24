@@ -2,7 +2,7 @@
 -- Definition of proofs
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.Proof.Definition (ℳ : ModeTheory) where
 

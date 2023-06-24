@@ -2,7 +2,7 @@
 -- Module that re-exports all definitions involving predicates on STT programs
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
 module Experimental.LogicalFramework.bProp

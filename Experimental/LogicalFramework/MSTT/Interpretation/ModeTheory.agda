@@ -4,7 +4,7 @@ open import Model.BaseCategory as M using (BaseCategory)
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.Modality as M using (_≅ᵐ_)
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 
 record MTIntBasis (ℳ : ModeTheory) : Set₁ where

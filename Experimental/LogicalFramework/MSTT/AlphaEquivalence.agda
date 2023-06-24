@@ -2,7 +2,7 @@
 -- Definition of α-equivalence of MSTT terms via a translation to nameless terms
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.AlphaEquivalence (ℳ : ModeTheory) where
 

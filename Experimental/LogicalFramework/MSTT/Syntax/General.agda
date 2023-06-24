@@ -5,7 +5,7 @@
 --   but rather use MSTT.Syntax.Named.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.Syntax.General (ℳ : ModeTheory) (Name : Set) where
 

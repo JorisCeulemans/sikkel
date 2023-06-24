@@ -1,4 +1,4 @@
-module Experimental.LogicalFramework.MSTT.ModeTheory where
+module Experimental.LogicalFramework.MSTT.Parameter.ModeTheory where
 
 open import Data.Maybe
 open import Relation.Binary.PropositionalEquality

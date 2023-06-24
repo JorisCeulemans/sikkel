@@ -2,7 +2,7 @@
 -- Definition of MSTT types
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.Syntax.Types (ℳ : ModeTheory) where
 

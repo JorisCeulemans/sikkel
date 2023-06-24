@@ -2,7 +2,7 @@
 -- Interpretation of MSTT contexts and terms in a presheaf model
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.Interpretation

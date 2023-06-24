@@ -3,7 +3,7 @@
 --   This essentially means that we have a nameless syntax.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.Syntax.Nameless (ℳ : ModeTheory) where
 

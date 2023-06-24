@@ -3,7 +3,7 @@
 --   type theory MSTT (but not interpreting it in a model)
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.Syntax (ℳ : ModeTheory) where
 

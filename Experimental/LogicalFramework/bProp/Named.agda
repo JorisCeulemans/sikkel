@@ -2,7 +2,7 @@
 -- Instantiation of the general definition of bProps with strings as names
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.bProp.Named (ℳ : ModeTheory) where
 

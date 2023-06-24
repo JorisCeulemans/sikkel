@@ -2,7 +2,7 @@
 -- Definition of α-equivalence of bProps via a translation to nameless bProps
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.bProp.AlphaEquivalence (ℳ : ModeTheory) where
 

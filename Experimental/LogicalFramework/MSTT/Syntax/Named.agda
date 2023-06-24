@@ -2,7 +2,7 @@
 -- Instantiation of the general MSTT syntax with strings as names
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.MSTT.Syntax.Named (ℳ : ModeTheory) where
 

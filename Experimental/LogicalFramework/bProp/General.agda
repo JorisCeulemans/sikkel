@@ -6,7 +6,7 @@
 --   bProp.Named.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.bProp.General (ℳ : ModeTheory) (Name : Set) where
 

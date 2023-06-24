@@ -8,7 +8,7 @@ open import Relation.Binary.PropositionalEquality
 import Model.BaseCategory as M
 import Model.Modality as M
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
 
 

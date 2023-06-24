@@ -3,7 +3,7 @@
 --   This essentially means that we have nameless bProps.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 module Experimental.LogicalFramework.bProp.Nameless (ℳ : ModeTheory) where
 
