@@ -3,13 +3,10 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
-module Experimental.LogicalFramework.bProp
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
-  where
+module Experimental.LogicalFramework.bProp (ℳ : ModeTheory) where
 
 
 open import Experimental.LogicalFramework.bProp.Named ℳ public
 open import Experimental.LogicalFramework.bProp.AlphaEquivalence ℳ public
-open import Experimental.LogicalFramework.bProp.Interpretation ℳ ⟦ℳ⟧ public
+open import Experimental.LogicalFramework.bProp.Interpretation ℳ public

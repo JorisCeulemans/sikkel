@@ -1,9 +1,6 @@
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
-module Experimental.LogicalFramework.Proof.Checker
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
-  where
+module Experimental.LogicalFramework.Proof.Checker (ℳ : ModeTheory) where
 
 open import Data.List
 open import Data.String as Str hiding (_≟_; _++_)
@@ -24,15 +21,14 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 
 open ModeTheory ℳ
-open ModeTheorySemantics ⟦ℳ⟧
 
-open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
-open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.MSTT ℳ
+open import Experimental.LogicalFramework.bProp ℳ
 open import Experimental.LogicalFramework.Proof.Definition ℳ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality ℳ
-open import Experimental.LogicalFramework.Proof.Context ℳ ⟦ℳ⟧
-open import Experimental.LogicalFramework.Postulates ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.Proof.Context ℳ
+open import Experimental.LogicalFramework.Postulates ℳ
 
 private variable
   m n o p : Mode

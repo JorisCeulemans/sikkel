@@ -3,18 +3,14 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
-module Experimental.LogicalFramework.MSTT.Interpretation
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
-  where
+module Experimental.LogicalFramework.MSTT.Interpretation (ℳ : ModeTheory) where
 
 open import Data.Maybe
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
-open ModeTheorySemantics ⟦ℳ⟧
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
@@ -29,7 +25,7 @@ open Syn.AtomicRen
 open Syn.AtomicRenSub
 import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ as DB
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧ as DBInt
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ as DBInt
 
 private variable
   m n : Mode

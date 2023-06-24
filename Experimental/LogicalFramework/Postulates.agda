@@ -4,11 +4,8 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
-module Experimental.LogicalFramework.Postulates
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
-  where
+module Experimental.LogicalFramework.Postulates (ℳ : ModeTheory) where
 
 open import Data.String using (String)
 
@@ -17,10 +14,9 @@ import Model.Modality as M
 import Model.Type.Function as M
 
 open ModeTheory ℳ
-open ModeTheorySemantics ⟦ℳ⟧
 
-open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
-open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.MSTT ℳ
+open import Experimental.LogicalFramework.bProp ℳ
 import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ as Syn
 
 private variable

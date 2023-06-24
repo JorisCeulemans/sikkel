@@ -3,34 +3,57 @@ module Experimental.LogicalFramework.MSTT.Parameter.ModeTheory where
 open import Data.Maybe
 open import Relation.Binary.PropositionalEquality
 
+open import Model.BaseCategory as M using (BaseCategory)
+open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+open import Model.Modality as M using (_≅ᵐ_)
+
 
 record MTBasis : Set₁ where
   field
     Mode : Set
     NonTrivModality : Mode → Mode → Set
+
     mode-eq? : (m n : Mode) → Maybe (m ≡ n)
     non-triv-mod-eq? : ∀ {m n} (μ κ : NonTrivModality m n) → Maybe (μ ≡ κ)
+
+    ⟦_⟧mode : Mode → BaseCategory
+    ⟦_⟧non-triv-mod : ∀ {m n} → NonTrivModality m n → M.Modality ⟦ m ⟧mode ⟦ n ⟧mode
 
   infix 50 ‵_
   data Modality : Mode → Mode → Set where
     𝟙 : ∀ {m} → Modality m m
     ‵_ : ∀ {m n} → NonTrivModality m n → Modality m n
 
-  mod-dom mod-cod : ∀ {m n} →  Modality m n → Mode
+  mod-dom mod-cod : ∀ {m n} → Modality m n → Mode
   mod-dom {m}     μ = m
   mod-cod {_} {n} μ = n
 
+  ⟦_⟧mod : ∀ {m n} → Modality m n → M.Modality ⟦ m ⟧mode ⟦ n ⟧mode
+  ⟦ 𝟙 ⟧mod = M.𝟙
+  ⟦ ‵ μ ⟧mod = ⟦ μ ⟧non-triv-mod
 
-record MTComposition (mtb : MTBasis) : Set where
+  ⟦𝟙⟧-sound : ∀ {m} → ⟦ 𝟙 {m} ⟧mod ≅ᵐ M.𝟙
+  ⟦𝟙⟧-sound = M.reflᵐ
+
+
+record MTComposition (mtb : MTBasis) : Set₁ where
   open MTBasis mtb
 
   field
     _ⓜnon-triv_ : ∀ {m n o} → NonTrivModality n o → NonTrivModality m n → Modality m o
 
+    ⟦ⓜ⟧-non-triv-sound : ∀ {m n o} (μ : NonTrivModality n o) (κ : NonTrivModality m n) →
+                         ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵐ ⟦ μ ⟧non-triv-mod M.ⓜ ⟦ κ ⟧non-triv-mod
+
   _ⓜ_ : ∀ {m n o} → Modality n o → Modality m n → Modality m o
   𝟙 ⓜ ρ = ρ
   ‵ μ ⓜ 𝟙 = ‵ μ
   ‵ μ ⓜ ‵ ρ = μ ⓜnon-triv ρ
+
+  ⟦ⓜ⟧-sound : ∀ {m n o} (μ : Modality n o) (κ : Modality m n) → ⟦ μ ⓜ κ ⟧mod ≅ᵐ ⟦ μ ⟧mod M.ⓜ ⟦ κ ⟧mod
+  ⟦ⓜ⟧-sound 𝟙     κ     = M.symᵐ (M.𝟙-unitˡ _)
+  ⟦ⓜ⟧-sound (‵ μ) 𝟙     = M.symᵐ (M.𝟙-unitʳ _)
+  ⟦ⓜ⟧-sound (‵ μ) (‵ κ) = ⟦ⓜ⟧-non-triv-sound μ κ
 
 
 record MTCompositionLaws (mtb : MTBasis) (mtc : MTComposition mtb) : Set where
@@ -68,6 +91,8 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
     _ⓣ-hor_ : ∀ {m n o} {μ1 ρ1 : Modality n o} {μ2 ρ2 : Modality m n} →
               TwoCell μ1 ρ1 → TwoCell μ2 ρ2 → TwoCell (μ1 ⓜ μ2) (ρ1 ⓜ ρ2)
     two-cell-eq? : ∀ {m n} {μ ρ : Modality m n} (α β : TwoCell μ ρ) → Maybe (α ≡ β)
+
+    ⟦_⟧two-cell : ∀ {m n} {μ κ : Modality m n} → TwoCell μ κ → M.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 
   eq-cell : ∀ {m n} {μ ρ : Modality m n} → μ ≡ ρ → TwoCell μ ρ
   eq-cell refl = id-cell

@@ -4,11 +4,8 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
-module Experimental.LogicalFramework.bProp.Interpretation.Nameless
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
-  where
+module Experimental.LogicalFramework.bProp.Interpretation.Nameless (ℳ : ModeTheory) where
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy)
 import Model.Type.Function as M
@@ -19,10 +16,9 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
 
 open ModeTheory ℳ
-open ModeTheorySemantics ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ ⟦ℳ⟧
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ
 open import Experimental.LogicalFramework.bProp.Nameless ℳ
 
 private variable

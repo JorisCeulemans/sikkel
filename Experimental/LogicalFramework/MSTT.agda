@@ -4,9 +4,8 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
-module Experimental.LogicalFramework.MSTT (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ) where
+module Experimental.LogicalFramework.MSTT (ℳ : ModeTheory) where
 
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ public
-open import Experimental.LogicalFramework.MSTT.Interpretation ℳ ⟦ℳ⟧ public
+open import Experimental.LogicalFramework.MSTT.Interpretation ℳ public

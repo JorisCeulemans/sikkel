@@ -9,9 +9,9 @@ open import Data.Nat hiding (_+_; _≡ᵇ_)
 open import Relation.Binary.PropositionalEquality using (_≡_) -- ; refl)
 
 open import Experimental.LogicalFramework.ModeTheory.Trivial
-open import Experimental.LogicalFramework.MSTT triv-mt ⟦triv-mt⟧
-open import Experimental.LogicalFramework.bProp triv-mt ⟦triv-mt⟧
-open import Experimental.LogicalFramework.Proof triv-mt ⟦triv-mt⟧
+open import Experimental.LogicalFramework.MSTT triv-mt
+open import Experimental.LogicalFramework.bProp triv-mt
+open import Experimental.LogicalFramework.Proof triv-mt
 -- open import Experimental.LogicalFramework.BetaReduction
 open import Extraction
 
@@ -23,9 +23,8 @@ import Experimental.DependentTypes.Model.Function as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 private variable
-  m : Mode
-  Γ Δ : Ctx m
-  T : Ty m
+  Γ Δ : Ctx ★
+  T : Ty ★
 
 
 --------------------------------------------------
@@ -71,11 +70,11 @@ proof-plus-zeroʳ {Γ = Γ} =
     (trans (id ∙ zero) (fun-cong {μ = 𝟙} nat-rec-β-zero zero) fun-β)
     (trans (plus-helper ∙ plus' (svar "n") ∙ zero)
            (fun-cong {μ = 𝟙} nat-rec-β-suc zero)
-           (trans ((lam[ "n" ∈ Nat' ] suc ((plus' (var' _ {vsuc vzero} (id-cell {★}))) ∙ svar "n")) ∙ zero)
+           (trans ((lam[ "n" ∈ Nat' ] suc ((plus' (var' _ {vsuc vzero} id-cell)) ∙ svar "n")) ∙ zero)
                   (fun-cong {μ = 𝟙} fun-β zero)
                   (trans (suc (plus' (svar "n") ∙ zero))
                          fun-β
-                         (cong-suc (plus' (svar "n") ∙ zero) (svar "n") (assumption' "ind-hyp" {𝟙} {𝟙} (id-cell {★})))))))
+                         (cong-suc (plus' (svar "n") ∙ zero) (svar "n") (assumption' "ind-hyp" {𝟙} {𝟙} id-cell))))))
 
 test-plus-zeroʳ : (PCResult.goals <$> check-proof [] proof-plus-zeroʳ plus-zeroʳ) ≡ ok []
 test-plus-zeroʳ = refl
@@ -104,7 +103,7 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                          (cong-suc (plus' (svar "m") ∙ suc (svar "n")) (plus' (suc (svar "m")) ∙ svar "n")
                            (trans (suc (plus' (svar "m") ∙ svar "n"))
                                   (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (svar "m") ∙ suc (svar "n") ≡ᵇ suc (plus' (svar "m") ∙ svar "n"))
-                                            (assumption' "ind-hyp" {𝟙} {𝟙} (id-cell {★})) (svar "n"))
+                                            (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (svar "n"))
                                   (sym (trans (plus-helper ∙ plus' (svar "m") ∙ svar "n")
                                               (fun-cong nat-rec-β-suc (svar "n"))
                                               (trans ((lam[ "n" ∈ Nat' ] suc (plus' (svar "m") ∙ svar "n")) ∙ svar "n")
@@ -134,9 +133,9 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                                (cong-suc (plus' (svar "m") ∙ svar "n")
                                          (plus' (svar "n") ∙ svar "m")
                                          (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (svar "m") ∙ svar "n" ≡ᵇ plus' (svar "n") ∙ svar "m")
-                                                   (assumption' "ind-hyp" {𝟙} {𝟙} (id-cell {★})) (svar "n")))
-                               (sym (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (var' "n" {vsuc vzero} (id-cell {★})) ∙ suc (svar "n") ≡ᵇ
-                                                                         suc (plus' (var' "n" {vsuc vzero} (id-cell {★})) ∙ svar "n"))
+                                                   (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (svar "n")))
+                               (sym (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (var' "n" {vsuc vzero} id-cell) ∙ suc (svar "n") ≡ᵇ
+                                                                         suc (plus' (var' "n" {vsuc vzero} id-cell) ∙ svar "n"))
                                               (∀-elim 𝟙 plus-sucʳ proof-plus-sucʳ (svar "n")) (svar "m")))))))
 
 test-plus-comm : (PCResult.goals <$> check-proof [] proof-plus-comm plus-comm) ≡ ok []
