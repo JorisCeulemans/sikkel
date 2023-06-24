@@ -1,7 +1,7 @@
 -- Code to be reused later to implement a mode theory for guarded
 -- recursion. Is not supposed to typecheck right now.
 
-module Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory where
+module Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics where
 
 open import Data.Nat
 

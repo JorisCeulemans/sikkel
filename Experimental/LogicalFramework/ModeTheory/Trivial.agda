@@ -9,7 +9,7 @@ import Model.BaseCategory as M
 import Model.Modality as M
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
 
 data TrivMode : Set where
@@ -30,10 +30,10 @@ MTTwoCell.two-cell-eq? (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {MTBasis.�
 
 open ModeTheory triv-mt public
 
-⟦triv-mt⟧ : ModeTheoryInterpretation triv-mt
-MTIntBasis.⟦ ModeTheoryInterpretation.mtib ⟦triv-mt⟧ ⟧mode ★ = M.★
-MTIntBasis.⟦ ModeTheoryInterpretation.mtib ⟦triv-mt⟧ ⟧non-triv-mod ()
-MTIntCompletion.⟦ⓜ⟧-non-triv-sound (ModeTheoryInterpretation.mtic ⟦triv-mt⟧) () ()
-MTIntCompletion.⟦ ModeTheoryInterpretation.mtic ⟦triv-mt⟧ ⟧two-cell {μ = MTBasis.𝟙} {MTBasis.𝟙} tt = M.id-cell
+⟦triv-mt⟧ : ModeTheorySemantics triv-mt
+MTSemBasis.⟦ ModeTheorySemantics.mtsb ⟦triv-mt⟧ ⟧mode ★ = M.★
+MTSemBasis.⟦ ModeTheorySemantics.mtsb ⟦triv-mt⟧ ⟧non-triv-mod ()
+MTSemCompletion.⟦ⓜ⟧-non-triv-sound (ModeTheorySemantics.mtsc ⟦triv-mt⟧) () ()
+MTSemCompletion.⟦ ModeTheorySemantics.mtsc ⟦triv-mt⟧ ⟧two-cell {μ = MTBasis.𝟙} {MTBasis.𝟙} tt = M.id-cell
 
-open ModeTheoryInterpretation ⟦triv-mt⟧ public
+open ModeTheorySemantics ⟦triv-mt⟧ public

@@ -1,8 +1,8 @@
 open import Experimental.LogicalFramework.MSTT.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
 module Experimental.LogicalFramework.MSTT.Normalization.Soundness
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
   where
 
 open import Data.Nat
@@ -11,7 +11,7 @@ open import Data.Unit.Polymorphic
 open import Level using (Level)
 
 open ModeTheory ℳ
-open ModeTheoryInterpretation ⟦ℳ⟧
+open ModeTheorySemantics ⟦ℳ⟧
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M

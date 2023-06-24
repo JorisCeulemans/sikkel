@@ -4,16 +4,16 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
 module Experimental.LogicalFramework.MSTT.Interpretation.Nameless
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
   where
 
 open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
-open ModeTheoryInterpretation ⟦ℳ⟧
+open ModeTheorySemantics ⟦ℳ⟧
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M

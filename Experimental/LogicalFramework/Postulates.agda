@@ -4,10 +4,10 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
 module Experimental.LogicalFramework.Postulates
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
   where
 
 open import Data.String using (String)
@@ -17,7 +17,7 @@ import Model.Modality as M
 import Model.Type.Function as M
 
 open ModeTheory ℳ
-open ModeTheoryInterpretation ⟦ℳ⟧
+open ModeTheorySemantics ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧

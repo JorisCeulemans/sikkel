@@ -1,8 +1,8 @@
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
 module Experimental.LogicalFramework.Proof.Context
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
   where
 
 open import Data.String as Str
@@ -14,7 +14,7 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 import Model.Modality as M
 
 open ModeTheory ℳ
-open ModeTheoryInterpretation ⟦ℳ⟧
+open ModeTheorySemantics ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧

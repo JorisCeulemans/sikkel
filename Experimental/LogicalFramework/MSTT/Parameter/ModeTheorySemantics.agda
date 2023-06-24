@@ -1,4 +1,4 @@
-module Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory where
+module Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics where
 
 open import Model.BaseCategory as M using (BaseCategory)
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
@@ -7,7 +7,7 @@ open import Model.Modality as M using (_≅ᵐ_)
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 
-record MTIntBasis (ℳ : ModeTheory) : Set₁ where
+record MTSemBasis (ℳ : ModeTheory) : Set₁ where
   open ModeTheory ℳ
 
   field
@@ -22,9 +22,9 @@ record MTIntBasis (ℳ : ModeTheory) : Set₁ where
   ⟦𝟙⟧-sound = M.reflᵐ
 
 
-record MTIntCompletion (ℳ : ModeTheory) (mtib : MTIntBasis ℳ) : Set₁ where
+record MTSemCompletion (ℳ : ModeTheory) (mtsb : MTSemBasis ℳ) : Set₁ where
   open ModeTheory ℳ
-  open MTIntBasis mtib
+  open MTSemBasis mtsb
 
   field
     ⟦ⓜ⟧-non-triv-sound : ∀ {m n o} (μ : NonTrivModality n o) (κ : NonTrivModality m n) →
@@ -37,10 +37,10 @@ record MTIntCompletion (ℳ : ModeTheory) (mtib : MTIntBasis ℳ) : Set₁ where
   ⟦ⓜ⟧-sound (‵ μ) (‵ κ) = ⟦ⓜ⟧-non-triv-sound μ κ
     
 
-record ModeTheoryInterpretation (ℳ : ModeTheory) : Set₁ where
+record ModeTheorySemantics (ℳ : ModeTheory) : Set₁ where
   field
-    mtib : MTIntBasis ℳ
-    mtic : MTIntCompletion ℳ mtib
+    mtsb : MTSemBasis ℳ
+    mtsc : MTSemCompletion ℳ mtsb
 
-  open MTIntBasis mtib public
-  open MTIntCompletion mtic public
+  open MTSemBasis mtsb public
+  open MTSemCompletion mtsc public

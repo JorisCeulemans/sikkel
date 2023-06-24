@@ -1,8 +1,8 @@
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Interpretation.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheorySemantics
 
 module Experimental.LogicalFramework.Proof.Checker
-  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheoryInterpretation ℳ)
+  (ℳ : ModeTheory) (⟦ℳ⟧ : ModeTheorySemantics ℳ)
   where
 
 open import Data.List
@@ -24,7 +24,7 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 
 open ModeTheory ℳ
-open ModeTheoryInterpretation ⟦ℳ⟧
+open ModeTheorySemantics ⟦ℳ⟧
 
 open import Experimental.LogicalFramework.MSTT ℳ ⟦ℳ⟧
 open import Experimental.LogicalFramework.bProp ℳ ⟦ℳ⟧
