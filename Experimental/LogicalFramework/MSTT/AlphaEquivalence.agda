@@ -3,16 +3,19 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 
-module Experimental.LogicalFramework.MSTT.AlphaEquivalence (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.MSTT.AlphaEquivalence
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  where
 
 open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ
-import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ as NMLS
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 as NMLS
 
 private variable
   m n : Mode

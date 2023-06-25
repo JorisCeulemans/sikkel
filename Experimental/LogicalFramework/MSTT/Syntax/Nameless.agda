@@ -4,11 +4,14 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 
-module Experimental.LogicalFramework.MSTT.Syntax.Nameless (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.MSTT.Syntax.Nameless
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  where
 
 open import Data.Unit
 
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ public
-open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ ⊤ public
+open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯 public
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 ⊤ public

@@ -3,8 +3,11 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 
-module Experimental.LogicalFramework.MSTT.Syntax.Named (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.MSTT.Syntax.Named
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  where
 
 open import Data.Empty
 open import Data.Product
@@ -24,8 +27,8 @@ open ModeTheory ℳ
 --------------------------------------------------
 -- Re-exporting the definitions of types, contexts, terms and associated operations.
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ public
-open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ String public
+open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯 public
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 String public
 
 private variable
   m n : Mode

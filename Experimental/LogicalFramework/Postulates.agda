@@ -3,9 +3,9 @@
 
 {-# OPTIONS --allow-unsolved-metas #-}
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.Postulates (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.Postulates (𝒫 : MSTT-Parameter) where
 
 open import Data.String using (String)
 
@@ -13,11 +13,11 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 import Model.Modality as M
 import Model.Type.Function as M
 
-open ModeTheory ℳ
+open MSTT-Parameter 𝒫
 
-open import Experimental.LogicalFramework.MSTT ℳ
-open import Experimental.LogicalFramework.bProp ℳ
-import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ as Syn
+open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.bProp 𝒫
+import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯 as Syn
 
 private variable
   m n o : Mode

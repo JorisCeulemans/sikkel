@@ -6,15 +6,18 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 
-module Experimental.LogicalFramework.MSTT.Syntax.General (ℳ : ModeTheory) (Name : Set) where
+module Experimental.LogicalFramework.MSTT.Syntax.General
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set)
+  where
 
 open import Data.Maybe
 open import Relation.Binary.PropositionalEquality as Ag
 
 open ModeTheory ℳ
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ
+open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
 
 private variable
   m n o p : Mode

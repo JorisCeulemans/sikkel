@@ -3,9 +3,11 @@
 --   type theory MSTT
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.MSTT (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.MSTT (𝒫 : MSTT-Parameter) where
 
-open import Experimental.LogicalFramework.MSTT.Syntax ℳ public
-open import Experimental.LogicalFramework.MSTT.Interpretation ℳ public
+open MSTT-Parameter
+
+open import Experimental.LogicalFramework.MSTT.Syntax (𝒫 .ℳ) (𝒫 .𝒯) public
+open import Experimental.LogicalFramework.MSTT.Interpretation (𝒫 .ℳ) (𝒫 .𝒯) public

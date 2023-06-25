@@ -2,17 +2,17 @@
 -- Definition of proofs
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.Proof.Definition (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.Proof.Definition (𝒫 : MSTT-Parameter) where
 
 open import Data.String as Str hiding (_≟_)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
-open ModeTheory ℳ
+open MSTT-Parameter 𝒫
 
-open import Experimental.LogicalFramework.MSTT.Syntax ℳ
-open import Experimental.LogicalFramework.bProp.Named ℳ
+open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.bProp.Named 𝒫
 
 private variable
   m n o p : Mode

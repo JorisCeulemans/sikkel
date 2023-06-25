@@ -2,17 +2,17 @@
 -- Definition of α-equivalence of bProps via a translation to nameless bProps
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.bProp.AlphaEquivalence (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.bProp.AlphaEquivalence (𝒫 : MSTT-Parameter) where
 
 open import Relation.Binary.PropositionalEquality
 
-open ModeTheory ℳ
+open MSTT-Parameter 𝒫
 
-open import Experimental.LogicalFramework.bProp.Named ℳ
-import Experimental.LogicalFramework.bProp.Nameless ℳ as NMLS
-open import Experimental.LogicalFramework.MSTT.Syntax ℳ
+open import Experimental.LogicalFramework.bProp.Named 𝒫
+import Experimental.LogicalFramework.bProp.Nameless 𝒫 as NMLS
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯
 
 private variable
   m : Mode

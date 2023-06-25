@@ -3,8 +3,11 @@
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 
-module Experimental.LogicalFramework.MSTT.Interpretation (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.MSTT.Interpretation
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  where
 
 open import Data.Maybe
 open import Data.String
@@ -19,13 +22,13 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Constant as M
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ as Syn
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯 as Syn
 open Syn.AtomicSub
 open Syn.AtomicRen
 open Syn.AtomicRenSub
-import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ as DB
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ as DBInt
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 as DB
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ 𝒯 as DBInt
 
 private variable
   m n : Mode

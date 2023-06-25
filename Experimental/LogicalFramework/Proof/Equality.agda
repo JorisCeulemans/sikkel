@@ -1,16 +1,20 @@
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.Proof.Equality (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.Proof.Equality (𝒫 : MSTT-Parameter) where
 
+open import Data.List using (List; []; _∷_)
 open import Data.Nat as Nat hiding (_≟_)
 open import Data.Nat.Properties
+open import Data.Product using (_,_)
 open import Data.String as Str hiding (_≟_)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
-open ModeTheory ℳ
+open MSTT-Parameter 𝒫
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension ℳ
+open TyExt 𝒯
 
-open import Experimental.LogicalFramework.MSTT.Syntax ℳ
-open import Experimental.LogicalFramework.bProp.Named ℳ
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯
+open import Experimental.LogicalFramework.bProp.Named 𝒫
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 private variable
@@ -24,6 +28,15 @@ private variable
 
 _=m?_ : (m n : Mode) → PCM (m Ag.≡ n)
 m =m? n = from-maybe "Modes are not equal." (mode-eq? m n)
+
+_=list-mode?_ : (ms ns : List Mode) → PCM (ms Ag.≡ ns)
+[]       =list-mode? []       = return Ag.refl
+[]       =list-mode? (n ∷ ns) = throw-error ""
+(m ∷ ms) =list-mode? []       = throw-error ""
+(m ∷ ms) =list-mode? (n ∷ ns) = do
+  refl ← m =m? n
+  refl ← ms =list-mode? ns
+  return Ag.refl
 
 modality-msg : ErrorMsg
 modality-msg = "Modalities are not equal."
@@ -39,13 +52,22 @@ _=c?_ : (α β : TwoCell μ κ) → PCM (α Ag.≡ β)
 α =c? β = from-maybe "Two-cells are not equal." (two-cell-eq? α β)
 
 show-ty : Ty m → String
+show-ext : ∀ {margs} → TyExtShow margs → TyExtArgs margs → String
+
 show-ty Nat' = "ℕ"
 show-ty Bool' = "Bool"
 show-ty (⟨ μ ∣ T ⟩⇛ S) = "⟨ _ ∣ " ++ show-ty T ++ " ⟩→ " ++ show-ty S
 show-ty (T ⊠ S) = show-ty T ++ " × " ++ show-ty S
 show-ty ⟨ μ ∣ T ⟩ = "⟨ _ ∣ " ++ show-ty T ++ " ⟩"
+show-ty (Ext c Args) = show-ext (show-ty-code c) Args
+
+show-ext {[]}        s Args       = s
+show-ext {m ∷ margs} f (A , Args) = show-ext (f (show-ty A)) Args
+
 
 _=T?_ : (T S : Ty m) → PCM (T Ag.≡ S)
+_=Args?_ : ∀ {margs} → (Args1 Args2 : TyExtArgs margs) → PCM (Args1 Ag.≡ Args2)
+
 Nat' =T? Nat' = return Ag.refl
 Bool' =T? Bool' = return Ag.refl
 (⟨ μ ∣ T1 ⟩⇛ T2) =T? (⟨ ρ ∣ S1 ⟩⇛ S2) = do
@@ -63,7 +85,18 @@ Bool' =T? Bool' = return Ag.refl
   refl ← μ =mod? κ
   refl ← T =T? S
   return Ag.refl
+(Ext {margs1} c1 Args1) =T? (Ext {margs2} c2 Args2) = do
+  refl ← margs1 =list-mode? margs2
+  refl ← c1 ≟ty-code c2
+  refl ← Args1 =Args? Args2
+  return Ag.refl
 T =T? S = throw-error ("Types are not equal: " ++ show-ty T ++ " != " ++ show-ty S)
+
+_=Args?_ {[]}        Args1        Args2        = return Ag.refl
+_=Args?_ {m ∷ margs} (A1 , Args1) (A2 , Args2) = do
+  refl ← A1 =T? A2
+  refl ← Args1 =Args? Args2
+  return Ag.refl
 
 
 bisubst : {A B : Set} (C : A → B → Set) {x y : A} {z w : B} → x Ag.≡ y → z Ag.≡ w → C x z → C y w

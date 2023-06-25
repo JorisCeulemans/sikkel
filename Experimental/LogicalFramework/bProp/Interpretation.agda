@@ -1,11 +1,10 @@
 --------------------------------------------------
--- Interpretation of propositions in the presheaf model over the trivial
---   base category
+-- Interpretation of propositions in a presheaf model
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.bProp.Interpretation (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.bProp.Interpretation (𝒫 : MSTT-Parameter) where
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy) using (_≅ᵗʸ_)
 import Model.Type.Function as M
@@ -13,12 +12,12 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
-open ModeTheory ℳ
+open MSTT-Parameter 𝒫
 
-open import Experimental.LogicalFramework.MSTT ℳ
-open import Experimental.LogicalFramework.bProp.Named ℳ
-open import Experimental.LogicalFramework.bProp.AlphaEquivalence ℳ
-open import Experimental.LogicalFramework.bProp.Interpretation.Nameless ℳ
+open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.bProp.Named 𝒫
+open import Experimental.LogicalFramework.bProp.AlphaEquivalence 𝒫
+open import Experimental.LogicalFramework.bProp.Interpretation.Nameless 𝒫
 
 private variable
   m : Mode

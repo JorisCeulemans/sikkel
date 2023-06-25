@@ -1,4 +1,4 @@
-module Experimental.LogicalFramework.ModeTheory.Trivial where
+module Experimental.LogicalFramework.Instances.Trivial where
 
 open import Data.Empty
 open import Data.Maybe
@@ -9,6 +9,8 @@ import Model.BaseCategory as M
 import Model.Modality as M
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter
 
 
 record TrivMode : Set where
@@ -36,3 +38,17 @@ open ModeTheory triv-mt public hiding (id-cell)
 -- The following type of id-cell works better with Agda's type inference
 id-cell : TwoCell 𝟙 𝟙
 id-cell = ModeTheory.id-cell triv-mt {μ = 𝟙}
+
+
+triv-ty-ext : TyExt triv-mt
+TyExt.TyExtCode triv-ty-ext _ _ = ⊥
+TyExt._≟ty-code_ triv-ty-ext () ()
+TyExt.show-ty-code triv-ty-ext ()
+TyExt.⟦ triv-ty-ext ⟧ty-code ()
+TyExt.sem-ty-code-natural triv-ty-ext ()
+TyExt.sem-ty-code-cong triv-ty-ext ()
+
+
+triv-mstt : MSTT-Parameter
+MSTT-Parameter.ℳ triv-mstt = triv-mt
+MSTT-Parameter.𝒯 triv-mstt = triv-ty-ext

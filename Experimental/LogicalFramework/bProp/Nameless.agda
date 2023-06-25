@@ -3,11 +3,11 @@
 --   This essentially means that we have nameless bProps.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.bProp.Nameless (ℳ : ModeTheory) where
+module Experimental.LogicalFramework.bProp.Nameless (𝒫 : MSTT-Parameter) where
 
 open import Data.Unit
 
 
-open import Experimental.LogicalFramework.bProp.General ℳ ⊤ public
+open import Experimental.LogicalFramework.bProp.General 𝒫 ⊤ public
