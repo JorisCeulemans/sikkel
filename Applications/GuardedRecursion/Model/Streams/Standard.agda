@@ -30,6 +30,9 @@ private
 Stream' : ClosedTy ★ → ClosedTy ★
 Stream' A = forever-ty (GStream A)
 
+stream-closed : {A : ClosedTy ★} → IsClosedNatural A → IsClosedNatural (Stream' A)
+stream-closed clA = mod-closed forever (gstream-closed clA)
+
 
 --------------------------------------------------
 -- Definition of standard Agda streams (note that the standard library uses

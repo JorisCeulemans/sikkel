@@ -518,7 +518,7 @@ diagB-sem = ⟦ diag Bool' ⟧tm
 
 
 --------------------------------------------------
--- Example not taken from a paper
+-- Examples not taken from a paper
 
 -- Γ ⊢ fibs : Stream' Nat'
 fibs : TmExpr ★
@@ -532,3 +532,49 @@ fibs-agda = extract-term (extract-stream const-closed extract-const) fibs-sem
 
 fibs-test : take 10 fibs-agda ≡ 1 ∷ 1 ∷ 2 ∷ 3 ∷ 5 ∷ 8 ∷ 13 ∷ 21 ∷ 34 ∷ 55 ∷ []
 fibs-test = refl
+
+-- Γ ⊢ g-pascalNext : GStream Nat' ⇛ GStream Nat'
+g-pascalNext : TmExpr ω
+g-pascalNext =
+  lam[ "xs" ∈ GStream Nat' ] let' mod⟨ later ⟩ "tail-xs" ← (g-tailN ∙ svar "xs") in' (
+    löb[later∣ "ys" ∈ GStream Nat' ]
+      g-cons Nat' ∙⟨ constantly ⟩ lit 1
+                  ∙⟨ later ⟩ (g-zipWith Nat' Nat' Nat' ∙⟨ constantly ⟩ plus
+                                                       ∙ svar "tail-xs"
+                                                       ∙ svar "ys"))
+
+-- Γ ⊢ pascalNext : Stream' Nat' ⇛ Stream' Nat'
+pascalNext : TmExpr ★
+pascalNext =
+  lam[ "xs" ∈ Stream' Nat' ] let' mod⟨ forever ⟩ "g-xs" ← svar "xs" in' (mod⟨ forever ⟩ g-pascalNext ∙ svar "g-xs")
+
+-- Γ ⊢ g-ones : GStream Nat'
+g-ones : TmExpr ω
+g-ones = löb[later∣ "g-ones" ∈ GStream Nat' ] g-consN ∙⟨ constantly ⟩ lit 1 ∙⟨ later ⟩ svar "g-ones"
+
+-- Γ ⊢ g-pascal : GStream Nat'
+g-pascal : TmExpr ω
+g-pascal =
+  löb[later∣ "pascal" ∈ GStream (Stream' Nat') ]
+    g-cons (Stream' Nat') ∙⟨ constantly ⟩ (mod⟨ forever ⟩ g-ones)
+                          ∙⟨ later ⟩ (g-map (Stream' Nat') (Stream' Nat') ∙⟨ constantly ⟩ pascalNext ∙ svar "pascal")
+
+-- Γ ⊢ pascal : Stream' Nat'
+pascal : TmExpr ★
+pascal = mod⟨ forever ⟩ g-pascal
+
+pascal-sem : Tm ′◇ (′Stream' (′Stream' ′Nat'))
+pascal-sem = ⟦ pascal ⟧tm
+
+pascal-agda : Stream (Stream ℕ)
+pascal-agda =
+  extract-term (extract-stream (stream-closed const-closed) (extract-stream const-closed extract-const)) pascal-sem
+
+pascal-test : map (take 5) (take 5 pascal-agda) ≡
+  (1 ∷ 1 ∷ 1  ∷ 1  ∷ 1  ∷ []) ∷
+  (1 ∷ 2 ∷ 3  ∷ 4  ∷ 5  ∷ []) ∷
+  (1 ∷ 3 ∷ 6  ∷ 10 ∷ 15 ∷ []) ∷
+  (1 ∷ 4 ∷ 10 ∷ 20 ∷ 35 ∷ []) ∷
+  (1 ∷ 5 ∷ 15 ∷ 35 ∷ 70 ∷ []) ∷
+  []
+pascal-test = refl
