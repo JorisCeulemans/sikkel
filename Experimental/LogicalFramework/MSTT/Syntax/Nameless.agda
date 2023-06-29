@@ -14,4 +14,5 @@ open import Data.Unit
 
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯 public
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 ⊤ public
 open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 ⊤ public

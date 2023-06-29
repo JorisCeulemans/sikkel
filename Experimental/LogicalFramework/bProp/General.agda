@@ -17,6 +17,7 @@ open MSTT-Parameter 𝒫
   -- ^ Brings mode theory ℳ (and its contents) and type extension parameter 𝒯 into scope
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
 open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 Name
 
 private variable

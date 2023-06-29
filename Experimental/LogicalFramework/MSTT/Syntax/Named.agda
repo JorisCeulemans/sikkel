@@ -28,6 +28,7 @@ open ModeTheory ℳ
 -- Re-exporting the definitions of types, contexts, terms and associated operations.
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯 public
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 String public
 open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 String public
 
 private variable
