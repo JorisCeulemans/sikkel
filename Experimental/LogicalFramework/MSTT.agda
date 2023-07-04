@@ -11,3 +11,4 @@ open MSTT-Parameter
 
 open import Experimental.LogicalFramework.MSTT.Syntax (𝒫 .ℳ) (𝒫 .𝒯) (𝒫 .𝓉) public
 open import Experimental.LogicalFramework.MSTT.Interpretation (𝒫 .ℳ) (𝒫 .𝒯) (𝒫 .𝓉) (𝒫 .⟦𝓉⟧) public
+open import Experimental.LogicalFramework.MSTT.BasicPrograms (𝒫 .ℳ) (𝒫 .𝒯) (𝒫 .𝓉) public
