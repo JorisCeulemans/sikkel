@@ -179,7 +179,7 @@ sub-to-ctx-sub {μ = μ} {x} {T} Ξ φ t =
 check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (PCResult Ξ φ)
 check-proof Ξ refl φ = do
   is-eq t1 t2 ← is-eq? φ
-  refl ← t1 =t? t2
+  refl ← t1 ≟tm t2
   return ⟅ [] , _ ↦ M.refl' _ M.[ _ ]' ⟆
 check-proof Ξ (sym p) φ = do
   is-eq t1 t2 ← is-eq? φ
@@ -187,7 +187,7 @@ check-proof Ξ (sym p) φ = do
   return ⟅ goals , sgoals ↦ M.ι[ M.Id-natural _ ] M.sym' (M.ι⁻¹[ M.Id-natural _ ] ⟦p⟧ sgoals) ⟆
 check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
   is-eq {T = T} t s ← is-eq? φ
-  refl ← T =T? T'
+  refl ← T ≟ty T'
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (t ≡ᵇ middle-tm)
   ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof Ξ p2 (middle-tm ≡ᵇ s)
   return ⟅ goals1 ++ goals2
@@ -197,20 +197,20 @@ check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
 check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   ⟅ goalse , ⟦pe⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) pe (t1 ≡ᵇ t2)
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (φ [ t1 / x ]bprop)
-  refl ← ψ =b? φ [ t2 / x ]bprop
+  refl ← ψ ≟bprop φ [ t2 / x ]bprop
   return ⟅ goalse ++ goals1 , sgoals ↦ (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
     M.ι[ sub-to-ctx-sub Ξ φ t2 ]
     M.ι[ M.ty-subst-cong-subst (M./cl-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (M.mod-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (
            M.eq-reflect (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] ⟦pe⟧ sgoalse))))) _ ]
     M.ι⁻¹[ sub-to-ctx-sub Ξ φ t1 ] ⟦p1⟧ sgoals1) ⟆
 check-proof Ξ ⊤ᵇ-intro φ = do
-  refl ← φ =b? ⊤ᵇ
+  refl ← φ ≟bprop ⊤ᵇ
   return ⟅ [] , _ ↦ M.tt' M.[ _ ]' ⟆
 check-proof Ξ ⊥ᵇ-elim φ = do
   is-implication μ domφ codφ ← is-implication? φ
-  refl ← mod-dom μ =m? mod-cod μ
-  refl ← μ =mod? 𝟙
-  refl ← domφ =b? ⊥ᵇ
+  refl ← mod-dom μ ≟mode mod-cod μ
+  refl ← μ ≟mod 𝟙
+  refl ← domφ ≟bprop ⊥ᵇ
   return ⟅ [] , _ ↦ M.empty-elim _ M.[ _ ]' ⟆
 check-proof Ξ (⊃-intro x p) φ = do
   is-implication μ domφ codφ ← is-implication? φ
@@ -235,8 +235,8 @@ check-proof Ξ (∧-elimʳ ψ p) φ = do
   return ⟅ goals , sgoals ↦ M.snd (M.ι⁻¹[ M.⊠-natural _ ] ⟦p⟧ sgoals) ⟆
 check-proof Ξ (mod⟨ μ ⟩ p) φ = do
   is-modal κ ψ ← is-modal? φ
-  refl ← mod-dom μ =m? mod-dom κ
-  refl ← μ =mod? κ
+  refl ← mod-dom μ ≟mode mod-dom κ
+  refl ← μ ≟mod κ
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p ψ
   return ⟅ goals , sgoals ↦ M.ι[ M.mod-natural ⟦ μ ⟧mod _ ] M.mod-intro ⟦ μ ⟧mod (⟦p⟧ sgoals) ⟆
 check-proof Ξ (mod-elim ρ μ x φ p1 p2) ψ = do
@@ -251,24 +251,24 @@ check-proof Ξ (mod-elim ρ μ x φ p1 p2) ψ = do
         M./v ]')) ⟆
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
-  refl ← κ' =mod? κ
-  refl ← φ =b? lookup-assumption a α
+  refl ← κ' ≟mod κ
+  refl ← φ ≟bprop lookup-assumption a α
   return ⟅ [] , _ ↦ ⟦ a , α ⟧assumption ⟆
 check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   is-forall {n = n'} κ y S φ' ← is-forall? φ
-  refl ← n =m? n'
-  refl ← μ =mod? κ
+  refl ← n ≟mode n'
+  refl ← μ ≟mod κ
   refl ← from-dec "Alpha equivalence is currently not supported" (x Str.≟ y)
-  refl ← T =T? S
+  refl ← T ≟ty S
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
   return ⟅ goals , sgoals ↦ M.ι[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ]
                                M.dlam ⟦ ⟨ μ ∣ T ⟩ ⟧ty (⟦p⟧ sgoals) ⟆
 check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   is-forall {n = n'} κ y S ψ' ← is-forall? ψ
-  refl ← n =m? n'
-  refl ← μ =mod? κ
-  refl ← T =T? S
-  refl ← φ =b? (ψ' [ t / y ]bprop)
+  refl ← n ≟mode n'
+  refl ← μ ≟mod κ
+  refl ← T ≟ty S
+  refl ← φ ≟bprop (ψ' [ t / y ]bprop)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
   return ⟅ goals , sgoals ↦ M.ι[ sub-to-ctx-sub Ξ ψ' t ]
          (M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals))
@@ -277,7 +277,7 @@ check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   lam {T = A} {S = B} μ x b ← is-lam? f
-  refl ← rhs =t? (b [ t / x ]tm)
+  refl ← rhs ≟tm (b [ t / x ]tm)
   return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (
          M.transᵗᵐ (M.⇛-cl-β (ty-closed-natural ⟨ μ ∣ A ⟩) (ty-closed-natural B) _ _) (
          M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural B) (M.symˢ (/cl-sound t x))) (
@@ -286,19 +286,19 @@ check-proof Ξ fun-β φ = do
 check-proof Ξ nat-rec-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-rec z s n ← is-nat-rec? lhs
-  refl ← n =t? zero
-  refl ← rhs =t? z
+  refl ← n ≟tm zero
+  refl ← rhs ≟tm z
   return ⟅ [] , _ ↦ (M.≅ᵗᵐ-to-Id (M.β-nat-zero _ _)) M.[ _ ]' ⟆
 check-proof Ξ nat-rec-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-rec z s n ← is-nat-rec? lhs
   suc-tm n' ← is-suc-tm? n
-  refl ← rhs =t? s ∙¹ (nat-rec z s n')
+  refl ← rhs ≟tm s ∙¹ (nat-rec z s n')
   return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.β-nat-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-rec z s n')))) M.[ _ ]' ⟆
 check-proof Ξ (fun-η x) φ = do
   is-eq {T = T} lhs rhs ← is-eq? φ
   is-fun-ty μ dom cod ← is-fun-ty? T
-  refl ← rhs =t? (lam[ μ ∣ x ∈ dom ] (weaken-tm lhs ∙ v0))
+  refl ← rhs ≟tm (lam[ μ ∣ x ∈ dom ] (weaken-tm lhs ∙ v0))
   return ⟅ [] , _ ↦
     M.≅ᵗᵐ-to-Id (M.transᵗᵐ
       (M.⇛-cl-η (ty-closed-natural ⟨ μ ∣ dom ⟩) (ty-closed-natural cod) _)
@@ -309,29 +309,29 @@ check-proof Ξ (fun-η x) φ = do
 check-proof Ξ ⊠-η φ = do
   is-eq {T = P} lhs rhs ← is-eq? φ
   is-prod-ty T S ← is-prod-ty? P
-  refl ← rhs =t? (pair (fst lhs) (snd lhs))
+  refl ← rhs ≟tm (pair (fst lhs) (snd lhs))
   return ⟅ [] , _ ↦ M.≅ᵗᵐ-to-Id (M.η-⊠ ⟦ lhs ⟧tm) M.[ _ ]' ⟆
 check-proof Ξ true≠false φ = do
-  refl ← φ =b? ¬⟨ 𝟙 ⟩ (true ≡ᵇ false)
+  refl ← φ ≟bprop ¬⟨ 𝟙 ⟩ (true ≡ᵇ false)
   return ⟅ [] , _ ↦ M.true≠false M.[ _ ]' ⟆
 check-proof Ξ (suc-inj m n) φ = do
-  refl ← φ =b? (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-𝟙 ≡ᵇ v0-𝟙)))
+  refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-𝟙 ≡ᵇ v0-𝟙)))
   return ⟅ [] , _ ↦
     (M.ι[ M.Pi-cong-cod (M.Pi-cong-cod (
       M.⇛-cong (M.Id-cong' (M.suc'-cong (v1-sound-𝟙 (to-ctx Ξ) m Nat' 𝟙 n Nat')) (M.suc'-cong (v0-sound-𝟙 (to-ctx Ξ ,, 𝟙 ∣ m ∈ Nat') n Nat')))
                (M.Id-cong' (v1-𝟙-sound (to-ctx Ξ) m Nat' 𝟙 n Nat') (v0-𝟙-sound (to-ctx Ξ ,, 𝟙 ∣ m ∈ Nat') n Nat')))) ]
       M.suc-inj) M.[ _ ]' ⟆
 check-proof Ξ (zero≠sucn m) φ = do
-  refl ← φ =b? (∀[ 𝟙 ∣ m ∈ Nat' ] ¬⟨ 𝟙 ⟩ (zero ≡ᵇ suc v0))
+  refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] ¬⟨ 𝟙 ⟩ (zero ≡ᵇ suc v0))
   return ⟅ [] , _ ↦
     (M.ι[ M.Pi-cong-cod (M.⇛-cong (M.Id-cong' M.reflᵗᵐ (M.suc'-cong (v0-sound-𝟙 (to-ctx Ξ) m Nat')))
                                   M.reflᵗʸ) ]
     M.zero≠sucn) M.[ _ ]' ⟆
 check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
-  refl ← mod-dom μ =m? mod-cod μ
-  refl ← μ =mod? 𝟙
-  refl ← T =T? Bool'
+  refl ← mod-dom μ ≟mode mod-cod μ
+  refl ← μ ≟mod 𝟙
+  refl ← T ≟ty Bool'
   refl ← return Δ=Γ,x∈Bool
   ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true / x ]bprop)
   ⟅ goalsf , ⟦pf⟧ ⟆ ← check-proof Ξ' pf (φ [ false / x ]bprop)
@@ -353,8 +353,8 @@ check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
                  ⟦pf⟧ sgoalsf))) ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
-  refl ← mod-dom μ =m? mod-cod μ
-  refl ← μ =mod? 𝟙
+  refl ← mod-dom μ ≟mode mod-cod μ
+  refl ← μ ≟mod 𝟙
   refl ← return Δ=Γ,x∈Nat
     -- ^ Before this step, ps is a proof in Δ = to-ctx Ξ' ,,ᵛ μ ∣ x ∈ T and p0 is a proof in Γ.
     -- By pattern matching on Δ=Γ,x∈Nat : Δ ≡ Γ ,, x ∈ Nat', Γ gets unified with to-ctx Ξ', μ with 𝟙 and T with Nat'.
@@ -398,14 +398,14 @@ check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do
   is-eq lhs rhs ← is-eq? φ
   app {T = T2} {μ = ρ}  f s  ← is-app? lhs
   app {T = T3} {μ = ρ'} g s' ← is-app? rhs
-  refl ← mod-dom μ =m? mod-dom ρ
-  refl ← μ =mod? ρ
-  refl ← mod-dom μ =m? mod-dom ρ'
-  refl ← μ =mod? ρ'
-  refl ← T =T? T2
-  refl ← T =T? T3
-  refl ← s =t? t
-  refl ← s' =t? t
+  refl ← mod-dom μ ≟mode mod-dom ρ
+  refl ← μ ≟mod ρ
+  refl ← mod-dom μ ≟mode mod-dom ρ'
+  refl ← μ ≟mod ρ'
+  refl ← T ≟ty T2
+  refl ← T ≟ty T3
+  refl ← s ≟tm t
+  refl ← s' ≟tm t
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (f ≡ᵇ g)
   return ⟅ goals , sgoals ↦
     M.ι[ M.Id-natural _ ] M.ι[ M.Id-cong' (M.app-natural _ _ _) (M.app-natural _ _ _) ]
@@ -415,15 +415,15 @@ check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   is-eq {T = S'} lhs rhs ← is-eq? φ
   app {T = T2} {μ = ρ}  g  t ← is-app? lhs
   app {T = T3} {μ = ρ'} g' s ← is-app? rhs
-  refl ← mod-dom μ =m? mod-dom ρ
-  refl ← μ =mod? ρ
-  refl ← mod-dom μ =m? mod-dom ρ'
-  refl ← μ =mod? ρ'
-  refl ← S =T? S'
-  refl ← T =T? T2
-  refl ← T =T? T3
-  refl ← g =t? f
-  refl ← g' =t? f
+  refl ← mod-dom μ ≟mode mod-dom ρ
+  refl ← μ ≟mod ρ
+  refl ← mod-dom μ ≟mode mod-dom ρ'
+  refl ← μ ≟mod ρ'
+  refl ← S ≟ty S'
+  refl ← T ≟ty T2
+  refl ← T ≟ty T3
+  refl ← g ≟tm f
+  refl ← g' ≟tm f
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᵇ s)
   return ⟅ goals , sgoals ↦
     M.ι[ M.Id-natural _ ] M.ι[ M.Id-cong' (M.app-natural _ _ _) (M.app-natural _ _ _) ]

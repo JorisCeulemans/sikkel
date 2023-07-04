@@ -89,9 +89,9 @@ contains-assumption? x μ [] = throw-error "Assumption not found in context."
 contains-assumption? x μ (Ξ ,,ᵛ ρ ∣ y ∈ T) = map-contains id skip-var <$> contains-assumption? x μ Ξ
 contains-assumption? x μ (Ξ ,,ᵇ ρ ∣ y ∈ φ) with x Str.≟ y
 contains-assumption? {n = n} {o} {m} x μ (_,,ᵇ_∣_∈_ {n = n'} Ξ ρ .x φ) | yes refl = do
-  refl ← m =m? o
-  refl ← n =m? n'
-  refl ← μ =mod? ρ
+  refl ← m ≟mode o
+  refl ← n ≟mode n'
+  refl ← μ ≟mod ρ
   return (contains-assumption 𝟙 azero)
 contains-assumption? x μ (Ξ ,,ᵇ ρ ∣ y ∈ φ) | no ¬x=y = map-contains id asuc <$> contains-assumption? x μ Ξ
 contains-assumption? x μ (Ξ ,lock⟨ ρ ⟩) = map-contains (_ⓜ ρ) (skip-lock ρ) <$> contains-assumption? x μ Ξ

@@ -1,17 +1,24 @@
 module Experimental.LogicalFramework.MSTT.Parameter.ModeTheory where
 
-open import Data.Maybe
+open import Data.Maybe using (Maybe)
 open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M using (BaseCategory)
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.Modality as M using (_≅ᵐ_)
 
+open import Experimental.LogicalFramework.Proof.CheckingMonad
+
 
 record MTBasis : Set₁ where
   field
     Mode : Set
     NonTrivModality : Mode → Mode → Set
+      -- ^ A modality is either the unit modality 𝟙 or a non-trivial modality
+      --   described above. This treatment allows for some more definitional
+      --   equalities (e.g. the interpretation of the unit modality is
+      --   definitionally the semantic unit modality, and 𝟙 is definitionally
+      --   a left unit of modality composition ⓜ).
 
     mode-eq? : (m n : Mode) → Maybe (m ≡ n)
     non-triv-mod-eq? : ∀ {m n} (μ κ : NonTrivModality m n) → Maybe (μ ≡ κ)
@@ -34,6 +41,19 @@ record MTBasis : Set₁ where
 
   ⟦𝟙⟧-sound : ∀ {m} → ⟦ 𝟙 {m} ⟧mod ≅ᵐ M.𝟙
   ⟦𝟙⟧-sound = M.reflᵐ
+
+  _≟mode_ : (m n : Mode) → PCM (m ≡ n)
+  m ≟mode n = from-maybe "Modes are not equal." (mode-eq? m n)
+
+  modality-msg : ErrorMsg
+  modality-msg = "Modalities are not equal."
+
+  _≟mod_ : {m n : Mode} (μ κ : Modality m n) → PCM (μ ≡ κ)
+  𝟙 ≟mod 𝟙 = return refl
+  ‵ μ ≟mod ‵ κ = do
+    refl ← from-maybe modality-msg (non-triv-mod-eq? μ κ)
+    return refl
+  _ ≟mod _ = throw-error modality-msg
 
 
 record MTComposition (mtb : MTBasis) : Set₁ where
@@ -103,6 +123,8 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
   transp-cellˡ : ∀ {m n} {μ μ' ρ : Modality m n} → μ ≡ μ' → TwoCell μ ρ → TwoCell μ' ρ
   transp-cellˡ refl α = α
 
+  _≟cell_ : {m n : Mode} {μ κ : Modality m n} (α β : TwoCell μ κ) → PCM (α ≡ β)
+  α ≟cell β = from-maybe "Two-cells are not equal." (two-cell-eq? α β)
 
 record ModeTheory : Set₁ where
   field
