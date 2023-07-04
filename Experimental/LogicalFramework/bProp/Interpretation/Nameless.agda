@@ -17,8 +17,10 @@ import Experimental.DependentTypes.Model.Function as M
 
 open MSTT-Parameter 𝒫
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 (erase-names-tmext 𝓉)
+open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ 𝒯 (erase-names-tmext 𝓉) ⟦𝓉⟧
 open import Experimental.LogicalFramework.bProp.Nameless 𝒫
 
 private variable

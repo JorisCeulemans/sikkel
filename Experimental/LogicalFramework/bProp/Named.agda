@@ -8,5 +8,7 @@ module Experimental.LogicalFramework.bProp.Named (𝒫 : MSTT-Parameter) where
 
 open import Data.String
 
+open MSTT-Parameter 𝒫
 
-open import Experimental.LogicalFramework.bProp.General 𝒫 String public
+
+open import Experimental.LogicalFramework.bProp.General ℳ 𝒯 String 𝓉 public

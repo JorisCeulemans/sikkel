@@ -4,14 +4,15 @@
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
+open import Data.String as Str
 
 module Experimental.LogicalFramework.MSTT.Syntax.Named
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯 String)
   where
 
 open import Data.Empty
 open import Data.Product
-open import Data.String as Str
 open import Relation.Nullary
 open import Relation.Nullary.Decidable.Core
 import Relation.Binary.PropositionalEquality as PropEq
@@ -29,7 +30,7 @@ open ModeTheory ℳ
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯 public
 open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 String public
-open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 String public
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 String 𝓉 public
 
 private variable
   m n : Mode

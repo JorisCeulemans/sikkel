@@ -7,16 +7,22 @@
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
 
 module Experimental.LogicalFramework.MSTT.Syntax.General
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set) (𝓉 : TmExt ℳ 𝒯 Name)
   where
 
+open import Data.List
 open import Data.Maybe
+open import Data.Product
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality as Ag
 
 open ModeTheory ℳ
+open TmExt 𝓉
 
+open Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 Name hiding (TmExt)
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
 
@@ -45,10 +51,13 @@ data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → 
   skip-lock : (ρ : Modality m p) → Var x μ T κ Γ → Var x μ T (κ ⓜ ρ) (Γ ,lock⟨ ρ ⟩)
 
 infixl 50 _∙_
-data Tm : Ctx m → Ty m → Set where
+data Tm : Ctx m → Ty m → Set
+TmExtArgs : {m : Mode} → List (TmArgInfo m) → Ctx m → Set
+
+data Tm where
   var' : {μ : Modality m n} (x : Name) {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
-  -- ^ When writing programs, one should not directly use var' but rather combine
-  --   it with a decision procedure for Var, which will resolve the name.
+    -- ^ When writing programs, one should not directly use var' but rather combine
+    --   it with a decision procedure for Var, which will resolve the name.
   mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
   mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : Name)
              (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) →
@@ -63,6 +72,13 @@ data Tm : Ctx m → Ty m → Set where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   snd : Tm Γ (T ⊠ S) → Tm Γ S
+  ext : (c : TmExtCode m) → TmExtArgs (tm-code-arginfos c) Γ → T ≡ tm-code-ty c → Tm Γ T
+    -- ^ This constructor is not intended for direct use. An instantiation of MSTT with
+    --   specific term extensions should rather provide more convenient term formers via pattern synonyms.
+
+TmExtArgs []                   Γ = ⊤
+TmExtArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty arginfo) × TmExtArgs arginfos Γ
+
 
 v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
 v0 = var' _ {skip-lock _ vzero} id-cell
@@ -92,7 +108,14 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
     lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
     lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
+  lift-trav-tel : Trav Γ Δ → (Θ : Telescope m n) → Trav (Γ ++tel Θ) (Δ ++tel Θ)
+  lift-trav-tel σ ◇ = σ
+  lift-trav-tel σ (Θ ,, μ ∣ x ∈ T) = lift (lift-trav-tel σ Θ)
+  lift-trav-tel σ (Θ ,lock⟨ μ ⟩) = lock (lift-trav-tel σ Θ)
+
   traverse-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
+  traverse-ext-tm-args : {arginfos : List (TmArgInfo m)} → TmExtArgs arginfos Δ → Trav Γ Δ → TmExtArgs arginfos Γ
+  
   traverse-tm (var' x {v} α) σ = vr v α σ
   traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lock σ)
   traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lock σ)) (traverse-tm s (lift σ))
@@ -107,6 +130,11 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (pair t s) σ = pair (traverse-tm t σ) (traverse-tm s σ)
   traverse-tm (fst p) σ = fst (traverse-tm p σ)
   traverse-tm (snd p) σ = snd (traverse-tm p σ)
+  traverse-tm (ext c args ty-eq) σ = ext c (traverse-ext-tm-args args σ) ty-eq
+
+  traverse-ext-tm-args {arginfos = []}                 _            σ = tt
+  traverse-ext-tm-args {arginfos = arginfo ∷ arginfos} (arg , args) σ =
+    (traverse-tm arg (lift-trav-tel σ (tmarg-tel arginfo))) , (traverse-ext-tm-args args σ)
 
 open TravStruct using (traverse-tm)
 

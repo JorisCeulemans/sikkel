@@ -2,6 +2,7 @@ module Experimental.LogicalFramework.Instances.Trivial where
 
 open import Data.Empty
 open import Data.Maybe
+open import Data.String
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
@@ -10,6 +11,9 @@ import Model.Modality as M
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
 open import Experimental.LogicalFramework.MSTT.Parameter
 
 
@@ -48,7 +52,18 @@ TyExt.⟦ triv-ty-ext ⟧ty-code ()
 TyExt.sem-ty-code-natural triv-ty-ext ()
 TyExt.sem-ty-code-cong triv-ty-ext ()
 
+triv-tm-ext : TmExt triv-mt triv-ty-ext String
+TmExt.TmExtCode triv-tm-ext _ = ⊥
+TmExt._≟tm-code_ triv-tm-ext () ()
+TmExt.tm-code-ty triv-tm-ext ()
+TmExt.tm-code-arginfos triv-tm-ext ()
+
+triv-tm-ext-sem : TmExtSem triv-mt triv-ty-ext (erase-names-tmext triv-mt triv-ty-ext triv-tm-ext)
+TmExtSem.⟦ triv-tm-ext-sem ⟧tm-code ()
+
 
 triv-mstt : MSTT-Parameter
 MSTT-Parameter.ℳ triv-mstt = triv-mt
 MSTT-Parameter.𝒯 triv-mstt = triv-ty-ext
+MSTT-Parameter.𝓉 triv-mstt = triv-tm-ext
+MSTT-Parameter.⟦𝓉⟧ triv-mstt = triv-tm-ext-sem

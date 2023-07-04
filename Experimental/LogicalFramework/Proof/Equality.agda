@@ -9,11 +9,15 @@ open import Data.Product using (_,_)
 open import Data.String as Str hiding (_≟_)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
+open import Model.Helpers -- we need uip for term equality
+
 open MSTT-Parameter 𝒫
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension ℳ
 open TyExt 𝒯
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 String
+open TmExt 𝓉
 
-open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 open import Experimental.LogicalFramework.bProp.Named 𝒫
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
@@ -140,6 +144,8 @@ tm-msg = "Terms are not equal."
 
 infix 10 _=t?_
 _=t?_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
+tmext-args-equal? : ∀ {arginfos} (args1 args2 : TmExtArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
+
 var' {n = n} {κ = κ} {μ = μ} x {v} α =t? var' {n = n'} {κ = κ'} {μ = μ'} y {w} β = do
   refl ← from-dec tm-msg (x Str.≟ y)
   refl ← n =m? n'
@@ -201,7 +207,16 @@ snd {T = T} p =t? snd {T = T'} p' = do
   refl ← T =T? T'
   refl ← p =t? p'
   return Ag.refl
+(ext c1 args1 ty-eq1) =t? (ext c2 args2 ty-eq2) = do
+  refl ← c1 ≟tm-code c2
+  refl ← tmext-args-equal? args1 args2
+  refl ← return (uip ty-eq1 ty-eq2)
+  return Ag.refl
 _ =t? _ = throw-error tm-msg
+
+tmext-args-equal? {arginfos = []}                 _              _              = return Ag.refl
+tmext-args-equal? {arginfos = arginfo ∷ arginfos} (arg1 , args1) (arg2 , args2) =
+  Ag.cong₂ _,_ <$> arg1 =t? arg2 <*> tmext-args-equal? args1 args2
 
 
 bprop-msg : ErrorMsg

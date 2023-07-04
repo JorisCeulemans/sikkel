@@ -4,18 +4,25 @@
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
+open import Data.String
 
 module Experimental.LogicalFramework.MSTT.AlphaEquivalence
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯 String)
   where
 
-open import Data.String
+open import Data.List
+open import Data.Product using (_,_)
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
-open ModeTheory ℳ
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.Context ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension ℳ 𝒯
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯
-import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 as NMLS
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯 𝓉
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 (erase-names-tmext 𝓉) as NMLS
+
+open ModeTheory ℳ
 
 private variable
   m n : Mode
@@ -25,17 +32,14 @@ private variable
   x : String
 
 
-erase-names-ctx : Ctx m → NMLS.Ctx m
-erase-names-ctx ◇ = NMLS.◇
-erase-names-ctx (Γ ,, μ ∣ x ∈ T) = erase-names-ctx Γ NMLS.,, μ ∣ _ ∈ T
-erase-names-ctx (Γ ,lock⟨ μ ⟩) = erase-names-ctx Γ NMLS.,lock⟨ μ ⟩
-
 erase-names-var : Var x μ T κ Γ → NMLS.Var _ μ T κ (erase-names-ctx Γ)
 erase-names-var vzero = NMLS.vzero
 erase-names-var (vsuc v) = NMLS.vsuc (erase-names-var v)
 erase-names-var (skip-lock ρ v) = NMLS.skip-lock ρ (erase-names-var v)
 
 erase-names-tm : Tm Γ T → NMLS.Tm (erase-names-ctx Γ) T
+erase-names-tmext-args : ∀ {arginfos} → TmExtArgs arginfos Γ → NMLS.TmExtArgs (map erase-names-tmarg-info arginfos) (erase-names-ctx Γ)
+
 erase-names-tm (var' x {v} α) = NMLS.var' _ {erase-names-var v} α
 erase-names-tm (mod⟨ μ ⟩ t) = NMLS.mod⟨ μ ⟩ erase-names-tm t
 erase-names-tm (mod-elim ρ μ x t s) = NMLS.mod-elim ρ μ _ (erase-names-tm t) (erase-names-tm s)
@@ -50,6 +54,12 @@ erase-names-tm (if b t f) = NMLS.if (erase-names-tm b) (erase-names-tm t) (erase
 erase-names-tm (pair t s) = NMLS.pair (erase-names-tm t) (erase-names-tm s)
 erase-names-tm (fst p) = NMLS.fst (erase-names-tm p)
 erase-names-tm (snd p) = NMLS.snd (erase-names-tm p)
+erase-names-tm (ext c args ty-eq) = NMLS.ext c (erase-names-tmext-args args) ty-eq
+
+erase-names-tmext-args {arginfos = []}                 args         = tt
+erase-names-tmext-args {arginfos = arginfo ∷ arginfos} (arg , args) =
+  (subst (λ Γ → NMLS.Tm Γ (tmarg-ty arginfo)) (erase-names-tel-++ _ (tmarg-tel arginfo)) (erase-names-tm arg)) , (erase-names-tmext-args args)
+
 
 infix 2 _≈α_
 _≈α_ : (t s : Tm Γ T) → Set

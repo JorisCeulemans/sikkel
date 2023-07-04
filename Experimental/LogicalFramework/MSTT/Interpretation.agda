@@ -4,13 +4,16 @@
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension using (erase-names-tmext)
+open import Data.String
 
 module Experimental.LogicalFramework.MSTT.Interpretation
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯 String) (⟦𝓉⟧ : TmExtSem ℳ 𝒯 (erase-names-tmext ℳ 𝒯 𝓉))
   where
 
 open import Data.Maybe
-open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
@@ -22,13 +25,16 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Constant as M
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯 as Syn
+open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯 𝓉 as Syn
 open Syn.AtomicSub
 open Syn.AtomicRen
 open Syn.AtomicRenSub
-import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 as DB
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ 𝒯 as DBInt
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.Context ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension ℳ 𝒯 hiding (erase-names-tmext)
+import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 (erase-names-tmext ℳ 𝒯 𝓉) as NMLS-SYN
+open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ 𝒯 (erase-names-tmext ℳ 𝒯 𝓉) ⟦𝓉⟧ as NMLS-SEM
+open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ 𝒯 as NMLS-TySEM
 
 private variable
   m n : Mode
@@ -39,7 +45,7 @@ private variable
 --------------------------------------------------
 -- Re-export interpretation of modes, modalities, and types
 
-open DBInt public using (⟦_⟧ty; ty-natural; ty-closed-natural)
+open NMLS-TySEM public using (⟦_⟧ty; ty-natural; ty-closed-natural)
 
 
 --------------------------------------------------
@@ -48,16 +54,18 @@ open DBInt public using (⟦_⟧ty; ty-natural; ty-closed-natural)
 --   nameless syntax. This will make it almost trivial to prove that
 --   α-equivalent terms have the same interpretation.
 
+
 ⟦_⟧ctx : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ Γ ⟧ctx = ⟦ erase-names-ctx Γ ⟧ctx-nmls
 
 ⟦_⟧tm : Tm Γ T → SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 ⟦ t ⟧tm = ⟦ erase-names-tm t ⟧tm-nmls
 
-{-
+
 --------------------------------------------------
 -- Proof that weakening a term semantically corresponds to applying a π substitution
 
+{-
 mid-weaken-sem-subst : (x : String) {Γ : Ctx} (S : Ty) (Δ : Ctx) → ⟦ (Γ ,, x ∈ S) ++ctx Δ ⟧ctx M.⇒ ⟦ Γ ++ctx Δ ⟧ctx
 mid-weaken-sem-subst _ S ◇ = M.π
 mid-weaken-sem-subst x S (Δ ,, _ ∈ T) = mid-weaken-sem-subst x S Δ s⊹

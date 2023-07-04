@@ -12,7 +12,7 @@ open MSTT-Parameter 𝒫
 
 open import Experimental.LogicalFramework.bProp.Named 𝒫
 import Experimental.LogicalFramework.bProp.Nameless 𝒫 as NMLS
-open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 
 private variable
   m : Mode

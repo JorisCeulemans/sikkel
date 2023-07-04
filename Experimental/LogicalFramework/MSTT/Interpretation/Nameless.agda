@@ -5,9 +5,12 @@
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension using (TyExt)
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics using (TmExtSem)
+open import Data.Unit using (⊤)
 
 module Experimental.LogicalFramework.MSTT.Interpretation.Nameless
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯 ⊤) (⟦𝓉⟧ : TmExtSem ℳ 𝒯 𝓉)
   where
 
 open import Data.List
@@ -16,9 +19,10 @@ open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
 open TyExt 𝒯
+open TmExtSem ⟦𝓉⟧
 open Experimental.LogicalFramework.MSTT.Parameter.TypeExtension ℳ
+open Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics ℳ 𝒯
 
-open import Model.BaseCategory
 open import Model.CwF-Structure as M
   renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.CwF-Structure.ClosedType
@@ -27,8 +31,8 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Model.Modality as M
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ 𝒯
 
 private variable
   m n o : Mode
@@ -36,43 +40,6 @@ private variable
   Γ : Ctx m
   T : Ty m
 
-
-⟦_⟧ty : Ty m → ClosedTy ⟦ m ⟧mode
-apply-sem-ty-constructor : ∀ {margs} → SemTyConstructor margs m → TyExtArgs margs → ClosedTy ⟦ m ⟧mode
-
-⟦ Nat' ⟧ty = M.Nat'
-⟦ Bool' ⟧ty = M.Bool'
-⟦ ⟨ μ ∣ T ⟩⇛ S ⟧ty = M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩ M.⇛ ⟦ S ⟧ty
-⟦ T ⊠ S ⟧ty = ⟦ T ⟧ty M.⊠ ⟦ S ⟧ty
-⟦ ⟨ μ ∣ T ⟩ ⟧ty = M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦ Ext c Args ⟧ty = apply-sem-ty-constructor ⟦ c ⟧ty-code Args
-
-apply-sem-ty-constructor {margs = []}        T Args       = T
-apply-sem-ty-constructor {margs = m ∷ margs} F (A , Args) = apply-sem-ty-constructor (F ⟦ A ⟧ty) Args
-
-
-ty-closed-natural : (T : Ty m) → IsClosedNatural ⟦ T ⟧ty
-ext-ty-natural : ∀{margs} {F : SemTyConstructor margs m} → SemTyConstructorNatural F → (args : TyExtArgs margs) →
-                 IsClosedNatural (apply-sem-ty-constructor F args)
-
-ty-closed-natural Nat' = M.const-closed
-ty-closed-natural Bool' = M.const-closed
-ty-closed-natural (⟨ μ ∣ T ⟩⇛ S) = M.fun-closed (M.mod-closed ⟦ μ ⟧mod (ty-closed-natural T)) (ty-closed-natural S)
-ty-closed-natural (T ⊠ S) = M.prod-closed (ty-closed-natural T) (ty-closed-natural S)
-ty-closed-natural ⟨ μ ∣ T ⟩ = M.mod-closed ⟦ μ ⟧mod (ty-closed-natural T)
-ty-closed-natural (Ext c Args) = ext-ty-natural (sem-ty-code-natural c) Args
-
-ext-ty-natural {margs = []}        nat Args       = nat
-ext-ty-natural {margs = m ∷ margs} nat (A , Args) = ext-ty-natural (nat (ty-closed-natural A)) Args
-
-
-ty-natural : (T : Ty m) {Γ Δ : SemCtx ⟦ m ⟧mode} {σ : Γ M.⇒ Δ} → ⟦ T ⟧ty M.[ σ ] M.≅ᵗʸ ⟦ T ⟧ty
-ty-natural T = closed-natural (ty-closed-natural T) _
-
-⟦_⟧ctx-nmls : Ctx m → SemCtx ⟦ m ⟧mode
-⟦ ◇ ⟧ctx-nmls = M.◇
-⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls M.,, M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦ Γ ,lock⟨ μ ⟩ ⟧ctx-nmls = M.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx-nmls
 
 ⟦⟧var-helper : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var _ μ T κ Γ) →
                (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → SemTm ⟦ Γ ,lock⟨ ρ ⟩ ⟧ctx-nmls ⟦ T ⟧ty
@@ -87,6 +54,8 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
 
 ⟦_⟧tm-nmls : Tm Γ T → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
+apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T → TmExtArgs arginfos Γ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
+
 ⟦ var' _ {v} α ⟧tm-nmls = ⟦ v , α ⟧var-nmls
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim {T = T} {S = S} ρ μ _ t s ⟧tm-nmls =
@@ -105,3 +74,8 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 ⟦ pair t s ⟧tm-nmls = M.pair ⟦ t ⟧tm-nmls ⟦ s ⟧tm-nmls
 ⟦ fst p ⟧tm-nmls = M.fst ⟦ p ⟧tm-nmls
 ⟦ snd p ⟧tm-nmls = M.snd ⟦ p ⟧tm-nmls
+⟦ ext c args refl ⟧tm-nmls = apply-sem-tm-constructor ⟦ c ⟧tm-code args
+
+apply-sem-tm-constructor {arginfos = []}                 t args         = t
+apply-sem-tm-constructor {arginfos = arginfo ∷ arginfos} f (arg , args) =
+  apply-sem-tm-constructor (f ⟦ arg ⟧tm-nmls) args

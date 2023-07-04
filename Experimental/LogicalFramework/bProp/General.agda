@@ -6,19 +6,22 @@
 --   bProp.Named.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
 
-module Experimental.LogicalFramework.bProp.General (𝒫 : MSTT-Parameter) (Name : Set) where
+module Experimental.LogicalFramework.bProp.General
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set) (𝓉 : TmExt ℳ 𝒯 Name)
+  where
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality
 
-open MSTT-Parameter 𝒫
-  -- ^ Brings mode theory ℳ (and its contents) and type extension parameter 𝒯 into scope
+open ModeTheory ℳ
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
-open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 Name
+open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 Name 𝓉
 
 private variable
   m n : Mode
