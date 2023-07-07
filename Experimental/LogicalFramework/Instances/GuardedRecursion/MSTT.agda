@@ -11,7 +11,9 @@ open import Experimental.LogicalFramework.Instances.GuardedRecursion.TypeExtensi
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.TermExtension
 
 
-open GMT using (★; ω; later; constantly; forever; guarded-mt) public
+open GMT
+  using (★; ω; later; constantly; forever; guarded-mt; ltrⓜcst; ltr; 𝟙≤ltr; ltrⓜcstⓜfrv; cstⓜfrv≤𝟙; cstⓜfrv≤ltr)
+  public
 open ModeTheory guarded-mt public
 
 guarded-mstt : MSTT-Parameter
