@@ -76,7 +76,7 @@ proof-plus-zeroʳ {Γ = Γ} =
                          fun-β
                          (cong-suc (plus' (svar "n") ∙ zero) (svar "n") (assumption' "ind-hyp" {𝟙} {𝟙} id-cell))))))
 
-test-plus-zeroʳ : (PCResult.goals <$> check-proof [] proof-plus-zeroʳ plus-zeroʳ) ≡ ok []
+test-plus-zeroʳ : (PCResult.goals <$> check-proof ◇ proof-plus-zeroʳ plus-zeroʳ) ≡ ok []
 test-plus-zeroʳ = refl
 
 
@@ -110,7 +110,7 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                                                      (fun-cong fun-β (svar "n"))
                                                      fun-β)))))))))
 
-test-plus-sucʳ : (PCResult.goals <$> check-proof [] proof-plus-sucʳ plus-sucʳ) ≡ ok []
+test-plus-sucʳ : (PCResult.goals <$> check-proof ◇ proof-plus-sucʳ plus-sucʳ) ≡ ok []
 test-plus-sucʳ = refl
 
 
@@ -138,7 +138,7 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                                                                          suc (plus' (var' "n" {vsuc vzero} id-cell) ∙ svar "n"))
                                               (∀-elim 𝟙 plus-sucʳ proof-plus-sucʳ (svar "n")) (svar "m")))))))
 
-test-plus-comm : (PCResult.goals <$> check-proof [] proof-plus-comm plus-comm) ≡ ok []
+test-plus-comm : (PCResult.goals <$> check-proof ◇ proof-plus-comm plus-comm) ≡ ok []
 test-plus-comm = refl
 
 

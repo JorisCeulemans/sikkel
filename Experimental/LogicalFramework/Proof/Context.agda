@@ -33,12 +33,12 @@ to-ctx : ProofCtx m → Ctx m
 
 infixl 2 _,,ᵛ_∣_∈_ _,,ᵇ_∣_∈_
 data ProofCtx m where
-  [] : ProofCtx m
+  ◇ : ProofCtx m
   _,,ᵛ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → ProofCtx m
   _,,ᵇ_∣_∈_ : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (φ : bProp ((to-ctx Ξ) ,lock⟨ μ ⟩)) → ProofCtx m
   _,lock⟨_⟩ : (Ξ : ProofCtx n) (μ : Modality m n) → ProofCtx m
 
-to-ctx []               = ◇
+to-ctx ◇               = ◇
 to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T) = (to-ctx Ξ) ,, μ ∣ x ∈ T
 to-ctx (Ξ ,,ᵇ _ ∣ _ ∈ _) = to-ctx Ξ
 to-ctx (Ξ ,lock⟨ μ ⟩)   = (to-ctx Ξ) ,lock⟨ μ ⟩
@@ -85,7 +85,7 @@ map-contains F G (contains-assumption locks as) = contains-assumption (F locks) 
 
 contains-assumption? : (x : String) (μ : Modality n o) (Ξ : ProofCtx m) →
                        PCM (ContainsAssumption x μ Ξ)
-contains-assumption? x μ [] = throw-error "Assumption not found in context."
+contains-assumption? x μ ◇ = throw-error "Assumption not found in context."
 contains-assumption? x μ (Ξ ,,ᵛ ρ ∣ y ∈ T) = map-contains id skip-var <$> contains-assumption? x μ Ξ
 contains-assumption? x μ (Ξ ,,ᵇ ρ ∣ y ∈ φ) with x Str.≟ y
 contains-assumption? {n = n} {o} {m} x μ (_,,ᵇ_∣_∈_ {n = n'} Ξ ρ .x φ) | yes refl = do
@@ -100,12 +100,12 @@ contains-assumption? x μ (Ξ ,lock⟨ ρ ⟩) = map-contains (_ⓜ ρ) (skip-lo
 ⟦_⟧pctx : ProofCtx m → SemCtx ⟦ m ⟧mode
 to-ctx-subst : (Ξ : ProofCtx m) → ⟦ Ξ ⟧pctx M.⇒ ⟦ to-ctx Ξ ⟧ctx
 
-⟦ [] ⟧pctx = M.◇
+⟦ ◇ ⟧pctx = M.◇
 ⟦ Ξ ,,ᵛ μ ∣ _ ∈ T ⟧pctx = ⟦ Ξ ⟧pctx M.,, M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
 ⟦ Ξ ,,ᵇ μ ∣ _ ∈ φ ⟧pctx = ⟦ Ξ ⟧pctx M.,, (M.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧bprop ⟩ M.[ to-ctx-subst Ξ ])
 ⟦ Ξ ,lock⟨ μ ⟩ ⟧pctx = M.lock ⟦ μ ⟧mod ⟦ Ξ ⟧pctx
 
-to-ctx-subst [] = M.id-subst M.◇
+to-ctx-subst ◇ = M.id-subst M.◇
 to-ctx-subst (Ξ ,,ᵛ μ ∣ _ ∈ T) = M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) (to-ctx-subst Ξ)
 to-ctx-subst (Ξ ,,ᵇ _ ∣ _ ∈ _) = to-ctx-subst Ξ M.⊚ M.π
 to-ctx-subst (Ξ ,lock⟨ μ ⟩) = M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ)
