@@ -206,12 +206,9 @@ check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
 check-proof Ξ ⊤ᵇ-intro φ = do
   refl ← φ ≟bprop ⊤ᵇ
   return ⟅ [] , _ ↦ M.tt' M.[ _ ]' ⟆
-check-proof Ξ ⊥ᵇ-elim φ = do
-  is-implication μ domφ codφ ← is-implication? φ
-  refl ← mod-dom μ ≟mode mod-cod μ
-  refl ← μ ≟mod 𝟙
-  refl ← domφ ≟bprop ⊥ᵇ
-  return ⟅ [] , _ ↦ M.empty-elim _ M.[ _ ]' ⟆
+check-proof Ξ (⊥ᵇ-elim p) φ = do
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ⊥ᵇ
+  return ⟅ goals , sgoals ↦ M.app (M.ι⁻¹[ M.⇛-natural _ ] (M.empty-elim _ M.[ _ ]')) (⟦p⟧ sgoals) ⟆
 check-proof Ξ (⊃-intro x p) φ = do
   is-implication μ domφ codφ ← is-implication? φ
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵇ μ ∣ x ∈ domφ) p codφ

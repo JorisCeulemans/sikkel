@@ -50,7 +50,9 @@ data Proof {m : Mode} : Ctx m → Set where
 
   -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
   ⊤ᵇ-intro : Proof Γ  -- Ξ ⊢ ⊤ᵇ
-  ⊥ᵇ-elim : Proof Γ  -- Ξ ⊢ ⊥ᵇ ⊃ φ
+  ⊥ᵇ-elim : Proof Γ  -- Ξ ⊢ ⊥ᵇ
+            →
+            Proof Γ  -- Ξ ⊢ φ
   ⊃-intro : (x : String) →
             Proof Γ  -- Ξ ,,ᵇ μ ∣ x ∈ φ ⊢ ψ
             →
