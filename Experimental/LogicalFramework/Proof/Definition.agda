@@ -75,8 +75,15 @@ data Proof {m : Mode} : Ctx m → Set where
             Proof Γ  -- Ξ ⊢ φ ∧ ψ
             →
             Proof Γ  -- Ξ ⊢ ψ
-  ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : String) (T : Ty n) → Proof (Γ ,, μ ∣ x ∈ T) → Proof Γ
-  ∀-elim : (μ : Modality n m) (φ : bProp Γ) → Proof Γ → (t : Tm (Γ ,lock⟨ μ ⟩) T) → Proof Γ
+  ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : String) (T : Ty n) →
+                    Proof (Γ ,, μ ∣ x ∈ T)  -- Ξ ,,ᵛ μ ∣ x ∈ T ⊢ φ
+                    →
+                    Proof Γ                 -- Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ
+  ∀-elim : (μ : Modality n m) (φ : bProp Γ) →
+           Proof Γ →                  -- Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ
+           (t : Tm (Γ ,lock⟨ μ ⟩) T)  -- to-ctx Ξ ,lock⟨ μ ⟩ ⊢ t : T
+           →
+           Proof Γ                    -- Ξ ⊢ φ [ t / x ]bprop
 
   -- Modal reasoning principles
   mod⟨_⟩_ : (μ : Modality n m) →
@@ -110,8 +117,8 @@ data Proof {m : Mode} : Ctx m → Set where
 
   -- Axioms specifying distinctness of booleans and natural numbers
   true≠false : Proof Γ  -- Ξ ⊢ ¬ (true ≡ᵇ false)
-  suc-inj : (x y : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ∀[ 𝟙 ∣ y ∈ Nat' ] (suc ∙ (svar x) ≡ᵇ suc ∙ (svar y)) ⊃ (svar x ≡ᵇ svar y)
-  zero≠sucn : (x : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ¬ (zero ≡ᵇ suc ∙ svar x)
+  suc-inj : (x y : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ∀[ 𝟙 ∣ y ∈ Nat' ] (suc (svar x) ≡ᵇ suc (svar y)) ⊃ (svar x ≡ᵇ svar y)
+  zero≠sucn : (x : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ¬ (zero ≡ᵇ suc (svar x))
 
   -- Induction schemata for Bool' and Nat'
   bool-induction' : {Γ Δ : Ctx m} {x : String} → Δ Ag.≡ (Γ ,, x ∈ Bool') →
