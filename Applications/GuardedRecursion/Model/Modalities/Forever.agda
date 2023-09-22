@@ -93,12 +93,24 @@ module _ {T : Ty (constantly-ctx Γ)} where
   forever-ty-η : (t : Tm Γ (forever-ty T)) → forever-tm (unforever-tm t) ≅ᵗᵐ t
   eq (forever-ty-η t) _ = to-ω-limit-eq (λ _ → refl)
 
+forever-ty-map : {T S : Ty (constantly-ctx Γ)} → (T ↣ S) → forever-ty T ↣ forever-ty S
+func (forever-ty-map η) = ω-limit-map η
+_↣_.naturality (forever-ty-map η) = to-ω-limit-eq (λ n → _↣_.naturality η)
+
+forever-ty-map-id : {T : Ty (constantly-ctx Γ)} → forever-ty-map (id-trans T) ≅ⁿ id-trans (forever-ty T)
+eq forever-ty-map-id _ = to-ω-limit-eq (λ _ → refl)
+
+forever-ty-map-⊙ : {R S T : Ty (constantly-ctx Γ)} {η : S ↣ T} {φ : R ↣ S} →
+                   forever-ty-map (η ⊙ φ) ≅ⁿ forever-ty-map η ⊙ forever-ty-map φ
+eq forever-ty-map-⊙ _ = to-ω-limit-eq (λ _ → refl)
+
+forever-ty-map-cong : {T S : Ty (constantly-ctx Γ)} {η φ : T ↣ S} → η ≅ⁿ φ → forever-ty-map η ≅ⁿ forever-ty-map φ
+eq (forever-ty-map-cong 𝔢) _ = to-ω-limit-eq (λ _ → eq 𝔢 _)
+
 forever-ty-cong : {T : Ty (constantly-ctx Γ)} {S : Ty (constantly-ctx Γ)} →
                   T ≅ᵗʸ S → forever-ty T ≅ᵗʸ forever-ty S
-func (from (forever-ty-cong T=S)) = ω-limit-map (from T=S)
-_↣_.naturality (from (forever-ty-cong T=S)) = to-ω-limit-eq (λ n → _↣_.naturality (from T=S))
-func (to (forever-ty-cong T=S)) = ω-limit-map (to T=S)
-_↣_.naturality (to (forever-ty-cong T=S)) = to-ω-limit-eq (λ n → _↣_.naturality (to T=S))
+from (forever-ty-cong T=S) = forever-ty-map (from T=S)
+to (forever-ty-cong T=S) = forever-ty-map (to T=S)
 eq (isoˡ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoˡ T=S) _)
 eq (isoʳ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoʳ T=S) _)
 
@@ -121,6 +133,11 @@ module _ {T : Ty (constantly-ctx Γ)} where
   unforever-tm-cong : {t s : Tm Γ (forever-ty T)} → t ≅ᵗᵐ s → unforever-tm t ≅ᵗᵐ unforever-tm s
   eq (unforever-tm-cong t=s) γ = cong (λ x → limit x _) (eq t=s γ)
 
+
+forever-convert-tm : {T S : Ty (constantly-ctx Γ)} {η : T ↣ S} (t : Tm (constantly-ctx Γ) T) →
+                     convert-term (forever-ty-map η) (forever-tm t) ≅ᵗᵐ forever-tm (convert-term η t)
+eq (forever-convert-tm t) _ = to-ω-limit-eq (λ _ → refl)
+
 module _ {T S : Ty (constantly-ctx Γ)} {T=S : T ≅ᵗʸ S} where
   forever-tm-ι : (s : Tm (constantly-ctx Γ) S) → ι[ forever-ty-cong T=S ] forever-tm s ≅ᵗᵐ forever-tm (ι[ T=S ] s)
   eq (forever-tm-ι s) _ = to-ω-limit-eq (λ _ → refl)
@@ -138,33 +155,33 @@ _↣_.naturality (to (forever-ty-natural σ {T})) = to-ω-limit-eq (λ _ → ty-
 eq (isoˡ (forever-ty-natural σ {T})) _ = to-ω-limit-eq (λ _ → refl)
 eq (isoʳ (forever-ty-natural σ {T})) _ = to-ω-limit-eq (λ _ → refl)
 
-forever-ty-natural-ty-eq : (σ : Γ ⇒ Δ) {T S : Ty (constantly-ctx Δ)} (e : T ≅ᵗʸ S) →
-  transᵗʸ (forever-ty-natural σ) (forever-ty-cong (ty-subst-cong-ty (constantly-subst σ) e))
-    ≅ᵉ
-  transᵗʸ (ty-subst-cong-ty σ (forever-ty-cong e)) (forever-ty-natural σ)
-eq (from-eq (forever-ty-natural-ty-eq σ e)) _ = to-ω-limit-eq (λ _ → refl)
+forever-ty-natural-map : (σ : Γ ⇒ Δ) {T S : Ty (constantly-ctx Δ)} (η : T ↣ S) →
+  forever-ty-map (ty-subst-map (constantly-subst σ) η) ⊙ from (forever-ty-natural σ)
+    ≅ⁿ
+  from (forever-ty-natural σ) ⊙ ty-subst-map σ (forever-ty-map η)
+eq (forever-ty-natural-map σ η) _ = to-ω-limit-eq (λ _ → refl)
 
-forever-ty-natural-id : {T : Ty (constantly-ctx Γ)} →
-  transᵗʸ (forever-ty-natural (id-subst Γ)) (forever-ty-cong (transᵗʸ (ty-subst-cong-subst constantly-subst-id T) (ty-subst-id T)))
-    ≅ᵉ
-  ty-subst-id (forever-ty T)
-eq (from-eq (forever-ty-natural-id {T = T})) _ = to-ω-limit-eq (λ _ → ty-id T)
+forever-ty-natural-id-map : {T : Ty (constantly-ctx Γ)} →
+  forever-ty-map (ty-subst-id-from T ⊙ ty-subst-eq-subst-morph constantly-subst-id T) ⊙ from (forever-ty-natural (id-subst Γ))
+    ≅ⁿ
+  ty-subst-id-from (forever-ty T)
+eq (forever-ty-natural-id-map {T = T}) _ = to-ω-limit-eq (λ _ → ty-id T)
 
-forever-ty-natural-⊚ : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (constantly-ctx Θ)} →
-  transᵗʸ (ty-subst-cong-ty σ (forever-ty-natural τ))
-          (transᵗʸ (forever-ty-natural σ)
-                   (forever-ty-cong (ty-subst-comp T (constantly-subst τ) (constantly-subst σ))))
-    ≅ᵉ
-  transᵗʸ (ty-subst-comp (forever-ty T) τ σ)
-          (transᵗʸ (forever-ty-natural (τ ⊚ σ))
-                   (forever-ty-cong (ty-subst-cong-subst (constantly-subst-⊚ τ σ) T)))
-eq (from-eq (forever-ty-natural-⊚ τ σ {T})) _ = to-ω-limit-eq (λ _ → sym (ty-id T))
+forever-ty-natural-⊚-map : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (constantly-ctx Θ)} →
+  forever-ty-map (ty-subst-comp-from T (constantly-subst τ) (constantly-subst σ))
+  ⊙ from (forever-ty-natural σ)
+  ⊙ ty-subst-map σ (from (forever-ty-natural τ))
+    ≅ⁿ
+  forever-ty-map (ty-subst-eq-subst-morph (constantly-subst-⊚ τ σ) T)
+  ⊙ from (forever-ty-natural (τ ⊚ σ))
+  ⊙ ty-subst-comp-from (forever-ty T) τ σ
+eq (forever-ty-natural-⊚-map τ σ {T}) _ = to-ω-limit-eq (λ _ → sym (ty-id T))
 
-forever-ty-natural-subst-eq : {σ τ : Γ ⇒ Δ} {T : Ty (constantly-ctx Δ)} (ε : σ ≅ˢ τ) →
-  transᵗʸ (ty-subst-cong-subst ε (forever-ty T)) (forever-ty-natural τ)
-    ≅ᵉ
-  transᵗʸ (forever-ty-natural σ) (forever-ty-cong (ty-subst-cong-subst (constantly-subst-cong ε) T))
-eq (from-eq (forever-ty-natural-subst-eq {T = T} _)) _ = to-ω-limit-eq (λ _ → ty-cong T refl)
+forever-ty-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (constantly-ctx Δ)} (ε : σ ≅ˢ τ) →
+  from (forever-ty-natural τ) ⊙ ty-subst-eq-subst-morph ε (forever-ty T)
+    ≅ⁿ
+  forever-ty-map (ty-subst-eq-subst-morph (constantly-subst-cong ε) T) ⊙ from (forever-ty-natural σ)
+eq (forever-ty-natural-subst-eq-map {T = T} _) _ = to-ω-limit-eq (λ _ → ty-cong T refl)
 
 {-
 instance

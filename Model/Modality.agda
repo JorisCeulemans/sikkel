@@ -42,17 +42,20 @@ record Modality (C D : BaseCategory) : Set₁ where
   field
     ⟨_∣_⟩ : {Γ : Ctx D} → Ty (lock Γ) → Ty Γ
 
-    -- The modal type former should respect type equivalence
-    -- (i.e. natural isomorphism of presheaves). This should be
-    -- handled in a coherent way, in other words we should get a
-    -- morphism of groupoids from Ty (lock Γ) to Ty Γ.
-    mod-cong : {Γ : Ctx D} {T S : Ty (lock Γ)} →
-               T ≅ᵗʸ S → ⟨_∣_⟩ T ≅ᵗʸ ⟨_∣_⟩ S
-    mod-cong-refl : {Γ : Ctx D} {T : Ty (lock Γ)} → mod-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
-    mod-cong-sym : {Γ : Ctx D} {T S : Ty (lock Γ)} {e : T ≅ᵗʸ S} → mod-cong (symᵗʸ e) ≅ᵉ symᵗʸ (mod-cong e)
-    mod-cong-trans : {Γ : Ctx D} {R T S : Ty (lock Γ)} {e : R ≅ᵗʸ T} {e' : T ≅ᵗʸ S} →
-                     mod-cong (transᵗʸ e e') ≅ᵉ transᵗʸ (mod-cong e) (mod-cong e')
-    mod-cong-cong : {Γ : Ctx D} {T S : Ty (lock Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → mod-cong e ≅ᵉ mod-cong e'
+    -- The modal type former should respect type morphisms
+    -- (i.e. natural transformations between presheaves). This should
+    -- be handled in a coherent way, in other words we should get a
+    -- functor from the category Ty (lock Γ) to the category Ty Γ.
+    -- Previously, we only required equivalence preservation (i.e. of
+    -- natural isomorphisms between types). The transition from
+    -- equivalence to morphism is partly joint work with Youie Li.
+    mod-map : {Γ : Ctx D} {T S : Ty (lock Γ)} →
+              (T ↣ S) → ⟨_∣_⟩ T ↣ ⟨_∣_⟩ S
+    mod-map-cong : {Γ : Ctx D} {T S : Ty (lock Γ)} {φ η : T ↣ S} → φ ≅ⁿ η →
+                   mod-map φ ≅ⁿ mod-map η
+    mod-map-id : {Γ : Ctx D} {T : Ty (lock Γ)} → mod-map (id-trans T) ≅ⁿ id-trans (⟨_∣_⟩ T)
+    mod-map-⊙ : {Γ : Ctx D} {R T S : Ty (lock Γ)} {φ : T ↣ S} {η : R ↣ T} →
+                mod-map (φ ⊙ η) ≅ⁿ mod-map φ ⊙ mod-map η
 
     -- We can push substitutions under the modal type former but they
     -- get locked. Again, this must happen in a coherent way (i.e. the
@@ -60,22 +63,22 @@ record Modality (C D : BaseCategory) : Set₁ where
     -- pseudofunctor Ty ∘ lock to Ty).
     mod-natural : {Γ Δ : Ctx D} (σ : Γ ⇒ Δ) {T : Ty (lock Δ)} →
                   (⟨_∣_⟩ T) [ σ ] ≅ᵗʸ ⟨_∣_⟩ (T [ lock-fmap σ ])
-    mod-natural-ty-eq : {Γ Δ : Ctx D} (σ : Γ ⇒ Δ) {T S : Ty (lock Δ)} (e : T ≅ᵗʸ S) →
-                        transᵗʸ (mod-natural σ {T = T}) (mod-cong (ty-subst-cong-ty (lock-fmap σ) e))
-                          ≅ᵉ
-                        transᵗʸ (ty-subst-cong-ty σ (mod-cong e)) (mod-natural σ)
-    mod-natural-id : {Γ : Ctx D} {T : Ty (lock Γ)} →
-                     transᵗʸ (mod-natural _) (mod-cong (transᵗʸ (ty-subst-cong-subst lock-fmap-id T) (ty-subst-id T)))
-                       ≅ᵉ
-                     ty-subst-id (⟨_∣_⟩ T)
-    mod-natural-⊚ : {Γ Δ Θ : Ctx D} (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (lock Θ)} →
-                    transᵗʸ (ty-subst-cong-ty σ (mod-natural τ)) (transᵗʸ (mod-natural σ) (mod-cong (ty-subst-comp T _ _)))
-                      ≅ᵉ
-                    transᵗʸ (ty-subst-comp (⟨_∣_⟩ T) τ σ) (transᵗʸ (mod-natural (τ ⊚ σ)) (mod-cong (ty-subst-cong-subst (lock-fmap-⊚ τ σ) T)))
-    mod-natural-subst-eq : {Γ Δ : Ctx D} {σ τ : Γ ⇒ Δ} {T : Ty (lock Δ)} (ε : σ ≅ˢ τ) →
-                           transᵗʸ (ty-subst-cong-subst ε (⟨_∣_⟩ T)) (mod-natural τ)
-                             ≅ᵉ
-                           transᵗʸ (mod-natural σ) (mod-cong (ty-subst-cong-subst (lock-fmap-cong ε) T))
+    mod-natural-map : {Γ Δ : Ctx D} (σ : Γ ⇒ Δ) {T S : Ty (lock Δ)} (η : T ↣ S) →
+                      mod-map (ty-subst-map (lock-fmap σ) η) ⊙ from (mod-natural σ {T = T})
+                        ≅ⁿ
+                      from (mod-natural σ) ⊙ ty-subst-map σ (mod-map η)
+    mod-natural-id-map : {Γ : Ctx D} {T : Ty (lock Γ)} →
+                         mod-map (from (ty-subst-id T) ⊙ ty-subst-eq-subst-morph lock-fmap-id T) ⊙ from (mod-natural (id-subst Γ))
+                           ≅ⁿ
+                         from (ty-subst-id (⟨_∣_⟩ T))
+    mod-natural-⊚-map : {Γ Δ Θ : Ctx D} (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (lock Θ)} →
+                        mod-map (from (ty-subst-comp T (lock-fmap τ) (lock-fmap σ))) ⊙ from (mod-natural σ) ⊙ ty-subst-map σ (from (mod-natural τ))
+                          ≅ⁿ
+                        mod-map (ty-subst-eq-subst-morph (lock-fmap-⊚ τ σ) T) ⊙ from (mod-natural (τ ⊚ σ)) ⊙ from (ty-subst-comp (⟨_∣_⟩ T) τ σ)
+    mod-natural-subst-eq-map : {Γ Δ : Ctx D} {σ τ : Γ ⇒ Δ} {T : Ty (lock Δ)} (ε : σ ≅ˢ τ) →
+                               from (mod-natural τ) ⊙ ty-subst-eq-subst-morph ε (⟨_∣_⟩ T)
+                                 ≅ⁿ
+                               mod-map (ty-subst-eq-subst-morph (lock-fmap-cong ε) T) ⊙ from (mod-natural σ)
 
     -- Term formers coming with a modality and their laws.
     mod-intro : {Γ : Ctx D} {T : Ty (lock Γ)} → Tm (lock Γ) T → Tm Γ (⟨_∣_⟩ T)
@@ -83,50 +86,100 @@ record Modality (C D : BaseCategory) : Set₁ where
                      t ≅ᵗᵐ t' → mod-intro t ≅ᵗᵐ mod-intro t'
     mod-intro-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (lock Γ)} (t : Tm (lock Γ) T) →
                         (mod-intro t) [ σ ]' ≅ᵗᵐ ι[ mod-natural σ ] mod-intro (t [ lock-fmap σ ]')
-    mod-intro-ι : {Γ : Ctx D} {T S : Ty (lock Γ)} {T=S : T ≅ᵗʸ S} (t : Tm (lock Γ) S) →
-                  ι[ mod-cong T=S ] mod-intro t ≅ᵗᵐ mod-intro (ι[ T=S ] t)
+    mod-intro-convert : {Γ : Ctx D} {T S : Ty (lock Γ)} {η : T ↣ S} (t : Tm (lock Γ) T) →
+                        convert-term (mod-map η) (mod-intro t) ≅ᵗᵐ mod-intro (convert-term η t)
 
     mod-elim : {Γ : Ctx D} {T : Ty (lock Γ)} → Tm Γ (⟨_∣_⟩ T) → Tm (lock Γ) T
     mod-elim-cong : {Γ : Ctx D} {T : Ty (lock Γ)} {t t' : Tm Γ (⟨_∣_⟩ T)} →
                     t ≅ᵗᵐ t' → mod-elim t ≅ᵗᵐ mod-elim t'
-    -- Naturality of mod-elim and the fact that it commutes with ι can be proved
-    -- from mod-intro-natural, mod-intro-ι  and the β and η laws (see below).
+    -- Naturality of mod-elim and the fact that it commutes with convert-term can be proved
+    -- from mod-intro-natural, mod-intro-convert and the β and η laws (see below).
 
     mod-β : {Γ : Ctx D} {T : Ty (lock Γ)} (t : Tm (lock Γ) T) →
             mod-elim (mod-intro t) ≅ᵗᵐ t
     mod-η : {Γ : Ctx D} {T : Ty (lock Γ)} (t : Tm Γ (⟨_∣_⟩ T)) →
             mod-intro (mod-elim t) ≅ᵗᵐ t
 
-  mod-elim-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (lock Γ)} (t : Tm Γ (⟨_∣_⟩ T)) →
-                     (mod-elim t) [ lock-fmap σ ]' ≅ᵗᵐ mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]'))
-  mod-elim-natural σ t = begin
-      (mod-elim t) [ lock-fmap σ ]'
-    ≅˘⟨ mod-β _ ⟩
-      mod-elim (mod-intro ((mod-elim t) [ lock-fmap σ ]'))
-    ≅˘⟨ mod-elim-cong ι-symˡ ⟩
-      mod-elim (ι⁻¹[ mod-natural σ ] (ι[ mod-natural σ ] (mod-intro ((mod-elim t) [ lock-fmap σ ]'))))
-    ≅˘⟨ mod-elim-cong (ι⁻¹-cong (mod-intro-natural σ (mod-elim t))) ⟩
-      mod-elim (ι⁻¹[ mod-natural σ ] (mod-intro (mod-elim t) [ σ ]'))
-    ≅⟨ mod-elim-cong (ι⁻¹-cong (tm-subst-cong-tm σ (mod-η t))) ⟩
-      mod-elim (ι⁻¹[ mod-natural σ ] (t [ σ ]')) ∎
-    where open ≅ᵗᵐ-Reasoning
-
-  mod-elim-ι : {Γ : Ctx D} {T S : Ty (lock Γ)} {T=S : T ≅ᵗʸ S} (t : Tm Γ (⟨_∣_⟩ S)) →
-               ι[ T=S ] mod-elim t ≅ᵗᵐ mod-elim (ι[ mod-cong T=S ] t)
-  mod-elim-ι {T = T} {S = S} {T=S = T=S} t = begin
-      ι[ T=S ] mod-elim t
-    ≅˘⟨ mod-β _ ⟩
-      mod-elim (mod-intro (ι[ T=S ] mod-elim t))
-    ≅˘⟨ mod-elim-cong (mod-intro-ι _) ⟩
-      mod-elim (ι[ mod-cong T=S ] mod-intro (mod-elim t))
-    ≅⟨ mod-elim-cong (ι-cong (mod-η t)) ⟩
-      mod-elim (ι[ mod-cong T=S ] t) ∎
-    where open ≅ᵗᵐ-Reasoning
-
 open Modality public
-
 _,lock⟨_⟩ : Ctx D → Modality C D → Ctx C
 Γ ,lock⟨ μ ⟩ = lock μ Γ
+
+
+module _ (μ : Modality C D) where
+  mod-cong : {Γ : Ctx D} {T S : Ty (lock μ Γ)} →
+             T ≅ᵗʸ S → ⟨ μ ∣ T ⟩ ≅ᵗʸ ⟨ μ ∣ S ⟩
+  from (mod-cong e) = mod-map μ (from e)
+  to (mod-cong e) = mod-map μ (to e)
+  isoˡ (mod-cong e) = transⁿ (symⁿ (mod-map-⊙ μ)) (transⁿ (mod-map-cong μ (isoˡ e)) (mod-map-id μ))
+  isoʳ (mod-cong e) = transⁿ (symⁿ (mod-map-⊙ μ)) (transⁿ (mod-map-cong μ (isoʳ e)) (mod-map-id μ))
+
+  mod-cong-refl : {Γ : Ctx D} {T : Ty (lock μ Γ)} → mod-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
+  from-eq mod-cong-refl = mod-map-id μ
+
+  mod-cong-sym : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {e : T ≅ᵗʸ S} → mod-cong (symᵗʸ e) ≅ᵉ symᵗʸ (mod-cong e)
+  from-eq mod-cong-sym = reflⁿ
+
+  mod-cong-trans : {Γ : Ctx D} {R T S : Ty (lock μ Γ)} {e : R ≅ᵗʸ T} {e' : T ≅ᵗʸ S} →
+                   mod-cong (transᵗʸ e e') ≅ᵉ transᵗʸ (mod-cong e) (mod-cong e')
+  from-eq mod-cong-trans = mod-map-⊙ μ
+
+  mod-cong-cong : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → mod-cong e ≅ᵉ mod-cong e'
+  from-eq (mod-cong-cong 𝑒) = mod-map-cong μ (from-eq 𝑒)
+
+  mod-natural-ty-eq : {Γ Δ : Ctx D} (σ : Γ ⇒ Δ) {T S : Ty (lock μ Δ)} (e : T ≅ᵗʸ S) →
+                      transᵗʸ (mod-natural μ σ {T = T}) (mod-cong (ty-subst-cong-ty (lock-fmap μ σ) e))
+                        ≅ᵉ
+                      transᵗʸ (ty-subst-cong-ty σ (mod-cong e)) (mod-natural μ σ)
+  from-eq (mod-natural-ty-eq σ e) = mod-natural-map μ σ (from e)
+
+  mod-natural-id : {Γ : Ctx D} {T : Ty (lock μ Γ)} →
+                   transᵗʸ (mod-natural μ _) (mod-cong (transᵗʸ (ty-subst-cong-subst (lock-fmap-id μ) T) (ty-subst-id T)))
+                     ≅ᵉ
+                   ty-subst-id ⟨ μ ∣ T ⟩
+  from-eq mod-natural-id = mod-natural-id-map μ
+
+  mod-natural-⊚ : {Γ Δ Θ : Ctx D} (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (lock μ Θ)} →
+                  transᵗʸ (ty-subst-cong-ty σ (mod-natural μ τ)) (transᵗʸ (mod-natural μ σ) (mod-cong (ty-subst-comp T _ _)))
+                    ≅ᵉ
+                  transᵗʸ (ty-subst-comp ⟨ μ ∣ T ⟩ τ σ) (transᵗʸ (mod-natural μ (τ ⊚ σ)) (mod-cong (ty-subst-cong-subst (lock-fmap-⊚ μ τ σ) T)))
+  from-eq (mod-natural-⊚ τ σ) = mod-natural-⊚-map μ τ σ
+
+  mod-natural-subst-eq : {Γ Δ : Ctx D} {σ τ : Γ ⇒ Δ} {T : Ty (lock μ Δ)} (ε : σ ≅ˢ τ) →
+                         transᵗʸ (ty-subst-cong-subst ε ⟨ μ ∣ T ⟩) (mod-natural μ τ)
+                           ≅ᵉ
+                         transᵗʸ (mod-natural μ σ) (mod-cong (ty-subst-cong-subst (lock-fmap-cong μ ε) T))
+  from-eq (mod-natural-subst-eq ε) = mod-natural-subst-eq-map μ ε
+
+
+  mod-intro-ι : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm (lock μ Γ) S) →
+                ι[ mod-cong T=S ] mod-intro μ t ≅ᵗᵐ mod-intro μ (ι[ T=S ] t)
+  mod-intro-ι t = transᵗᵐ ι-convert (transᵗᵐ (mod-intro-convert μ t) (mod-intro-cong μ (symᵗᵐ ι-convert)))
+
+  mod-elim-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (lock μ Γ)} (t : Tm Γ ⟨ μ ∣ T ⟩) →
+                     (mod-elim μ t) [ lock-fmap μ σ ]' ≅ᵗᵐ mod-elim μ (ι⁻¹[ mod-natural μ σ ] (t [ σ ]'))
+  mod-elim-natural σ t = begin
+      (mod-elim μ t) [ lock-fmap μ σ ]'
+    ≅˘⟨ mod-β μ _ ⟩
+      mod-elim μ (mod-intro μ ((mod-elim μ t) [ lock-fmap μ σ ]'))
+    ≅˘⟨ mod-elim-cong μ ι-symˡ ⟩
+      mod-elim μ (ι⁻¹[ mod-natural μ σ ] (ι[ mod-natural μ σ ] (mod-intro μ ((mod-elim μ t) [ lock-fmap μ σ ]'))))
+    ≅˘⟨ mod-elim-cong μ (ι⁻¹-cong (mod-intro-natural μ σ (mod-elim μ t))) ⟩
+      mod-elim μ (ι⁻¹[ mod-natural μ σ ] (mod-intro μ (mod-elim μ t) [ σ ]'))
+    ≅⟨ mod-elim-cong μ (ι⁻¹-cong (tm-subst-cong-tm σ (mod-η μ t))) ⟩
+      mod-elim μ (ι⁻¹[ mod-natural μ σ ] (t [ σ ]')) ∎
+    where open ≅ᵗᵐ-Reasoning
+
+  mod-elim-ι : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm Γ ⟨ μ ∣ S ⟩) →
+               ι[ T=S ] mod-elim μ t ≅ᵗᵐ mod-elim μ (ι[ mod-cong T=S ] t)
+  mod-elim-ι {T = T} {S = S} {T=S = T=S} t = begin
+      ι[ T=S ] mod-elim μ t
+    ≅˘⟨ mod-β μ _ ⟩
+      mod-elim μ (mod-intro μ (ι[ T=S ] mod-elim μ t))
+    ≅˘⟨ mod-elim-cong μ (mod-intro-ι _) ⟩
+      mod-elim μ (ι[ mod-cong T=S ] mod-intro μ (mod-elim μ t))
+    ≅⟨ mod-elim-cong μ (ι-cong (mod-η μ t)) ⟩
+      mod-elim μ (ι[ mod-cong T=S ] t) ∎
+    where open ≅ᵗᵐ-Reasoning
 
 
 --------------------------------------------------
@@ -258,64 +311,68 @@ module _ (μ : Modality C D) {Γ : Ctx D} where
 𝟙 : {C : BaseCategory} → Modality C C
 ctx-functor 𝟙 = id-ctx-functor
 ⟨ 𝟙 ∣ T ⟩ = T
-mod-cong 𝟙 T=S = T=S
-mod-cong-refl 𝟙 = reflᵉ
-mod-cong-sym 𝟙 = reflᵉ
-mod-cong-trans 𝟙 = reflᵉ
-mod-cong-cong 𝟙 𝑒 = 𝑒
+mod-map 𝟙 φ = φ
+mod-map-cong 𝟙 𝔢 = 𝔢
+mod-map-id 𝟙 = reflⁿ
+mod-map-⊙ 𝟙 = reflⁿ
 mod-natural 𝟙 σ = reflᵗʸ
-mod-natural-ty-eq 𝟙 σ e = transᵉ reflᵗʸ-unitˡ (symᵉ reflᵗʸ-unitʳ)
-mod-natural-id 𝟙 = transᵉ reflᵗʸ-unitˡ (transᵉ (transᵗʸ-congˡ ty-subst-cong-subst-refl) reflᵗʸ-unitˡ)
-mod-natural-⊚ 𝟙 _ _ =
-  transᵉ (transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-refl) reflᵗʸ-unitˡ) (transᵉ reflᵗʸ-unitˡ
-  (symᵉ (transᵉ (transᵗʸ-congʳ (transᵉ reflᵗʸ-unitˡ ty-subst-cong-subst-refl)) reflᵗʸ-unitʳ)))
-mod-natural-subst-eq 𝟙 _ = transᵉ reflᵗʸ-unitʳ (symᵉ reflᵗʸ-unitˡ)
+mod-natural-map 𝟙 σ η = transⁿ id-trans-unitʳ (symⁿ id-trans-unitˡ)
+mod-natural-id-map 𝟙 = transⁿ id-trans-unitʳ (transⁿ (⊙-congʳ ty-subst-eq-subst-morph-refl) id-trans-unitʳ)
+mod-natural-⊚-map 𝟙 τ σ = transⁿ
+  (transⁿ (⊙-congʳ ty-subst-map-id) (transⁿ id-trans-unitʳ id-trans-unitʳ))
+  (symⁿ (transⁿ (⊙-congˡ (transⁿ id-trans-unitʳ ty-subst-eq-subst-morph-refl)) id-trans-unitˡ))
+mod-natural-subst-eq-map 𝟙 ε = transⁿ id-trans-unitˡ (symⁿ id-trans-unitʳ)
 mod-intro 𝟙 t = t
 mod-intro-cong 𝟙 t=t' = t=t'
 mod-intro-natural 𝟙 σ t = symᵗᵐ ι-refl
-mod-intro-ι 𝟙 t = reflᵗᵐ
+mod-intro-convert 𝟙 t = reflᵗᵐ
 mod-elim 𝟙 t = t
 mod-elim-cong 𝟙 t=t' = t=t'
 mod-β 𝟙 t = reflᵗᵐ
 mod-η 𝟙 t = reflᵗᵐ
 
+
 -- Composition of modalities
 _ⓜ_ : {C1 C2 C3 : BaseCategory} → Modality C2 C3 → Modality C1 C2 → Modality C1 C3
 ctx-functor (μ ⓜ ρ) = ctx-functor ρ ⓕ ctx-functor μ
 ⟨ μ ⓜ ρ ∣ T ⟩ = ⟨ μ ∣ ⟨ ρ ∣ T ⟩ ⟩
-mod-cong (μ ⓜ ρ) e = mod-cong μ (mod-cong ρ e)
-mod-cong-refl (μ ⓜ ρ) = transᵉ (mod-cong-cong μ (mod-cong-refl ρ)) (mod-cong-refl μ)
-mod-cong-sym (μ ⓜ ρ) = transᵉ (mod-cong-cong μ (mod-cong-sym ρ)) (mod-cong-sym μ)
-mod-cong-trans (μ ⓜ ρ) = transᵉ (mod-cong-cong μ (mod-cong-trans ρ)) (mod-cong-trans μ)
-mod-cong-cong (μ ⓜ ρ) 𝑒 = mod-cong-cong μ (mod-cong-cong ρ 𝑒)
+mod-map (μ ⓜ ρ) η = mod-map μ (mod-map ρ η)
+mod-map-cong (μ ⓜ ρ) 𝔢 = mod-map-cong μ (mod-map-cong ρ 𝔢)
+mod-map-id (μ ⓜ ρ) = transⁿ (mod-map-cong μ (mod-map-id ρ)) (mod-map-id μ)
+mod-map-⊙ (μ ⓜ ρ) = transⁿ (mod-map-cong μ (mod-map-⊙ ρ)) (mod-map-⊙ μ)
 mod-natural (μ ⓜ ρ) σ = transᵗʸ (mod-natural μ σ) (mod-cong μ (mod-natural ρ _))
-mod-natural-ty-eq (μ ⓜ ρ) σ e =
-  transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (mod-cong-cong μ (mod-natural-ty-eq ρ (lock-fmap μ σ) e)))))
-         (transᵉ (transᵉ (transᵗʸ-congʳ (mod-cong-trans μ)) (symᵉ transᵗʸ-assoc))
-                 (transᵉ (transᵗʸ-congˡ (mod-natural-ty-eq μ σ (mod-cong ρ e))) transᵗʸ-assoc))
-mod-natural-id (μ ⓜ ρ) =
-  transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (mod-cong-cong μ (transᵉ (transᵗʸ-congʳ (transᵉ (mod-cong-cong ρ (transᵉ (transᵗʸ-congˡ ty-subst-cong-subst-trans) transᵗʸ-assoc)) (mod-cong-trans ρ))) (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ (symᵉ (mod-natural-subst-eq ρ _)))))))))
-         (transᵉ (transᵗʸ-congʳ (mod-cong-cong μ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (mod-natural-id ρ)))))
-                 (mod-natural-id μ))
-mod-natural-⊚ (μ ⓜ ρ) τ σ =
-  transᵉ (transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-trans) (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ (symᵉ transᵗʸ-assoc)))))
-                                                                (transᵗʸ-congʳ (transᵗʸ-congˡ (transᵗʸ-congˡ (symᵉ (mod-natural-ty-eq μ σ _)))))))
-  (transᵉ (transᵗʸ-congʳ (transᵉ transᵗʸ-assoc (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (transᵗʸ-congʳ (symᵉ (mod-cong-trans μ))) (symᵉ (mod-cong-trans μ)))))))
-  (transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ (mod-cong-cong μ (mod-natural-⊚ ρ (lock-fmap μ τ) (lock-fmap μ σ)))))
-  (transᵉ (transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ (mod-cong-trans μ))) (transᵉ (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc)) (symᵉ transᵗʸ-assoc)))
-  (transᵉ (transᵗʸ-congˡ (mod-natural-⊚ μ τ σ))
-  (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ transᵗʸ-assoc))
-  (transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ))
-                                         (transᵉ (mod-cong-cong μ (transᵉ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ (mod-natural-subst-eq ρ _)))
-                                                                          (transᵉ transᵗʸ-assoc
-                                                                          (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans ρ))
-                                                                                                 (mod-cong-cong ρ (symᵉ ty-subst-cong-subst-trans)))))))
-                                         (mod-cong-trans μ)))))
-  (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc))))))))
-mod-natural-subst-eq (μ ⓜ ρ) ε =
-  transᵉ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ (mod-natural-subst-eq μ ε)))
-         (transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (symᵉ (mod-cong-trans μ)) (mod-cong-cong μ (mod-natural-subst-eq ρ (lock-fmap-cong μ ε))))))
-                 (transᵉ (transᵗʸ-congʳ (mod-cong-trans μ)) (symᵉ transᵗʸ-assoc)))
+mod-natural-map (μ ⓜ ρ) σ η =
+    transⁿ (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ (symⁿ (mod-map-⊙ μ)))) (
+  transⁿ (⊙-congˡ (mod-map-cong μ (mod-natural-map ρ _ η))) (
+    transⁿ (transⁿ (⊙-congˡ (mod-map-⊙ μ)) ⊙-assoc) (
+  transⁿ (⊙-congʳ (mod-natural-map μ σ (mod-map ρ η)))
+    (symⁿ ⊙-assoc))))
+mod-natural-id-map (μ ⓜ ρ) =
+  transⁿ (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ (symⁿ (mod-map-⊙ μ)))) (
+      transⁿ (⊙-congˡ (mod-map-cong μ (
+          transⁿ (⊙-congˡ (transⁿ (mod-map-cong ρ (transⁿ (⊙-congʳ ty-subst-eq-subst-morph-trans) (symⁿ ⊙-assoc))) (mod-map-⊙ ρ))) (
+        transⁿ ⊙-assoc (
+          transⁿ (⊙-congʳ (symⁿ (mod-natural-subst-eq-map ρ _))) (
+        transⁿ (symⁿ ⊙-assoc) (
+          ⊙-congˡ (mod-natural-id-map ρ)))))))) (
+  mod-natural-id-map μ))
+mod-natural-⊚-map (μ ⓜ ρ) τ σ =
+    transⁿ (transⁿ (⊙-congʳ ty-subst-map-⊙) (transⁿ (⊙-congˡ (symⁿ ⊙-assoc)) (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ ⊙-assoc)))) (
+  transⁿ (⊙-congˡ (⊙-congʳ (symⁿ (mod-natural-map μ σ _)))) (
+    transⁿ (⊙-congˡ (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ (transⁿ (⊙-congˡ (symⁿ (mod-map-⊙ μ))) (symⁿ (mod-map-⊙ μ)))))) (
+  transⁿ (⊙-congˡ (⊙-congˡ (mod-map-cong μ (mod-natural-⊚-map ρ _ _)))) (
+    transⁿ (transⁿ (⊙-congˡ (⊙-congˡ (mod-map-⊙ μ))) (transⁿ (⊙-congˡ ⊙-assoc) ⊙-assoc)) (
+  transⁿ (⊙-congʳ (mod-natural-⊚-map μ τ σ)) (
+    transⁿ (transⁿ (⊙-congʳ ⊙-assoc) (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ (transⁿ (symⁿ (mod-map-⊙ μ)) (mod-map-cong μ ⊙-assoc))))) (
+  transⁿ (⊙-congˡ (mod-map-cong μ (⊙-congʳ (mod-natural-subst-eq-map ρ _)))) (
+    transⁿ (⊙-congˡ (transⁿ (mod-map-cong μ (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ (transⁿ (symⁿ (mod-map-⊙ ρ)) (mod-map-cong ρ (symⁿ ty-subst-eq-subst-morph-trans)))))) (mod-map-⊙ μ)))
+    (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ ⊙-assoc))))))))))
+mod-natural-subst-eq-map (μ ⓜ ρ) ε =
+    transⁿ ⊙-assoc (
+  transⁿ (⊙-congʳ (mod-natural-subst-eq-map μ ε)) (
+    transⁿ (transⁿ (symⁿ ⊙-assoc) (⊙-congˡ (symⁿ (mod-map-⊙ μ)))) (
+  transⁿ (⊙-congˡ (mod-map-cong μ (mod-natural-subst-eq-map ρ _)))
+    (transⁿ (⊙-congˡ (mod-map-⊙ μ)) ⊙-assoc))))
 mod-intro (μ ⓜ ρ) t = mod-intro μ (mod-intro ρ t)
 mod-intro-cong (μ ⓜ ρ) e = mod-intro-cong μ (mod-intro-cong ρ e)
 mod-intro-natural (μ ⓜ ρ) σ t = begin
@@ -329,20 +386,29 @@ mod-intro-natural (μ ⓜ ρ) σ t = begin
   ≅˘⟨ ι-trans ⟩
     ι[ transᵗʸ (mod-natural μ σ) (mod-cong μ (mod-natural ρ (lock-fmap μ σ))) ] mod-intro μ (mod-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')) ∎
   where open ≅ᵗᵐ-Reasoning
-mod-intro-ι (μ ⓜ ρ) t = transᵗᵐ (mod-intro-ι μ _) (mod-intro-cong μ (mod-intro-ι ρ _))
+mod-intro-convert (μ ⓜ ρ) t = transᵗᵐ (mod-intro-convert μ (mod-intro ρ t)) (mod-intro-cong μ (mod-intro-convert ρ t))
 mod-elim (μ ⓜ ρ) t = mod-elim ρ (mod-elim μ t)
 mod-elim-cong (μ ⓜ ρ) e = mod-elim-cong ρ (mod-elim-cong μ e)
 mod-β (μ ⓜ ρ) t = transᵗᵐ (mod-elim-cong ρ (mod-β μ _)) (mod-β ρ t)
 mod-η (μ ⓜ ρ) t = transᵗᵐ (mod-intro-cong μ (mod-η ρ _)) (mod-η μ t)
 
+
 -- The unit modality or composition of modalities preserve the
 -- structure of closed types being natural.
+mod-cong-𝟙 : {Γ : Ctx C} {T S : Ty Γ} {e : T ≅ᵗʸ S} → mod-cong 𝟙 e ≅ᵉ e
+from-eq mod-cong-𝟙 = reflⁿ
+
+mod-cong-ⓜ : {ρ : Modality C D} {μ : Modality D E} {Γ : Ctx E} {T S : Ty (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)} {e : T ≅ᵗʸ S} →
+             mod-cong (μ ⓜ ρ) e ≅ᵉ mod-cong μ (mod-cong ρ e)
+from-eq mod-cong-ⓜ = reflⁿ
+
 𝟙-preserves-cl : {A : ClosedTy C} (clA : IsClosedNatural A) → mod-closed 𝟙 clA ≅ᶜᵗʸ clA
-closed-natural-eq (𝟙-preserves-cl clA) σ = reflᵗʸ-unitˡ
+closed-natural-eq (𝟙-preserves-cl clA) σ = transᵉ reflᵗʸ-unitˡ mod-cong-𝟙
 
 ⓜ-preserves-cl : (μ : Modality D E) (ρ : Modality C D) {A : ClosedTy C} (clA : IsClosedNatural A) →
                  mod-closed (μ ⓜ ρ) clA ≅ᶜᵗʸ mod-closed μ (mod-closed ρ clA)
-closed-natural-eq (ⓜ-preserves-cl μ ρ clA) σ = transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ (mod-cong-trans μ)))
+closed-natural-eq (ⓜ-preserves-cl μ ρ clA) σ =
+  transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (transᵗʸ-congʳ mod-cong-ⓜ) (symᵉ (mod-cong-trans μ))))
 
 
 --------------------------------------------------

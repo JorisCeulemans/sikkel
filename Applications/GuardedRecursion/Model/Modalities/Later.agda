@@ -279,6 +279,11 @@ löb-cong : (T : Ty Γ) {f f' : Tm Γ (▻' T ⇛ T)} → f ≅ᵗᵐ f' → lö
 eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ tt) (eq f=f' γ)
 eq (löb-cong T f=f') {suc n} _ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
 
+next-convert : {Γ : Ctx ω} {T T' : Ty (◄ Γ)} {η : T ↣ T'} (t : Tm (◄ Γ) T) →
+               convert-term (▻-map η) (next t) ≅ᵗᵐ next (convert-term η t)
+eq (next-convert t) {zero}  _ = refl
+eq (next-convert t) {suc n} _ = refl
+
 module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} {T=T' : T ≅ᵗʸ T'} where
   next-ι : (t : Tm (◄ Γ) T') → ι[ ▻-cong T=T' ] next t ≅ᵗᵐ next (ι[ T=T' ] t)
   eq (next-ι t) {zero}  _ = refl
@@ -330,35 +335,37 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty (◄ Γ)} where
   prev-natural : (t : Tm Γ (▻ T)) → (prev t) [ ◄-subst σ ]' ≅ᵗᵐ prev (ι⁻¹[ ▻-natural ] (t [ σ ]'))
   eq (prev-natural t) _ = refl
 
-later-natural-ty-eq : (σ : Γ ⇒ Δ) {T S : Ty (◄ Δ)} (e : T ≅ᵗʸ S) →
-                      transᵗʸ (▻-natural σ) (▻-cong (ty-subst-cong-ty (◄-subst σ) e))
-                        ≅ᵉ
-                      transᵗʸ (ty-subst-cong-ty σ (▻-cong e)) (▻-natural σ)
-eq (from-eq (later-natural-ty-eq σ e)) {zero}  _ = refl
-eq (from-eq (later-natural-ty-eq σ e)) {suc n} _ = refl
+later-natural-map : (σ : Γ ⇒ Δ) {T S : Ty (◄ Δ)} (η : T ↣ S) →
+                    ▻-map (ty-subst-map (◄-subst σ) η) ⊙ ▻-natural-from σ
+                      ≅ⁿ
+                    ▻-natural-from σ ⊙ ty-subst-map σ (▻-map η)
+eq (later-natural-map σ e) {zero}  _ = refl
+eq (later-natural-map σ e) {suc n} _ = refl
 
-later-natural-id : {T : Ty (◄ Γ)} →
-                   transᵗʸ (▻-natural (id-subst Γ)) (▻-cong (transᵗʸ (ty-subst-cong-subst ◄-subst-id T) (ty-subst-id T))) ≅ᵉ ty-subst-id (▻ T)
-eq (from-eq later-natural-id)           {zero}  _ = refl
-eq (from-eq (later-natural-id {T = T})) {suc n} _ = strong-ty-id T
+later-natural-id-map : {T : Ty (◄ Γ)} →
+                       ▻-map (ty-subst-id-from T ⊙ ty-subst-eq-subst-morph ◄-subst-id T) ⊙ ▻-natural-from (id-subst Γ)
+                         ≅ⁿ
+                       ty-subst-id-from (▻ T)
+eq later-natural-id-map           {zero}  _ = refl
+eq (later-natural-id-map {T = T}) {suc n} _ = strong-ty-id T
 
-later-natural-⊚ : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (◄ Θ)} →
-                  transᵗʸ (ty-subst-cong-ty σ (▻-natural τ))
-                          (transᵗʸ (▻-natural σ)
-                                   (▻-cong (ty-subst-comp T (◄-subst τ) (◄-subst σ))))
-                    ≅ᵉ
-                  transᵗʸ (ty-subst-comp (▻ T) τ σ)
-                          (transᵗʸ (▻-natural (τ ⊚ σ))
-                                   (▻-cong (ty-subst-cong-subst (◄-subst-⊚ τ σ) T)))
-eq (from-eq (later-natural-⊚ τ σ))     {zero}  _ = refl
-eq (from-eq (later-natural-⊚ τ σ {T})) {suc n} _ = sym (strong-ty-id T)
+later-natural-⊚-map : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (◄ Θ)} →
+                      ▻-map (ty-subst-comp-from T (◄-subst τ) (◄-subst σ))
+                      ⊙ ▻-natural-from σ
+                      ⊙ ty-subst-map σ (▻-natural-from τ)
+                        ≅ⁿ
+                      ▻-map (ty-subst-eq-subst-morph (◄-subst-⊚ τ σ) T)
+                      ⊙ ▻-natural-from (τ ⊚ σ)
+                      ⊙ ty-subst-comp-from (▻ T) τ σ
+eq (later-natural-⊚-map τ σ)     {zero}  _ = refl
+eq (later-natural-⊚-map τ σ {T}) {suc n} _ = sym (strong-ty-id T)
 
-later-natural-subst-eq : {σ τ : Γ ⇒ Δ} {T : Ty (◄ Δ)} (ε : σ ≅ˢ τ) →
-                         transᵗʸ (ty-subst-cong-subst ε (▻ T)) (▻-natural τ)
-                           ≅ᵉ
-                         transᵗʸ (▻-natural σ) (▻-cong (ty-subst-cong-subst (◄-subst-cong ε) T))
-eq (from-eq (later-natural-subst-eq _)) {zero}  _ = refl
-eq (from-eq (later-natural-subst-eq _)) {suc n} _ = refl
+later-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (◄ Δ)} (ε : σ ≅ˢ τ) →
+                             ▻-natural-from τ ⊙ ty-subst-eq-subst-morph ε (▻ T)
+                               ≅ⁿ
+                             ▻-map (ty-subst-eq-subst-morph (◄-subst-cong ε) T) ⊙ ▻-natural-from σ
+eq (later-natural-subst-eq-map _) {zero}  _ = refl
+eq (later-natural-subst-eq-map _) {suc n} _ = refl
 
 module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
   ▻'-natural : (▻' T) [ σ ] ≅ᵗʸ ▻' (T [ σ ])
@@ -450,29 +457,29 @@ eq ▻-map-id {x = suc _} _ = refl
 ▻'-map-id {T = T} =
   begin
     ▻-map (ty-subst-map (from-earlier _) (id-trans T))
-  ≅⟨ ▻-map-cong (ty-subst-map-id (from-earlier _)) ⟩
+  ≅⟨ ▻-map-cong ty-subst-map-id ⟩
     ▻-map (id-trans (T [ from-earlier _ ]))
   ≅⟨ ▻-map-id ⟩
     id-trans (▻' T) ∎
   where open ≅ⁿ-Reasoning
 
 ▻-map-comp : {R : Ty (◄ Γ)} {S : Ty (◄ Γ)} {T : Ty (◄ Γ)}
-              (η : S ↣ T) (φ : R ↣ S) →
-              ▻-map (η ⊙ φ) ≅ⁿ ▻-map η ⊙ ▻-map φ
-eq (▻-map-comp η φ) {x = zero} _ = refl
-eq (▻-map-comp η φ) {x = suc _} _ = refl
+             {η : S ↣ T} {φ : R ↣ S} →
+             ▻-map (η ⊙ φ) ≅ⁿ ▻-map η ⊙ ▻-map φ
+eq ▻-map-comp {x = zero} _ = refl
+eq ▻-map-comp {x = suc _} _ = refl
 
 ▻'-map-comp : {R : Ty Γ} {S : Ty Γ} {T : Ty Γ}
-               (η : S ↣ T) (φ : R ↣ S) →
-               ▻'-map (η ⊙ φ) ≅ⁿ ▻'-map η ⊙ ▻'-map φ
-▻'-map-comp η φ =
+              {η : S ↣ T} {φ : R ↣ S} →
+              ▻'-map (η ⊙ φ) ≅ⁿ ▻'-map η ⊙ ▻'-map φ
+▻'-map-comp {η = η} {φ} =
   begin
     ▻'-map (η ⊙ φ)
   ≅⟨⟩
     ▻-map (ty-subst-map (from-earlier _) (η ⊙ φ))
-  ≅⟨ ▻-map-cong (ty-subst-map-comp (from-earlier _) η φ) ⟩
+  ≅⟨ ▻-map-cong ty-subst-map-⊙ ⟩
     ▻-map (ty-subst-map (from-earlier _) η ⊙ ty-subst-map (from-earlier _) φ)
-  ≅⟨ ▻-map-comp _ _ ⟩
+  ≅⟨ ▻-map-comp ⟩
     ▻'-map η ⊙ ▻'-map φ ∎
   where open ≅ⁿ-Reasoning
 

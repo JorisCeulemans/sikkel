@@ -173,12 +173,14 @@ module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-left Γ)} 
                               unforget-right-tm t [ just-left-subst σ ]' ≅ᵗᵐ unforget-right-tm (ι⁻¹[ forget-right-ty-natural ] (t [ σ ]'))
   eq (unforget-right-tm-natural t) {x = left} _ = refl
 
+forget-right-ty-map : {Γ : Ctx ★} {T T' : Ty (just-left Γ)} → (T ↣ T') → forget-right-ty T ↣ forget-right-ty T'
+func (forget-right-ty-map η) = func η
+_↣_.naturality (forget-right-ty-map η) = _↣_.naturality η
+
 forget-right-ty-cong : {Γ : Ctx ★} {T : Ty (just-left Γ)} {T' : Ty (just-left Γ)} →
                        T ≅ᵗʸ T' → forget-right-ty T ≅ᵗʸ forget-right-ty T'
-func (from (forget-right-ty-cong T=T')) = func (from T=T')
-_↣_.naturality (from (forget-right-ty-cong T=T')) = _↣_.naturality (from T=T')
-func (to (forget-right-ty-cong T=T')) = func (to T=T')
-_↣_.naturality (to (forget-right-ty-cong T=T')) = _↣_.naturality (to T=T')
+from (forget-right-ty-cong T=T') = forget-right-ty-map (from T=T')
+to (forget-right-ty-cong T=T') = forget-right-ty-map (to T=T')
 eq (isoˡ (forget-right-ty-cong T=T')) = eq (isoˡ T=T')
 eq (isoʳ (forget-right-ty-cong T=T')) = eq (isoʳ T=T')
 
@@ -216,24 +218,24 @@ is-functor just-left-functor = just-left-is-functor
 forget-right : Modality ⋀ ★
 ctx-functor forget-right = just-left-functor
 ⟨_∣_⟩ forget-right = forget-right-ty
-mod-cong forget-right = forget-right-ty-cong
-eq (from-eq (mod-cong-refl forget-right)) _ = refl
-eq (from-eq (mod-cong-sym forget-right)) _ = refl
-eq (from-eq (mod-cong-trans forget-right)) _ = refl
-eq (from-eq (mod-cong-cong forget-right 𝑒)) t = eq (from-eq 𝑒) t
+mod-map forget-right = forget-right-ty-map
+eq (mod-map-cong forget-right 𝔢) t = eq 𝔢 t
+eq (mod-map-id forget-right) _ = refl
+eq (mod-map-⊙ forget-right) _ = refl
 mod-natural forget-right = forget-right-ty-natural
-eq (from-eq (mod-natural-ty-eq forget-right _ _)) _ = refl
-eq (from-eq (mod-natural-id forget-right {T = T})) _ = ty-id T
-eq (from-eq (mod-natural-⊚ forget-right _ _ {T = T})) _ = sym (ty-id T)
-eq (from-eq (mod-natural-subst-eq forget-right {T = T} _)) _ = ty-cong T refl
+eq (mod-natural-map forget-right _ _) _ = refl
+eq (mod-natural-id-map forget-right {T = T}) _ = ty-id T
+eq (mod-natural-⊚-map forget-right _ _ {T = T}) _ = sym (ty-id T)
+eq (mod-natural-subst-eq-map forget-right {T = T} _) _ = ty-cong T refl
 mod-intro forget-right = forget-right-tm
 mod-intro-cong forget-right = forget-right-tm-cong
 mod-intro-natural forget-right = forget-right-tm-natural
-mod-intro-ι forget-right = forget-right-tm-ι
+eq (mod-intro-convert forget-right _) _ = refl
 mod-elim forget-right = unforget-right-tm
 mod-elim-cong forget-right = unforget-right-tm-cong
 mod-β forget-right = forget-right-β
 mod-η forget-right = forget-right-η
+
 
 just-right : Ctx ★ → Ctx ⋀
 just-right Γ ⟨ left  ⟩ = ⊥
@@ -300,6 +302,10 @@ module _ {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) {T : Ty (just-right Γ)}
                              unforget-left-tm t [ just-right-subst σ ]' ≅ᵗᵐ unforget-left-tm (ι⁻¹[ forget-left-ty-natural ] (t [ σ ]'))
   eq (unforget-left-tm-natural t) {x = right} _ = refl
 
+forget-left-ty-map : {Γ : Ctx ★} {T T' : Ty (just-right Γ)} → (T ↣ T') → forget-left-ty T ↣ forget-left-ty T'
+func (forget-left-ty-map η) = func η
+_↣_.naturality (forget-left-ty-map η) = _↣_.naturality η
+
 forget-left-ty-cong : {Γ : Ctx ★} {T : Ty (just-right Γ)} {T' : Ty (just-right Γ)} →
                       T ≅ᵗʸ T' → forget-left-ty T ≅ᵗʸ forget-left-ty T'
 func (from (forget-left-ty-cong T=T')) = func (from T=T')
@@ -343,20 +349,19 @@ is-functor just-right-functor = just-right-is-functor
 forget-left : Modality ⋀ ★
 ctx-functor forget-left = just-right-functor
 ⟨_∣_⟩ forget-left = forget-left-ty
-mod-cong forget-left = forget-left-ty-cong
-eq (from-eq (mod-cong-refl forget-left)) _ = refl
-eq (from-eq (mod-cong-sym forget-left)) _ = refl
-eq (from-eq (mod-cong-trans forget-left)) _ = refl
-eq (from-eq (mod-cong-cong forget-left 𝑒)) t = eq (from-eq 𝑒) t
+mod-map forget-left = forget-left-ty-map
+eq (mod-map-cong forget-left 𝔢) t = eq 𝔢 t
+eq (mod-map-id forget-left) _ = refl
+eq (mod-map-⊙ forget-left) _ = refl
 mod-natural forget-left = forget-left-ty-natural
-eq (from-eq (mod-natural-ty-eq forget-left _ _)) _ = refl
-eq (from-eq (mod-natural-id forget-left {T = T})) _ = ty-id T
-eq (from-eq (mod-natural-⊚ forget-left _ _ {T = T})) _ = sym (ty-id T)
-eq (from-eq (mod-natural-subst-eq forget-left {T = T} _)) _ = ty-cong T refl
+eq (mod-natural-map forget-left _ _) _ = refl
+eq (mod-natural-id-map forget-left {T = T}) _ = ty-id T
+eq (mod-natural-⊚-map forget-left _ _ {T = T}) _ = sym (ty-id T)
+eq (mod-natural-subst-eq-map forget-left {T = T} _) _ = ty-cong T refl
 mod-intro forget-left = forget-left-tm
 mod-intro-cong forget-left = forget-left-tm-cong
 mod-intro-natural forget-left = forget-left-tm-natural
-mod-intro-ι forget-left = forget-left-tm-ι
+eq (mod-intro-convert forget-left _) _ = refl
 mod-elim forget-left = unforget-left-tm
 mod-elim-cong forget-left = unforget-left-tm-cong
 mod-β forget-left = forget-left-β

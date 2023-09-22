@@ -87,20 +87,27 @@ module ≅ᵗᵐ-Reasoning where
 --------------------------------------------------
 -- Reindexing maps (cf. Dybjer's internal type theory)
 
--- The reindexing map ι can be implemented in terms of a similar
--- operation for the more primitive transformation T ↣ S. However, the
--- following version enables Agda to infer the type equality proofs
--- when using the properties of ι below.
-ι[_]_ : T ≅ᵗʸ S → Tm Γ S → Tm Γ T
-(ι[ T=S ] s) ⟨ x , γ ⟩' = func (to T=S) (s ⟨ x , γ ⟩')
-naturality (ι[_]_ {T = T} {S = S} T=S s) f eγ =
+convert-term : (T ↣ S) → Tm Γ T → Tm Γ S
+convert-term η t ⟨ x , γ ⟩' = func η (t ⟨ x , γ ⟩')
+naturality (convert-term {T = T}{S = S} η t) f eγ =
   begin
-    T ⟪ f , eγ ⟫ func (to T=S) (s ⟨ _ , _ ⟩')
-  ≡⟨ naturality (to T=S) ⟩
-    func (to T=S) (S ⟪ f , eγ ⟫ (s ⟨ _ , _ ⟩'))
-  ≡⟨ cong (func (to T=S)) (naturality s f eγ) ⟩
-    func (to T=S) (s ⟨ _ , _ ⟩') ∎
+    S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
+  ≡⟨ naturality η ⟩
+    func η (T ⟪ f , eγ ⟫ (t ⟨ _ , _ ⟩'))
+  ≡⟨ cong (func η) (naturality t f eγ) ⟩
+    func η (t ⟨ _ , _ ⟩') ∎
   where open ≡-Reasoning
+
+-- Note that instead of the definition below, we could have just
+-- written ι[ T=S ] s = convert-term (to T=S) s. However, the
+-- following version enables Agda to infer the type equality proofs
+-- when we prove a proposition containing ι[_]_.
+ι[_]_ : T ≅ᵗʸ S → Tm Γ S → Tm Γ T
+(ι[ T=S ] s) ⟨ x , γ ⟩' = convert-term (to (T=S)) s ⟨ x , γ ⟩'
+naturality (ι[_]_ {T = T} {S = S} T=S s) f eγ = naturality (convert-term (to T=S) s) f eγ
+
+ι-convert : {e : T ≅ᵗʸ S} {s : Tm Γ S} → ι[ e ] s ≅ᵗᵐ convert-term (to e) s
+eq ι-convert γ = refl
 
 ι-cong : {T=S : T ≅ᵗʸ S} →
          s ≅ᵗᵐ s' → ι[ T=S ] s ≅ᵗᵐ ι[ T=S ] s'

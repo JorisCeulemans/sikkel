@@ -189,22 +189,22 @@ naturality (_⊙_ {S = S}{T = T}{R = R} φ η) {f = f}{eγ = eγ} {t = r} =
     func φ (func η (R ⟪ f , eγ ⟫ r)) ∎
   where open ≡-Reasoning
 
-id-trans-unitʳ : (η : T ↣ S) → η ⊙ id-trans T ≅ⁿ η
-eq (id-trans-unitʳ η) _ = refl
+id-trans-unitʳ : {η : T ↣ S} → η ⊙ id-trans T ≅ⁿ η
+eq id-trans-unitʳ _ = refl
 
-id-trans-unitˡ : (η : T ↣ S) → id-trans S ⊙ η ≅ⁿ η
-eq (id-trans-unitˡ η) _ = refl
+id-trans-unitˡ : {η : T ↣ S} → id-trans S ⊙ η ≅ⁿ η
+eq id-trans-unitˡ _ = refl
 
 ⊙-assoc : {T₁ : Ty Γ} {T₂ : Ty Γ} {T₃ : Ty Γ} {T₄ : Ty Γ}
-          (η₃₄ : T₃ ↣ T₄) (η₂₃ : T₂ ↣ T₃) (η₁₂ : T₁ ↣ T₂) →
+          {η₃₄ : T₃ ↣ T₄} {η₂₃ : T₂ ↣ T₃} {η₁₂ : T₁ ↣ T₂} →
           (η₃₄ ⊙ η₂₃) ⊙ η₁₂ ≅ⁿ η₃₄ ⊙ (η₂₃ ⊙ η₁₂)
-eq (⊙-assoc η₃₄ η₂₃ η₁₂) _ = refl
+eq ⊙-assoc _ = refl
 
-⊙-congʳ : (φ : S ↣ T) {η η' : R ↣ S} → η ≅ⁿ η' → φ ⊙ η ≅ⁿ φ ⊙ η'
-eq (⊙-congʳ φ η=η') δ = cong (func φ) (eq η=η' δ)
+⊙-congʳ : {φ : S ↣ T} {η η' : R ↣ S} → η ≅ⁿ η' → φ ⊙ η ≅ⁿ φ ⊙ η'
+eq (⊙-congʳ {φ = φ} η=η') δ = cong (func φ) (eq η=η' δ)
 
-⊙-congˡ : {φ φ' : S ↣ T} (η : R ↣ S) → φ ≅ⁿ φ' → φ ⊙ η ≅ⁿ φ' ⊙ η
-eq (⊙-congˡ η φ=φ') δ = eq φ=φ' (func η δ)
+⊙-congˡ : {φ φ' : S ↣ T} {η : R ↣ S} → φ ≅ⁿ φ' → φ ⊙ η ≅ⁿ φ' ⊙ η
+eq (⊙-congˡ {η = η} φ=φ') δ = eq φ=φ' (func η δ)
 
 
 --------------------------------------------------
@@ -240,13 +240,13 @@ to (transᵗʸ S=T T=R) = to S=T ⊙ to T=R
 isoˡ (transᵗʸ S=T T=R) =
   begin
     (to S=T ⊙ to T=R) ⊙ (from T=R ⊙ from S=T)
-  ≅⟨ ⊙-assoc (to S=T) (to T=R) _ ⟩
+  ≅⟨ ⊙-assoc ⟩
     to S=T ⊙ (to T=R ⊙ (from T=R ⊙ from S=T))
-  ≅˘⟨ ⊙-congʳ (to S=T) (⊙-assoc (to T=R) (from T=R) (from S=T)) ⟩
+  ≅˘⟨ ⊙-congʳ ⊙-assoc ⟩
     to S=T ⊙ ((to T=R ⊙ from T=R) ⊙ from S=T)
-  ≅⟨ ⊙-congʳ (to S=T) (⊙-congˡ (from S=T) (isoˡ T=R)) ⟩
+  ≅⟨ ⊙-congʳ (⊙-congˡ (isoˡ T=R)) ⟩
     to S=T ⊙ (id-trans _ ⊙ from S=T)
-  ≅⟨ ⊙-congʳ (to S=T) (id-trans-unitˡ (from S=T)) ⟩
+  ≅⟨ ⊙-congʳ id-trans-unitˡ ⟩
     to S=T ⊙ from S=T
   ≅⟨ isoˡ S=T ⟩
     id-trans _ ∎
@@ -254,13 +254,13 @@ isoˡ (transᵗʸ S=T T=R) =
 isoʳ (transᵗʸ S=T T=R) =
   begin
     (from T=R ⊙ from S=T) ⊙ (to S=T ⊙ to T=R)
-  ≅⟨ ⊙-assoc (from T=R) (from S=T) _ ⟩
+  ≅⟨ ⊙-assoc ⟩
     from T=R ⊙ (from S=T ⊙ (to S=T ⊙ to T=R))
-  ≅˘⟨ ⊙-congʳ (from T=R) (⊙-assoc (from S=T) (to S=T) (to T=R)) ⟩
+  ≅˘⟨ ⊙-congʳ ⊙-assoc ⟩
     from T=R ⊙ ((from S=T ⊙ to S=T) ⊙ to T=R)
-  ≅⟨ ⊙-congʳ (from T=R) (⊙-congˡ (to T=R) (isoʳ S=T)) ⟩
+  ≅⟨ ⊙-congʳ (⊙-congˡ (isoʳ S=T)) ⟩
     from T=R ⊙ (id-trans _ ⊙ to T=R)
-  ≅⟨ ⊙-congʳ (from T=R) (id-trans-unitˡ (to T=R)) ⟩
+  ≅⟨ ⊙-congʳ id-trans-unitˡ ⟩
     from T=R ⊙ to T=R
   ≅⟨ isoʳ T=R ⟩
     id-trans _ ∎
@@ -299,19 +299,19 @@ record _≅ᵉ_ {T S : Ty Γ} (e1 e2 : T ≅ᵗʸ S) : Set where
 open _≅ᵉ_ public
 
 to-eq : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → to e1 ≅ⁿ to e2
-to-eq {e1 = e1} {e2} ε = begin
+to-eq {e1 = e1} {e2} 𝑒 = begin
     to e1
-  ≅˘⟨ id-trans-unitʳ (to e1) ⟩
+  ≅˘⟨ id-trans-unitʳ ⟩
     to e1 ⊙ id-trans _
-  ≅˘⟨ ⊙-congʳ _ (isoʳ e2) ⟩
+  ≅˘⟨ ⊙-congʳ (isoʳ e2) ⟩
     to e1 ⊙ (from e2 ⊙ to e2)
-  ≅˘⟨ ⊙-assoc _ _ _ ⟩
+  ≅˘⟨ ⊙-assoc ⟩
     (to e1 ⊙ from e2) ⊙ to e2
-  ≅⟨ ⊙-congˡ _ (⊙-congʳ _ (symⁿ (from-eq ε))) ⟩
+  ≅⟨ ⊙-congˡ (⊙-congʳ (symⁿ (from-eq 𝑒))) ⟩
     (to e1 ⊙ from e1) ⊙ to e2
-  ≅⟨ ⊙-congˡ _ (isoˡ e1) ⟩
+  ≅⟨ ⊙-congˡ (isoˡ e1) ⟩
     id-trans _ ⊙ to e2
-  ≅⟨ id-trans-unitˡ _ ⟩
+  ≅⟨ id-trans-unitˡ ⟩
     to e2 ∎
   where open ≅ⁿ-Reasoning
 
@@ -319,31 +319,31 @@ reflᵉ : {e : T ≅ᵗʸ S} → e ≅ᵉ e
 from-eq reflᵉ = reflⁿ
 
 symᵉ : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → e2 ≅ᵉ e1
-from-eq (symᵉ ε) = symⁿ (from-eq ε)
+from-eq (symᵉ 𝑒) = symⁿ (from-eq 𝑒)
 
 transᵉ : {e1 e2 e3 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → e2 ≅ᵉ e3 → e1 ≅ᵉ e3
-from-eq (transᵉ ε ε') = transⁿ (from-eq ε) (from-eq ε')
+from-eq (transᵉ 𝑒 𝑒') = transⁿ (from-eq 𝑒) (from-eq 𝑒')
 
 -- symᵗʸ and transᵗʸ respect equality of natural isomorphisms.
 symᵗʸ-cong : {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → symᵗʸ e ≅ᵉ symᵗʸ e'
 from-eq (symᵗʸ-cong 𝑒) = to-eq 𝑒
 
 transᵗʸ-congˡ : {e1 e1' : T ≅ᵗʸ S} {e2 : S ≅ᵗʸ R} → e1 ≅ᵉ e1' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1' e2
-from-eq (transᵗʸ-congˡ 𝑒) = ⊙-congʳ _ (from-eq 𝑒)
+from-eq (transᵗʸ-congˡ 𝑒) = ⊙-congʳ (from-eq 𝑒)
 
 transᵗʸ-congʳ : {e1 : T ≅ᵗʸ S} {e2 e2' : S ≅ᵗʸ R} → e2 ≅ᵉ e2' → transᵗʸ e1 e2 ≅ᵉ transᵗʸ e1 e2'
-from-eq (transᵗʸ-congʳ 𝑒) = ⊙-congˡ _ (from-eq 𝑒)
+from-eq (transᵗʸ-congʳ 𝑒) = ⊙-congˡ (from-eq 𝑒)
 
 -- Groupoid laws for the groupoid Ty Γ and some consequences
 transᵗʸ-assoc : {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} {e'' : T3 ≅ᵗʸ T4} →
                 transᵗʸ (transᵗʸ e e') e'' ≅ᵉ transᵗʸ e (transᵗʸ e' e'')
-from-eq transᵗʸ-assoc = symⁿ (⊙-assoc _ _ _)
+from-eq transᵗʸ-assoc = symⁿ ⊙-assoc
 
 reflᵗʸ-unitˡ : {e : T ≅ᵗʸ S} → transᵗʸ reflᵗʸ e ≅ᵉ e
-from-eq reflᵗʸ-unitˡ = id-trans-unitʳ _
+from-eq reflᵗʸ-unitˡ = id-trans-unitʳ
 
 reflᵗʸ-unitʳ : {e : T ≅ᵗʸ S} → transᵗʸ e reflᵗʸ ≅ᵉ e
-from-eq reflᵗʸ-unitʳ = id-trans-unitˡ _
+from-eq reflᵗʸ-unitʳ = id-trans-unitˡ
 
 symᵗʸ-invˡ : {e : T ≅ᵗʸ S} → transᵗʸ (symᵗʸ e) e ≅ᵉ reflᵗʸ
 from-eq (symᵗʸ-invˡ {e = e}) = isoʳ e
@@ -377,19 +377,31 @@ ty-cong (T [ σ ]) f = ty-cong T f
 ty-id (T [ σ ]) = strong-ty-id T
 ty-comp (T [ σ ]) = strong-ty-comp T
 
+ty-subst-id-from : (T : Ty Γ) → T [ id-subst Γ ] ↣ T
+func (ty-subst-id-from T) = id
+naturality (ty-subst-id-from T) = ty-cong T refl
+
+ty-subst-id-to : (T : Ty Γ) → T ↣ T [ id-subst Γ ]
+func (ty-subst-id-to T) = id
+naturality (ty-subst-id-to T) = ty-cong T refl
+
 ty-subst-id : (T : Ty Γ) → T [ id-subst Γ ] ≅ᵗʸ T
-func (from (ty-subst-id T)) = id
-naturality (from (ty-subst-id T)) = ty-cong T refl
-func (to (ty-subst-id T)) = id
-naturality (to (ty-subst-id T)) = ty-cong T refl
+from (ty-subst-id T) = ty-subst-id-from T
+to (ty-subst-id T) = ty-subst-id-to T
 eq (isoˡ (ty-subst-id T)) _ = refl
 eq (isoʳ (ty-subst-id T)) _ = refl
 
+ty-subst-comp-from : (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ↣ T [ τ ⊚ σ ]
+func (ty-subst-comp-from T τ σ) = id
+naturality (ty-subst-comp-from T τ σ) = ty-cong T refl
+
+ty-subst-comp-to : (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ⊚ σ ] ↣ T [ τ ] [ σ ]
+func (ty-subst-comp-to T τ σ) = id
+naturality (ty-subst-comp-to T τ σ) = ty-cong T refl
+
 ty-subst-comp : (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≅ᵗʸ T [ τ ⊚ σ ]
-func (from (ty-subst-comp T τ σ)) = id
-naturality (from (ty-subst-comp T τ σ)) = ty-cong T refl
-func (to (ty-subst-comp T τ σ)) = id
-naturality (to (ty-subst-comp T τ σ)) = ty-cong T refl
+from (ty-subst-comp T τ σ) = ty-subst-comp-from T τ σ
+to (ty-subst-comp T τ σ) = ty-subst-comp-to T τ σ
 eq (isoˡ (ty-subst-comp T τ σ)) _ = refl
 eq (isoʳ (ty-subst-comp T τ σ)) _ = refl
 
@@ -401,12 +413,12 @@ ty-subst-map-cong : {σ : Δ ⇒ Γ} {η φ : T ↣ S} →
                     η ≅ⁿ φ → ty-subst-map σ η ≅ⁿ ty-subst-map σ φ
 eq (ty-subst-map-cong e) t = eq e t
 
-ty-subst-map-id : (σ : Δ ⇒ Γ) → ty-subst-map σ (id-trans T) ≅ⁿ id-trans (T [ σ ])
-eq (ty-subst-map-id σ) t = refl
+ty-subst-map-id : {σ : Δ ⇒ Γ} → ty-subst-map σ (id-trans T) ≅ⁿ id-trans (T [ σ ])
+eq ty-subst-map-id t = refl
 
-ty-subst-map-comp : (σ : Δ ⇒ Γ) (φ : S ↣ T) (η : R ↣ S) →
-                    ty-subst-map σ (φ ⊙ η) ≅ⁿ ty-subst-map σ φ ⊙ ty-subst-map σ η
-eq (ty-subst-map-comp σ φ η) t = refl
+ty-subst-map-⊙ : {σ : Δ ⇒ Γ} {φ : S ↣ T} {η : R ↣ S} →
+                 ty-subst-map σ (φ ⊙ η) ≅ⁿ ty-subst-map σ φ ⊙ ty-subst-map σ η
+eq ty-subst-map-⊙ t = refl
 
 ty-subst-cong-ty : (σ : Δ ⇒ Γ) → T ≅ᵗʸ S → T [ σ ] ≅ᵗʸ S [ σ ]
 from (ty-subst-cong-ty σ T=S) = ty-subst-map σ (from T=S)
@@ -414,12 +426,21 @@ to (ty-subst-cong-ty σ T=S) = ty-subst-map σ (to T=S)
 eq (isoˡ (ty-subst-cong-ty σ T=S)) t = eq (isoˡ T=S) t
 eq (isoʳ (ty-subst-cong-ty σ T=S)) t = eq (isoʳ T=S) t
 
+ty-subst-eq-subst-morph : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ↣ T [ τ ]
+func (ty-subst-eq-subst-morph ε T) {_} {δ} t = ty-ctx-subst T (eq ε δ) t
+naturality (ty-subst-eq-subst-morph ε T) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
+
+ty-subst-eq-subst-morph-refl : {σ : Δ ⇒ Γ} {T : Ty Γ} → ty-subst-eq-subst-morph reflˢ T ≅ⁿ id-trans (T [ σ ])
+eq (ty-subst-eq-subst-morph-refl {T = T}) t = strong-ty-id T
+
+ty-subst-eq-subst-morph-trans : {σ1 σ2 σ3 : Γ ⇒ Δ} {ε : σ1 ≅ˢ σ2} {ε' : σ2 ≅ˢ σ3} →
+                                ty-subst-eq-subst-morph (transˢ ε ε') T ≅ⁿ ty-subst-eq-subst-morph ε' T ⊙ ty-subst-eq-subst-morph ε T
+eq (ty-subst-eq-subst-morph-trans {T = T}) t = sym (ty-cong-2-1 T hom-idʳ)
+
 ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → (T : Ty Γ) → T [ σ ] ≅ᵗʸ T [ τ ]
-func (from (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ty-ctx-subst T (eq σ=τ δ) t
-naturality (from (ty-subst-cong-subst σ=τ T)) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
-func (to (ty-subst-cong-subst σ=τ T)) {_}{δ} t = ty-ctx-subst T (sym (eq σ=τ δ)) t
-naturality (to (ty-subst-cong-subst σ=τ T)) = ty-cong-2-2 T (trans hom-idˡ (sym hom-idʳ))
-eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
+from (ty-subst-cong-subst ε T) = ty-subst-eq-subst-morph ε T
+to (ty-subst-cong-subst ε T) = ty-subst-eq-subst-morph (symˢ ε) T
+eq (isoˡ (ty-subst-cong-subst {Γ = Γ} ε T)) t =
   -- Here we cannot use ty-id T twice because the omitted equality proofs are not ctx-id Γ _
   -- (i.e. T ⟪_⟫ t is not applied to the identity morphism in the category of elements of Γ).
   begin
@@ -429,7 +450,7 @@ eq (isoˡ (ty-subst-cong-subst {Γ = Γ} σ=τ T)) t =
   ≡⟨ ty-id T ⟩
     t ∎
   where open ≡-Reasoning
-eq (isoʳ (ty-subst-cong-subst σ=τ T)) t =
+eq (isoʳ (ty-subst-cong-subst ε T)) t =
   begin
     T ⟪ hom-id , _ ⟫ T ⟪ hom-id , _ ⟫ t
   ≡⟨ ty-cong-2-1 T hom-idˡ ⟩
@@ -444,28 +465,28 @@ ty-subst-cong-ty-cong : {T S : Ty Δ} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → 
 from-eq (ty-subst-cong-ty-cong 𝑒 σ) = ty-subst-map-cong (from-eq 𝑒)
 
 ty-subst-cong-ty-refl : {σ : Γ ⇒ Δ} {T : Ty Δ} → ty-subst-cong-ty σ (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
-from-eq ty-subst-cong-ty-refl = ty-subst-map-id _
+from-eq ty-subst-cong-ty-refl = ty-subst-map-id
 
 ty-subst-cong-ty-sym : {σ : Γ ⇒ Δ} {e : T ≅ᵗʸ S} → ty-subst-cong-ty σ (symᵗʸ e) ≅ᵉ symᵗʸ (ty-subst-cong-ty σ e)
 from-eq ty-subst-cong-ty-sym = reflⁿ
 
 ty-subst-cong-ty-trans : {σ : Γ ⇒ Δ} {e : T1 ≅ᵗʸ T2} {e' : T2 ≅ᵗʸ T3} →
                          ty-subst-cong-ty σ (transᵗʸ e e') ≅ᵉ transᵗʸ (ty-subst-cong-ty σ e) (ty-subst-cong-ty σ e')
-from-eq ty-subst-cong-ty-trans = ty-subst-map-comp _ _ _
+from-eq ty-subst-cong-ty-trans = ty-subst-map-⊙
 
 ty-subst-cong-natural : {σ τ : Γ ⇒ Δ} (ε : σ ≅ˢ τ) (e : T ≅ᵗʸ S) →
                         transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-ty τ e) ≅ᵉ transᵗʸ (ty-subst-cong-ty σ e) (ty-subst-cong-subst ε S)
 eq (from-eq (ty-subst-cong-natural ε e)) _ = sym (naturality (from e))
 
 ty-subst-cong-subst-refl : {σ : Γ ⇒ Δ} → ty-subst-cong-subst (reflˢ {σ = σ}) T ≅ᵉ reflᵗʸ
-eq (from-eq (ty-subst-cong-subst-refl {T = T})) _ = strong-ty-id T
+from-eq ty-subst-cong-subst-refl = ty-subst-eq-subst-morph-refl
 
 ty-subst-cong-subst-sym : {σ τ : Γ ⇒ Δ} {ε : σ ≅ˢ τ} → ty-subst-cong-subst (symˢ ε) T ≅ᵉ symᵗʸ (ty-subst-cong-subst ε T)
-eq (from-eq ty-subst-cong-subst-sym) _ = refl
+from-eq ty-subst-cong-subst-sym = reflⁿ
 
 ty-subst-cong-subst-trans : {σ1 σ2 σ3 : Γ ⇒ Δ} {ε : σ1 ≅ˢ σ2} {ε' : σ2 ≅ˢ σ3} →
                             ty-subst-cong-subst (transˢ ε ε') T ≅ᵉ transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-subst ε' T)
-eq (from-eq (ty-subst-cong-subst-trans {T = T})) _ = sym (ty-cong-2-1 T hom-idʳ)
+from-eq ty-subst-cong-subst-trans = ty-subst-eq-subst-morph-trans
 
 ty-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
                           (T : Ty Θ) → σ2 ⊚ σ1 ≅ˢ τ →

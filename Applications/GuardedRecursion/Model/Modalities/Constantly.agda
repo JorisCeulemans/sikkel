@@ -88,11 +88,23 @@ module _ {T : Ty (now Γ)} where
   constantly-ty-β : (t : Tm (now Γ) T) → unconstantly-tm (constantly-tm t) ≅ᵗᵐ t
   eq (constantly-ty-β t) γ = Tm.naturality t tt _
 
+constantly-ty-map : {T S : Ty (now Γ)} → (T ↣ S) → constantly-ty T ↣ constantly-ty S
+func (constantly-ty-map η) = func η
+_↣_.naturality (constantly-ty-map η) = _↣_.naturality η
+
+constantly-ty-map-cong : {T S : Ty (now Γ)} {η φ : T ↣ S} → η ≅ⁿ φ → constantly-ty-map η ≅ⁿ constantly-ty-map φ
+eq (constantly-ty-map-cong 𝔢) t = eq 𝔢 t
+
+constantly-ty-map-id : {T : Ty (now Γ)} → constantly-ty-map (id-trans T) ≅ⁿ id-trans (constantly-ty T)
+eq constantly-ty-map-id _ = refl
+
+constantly-ty-map-⊙ : {R S T : Ty (now Γ)} {η : R ↣ S} {φ : S ↣ T} →
+                      constantly-ty-map (φ ⊙ η) ≅ⁿ constantly-ty-map φ ⊙ constantly-ty-map η
+eq constantly-ty-map-⊙ _ = refl
+
 constantly-ty-cong : {T : Ty (now Γ)} {S : Ty (now Γ)} → T ≅ᵗʸ S → constantly-ty T ≅ᵗʸ constantly-ty S
-func (from (constantly-ty-cong T=S)) = func (from T=S)
-_↣_.naturality (from (constantly-ty-cong T=S)) = _↣_.naturality (from T=S)
-func (to (constantly-ty-cong T=S)) = func (to T=S)
-_↣_.naturality (to (constantly-ty-cong T=S)) = _↣_.naturality (to T=S)
+from (constantly-ty-cong T=S) = constantly-ty-map (from T=S)
+to (constantly-ty-cong T=S) = constantly-ty-map (to T=S)
 eq (isoˡ (constantly-ty-cong T=S)) = eq (isoˡ T=S)
 eq (isoʳ (constantly-ty-cong T=S)) = eq (isoʳ T=S)
 
@@ -116,6 +128,10 @@ module _ {T : Ty (now Γ)} where
   eq (unconstantly-tm-cong t=s) γ = cong (T ⟪ tt , _ ⟫_) (eq t=s γ)
 
 module _ {T S : Ty (now Γ)} where
+  constantly-tm-convert : {φ : T ↣ S} (t : Tm (now Γ) T) →
+                          convert-term (constantly-ty-map φ) (constantly-tm t) ≅ᵗᵐ constantly-tm (convert-term φ t)
+  eq (constantly-tm-convert t) _ = refl
+
   constantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm (now Γ) S) →
                     ι[ constantly-ty-cong T=S ] constantly-tm s ≅ᵗᵐ constantly-tm (ι[ T=S ] s)
   eq (constantly-tm-ι s) _ = refl
@@ -146,33 +162,33 @@ eq (isoʳ (constantly-ty-natural σ {T})) t =
     t ∎
   where open ≡-Reasoning
 
-constantly-ty-natural-ty-eq : (σ : Γ ⇒ Δ) {T S : Ty (now Δ)} (e : T ≅ᵗʸ S) →
-  transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (ty-subst-cong-ty (now-subst σ) e))
-    ≅ᵉ
-  transᵗʸ (ty-subst-cong-ty σ (constantly-ty-cong e)) (constantly-ty-natural σ)
-eq (from-eq (constantly-ty-natural-ty-eq σ e)) _ = sym (_↣_.naturality (from e))
+constantly-ty-natural-map : (σ : Γ ⇒ Δ) {T S : Ty (now Δ)} (φ : T ↣ S) →
+  constantly-ty-map (ty-subst-map (now-subst σ) φ) ⊙ from (constantly-ty-natural σ)
+    ≅ⁿ
+  from (constantly-ty-natural σ) ⊙ ty-subst-map σ (constantly-ty-map φ)
+eq (constantly-ty-natural-map σ φ) _ = sym (_↣_.naturality φ)
 
-constantly-ty-natural-id : {T : Ty (now Γ)} →
-  transᵗʸ (constantly-ty-natural (id-subst Γ)) (constantly-ty-cong (transᵗʸ (ty-subst-cong-subst now-subst-id T) (ty-subst-id T)))
-    ≅ᵉ
-  ty-subst-id (constantly-ty T)
-eq (from-eq (constantly-ty-natural-id {T = T})) _ = trans (ty-id T) (ty-id T)
+constantly-ty-natural-id-map : {T : Ty (now Γ)} →
+  constantly-ty-map (ty-subst-id-from T ⊙ ty-subst-eq-subst-morph now-subst-id T) ⊙ from (constantly-ty-natural (id-subst Γ))
+    ≅ⁿ
+  ty-subst-id-from (constantly-ty T)
+eq (constantly-ty-natural-id-map {T = T}) _ = trans (ty-id T) (ty-id T)
 
-constantly-ty-natural-⊚ : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (now Θ)} →
-  transᵗʸ (ty-subst-cong-ty σ (constantly-ty-natural τ))
-          (transᵗʸ (constantly-ty-natural σ)
-                   (constantly-ty-cong (ty-subst-comp T (now-subst τ) (now-subst σ))))
-    ≅ᵉ
-  transᵗʸ (ty-subst-comp (constantly-ty T) τ σ)
-          (transᵗʸ (constantly-ty-natural (τ ⊚ σ))
-                   (constantly-ty-cong (ty-subst-cong-subst (now-subst-⊚ τ σ) T)))
-eq (from-eq (constantly-ty-natural-⊚ τ σ {T})) _ = ty-cong-2-2 T refl
+constantly-ty-natural-⊚-map : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (now Θ)} →
+  constantly-ty-map (ty-subst-comp-from T (now-subst τ) (now-subst σ))
+  ⊙ from (constantly-ty-natural σ)
+  ⊙ ty-subst-map σ (from (constantly-ty-natural τ))
+    ≅ⁿ
+  constantly-ty-map (ty-subst-eq-subst-morph (now-subst-⊚ τ σ) T)
+  ⊙ from (constantly-ty-natural (τ ⊚ σ))
+  ⊙ ty-subst-comp-from (constantly-ty T) τ σ
+eq (constantly-ty-natural-⊚-map τ σ {T}) _ = ty-cong-2-2 T refl
 
-constantly-ty-natural-subst-eq : {σ τ : Γ ⇒ Δ} {T : Ty (now Δ)} (ε : σ ≅ˢ τ) →
-  transᵗʸ (ty-subst-cong-subst ε (constantly-ty T)) (constantly-ty-natural τ)
-    ≅ᵉ
-  transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (ty-subst-cong-subst (now-subst-cong ε) T))
-eq (from-eq (constantly-ty-natural-subst-eq {T = T} _)) _ = ty-cong-2-2 T refl
+constantly-ty-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (now Δ)} (ε : σ ≅ˢ τ) →
+  from (constantly-ty-natural τ) ⊙ ty-subst-eq-subst-morph ε (constantly-ty T)
+    ≅ⁿ
+  constantly-ty-map (ty-subst-eq-subst-morph (now-subst-cong ε) T) ⊙ from (constantly-ty-natural σ)
+eq (constantly-ty-natural-subst-eq-map {T = T} _) _ = ty-cong-2-2 T refl
 
 {-
 instance
