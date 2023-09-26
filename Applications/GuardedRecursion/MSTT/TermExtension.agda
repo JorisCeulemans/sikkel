@@ -47,7 +47,7 @@ infer-interpret-gr-code constantly-if-code = λ infer-c infer-t infer-f Γ → d
   T , ⟦t⟧ ← infer-t Γ
   F , ⟦f⟧ ← infer-f Γ
   T=F ← T ≃ᵗʸ? F
-  return (T , constantly-if' ι[ transᵗʸ (constantly-ty-cong Bool'=B) (eq-mod-closed constantly=μ (⟦⟧ty-natural B)) ] ⟦c⟧
+  return (T , constantly-if' ι[ transᵗʸ (constantly-ty-cong Bool'=B) (eq-dra-closed constantly=μ (⟦⟧ty-natural B)) ] ⟦c⟧
               then' ⟦t⟧ else' (ι[ T=F ] ⟦f⟧))
 infer-interpret-gr-code (löb-code x T) = λ infer-t Γ → do
   S , ⟦t⟧ ← infer-t (Γ , later ∣ x ∈ T)

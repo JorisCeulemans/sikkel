@@ -9,7 +9,7 @@ open import Data.String
 
 open import Model.BaseCategory as M hiding (★; ω)
 open import Model.CwF-Structure as M
-open import Model.Modality as M hiding (𝟙; _ⓜ_; _ⓣ-vert_; _ⓣ-hor_; id-cell)
+open import Model.Modality as M hiding (𝟙; _ⓣ-vert_; _ⓣ-hor_; id-cell)
 open import Applications.GuardedRecursion.Model.Modalities as M hiding
   (constantly; forever; later; 𝟙≤later; constantly∘forever≤𝟙)
 
@@ -69,9 +69,9 @@ show-modality later = "later"
 ⟦ ★ ⟧mode = M.★
 ⟦ ω ⟧mode = M.ω
 
-⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
+⟦_⟧modality : ModalityExpr m m' → DRA ⟦ m ⟧mode ⟦ m' ⟧mode
 ⟦ 𝟙 ⟧modality = M.𝟙
-⟦ μ ⓜ ρ ⟧modality = ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
+⟦ μ ⓜ ρ ⟧modality = ⟦ μ ⟧modality M.ⓓ ⟦ ρ ⟧modality
 ⟦ constantly ⟧modality = M.constantly
 ⟦ forever ⟧modality = M.forever
 ⟦ later ⟧modality = M.later

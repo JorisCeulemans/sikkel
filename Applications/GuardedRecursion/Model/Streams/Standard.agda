@@ -31,7 +31,7 @@ Stream' : ClosedTy ★ → ClosedTy ★
 Stream' A = forever-ty (GStream A)
 
 stream-closed : {A : ClosedTy ★} → IsClosedNatural A → IsClosedNatural (Stream' A)
-stream-closed clA = mod-closed forever (gstream-closed clA)
+stream-closed clA = dra-closed forever (gstream-closed clA)
 
 
 --------------------------------------------------

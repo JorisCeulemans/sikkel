@@ -9,7 +9,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M hiding (★; ⋀)
 open import Model.CwF-Structure as M
-open import Model.Modality as M hiding (𝟙; _ⓜ_; id-cell)
+open import Model.Modality as M hiding (𝟙; id-cell)
 open import Applications.Parametricity.Model as M hiding (forget-left; forget-right)
 
 open import MSTT.TCMonad
@@ -60,16 +60,16 @@ show-modality forget-right = "forget-right"
 ⟦ ★ ⟧mode = M.★
 ⟦ ⋀ ⟧mode = M.⋀
 
-⟦_⟧modality : ModalityExpr m m' → Modality ⟦ m ⟧mode ⟦ m' ⟧mode
+⟦_⟧modality : ModalityExpr m m' → DRA ⟦ m ⟧mode ⟦ m' ⟧mode
 ⟦ 𝟙 ⟧modality = M.𝟙
 ⟦ forget-left ⟧modality = M.forget-left
 ⟦ forget-right ⟧modality = M.forget-right
 
 ⓜ-interpretation : (μ : ModalityExpr m' m'') (ρ : ModalityExpr m m') →
-                   ⟦ μ ⓜ ρ ⟧modality ≅ᵐ ⟦ μ ⟧modality M.ⓜ ⟦ ρ ⟧modality
-ⓜ-interpretation 𝟙 ρ = symᵐ (𝟙-unitˡ ⟦ ρ ⟧modality)
-ⓜ-interpretation forget-left 𝟙 = symᵐ (𝟙-unitʳ M.forget-left)
-ⓜ-interpretation forget-right 𝟙 = symᵐ (𝟙-unitʳ M.forget-right)
+                   ⟦ μ ⓜ ρ ⟧modality ≅ᵈ ⟦ μ ⟧modality M.ⓓ ⟦ ρ ⟧modality
+ⓜ-interpretation 𝟙 ρ = symᵈ (𝟙-unitˡ ⟦ ρ ⟧modality)
+ⓜ-interpretation forget-left 𝟙 = symᵈ (𝟙-unitʳ M.forget-left)
+ⓜ-interpretation forget-right 𝟙 = symᵈ (𝟙-unitʳ M.forget-right)
 
 
 --------------------------------------------------
@@ -87,10 +87,10 @@ forget-right ≟modality forget-right = return refl
 μ ≟modality ρ = type-error ("Modality " ++ show-modality μ ++ " is not equal to " ++ show-modality ρ)
 
 -- There are no interesting equivalences of modalities, we just check whether they are identical.
-_≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ ρ ⟧modality)
+_≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵈ ⟦ ρ ⟧modality)
 μ ≃ᵐ? ρ = do
   refl ← μ ≟modality ρ
-  return reflᵐ
+  return reflᵈ
 
 
 --------------------------------------------------
@@ -99,7 +99,7 @@ _≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵐ ⟦ �
 ⟦_∈_⇒_⟧two-cell : TwoCellExpr → ∀ {m m'} (μ ρ : ModalityExpr m m') → TCM (TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality)
 ⟦ id-cell ∈ μ ⇒ ρ ⟧two-cell = do
   μ=ρ ← μ ≃ᵐ? ρ
-  return (M.≅ᵐ-to-2-cell μ=ρ)
+  return (M.≅ᵈ-to-2-cell μ=ρ)
 
 
 --------------------------------------------------
@@ -115,7 +115,7 @@ ModeTheory.𝟙 par-mode-theory = 𝟙
 ModeTheory._ⓜ_ par-mode-theory = _ⓜ_
 ModeTheory.show-modality par-mode-theory = show-modality
 ModeTheory.⟦_⟧modality par-mode-theory = ⟦_⟧modality
-ModeTheory.𝟙-interpretation par-mode-theory = reflᵐ
+ModeTheory.𝟙-interpretation par-mode-theory = reflᵈ
 ModeTheory.ⓜ-interpretation par-mode-theory = ⓜ-interpretation
 ModeTheory._≃ᵐ?_ par-mode-theory = _≃ᵐ?_
 ModeTheory.TwoCellExpr par-mode-theory = TwoCellExpr

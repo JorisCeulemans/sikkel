@@ -215,26 +215,26 @@ just-left-functor : CtxFunctor ★ ⋀
 ctx-op just-left-functor = just-left
 is-functor just-left-functor = just-left-is-functor
 
-forget-right : Modality ⋀ ★
+forget-right : DRA ⋀ ★
 ctx-functor forget-right = just-left-functor
 ⟨_∣_⟩ forget-right = forget-right-ty
-mod-map forget-right = forget-right-ty-map
-eq (mod-map-cong forget-right 𝔢) t = eq 𝔢 t
-eq (mod-map-id forget-right) _ = refl
-eq (mod-map-⊙ forget-right) _ = refl
-mod-natural forget-right = forget-right-ty-natural
-eq (mod-natural-map forget-right _ _) _ = refl
-eq (mod-natural-id-map forget-right {T = T}) _ = ty-id T
-eq (mod-natural-⊚-map forget-right _ _ {T = T}) _ = sym (ty-id T)
-eq (mod-natural-subst-eq-map forget-right {T = T} _) _ = ty-cong T refl
-mod-intro forget-right = forget-right-tm
-mod-intro-cong forget-right = forget-right-tm-cong
-mod-intro-natural forget-right = forget-right-tm-natural
-eq (mod-intro-convert forget-right _) _ = refl
-mod-elim forget-right = unforget-right-tm
-mod-elim-cong forget-right = unforget-right-tm-cong
-mod-β forget-right = forget-right-β
-mod-η forget-right = forget-right-η
+dra-map forget-right = forget-right-ty-map
+eq (dra-map-cong forget-right 𝔢) t = eq 𝔢 t
+eq (dra-map-id forget-right) _ = refl
+eq (dra-map-⊙ forget-right) _ = refl
+dra-natural forget-right = forget-right-ty-natural
+eq (dra-natural-map forget-right _ _) _ = refl
+eq (dra-natural-id-map forget-right {T = T}) _ = ty-id T
+eq (dra-natural-⊚-map forget-right _ _ {T = T}) _ = sym (ty-id T)
+eq (dra-natural-subst-eq-map forget-right {T = T} _) _ = ty-cong T refl
+dra-intro forget-right = forget-right-tm
+dra-intro-cong forget-right = forget-right-tm-cong
+dra-intro-natural forget-right = forget-right-tm-natural
+eq (dra-intro-convert forget-right _) _ = refl
+dra-elim forget-right = unforget-right-tm
+dra-elim-cong forget-right = unforget-right-tm-cong
+dra-β forget-right = forget-right-β
+dra-η forget-right = forget-right-η
 
 
 just-right : Ctx ★ → Ctx ⋀
@@ -346,26 +346,26 @@ just-right-functor : CtxFunctor ★ ⋀
 ctx-op just-right-functor = just-right
 is-functor just-right-functor = just-right-is-functor
 
-forget-left : Modality ⋀ ★
+forget-left : DRA ⋀ ★
 ctx-functor forget-left = just-right-functor
 ⟨_∣_⟩ forget-left = forget-left-ty
-mod-map forget-left = forget-left-ty-map
-eq (mod-map-cong forget-left 𝔢) t = eq 𝔢 t
-eq (mod-map-id forget-left) _ = refl
-eq (mod-map-⊙ forget-left) _ = refl
-mod-natural forget-left = forget-left-ty-natural
-eq (mod-natural-map forget-left _ _) _ = refl
-eq (mod-natural-id-map forget-left {T = T}) _ = ty-id T
-eq (mod-natural-⊚-map forget-left _ _ {T = T}) _ = sym (ty-id T)
-eq (mod-natural-subst-eq-map forget-left {T = T} _) _ = ty-cong T refl
-mod-intro forget-left = forget-left-tm
-mod-intro-cong forget-left = forget-left-tm-cong
-mod-intro-natural forget-left = forget-left-tm-natural
-eq (mod-intro-convert forget-left _) _ = refl
-mod-elim forget-left = unforget-left-tm
-mod-elim-cong forget-left = unforget-left-tm-cong
-mod-β forget-left = forget-left-β
-mod-η forget-left = forget-left-η
+dra-map forget-left = forget-left-ty-map
+eq (dra-map-cong forget-left 𝔢) t = eq 𝔢 t
+eq (dra-map-id forget-left) _ = refl
+eq (dra-map-⊙ forget-left) _ = refl
+dra-natural forget-left = forget-left-ty-natural
+eq (dra-natural-map forget-left _ _) _ = refl
+eq (dra-natural-id-map forget-left {T = T}) _ = ty-id T
+eq (dra-natural-⊚-map forget-left _ _ {T = T}) _ = sym (ty-id T)
+eq (dra-natural-subst-eq-map forget-left {T = T} _) _ = ty-cong T refl
+dra-intro forget-left = forget-left-tm
+dra-intro-cong forget-left = forget-left-tm-cong
+dra-intro-natural forget-left = forget-left-tm-natural
+eq (dra-intro-convert forget-left _) _ = refl
+dra-elim forget-left = unforget-left-tm
+dra-elim-cong forget-left = unforget-left-tm-cong
+dra-β forget-left = forget-left-β
+dra-η forget-left = forget-left-η
 
 extract-forget-right-rel : {A B : Set} {R : REL A B 0ℓ} → Extractable (forget-right-ty (FromRel A B R))
 translated-type (extract-forget-right-rel {A = A}) = A

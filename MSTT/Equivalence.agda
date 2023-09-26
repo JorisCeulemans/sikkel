@@ -14,7 +14,7 @@ open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure
-open import Model.Modality as M hiding (⟨_∣_⟩; 𝟙; _ⓜ_)
+open import Model.Modality as M hiding (⟨_∣_⟩; 𝟙)
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 
@@ -61,8 +61,8 @@ Bool' ≃ᵗʸ? Bool' = return reflᵗʸ
   refl ← mT ≟mode mS
   μ=ρ ← μ ≃ᵐ? ρ
   T=S ← T ≃ᵗʸ? S
-  return (transᵗʸ (eq-mod-closed μ=ρ (⟦⟧ty-natural T))
-                  (mod-cong ⟦ ρ ⟧modality T=S))
+  return (transᵗʸ (eq-dra-closed μ=ρ (⟦⟧ty-natural T))
+                  (dra-cong ⟦ ρ ⟧modality T=S))
 (Ext {margs1} c1 args1) ≃ᵗʸ? (Ext {margs2} c2 args2) = do
   refl ← margs1 ≟list-mode margs2
   refl ← c1 ≟code c2

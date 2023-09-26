@@ -14,7 +14,7 @@ open import Model.CwF-Structure as M hiding (◇; _,,_)
 open import Model.Type.Constant as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
-open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim)
+open import Model.Modality as M hiding (𝟙; ⟨_∣_⟩; _,lock⟨_⟩)
 
 open import MSTT.TCMonad
 open import MSTT.Syntax.Type mt ty-ext
@@ -56,7 +56,7 @@ interpret-ext-ty-natural : {F : TyConstructor margs m} → TyConstructorNatural 
 ⟦⟧ty-natural Bool' = M.const-closed
 ⟦⟧ty-natural (T1 ⇛ T2) = M.fun-closed (⟦⟧ty-natural T1) (⟦⟧ty-natural T2)
 ⟦⟧ty-natural (T1 ⊠ T2) = M.prod-closed (⟦⟧ty-natural T1) (⟦⟧ty-natural T2)
-⟦⟧ty-natural ⟨ μ ∣ T ⟩ = M.mod-closed ⟦ μ ⟧modality (⟦⟧ty-natural T)
+⟦⟧ty-natural ⟨ μ ∣ T ⟩ = M.dra-closed ⟦ μ ⟧modality (⟦⟧ty-natural T)
 ⟦⟧ty-natural (Ext code args) = interpret-ext-ty-natural (interpret-code-natural code) args
 
 interpret-ext-ty-natural {[]}        nat args = nat

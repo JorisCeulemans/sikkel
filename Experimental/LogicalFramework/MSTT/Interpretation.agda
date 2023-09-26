@@ -113,7 +113,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _
-⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (M.mod-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
+⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (M.dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
 ⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
 ⟦ σ ,aslock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
 ⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
@@ -130,7 +130,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦_⟧var {x = x} {μ = μ} v = ⟦⟧var-helper (erase-names-var v) μ (eq-cell (sym mod-unitˡ))
 
 ⟦_⟧rd : ∀ {μ} → RenData μ T Γ → SemTm ⟦ Γ ⟧ctx M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦_⟧rd {μ = μ} (Syn.rendata new-name new-var) = M.mod-intro ⟦ μ ⟧mod ⟦ new-var ⟧var
+⟦_⟧rd {μ = μ} (Syn.rendata new-name new-var) = M.dra-intro ⟦ μ ⟧mod ⟦ new-var ⟧var
 
 ⟦_⟧aren : AtomicRen Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ [] ⟧aren = M.!◇ _

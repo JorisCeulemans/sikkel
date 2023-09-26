@@ -11,73 +11,73 @@ earlier-functor : CtxFunctor ω ω
 ctx-op earlier-functor = ◄
 is-functor earlier-functor = ◄-is-functor
 
-later : Modality ω ω
+later : DRA ω ω
 ctx-functor later = earlier-functor
 ⟨_∣_⟩ later = ▻
-mod-map later = ▻-map
-mod-map-cong later = ▻-map-cong
-mod-map-id later = ▻-map-id
-mod-map-⊙ later = ▻-map-comp
-mod-natural later = ▻-natural
-mod-natural-map later = later-natural-map
-mod-natural-id-map later = later-natural-id-map
-mod-natural-⊚-map later = later-natural-⊚-map
-mod-natural-subst-eq-map later = later-natural-subst-eq-map
-mod-intro later = next
-mod-intro-cong later = next-cong
-mod-intro-natural later = next-natural
-mod-intro-convert later = next-convert
-mod-elim later = prev
-mod-elim-cong later = prev-cong
-mod-β later = prev-next
-mod-η later = next-prev
+dra-map later = ▻-map
+dra-map-cong later = ▻-map-cong
+dra-map-id later = ▻-map-id
+dra-map-⊙ later = ▻-map-comp
+dra-natural later = ▻-natural
+dra-natural-map later = later-natural-map
+dra-natural-id-map later = later-natural-id-map
+dra-natural-⊚-map later = later-natural-⊚-map
+dra-natural-subst-eq-map later = later-natural-subst-eq-map
+dra-intro later = next
+dra-intro-cong later = next-cong
+dra-intro-natural later = next-natural
+dra-intro-convert later = next-convert
+dra-elim later = prev
+dra-elim-cong later = prev-cong
+dra-β later = prev-next
+dra-η later = next-prev
 
 now-functor : CtxFunctor ω ★
 ctx-op now-functor = now
 is-functor now-functor = now-is-functor
 
-constantly : Modality ★ ω
+constantly : DRA ★ ω
 ctx-functor constantly = now-functor
 ⟨_∣_⟩ constantly = constantly-ty
-mod-map constantly = constantly-ty-map
-mod-map-cong constantly = constantly-ty-map-cong
-mod-map-id constantly = constantly-ty-map-id
-mod-map-⊙ constantly = constantly-ty-map-⊙
-mod-natural constantly = constantly-ty-natural
-mod-natural-map constantly = constantly-ty-natural-map
-mod-natural-id-map constantly = constantly-ty-natural-id-map
-mod-natural-⊚-map constantly = constantly-ty-natural-⊚-map
-mod-natural-subst-eq-map constantly = constantly-ty-natural-subst-eq-map
-mod-intro constantly = constantly-tm
-mod-intro-cong constantly = constantly-tm-cong
-mod-intro-natural constantly = constantly-tm-natural
-mod-intro-convert constantly = constantly-tm-convert
-mod-elim constantly = unconstantly-tm
-mod-elim-cong constantly = unconstantly-tm-cong
-mod-β constantly = constantly-ty-β
-mod-η constantly = constantly-ty-η
+dra-map constantly = constantly-ty-map
+dra-map-cong constantly = constantly-ty-map-cong
+dra-map-id constantly = constantly-ty-map-id
+dra-map-⊙ constantly = constantly-ty-map-⊙
+dra-natural constantly = constantly-ty-natural
+dra-natural-map constantly = constantly-ty-natural-map
+dra-natural-id-map constantly = constantly-ty-natural-id-map
+dra-natural-⊚-map constantly = constantly-ty-natural-⊚-map
+dra-natural-subst-eq-map constantly = constantly-ty-natural-subst-eq-map
+dra-intro constantly = constantly-tm
+dra-intro-cong constantly = constantly-tm-cong
+dra-intro-natural constantly = constantly-tm-natural
+dra-intro-convert constantly = constantly-tm-convert
+dra-elim constantly = unconstantly-tm
+dra-elim-cong constantly = unconstantly-tm-cong
+dra-β constantly = constantly-ty-β
+dra-η constantly = constantly-ty-η
 
 constantly-ctx-functor : CtxFunctor ★ ω
 ctx-op constantly-ctx-functor = constantly-ctx
 is-functor constantly-ctx-functor = constantly-ctx-is-functor
 
-forever : Modality ω ★
+forever : DRA ω ★
 ctx-functor forever = constantly-ctx-functor
 ⟨_∣_⟩ forever = forever-ty
-mod-map forever = forever-ty-map
-mod-map-cong forever = forever-ty-map-cong
-mod-map-id forever = forever-ty-map-id
-mod-map-⊙ forever = forever-ty-map-⊙
-mod-natural forever = forever-ty-natural
-mod-natural-map forever = forever-ty-natural-map
-mod-natural-id-map forever = forever-ty-natural-id-map
-mod-natural-⊚-map forever = forever-ty-natural-⊚-map
-mod-natural-subst-eq-map forever = forever-ty-natural-subst-eq-map
-mod-intro forever = forever-tm
-mod-intro-cong forever = forever-tm-cong
-mod-intro-natural forever = forever-tm-natural
-mod-intro-convert forever = forever-convert-tm
-mod-elim forever = unforever-tm
-mod-elim-cong forever = unforever-tm-cong
-mod-β forever = forever-ty-β
-mod-η forever = forever-ty-η
+dra-map forever = forever-ty-map
+dra-map-cong forever = forever-ty-map-cong
+dra-map-id forever = forever-ty-map-id
+dra-map-⊙ forever = forever-ty-map-⊙
+dra-natural forever = forever-ty-natural
+dra-natural-map forever = forever-ty-natural-map
+dra-natural-id-map forever = forever-ty-natural-id-map
+dra-natural-⊚-map forever = forever-ty-natural-⊚-map
+dra-natural-subst-eq-map forever = forever-ty-natural-subst-eq-map
+dra-intro forever = forever-tm
+dra-intro-cong forever = forever-tm-cong
+dra-intro-natural forever = forever-tm-natural
+dra-intro-convert forever = forever-convert-tm
+dra-elim forever = unforever-tm
+dra-elim-cong forever = unforever-tm-cong
+dra-β forever = forever-ty-β
+dra-η forever = forever-ty-η

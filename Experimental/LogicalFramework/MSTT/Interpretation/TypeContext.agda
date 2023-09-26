@@ -51,9 +51,9 @@ ext-ty-natural : ∀{margs} {F : SemTyConstructor margs m} → SemTyConstructorN
 
 ty-closed-natural Nat' = M.const-closed
 ty-closed-natural Bool' = M.const-closed
-ty-closed-natural (⟨ μ ∣ T ⟩⇛ S) = M.fun-closed (M.mod-closed ⟦ μ ⟧mod (ty-closed-natural T)) (ty-closed-natural S)
+ty-closed-natural (⟨ μ ∣ T ⟩⇛ S) = M.fun-closed (M.dra-closed ⟦ μ ⟧mod (ty-closed-natural T)) (ty-closed-natural S)
 ty-closed-natural (T ⊠ S) = M.prod-closed (ty-closed-natural T) (ty-closed-natural S)
-ty-closed-natural ⟨ μ ∣ T ⟩ = M.mod-closed ⟦ μ ⟧mod (ty-closed-natural T)
+ty-closed-natural ⟨ μ ∣ T ⟩ = M.dra-closed ⟦ μ ⟧mod (ty-closed-natural T)
 ty-closed-natural (Ext c Args) = ext-ty-natural (sem-ty-code-natural c) Args
 
 ext-ty-natural {margs = []}        nat Args       = nat

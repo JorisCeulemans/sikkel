@@ -49,14 +49,14 @@ _↣_.naturality (to (forever-later-tyʳ T)) = to-ω-limit-eq (λ { zero → ref
 eq (isoˡ (forever-later-tyʳ T)) l = to-ω-limit-eq (λ { zero → refl ; (suc n) → refl })
 eq (isoʳ (forever-later-tyʳ T)) l = to-ω-limit-eq (λ _ → refl)
 
-forever-later : forever ⓜ later ≅ᵐ forever
+forever-later : forever ⓓ later ≅ᵈ forever
 eq-lock forever-later = earlier-constantly-ctx
 eq (eq-lock-natural-to forever-later σ) δ = refl
-eq-mod-tyʳ forever-later = forever-later-tyʳ
+eq-dra-tyʳ forever-later = forever-later-tyʳ
 
 forever-later'-ty : {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) →
                     forever-ty (▻' T) ≅ᵗʸ forever-ty T
-forever-later'-ty = eq-mod-tyˡ forever-later
+forever-later'-ty = eq-dra-tyˡ forever-later
 
 
 --------------------------------------------------
@@ -84,14 +84,14 @@ _↣_.naturality (to (forever-constantly-tyʳ T)) = to-ω-limit-eq (λ _ → ty-
 eq (isoˡ (forever-constantly-tyʳ T)) l = to-ω-limit-eq (λ _ → trans (sym (limit-natural l z≤n)) (ty-id T))
 eq (isoʳ (forever-constantly-tyʳ T)) _ = refl
 
-forever-constantly : forever ⓜ constantly ≅ᵐ 𝟙
+forever-constantly : forever ⓓ constantly ≅ᵈ 𝟙
 eq-lock forever-constantly = now-constantly-ctx
 eq (eq-lock-natural-to forever-constantly σ) δ = refl
-eq-mod-tyʳ forever-constantly = forever-constantly-tyʳ
+eq-dra-tyʳ forever-constantly = forever-constantly-tyʳ
 
 now-constantly-ctx-intro : {A : ClosedTy ★} → IsClosedNatural A → {Γ : Ctx ★} →
                            Tm Γ A → Tm (now (constantly-ctx Γ)) A
-now-constantly-ctx-intro clA t = unconstantly-tm (unforever-tm (ι[ eq-mod-closed forever-constantly clA ] t))
+now-constantly-ctx-intro clA t = unconstantly-tm (unforever-tm (ι[ eq-dra-closed forever-constantly clA ] t))
 
 to-constantly-now-ctx : (Γ : Ctx ω) → (Γ ⇒ constantly-ctx (now Γ))
 func (to-constantly-now-ctx Γ) = Γ ⟪ z≤n ⟫_
@@ -101,7 +101,7 @@ to-constantly-now-ctx-natural : {Δ Γ : Ctx ω} (σ : Δ ⇒ Γ) →
     to-constantly-now-ctx Γ ⊚ σ ≅ˢ ctx-fmap (constantly-ctx-functor ⓕ now-functor) σ ⊚ to-constantly-now-ctx Δ
 eq (to-constantly-now-ctx-natural σ) δ = _⇒_.naturality σ
 
-constantly∘forever≤𝟙 : TwoCell (constantly ⓜ forever) 𝟙
+constantly∘forever≤𝟙 : TwoCell (constantly ⓓ forever) 𝟙
 transf-op (transf constantly∘forever≤𝟙) = to-constantly-now-ctx
 CtxNatTransf.naturality (transf constantly∘forever≤𝟙) = to-constantly-now-ctx-natural
 

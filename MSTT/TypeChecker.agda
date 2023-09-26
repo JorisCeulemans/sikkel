@@ -20,7 +20,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure as M hiding (◇; _,,_)
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
-open import Model.Modality as M hiding (𝟙; _ⓜ_; ⟨_∣_⟩; _,lock⟨_⟩; mod-intro; mod-elim; coe)
+open import Model.Modality as M hiding (𝟙; ⟨_∣_⟩; _,lock⟨_⟩; coe)
 open import Model.Type.Constant as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
@@ -108,7 +108,7 @@ infer-interpret-var {m = m} x α Γ = do
   ⟦α⟧ ← ⟦ α ∈ μ ⇒ compose-lock-seq locks ⟧two-cell
   return (T , ι⁻¹[ transᵗʸ (ty-subst-seq-cong (_ ∷ _ ∷ σ ◼) (_ ◼) ⟦ T ⟧ty reflˢ) (closed-natural (⟦⟧ty-natural T) _) ] (
               (ιc[ apply-compose-lock-seq (Γ' , μ ∣ x ∈ T) locks ]' (
-                Modality.mod-elim ⟦ μ ⟧modality
+                DRA.dra-elim ⟦ μ ⟧modality
                 (ι⁻¹[ closed-natural (⟦⟧ty-natural ⟨ μ ∣ T ⟩) _ ] ξ) [ key-subst ⟦α⟧ ]'))
               [ σ ]'))
 
@@ -127,7 +127,7 @@ infer-interpret (ann t ∈ T) Γ = do
 infer-interpret (var x α) Γ = infer-interpret-var x α Γ
 infer-interpret (lam[ x ∈ T ] b) Γ = do
   S , ⟦b⟧ ← infer-interpret b (Γ , 𝟙 ∣ x ∈ T)
-  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-mod-closed 𝟙-interpretation (⟦⟧ty-natural T)) reflᵗʸ ]
+  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-dra-closed 𝟙-interpretation (⟦⟧ty-natural T)) reflᵗʸ ]
                   M.lam ⟦ ⟨ 𝟙 ∣ T ⟩ ⟧ty (ι[ closed-natural (⟦⟧ty-natural S) π ] ⟦b⟧))
 infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
@@ -169,7 +169,7 @@ infer-interpret (snd p) Γ = do
   return (S , M.snd ⟦p⟧)
 infer-interpret (mod⟨ μ ⟩ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
-  return (⟨ μ ∣ T ⟩ , M.mod-intro ⟦ μ ⟧modality ⟦t⟧)
+  return (⟨ μ ∣ T ⟩ , M.dra-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ ρ ⟩)
   modal-ty mμ' μ' A ← is-modal-ty T
@@ -177,9 +177,9 @@ infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
   μ=μ' ← μ ≃ᵐ? μ'
   S , ⟦s⟧ ← infer-interpret s (Γ , ρ ⓜ μ ∣ x ∈ A)
   return (S , ι⁻¹[ closed-natural (⟦⟧ty-natural S) _ ] (
-              ⟦s⟧ [ tm-to-subst (ι[ eq-mod-closed (ⓜ-interpretation ρ μ) (⟦⟧ty-natural A) ]
-                                 Modality.mod-intro ⟦ ρ ⟧modality (
-                                 ι[ eq-mod-closed μ=μ' (⟦⟧ty-natural A) ] ⟦t⟧))
+              ⟦s⟧ [ tm-to-subst (ι[ eq-dra-closed (ⓜ-interpretation ρ μ) (⟦⟧ty-natural A) ]
+                                 DRA.dra-intro ⟦ ρ ⟧modality (
+                                 ι[ eq-dra-closed μ=μ' (⟦⟧ty-natural A) ] ⟦t⟧))
                   ]'))
 infer-interpret (ext c args) Γ = infer-interpret-ext-args (infer-interpret-code c) args Γ
 

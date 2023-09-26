@@ -116,7 +116,7 @@ interp-assumption-helper : (a : Assumption x μ κ Ξ) (ρ : Modality _ _) (α :
 interp-assumption-helper {μ = μ} (azero {Ξ = Ξ} {φ = φ}) ρ α =
   M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (key-sub-sound α {to-ctx Ξ}) _) (bprop-sub-sound φ _)) ] (
   M.ι[ M.ty-subst-cong-subst-2-2 _ (M.key-subst-natural ⟦ α ⟧two-cell) ] (
-  M.mod-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (M.mod-natural ⟦ μ ⟧mod _) ] M.ξ)
+  M.dra-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (M.dra-natural ⟦ μ ⟧mod _) ] M.ξ)
   M.[ M.key-subst ⟦ α ⟧two-cell ]'))
 interp-assumption-helper (asuc a) ρ α =
   M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.symˢ (M.lock-fmap-⊚ ⟦ ρ ⟧mod _ _)) ] (

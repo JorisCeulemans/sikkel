@@ -170,11 +170,11 @@ sub-to-ctx-sub : (Ξ : ProofCtx m) (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T)
                  ⟦ φ [ t / x ]bprop ⟧bprop M.[ to-ctx-subst Ξ ]
                    M.≅ᵗʸ
                  (⟦ φ ⟧bprop M.[ to-ctx-subst (Ξ ,,ᵛ μ ∣ x ∈ T) ]) M.[
-                    M.mod-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ]
+                    M.dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ]
 sub-to-ctx-sub {μ = μ} {x} {T} Ξ φ t =
   M.transᵗʸ (M.symᵗʸ (M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound t x)) ⟦ φ ⟧bprop) (bprop-sub-sound φ (t / x))))) (
   M.transᵗʸ (M.ty-subst-cong-subst-2-2 _ (M./cl-⊚ (ty-closed-natural ⟨ μ ∣ T ⟩) _ _)) (
-  M.ty-subst-cong-subst (M.,cl-cong-tm (ty-closed-natural ⟨ μ ∣ T ⟩) (M.mod-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm)) _))
+  M.ty-subst-cong-subst (M.,cl-cong-tm (ty-closed-natural ⟨ μ ∣ T ⟩) (M.dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm)) _))
 
 check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (PCResult Ξ φ)
 check-proof Ξ refl φ = do
@@ -200,7 +200,7 @@ check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   refl ← ψ ≟bprop φ [ t2 / x ]bprop
   return ⟅ goalse ++ goals1 , sgoals ↦ (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
     M.ι[ sub-to-ctx-sub Ξ φ t2 ]
-    M.ι[ M.ty-subst-cong-subst (M./cl-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (M.mod-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (
+    M.ι[ M.ty-subst-cong-subst (M./cl-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (M.dra-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (
            M.eq-reflect (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] ⟦pe⟧ sgoalse))))) _ ]
     M.ι⁻¹[ sub-to-ctx-sub Ξ φ t1 ] ⟦p1⟧ sgoals1) ⟆
 check-proof Ξ ⊤ᵇ-intro φ = do
@@ -217,7 +217,7 @@ check-proof Ξ (⊃-elim μ φ p1 p2) ψ = do
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (⟨ μ ∣ φ ⟩⊃ ψ)
   ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p2 φ
   return ⟅ goals1 ++ goals2 , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals in
-    M.app (M.ι⁻¹[ M.⇛-natural _ ] ⟦p1⟧ sgoals1) (M.ι[ M.mod-natural ⟦ μ ⟧mod _ ] M.mod-intro ⟦ μ ⟧mod (⟦p2⟧ sgoals2))) ⟆
+    M.app (M.ι⁻¹[ M.⇛-natural _ ] ⟦p1⟧ sgoals1) (M.ι[ M.dra-natural ⟦ μ ⟧mod _ ] M.dra-intro ⟦ μ ⟧mod (⟦p2⟧ sgoals2))) ⟆
 check-proof Ξ (∧-intro p1 p2) φ = do
   is-conjunction φ1 φ2 ← is-conjunction? φ
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 φ1
@@ -235,16 +235,16 @@ check-proof Ξ (mod⟨ μ ⟩ p) φ = do
   refl ← mod-dom μ ≟mode mod-dom κ
   refl ← μ ≟mod κ
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p ψ
-  return ⟅ goals , sgoals ↦ M.ι[ M.mod-natural ⟦ μ ⟧mod _ ] M.mod-intro ⟦ μ ⟧mod (⟦p⟧ sgoals) ⟆
+  return ⟅ goals , sgoals ↦ M.ι[ M.dra-natural ⟦ μ ⟧mod _ ] M.dra-intro ⟦ μ ⟧mod (⟦p⟧ sgoals) ⟆
 check-proof Ξ (mod-elim ρ μ x φ p1 p2) ψ = do
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof (Ξ ,lock⟨ ρ ⟩) p1 ⟨ μ ∣ φ ⟩
   ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof (Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ) p2 ψ
   return ⟅ goals1 ++ goals2 , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals in
     M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.ctx-ext-subst-β₁ _ _)) (M.id-subst-unitʳ _))) ] (
     ⟦p2⟧ sgoals2
-      M.[ (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.eq-mod-tyʳ (⟦ⓜ⟧-sound ρ μ) _) (M.mod-cong ⟦ ρ ⟧mod (M.mod-cong ⟦ μ ⟧mod (fuselocks-bprop-sound φ)))) ]
-          (M.ι[ M.mod-natural ⟦ ρ ⟧mod _ ]
-          M.mod-intro ⟦ ρ ⟧mod (⟦p1⟧ sgoals1)))
+      M.[ (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.eq-dra-tyʳ (⟦ⓜ⟧-sound ρ μ) _) (M.dra-cong ⟦ ρ ⟧mod (M.dra-cong ⟦ μ ⟧mod (fuselocks-bprop-sound φ)))) ]
+          (M.ι[ M.dra-natural ⟦ ρ ⟧mod _ ]
+          M.dra-intro ⟦ ρ ⟧mod (⟦p1⟧ sgoals1)))
         M./v ]')) ⟆
 check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
   contains-assumption κ' a ← contains-assumption? x μ Ξ
@@ -269,7 +269,7 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
   return ⟅ goals , sgoals ↦ M.ι[ sub-to-ctx-sub Ξ ψ' t ]
          (M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals))
-                                                 (M.mod-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))) ⟆
+                                                 (M.dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))) ⟆
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
@@ -300,8 +300,8 @@ check-proof Ξ (fun-η x) φ = do
     M.≅ᵗᵐ-to-Id (M.transᵗᵐ
       (M.⇛-cl-η (ty-closed-natural ⟨ μ ∣ dom ⟩) (ty-closed-natural cod) _)
       (M.lamcl-cong (ty-closed-natural cod) (M.app-cong (M.symᵗᵐ (weaken-tm-sound (to-ctx Ξ) x μ dom lhs))
-                                                        (M.symᵗᵐ (M.transᵗᵐ (M.mod-intro-cong ⟦ μ ⟧mod (v0-sound (to-ctx Ξ) μ x dom))
-                                                                            (M.mod-η ⟦ μ ⟧mod _))))))
+                                                        (M.symᵗᵐ (M.transᵗᵐ (M.dra-intro-cong ⟦ μ ⟧mod (v0-sound (to-ctx Ξ) μ x dom))
+                                                                            (M.dra-η ⟦ μ ⟧mod _))))))
       M.[ _ ]' ⟆
 check-proof Ξ ⊠-η φ = do
   is-eq {T = P} lhs rhs ← is-eq? φ
@@ -424,6 +424,6 @@ check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᵇ s)
   return ⟅ goals , sgoals ↦
     M.ι[ M.Id-natural _ ] M.ι[ M.Id-cong' (M.app-natural _ _ _) (M.app-natural _ _ _) ]
-    M.cong' _ (M.ι[ M.Id-cong (M.mod-natural ⟦ μ ⟧mod _) (M.mod-intro-natural ⟦ μ ⟧mod _ _) (M.mod-intro-natural ⟦ μ ⟧mod _ _) ]
-              M.id-mod-intro-cong ⟦ μ ⟧mod (M.ι⁻¹[ M.Id-natural _ ] ⟦p⟧ sgoals)) ⟆
+    M.cong' _ (M.ι[ M.Id-cong (M.dra-natural ⟦ μ ⟧mod _) (M.dra-intro-natural ⟦ μ ⟧mod _ _) (M.dra-intro-natural ⟦ μ ⟧mod _ _) ]
+              M.id-dra-intro-cong ⟦ μ ⟧mod (M.ι⁻¹[ M.Id-natural _ ] ⟦p⟧ sgoals)) ⟆
 check-proof Ξ (hole name) φ = return ⟅ [ goal name Ξ φ ] , (sgl , _) ↦ sgl ⟆
