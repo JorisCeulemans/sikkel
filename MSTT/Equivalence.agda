@@ -14,7 +14,7 @@ open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure
-open import Model.Modality as M hiding (⟨_∣_⟩; 𝟙)
+open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙)
 open import Model.Type.Function as M hiding (_⇛_)
 open import Model.Type.Product as M hiding (_⊠_)
 

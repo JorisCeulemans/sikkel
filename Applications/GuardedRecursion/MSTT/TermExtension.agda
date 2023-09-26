@@ -9,7 +9,7 @@ open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure as M
-open import Model.Modality as M hiding (⟨_∣_⟩)
+open import Model.DRA as DRA hiding (⟨_∣_⟩)
 open import Model.Type.Function as M hiding (_⇛_)
 open import Applications.GuardedRecursion.Model.Modalities as M
   hiding (later; constantly; forever; ▻)

@@ -10,7 +10,7 @@ import Model.Type.Constant
 import Model.Type.Function
 import Model.Type.Product
 import Model.Type.Sum
-import Model.Modality
+import Model.DRA
 
 import MSTT.TCMonad
 import MSTT.Parameter.ModeTheory

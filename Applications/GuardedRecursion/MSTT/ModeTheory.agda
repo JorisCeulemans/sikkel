@@ -4,7 +4,7 @@
 
 module Applications.GuardedRecursion.MSTT.ModeTheory where
 
-open import Model.Modality using (reflᵈ)
+open import Model.DRA using (reflᵈ)
 
 open import MSTT.Parameter.ModeTheory
 

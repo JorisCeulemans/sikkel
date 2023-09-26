@@ -9,7 +9,7 @@ open import Data.String
 
 open import Model.BaseCategory as M hiding (★; ω)
 open import Model.CwF-Structure as M
-open import Model.Modality as M hiding (𝟙; _ⓣ-vert_; _ⓣ-hor_; id-cell)
+open import Model.DRA as M hiding (𝟙; _ⓣ-vert_; _ⓣ-hor_; id-cell)
 open import Applications.GuardedRecursion.Model.Modalities as M hiding
   (constantly; forever; later; 𝟙≤later; constantly∘forever≤𝟙)
 

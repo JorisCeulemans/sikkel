@@ -19,7 +19,7 @@ open import Model.CwF-Structure.ClosedType
 import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Constant as M
-import Model.Modality as M
+import Model.DRA as DRA
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 ⊤
@@ -36,9 +36,9 @@ apply-sem-ty-constructor : ∀ {margs} → SemTyConstructor margs m → TyExtArg
 
 ⟦ Nat' ⟧ty = M.Nat'
 ⟦ Bool' ⟧ty = M.Bool'
-⟦ ⟨ μ ∣ T ⟩⇛ S ⟧ty = M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩ M.⇛ ⟦ S ⟧ty
+⟦ ⟨ μ ∣ T ⟩⇛ S ⟧ty = DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩ M.⇛ ⟦ S ⟧ty
 ⟦ T ⊠ S ⟧ty = ⟦ T ⟧ty M.⊠ ⟦ S ⟧ty
-⟦ ⟨ μ ∣ T ⟩ ⟧ty = M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦ ⟨ μ ∣ T ⟩ ⟧ty = DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
 ⟦ Ext c Args ⟧ty = apply-sem-ty-constructor ⟦ c ⟧ty-code Args
 
 apply-sem-ty-constructor {margs = []}        T Args       = T
@@ -51,9 +51,9 @@ ext-ty-natural : ∀{margs} {F : SemTyConstructor margs m} → SemTyConstructorN
 
 ty-closed-natural Nat' = M.const-closed
 ty-closed-natural Bool' = M.const-closed
-ty-closed-natural (⟨ μ ∣ T ⟩⇛ S) = M.fun-closed (M.dra-closed ⟦ μ ⟧mod (ty-closed-natural T)) (ty-closed-natural S)
+ty-closed-natural (⟨ μ ∣ T ⟩⇛ S) = M.fun-closed (DRA.dra-closed ⟦ μ ⟧mod (ty-closed-natural T)) (ty-closed-natural S)
 ty-closed-natural (T ⊠ S) = M.prod-closed (ty-closed-natural T) (ty-closed-natural S)
-ty-closed-natural ⟨ μ ∣ T ⟩ = M.dra-closed ⟦ μ ⟧mod (ty-closed-natural T)
+ty-closed-natural ⟨ μ ∣ T ⟩ = DRA.dra-closed ⟦ μ ⟧mod (ty-closed-natural T)
 ty-closed-natural (Ext c Args) = ext-ty-natural (sem-ty-code-natural c) Args
 
 ext-ty-natural {margs = []}        nat Args       = nat
@@ -65,5 +65,5 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 
 ⟦_⟧ctx-nmls : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ ◇ ⟧ctx-nmls = M.◇
-⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls M.,, M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦ Γ ,lock⟨ μ ⟩ ⟧ctx-nmls = M.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx-nmls
+⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls M.,, DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦ Γ ,lock⟨ μ ⟩ ⟧ctx-nmls = DRA.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx-nmls

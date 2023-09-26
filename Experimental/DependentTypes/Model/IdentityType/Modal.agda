@@ -2,7 +2,7 @@ module Experimental.DependentTypes.Model.IdentityType.Modal where
 
 open import Model.BaseCategory
 open import Model.CwF-Structure
-open import Model.Modality
+open import Model.DRA
 open import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm
 
 

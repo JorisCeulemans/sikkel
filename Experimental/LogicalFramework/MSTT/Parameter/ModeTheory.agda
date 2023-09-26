@@ -5,7 +5,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.BaseCategory as M using (BaseCategory)
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-open import Model.Modality as M using (_≅ᵈ_)
+open import Model.DRA as DRA hiding (𝟙; TwoCell; id-cell; _ⓣ-vert_; _ⓣ-hor_)
 
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
@@ -24,7 +24,7 @@ record MTBasis : Set₁ where
     non-triv-mod-eq? : ∀ {m n} (μ κ : NonTrivModality m n) → Maybe (μ ≡ κ)
 
     ⟦_⟧mode : Mode → BaseCategory
-    ⟦_⟧non-triv-mod : ∀ {m n} → NonTrivModality m n → M.DRA ⟦ m ⟧mode ⟦ n ⟧mode
+    ⟦_⟧non-triv-mod : ∀ {m n} → NonTrivModality m n → DRA ⟦ m ⟧mode ⟦ n ⟧mode
 
   infix 50 ‵_
   data Modality : Mode → Mode → Set where
@@ -35,12 +35,12 @@ record MTBasis : Set₁ where
   mod-dom {m}     μ = m
   mod-cod {_} {n} μ = n
 
-  ⟦_⟧mod : ∀ {m n} → Modality m n → M.DRA ⟦ m ⟧mode ⟦ n ⟧mode
-  ⟦ 𝟙 ⟧mod = M.𝟙
+  ⟦_⟧mod : ∀ {m n} → Modality m n → DRA ⟦ m ⟧mode ⟦ n ⟧mode
+  ⟦ 𝟙 ⟧mod = DRA.𝟙
   ⟦ ‵ μ ⟧mod = ⟦ μ ⟧non-triv-mod
 
-  ⟦𝟙⟧-sound : ∀ {m} → ⟦ 𝟙 {m} ⟧mod ≅ᵈ M.𝟙
-  ⟦𝟙⟧-sound = M.reflᵈ
+  ⟦𝟙⟧-sound : ∀ {m} → ⟦ 𝟙 {m} ⟧mod ≅ᵈ DRA.𝟙
+  ⟦𝟙⟧-sound = DRA.reflᵈ
 
   _≟mode_ : (m n : Mode) → PCM (m ≡ n)
   m ≟mode n = from-maybe "Modes are not equal." (mode-eq? m n)
@@ -63,16 +63,16 @@ record MTComposition (mtb : MTBasis) : Set₁ where
     _ⓜnon-triv_ : ∀ {m n o} → NonTrivModality n o → NonTrivModality m n → Modality m o
 
     ⟦ⓜ⟧-non-triv-sound : ∀ {m n o} (μ : NonTrivModality n o) (κ : NonTrivModality m n) →
-                         ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵈ ⟦ μ ⟧non-triv-mod M.ⓓ ⟦ κ ⟧non-triv-mod
+                         ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵈ ⟦ μ ⟧non-triv-mod DRA.ⓓ ⟦ κ ⟧non-triv-mod
 
   _ⓜ_ : ∀ {m n o} → Modality n o → Modality m n → Modality m o
   𝟙 ⓜ ρ = ρ
   ‵ μ ⓜ 𝟙 = ‵ μ
   ‵ μ ⓜ ‵ ρ = μ ⓜnon-triv ρ
 
-  ⟦ⓜ⟧-sound : ∀ {m n o} (μ : Modality n o) (κ : Modality m n) → ⟦ μ ⓜ κ ⟧mod ≅ᵈ ⟦ μ ⟧mod M.ⓓ ⟦ κ ⟧mod
-  ⟦ⓜ⟧-sound 𝟙     κ     = M.symᵈ (M.𝟙-unitˡ _)
-  ⟦ⓜ⟧-sound (‵ μ) 𝟙     = M.symᵈ (M.𝟙-unitʳ _)
+  ⟦ⓜ⟧-sound : ∀ {m n o} (μ : Modality n o) (κ : Modality m n) → ⟦ μ ⓜ κ ⟧mod ≅ᵈ ⟦ μ ⟧mod ⓓ ⟦ κ ⟧mod
+  ⟦ⓜ⟧-sound 𝟙     κ     = symᵈ (𝟙-unitˡ _)
+  ⟦ⓜ⟧-sound (‵ μ) 𝟙     = symᵈ (𝟙-unitʳ _)
   ⟦ⓜ⟧-sound (‵ μ) (‵ κ) = ⟦ⓜ⟧-non-triv-sound μ κ
 
 
@@ -112,7 +112,7 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
               TwoCell μ1 ρ1 → TwoCell μ2 ρ2 → TwoCell (μ1 ⓜ μ2) (ρ1 ⓜ ρ2)
     two-cell-eq? : ∀ {m n} {μ ρ : Modality m n} (α β : TwoCell μ ρ) → Maybe (α ≡ β)
 
-    ⟦_⟧two-cell : ∀ {m n} {μ κ : Modality m n} → TwoCell μ κ → M.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
+    ⟦_⟧two-cell : ∀ {m n} {μ κ : Modality m n} → TwoCell μ κ → DRA.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 
   eq-cell : ∀ {m n} {μ ρ : Modality m n} → μ ≡ ρ → TwoCell μ ρ
   eq-cell refl = id-cell

@@ -8,7 +8,7 @@ open import Relation.Binary.PropositionalEquality
 
 import Model.CwF-Structure as M
 import Model.Type.Function as M
-import Model.Modality as M
+open import Model.DRA as DRA using (dra-intro)
 import Applications.GuardedRecursion.Model.Streams.Guarded as M
 import Applications.GuardedRecursion.Model.Modalities as M
 
@@ -75,8 +75,8 @@ TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (löb-code x A) =
   λ t → M.löb' ⟦ A ⟧ty (M.ι[ M.transᵗʸ (ty-natural A) (M.symᵗʸ (ty-natural A)) ]
                          (M.ιc[ M.,,-cong (M.▻-cong (ty-natural A)) ]' t))
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (g-cons-code A) =
-  λ h t → M.app (M.app M.g-cons (M.mod-intro ⟦ constantly ⟧mod h))
-                (M.ι[ M.▻-cong (ty-natural (GStream A)) ] M.mod-intro ⟦ later ⟧mod t)
+  λ h t → M.app (M.app M.g-cons (dra-intro ⟦ constantly ⟧mod h))
+                (M.ι[ M.▻-cong (ty-natural (GStream A)) ] dra-intro ⟦ later ⟧mod t)
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (g-head-code A) =
   λ s → M.app M.g-head s
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (g-tail-code A) =

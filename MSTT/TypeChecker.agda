@@ -20,7 +20,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure as M hiding (◇; _,,_)
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
-open import Model.Modality as M hiding (𝟙; ⟨_∣_⟩; _,lock⟨_⟩; coe)
+open import Model.DRA as DRA hiding (𝟙; ⟨_∣_⟩; _,lock⟨_⟩; coe)
 open import Model.Type.Constant as M hiding (Nat'; Bool')
 open import Model.Type.Function as M hiding (_⇛_; lam; app)
 open import Model.Type.Product as M hiding (_⊠_; pair; fst; snd)
@@ -99,7 +99,7 @@ prune-ctx-until-var x (Γ , μ ∣ y ∈ T) | false = do
   return (prune-ctx-result _ Γ' n' ρ S locks (σ M.⊚ M.π))
 prune-ctx-until-var x (Γ ,lock⟨ μ ⟩) = do
   prune-ctx-result n Γ' n' ρ S locks σ ← prune-ctx-until-var x Γ
-  return (prune-ctx-result _ Γ' n' ρ S (locks ,, μ) (M.lock-fmap ⟦ μ ⟧modality σ))
+  return (prune-ctx-result _ Γ' n' ρ S (locks ,, μ) (DRA.lock-fmap ⟦ μ ⟧modality σ))
 
 infer-interpret-var : String → TwoCellExpr → (Γ : CtxExpr m) → TCM (InferInterpretResult Γ)
 infer-interpret-var {m = m} x α Γ = do
@@ -169,7 +169,7 @@ infer-interpret (snd p) Γ = do
   return (S , M.snd ⟦p⟧)
 infer-interpret (mod⟨ μ ⟩ t) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ μ ⟩)
-  return (⟨ μ ∣ T ⟩ , M.dra-intro ⟦ μ ⟧modality ⟦t⟧)
+  return (⟨ μ ∣ T ⟩ , DRA.dra-intro ⟦ μ ⟧modality ⟦t⟧)
 infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
   T , ⟦t⟧ ← infer-interpret t (Γ ,lock⟨ ρ ⟩)
   modal-ty mμ' μ' A ← is-modal-ty T

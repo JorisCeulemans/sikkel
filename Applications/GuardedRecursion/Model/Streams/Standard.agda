@@ -13,7 +13,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.BaseCategory
 open import Model.CwF-Structure
-open import Model.Modality
+open import Model.DRA
 open import Model.Type.Function
 open import Applications.GuardedRecursion.Model.Streams.Guarded
 open import Applications.GuardedRecursion.Model.Modalities

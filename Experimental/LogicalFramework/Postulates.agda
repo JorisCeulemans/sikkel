@@ -10,7 +10,7 @@ module Experimental.LogicalFramework.Postulates (𝒫 : MSTT-Parameter) where
 open import Data.String using (String)
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-import Model.Modality as M
+open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell)
 import Model.Type.Function as M
 
 open MSTT-Parameter 𝒫
@@ -31,13 +31,13 @@ postulate
   bprop-sub-sound : (φ : bProp Δ) (σ : Sub Γ Δ) → ⟦ φ ⟧bprop M.[ ⟦ σ ⟧sub ] M.≅ᵗʸ ⟦ φ [ σ ]bprop ⟧bprop
 
   v0-sound : (Γ : Ctx n) (μ : Modality m n) (x : String) (T : Ty m) →
-             ⟦ v0 {Γ = Γ} {μ = μ} {x} {T} ⟧tm M.≅ᵗᵐ M.dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+             ⟦ v0 {Γ = Γ} {μ = μ} {x} {T} ⟧tm M.≅ᵗᵐ dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
   v0-𝟙-sound : (Γ : Ctx m) (x : String) (T : Ty m) →
                ⟦ v0-𝟙 {Γ = Γ} {x = x} {T = T} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T)
   v1-sound : (Γ : Ctx n) (μ : Modality m n) (x : String) (T : Ty m) (κ : Modality o n) (y : String) (S : Ty o) →
              ⟦ v1 {Γ = Γ} {μ = μ} {x} {T} {κ = κ} {y} {S} ⟧tm
                M.≅ᵗᵐ
-             M.dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.π ]cl)
+             dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.π ]cl)
   v1-𝟙-sound : (Γ : Ctx m) (x : String) (T : Ty m) (κ : Modality n m) (y : String) (S : Ty n) →
                ⟦ v1-𝟙 {Γ = Γ} {x = x} {T} {_} {κ} {y} {S} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T) M.[ ty-closed-natural T ∣ M.π ]cl
 
@@ -46,20 +46,20 @@ postulate
   unlock𝟙-bprop-sound : (φ : bProp (Γ ,lock⟨ 𝟙 ⟩)) → ⟦ unlock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
   lock𝟙-bprop-sound : (φ : bProp Γ) → ⟦ lock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
   unfuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⓜ ρ ⟩)) →
-                            ⟦ unfuselocks-bprop {μ = μ} φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound μ ρ) _) ]
+                            ⟦ unfuselocks-bprop {μ = μ} φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.to (eq-lock (⟦ⓜ⟧-sound μ ρ) _) ]
   fuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)) →
-                          ⟦ fuselocks-bprop φ ⟧bprop M.[ M.to (M.eq-lock (⟦ⓜ⟧-sound μ ρ) _) ] M.≅ᵗʸ ⟦ φ ⟧bprop
+                          ⟦ fuselocks-bprop φ ⟧bprop M.[ M.to (eq-lock (⟦ⓜ⟧-sound μ ρ) _) ] M.≅ᵗʸ ⟦ φ ⟧bprop
 
   ren-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ π-ren {Γ = Γ} {μ = μ} {x} {T} ⟧ren M.≅ˢ M.π
 
   key-sub-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
-                  M.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ key-sub {Γ = Γ} (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⟩) α ⟧sub
-  sub-lock-sound : (σ : Sub Γ Δ) (μ : Modality m n) → ⟦ σ ,slock⟨ μ ⟩ ⟧sub M.≅ˢ M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧sub
+                  DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ key-sub {Γ = Γ} (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⟩) α ⟧sub
+  sub-lock-sound : (σ : Sub Γ Δ) (μ : Modality m n) → ⟦ σ ,slock⟨ μ ⟩ ⟧sub M.≅ˢ lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧sub
   sub-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ π {Γ = Γ} {μ = μ} {x} {T} ⟧sub M.≅ˢ M.π
   /cl-sound : {Γ : Ctx m} {μ : Modality n m} {T : Ty n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : String) →
-              ⟦ t / x ⟧sub M.≅ˢ (M.dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩
+              ⟦ t / x ⟧sub M.≅ˢ (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩
   ∷ˢ-sound : (σ : Sub Γ Δ) {μ : Modality m n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : String) →
-             ⟦ σ ∷ˢ t / x ⟧sub M.≅ˢ ⟦ σ ⟧sub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ M.dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm
+             ⟦ σ ∷ˢ t / x ⟧sub M.≅ˢ ⟦ σ ⟧sub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm
 
 atomic-rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : AtomicRen.AtomicRen Δ Γ) →
                   ⟦ AtomicRen.atomic-rename-tm t σ ⟧tm M.≅ᵗᵐ (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl )
@@ -95,7 +95,7 @@ lock𝟙-sound t = M.transᵗᵐ (rename-tm-sound t lock𝟙-ren)
 /v-sound {T = T} t x =
   M.transˢ (/cl-sound (lock𝟙-tm t) x) (
   M.transˢ (M.,cl-cong-tm (ty-closed-natural ⟨ 𝟙 ∣ T ⟩) (lock𝟙-tm-sound t)) (
-  M.transˢ (M.,cl-cong-cl (M.𝟙-preserves-cl (ty-closed-natural T))) (
+  M.transˢ (M.,cl-cong-cl (𝟙-preserves-cl (ty-closed-natural T))) (
   M.symˢ (M./v-/cl (ty-closed-natural T) ⟦ t ⟧tm))))
 
 weaken-tm-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (S : Ty n) {T : Ty m} (t : Tm Γ T) →
@@ -104,11 +104,11 @@ weaken-tm-sound Γ x μ S {T} t = M.transᵗᵐ (rename-tm-sound t π-ren) (M.cl
 
 v0-sound-𝟙 : (Γ : Ctx m) (x : String) (T : Ty m) →
              ⟦ v0 {Γ = Γ} {μ = 𝟙} {x = x} {T = T} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T)
-v0-sound-𝟙 Γ x T = M.transᵗᵐ (v0-sound Γ 𝟙 x T) (M.ξcl-cong-cl (M.𝟙-preserves-cl (ty-closed-natural T)))
+v0-sound-𝟙 Γ x T = M.transᵗᵐ (v0-sound Γ 𝟙 x T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))
 
 v1-sound-𝟙 : (Γ : Ctx m) (x : String) (T : Ty m) (κ : Modality n m) (y : String) (S : Ty n) →
              ⟦ v1 {Γ = Γ} {μ = 𝟙} {x} {T} {κ = κ} {y} {S} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T) M.[ ty-closed-natural T ∣ M.π ]cl
 v1-sound-𝟙 Γ x T κ y S =
   M.transᵗᵐ (v1-sound Γ 𝟙 x T κ y S) (
-  M.transᵗᵐ (M.cl-tm-subst-cong-cl (M.𝟙-preserves-cl (ty-closed-natural T))) (
-  M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.ξcl-cong-cl (M.𝟙-preserves-cl (ty-closed-natural T)))))
+  M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl (ty-closed-natural T))) (
+  M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))))

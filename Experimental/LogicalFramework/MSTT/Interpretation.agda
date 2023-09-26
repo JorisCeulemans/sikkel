@@ -20,7 +20,7 @@ open ModeTheory ℳ
 
 open import Model.BaseCategory
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-import Model.Modality as M
+open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩)
 import Model.Type.Function as M
 import Model.Type.Product as M
 import Model.Type.Constant as M
@@ -105,20 +105,20 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 -- Interpretation of substitutions as presheaf morphisms
 --   and soundness proof of term substitution
 
-⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ++ltel Λ ⟧ctx M.≅ᶜ M.lock ⟦ locks-ltel Λ ⟧mod ⟦ Γ ⟧ctx
+⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ++ltel Λ ⟧ctx M.≅ᶜ DRA.lock ⟦ locks-ltel Λ ⟧mod ⟦ Γ ⟧ctx
 ⟦⟧ltel {m} ◇ = M.reflᶜ
 ⟦⟧ltel (Λ ,lock⟨ μ ⟩) =
-  M.transᶜ (M.ctx-functor-cong (M.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
-           (M.symᶜ (M.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
+  M.transᶜ (M.ctx-functor-cong (DRA.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
+           (M.symᶜ (DRA.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _
-⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (M.dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
+⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
 ⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
-⟦ σ ,aslock⟨ μ ⟩ ⟧asub = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
+⟦ σ ,aslock⟨ μ ⟩ ⟧asub = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
 ⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
   M.to (⟦⟧ltel Λ₂)
-  M.⊚ (M.key-subst ⟦ α ⟧two-cell)
+  M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
   M.⊚ M.from (⟦⟧ltel Λ₁)
 
 ⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
@@ -129,16 +129,16 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦_⟧var : ∀ {x μ} → Syn.Var x μ T 𝟙 Γ → SemTm ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx ⟦ T ⟧ty
 ⟦_⟧var {x = x} {μ = μ} v = ⟦⟧var-helper (erase-names-var v) μ (eq-cell (sym mod-unitˡ))
 
-⟦_⟧rd : ∀ {μ} → RenData μ T Γ → SemTm ⟦ Γ ⟧ctx M.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦_⟧rd {μ = μ} (Syn.rendata new-name new-var) = M.dra-intro ⟦ μ ⟧mod ⟦ new-var ⟧var
+⟦_⟧rd : ∀ {μ} → RenData μ T Γ → SemTm ⟦ Γ ⟧ctx DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦_⟧rd {μ = μ} (Syn.rendata new-name new-var) = dra-intro ⟦ μ ⟧mod ⟦ new-var ⟧var
 
 ⟦_⟧aren : AtomicRen Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ [] ⟧aren = M.!◇ _
 ⟦ _∷_/_ {μ = μ} {T = T} σ t x ⟧aren = ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ⟦ t ⟧rd
 ⟦ σ ⊚π ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
-⟦ σ ,lock⟨ μ ⟩ ⟧aren = M.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
+⟦ σ ,lock⟨ μ ⟩ ⟧aren = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
 ⟦ atomic-key Λ₁ Λ₂ α ⟧aren = M.to (⟦⟧ltel Λ₂)
-                             M.⊚ (M.key-subst ⟦ α ⟧two-cell)
+                             M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
                              M.⊚ M.from (⟦⟧ltel Λ₁) 
 
 ⟦_⟧ren : Ren Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
