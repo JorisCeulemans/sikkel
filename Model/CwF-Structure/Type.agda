@@ -354,14 +354,29 @@ from-eq (symᵗʸ-invʳ {e = e}) = isoˡ e
 symᵗʸ-transᵗʸ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → symᵗʸ (transᵗʸ e e') ≅ᵉ transᵗʸ (symᵗʸ e') (symᵗʸ e)
 from-eq symᵗʸ-transᵗʸ = reflⁿ
 
+symᵗʸ-involutive : {e : T ≅ᵗʸ S} → symᵗʸ (symᵗʸ e) ≅ᵉ e
+from-eq symᵗʸ-involutive = reflⁿ
+
 to-symᵗʸ-eq : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ T} → transᵗʸ e e' ≅ᵉ reflᵗʸ → e ≅ᵉ symᵗʸ e'
 to-symᵗʸ-eq 𝑒 = transᵉ (symᵉ reflᵗʸ-unitʳ) (transᵉ (transᵗʸ-congʳ (symᵉ symᵗʸ-invʳ)) (transᵉ (symᵉ transᵗʸ-assoc) (transᵉ (transᵗʸ-congˡ 𝑒) reflᵗʸ-unitˡ)))
 
-transᵗʸ-cancelʳ : {e : T ≅ᵗʸ S} {e' : R ≅ᵗʸ S} → transᵗʸ e (transᵗʸ (symᵗʸ e') e') ≅ᵉ e
-transᵗʸ-cancelʳ = transᵉ (transᵗʸ-congʳ symᵗʸ-invˡ) reflᵗʸ-unitʳ
+transᵗʸ-cancelʳ-symˡ : {e : T ≅ᵗʸ S} {e' : R ≅ᵗʸ S} → transᵗʸ e (transᵗʸ (symᵗʸ e') e') ≅ᵉ e
+transᵗʸ-cancelʳ-symˡ = transᵉ (transᵗʸ-congʳ symᵗʸ-invˡ) reflᵗʸ-unitʳ
 
-transᵗʸ-cancelˡ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → transᵗʸ (transᵗʸ (symᵗʸ e) e) e' ≅ᵉ e'
-transᵗʸ-cancelˡ = transᵉ (transᵗʸ-congˡ symᵗʸ-invˡ) reflᵗʸ-unitˡ
+transᵗʸ-cancelˡ-symˡ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → transᵗʸ (transᵗʸ (symᵗʸ e) e) e' ≅ᵉ e'
+transᵗʸ-cancelˡ-symˡ = transᵉ (transᵗʸ-congˡ symᵗʸ-invˡ) reflᵗʸ-unitˡ
+
+transᵗʸ-cancelʳ-symʳ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → transᵗʸ e (transᵗʸ e' (symᵗʸ e')) ≅ᵉ e
+transᵗʸ-cancelʳ-symʳ = transᵉ (transᵗʸ-congʳ symᵗʸ-invʳ) reflᵗʸ-unitʳ
+
+transᵗʸ-cancelˡ-symʳ : {e : T ≅ᵗʸ S} {e' : T ≅ᵗʸ R} → transᵗʸ (transᵗʸ e (symᵗʸ e)) e' ≅ᵉ e'
+transᵗʸ-cancelˡ-symʳ = transᵉ (transᵗʸ-congˡ symᵗʸ-invʳ) reflᵗʸ-unitˡ
+
+to-symᵗʸ-eqʳ : {e : T ≅ᵗʸ S} {e' : R ≅ᵗʸ S} {e'' : T ≅ᵗʸ R} → e ≅ᵉ transᵗʸ e'' e' → transᵗʸ e (symᵗʸ e') ≅ᵉ e''
+to-symᵗʸ-eqʳ 𝑒 = transᵉ (transᵗʸ-congˡ 𝑒) (transᵉ transᵗʸ-assoc transᵗʸ-cancelʳ-symʳ)
+
+to-symᵗʸ-eqˡ : {e : T ≅ᵗʸ S} {e' : T ≅ᵗʸ R} {e'' : S ≅ᵗʸ R} → e' ≅ᵉ transᵗʸ e e'' → transᵗʸ (symᵗʸ e) e' ≅ᵉ e''
+to-symᵗʸ-eqˡ 𝑒 = transᵉ (transᵗʸ-congʳ 𝑒) (transᵉ (symᵉ transᵗʸ-assoc) transᵗʸ-cancelˡ-symˡ)
 
 
 --------------------------------------------------
@@ -487,6 +502,13 @@ from-eq ty-subst-cong-subst-sym = reflⁿ
 ty-subst-cong-subst-trans : {σ1 σ2 σ3 : Γ ⇒ Δ} {ε : σ1 ≅ˢ σ2} {ε' : σ2 ≅ˢ σ3} →
                             ty-subst-cong-subst (transˢ ε ε') T ≅ᵉ transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-subst ε' T)
 from-eq ty-subst-cong-subst-trans = ty-subst-eq-subst-morph-trans
+
+ty-subst-cong-ty-id : (e : T ≅ᵗʸ S) → transᵗʸ (ty-subst-id T) e ≅ᵉ transᵗʸ (ty-subst-cong-ty (id-subst _) e) (ty-subst-id S)
+eq (from-eq (ty-subst-cong-ty-id e)) _ = refl
+
+ty-subst-cong-ty-id-sym : (e : T ≅ᵗʸ S) →
+                          transᵗʸ e (symᵗʸ (ty-subst-id S)) ≅ᵉ transᵗʸ (symᵗʸ (ty-subst-id T)) (ty-subst-cong-ty (id-subst _) e)
+eq (from-eq (ty-subst-cong-ty-id-sym e)) _ = refl
 
 ty-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
                           (T : Ty Θ) → σ2 ⊚ σ1 ≅ˢ τ →

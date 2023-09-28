@@ -480,7 +480,7 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
       transᵉ (transᵗʸ-congʳ (closed-⊚ clB π (a /v))) (
       transᵉ (transᵗʸ-congˡ (transᵉ symᵗʸ-transᵗʸ (transᵗʸ-congʳ symᵗʸ-transᵗʸ))) (
       transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc))))) (
-      transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ transᵗʸ-cancelˡ)) (
+      transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ transᵗʸ-cancelˡ-symˡ)) (
       transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ ty-subst-cong-subst-sym))) (
       transᵉ (transᵗʸ-congʳ (closed-subst-eq clB _)) (
       transᵉ (transᵗʸ-congʳ (closed-id clB)) symᵗʸ-invˡ)))))))))))))))
