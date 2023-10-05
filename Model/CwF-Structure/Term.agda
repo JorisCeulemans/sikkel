@@ -114,8 +114,11 @@ convert-tm-ι-2-2 : {T T' S R : Ty Γ} {e : T ≅ᵗʸ S} {e' : R ≅ᵗʸ T'} {
                    convert-tm φ (ι[ e ] s) ≅ᵗᵐ ι[ e' ] convert-tm φ' s
 eq (convert-tm-ι-2-2 𝔢) γ = eq 𝔢 _
 
-convert-tm-cong : {φ : T ↣ S} {t t' : Tm Γ T} → t ≅ᵗᵐ t' → convert-tm φ t ≅ᵗᵐ convert-tm φ t'
-eq (convert-tm-cong {φ = φ} e) γ = cong (func φ) (eq e γ)
+convert-tm-cong-tm : {φ : T ↣ S} {t t' : Tm Γ T} → t ≅ᵗᵐ t' → convert-tm φ t ≅ᵗᵐ convert-tm φ t'
+eq (convert-tm-cong-tm {φ = φ} e) γ = cong (func φ) (eq e γ)
+
+convert-tm-cong-trans : {φ φ' : T ↣ S} {t : Tm Γ T} → φ ≅ⁿ φ' → convert-tm φ t ≅ᵗᵐ convert-tm φ' t
+eq (convert-tm-cong-trans 𝔢) γ = eq 𝔢 _
 
 ι-cong : {T=S : T ≅ᵗʸ S} →
          s ≅ᵗᵐ s' → ι[ T=S ] s ≅ᵗᵐ ι[ T=S ] s'

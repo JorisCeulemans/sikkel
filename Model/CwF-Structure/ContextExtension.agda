@@ -120,11 +120,10 @@ ty-weaken-subst t = transᵗʸ (π-ext-comp-ty-subst _ _ _) (ty-subst-id _)
 
 -- Extending a context with two equivalent types leads to equivalent contexts.
 ,,-map : (T ↣ S) → (Γ ,, T ⇒ Γ ,, S)
-func (,,-map η) [ γ , t ] = [ γ , func η t ]
-naturality (,,-map η) = cong [ _ ,_] (naturality η)
+,,-map η = π ∷ˢ convert-tm (ty-subst-map π η) ξ
 
 ,,-map-cong : {η φ : T ↣ S} → η ≅ⁿ φ → ,,-map η ≅ˢ ,,-map φ
-eq (,,-map-cong e) [ γ , t ] = cong ([ γ ,_]) (eq e t)
+,,-map-cong 𝔢 = ctx-ext-subst-cong-tm π (convert-tm-cong-trans (ty-subst-map-cong 𝔢))
 
 ,,-map-id : {T : Ty Γ} → ,,-map (id-trans T) ≅ˢ id-subst (Γ ,, T)
 eq ,,-map-id _ = refl
@@ -139,7 +138,7 @@ eq (isoˡ (,,-cong T=S)) [ γ , t ] = cong [ γ ,_] (eq (isoˡ T=S) t)
 eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
 
 ,,-map-π : (φ : T ↣ S) → π ⊚ ,,-map φ ≅ˢ π
-eq (,,-map-π φ) _ = refl
+,,-map-π φ = ctx-ext-subst-β₁ π _
 
 ξ-convert : (φ : T ↣ S) → convert-tm (ty-subst-map π φ) ξ ≅ᵗᵐ ι⁻¹[ ty-subst-cong-subst-2-1 S (,,-map-π φ) ] (ξ [ ,,-map φ ]')
 eq (ξ-convert {S = S} φ) _ = sym (strong-ty-id S)
