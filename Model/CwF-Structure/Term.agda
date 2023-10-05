@@ -87,9 +87,9 @@ module ≅ᵗᵐ-Reasoning where
 --------------------------------------------------
 -- Reindexing maps (cf. Dybjer's internal type theory)
 
-convert-term : (T ↣ S) → Tm Γ T → Tm Γ S
-convert-term η t ⟨ x , γ ⟩' = func η (t ⟨ x , γ ⟩')
-naturality (convert-term {T = T}{S = S} η t) f eγ =
+convert-tm : (T ↣ S) → Tm Γ T → Tm Γ S
+convert-tm η t ⟨ x , γ ⟩' = func η (t ⟨ x , γ ⟩')
+naturality (convert-tm {T = T}{S = S} η t) f eγ =
   begin
     S ⟪ f , eγ ⟫ func η (t ⟨ _ , _ ⟩')
   ≡⟨ naturality η ⟩
@@ -99,15 +99,23 @@ naturality (convert-term {T = T}{S = S} η t) f eγ =
   where open ≡-Reasoning
 
 -- Note that instead of the definition below, we could have just
--- written ι[ T=S ] s = convert-term (to T=S) s. However, the
+-- written ι[ T=S ] s = convert-tm (to T=S) s. However, the
 -- following version enables Agda to infer the type equality proofs
 -- when we prove a proposition containing ι[_]_.
 ι[_]_ : T ≅ᵗʸ S → Tm Γ S → Tm Γ T
-(ι[ T=S ] s) ⟨ x , γ ⟩' = convert-term (to (T=S)) s ⟨ x , γ ⟩'
-naturality (ι[_]_ {T = T} {S = S} T=S s) f eγ = naturality (convert-term (to T=S) s) f eγ
+(ι[ T=S ] s) ⟨ x , γ ⟩' = convert-tm (to T=S) s ⟨ x , γ ⟩'
+naturality (ι[_]_ {T = T} {S = S} T=S s) f eγ = naturality (convert-tm (to T=S) s) f eγ
 
-ι-convert : {e : T ≅ᵗʸ S} {s : Tm Γ S} → ι[ e ] s ≅ᵗᵐ convert-term (to e) s
+ι-convert : {e : T ≅ᵗʸ S} {s : Tm Γ S} → ι[ e ] s ≅ᵗᵐ convert-tm (to e) s
 eq ι-convert γ = refl
+
+convert-tm-ι-2-2 : {T T' S R : Ty Γ} {e : T ≅ᵗʸ S} {e' : R ≅ᵗʸ T'} {φ : T ↣ R} {φ' : S ↣ T'} {s : Tm Γ S} →
+                   φ ⊙ to e ≅ⁿ to e' ⊙ φ' →
+                   convert-tm φ (ι[ e ] s) ≅ᵗᵐ ι[ e' ] convert-tm φ' s
+eq (convert-tm-ι-2-2 𝔢) γ = eq 𝔢 _
+
+convert-tm-cong : {φ : T ↣ S} {t t' : Tm Γ T} → t ≅ᵗᵐ t' → convert-tm φ t ≅ᵗᵐ convert-tm φ t'
+eq (convert-tm-cong {φ = φ} e) γ = cong (func φ) (eq e γ)
 
 ι-cong : {T=S : T ≅ᵗʸ S} →
          s ≅ᵗᵐ s' → ι[ T=S ] s ≅ᵗᵐ ι[ T=S ] s'
@@ -192,6 +200,10 @@ naturality (t [ σ ]') f eγ = naturality t f _
 tm-subst-cong-tm : (σ : Δ ⇒ Γ) → t ≅ᵗᵐ s → t [ σ ]' ≅ᵗᵐ s [ σ ]'
 eq (tm-subst-cong-tm σ t=s) δ = eq t=s (func σ δ)
 
+convert-tm-subst-commute : {σ : Δ ⇒ Γ} {φ : T ↣ S} {t : Tm Γ T} →
+                           convert-tm (ty-subst-map σ φ) (t [ σ ]') ≅ᵗᵐ (convert-tm φ t) [ σ ]'
+eq convert-tm-subst-commute _ = refl
+
 ι-subst-commute : {σ : Δ ⇒ Γ} {T=S : T ≅ᵗʸ S} {s : Tm Γ S} →
                   ι[ ty-subst-cong-ty σ T=S ] (s [ σ ]') ≅ᵗᵐ (ι[ T=S ] s) [ σ ]'
 eq ι-subst-commute _ = refl
@@ -210,6 +222,11 @@ eq (tm-subst-id t) _ = refl
 tm-subst-comp : (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 t [ τ ]' [ σ ]' ≅ᵗᵐ ι[ ty-subst-comp T τ σ ] (t [ τ ⊚ σ ]')
 eq (tm-subst-comp t τ σ) _ = refl
+
+tm-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
+                          {T : Ty Θ} (t : Tm Θ T) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
+                          t [ σ2 ]' [ σ1 ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-2 T ε ] (t [ τ2 ]' [ τ1 ]')
+eq (tm-subst-cong-subst-2-2 t ε) γ = sym (naturality t _ _)
 
 -- Nicer syntax for substitutions coming from context equality
 ιc[_]'_ : {S : Ty Δ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Δ S → Tm Γ (ιc[ Γ=Δ ] S)

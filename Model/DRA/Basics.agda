@@ -84,12 +84,12 @@ record DRA (C D : BaseCategory) : Set₁ where
     dra-intro-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (lock Γ)} (t : Tm (lock Γ) T) →
                         (dra-intro t) [ σ ]' ≅ᵗᵐ ι[ dra-natural σ ] dra-intro (t [ lock-fmap σ ]')
     dra-intro-convert : {Γ : Ctx D} {T S : Ty (lock Γ)} {η : T ↣ S} (t : Tm (lock Γ) T) →
-                        convert-term (dra-map η) (dra-intro t) ≅ᵗᵐ dra-intro (convert-term η t)
+                        convert-tm (dra-map η) (dra-intro t) ≅ᵗᵐ dra-intro (convert-tm η t)
 
     dra-elim : {Γ : Ctx D} {T : Ty (lock Γ)} → Tm Γ (⟨_∣_⟩ T) → Tm (lock Γ) T
     dra-elim-cong : {Γ : Ctx D} {T : Ty (lock Γ)} {t t' : Tm Γ (⟨_∣_⟩ T)} →
                     t ≅ᵗᵐ t' → dra-elim t ≅ᵗᵐ dra-elim t'
-    -- Naturality of dra-elim and the fact that it commutes with convert-term can be proved
+    -- Naturality of dra-elim and the fact that it commutes with convert-tm can be proved
     -- from dra-intro-natural, dra-intro-convert and the β and η laws (see below).
 
     dra-β : {Γ : Ctx D} {T : Ty (lock Γ)} (t : Tm (lock Γ) T) →

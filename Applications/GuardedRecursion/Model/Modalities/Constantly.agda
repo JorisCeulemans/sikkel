@@ -129,7 +129,7 @@ module _ {T : Ty (now Γ)} where
 
 module _ {T S : Ty (now Γ)} where
   constantly-tm-convert : {φ : T ↣ S} (t : Tm (now Γ) T) →
-                          convert-term (constantly-ty-map φ) (constantly-tm t) ≅ᵗᵐ constantly-tm (convert-term φ t)
+                          convert-tm (constantly-ty-map φ) (constantly-tm t) ≅ᵗᵐ constantly-tm (convert-tm φ t)
   eq (constantly-tm-convert t) _ = refl
 
   constantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm (now Γ) S) →

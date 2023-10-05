@@ -280,7 +280,7 @@ eq (löb-cong T f=f') {zero} γ = cong (_$⟨ z≤n , _ ⟩ tt) (eq f=f' γ)
 eq (löb-cong T f=f') {suc n} _ = €-cong f=f' (eq (löb-cong T f=f') {n} _)
 
 next-convert : {Γ : Ctx ω} {T T' : Ty (◄ Γ)} {η : T ↣ T'} (t : Tm (◄ Γ) T) →
-               convert-term (▻-map η) (next t) ≅ᵗᵐ next (convert-term η t)
+               convert-tm (▻-map η) (next t) ≅ᵗᵐ next (convert-tm η t)
 eq (next-convert t) {zero}  _ = refl
 eq (next-convert t) {suc n} _ = refl
 

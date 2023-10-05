@@ -62,6 +62,11 @@ naturality (to-ext-subst {Δ = Δ} T σ t) {δ = δ} = to-Σ-ty-eq T (naturality
 
 syntax to-ext-subst T σ t = ⟨ σ , t ∈ T ⟩
 
+to-ext-subst-syntax : {T : Ty Γ} (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ]) → (Δ ⇒ Γ ,, T)
+to-ext-subst-syntax σ t = to-ext-subst _ σ t
+infixl 4 to-ext-subst-syntax
+syntax to-ext-subst-syntax σ t = σ ∷ˢ t
+
 ctx-ext-subst-β₁ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ , t ∈ T ⟩ ≅ˢ σ
 eq (ctx-ext-subst-β₁ σ t) δ = refl
 
@@ -135,6 +140,9 @@ eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
 
 ,,-map-π : (φ : T ↣ S) → π ⊚ ,,-map φ ≅ˢ π
 eq (,,-map-π φ) _ = refl
+
+ξ-convert : (φ : T ↣ S) → convert-tm (ty-subst-map π φ) ξ ≅ᵗᵐ ι⁻¹[ ty-subst-cong-subst-2-1 S (,,-map-π φ) ] (ξ [ ,,-map φ ]')
+eq (ξ-convert {S = S} φ) _ = sym (strong-ty-id S)
 
 -- Context extension which includes a variable name
 _,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C

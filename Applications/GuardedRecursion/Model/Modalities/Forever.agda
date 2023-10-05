@@ -135,7 +135,7 @@ module _ {T : Ty (constantly-ctx Γ)} where
 
 
 forever-convert-tm : {T S : Ty (constantly-ctx Γ)} {η : T ↣ S} (t : Tm (constantly-ctx Γ) T) →
-                     convert-term (forever-ty-map η) (forever-tm t) ≅ᵗᵐ forever-tm (convert-term η t)
+                     convert-tm (forever-ty-map η) (forever-tm t) ≅ᵗᵐ forever-tm (convert-tm η t)
 eq (forever-convert-tm t) _ = to-ω-limit-eq (λ _ → refl)
 
 module _ {T S : Ty (constantly-ctx Γ)} {T=S : T ≅ᵗʸ S} where
