@@ -43,6 +43,10 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
       id-subst (Φ Δ) ∎
     where open ≅ˢ-Reasoning
 
+  ctx-map-cong-2-1 : {Γ Δ Θ : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ} →
+                     σ2 ⊚ σ1 ≅ˢ τ → ctx-map σ2 ⊚ ctx-map σ1 ≅ˢ ctx-map τ
+  ctx-map-cong-2-1 {σ1 = σ1} {σ2} {τ} e = transˢ (symˢ (ctx-map-⊚ σ2 σ1)) (ctx-map-cong e)
+
   ctx-map-cong-2-2 : {Γ Δ Δ' Θ : Ctx C} {σ1 : Γ ⇒ Δ} {τ1 : Δ ⇒ Θ} {σ2 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} →
                      τ1 ⊚ σ1 ≅ˢ τ2 ⊚ σ2 → ctx-map τ1 ⊚ ctx-map σ1 ≅ˢ ctx-map τ2 ⊚ ctx-map σ2
   ctx-map-cong-2-2 {σ1 = σ1} {τ1} {σ2} {τ2} e = begin
@@ -86,6 +90,7 @@ record CtxFunctor (C D : BaseCategory) : Set₁ where
   ctx-fmap-id = ctx-map-id {{is-functor}}
   ctx-fmap-⊚ = ctx-map-⊚ {{is-functor}}
   ctx-fmap-inverse = ctx-map-inverse {{is-functor}}
+  ctx-fmap-cong-2-1 = ctx-map-cong-2-1 {{is-functor}}
   ctx-fmap-cong-2-2 = ctx-map-cong-2-2 {{is-functor}}
 
 open CtxFunctor public

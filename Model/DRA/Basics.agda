@@ -106,6 +106,12 @@ _,lock⟨_⟩ : Ctx D → DRA C D → Ctx C
 -- Some properties derived from the definition of a DRA
 
 module _ (μ : DRA C D) where
+  dra-natural-map-to : {Γ Δ : Ctx D} (σ : Γ ⇒ Δ) {T S : Ty (lock μ Δ)} (η : T ↣ S) →
+                       to (dra-natural μ σ) ⊙ dra-map μ (ty-subst-map (lock-fmap μ σ) η)
+                         ≅ⁿ
+                       ty-subst-map σ (dra-map μ η) ⊙ to (dra-natural μ σ {T = T})
+  dra-natural-map-to σ η = exchange-from-to-out (dra-natural μ σ) (dra-natural μ σ) (dra-natural-map μ σ η)
+
   dra-cong : {Γ : Ctx D} {T S : Ty (lock μ Γ)} →
              T ≅ᵗʸ S → ⟨ μ ∣ T ⟩ ≅ᵗʸ ⟨ μ ∣ S ⟩
   from (dra-cong e) = dra-map μ (from e)
@@ -150,6 +156,24 @@ module _ (μ : DRA C D) where
                          transᵗʸ (dra-natural μ σ) (dra-cong (ty-subst-cong-subst (lock-fmap-cong μ ε) T))
   from-eq (dra-natural-subst-eq ε) = dra-natural-subst-eq-map μ ε
 
+  dra-natural-ty-subst-2-1 : {Γ Δ Θ : Ctx D} {σ : Γ ⇒ Δ} {σ' : Δ ⇒ Θ} {τ : Γ ⇒ Θ} (ε : σ' ⊚ σ ≅ˢ τ)
+                             {T : Ty (Θ ,lock⟨ μ ⟩)} →
+                             transᵗʸ (ty-subst-cong-subst-2-1 ⟨ μ ∣ T ⟩ ε) (
+                             dra-natural μ τ)
+                               ≅ᵉ
+                             transᵗʸ (ty-subst-cong-ty σ (dra-natural μ σ')) (
+                             transᵗʸ (dra-natural μ σ) (
+                             dra-cong (ty-subst-cong-subst-2-1 T (ctx-fmap-cong-2-1 (ctx-functor μ) ε))))
+  dra-natural-ty-subst-2-1 ε =
+      transᵉ transᵗʸ-assoc (
+    transᵉ (transᵗʸ-congʳ (dra-natural-subst-eq ε)) (
+    transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ (dra-cong-cong (transᵉ (symᵉ transᵗʸ-cancelˡ-symʳ) transᵗʸ-assoc)))) (
+      transᵉ (transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ dra-cong-trans)) (transᵉ (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc)) (symᵉ transᵗʸ-assoc))) (
+    transᵉ (transᵗʸ-congˡ (symᵉ (dra-natural-⊚ _ _))) (
+      transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ transᵗʸ-assoc)) (
+    transᵗʸ-congʳ (transᵗʸ-congʳ (transᵉ (symᵉ dra-cong-trans) (dra-cong-cong (transᵗʸ-congʳ (
+                  transᵉ (transᵗʸ-congˡ (symᵉ ty-subst-cong-subst-sym)) (symᵉ ty-subst-cong-subst-trans))))))))))))
+
 
   dra-intro-ι : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm (lock μ Γ) S) →
                 ι[ dra-cong T=S ] (dra-intro μ t) ≅ᵗᵐ dra-intro μ (ι[ T=S ] t)
@@ -168,6 +192,11 @@ module _ (μ : DRA C D) where
     ≅⟨ dra-elim-cong μ (ι⁻¹-cong (tm-subst-cong-tm σ (dra-η μ t))) ⟩
       dra-elim μ (ι⁻¹[ dra-natural μ σ ] (t [ σ ]')) ∎
     where open ≅ᵗᵐ-Reasoning
+
+  dra-elim-convert : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {φ : T ↣ S} (t : Tm Γ ⟨ μ ∣ T ⟩) →
+                     convert-tm φ (dra-elim μ t) ≅ᵗᵐ dra-elim μ (convert-tm (dra-map μ φ) t)
+  dra-elim-convert t =
+    transᵗᵐ (symᵗᵐ (dra-β μ _)) (dra-elim-cong μ (transᵗᵐ (symᵗᵐ (dra-intro-convert μ _)) (convert-tm-cong-tm (dra-η μ t))))
 
   dra-elim-ι : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm Γ ⟨ μ ∣ S ⟩) →
                ι[ T=S ] (dra-elim μ t) ≅ᵗᵐ dra-elim μ (ι[ dra-cong T=S ] t)

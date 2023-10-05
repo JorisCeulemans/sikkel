@@ -378,6 +378,41 @@ to-symᵗʸ-eqʳ 𝑒 = transᵉ (transᵗʸ-congˡ 𝑒) (transᵉ transᵗʸ-a
 to-symᵗʸ-eqˡ : {e : T ≅ᵗʸ S} {e' : T ≅ᵗʸ R} {e'' : S ≅ᵗʸ R} → e' ≅ᵉ transᵗʸ e e'' → transᵗʸ (symᵗʸ e) e' ≅ᵉ e''
 to-symᵗʸ-eqˡ 𝑒 = transᵉ (transᵗʸ-congʳ 𝑒) (transᵉ (symᵉ transᵗʸ-assoc) transᵗʸ-cancelˡ-symˡ)
 
+move-symᵗʸ-out : {T S S' R : Ty Γ} {e1 : S ≅ᵗʸ T} {e2 : S ≅ᵗʸ R} {e1' : T ≅ᵗʸ S'} {e2' : R ≅ᵗʸ S'} →
+                 transᵗʸ e2 e2' ≅ᵉ transᵗʸ e1 e1' →
+                 transᵗʸ (symᵗʸ e1) e2 ≅ᵉ transᵗʸ e1' (symᵗʸ e2')
+move-symᵗʸ-out 𝑒 = to-symᵗʸ-eqˡ (symᵉ (transᵉ (symᵉ transᵗʸ-assoc) (to-symᵗʸ-eqʳ (symᵉ 𝑒))))
+
+exchange-to-from-out : {T T' S R : Ty Γ} (e : T ≅ᵗʸ S) (e' : R ≅ᵗʸ T') {φ : T ↣ R} {φ' : S ↣ T'} →
+                       φ ⊙ to e ≅ⁿ to e' ⊙ φ' →
+                       from e' ⊙ φ ≅ⁿ φ' ⊙ from e
+exchange-to-from-out e e' 𝔢 =
+  transⁿ (⊙-congʳ (transⁿ (symⁿ id-trans-unitʳ) (⊙-congʳ (symⁿ (isoˡ e))))) (
+    transⁿ (⊙-congʳ (symⁿ ⊙-assoc)) (
+  transⁿ (⊙-congʳ (⊙-congˡ 𝔢)) (
+    transⁿ (transⁿ (⊙-congʳ ⊙-assoc) (symⁿ ⊙-assoc))
+  (transⁿ (⊙-congˡ (isoʳ e')) id-trans-unitˡ))))
+
+exchange-to-from-in : {T T' S R : Ty Γ} (e : R ≅ᵗʸ T) (e' : T' ≅ᵗʸ S) {φ : S ↣ T} {φ' : T' ↣ R} →
+                      to e ⊙ φ ≅ⁿ φ' ⊙ to e' →
+                      φ ⊙ from e' ≅ⁿ from e ⊙ φ'
+exchange-to-from-in e e' 𝔢 =
+  transⁿ (⊙-congˡ (transⁿ (symⁿ id-trans-unitˡ) (⊙-congˡ (symⁿ (isoʳ e))))) (
+    transⁿ (⊙-congˡ ⊙-assoc) (
+  transⁿ (⊙-congˡ (⊙-congʳ 𝔢)) (
+    transⁿ (transⁿ (⊙-congˡ (symⁿ ⊙-assoc)) ⊙-assoc)
+  (transⁿ (⊙-congʳ (isoˡ e')) id-trans-unitʳ))))
+
+exchange-from-to-out : {T T' S R : Ty Γ} (e : S ≅ᵗʸ T) (e' : T' ≅ᵗʸ R) {φ : T ↣ R} {φ' : S ↣ T'} →
+                       φ ⊙ from e ≅ⁿ from e' ⊙ φ' →
+                       to e' ⊙ φ ≅ⁿ φ' ⊙ to e
+exchange-from-to-out e e' 𝔢 = exchange-to-from-out (symᵗʸ e) (symᵗʸ e') 𝔢
+
+exchange-from-to-in : {T T' S R : Ty Γ} (e : T ≅ᵗʸ R) (e' : S ≅ᵗʸ T') {φ : S ↣ T} {φ' : T' ↣ R} →
+                      from e ⊙ φ ≅ⁿ φ' ⊙ from e' →
+                      φ ⊙ to e' ≅ⁿ to e ⊙ φ'
+exchange-from-to-in e e' 𝔢 = exchange-to-from-in (symᵗʸ e) (symᵗʸ e') 𝔢
+
 
 --------------------------------------------------
 -- Substitution of types
@@ -520,6 +555,28 @@ ty-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1
                           T [ σ2 ] [ σ1 ] ≅ᵗʸ T [ τ2 ] [ τ1 ]
 ty-subst-cong-subst-2-2 T ε =
   transᵗʸ (ty-subst-comp T _ _) (transᵗʸ (ty-subst-cong-subst ε T) (symᵗʸ (ty-subst-comp T _ _)))
+
+ty-subst-cong-subst-2-2-id : {σ : Γ ⇒ Δ} (T : Ty Δ) →
+                             transᵗʸ (ty-subst-cong-subst-2-2 T (transˢ (id-subst-unitˡ σ) (symˢ (id-subst-unitʳ σ)))) (ty-subst-id (T [ σ ]))
+                               ≅ᵉ
+                             ty-subst-cong-ty σ (ty-subst-id T)
+eq (from-eq (ty-subst-cong-subst-2-2-id T)) _ = strong-ty-id T
+
+ty-subst-cong-subst-2-2-natural-from : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
+                                       {T S : Ty Θ} (φ : T ↣ S) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
+                                       from (ty-subst-cong-subst-2-2 S ε) ⊙ ty-subst-map σ1 (ty-subst-map σ2 φ)
+                                         ≅ⁿ
+                                       ty-subst-map τ1 (ty-subst-map τ2 φ) ⊙ from (ty-subst-cong-subst-2-2 T ε)
+eq (ty-subst-cong-subst-2-2-natural-from φ ε) t = naturality φ
+
+
+ty-subst-cong-subst-2-2-natural-to : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
+                                     {T S : Ty Θ} (φ : T ↣ S) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
+                                     to (ty-subst-cong-subst-2-2 S ε) ⊙ ty-subst-map τ1 (ty-subst-map τ2 φ)
+                                       ≅ⁿ
+                                     ty-subst-map σ1 (ty-subst-map σ2 φ) ⊙ to (ty-subst-cong-subst-2-2 T ε)
+eq (ty-subst-cong-subst-2-2-natural-to φ ε) t = naturality φ
+
 
 -- Nicer syntax for substitutions coming from context equality
 ιc[_]_ : Γ ≅ᶜ Δ → Ty Δ → Ty Γ

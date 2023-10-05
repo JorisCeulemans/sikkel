@@ -4,6 +4,9 @@
 
 module Model.DRA.TwoCell where
 
+open import Data.Product renaming (_,_ to [_,_])
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
+
 open import Model.DRA.Basics
 
 open import Model.BaseCategory
@@ -52,6 +55,135 @@ transf (α ⓣ-vert β) = transf β ⓝ-vert transf α
 
 _ⓣ-hor_ : {μ μ' : DRA D E} {ρ ρ' : DRA C D} → TwoCell μ μ' → TwoCell ρ ρ' → TwoCell (μ ⓓ ρ) (μ' ⓓ ρ')
 transf (α ⓣ-hor β) = transf β ⓝ-hor transf α
+
+
+--------------------------------------------------
+-- A two-cell α from μ to ρ introduces a natural transformation
+--   from ⟨ μ ∣ _ ⟩ to ⟨ ρ ∣ _ [ key-subst α ] ⟩ (both seen as functors from
+--   Ty (Γ ,lock⟨ μ ⟩) to Ty Γ.
+
+coe-tm-helper : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} {A : Ty Γ} →
+                Tm (Γ ,, A) (⟨ μ ∣ T ⟩ [ π ]) → Tm (Γ ,, A) (⟨ ρ ∣ T [ key-subst α ] ⟩ [ π ])
+coe-tm-helper {μ = μ} {ρ} α {Γ} {T} t =
+  ι[ dra-natural ρ π ] (dra-intro ρ (ι[ ty-subst-cong-subst-2-2 T (key-subst-natural α) ] (
+      (dra-elim μ (ι⁻¹[ dra-natural μ π ] t))
+    [ key-subst α ]')))
+
+coe-tm : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} →
+         Tm (Γ ,, ⟨ μ ∣ T ⟩) (⟨ ρ ∣ T [ key-subst α ] ⟩ [ π ])
+coe-tm {μ = μ} {ρ} α {Γ} {T} = coe-tm-helper α ξ
+
+coe-trans : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} →
+            ⟨ μ ∣ T ⟩ ↣ ⟨ ρ ∣ T [ key-subst α ] ⟩
+func (coe-trans α) t = coe-tm α ⟨ _ , [ _ , t ] ⟩'
+naturality (coe-trans α) {eγ = refl} = naturality (coe-tm α) _ refl
+
+coe-tm-helper-cong : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} {A : Ty Γ} →
+                     {t t' : Tm (Γ ,, A) (⟨ μ ∣ T ⟩ [ π ])} →
+                     t ≅ᵗᵐ t' → coe-tm-helper α t ≅ᵗᵐ coe-tm-helper α t'
+coe-tm-helper-cong {μ = μ} {ρ} α et = ι-cong (dra-intro-cong ρ (ι-cong (tm-subst-cong-tm _ (dra-elim-cong μ (ι⁻¹-cong et)))))
+
+coe-tm-helper-convert : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T S : Ty (Γ ,lock⟨ μ ⟩)} {A : Ty Γ}
+                        (φ : T ↣ S) {t : Tm (Γ ,, A) (⟨ μ ∣ T ⟩ [ π ])} →
+                        convert-tm (ty-subst-map π (dra-map ρ (ty-subst-map _ φ))) (coe-tm-helper α t)
+                          ≅ᵗᵐ
+                        coe-tm-helper α (convert-tm (ty-subst-map π (dra-map μ φ)) t)
+coe-tm-helper-convert {μ = μ} {ρ} α φ =
+  transᵗᵐ (convert-tm-ι-2-2 {e' = dra-natural ρ π} (symⁿ (dra-natural-map-to ρ π _))) (ι-cong (
+  transᵗᵐ (dra-intro-convert ρ _) (dra-intro-cong ρ (
+  transᵗᵐ (convert-tm-ι-2-2 (symⁿ (ty-subst-cong-subst-2-2-natural-to φ _))) (ι-cong (
+  transᵗᵐ convert-tm-subst-commute (tm-subst-cong-tm _ (
+  transᵗᵐ (dra-elim-convert μ _) (dra-elim-cong μ (
+  convert-tm-ι-2-2 (dra-natural-map μ π φ))
+  )))))))))
+
+coe-tm-helper-subst : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} {A B : Ty Γ}
+                      {t : Tm (Γ ,, B) (⟨ μ ∣ T ⟩ [ π ])} (b : Tm (Γ ,, A) (B [ π ])) →
+                      ι⁻¹[ ty-subst-cong-subst-2-1 _ (ctx-ext-subst-β₁ π b) ] ((coe-tm-helper α t) [ π ∷ˢ b ]')
+                        ≅ᵗᵐ
+                      coe-tm-helper α (ι⁻¹[ ty-subst-cong-subst-2-1 _ (ctx-ext-subst-β₁ π b) ] (t [ π ∷ˢ b ]'))
+coe-tm-helper-subst {C = C} {μ = μ} {ρ} α {Γ} {T} b =
+  transᵗᵐ (ι⁻¹-cong (symᵗᵐ ι-subst-commute)) (
+  transᵗᵐ (ι-congᵉ-2-2 (move-symᵗʸ-out (symᵉ (dra-natural-ty-subst-2-1 ρ _)))) (ι-cong (
+  transᵗᵐ (ι⁻¹-cong (dra-intro-natural ρ _ _)) (
+    transᵗᵐ (ι-congᵉ-2-1 (transᵉ (transᵗʸ-congˡ symᵗʸ-transᵗʸ) (transᵉ transᵗʸ-assoc transᵗʸ-cancelʳ-symˡ))) (transᵗᵐ (ι-congᵉ (symᵉ (dra-cong-sym ρ))) (
+  transᵗᵐ (dra-intro-ι ρ _) (dra-intro-cong ρ (
+  transᵗᵐ (ι⁻¹-cong (symᵗᵐ ι-subst-commute)) (
+  transᵗᵐ (ι-congᵉ-2-2 lemma) (ι-cong (
+  transᵗᵐ (ι-cong (tm-subst-cong-subst-2-2 _ (key-subst-natural α))) (
+    transᵗᵐ (ι-congᵉ-2-1 (transᵉ transᵗʸ-assoc transᵗʸ-cancelʳ-symˡ)) (
+  transᵗᵐ ι⁻¹-subst-commute (tm-subst-cong-tm _ (
+  transᵗᵐ (ι⁻¹-cong (dra-elim-natural μ _ _)) (
+  transᵗᵐ (dra-elim-ι μ _) (dra-elim-cong μ (
+  transᵗᵐ (ι-cong (ι⁻¹-cong (symᵗᵐ ι⁻¹-subst-commute))) (
+  transᵗᵐ (symᵗᵐ ι-trans) (ι-congᵉ-2-2 (
+    transᵉ (transᵗʸ-congˡ (transᵗʸ-congˡ (dra-cong-sym μ))) (transᵉ (transᵗʸ-congˡ (symᵉ symᵗʸ-transᵗʸ)) (
+    transᵉ (symᵉ symᵗʸ-transᵗʸ) (transᵉ (symᵗʸ-cong (symᵉ (dra-natural-ty-subst-2-1 μ _))) symᵗʸ-transᵗʸ))))))))))))))))))))))))
+  where
+    open BaseCategory C
+    lemma : _ ≅ᵉ transᵗʸ (ty-subst-cong-subst-2-2 T (key-subst-natural α))
+                         (transᵗʸ (symᵗʸ (ty-subst-cong-ty _ (ty-subst-cong-subst-2-1 T (ctx-fmap-cong-2-1 (ctx-functor μ) (ctx-ext-subst-β₁ π b)))))
+                                  (symᵗʸ (ty-subst-cong-subst-2-2 _ (key-subst-natural α))))
+    eq (from-eq lemma) _ = trans (sym (ty-comp T)) (trans (ty-cong T (trans hom-idʳ (sym (trans hom-idˡ hom-idʳ)))) (trans (ty-comp T) (ty-comp T)))
+
+coe-tm-helper-ⓣ : {μ ρ κ : DRA C D} (α : TwoCell μ ρ) (β : TwoCell ρ κ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
+                  {A : Ty Γ} {t : Tm (Γ ,, A) (⟨ μ ∣ T ⟩ [ π ])} →
+                  coe-tm-helper β (coe-tm-helper α t)
+                    ≅ᵗᵐ
+                  ι[ ty-subst-cong-ty π (dra-cong κ (ty-subst-comp T _ _)) ] (coe-tm-helper (β ⓣ-vert α) t)
+coe-tm-helper-ⓣ {C} {μ = μ} {ρ} {κ} α β {Γ} {T} =
+  transᵗᵐ (ι-cong (dra-intro-cong κ (ι-cong (tm-subst-cong-tm _ (transᵗᵐ (dra-elim-cong ρ ι-symˡ) (dra-β ρ _)))))) (
+  transᵗᵐ (ι-cong (dra-intro-cong κ (ι-cong (symᵗᵐ ι-subst-commute)))) (
+  transᵗᵐ (ι-cong (dra-intro-cong κ (transᵗᵐ (symᵗᵐ ι-trans) (ι-cong (tm-subst-comp _ _ _))))) (
+  transᵗᵐ (ι-cong (dra-intro-cong κ (ι-congᵉ-2-2 lemma))) (
+  transᵗᵐ (ι-cong (symᵗᵐ (dra-intro-ι κ _))) (ι-congᵉ-2-2 (dra-natural-ty-eq κ π _))))))
+  where
+    open BaseCategory C
+    lemma : _ ≅ᵉ transᵗʸ (ty-subst-cong-ty _ (ty-subst-comp _ _ _)) (ty-subst-cong-subst-2-2 _ (key-subst-natural (β ⓣ-vert α)))
+    eq (from-eq lemma) t = trans (sym (ty-comp T)) (ty-cong T hom-idˡ)
+
+
+coe-tm-natural : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T S : Ty (Γ ,lock⟨ μ ⟩)}
+                 (φ : T ↣ S) →
+                 convert-tm (ty-subst-map π (dra-map ρ (ty-subst-map _ φ))) (coe-tm α)
+                   ≅ᵗᵐ
+                 ι⁻¹[ ty-subst-cong-subst-2-1 _ (,,-map-π _) ] (coe-tm α [ ,,-map (dra-map μ φ) ]')
+coe-tm-natural {μ = μ} {ρ} α φ =
+  transᵗᵐ (coe-tm-helper-convert α φ) (transᵗᵐ (coe-tm-helper-cong α (ξ-convert _)) (symᵗᵐ (coe-tm-helper-subst α _)))
+
+coe-trans-natural : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T S : Ty (Γ ,lock⟨ μ ⟩)}
+                    (φ : T ↣ S) →
+                    dra-map ρ (ty-subst-map (key-subst α) φ) ⊙ coe-trans α ≅ⁿ coe-trans α ⊙ dra-map μ φ
+eq (coe-trans-natural {ρ = ρ} α {S = S} φ) t = trans (eq (coe-tm-natural α φ) _) (strong-ty-id ⟨ ρ ∣ S [ key-subst α ] ⟩)
+
+coe-tm-id : (μ : DRA C D) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} →
+            coe-tm {μ = μ} id-cell ≅ᵗᵐ ι[ ty-subst-cong-ty π (dra-cong μ (ty-subst-id T)) ] ξ
+coe-tm-id μ =
+  transᵗᵐ (ι-cong (dra-intro-cong μ (ι-cong (tm-subst-id _)))) (
+  transᵗᵐ (ι-cong (dra-intro-cong μ (ι-congᵉ-2-1 (ty-subst-cong-subst-2-2-id _)))) (
+  transᵗᵐ (ι-cong (dra-intro-cong μ (dra-elim-ι μ _))) (
+  transᵗᵐ (ι-cong (dra-η μ _)) (
+  transᵗᵐ (ι-congᵉ-2-2 (dra-natural-ty-eq μ π (ty-subst-id _))) (
+  ι-cong ι-symʳ)))))
+
+coe-trans-id : (μ : DRA C D) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} →
+               coe-trans {μ = μ} id-cell ≅ⁿ dra-map μ (ty-subst-id-to T)
+eq (coe-trans-id μ) t = eq (coe-tm-id μ) [ _ , t ]
+
+coe-tm-ⓣ : {μ ρ κ : DRA C D} {α : TwoCell μ ρ} {β : TwoCell ρ κ} {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} →
+           coe-tm (β ⓣ-vert α)
+             ≅ᵗᵐ
+           ι⁻¹[ ty-subst-cong-ty _ (dra-cong κ (ty-subst-comp T _ _)) ] ι⁻¹[ ty-subst-cong-subst-2-1 _ (ctx-ext-subst-β₁ _ _) ]
+                (coe-tm β [ π ∷ˢ coe-tm α ]')
+coe-tm-ⓣ {α = α} {β} = symᵗᵐ (
+  transᵗᵐ (ι⁻¹-cong (coe-tm-helper-subst β _)) (move-ι⁻¹-left (
+  transᵗᵐ (coe-tm-helper-cong β (move-ι⁻¹-left (ctx-ext-subst-β₂ π _))) (
+  coe-tm-helper-ⓣ α β))))
+
+coe-trans-ⓣ : {μ ρ κ : DRA C D} {α : TwoCell μ ρ} {β : TwoCell ρ κ} {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} →
+              coe-trans (β ⓣ-vert α) ≅ⁿ dra-map κ (ty-subst-comp-from T _ _) ⊙ coe-trans β ⊙ coe-trans α
+eq (coe-trans-ⓣ {κ = κ} {α} {β}) t =
+  trans (eq (coe-tm-ⓣ {α = α} {β}) [ _ , t ]) (cong (func (dra-map κ _)) (strong-ty-id ⟨ κ ∣ _ ⟩))
 
 
 --------------------------------------------------
@@ -114,3 +246,21 @@ key-subst-eq (2-cell-interchange {ρ'' = ρ''} {δ = δ}) =
 -- unit for ⓣ-hor, we need the associator and unitor in the 2-category
 -- of base categories, DRAs and 2-cells. These proofs are therefore
 -- included in Model.DRA.Equivalence.
+
+
+coe-tm-cong : {μ ρ : DRA C D} {α β : TwoCell μ ρ} {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
+              (ℯ : α ≅ᵗᶜ β) →
+              ι⁻¹[ ty-subst-cong-ty π (dra-cong ρ (ty-subst-cong-subst (key-subst-eq ℯ) T)) ] coe-tm α ≅ᵗᵐ coe-tm β
+coe-tm-cong {μ = μ} {ρ} {T = T} ℯ = move-ι⁻¹-left (symᵗᵐ (
+  transᵗᵐ (ι-congᵉ-2-2 (symᵉ (dra-natural-ty-eq ρ _ _))) (ι-cong (
+  transᵗᵐ (dra-intro-ι ρ _) (dra-intro-cong ρ (
+  transᵗᵐ (ι-congᵉ-2-2 lemma) (ι-cong (
+  symᵗᵐ (tm-subst-cong-subst _ (key-subst-eq ℯ))))))))))
+  where
+    lemma : _ ≅ᵉ _
+    eq (from-eq lemma) _ = trans (sym (ty-comp T)) (trans (ty-cong T refl) (ty-comp T))
+
+coe-trans-cong : {μ ρ : DRA C D} {α β : TwoCell μ ρ} {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
+                 (ℯ : α ≅ᵗᶜ β) →
+                 dra-map ρ (ty-subst-eq-subst-morph (key-subst-eq ℯ) T) ⊙ coe-trans α ≅ⁿ coe-trans β
+eq (coe-trans-cong ℯ) t = eq (coe-tm-cong ℯ) _

@@ -71,7 +71,7 @@ ctx-ext-subst-β₁ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ 
 eq (ctx-ext-subst-β₁ σ t) δ = refl
 
 ctx-ext-subst-β₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
-                   ξ [ ⟨ σ , t ∈ T ⟩ ]' ≅ᵗᵐ ι[ transᵗʸ (ty-subst-comp T π _) (ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) T) ] t
+                   ξ [ ⟨ σ , t ∈ T ⟩ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-1 T (ctx-ext-subst-β₁ σ t) ] t
 eq (ctx-ext-subst-β₂ {T = T} σ t) _ = sym (strong-ty-id T)
 
 ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≅ˢ τ
