@@ -22,7 +22,7 @@ private
     Δ Γ Θ Ξ : Ctx C
 
 
-data Val : Ctx C → Ctx C → Set where
+data Val : Ctx C → Ctx C → Set₁ where
   var : {Δ : Ctx C} {Γ : Ctx C} (σ : Δ ⇒ Γ) → Val Δ Γ
   id' : {Γ : Ctx C} → Val Γ Γ
   !◇' : {Γ : Ctx C} → Val Γ ◇
