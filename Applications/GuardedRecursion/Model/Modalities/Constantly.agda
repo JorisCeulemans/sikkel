@@ -77,7 +77,7 @@ module _ {T : Ty (now Γ)} where
   eq (constantly-ty-η t) {n} γ =
     begin
       T ⟪ tt , ctx-id Γ ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
-    ≡˘⟨ cong (T ⟪ tt , ctx-id Γ ⟫_) (Tm.naturality t z≤n refl) ⟩
+    ≡⟨ cong (T ⟪ tt , ctx-id Γ ⟫_) (Tm.naturality t z≤n refl) ⟨
       T ⟪ tt , ctx-id Γ ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
     ≡⟨ ty-cong-2-1 T refl ⟩
       T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')

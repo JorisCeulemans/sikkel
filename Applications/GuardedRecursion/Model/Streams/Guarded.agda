@@ -69,7 +69,7 @@ map-map-cong : ∀ {n ℓa ℓb ℓc ℓd} {A : Set ℓa} {B : Set ℓb} {C : Se
 map-map-cong {f = f}{g}{f'}{g'} e {as} =
   begin
     map g (map f as)
-  ≡˘⟨ map-∘ g f as ⟩
+  ≡⟨ map-∘ g f as ⟨
     map (g ∘ f) as
   ≡⟨ map-cong e as ⟩
     map (g' ∘ f') as
@@ -84,7 +84,7 @@ map-inverse : ∀ {n} {A : Set ℓ} {B : Set ℓ'}
 map-inverse {f = f}{g} e {as} =
   begin
     map g (map f as)
-  ≡˘⟨ map-∘ g f as ⟩
+  ≡⟨ map-∘ g f as ⟨
     map (g ∘ f) as
   ≡⟨ map-cong e as ⟩
     map id as
@@ -181,7 +181,7 @@ module _ {A : Ty (now Γ)} where
   naturality (from (gstream-natural σ)) {t = v} =
     begin
       map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (A ⟪ tt , _ ⟫_) v))
-    ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟩
+    ≡⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟨
       map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v))
     ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
       map (ty-ctx-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
@@ -190,7 +190,7 @@ module _ {A : Ty (now Γ)} where
   naturality (to (gstream-natural σ)) {t = v} =
     begin
       map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (A ⟪ tt , _ ⟫_) v))
-    ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟩
+    ≡⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟨
       map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v))
     ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
       map (ty-ctx-subst A _) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
@@ -204,7 +204,7 @@ func (from (gstream-cong A=A')) = map (func (from A=A'))
 naturality (from (gstream-cong {A = A}{A' = A'} A=A')) {t = v} =
   begin
     map (A' ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (func (from A=A')) v))
-  ≡˘⟨ cong (map (A' ⟪ tt , _ ⟫_)) map-first-≤ ⟩
+  ≡⟨ cong (map (A' ⟪ tt , _ ⟫_)) map-first-≤ ⟨
     map (A' ⟪ tt , _ ⟫_) (map (func (from A=A')) (first-≤ (s≤s _) v))
   ≡⟨ map-map-cong (λ _ → naturality (from A=A')) ⟩
     map (func (from A=A')) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎
@@ -213,7 +213,7 @@ func (to (gstream-cong A=A')) = map (func (to A=A'))
 naturality (to (gstream-cong {A = A}{A' = A'} A=A')) {t = v} =
   begin
     map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s _) (map (func (to A=A')) v))
-  ≡˘⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟩
+  ≡⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟨
     map (A ⟪ tt , _ ⟫_) (map (func (to A=A')) (first-≤ (s≤s _) v))
   ≡⟨ map-map-cong (λ _ → naturality (to A=A')) ⟩
     map (func (to A=A')) (map (A' ⟪ tt , _ ⟫_) (first-≤ (s≤s _) v)) ∎

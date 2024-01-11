@@ -35,7 +35,7 @@ ctx-m≤1+n : (Γ : Ctx ω) {m≤n : m ≤ n} {γ : Γ ⟨ suc n ⟩} →
 ctx-m≤1+n {m = m}{n = n} Γ {m≤n}{γ} =
   begin
     Γ ⟪ m≤n ⟫ (Γ ⟪ n≤1+n n ⟫ γ)
-  ≡˘⟨ ctx-comp Γ ⟩
+  ≡⟨ ctx-comp Γ ⟨
     Γ ⟪ ≤-trans m≤n (n≤1+n n) ⟫ γ
   ≡⟨ cong (Γ ⟪_⟫ γ) (≤-irrelevant _ _) ⟩
     Γ ⟪ ≤-trans (n≤1+n m)(s≤s m≤n) ⟫ γ
@@ -205,7 +205,7 @@ fixpoint-unique : {T : Ty Γ} (f  : Tm Γ (▻' T ⇛ T)) (t s : Tm Γ T) →
 eq (fixpoint-unique f t s t-fix s-fix) {x = zero}  γ =
   begin
     t ⟨ zero , γ ⟩'
-  ≡˘⟨ eq t-fix γ ⟩
+  ≡⟨ eq t-fix γ ⟨
     f €⟨ zero , γ ⟩ tt
   ≡⟨ eq s-fix γ ⟩
     s ⟨ zero , γ ⟩' ∎
@@ -213,7 +213,7 @@ eq (fixpoint-unique f t s t-fix s-fix) {x = zero}  γ =
 eq (fixpoint-unique f t s t-fix s-fix) {x = suc n} γ =
   begin
     t ⟨ suc n , γ ⟩'
-  ≡˘⟨ eq t-fix γ ⟩
+  ≡⟨ eq t-fix γ ⟨
     f €⟨ suc n , γ ⟩ (t ⟨ n , _ ⟩')
   ≡⟨ cong (f €⟨ suc n , γ ⟩_) (eq (fixpoint-unique f t s t-fix s-fix) {x = n}  _) ⟩
     f €⟨ suc n , γ ⟩ (s ⟨ n , _ ⟩')
@@ -298,7 +298,7 @@ eq (löb-ι f) {zero} _ = refl
 eq (löb-ι {Γ = Γ}{T = T}{T' = T'}{T=T' = T=T'} f) {suc n} γ = cong (func (to T=T')) (€-cong (reflᵗᵐ {t = f}) (
   begin
     löb T' f ⟨ n , _ ⟩'
-  ≡˘⟨ eq (isoʳ T=T') _ ⟩
+  ≡⟨ eq (isoʳ T=T') _ ⟨
     func (from T=T') (func (to T=T') (löb T' f ⟨ n , _ ⟩'))
   ≡⟨ cong (func (from T=T')) (eq (löb-ι f) {n} _) ⟩
     func (from T=T') (löb T g ⟨ n , _ ⟩') ∎))
@@ -386,7 +386,7 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , ctx-id Γ ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ (func σ δ) ⟩')
     ≡⟨ $-cong (f ⟨ suc n , func σ δ ⟩') refl ⟩
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (löb T f ⟨ n , Γ ⟪ n≤1+n n ⟫ (func σ δ) ⟩')
-    ≡˘⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_) (naturality (löb T f) ≤-refl β) ⟩
+    ≡⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_) (naturality (löb T f) ≤-refl β) ⟨
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (T ⟪ ≤-refl , β ⟫ ((löb T f) [ σ ]' ⟨ n , Δ ⟪ n≤1+n n ⟫ δ ⟩'))
     ≡⟨ cong (f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩_ ∘ T ⟪ ≤-refl , β ⟫_) (eq (löb-natural f) {n} (Δ ⟪ n≤1+n n ⟫ δ)) ⟩
       f ⟨ suc n , func σ δ ⟩' $⟨ s≤s ≤-refl , α ⟩ (T ⟪ ≤-refl , β ⟫ (löb (T [ σ ]) g ⟨ n , Δ ⟪ n≤1+n n ⟫ δ ⟩')) ∎

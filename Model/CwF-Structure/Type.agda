@@ -75,7 +75,7 @@ ty-cong-2-1 : (T : Ty Γ)
 ty-cong-2-1 T {f}{g}{h} e-hom {t = t} =
   begin
     T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
-  ≡˘⟨ ty-comp T ⟩
+  ≡⟨ ty-comp T ⟨
     T ⟪ g ∙ f , _ ⟫ t
   ≡⟨ ty-cong T e-hom ⟩
     T ⟪ h , _ ⟫ t ∎
@@ -91,7 +91,7 @@ ty-cong-2-2 : (T : Ty Γ)
 ty-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
   begin
     T ⟪ f , _ ⟫ T ⟪ g , _ ⟫ t
-  ≡˘⟨ ty-comp T ⟩
+  ≡⟨ ty-comp T ⟨
     T ⟪ g ∙ f , _ ⟫ t
   ≡⟨ ty-cong T e-hom ⟩
     T ⟪ g' ∙ f' , _ ⟫ t

@@ -8,7 +8,6 @@ open import Function using (_∘_)
 open import Data.Nat
 open import Data.Product using (_×_) renaming (_,_ to [_,_])
 open import Data.Sum using (_⊎_; inj₁; inj₂; map)
-open import Data.Sum.Relation.Binary.Pointwise
 open import Data.Unit using (⊤; tt)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality

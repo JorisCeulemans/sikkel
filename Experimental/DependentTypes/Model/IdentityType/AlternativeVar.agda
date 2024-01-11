@@ -4,7 +4,7 @@ module Experimental.DependentTypes.Model.IdentityType.AlternativeVar {C : BaseCa
 
 open import Data.Product renaming (_,_ to [_,_])
 open import Function
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Relation.Binary.PropositionalEquality hiding ([_]; J)
 
 open import Model.Helpers
 open import Model.CwF-Structure

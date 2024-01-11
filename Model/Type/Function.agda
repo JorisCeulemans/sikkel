@@ -75,7 +75,7 @@ lower-presheaffunc {Γ = Γ}{y = y}{z = z}{T = T}{S = S} ρ-yz {γz}{γy} eγ-zy
     g-nat {ρ-wx = ρ-wx}{ρ-xy}{eγ-yx = eγ-yx}{eγ-xw}{t = t} =
       begin
         f $⟨ ρ-yz ∙ (ρ-xy ∙ ρ-wx) , strong-ctx-comp Γ eγ-zy (strong-ctx-comp Γ eγ-yx eγ-xw) ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
-      ≡˘⟨ $-cong f ∙assoc ⟩
+      ≡⟨ $-cong f ∙assoc ⟨
         f $⟨ (ρ-yz ∙ ρ-xy) ∙ ρ-wx , strong-ctx-comp Γ (strong-ctx-comp Γ eγ-zy eγ-yx) eγ-xw ⟩ (T ⟪ ρ-wx , eγ-xw ⟫ t)
       ≡⟨ naturality f ⟩
         (S ⟪ ρ-wx , eγ-xw ⟫ (f $⟨ ρ-yz ∙ ρ-xy , strong-ctx-comp Γ eγ-zy eγ-yx ⟩ t)) ∎
@@ -97,7 +97,7 @@ lam {S = S} T b ⟨ z , γz ⟩' = MkFun (λ ρ-yz {γy} eγ t → b ⟨ _ , [ �
                                     (λ {x = x}{y}{ρ-xy}{_}{γx}{γy}{eγ-zy}{eγ-yx}{t} →
   begin
     b ⟨ x , [ γx , T ⟪ ρ-xy , eγ-yx ⟫ t ] ⟩'
-  ≡˘⟨ naturality b ρ-xy (to-Σ-ty-eq T eγ-yx (ty-cong-2-1 T hom-idʳ)) ⟩
+  ≡⟨ naturality b ρ-xy (to-Σ-ty-eq T eγ-yx (ty-cong-2-1 T hom-idʳ)) ⟨
     S ⟪ ρ-xy , _ ⟫ b ⟨ y , [ γy , t ] ⟩'
   ≡⟨ ty-cong S refl ⟩
     S ⟪ ρ-xy , eγ-yx ⟫ b ⟨ y , [ γy , t ] ⟩' ∎)
@@ -119,7 +119,7 @@ _€⟨_,_⟩_ {Γ = Γ} f x γ t = f ⟨ x , γ ⟩' $⟨ hom-id , ctx-id Γ �
 €-natural {Γ = Γ}{T = T}{S = S} f {ρ}{γy}{γx}{eγ}{t} =
   begin
     S ⟪ ρ , eγ ⟫ (f ⟨ _ , γy ⟩' $⟨ hom-id , ctx-id Γ ⟩ t)
-  ≡˘⟨ naturality (f ⟨ _ , γy ⟩') ⟩
+  ≡⟨ naturality (f ⟨ _ , γy ⟩') ⟨
     f ⟨ _ , γy ⟩' $⟨ hom-id ∙ ρ , strong-ctx-comp Γ (ctx-id Γ) eγ ⟩ (T ⟪ ρ , eγ ⟫ t)
   ≡⟨ $-cong (f ⟨ _ , γy ⟩') (trans hom-idˡ (sym hom-idʳ)) ⟩
     f ⟨ _ , γy ⟩' $⟨ ρ ∙ hom-id , strong-ctx-comp Γ eγ (ctx-id Γ) ⟩ (T ⟪ ρ , eγ ⟫ t)
@@ -157,11 +157,11 @@ _$⟨_,_⟩_ (pshfun-dimap η φ f) ρ eγ t' = func φ (f $⟨ ρ , eγ ⟩ fun
 naturality (pshfun-dimap {T = T}{T'}{S}{S'} η φ {z} {γ} f) {eγ-zy = eγ-zy} {eγ-yx} {t'} =
   begin
     func φ (f $⟨ _ , _ ⟩ func η (T' ⟪ _ , eγ-yx ⟫ t'))
-  ≡˘⟨ cong (func φ ∘ f $⟨ _ , _ ⟩_) (naturality η) ⟩
+  ≡⟨ cong (func φ ∘ f $⟨ _ , _ ⟩_) (naturality η) ⟨
     func φ (f $⟨ _ , _ ⟩ (T ⟪ _ , eγ-yx ⟫ func η t'))
   ≡⟨ cong (func φ) (naturality f) ⟩
     func φ (S ⟪ _ , eγ-yx ⟫ (f $⟨ _ , eγ-zy ⟩ func η t'))
-  ≡˘⟨ naturality φ ⟩
+  ≡⟨ naturality φ ⟨
     S' ⟪ _ , eγ-yx ⟫ func φ (f $⟨ _ , eγ-zy ⟩ func η t') ∎
   where open ≡-Reasoning
 
@@ -292,7 +292,7 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
         ζ' = _
     in begin
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , ζ ⟫ t)
-    ≡˘⟨ cong (S ⟪ hom-id , α ⟫_ ∘ f $⟨ ρ-yz ∙ ρ-xy , β ⟩_) (ty-cong-2-1 T hom-idˡ) ⟩
+    ≡⟨ cong (S ⟪ hom-id , α ⟫_ ∘ f $⟨ ρ-yz ∙ ρ-xy , β ⟩_) (ty-cong-2-1 T hom-idˡ) ⟨
       S ⟪ hom-id , α ⟫ f $⟨ ρ-yz ∙ ρ-xy , β ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
     ≡⟨ cong (S ⟪ hom-id , α ⟫_) ($-cong f (sym hom-idʳ)) ⟩
       S ⟪ hom-id , α ⟫ f $⟨ (ρ-yz ∙ ρ-xy) ∙ hom-id , _ ⟩ (T ⟪ hom-id , _ ⟫ (T ⟪ hom-id , ζ' ⟫ t))
@@ -393,7 +393,7 @@ eq (↣-⇛-iso η) _ = refl
 eq (⇛-↣-iso {Γ = Γ} f) {x} γ = to-pshfun-eq (λ {y} ρ {γ'} eγ t →
   begin
     f ⟨ y , γ' ⟩' $⟨ hom-id , ctx-id Γ ⟩ t
-  ≡˘⟨ cong (_$⟨ hom-id , ctx-id Γ ⟩ t) (naturality f ρ eγ) ⟩
+  ≡⟨ cong (_$⟨ hom-id , ctx-id Γ ⟩ t) (naturality f ρ eγ) ⟨
     f ⟨ x , γ ⟩' $⟨ ρ ∙ hom-id , strong-ctx-comp Γ eγ (ctx-id Γ) ⟩ t
   ≡⟨ $-cong (f ⟨ x , γ ⟩') hom-idʳ ⟩
     f ⟨ x , γ ⟩' $⟨ ρ , eγ ⟩ t ∎)

@@ -23,7 +23,7 @@ Id a b ⟨ x , γ ⟩ = a ⟨ x , γ ⟩' ≡ b ⟨ x , γ ⟩'
 _⟪_,_⟫_ (Id {A = A} a b) {x} {y} f {γy} {γx} eγ ea =
   begin
     a ⟨ x , γx ⟩'
-  ≡˘⟨ Tm.naturality a f eγ ⟩
+  ≡⟨ Tm.naturality a f eγ ⟨
     A ⟪ f , eγ ⟫ a ⟨ y , γy ⟩'
   ≡⟨ cong (A ⟪ f , eγ ⟫_) ea ⟩
     A ⟪ f , eγ ⟫ b ⟨ y , γy ⟩'

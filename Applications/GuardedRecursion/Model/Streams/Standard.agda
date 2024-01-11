@@ -5,7 +5,7 @@
 module Applications.GuardedRecursion.Model.Streams.Standard where
 
 open import Data.Nat
-open import Data.Unit hiding (_≤_)
+open import Data.Unit
 open import Data.Vec as Vec using (Vec; _∷_; [])
 open import Data.Vec.Properties
 open import Function using (id; _∘_)
@@ -85,7 +85,7 @@ embed-term (extract-stream {A = A} clA exA) s = forever-tm (MkTm (λ n _ → Vec
         Vec.map (A ⟪ tt , refl ⟫_) (first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take n s')))
       ≡⟨ trans (map-cong (λ _ → ty-id A) _) (map-id _) ⟩
         first-≤ m≤n (Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take n s'))
-      ≡˘⟨ map-first-≤ ⟩
+      ≡⟨ map-first-≤ ⟨
         Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (first-≤ m≤n (take n s'))
       ≡⟨ cong (Vec.map _) (take-first m≤n s') ⟩
         Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩') (take m s') ∎

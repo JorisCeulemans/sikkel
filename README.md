@@ -10,7 +10,7 @@ For an overview of the MSFP paper "Sikkel: Multimode Simple Type Theory as an Ag
 
 ## Installation
 
-Sikkel is tested with Agda 2.6.4, but it is probably also still compatible with Agda 2.6.2 and 2.6.3. It uses the Agda standard library (version 1.7.3).
+Sikkel is tested with Agda 2.6.4.1, but it is probably also still compatible with Agda 2.6.4. It uses the Agda standard library (version 2.0).
 To use the library in your Agda development, perform
 ```
 git clone https://github.com/JorisCeulemans/sikkel.git

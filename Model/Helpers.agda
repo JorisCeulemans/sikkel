@@ -5,7 +5,7 @@ open import Axiom.UniquenessOfIdentityProofs
 open import Data.Bool using (Bool; true; false)
 open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming (_,_ to [_,_])
 open import Level
-open import Relation.Binary.PropositionalEquality hiding (Extensionality)
+open import Relation.Binary.PropositionalEquality
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Unary using (Pred; Decidable)
 
