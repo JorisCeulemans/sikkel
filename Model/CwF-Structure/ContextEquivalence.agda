@@ -70,25 +70,6 @@ isoʳ (transᶜ Δ=Γ Γ=Θ) =
     id-subst _ ∎
   where open ≅ˢ-Reasoning
 
-module ≅ᶜ-Reasoning where
-  infix  3 _∎
-  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
-  infix  1 begin_
-
-  begin_ : Γ ≅ᶜ Δ → Γ ≅ᶜ Δ
-  begin_ Γ=Δ = Γ=Δ
-
-  _≅⟨⟩_ : (Γ : Ctx C) → Γ ≅ᶜ Δ → Γ ≅ᶜ Δ
-  _ ≅⟨⟩ Γ=Δ = Γ=Δ
-
-  step-≅ : (Γ : Ctx C) → Δ ≅ᶜ Θ → Γ ≅ᶜ Δ → Γ ≅ᶜ Θ
-  step-≅ _ Δ≅Θ Γ≅Δ = transᶜ Γ≅Δ Δ≅Θ
-
-  step-≅˘ : (Γ : Ctx C) → Δ ≅ᶜ Θ → Δ ≅ᶜ Γ → Γ ≅ᶜ Θ
-  step-≅˘ _ Δ≅Θ Δ≅Γ = transᶜ (symᶜ Δ≅Γ) Δ≅Θ
-
-  _∎ : (Γ : Ctx C) → Γ ≅ᶜ Γ
-  _∎ _ = reflᶜ
-
-  syntax step-≅  Γ Δ≅Θ Γ≅Δ = Γ ≅⟨  Γ≅Δ ⟩ Δ≅Θ
-  syntax step-≅˘ Γ Δ≅Θ Δ≅Γ = Γ ≅˘⟨ Δ≅Γ ⟩ Δ≅Θ
+-- There is no module ≅ᶜ-Reasoning because Ctx C with _≅ᶜ_ is a
+-- groupoid and not a setoid. Hence we do not want to add reflᶜ to the
+-- end of every proof of type equivalence.

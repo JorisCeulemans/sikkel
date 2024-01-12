@@ -9,6 +9,8 @@ module Model.CwF-Structure.Type {C : BaseCategory} where
 open import Data.Product renaming (_,_ to [_,_])
 open import Function hiding (_⟨_⟩_; _↣_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.Reasoning.Syntax
+open import Preliminaries
 
 open import Model.Helpers
 open import Model.CwF-Structure.Context
@@ -151,28 +153,10 @@ eq (symⁿ η=φ) t = sym (eq η=φ t)
 transⁿ : {η φ µ : T ↣ S} → η ≅ⁿ φ → φ ≅ⁿ µ → η ≅ⁿ µ
 eq (transⁿ η=φ φ=µ) t = trans (eq η=φ t) (eq φ=µ t)
 
-module ≅ⁿ-Reasoning where
-  infix  3 _∎
-  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
-  infix  1 begin_
-
-  begin_ : ∀ {η φ : T ↣ S} → η ≅ⁿ φ → η ≅ⁿ φ
-  begin_ η=φ = η=φ
-
-  _≅⟨⟩_ : ∀ (η {φ} : T ↣ S) → η ≅ⁿ φ → η ≅ⁿ φ
-  _ ≅⟨⟩ η=φ = η=φ
-
-  step-≅ : ∀ (η {φ µ} : T ↣ S) → φ ≅ⁿ µ → η ≅ⁿ φ → η ≅ⁿ µ
-  step-≅ _ φ≅µ η≅φ = transⁿ η≅φ φ≅µ
-
-  step-≅˘ : ∀ (η {φ µ} : T ↣ S) → φ ≅ⁿ µ → φ ≅ⁿ η → η ≅ⁿ µ
-  step-≅˘ _ φ≅µ φ≅η = transⁿ (symⁿ φ≅η) φ≅µ
-
-  _∎ : ∀ (η : T ↣ S) → η ≅ⁿ η
-  _∎ _ = reflⁿ
-
-  syntax step-≅  η φ≅µ η≅φ = η ≅⟨  η≅φ ⟩ φ≅µ
-  syntax step-≅˘ η φ≅µ φ≅η = η ≅˘⟨ φ≅η ⟩ φ≅µ
+module ≅ⁿ-Reasoning {Γ}{T S : Ty Γ} where
+  open begin-syntax {A = T ↣ S} _≅ⁿ_ id public
+  open ≅-syntax {A = T ↣ S} _≅ⁿ_ _≅ⁿ_ transⁿ symⁿ public
+  open end-syntax {A = T ↣ S} _≅ⁿ_ reflⁿ public
 
 id-trans : (T : Ty Γ) → T ↣ T
 func (id-trans T) = id
@@ -242,7 +226,7 @@ isoˡ (transᵗʸ S=T T=R) =
     (to S=T ⊙ to T=R) ⊙ (from T=R ⊙ from S=T)
   ≅⟨ ⊙-assoc ⟩
     to S=T ⊙ (to T=R ⊙ (from T=R ⊙ from S=T))
-  ≅˘⟨ ⊙-congʳ ⊙-assoc ⟩
+  ≅⟨ ⊙-congʳ ⊙-assoc ⟨
     to S=T ⊙ ((to T=R ⊙ from T=R) ⊙ from S=T)
   ≅⟨ ⊙-congʳ (⊙-congˡ (isoˡ T=R)) ⟩
     to S=T ⊙ (id-trans _ ⊙ from S=T)
@@ -256,7 +240,7 @@ isoʳ (transᵗʸ S=T T=R) =
     (from T=R ⊙ from S=T) ⊙ (to S=T ⊙ to T=R)
   ≅⟨ ⊙-assoc ⟩
     from T=R ⊙ (from S=T ⊙ (to S=T ⊙ to T=R))
-  ≅˘⟨ ⊙-congʳ ⊙-assoc ⟩
+  ≅⟨ ⊙-congʳ ⊙-assoc ⟨
     from T=R ⊙ ((from S=T ⊙ to S=T) ⊙ to T=R)
   ≅⟨ ⊙-congʳ (⊙-congˡ (isoʳ S=T)) ⟩
     from T=R ⊙ (id-trans _ ⊙ to T=R)
@@ -266,28 +250,9 @@ isoʳ (transᵗʸ S=T T=R) =
     id-trans _ ∎
   where open ≅ⁿ-Reasoning
 
-module ≅ᵗʸ-Reasoning where
-  infix  3 _∎
-  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
-  infix  1 begin_
-
-  begin_ : T ≅ᵗʸ S → T ≅ᵗʸ S
-  begin_ T=S = T=S
-
-  _≅⟨⟩_ : (T : Ty Γ) → T ≅ᵗʸ S → T ≅ᵗʸ S
-  _ ≅⟨⟩ T=S = T=S
-
-  step-≅ : (T : Ty Γ) → S ≅ᵗʸ R → T ≅ᵗʸ S → T ≅ᵗʸ R
-  step-≅ _ S≅R T≅S = transᵗʸ T≅S S≅R
-
-  step-≅˘ : (T : Ty Γ) → S ≅ᵗʸ R → S ≅ᵗʸ T → T ≅ᵗʸ R
-  step-≅˘ _ S≅R S≅T = transᵗʸ (symᵗʸ S≅T) S≅R
-
-  _∎ : (T : Ty Γ) → T ≅ᵗʸ T
-  _∎ _ = reflᵗʸ
-
-  syntax step-≅  T S≅R T≅S = T ≅⟨  T≅S ⟩ S≅R
-  syntax step-≅˘ T S≅R S≅T = T ≅˘⟨ S≅T ⟩ S≅R
+-- There is no module ≅ᵗʸ-Reasoning because Ty Γ with _≅ᵗʸ_ is a
+-- groupoid and not a setoid. Hence we do not want to add reflᵗʸ to
+-- the end of every proof of type equivalence.
 
 
 -- Ty Γ is a groupoid and not a setoid (i.e. T ≅ᵗʸ S is not necessarily a proposition).
@@ -301,11 +266,11 @@ open _≅ᵉ_ public
 to-eq : {e1 e2 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → to e1 ≅ⁿ to e2
 to-eq {e1 = e1} {e2} 𝑒 = begin
     to e1
-  ≅˘⟨ id-trans-unitʳ ⟩
+  ≅⟨ id-trans-unitʳ ⟨
     to e1 ⊙ id-trans _
-  ≅˘⟨ ⊙-congʳ (isoʳ e2) ⟩
+  ≅⟨ ⊙-congʳ (isoʳ e2) ⟨
     to e1 ⊙ (from e2 ⊙ to e2)
-  ≅˘⟨ ⊙-assoc ⟩
+  ≅⟨ ⊙-assoc ⟨
     (to e1 ⊙ from e2) ⊙ to e2
   ≅⟨ ⊙-congˡ (⊙-congʳ (symⁿ (from-eq 𝑒))) ⟩
     (to e1 ⊙ from e1) ⊙ to e2

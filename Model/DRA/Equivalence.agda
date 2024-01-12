@@ -35,17 +35,17 @@ record _≅ᵈ_  {C D} (μ ρ : DRA C D) : Set₁ where
                          from (eq-lock Γ) ⊚ lock-fmap μ σ ≅ˢ lock-fmap ρ σ ⊚ from (eq-lock Δ)
   eq-lock-natural-from {Δ} {Γ} σ = begin
       from (eq-lock Γ) ⊚ lock-fmap μ σ
-    ≅˘⟨ id-subst-unitʳ _ ⟩
+    ≅⟨ id-subst-unitʳ _ ⟨
       (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ id-subst (lock μ Δ)
-    ≅˘⟨ ⊚-congʳ (isoˡ (eq-lock Δ)) ⟩
+    ≅⟨ ⊚-congʳ (isoˡ (eq-lock Δ)) ⟨
       (from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ (to (eq-lock Δ) ⊚ from (eq-lock Δ))
-    ≅˘⟨ ⊚-assoc ⟩
+    ≅⟨ ⊚-assoc ⟨
       ((from (eq-lock Γ) ⊚ lock-fmap μ σ) ⊚ to (eq-lock Δ)) ⊚ from (eq-lock Δ)
     ≅⟨ ⊚-congˡ ⊚-assoc ⟩
       (from (eq-lock Γ) ⊚ (lock-fmap μ σ ⊚ to (eq-lock Δ))) ⊚ from (eq-lock Δ)
-    ≅˘⟨ ⊚-congˡ (⊚-congʳ (eq-lock-natural-to σ)) ⟩
+    ≅⟨ ⊚-congˡ (⊚-congʳ (eq-lock-natural-to σ)) ⟨
       (from (eq-lock Γ) ⊚ (to (eq-lock Γ) ⊚ lock-fmap ρ σ)) ⊚ from (eq-lock Δ)
-    ≅˘⟨ ⊚-congˡ ⊚-assoc ⟩
+    ≅⟨ ⊚-congˡ ⊚-assoc ⟨
       ((from (eq-lock Γ) ⊚ to (eq-lock Γ)) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
     ≅⟨ ⊚-congˡ (⊚-congˡ (isoʳ (eq-lock Γ))) ⟩
       (id-subst (lock ρ Γ) ⊚ lock-fmap ρ σ) ⊚ from (eq-lock Δ)
@@ -54,24 +54,14 @@ record _≅ᵈ_  {C D} (μ ρ : DRA C D) : Set₁ where
     where open ≅ˢ-Reasoning
 
   eq-dra-tyˡ : {Γ : Ctx D} (T : Ty (lock ρ Γ)) → ⟨ μ ∣ T [ from (eq-lock Γ) ] ⟩ ≅ᵗʸ ⟨ ρ ∣ T ⟩
-  eq-dra-tyˡ {Γ = Γ} T = begin
-      ⟨ μ ∣ T [ from (eq-lock Γ) ] ⟩
-    ≅⟨ eq-dra-tyʳ (T [ from (eq-lock Γ) ]) ⟩
-      ⟨ ρ ∣ (T [ from (eq-lock Γ) ]) [ to (eq-lock Γ) ] ⟩
-    ≅⟨ dra-cong ρ (ty-subst-cong-subst-2-1 T (isoʳ (eq-lock Γ))) ⟩
-      ⟨ ρ ∣ T [ id-subst (Γ ,lock⟨ ρ ⟩) ] ⟩
-    ≅⟨ dra-cong ρ (ty-subst-id T) ⟩
-      ⟨ ρ ∣ T ⟩ ∎
-    where open ≅ᵗʸ-Reasoning
+  eq-dra-tyˡ {Γ = Γ} T =
+    transᵗʸ (eq-dra-tyʳ (T [ from (eq-lock Γ) ])) (
+    transᵗʸ (dra-cong ρ (ty-subst-cong-subst-2-1 T (isoʳ (eq-lock Γ)))) (
+    dra-cong ρ (ty-subst-id T)))
 
   eq-dra-closed : {A : ClosedTy C} → IsClosedNatural A → {Γ : Ctx D} → ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
-  eq-dra-closed {A = A} clA = begin
-      ⟨ μ ∣ A ⟩
-    ≅⟨ eq-dra-tyʳ A ⟩
-      ⟨ ρ ∣ A [ to (eq-lock _) ] ⟩
-    ≅⟨ dra-cong ρ (closed-natural clA (to (eq-lock _))) ⟩
-      ⟨ ρ ∣ A ⟩ ∎
-    where open ≅ᵗʸ-Reasoning
+  eq-dra-closed {A = A} clA =
+    transᵗʸ (eq-dra-tyʳ A) (dra-cong ρ (closed-natural clA (to (eq-lock _))))
 
 open _≅ᵈ_ public
 
@@ -93,22 +83,17 @@ eq-lock-natural-to (transᵈ {μ = μ} {ρ} {κ} μ=ρ ρ=κ) σ = begin
     to (eq-lock μ=ρ _) ⊚ (to (eq-lock ρ=κ _) ⊚ lock-fmap κ σ)
   ≅⟨ ⊚-congʳ (eq-lock-natural-to ρ=κ σ) ⟩
     to (eq-lock μ=ρ _) ⊚ (lock-fmap ρ σ ⊚ to (eq-lock ρ=κ _))
-  ≅˘⟨ ⊚-assoc ⟩
+  ≅⟨ ⊚-assoc ⟨
     (to (eq-lock μ=ρ _) ⊚ lock-fmap ρ σ) ⊚ to (eq-lock ρ=κ _)
   ≅⟨ ⊚-congˡ (eq-lock-natural-to μ=ρ σ) ⟩
     (lock-fmap μ σ ⊚ to (eq-lock μ=ρ _)) ⊚ to (eq-lock ρ=κ _)
   ≅⟨ ⊚-assoc ⟩
     lock-fmap μ σ ⊚ (to (eq-lock μ=ρ _) ⊚ to (eq-lock ρ=κ _)) ∎
   where open ≅ˢ-Reasoning
-eq-dra-tyʳ (transᵈ {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T = begin
-    ⟨ μ ∣ T ⟩
-  ≅⟨ eq-dra-tyʳ μ=ρ T ⟩
-    ⟨ ρ ∣ T [ to (eq-lock μ=ρ Γ) ] ⟩
-  ≅⟨ eq-dra-tyʳ ρ=κ (T [ to (eq-lock μ=ρ Γ) ]) ⟩
-    ⟨ κ ∣ (T [ to (eq-lock μ=ρ Γ) ]) [ to (eq-lock ρ=κ Γ) ] ⟩
-  ≅⟨ dra-cong κ (ty-subst-comp T _ _) ⟩
-    ⟨ κ ∣ T [ to (eq-lock μ=ρ Γ) ⊚ to (eq-lock ρ=κ Γ) ] ⟩ ∎
-  where open ≅ᵗʸ-Reasoning
+eq-dra-tyʳ (transᵈ {μ = μ} {ρ = ρ} {κ = κ} μ=ρ ρ=κ) {Γ = Γ} T =
+  transᵗʸ (eq-dra-tyʳ μ=ρ T) (
+  transᵗʸ (eq-dra-tyʳ ρ=κ (T [ to (eq-lock μ=ρ Γ) ])) (
+  dra-cong κ (ty-subst-comp T _ _)))
 
 𝟙-unitʳ : (μ : DRA C D) → μ ⓓ 𝟙 ≅ᵈ μ
 eq-lock (𝟙-unitʳ μ) Γ = reflᶜ
@@ -139,43 +124,19 @@ isoˡ (eq-lock (ⓓ-congˡ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (i
 isoʳ (eq-lock (ⓓ-congˡ μ ρ=ρ') Γ) = ctx-fmap-inverse (ctx-functor μ) (isoʳ (eq-lock ρ=ρ' Γ))
 eq-lock-natural-to (ⓓ-congˡ {ρ = ρ} {ρ'} μ ρ=ρ') σ = begin
     lock-fmap μ (to (eq-lock ρ=ρ' _)) ⊚ lock-fmap μ (lock-fmap ρ' σ)
-  ≅˘⟨ lock-fmap-⊚ μ _ _ ⟩
+  ≅⟨ lock-fmap-⊚ μ _ _ ⟨
     lock-fmap μ (to (eq-lock ρ=ρ' _) ⊚ lock-fmap ρ' σ)
   ≅⟨ lock-fmap-cong μ (eq-lock-natural-to ρ=ρ' σ) ⟩
     lock-fmap μ (lock-fmap ρ σ ⊚ to (eq-lock ρ=ρ' _))
   ≅⟨ lock-fmap-⊚ μ _ _ ⟩
     lock-fmap μ (lock-fmap ρ σ) ⊚ lock-fmap μ (to (eq-lock ρ=ρ' _)) ∎
   where open ≅ˢ-Reasoning
-eq-dra-tyʳ (ⓓ-congˡ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T = begin
-    ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩
-  ≅⟨ eq-dra-tyʳ ρ=ρ' ⟨ μ ∣ T ⟩ ⟩
-    ⟨ ρ' ∣ ⟨ μ ∣ T ⟩ [ to (eq-lock ρ=ρ' Γ) ] ⟩
-  ≅⟨ dra-cong ρ' (dra-natural μ (to (eq-lock ρ=ρ' Γ))) ⟩
-    ⟨ ρ' ∣ ⟨ μ ∣ T [ lock-fmap μ (to (eq-lock ρ=ρ' Γ)) ] ⟩ ⟩ ∎
-  where open ≅ᵗʸ-Reasoning
+eq-dra-tyʳ (ⓓ-congˡ {ρ = ρ} {ρ' = ρ'} μ ρ=ρ') {Γ = Γ} T =
+  transᵗʸ (eq-dra-tyʳ ρ=ρ' ⟨ μ ∣ T ⟩) (dra-cong ρ' (dra-natural μ (to (eq-lock ρ=ρ' Γ))))
 
-module ≅ᵈ-Reasoning where
-  infix  3 _∎
-  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
-  infix  1 begin_
-
-  begin_ : ∀ {μ ρ : DRA C D} → μ ≅ᵈ ρ → μ ≅ᵈ ρ
-  begin_ μ=ρ = μ=ρ
-
-  _≅⟨⟩_ : ∀ (μ {ρ} : DRA C D) → μ ≅ᵈ ρ → μ ≅ᵈ ρ
-  _ ≅⟨⟩ μ=ρ = μ=ρ
-
-  step-≅ : ∀ (μ {ρ κ} : DRA C D) → ρ ≅ᵈ κ → μ ≅ᵈ ρ → μ ≅ᵈ κ
-  step-≅ _ ρ≅κ μ≅ρ = transᵈ μ≅ρ ρ≅κ
-
-  step-≅˘ : ∀ (μ {ρ κ} : DRA C D) → ρ ≅ᵈ κ → ρ ≅ᵈ μ → μ ≅ᵈ κ
-  step-≅˘ _ ρ≅κ ρ≅μ = transᵈ (symᵈ ρ≅μ) ρ≅κ
-
-  _∎ : ∀ (μ : DRA C D) → μ ≅ᵈ μ
-  _∎ _ = reflᵈ
-
-  syntax step-≅  μ ρ≅κ μ≅ρ = μ ≅⟨  μ≅ρ ⟩ ρ≅κ
-  syntax step-≅˘ μ ρ≅κ ρ≅μ = μ ≅˘⟨ ρ≅μ ⟩ ρ≅κ
+-- There is no module ≅ᵈ-Reasoning because DRA C D with _≅ᵈ_ is a groupoid and not
+-- a setoid. Hence we do not want to add reflᵈ to the end of every
+-- proof of type equivalence.
 
 
 ≅ᵈ-to-2-cell : {μ ρ : DRA C D} → μ ≅ᵈ ρ → TwoCell μ ρ

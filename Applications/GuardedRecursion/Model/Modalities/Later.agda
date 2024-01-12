@@ -370,13 +370,7 @@ eq (later-natural-subst-eq-map _) {suc n} _ = refl
 module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
   ▻'-natural : (▻' T) [ σ ] ≅ᵗʸ ▻' (T [ σ ])
   ▻'-natural =
-    begin
-      ▻ (T [ from-earlier Γ ]) [ σ ]
-    ≅⟨ ▻-natural σ ⟩
-      ▻ (T [ from-earlier Γ ] [ ◄-subst σ ])
-    ≅⟨ ▻-cong (ty-subst-seq-cong (from-earlier Γ ∷ ◄-subst σ ◼) (σ ∷ (from-earlier Δ ◼)) T (from-earlier-natural σ)) ⟩
-      ▻ (T [ σ ] [ from-earlier Δ ]) ∎
-    where open ≅ᵗʸ-Reasoning
+    transᵗʸ (▻-natural σ) (▻-cong (ty-subst-seq-cong (from-earlier Γ ∷ ◄-subst σ ◼) (σ ∷ from-earlier Δ ◼) T (from-earlier-natural σ)))
 
   löb-natural : (f : Tm Γ (▻' T ⇛ T)) →
                 (löb T f) [ σ ]' ≅ᵗᵐ löb (T [ σ ]) (ι⁻¹[ ⇛-cong ▻'-natural reflᵗʸ ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]')))

@@ -76,7 +76,7 @@ concat-denote (σ ∷ σs) τs =
     ⟦ σ ⟧v ⊚ ⟦ σs ++ τs ⟧vs
   ≅⟨ ⊚-congʳ (concat-denote σs τs) ⟩
     ⟦ σ ⟧v ⊚ (⟦ σs ⟧vs ⊚ ⟦ τs ⟧vs)
-  ≅˘⟨ ⊚-assoc ⟩
+  ≅⟨ ⊚-assoc ⟨
     (⟦ σ ⟧v ⊚ ⟦ σs ⟧vs) ⊚ ⟦ τs ⟧vs ∎
   where open ≅ˢ-Reasoning
 
@@ -100,9 +100,9 @@ subst-reflect : (e1 e2 : Exp Δ Γ) → reduce (flatten e1) ≡ reduce (flatten 
 subst-reflect e1 e2 eq =
   begin
     ⟦ e1 ⟧e
-  ≅˘⟨ flatten-sound e1 ⟩
+  ≅⟨ flatten-sound e1 ⟨
     ⟦ flatten e1 ⟧vs
-  ≅˘⟨ reduce-sound (flatten e1) ⟩
+  ≅⟨ reduce-sound (flatten e1) ⟨
     ⟦ reduce (flatten e1) ⟧vs
   ≅⟨ vs-cong eq ⟩
     ⟦ reduce (flatten e2) ⟧vs

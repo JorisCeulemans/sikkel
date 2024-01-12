@@ -6,7 +6,10 @@ open import Model.BaseCategory
 
 module Model.CwF-Structure.Term {C : BaseCategory}  where
 
+open import Function using (id)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.Reasoning.Syntax
+open import Preliminaries
 
 open import Model.Helpers
 open import Model.CwF-Structure.Context
@@ -60,28 +63,10 @@ eq (symᵗᵐ t=t') γ = sym (eq t=t' γ)
 transᵗᵐ : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
 eq (transᵗᵐ t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
 
-module ≅ᵗᵐ-Reasoning where
-  infix  3 _∎
-  infixr 2 _≅⟨⟩_ step-≅ step-≅˘
-  infix  1 begin_
-
-  begin_ : ∀ {t s : Tm Γ T} → t ≅ᵗᵐ s → t ≅ᵗᵐ s
-  begin_ t=s = t=s
-
-  _≅⟨⟩_ : ∀ (t {s} : Tm Γ T) → t ≅ᵗᵐ s → t ≅ᵗᵐ s
-  _ ≅⟨⟩ t=s = t=s
-
-  step-≅ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t2 → t1 ≅ᵗᵐ t3
-  step-≅ _ t2=t3 t1=t2 = transᵗᵐ t1=t2 t2=t3
-
-  step-≅˘ : ∀ (t1 {t2 t3} : Tm Γ T) → t2 ≅ᵗᵐ t3 → t2 ≅ᵗᵐ t1 → t1 ≅ᵗᵐ t3
-  step-≅˘ _ t2=t3 t2=t1 = transᵗᵐ (symᵗᵐ t2=t1) t2=t3
-
-  _∎ : ∀ (t : Tm Γ T) → t ≅ᵗᵐ t
-  _∎ _ = reflᵗᵐ
-
-  syntax step-≅  t1 t2≅t3 t1≅t2 = t1 ≅⟨  t1≅t2 ⟩ t2≅t3
-  syntax step-≅˘ t1 t2≅t3 t2≅t1 = t1 ≅˘⟨ t2≅t1 ⟩ t2≅t3
+module ≅ᵗᵐ-Reasoning {Γ}{T} where
+  open begin-syntax {A = Tm Γ T} _≅ᵗᵐ_ id public
+  open ≅-syntax {A = Tm Γ T} _≅ᵗᵐ_ _≅ᵗᵐ_ transᵗᵐ symᵗᵐ public
+  open end-syntax {A = Tm Γ T} _≅ᵗᵐ_ reflᵗᵐ public
 
 
 --------------------------------------------------

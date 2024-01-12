@@ -59,7 +59,7 @@ module _ (μ : DRA C D) {Γ : Ctx D} where
       ≅⟨ pair-cong (dra-η μ (fst p)) (dra-η μ (snd p)) ⟩
         pair (fst p)
              (snd p)
-      ≅˘⟨ η-⊠ p ⟩
+      ≅⟨ η-⊠ p ⟨
         p ∎
       where open ≅ᵗᵐ-Reasoning
 
@@ -77,7 +77,7 @@ module _ (μ : DRA C D) {Γ : Ctx D} where
       ≅⟨ dra-intro-cong μ (pair-cong (dra-β μ _) (dra-β μ _)) ⟩
         dra-intro μ (pair (fst (dra-elim μ p))
                           (snd (dra-elim μ p)))
-      ≅˘⟨ dra-intro-cong μ (η-⊠ (dra-elim μ p)) ⟩
+      ≅⟨ dra-intro-cong μ (η-⊠ (dra-elim μ p)) ⟨
         dra-intro μ (dra-elim μ p)
       ≅⟨ dra-η μ p ⟩
         p ∎
@@ -91,7 +91,7 @@ module _ (μ : DRA C D) {Γ : Ctx D} where
   dra-unit'-η t =
     begin
       t
-    ≅˘⟨ dra-η μ t ⟩
+    ≅⟨ dra-η μ t ⟨
       dra-intro μ (dra-elim μ t)
     ≅⟨ dra-intro-cong μ (η-unit (dra-elim μ t)) ⟩
       dra-intro μ tt' ∎

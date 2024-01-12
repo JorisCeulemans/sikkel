@@ -98,25 +98,16 @@ s++-sound : (μs : SModalitySeq m'' m') (ρs : SModalitySeq m m'') →
             ⟦ μs s++ ρs ⟧smod-seq ≅ᵈ ⟦ μs ⟧smod-seq ⓓ ⟦ ρs ⟧smod-seq
 s++-sound []               ρs = symᵈ (𝟙-unitˡ _)
 s++-sound (μ ∷ [])         ρs = interpret-smod-cons μ ρs
-s++-sound (μ ∷ μs@(_ ∷ _)) ρs = begin
-    ⟦ μ ⟧smod ⓓ ⟦ μs s++ ρs ⟧smod-seq
-  ≅⟨ ⓓ-congʳ ⟦ μ ⟧smod (s++-sound μs ρs) ⟩
-    ⟦ μ ⟧smod ⓓ (⟦ μs ⟧smod-seq ⓓ ⟦ ρs ⟧smod-seq)
-  ≅˘⟨ ⓓ-assoc ⟦ μ ⟧smod ⟦ μs ⟧smod-seq ⟦ ρs ⟧smod-seq ⟩
-    (⟦ μ ⟧smod ⓓ ⟦ μs ⟧smod-seq) ⓓ ⟦ ρs ⟧smod-seq ∎
-  where open ≅ᵈ-Reasoning
+s++-sound (μ ∷ μs@(_ ∷ _)) ρs =
+  transᵈ (ⓓ-congʳ ⟦ μ ⟧smod (s++-sound μs ρs))
+         (symᵈ (ⓓ-assoc ⟦ μ ⟧smod ⟦ μs ⟧smod-seq ⟦ ρs ⟧smod-seq))
 
 flatten-sound : (μ : ModalityExpr m m') → ⟦ flatten μ ⟧smod-seq ≅ᵈ ⟦ μ ⟧modality
 flatten-sound 𝟙 = reflᵈ
-flatten-sound (μ ⓜ ρ) = begin
-    ⟦ flatten μ s++ flatten ρ ⟧smod-seq
-  ≅⟨ s++-sound (flatten μ) (flatten ρ) ⟩
-    ⟦ flatten μ ⟧smod-seq ⓓ ⟦ flatten ρ ⟧smod-seq
-  ≅⟨ ⓓ-congˡ ⟦ flatten ρ ⟧smod-seq (flatten-sound μ) ⟩
-    ⟦ μ ⟧modality ⓓ ⟦ flatten ρ ⟧smod-seq
-  ≅⟨ ⓓ-congʳ ⟦ μ ⟧modality (flatten-sound ρ) ⟩
-    ⟦ μ ⟧modality ⓓ ⟦ ρ ⟧modality ∎
-  where open ≅ᵈ-Reasoning
+flatten-sound (μ ⓜ ρ) =
+  transᵈ (s++-sound (flatten μ) (flatten ρ)) (
+  transᵈ (ⓓ-congˡ ⟦ flatten ρ ⟧smod-seq (flatten-sound μ)) (
+  ⓓ-congʳ ⟦ μ ⟧modality (flatten-sound ρ)))
 flatten-sound constantly = reflᵈ
 flatten-sound forever = reflᵈ
 flatten-sound later = reflᵈ
@@ -133,28 +124,16 @@ reduce-smod-seq (μ ∷ μs) = reduce-smod-seq-cons μ (reduce-smod-seq μs)
 
 reduce-smod-seq-cons-sound : (μ : SModalityExpr m'' m') (μs : SModalitySeq m m'') →
                              ⟦ reduce-smod-seq-cons μ μs ⟧smod-seq ≅ᵈ ⟦ μ ⟧smod ⓓ ⟦ μs ⟧smod-seq
-reduce-smod-seq-cons-sound s-forever (s-constantly ∷ μs) = begin
-    ⟦ μs ⟧smod-seq
-  ≅˘⟨ 𝟙-unitˡ ⟦ μs ⟧smod-seq ⟩
-    DRA.𝟙 ⓓ ⟦ μs ⟧smod-seq
-  ≅˘⟨ ⓓ-congˡ ⟦ μs ⟧smod-seq forever-constantly ⟩
-    (M.forever ⓓ M.constantly) ⓓ ⟦ μs ⟧smod-seq
-  ≅⟨ ⓓ-assoc _ _ _ ⟩
-    M.forever ⓓ (M.constantly ⓓ ⟦ μs ⟧smod-seq)
-  ≅˘⟨ ⓓ-congʳ M.forever (interpret-smod-cons s-constantly μs) ⟩
-    M.forever ⓓ ⟦ s-constantly ∷ μs ⟧smod-seq ∎
-  where open ≅ᵈ-Reasoning
-reduce-smod-seq-cons-sound s-forever (s-later    ∷ μs) = begin
-    ⟦ reduce-smod-seq-cons s-forever μs ⟧smod-seq
-  ≅⟨ reduce-smod-seq-cons-sound s-forever μs ⟩
-    M.forever ⓓ ⟦ μs ⟧smod-seq
-  ≅˘⟨ ⓓ-congˡ ⟦ μs ⟧smod-seq forever-later ⟩
-    (M.forever ⓓ M.later) ⓓ ⟦ μs ⟧smod-seq
-  ≅⟨ ⓓ-assoc _ _ _ ⟩
-    M.forever ⓓ (M.later ⓓ ⟦ μs ⟧smod-seq)
-  ≅˘⟨ ⓓ-congʳ M.forever (interpret-smod-cons s-later μs) ⟩
-    M.forever ⓓ ⟦ s-later ∷ μs ⟧smod-seq ∎
-  where open ≅ᵈ-Reasoning
+reduce-smod-seq-cons-sound s-forever (s-constantly ∷ μs) =
+  transᵈ (symᵈ (𝟙-unitˡ ⟦ μs ⟧smod-seq)) (
+  transᵈ (symᵈ (ⓓ-congˡ ⟦ μs ⟧smod-seq forever-constantly)) (
+  transᵈ (ⓓ-assoc _ _ _) (
+  symᵈ (ⓓ-congʳ M.forever (interpret-smod-cons s-constantly μs)))))
+reduce-smod-seq-cons-sound s-forever (s-later    ∷ μs) =
+  transᵈ (reduce-smod-seq-cons-sound s-forever μs) (
+  transᵈ (symᵈ (ⓓ-congˡ ⟦ μs ⟧smod-seq forever-later)) (
+  transᵈ (ⓓ-assoc _ _ _) (
+  symᵈ (ⓓ-congʳ M.forever (interpret-smod-cons s-later μs)))))
 reduce-smod-seq-cons-sound s-forever [] = symᵈ (𝟙-unitʳ _)
 reduce-smod-seq-cons-sound s-constantly μs = interpret-smod-cons s-constantly μs
 reduce-smod-seq-cons-sound s-later μs = interpret-smod-cons s-later μs
@@ -167,13 +146,9 @@ reduce-smod-seq-cons-empty s-later = refl
 reduce-smod-seq-sound : (μs : SModalitySeq m m') → ⟦ reduce-smod-seq μs ⟧smod-seq ≅ᵈ ⟦ μs ⟧smod-seq
 reduce-smod-seq-sound [] = reflᵈ
 reduce-smod-seq-sound (μ ∷ []) rewrite reduce-smod-seq-cons-empty μ = reflᵈ
-reduce-smod-seq-sound (μ ∷ μs@(_ ∷ _)) = begin
-    ⟦ reduce-smod-seq-cons μ (reduce-smod-seq μs) ⟧smod-seq
-  ≅⟨ reduce-smod-seq-cons-sound μ (reduce-smod-seq μs) ⟩
-    ⟦ μ ⟧smod ⓓ ⟦ reduce-smod-seq μs ⟧smod-seq
-  ≅⟨ ⓓ-congʳ ⟦ μ ⟧smod (reduce-smod-seq-sound μs) ⟩
-    ⟦ μ ⟧smod ⓓ ⟦ μs ⟧smod-seq ∎
-  where open ≅ᵈ-Reasoning
+reduce-smod-seq-sound (μ ∷ μs@(_ ∷ _)) =
+  transᵈ (reduce-smod-seq-cons-sound μ (reduce-smod-seq μs))
+         (ⓓ-congʳ ⟦ μ ⟧smod (reduce-smod-seq-sound μs))
 
 reduce-modality-expr : ModalityExpr m m' → ModalityExpr m m'
 reduce-modality-expr = interpret-smod-sequence ∘ reduce-smod-seq ∘ flatten

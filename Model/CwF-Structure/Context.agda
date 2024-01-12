@@ -7,6 +7,8 @@ module Model.CwF-Structure.Context where
 open import Data.Unit using (⊤; tt)
 open import Function using (id; _∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+open import Relation.Binary.Reasoning.Syntax
+open import Preliminaries
 
 open import Model.BaseCategory
 open import Model.Helpers
@@ -104,28 +106,10 @@ module _ {C : BaseCategory} where
   transˢ : {σ τ ψ : Δ ⇒ Γ} → σ ≅ˢ τ → τ ≅ˢ ψ → σ ≅ˢ ψ
   eq (transˢ σ=τ τ=ψ) δ = trans (eq σ=τ δ) (eq τ=ψ δ)
 
-  module ≅ˢ-Reasoning where
-    infix  3 _∎
-    infixr 2 _≅⟨⟩_ step-≅ step-≅˘
-    infix  1 begin_
-
-    begin_ : ∀ {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → σ ≅ˢ τ
-    begin_ σ=τ = σ=τ
-
-    _≅⟨⟩_ : ∀ (σ {τ} : Δ ⇒ Γ) → σ ≅ˢ τ → σ ≅ˢ τ
-    _ ≅⟨⟩ σ=τ = σ=τ
-
-    step-≅ : ∀ (σ {τ ψ} : Δ ⇒ Γ) → τ ≅ˢ ψ → σ ≅ˢ τ → σ ≅ˢ ψ
-    step-≅ _ τ≅ψ σ≅τ = transˢ σ≅τ τ≅ψ
-
-    step-≅˘ : ∀ (σ {τ ψ} : Δ ⇒ Γ) → τ ≅ˢ ψ → τ ≅ˢ σ → σ ≅ˢ ψ
-    step-≅˘ _ τ≅ψ τ≅σ = transˢ (symˢ τ≅σ) τ≅ψ
-
-    _∎ : ∀ (σ : Δ ⇒ Γ) → σ ≅ˢ σ
-    _∎ _ = reflˢ
-
-    syntax step-≅  σ τ≅ψ σ≅τ = σ ≅⟨  σ≅τ ⟩ τ≅ψ
-    syntax step-≅˘ σ τ≅ψ τ≅σ = σ ≅˘⟨ τ≅σ ⟩ τ≅ψ
+  module ≅ˢ-Reasoning {Γ Δ : Ctx C} where
+    open begin-syntax {A = Γ ⇒ Δ} _≅ˢ_ id public
+    open ≅-syntax {A = Γ ⇒ Δ} _≅ˢ_ _≅ˢ_ transˢ  symˢ public
+    open end-syntax {A = Γ ⇒ Δ} _≅ˢ_ reflˢ public
 
 
   --------------------------------------------------

@@ -183,11 +183,11 @@ module _ (μ : DRA C D) where
                      (dra-elim μ t) [ lock-fmap μ σ ]' ≅ᵗᵐ dra-elim μ (ι⁻¹[ dra-natural μ σ ] (t [ σ ]'))
   dra-elim-natural σ t = begin
       (dra-elim μ t) [ lock-fmap μ σ ]'
-    ≅˘⟨ dra-β μ _ ⟩
+    ≅⟨ dra-β μ _ ⟨
       dra-elim μ (dra-intro μ ((dra-elim μ t) [ lock-fmap μ σ ]'))
-    ≅˘⟨ dra-elim-cong μ ι-symˡ ⟩
+    ≅⟨ dra-elim-cong μ ι-symˡ ⟨
       dra-elim μ (ι⁻¹[ dra-natural μ σ ] (ι[ dra-natural μ σ ] (dra-intro μ ((dra-elim μ t) [ lock-fmap μ σ ]'))))
-    ≅˘⟨ dra-elim-cong μ (ι⁻¹-cong (dra-intro-natural μ σ (dra-elim μ t))) ⟩
+    ≅⟨ dra-elim-cong μ (ι⁻¹-cong (dra-intro-natural μ σ (dra-elim μ t))) ⟨
       dra-elim μ (ι⁻¹[ dra-natural μ σ ] (dra-intro μ (dra-elim μ t) [ σ ]'))
     ≅⟨ dra-elim-cong μ (ι⁻¹-cong (tm-subst-cong-tm σ (dra-η μ t))) ⟩
       dra-elim μ (ι⁻¹[ dra-natural μ σ ] (t [ σ ]')) ∎
@@ -202,9 +202,9 @@ module _ (μ : DRA C D) where
                ι[ T=S ] (dra-elim μ t) ≅ᵗᵐ dra-elim μ (ι[ dra-cong T=S ] t)
   dra-elim-ι {T = T} {S = S} {T=S = T=S} t = begin
       ι[ T=S ] dra-elim μ t
-    ≅˘⟨ dra-β μ _ ⟩
+    ≅⟨ dra-β μ _ ⟨
       dra-elim μ (dra-intro μ (ι[ T=S ] dra-elim μ t))
-    ≅˘⟨ dra-elim-cong μ (dra-intro-ι _) ⟩
+    ≅⟨ dra-elim-cong μ (dra-intro-ι _) ⟨
       dra-elim μ (ι[ dra-cong T=S ] dra-intro μ (dra-elim μ t))
     ≅⟨ dra-elim-cong μ (ι-cong (dra-η μ t)) ⟩
       dra-elim μ (ι[ dra-cong T=S ] t) ∎
@@ -330,9 +330,9 @@ dra-intro-natural (μ ⓓ ρ) σ t = begin
     ι[ dra-natural μ σ ] dra-intro μ ((dra-intro ρ t) [ lock-fmap μ σ ]')
   ≅⟨ ι-cong (dra-intro-cong μ (dra-intro-natural ρ (lock-fmap μ σ) t)) ⟩
     ι[ dra-natural μ σ ] dra-intro μ (ι[ dra-natural ρ _ ] dra-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]'))
-  ≅˘⟨ ι-cong (dra-intro-ι μ _) ⟩
+  ≅⟨ ι-cong (dra-intro-ι μ _) ⟨
     ι[ dra-natural μ σ ] (ι[ dra-cong μ (dra-natural ρ _) ] dra-intro μ (dra-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')))
-  ≅˘⟨ ι-trans ⟩
+  ≅⟨ ι-trans ⟨
     ι[ transᵗʸ (dra-natural μ σ) (dra-cong μ (dra-natural ρ (lock-fmap μ σ))) ] dra-intro μ (dra-intro ρ (t [ lock-fmap ρ (lock-fmap μ σ) ]')) ∎
   where open ≅ᵗᵐ-Reasoning
 dra-intro-convert (μ ⓓ ρ) t = transᵗᵐ (dra-intro-convert μ (dra-intro ρ t)) (dra-intro-cong μ (dra-intro-convert ρ t))

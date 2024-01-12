@@ -85,7 +85,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   cl-tm-subst-⊚ {τ = τ} {σ} t =
     begin
       ι⁻¹[ closed-natural clT σ ] ((ι⁻¹[ closed-natural clT τ ] (t [ τ ]')) [ σ ]')
-    ≅˘⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟩
+    ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟨
       ι⁻¹[ closed-natural clT σ ] (ι⁻¹[ ty-subst-cong-ty σ (closed-natural clT τ) ] ((t [ τ ]') [ σ ]'))
     ≅⟨ ι⁻¹-cong (ι⁻¹-cong (tm-subst-comp t τ σ)) ⟩
       ι⁻¹[ closed-natural clT σ ] (ι⁻¹[ ty-subst-cong-ty σ (closed-natural clT τ) ] (ι[ ty-subst-comp T τ σ ] (t [ τ ⊚ σ ]')))
@@ -102,7 +102,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
       ι⁻¹[ closed-natural clT σ ] (t [ σ ]')
     ≅⟨ ι⁻¹-cong (tm-subst-cong-subst t ε) ⟩
       ι⁻¹[ closed-natural clT σ ] (ι[ ty-subst-cong-subst ε T ] (t [ τ ]'))
-    ≅˘⟨ ι⁻¹-congᵉ-2-1 (closed-subst-eq clT ε) ⟩
+    ≅⟨ ι⁻¹-congᵉ-2-1 (closed-subst-eq clT ε) ⟨
       ι⁻¹[ closed-natural clT τ ] (ι⁻¹[ ty-subst-cong-subst ε T ] (ι[ ty-subst-cong-subst ε T ] (t [ τ ]')))
     ≅⟨ ι⁻¹-cong ι-symˡ ⟩
       ι⁻¹[ closed-natural clT τ ] (t [ τ ]') ∎
@@ -135,7 +135,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   ,cl-β2 σ t =
     begin
       ι⁻¹[ closed-natural clT (σ ,cl⟨ clT ⟩ t) ] ((ι⁻¹[ closed-natural clT π ] ξ) [ σ ,cl⟨ clT ⟩ t ]')
-    ≅˘⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟩
+    ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟨
       ι⁻¹[ closed-natural clT (σ ,cl⟨ clT ⟩ t) ] (ι⁻¹[ ty-subst-cong-ty (σ ,cl⟨ clT ⟩ t) (closed-natural clT π) ] (ξ [ σ ,cl⟨ clT ⟩ t ]'))
     ≅⟨ ι⁻¹-cong (ι⁻¹-cong (ctx-ext-subst-β₂ σ _)) ⟩
       ι⁻¹[ closed-natural clT (σ ,cl⟨ clT ⟩ t) ] (ι⁻¹[ ty-subst-cong-ty (σ ,cl⟨ clT ⟩ t) (closed-natural clT π) ]
@@ -166,7 +166,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
       tm-proof =
         begin
           ι⁻¹[ closed-natural clT (π ⊚ σ) ] (ι⁻¹[ ty-subst-comp T π σ ] (ξ [ σ ]'))
-        ≅˘⟨ ι⁻¹-congᵉ-2-2 (closed-⊚ clT π σ) ⟩
+        ≅⟨ ι⁻¹-congᵉ-2-2 (closed-⊚ clT π σ) ⟨
           ι⁻¹[ closed-natural clT σ ] (ι⁻¹[ ty-subst-cong-ty σ (closed-natural clT π) ] (ξ [ σ ]'))
         ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟩
           ι⁻¹[ closed-natural clT σ ] ((ι⁻¹[ closed-natural clT π ] ξ) [ σ ]') ∎
@@ -221,7 +221,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
                 (symᵗᵐ (,cl-β2 _ _)) ⟩
       (σ ⊚ π ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl))) ,cl⟨ clT ⟩
         (ξcl clT [ clT ∣ id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl) ]cl)
-    ≅˘⟨ ,cl-⊚ _ _ _ ⟩
+    ≅⟨ ,cl-⊚ _ _ _ ⟨
       lift-cl-subst σ ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)) ∎
     where open ≅ˢ-Reasoning
 
@@ -240,9 +240,9 @@ module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) 
       (ξcl clS [ clS ∣ π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl) ]cl)
     ≅⟨ ,cl-cong clS (transˢ ⊚-assoc (⊚-congʳ (,cl-β1 clS _ _))) (,cl-β2 clS _ _) ⟩
       (σ ⊚ π) ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl)
-    ≅˘⟨ ,cl-cong-subst clS (lift-cl-subst-π-commute clT) ⟩
+    ≅⟨ ,cl-cong-subst clS (lift-cl-subst-π-commute clT) ⟨
       (π ⊚ lift-cl-subst clT σ) ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl)
-    ≅˘⟨ ,cl-⊚ clS π s (lift-cl-subst clT σ) ⟩
+    ≅⟨ ,cl-⊚ clS π s (lift-cl-subst clT σ) ⟨
       (π ,cl⟨ clS ⟩ s) ⊚ lift-cl-subst clT σ ∎
     where open ≅ˢ-Reasoning
 

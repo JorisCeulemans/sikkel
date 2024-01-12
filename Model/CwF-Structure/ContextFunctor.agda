@@ -35,7 +35,7 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
                     τ ⊚ σ ≅ˢ id-subst Δ → ctx-map τ ⊚ ctx-map σ ≅ˢ id-subst (Φ Δ)
   ctx-map-inverse {Δ = Δ} {σ = σ} {τ = τ} e = begin
       ctx-map τ ⊚ ctx-map σ
-    ≅˘⟨ ctx-map-⊚ τ σ ⟩
+    ≅⟨ ctx-map-⊚ τ σ ⟨
       ctx-map (τ ⊚ σ)
     ≅⟨ ctx-map-cong e ⟩
       ctx-map (id-subst Δ)
@@ -51,7 +51,7 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
                      τ1 ⊚ σ1 ≅ˢ τ2 ⊚ σ2 → ctx-map τ1 ⊚ ctx-map σ1 ≅ˢ ctx-map τ2 ⊚ ctx-map σ2
   ctx-map-cong-2-2 {σ1 = σ1} {τ1} {σ2} {τ2} e = begin
       ctx-map τ1 ⊚ ctx-map σ1
-    ≅˘⟨ ctx-map-⊚ τ1 σ1 ⟩
+    ≅⟨ ctx-map-⊚ τ1 σ1 ⟨
       ctx-map (τ1 ⊚ σ1)
     ≅⟨ ctx-map-cong e ⟩
       ctx-map (τ2 ⊚ σ2)
@@ -135,7 +135,7 @@ naturality (_ⓝ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin
     transf-op η Γ ⊚ (transf-op ζ Γ ⊚ ctx-fmap Φ σ)
   ≅⟨ ⊚-congʳ (naturality ζ σ) ⟩
     transf-op η Γ ⊚ (ctx-fmap Ψ σ ⊚ transf-op ζ Δ)
-  ≅˘⟨ ⊚-assoc ⟩
+  ≅⟨ ⊚-assoc ⟨
     (transf-op η Γ ⊚ ctx-fmap Ψ σ) ⊚ transf-op ζ Δ
   ≅⟨ ⊚-congˡ (naturality η σ) ⟩
     (ctx-fmap Ω σ ⊚ transf-op η Δ) ⊚ transf-op ζ Δ
@@ -151,13 +151,13 @@ naturality (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begi
     (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ)) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ)
   ≅⟨ ⊚-assoc ⟩
     transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (transf-op ζ Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ σ))
-  ≅˘⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
+  ≅⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟨
     transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (transf-op ζ Γ ⊚ ctx-fmap Ψ σ)
   ≅⟨ ⊚-congʳ (ctx-fmap-cong Φ (naturality ζ σ)) ⟩
     transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ ⊚ transf-op ζ Δ)
   ≅⟨ ⊚-congʳ (ctx-fmap-⊚ Φ _ _) ⟩
     transf-op η (ctx-op Ψ' Γ) ⊚ (ctx-fmap Φ (ctx-fmap Ψ' σ) ⊚ ctx-fmap Φ (transf-op ζ Δ))
-  ≅˘⟨ ⊚-assoc ⟩
+  ≅⟨ ⊚-assoc ⟨
     (transf-op η (ctx-op Ψ' Γ) ⊚ ctx-fmap Φ (ctx-fmap Ψ' σ)) ⊚ ctx-fmap Φ (transf-op ζ Δ)
   ≅⟨ ⊚-congˡ (naturality η (ctx-fmap Ψ' σ)) ⟩
     (ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ (transf-op η (ctx-op Ψ' Δ)) ⊚ ctx-fmap Φ (transf-op ζ Δ))
