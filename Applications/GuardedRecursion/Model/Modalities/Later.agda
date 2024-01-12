@@ -436,12 +436,12 @@ lift2▻' {Γ = Γ} f =
 
 ▻-map-cong : {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} {η φ : T ↣ T'} →
               η ≅ⁿ φ → ▻-map η ≅ⁿ ▻-map φ
-eq (▻-map-cong e) {x = zero} _ = refl
-eq (▻-map-cong e) {x = suc _} = eq e
+eq (▻-map-cong 𝔢) {x = zero} _ = refl
+eq (▻-map-cong 𝔢) {x = suc _} = eq 𝔢
 
 ▻'-map-cong : {T : Ty Γ} {S : Ty Γ} {η φ : T ↣ S} →
                η ≅ⁿ φ → ▻'-map η ≅ⁿ ▻'-map φ
-▻'-map-cong e = ▻-map-cong (ty-subst-map-cong e)
+▻'-map-cong 𝔢 = ▻-map-cong (ty-subst-map-cong 𝔢)
 
 ▻-map-id : {T : Ty (◄ Γ)} → ▻-map (id-trans T) ≅ⁿ id-trans (▻ T)
 eq ▻-map-id {x = zero} _ = refl

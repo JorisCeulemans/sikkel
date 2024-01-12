@@ -198,11 +198,11 @@ instance
 
 module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
   constantly-tm-natural : (t : Tm (now Γ) T) →
-                        (constantly-tm t) [ σ ]' ≅ᵗᵐ ι[ constantly-ty-natural σ ] constantly-tm (t [ now-subst σ ]')
+                          (constantly-tm t) [ σ ]' ≅ᵗᵐ ι[ constantly-ty-natural σ ] constantly-tm (t [ now-subst σ ]')
   eq (constantly-tm-natural t) δ = sym (Tm.naturality t tt _)
 
   unconstantly-tm-natural : (t : Tm Γ (constantly-ty T)) →
-                          (unconstantly-tm t) [ now-subst σ ]' ≅ᵗᵐ unconstantly-tm (ι⁻¹[ constantly-ty-natural σ ] (t [ σ ]'))
+                            (unconstantly-tm t) [ now-subst σ ]' ≅ᵗᵐ unconstantly-tm (ι⁻¹[ constantly-ty-natural σ ] (t [ σ ]'))
   eq (unconstantly-tm-natural t) δ = sym (ty-cong-2-1 T refl)
 
 -- A modal version of the eliminator for booleans for the constantly modality.

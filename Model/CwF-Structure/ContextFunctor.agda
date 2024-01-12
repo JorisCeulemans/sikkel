@@ -33,11 +33,11 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
 
   ctx-map-inverse : {Δ Γ : Ctx C} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} →
                     τ ⊚ σ ≅ˢ id-subst Δ → ctx-map τ ⊚ ctx-map σ ≅ˢ id-subst (Φ Δ)
-  ctx-map-inverse {Δ = Δ} {σ = σ} {τ = τ} e = begin
+  ctx-map-inverse {Δ = Δ} {σ = σ} {τ = τ} ε = begin
       ctx-map τ ⊚ ctx-map σ
     ≅⟨ ctx-map-⊚ τ σ ⟨
       ctx-map (τ ⊚ σ)
-    ≅⟨ ctx-map-cong e ⟩
+    ≅⟨ ctx-map-cong ε ⟩
       ctx-map (id-subst Δ)
     ≅⟨ ctx-map-id ⟩
       id-subst (Φ Δ) ∎
@@ -45,15 +45,15 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
 
   ctx-map-cong-2-1 : {Γ Δ Θ : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ} →
                      σ2 ⊚ σ1 ≅ˢ τ → ctx-map σ2 ⊚ ctx-map σ1 ≅ˢ ctx-map τ
-  ctx-map-cong-2-1 {σ1 = σ1} {σ2} {τ} e = transˢ (symˢ (ctx-map-⊚ σ2 σ1)) (ctx-map-cong e)
+  ctx-map-cong-2-1 {σ1 = σ1} {σ2} {τ} ε = transˢ (symˢ (ctx-map-⊚ σ2 σ1)) (ctx-map-cong ε)
 
   ctx-map-cong-2-2 : {Γ Δ Δ' Θ : Ctx C} {σ1 : Γ ⇒ Δ} {τ1 : Δ ⇒ Θ} {σ2 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} →
                      τ1 ⊚ σ1 ≅ˢ τ2 ⊚ σ2 → ctx-map τ1 ⊚ ctx-map σ1 ≅ˢ ctx-map τ2 ⊚ ctx-map σ2
-  ctx-map-cong-2-2 {σ1 = σ1} {τ1} {σ2} {τ2} e = begin
+  ctx-map-cong-2-2 {σ1 = σ1} {τ1} {σ2} {τ2} ε = begin
       ctx-map τ1 ⊚ ctx-map σ1
     ≅⟨ ctx-map-⊚ τ1 σ1 ⟨
       ctx-map (τ1 ⊚ σ1)
-    ≅⟨ ctx-map-cong e ⟩
+    ≅⟨ ctx-map-cong ε ⟩
       ctx-map (τ2 ⊚ σ2)
     ≅⟨ ctx-map-⊚ τ2 σ2 ⟩
       ctx-map τ2 ⊚ ctx-map σ2 ∎
@@ -64,7 +64,7 @@ open IsCtxFunctor {{...}} public
 instance
   id-is-ctx-functor : ∀ {C} → IsCtxFunctor {C = C} (λ Γ → Γ)
   ctx-map {{id-is-ctx-functor}} σ = σ
-  ctx-map-cong {{id-is-ctx-functor}} e = e
+  ctx-map-cong {{id-is-ctx-functor}} ε = ε
   ctx-map-id {{id-is-ctx-functor}} = reflˢ
   ctx-map-⊚ {{id-is-ctx-functor}} _ _ = reflˢ
 
@@ -74,7 +74,7 @@ instance
 composed-functor : {C1 C2 C3 : BaseCategory} {Φ : CtxOp C2 C3} {Ψ : CtxOp C1 C2} →
                    IsCtxFunctor Φ → IsCtxFunctor Ψ → IsCtxFunctor (λ Γ → Φ (Ψ Γ))
 ctx-map {{composed-functor φ ψ}} σ = ctx-map {{φ}} (ctx-map {{ψ}} σ)
-ctx-map-cong {{composed-functor φ ψ}} e = ctx-map-cong {{φ}} (ctx-map-cong {{ψ}} e)
+ctx-map-cong {{composed-functor φ ψ}} ε = ctx-map-cong {{φ}} (ctx-map-cong {{ψ}} ε)
 ctx-map-id {{composed-functor φ ψ}} = transˢ (ctx-map-cong {{φ}} (ctx-map-id {{ψ}})) (ctx-map-id {{φ}})
 ctx-map-⊚ {{composed-functor φ ψ}} τ σ = transˢ (ctx-map-cong {{φ}} (ctx-map-⊚ {{ψ}} τ σ)) (ctx-map-⊚ {{φ}} _ _)
 

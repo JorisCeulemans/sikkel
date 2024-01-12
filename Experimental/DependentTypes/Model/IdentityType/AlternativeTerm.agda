@@ -83,12 +83,12 @@ eq (isoʳ (Id-cong A=B a=b a=b')) _ = uip _ _
 Id-cong' : {A : Ty Γ} {a a' b b' : Tm Γ A} →
            a ≅ᵗᵐ b → a' ≅ᵗᵐ b' →
            Id a a' ≅ᵗʸ Id b b'
-func (from (Id-cong' e e')) ea = trans (sym (eq e _)) (trans ea (eq e' _))
-_↣_.naturality (from (Id-cong' ea eb)) = uip _ _
-func (to (Id-cong' e e')) eb = trans (eq e _) (trans eb (sym (eq e' _)))
-_↣_.naturality (to (Id-cong' ea eb)) = uip _ _
-eq (isoˡ (Id-cong' ea eb)) _ = uip _ _
-eq (isoʳ (Id-cong' ea eb)) _ = uip _ _
+func (from (Id-cong' 𝒆 𝒆')) ea = trans (sym (eq 𝒆 _)) (trans ea (eq 𝒆' _))
+_↣_.naturality (from (Id-cong' 𝒆 𝒆')) = uip _ _
+func (to (Id-cong' 𝒆 𝒆')) eb = trans (eq 𝒆 _) (trans eb (sym (eq 𝒆' _)))
+_↣_.naturality (to (Id-cong' 𝒆 𝒆')) = uip _ _
+eq (isoˡ (Id-cong' 𝒆 𝒆')) _ = uip _ _
+eq (isoʳ (Id-cong' 𝒆 𝒆')) _ = uip _ _
 
 Id-cl-natural : {A : ClosedTy C} (clA : IsClosedNatural A) {a b : Tm Δ A} (σ : Γ ⇒ Δ) →
                 (Id a b) [ σ ] ≅ᵗʸ Id (a [ clA ∣ σ ]cl) (b [ clA ∣ σ ]cl)
@@ -98,8 +98,8 @@ eq-reflect : {a b : Tm Γ A} → Tm Γ (Id a b) → a ≅ᵗᵐ b
 eq (eq-reflect e) {x = x} γ = e ⟨ x , γ ⟩'
 
 ≅ᵗᵐ-to-Id : {a b : Tm Γ A} → a ≅ᵗᵐ b → Tm Γ (Id a b)
-≅ᵗᵐ-to-Id e ⟨ x , γ ⟩' = eq e γ
-Tm.naturality (≅ᵗᵐ-to-Id e) _ _ = uip _ _
+≅ᵗᵐ-to-Id 𝒆 ⟨ x , γ ⟩' = eq 𝒆 γ
+Tm.naturality (≅ᵗᵐ-to-Id 𝒆) _ _ = uip _ _
 
 private
   -- Example exploring how difficult it is to use subst'.

@@ -84,7 +84,7 @@ naturality (coe-trans α) {eγ = refl} = naturality (coe-tm α) _ refl
 coe-tm-helper-cong : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} {A : Ty Γ} →
                      {t t' : Tm (Γ ,, A) (⟨ μ ∣ T ⟩ [ π ])} →
                      t ≅ᵗᵐ t' → coe-tm-helper α t ≅ᵗᵐ coe-tm-helper α t'
-coe-tm-helper-cong {μ = μ} {ρ} α et = ι-cong (dra-intro-cong ρ (ι-cong (tm-subst-cong-tm _ (dra-elim-cong μ (ι⁻¹-cong et)))))
+coe-tm-helper-cong {μ = μ} {ρ} α 𝒆 = ι-cong (dra-intro-cong ρ (ι-cong (tm-subst-cong-tm _ (dra-elim-cong μ (ι⁻¹-cong 𝒆)))))
 
 coe-tm-helper-convert : {μ ρ : DRA C D} (α : TwoCell μ ρ) {Γ : Ctx D} {T S : Ty (Γ ,lock⟨ μ ⟩)} {A : Ty Γ}
                         (φ : T ↣ S) {t : Tm (Γ ,, A) (⟨ μ ∣ T ⟩ [ π ])} →
@@ -205,7 +205,7 @@ module _ {μ ρ : DRA C D} where
   key-subst-eq (symᵗᶜ α=β) = symˢ (key-subst-eq α=β)
 
   transᵗᶜ : {α1 α2 α3 : TwoCell μ ρ} → α1 ≅ᵗᶜ α2 → α2 ≅ᵗᶜ α3 → α1 ≅ᵗᶜ α3
-  key-subst-eq (transᵗᶜ e e') = transˢ (key-subst-eq e) (key-subst-eq e')
+  key-subst-eq (transᵗᶜ 𝓮 𝓮') = transˢ (key-subst-eq 𝓮) (key-subst-eq 𝓮')
 
   ⓣ-vert-unitˡ : {α : TwoCell μ ρ} → id-cell ⓣ-vert α ≅ᵗᶜ α
   key-subst-eq ⓣ-vert-unitˡ = id-subst-unitʳ _
@@ -225,19 +225,19 @@ key-subst-eq ⓣ-vert-assoc = symˢ ⊚-assoc
 
 ⓣ-vert-congˡ : {μ ρ κ : DRA C D} {α α' : TwoCell ρ κ} {β : TwoCell μ ρ} →
                α ≅ᵗᶜ α' → α ⓣ-vert β ≅ᵗᶜ α' ⓣ-vert β
-key-subst-eq (ⓣ-vert-congˡ e) = ⊚-congʳ (key-subst-eq e)
+key-subst-eq (ⓣ-vert-congˡ 𝓮) = ⊚-congʳ (key-subst-eq 𝓮)
 
 ⓣ-vert-congʳ : {μ ρ κ : DRA C D} {α : TwoCell ρ κ} {β β' : TwoCell μ ρ} →
                β ≅ᵗᶜ β' → α ⓣ-vert β ≅ᵗᶜ α ⓣ-vert β'
-key-subst-eq (ⓣ-vert-congʳ e) = ⊚-congˡ (key-subst-eq e)
+key-subst-eq (ⓣ-vert-congʳ 𝓮) = ⊚-congˡ (key-subst-eq 𝓮)
 
 ⓣ-hor-congˡ : {μ ρ : DRA C D} {κ φ : DRA D E} {α : TwoCell μ ρ} {β β' : TwoCell κ φ} →
               β ≅ᵗᶜ β' → β ⓣ-hor α ≅ᵗᶜ β' ⓣ-hor α
-key-subst-eq (ⓣ-hor-congˡ {ρ = ρ} e) = ⊚-congʳ (lock-fmap-cong ρ (key-subst-eq e))
+key-subst-eq (ⓣ-hor-congˡ {ρ = ρ} 𝓮) = ⊚-congʳ (lock-fmap-cong ρ (key-subst-eq 𝓮))
 
 ⓣ-hor-congʳ : {μ ρ : DRA C D} {κ φ : DRA D E} {α α' : TwoCell μ ρ} {β : TwoCell κ φ} →
               α ≅ᵗᶜ α' → β ⓣ-hor α ≅ᵗᶜ β ⓣ-hor α'
-key-subst-eq (ⓣ-hor-congʳ e) = ⊚-congˡ (key-subst-eq e)
+key-subst-eq (ⓣ-hor-congʳ 𝓮) = ⊚-congˡ (key-subst-eq 𝓮)
 
 ⓣ-hor-id : {μ : DRA C D} {ρ : DRA D E} → id-cell {μ = ρ} ⓣ-hor id-cell {μ = μ} ≅ᵗᶜ id-cell
 key-subst-eq (ⓣ-hor-id {μ = μ}) = transˢ (id-subst-unitˡ _) (lock-fmap-id μ)
@@ -258,18 +258,18 @@ key-subst-eq (2-cell-interchange {ρ'' = ρ''} {δ = δ}) =
 
 
 coe-tm-cong : {μ ρ : DRA C D} {α β : TwoCell μ ρ} {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
-              (ℯ : α ≅ᵗᶜ β) →
-              ι⁻¹[ ty-subst-cong-ty π (dra-cong ρ (ty-subst-cong-subst (key-subst-eq ℯ) T)) ] coe-tm α ≅ᵗᵐ coe-tm β
-coe-tm-cong {μ = μ} {ρ} {T = T} ℯ = move-ι⁻¹-left (symᵗᵐ (
+              (𝓮 : α ≅ᵗᶜ β) →
+              ι⁻¹[ ty-subst-cong-ty π (dra-cong ρ (ty-subst-cong-subst (key-subst-eq 𝓮) T)) ] coe-tm α ≅ᵗᵐ coe-tm β
+coe-tm-cong {μ = μ} {ρ} {T = T} 𝓮 = move-ι⁻¹-left (symᵗᵐ (
   transᵗᵐ (ι-congᵉ-2-2 (symᵉ (dra-natural-ty-eq ρ _ _))) (ι-cong (
   transᵗᵐ (dra-intro-ι ρ _) (dra-intro-cong ρ (
   transᵗᵐ (ι-congᵉ-2-2 lemma) (ι-cong (
-  symᵗᵐ (tm-subst-cong-subst _ (key-subst-eq ℯ))))))))))
+  symᵗᵐ (tm-subst-cong-subst _ (key-subst-eq 𝓮))))))))))
   where
     lemma : _ ≅ᵉ _
     eq (from-eq lemma) _ = trans (sym (ty-comp T)) (trans (ty-cong T refl) (ty-comp T))
 
 coe-trans-cong : {μ ρ : DRA C D} {α β : TwoCell μ ρ} {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
-                 (ℯ : α ≅ᵗᶜ β) →
-                 dra-map ρ (ty-subst-eq-subst-morph (key-subst-eq ℯ) T) ⊙ coe-trans α ≅ⁿ coe-trans β
-eq (coe-trans-cong ℯ) t = eq (coe-tm-cong ℯ) _
+                 (𝓮 : α ≅ᵗᶜ β) →
+                 dra-map ρ (ty-subst-eq-subst-morph (key-subst-eq 𝓮) T) ⊙ coe-trans α ≅ⁿ coe-trans β
+eq (coe-trans-cong 𝓮) t = eq (coe-tm-cong 𝓮) _

@@ -408,7 +408,7 @@ module _ {A : Ty Γ} {B : ClosedTy C} (clB : IsClosedNatural B ) where
   lamcl b = lam _ (ι[ closed-natural clB π ] b)
 
   lamcl-cong : {b b' : Tm (Γ ,, A) B} → b ≅ᵗᵐ b' → lamcl b ≅ᵗᵐ lamcl b'
-  lamcl-cong e = lam-cong A (ι-cong e)
+  lamcl-cong 𝒆 = lam-cong A (ι-cong 𝒆)
 
 module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where
   fun-closed : IsClosedNatural (A ⇛ B)

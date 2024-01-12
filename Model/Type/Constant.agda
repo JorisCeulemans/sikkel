@@ -87,7 +87,7 @@ const-map-natural : {A B : Set} (f : A → B) {σ : Δ ⇒ Γ} {t : Tm Γ (Const
 eq (const-map-natural f) _ = refl
 
 const-map-cong : {A B : Set} (f : A → B) {t t' : Tm Γ (Const A)} → t ≅ᵗᵐ t' → const-map f t ≅ᵗᵐ const-map f t'
-eq (const-map-cong f e) γ = cong f (eq e γ)
+eq (const-map-cong f 𝒆) γ = cong f (eq 𝒆 γ)
 
 const-closed : {A : Set} → IsClosedNatural {C} (Const A)
 closed-natural (const-closed {A = A}) = Const-natural A
@@ -164,9 +164,9 @@ naturality (if'_then'_else'_ c t f) {x} {y} {γ} {γ'} φ eγ | true  | .true  |
 if'-cong : {b b' : Tm Γ Bool'} {t t' f f' : Tm Γ T} →
            b ≅ᵗᵐ b' → t ≅ᵗᵐ t' → f ≅ᵗᵐ f' →
            if' b then' t else' f ≅ᵗᵐ if' b' then' t' else' f'
-eq (if'-cong {b = b} {b'} eb et ef) γ with b ⟨ _ , γ ⟩' | b' ⟨ _ , γ ⟩' | eq eb γ
-eq (if'-cong {b = b} {b'} eb et ef) γ | false | .false | refl = eq ef γ
-eq (if'-cong {b = b} {b'} eb et ef) γ | true  | .true  | refl = eq et γ
+eq (if'-cong {b = b} {b'} 𝒆b 𝒆t 𝒆f) γ with b ⟨ _ , γ ⟩' | b' ⟨ _ , γ ⟩' | eq 𝒆b γ
+eq (if'-cong {b = b} {b'} 𝒆b 𝒆t 𝒆f) γ | false | .false | refl = eq 𝒆f γ
+eq (if'-cong {b = b} {b'} 𝒆b 𝒆t 𝒆f) γ | true  | .true  | refl = eq 𝒆t γ
 
 if'-natural : {σ : Γ ⇒ Δ} {b : Tm Δ Bool'} {t f : Tm Δ T} →
               (if' b then' t else' f) [ σ ]' ≅ᵗᵐ if' ι⁻¹[ Const-natural _ σ ] (b [ σ ]') then' (t [ σ ]') else' (f [ σ ]')
@@ -258,14 +258,14 @@ prim-nat-rec-cong : {z z' : Tm Γ T} {s s' : Tm (Γ ,, T) (T [ π ])} →
                     z ≅ᵗᵐ z' → s ≅ᵗᵐ s' →
                     (n n' : ℕ) → n ≡ n' →
                     prim-nat-rec T z s n ≅ᵗᵐ prim-nat-rec T z' s' n'
-eq (prim-nat-rec-cong           ez es zero    .zero    refl) γ = eq ez γ
-eq (prim-nat-rec-cong {s' = s'} ez es (suc n) .(suc n) refl) γ =
-  trans (eq es _) (cong (λ x → s' ⟨ _ , [ γ , x ] ⟩') (eq (prim-nat-rec-cong ez es n n refl) γ))
+eq (prim-nat-rec-cong           𝒆z 𝒆s zero    .zero    refl) γ = eq 𝒆z γ
+eq (prim-nat-rec-cong {s' = s'} 𝒆z 𝒆s (suc n) .(suc n) refl) γ =
+  trans (eq 𝒆s _) (cong (λ x → s' ⟨ _ , [ γ , x ] ⟩') (eq (prim-nat-rec-cong 𝒆z 𝒆s n n refl) γ))
 
 nat-rec-cong : {z z' : Tm Γ T} {s s' : Tm Γ (T ⇛ T)} {n n' : Tm Γ Nat'} →
                z ≅ᵗᵐ z' → s ≅ᵗᵐ s' → n ≅ᵗᵐ n' →
                nat-rec T z s n ≅ᵗᵐ nat-rec T z' s' n'
-eq (nat-rec-cong ez es en) γ = eq (prim-nat-rec-cong ez (ap-cong es) _ _ (eq en γ)) γ
+eq (nat-rec-cong 𝒆z 𝒆s 𝒆n) γ = eq (prim-nat-rec-cong 𝒆z (ap-cong 𝒆s) _ _ (eq 𝒆n γ)) γ
 
 prim-nat-rec-natural : {σ : Γ ⇒ Δ} {z : Tm Δ T} {s : Tm (Δ ,, T) (T [ π ])} (n : ℕ) →
                        (prim-nat-rec T z s n) [ σ ]' ≅ᵗᵐ prim-nat-rec (T [ σ ]) (z [ σ ]') (ι⁻¹[ ty-subst-cong-subst-2-2 T (⊹-π-comm σ) ] (s [ σ ⊹ ]')) n
