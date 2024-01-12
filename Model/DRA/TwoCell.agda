@@ -5,7 +5,10 @@
 module Model.DRA.TwoCell where
 
 open import Data.Product renaming (_,_ to [_,_])
+open import Function using (id)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
+open import Relation.Binary.Reasoning.Syntax
+open import Preliminaries
 
 open import Model.DRA.Basics
 
@@ -209,6 +212,12 @@ module _ {μ ρ : DRA C D} where
 
   ⓣ-vert-unitʳ : {α : TwoCell μ ρ} → α ⓣ-vert id-cell ≅ᵗᶜ α
   key-subst-eq ⓣ-vert-unitʳ = id-subst-unitˡ _
+
+module ≅ᵗᶜ-Reasoning {C D} {μ ρ : DRA C D} where
+  open begin-syntax {A = TwoCell μ ρ} _≅ᵗᶜ_ id public
+  open ≅-syntax {A = TwoCell μ ρ} _≅ᵗᶜ_ _≅ᵗᶜ_ transᵗᶜ symᵗᶜ public
+  open end-syntax {A = TwoCell μ ρ} _≅ᵗᶜ_ reflᵗᶜ public
+
 
 ⓣ-vert-assoc : {μ ρ κ φ : DRA C D} {α : TwoCell μ ρ} {β : TwoCell ρ κ} {γ : TwoCell κ φ} →
                (γ ⓣ-vert β) ⓣ-vert α ≅ᵗᶜ γ ⓣ-vert (β ⓣ-vert α)
