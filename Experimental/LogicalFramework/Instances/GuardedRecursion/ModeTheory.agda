@@ -3,7 +3,7 @@ module Experimental.LogicalFramework.Instances.GuardedRecursion.ModeTheory where
 open import Data.Maybe
 open import Data.Nat
 open import Data.Nat.Properties
-  using (+-identityʳ; +-assoc; +-suc; ≤-refl; ≤-trans; +-mono-≤; ≤-step; ≤-stepsʳ; ≤-stepsˡ; ≤-irrelevant)
+  using (+-identityʳ; +-assoc; +-suc; ≤-refl; ≤-trans; +-mono-≤; m≤n⇒m≤1+n; m≤n⇒m≤n+o; m≤n⇒m≤o+n; ≤-irrelevant)
   renaming (_≟_ to _≟nat_)
 open import Relation.Binary.PropositionalEquality
 
@@ -242,17 +242,17 @@ id-frv ⓣ-hor cstⓜfrv≤ltr _ = id-frv
 ltr k≤l ⓣ-hor id𝟙 = ltr k≤l
 ltr k≤l ⓣ-hor ltrⓜcst m≤n = ltrⓜcst (s≤s (+-mono-≤ k≤l m≤n))
 ltr k≤l ⓣ-hor ltr m≤n = ltr (s≤s (+-mono-≤ k≤l m≤n))
-ltr k≤l ⓣ-hor 𝟙≤ltr = ltr (≤-step (≤-stepsʳ _ k≤l))
+ltr k≤l ⓣ-hor 𝟙≤ltr = ltr (m≤n⇒m≤1+n (m≤n⇒m≤n+o _ k≤l))
 ltr k≤l ⓣ-hor ltrⓜcstⓜfrv m≤n = ltrⓜcstⓜfrv (s≤s (+-mono-≤ k≤l m≤n))
 ltr {_} {l} k≤l ⓣ-hor cstⓜfrv≤𝟙 = cstⓜfrv≤ltr (s≤s (subst (_≤ l) (sym (+-identityʳ _)) k≤l))
 ltr {k} k≤l ⓣ-hor cstⓜfrv≤ltr {m} m≤1+n = cstⓜfrv≤ltr (s≤s (subst (k + m ≤_) (+-suc _ _) (+-mono-≤ k≤l m≤1+n)))
 𝟙≤ltr ⓣ-hor id𝟙 = 𝟙≤ltr
-𝟙≤ltr ⓣ-hor ltrⓜcst k≤l = ltrⓜcst (≤-stepsˡ _ k≤l)
-𝟙≤ltr ⓣ-hor ltr k≤l = ltr (≤-stepsˡ _ k≤l)
+𝟙≤ltr ⓣ-hor ltrⓜcst k≤l = ltrⓜcst (m≤n⇒m≤o+n _ k≤l)
+𝟙≤ltr ⓣ-hor ltr k≤l = ltr (m≤n⇒m≤o+n _ k≤l)
 𝟙≤ltr ⓣ-hor 𝟙≤ltr = 𝟙≤ltr
-𝟙≤ltr ⓣ-hor ltrⓜcstⓜfrv k≤l = ltrⓜcstⓜfrv (≤-stepsˡ _ k≤l)
+𝟙≤ltr ⓣ-hor ltrⓜcstⓜfrv k≤l = ltrⓜcstⓜfrv (m≤n⇒m≤o+n _ k≤l)
 𝟙≤ltr ⓣ-hor cstⓜfrv≤𝟙 = cstⓜfrv≤ltr z≤n
-𝟙≤ltr ⓣ-hor cstⓜfrv≤ltr {k} {l} k≤1+l = cstⓜfrv≤ltr (≤-step (subst (λ x → k ≤ x) (+-suc _ l) (≤-stepsˡ _ k≤1+l)))
+𝟙≤ltr ⓣ-hor cstⓜfrv≤ltr {k} {l} k≤1+l = cstⓜfrv≤ltr (m≤n⇒m≤1+n (subst (λ x → k ≤ x) (+-suc _ l) (m≤n⇒m≤o+n _ k≤1+l)))
 ltrⓜcstⓜfrv k≤l ⓣ-hor id𝟙 = ltrⓜcstⓜfrv k≤l
 ltrⓜcstⓜfrv k≤l ⓣ-hor ltrⓜcst _ = ltrⓜcst k≤l
 ltrⓜcstⓜfrv k≤l ⓣ-hor ltr _ = ltrⓜcstⓜfrv k≤l
@@ -268,12 +268,12 @@ cstⓜfrv≤𝟙 ⓣ-hor ltrⓜcstⓜfrv _ = ltrⓜcstⓜfrv z≤n
 cstⓜfrv≤𝟙 ⓣ-hor cstⓜfrv≤𝟙 = cstⓜfrv≤𝟙
 cstⓜfrv≤𝟙 ⓣ-hor cstⓜfrv≤ltr _ = cstⓜfrv≤ltr z≤n
 cstⓜfrv≤ltr k≤l ⓣ-hor id𝟙 = cstⓜfrv≤ltr k≤l
-cstⓜfrv≤ltr k≤l ⓣ-hor ltrⓜcst _ = ltrⓜcst (≤-stepsʳ _ k≤l)
-cstⓜfrv≤ltr k≤l ⓣ-hor ltr _ = cstⓜfrv≤ltr (≤-step (≤-stepsʳ _ k≤l))
-cstⓜfrv≤ltr k≤l ⓣ-hor 𝟙≤ltr = cstⓜfrv≤ltr (≤-step (≤-stepsʳ _ k≤l))
-cstⓜfrv≤ltr k≤l ⓣ-hor ltrⓜcstⓜfrv _ = ltrⓜcstⓜfrv (≤-stepsʳ _ k≤l)
+cstⓜfrv≤ltr k≤l ⓣ-hor ltrⓜcst _ = ltrⓜcst (m≤n⇒m≤n+o _ k≤l)
+cstⓜfrv≤ltr k≤l ⓣ-hor ltr _ = cstⓜfrv≤ltr (m≤n⇒m≤1+n (m≤n⇒m≤n+o _ k≤l))
+cstⓜfrv≤ltr k≤l ⓣ-hor 𝟙≤ltr = cstⓜfrv≤ltr (m≤n⇒m≤1+n (m≤n⇒m≤n+o _ k≤l))
+cstⓜfrv≤ltr k≤l ⓣ-hor ltrⓜcstⓜfrv _ = ltrⓜcstⓜfrv (m≤n⇒m≤n+o _ k≤l)
 cstⓜfrv≤ltr k≤l ⓣ-hor cstⓜfrv≤𝟙 = cstⓜfrv≤ltr k≤l
-cstⓜfrv≤ltr k≤l ⓣ-hor cstⓜfrv≤ltr x = cstⓜfrv≤ltr (≤-step (≤-stepsʳ _ k≤l))
+cstⓜfrv≤ltr k≤l ⓣ-hor cstⓜfrv≤ltr x = cstⓜfrv≤ltr (m≤n⇒m≤1+n (m≤n⇒m≤n+o _ k≤l))
 
 two-cell-eq? : (α β : TwoCell μ ρ) → Maybe (α ≡ β)
 two-cell-eq? id𝟙 id𝟙 = just refl
@@ -288,21 +288,21 @@ two-cell-eq? (cstⓜfrv≤ltr k≤l) (cstⓜfrv≤ltr k≤l') = just (cong cst�
 ⟦_⟧two-cell : TwoCell μ κ → DRA.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 ⟦ id𝟙 ⟧two-cell = DRA.id-cell
 ⟦ ltrⓜcst {l = zero } z≤n ⟧two-cell = DRA.id-cell
-⟦ ltrⓜcst {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltrⓜcst {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert ≅ᵈ-to-2-cell (symᵈ (DRA.𝟙-unitˡ _))
+⟦ ltrⓜcst {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltrⓜcst {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
 ⟦ ltrⓜcst (s≤s k≤l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ ltrⓜcst k≤l ⟧two-cell
 ⟦ id-frv ⟧two-cell = DRA.id-cell
 ⟦ ltr {l = zero } z≤n ⟧two-cell = DRA.id-cell
-⟦ ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltr {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert ≅ᵈ-to-2-cell (symᵈ (DRA.𝟙-unitˡ _))
+⟦ ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltr {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
 ⟦ ltr (s≤s k≤l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ ltr k≤l ⟧two-cell
 ⟦ 𝟙≤ltr {k = zero } ⟧two-cell = M.𝟙≤later
-⟦ 𝟙≤ltr {k = suc k} ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ 𝟙≤ltr {k = k} ⟧two-cell) DRA.ⓣ-vert ≅ᵈ-to-2-cell (symᵈ (DRA.𝟙-unitˡ _))
+⟦ 𝟙≤ltr {k = suc k} ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ 𝟙≤ltr {k = k} ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
 ⟦ ltrⓜcstⓜfrv {l = zero } z≤n ⟧two-cell = DRA.id-cell
-⟦ ltrⓜcstⓜfrv {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltrⓜcstⓜfrv {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert ≅ᵈ-to-2-cell (symᵈ (DRA.𝟙-unitˡ _))
+⟦ ltrⓜcstⓜfrv {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltrⓜcstⓜfrv {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
 ⟦ ltrⓜcstⓜfrv (s≤s k≤l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ ltrⓜcstⓜfrv k≤l ⟧two-cell
 ⟦ cstⓜfrv≤𝟙 ⟧two-cell = M.constantly∘forever≤𝟙
 ⟦ cstⓜfrv≤ltr {l = zero } z≤n ⟧two-cell = M.𝟙≤later DRA.ⓣ-vert M.constantly∘forever≤𝟙
-⟦ cstⓜfrv≤ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ cstⓜfrv≤ltr {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert ≅ᵈ-to-2-cell (symᵈ (DRA.𝟙-unitˡ _))
-⟦ cstⓜfrv≤ltr {l = zero } (s≤s z≤n)   ⟧two-cell = ≅ᵈ-to-2-cell (DRA.𝟙-unitʳ _) DRA.ⓣ-vert (DRA.id-cell DRA.ⓣ-hor M.constantly∘forever≤𝟙)
+⟦ cstⓜfrv≤ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ cstⓜfrv≤ltr {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
+⟦ cstⓜfrv≤ltr {l = zero } (s≤s z≤n)   ⟧two-cell = from (DRA.𝟙-unitʳ _) DRA.ⓣ-vert (DRA.id-cell DRA.ⓣ-hor M.constantly∘forever≤𝟙)
 ⟦ cstⓜfrv≤ltr {l = suc l} (s≤s k≤1+l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ cstⓜfrv≤ltr {l = l} k≤1+l ⟧two-cell
 
 guarded-mt2c : MTTwoCell guarded-mtb guarded-mtc
