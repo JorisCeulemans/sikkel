@@ -252,19 +252,36 @@ isoʳ (ⓓ-congˡ μ ℯ) = begin
 -- proof of type equivalence.
 
 
+module _ {μ ρ : DRA C D} (α : TwoCell μ ρ) where
+  𝟙-unitʳ-natural : α ⓣ-vert from (𝟙-unitʳ μ) ≅ᵗᶜ from (𝟙-unitʳ ρ) ⓣ-vert (α ⓣ-hor id-cell)
+  key-subst-eq 𝟙-unitʳ-natural = symˢ (id-subst-unitʳ _)
 
-ⓣ-hor-unitˡ : {μ ρ : DRA C D} {α : TwoCell μ ρ} →
-              ≅ᵈ-to-2-cell (𝟙-unitˡ ρ) ⓣ-vert (id-cell {μ = 𝟙} ⓣ-hor α) ≅ᵗᶜ α ⓣ-vert ≅ᵈ-to-2-cell (𝟙-unitˡ μ)
-key-subst-eq (ⓣ-hor-unitˡ {ρ = ρ}) =
-  transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-id ρ)) (transˢ (id-subst-unitʳ _) (symˢ (id-subst-unitˡ _))))
+  𝟙-unitˡ-natural : α ⓣ-vert from (𝟙-unitˡ μ) ≅ᵗᶜ from (𝟙-unitˡ ρ) ⓣ-vert (id-cell ⓣ-hor α)
+  key-subst-eq 𝟙-unitˡ-natural = transˢ (id-subst-unitˡ _) (symˢ (transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-id ρ)) (id-subst-unitʳ _))))
 
-ⓣ-hor-unitʳ : {μ ρ : DRA C D} {α : TwoCell μ ρ} →
-              ≅ᵈ-to-2-cell (𝟙-unitʳ ρ) ⓣ-vert (α ⓣ-hor id-cell {μ = 𝟙}) ≅ᵗᶜ α ⓣ-vert ≅ᵈ-to-2-cell (𝟙-unitʳ μ)
-key-subst-eq (ⓣ-hor-unitʳ {ρ = ρ}) = id-subst-unitʳ _
+ⓓ-assoc-natural : {C1 C2 C3 C4 : BaseCategory}
+                  {μ μ' : DRA C3 C4} {ρ ρ' : DRA C2 C3} {κ κ' : DRA C1 C2}
+                  {α : TwoCell μ μ'} {β : TwoCell ρ ρ'} {γ : TwoCell κ κ'} →
+                  (α ⓣ-hor (β ⓣ-hor γ)) ⓣ-vert from (ⓓ-assoc μ ρ κ)
+                    ≅ᵗᶜ
+                  from (ⓓ-assoc μ' ρ' κ') ⓣ-vert ((α ⓣ-hor β) ⓣ-hor γ)
+key-subst-eq (ⓓ-assoc-natural {κ' = κ'}) =
+  transˢ (id-subst-unitˡ _) (transˢ ⊚-assoc (transˢ (⊚-congʳ (symˢ (lock-fmap-⊚ κ' _ _))) (symˢ (id-subst-unitʳ _))))
 
-ⓣ-hor-assoc : {F : BaseCategory}
-              {μ μ' : DRA C D} {ρ ρ' : DRA D E} {κ κ' : DRA E F}
-              {α : TwoCell μ μ'} {β : TwoCell ρ ρ'} {γ : TwoCell κ κ'} →
-              ≅ᵈ-to-2-cell (ⓓ-assoc _ _ _) ⓣ-vert ((γ ⓣ-hor β) ⓣ-hor α) ≅ᵗᶜ (γ ⓣ-hor (β ⓣ-hor α)) ⓣ-vert ≅ᵈ-to-2-cell (ⓓ-assoc _ _ _)
-key-subst-eq (ⓣ-hor-assoc {μ' = μ'}) =
-  transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-⊚ μ' _ _)) (transˢ (symˢ ⊚-assoc) (symˢ (id-subst-unitˡ _))))
+𝟙-ⓓ-triangle : {μ : DRA D E} {ρ : DRA C D} →
+               (from (𝟙-unitʳ μ) ⓣ-hor id-cell) ⓣ-vert to (ⓓ-assoc μ 𝟙 ρ)
+                 ≅ᵗᶜ
+               id-cell ⓣ-hor from (𝟙-unitˡ ρ)
+key-subst-eq 𝟙-ⓓ-triangle = id-subst-unitˡ _
+
+ⓓ-pentagon : {C1 C2 C3 C4 C5 : BaseCategory}
+             {μ : DRA C4 C5} {ρ : DRA C3 C4} {κ : DRA C2 C3} {θ : DRA C1 C2} →
+             (id-cell ⓣ-hor from (ⓓ-assoc ρ κ θ))
+             ⓣ-vert from (ⓓ-assoc μ (ρ ⓓ κ) θ)
+             ⓣ-vert (from (ⓓ-assoc μ ρ κ) ⓣ-hor id-cell)
+               ≅ᵗᶜ
+             from (ⓓ-assoc μ ρ (κ ⓓ θ))
+             ⓣ-vert from (ⓓ-assoc (μ ⓓ ρ) κ θ)
+key-subst-eq (ⓓ-pentagon {μ = μ} {ρ} {κ} {θ})  =
+  transˢ (⊚-congʳ (transˢ (id-subst-unitˡ _) (transˢ (id-subst-unitˡ _) (lock-fmap-id (ρ ⓓ κ ⓓ θ)))))
+         (transˢ (id-subst-unitʳ _) (⊚-congʳ (lock-fmap-id θ)))
