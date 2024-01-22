@@ -99,7 +99,7 @@ _≃ᵐ?_ : (μ ρ : ModalityExpr m m') → TCM (⟦ μ ⟧modality ≅ᵈ ⟦ �
 ⟦_∈_⇒_⟧two-cell : TwoCellExpr → ∀ {m m'} (μ ρ : ModalityExpr m m') → TCM (TwoCell ⟦ μ ⟧modality ⟦ ρ ⟧modality)
 ⟦ id-cell ∈ μ ⇒ ρ ⟧two-cell = do
   μ=ρ ← μ ≃ᵐ? ρ
-  return (DRA.≅ᵈ-to-2-cell μ=ρ)
+  return (from μ=ρ)
 
 
 --------------------------------------------------

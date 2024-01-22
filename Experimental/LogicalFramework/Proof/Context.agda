@@ -132,7 +132,7 @@ interp-assumption-helper (skip-var {Ξ = Ξ} {ρ = ρ'} {T = T} a) ρ α =
   interp-assumption-helper a ρ α M.[ DRA.lock-fmap ⟦ ρ ⟧mod M.π ]'))
 interp-assumption-helper (skip-lock {κ = κ} ρ' a) ρ α =
   M.ι[ M.ty-subst-cong-ty _ (unfuselocks-bprop-sound {μ = ρ'} (lookup-assumption' a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α))) ] (
-  M.ι[ M.ty-subst-cong-subst-2-2 _ (eq-lock-natural-to (⟦ⓜ⟧-sound ρ' ρ) _) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (key-subst-natural (from (⟦ⓜ⟧-sound ρ' ρ))) ] (
   interp-assumption-helper a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)
   M.[ _ ]'))
 

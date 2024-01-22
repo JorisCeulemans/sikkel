@@ -70,10 +70,10 @@ apply-lock-seq Γ (locks ,, μ) = (apply-lock-seq Γ locks) ,lock⟨ μ ⟩
 
 apply-compose-lock-seq : (Γ : CtxExpr m') (locks : LockSeq m m') →
                          ⟦ apply-lock-seq Γ locks ⟧ctx ≅ᶜ ⟦ Γ ,lock⟨ compose-lock-seq locks ⟩ ⟧ctx
-apply-compose-lock-seq Γ [] = symᶜ (eq-lock 𝟙-interpretation ⟦ Γ ⟧ctx)
+apply-compose-lock-seq Γ [] = symᶜ (lock-iso 𝟙-interpretation)
 apply-compose-lock-seq Γ (locks ,, μ) =
   transᶜ (ctx-functor-cong (ctx-functor ⟦ μ ⟧modality) (apply-compose-lock-seq Γ locks))
-         (symᶜ (eq-lock (ⓜ-interpretation (compose-lock-seq locks) μ) ⟦ Γ ⟧ctx))
+         (symᶜ (lock-iso (ⓜ-interpretation (compose-lock-seq locks) μ)))
 
 record PruneCtxResult (Γ : CtxExpr m) (x : String) : Set where
   constructor prune-ctx-result

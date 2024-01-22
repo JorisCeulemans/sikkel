@@ -31,28 +31,20 @@ CtxNatTransf.naturality (transf 𝟙≤later) = from-earlier-natural
 --------------------------------------------------
 -- Interaction between the forever and later modalities
 
-earlier-constantly-ctx : (Γ : Ctx ★) → ◄ (constantly-ctx Γ) ≅ᶜ constantly-ctx Γ
-from (earlier-constantly-ctx Γ) = from-earlier (constantly-ctx Γ)
-func (to (earlier-constantly-ctx Γ)) γ = γ
-_⇒_.naturality (to (earlier-constantly-ctx Γ)) = refl
-eq (isoˡ (earlier-constantly-ctx Γ)) _ = refl
-eq (isoʳ (earlier-constantly-ctx Γ)) _ = refl
+frvⓓltr≤frv : TwoCell (forever ⓓ later) forever
+func (transf-op (transf frvⓓltr≤frv) Γ) γ = γ
+_⇒_.naturality (transf-op (transf frvⓓltr≤frv) Γ) = refl
+eq (CtxNatTransf.naturality (transf frvⓓltr≤frv) σ) _ = refl
 
-forever-later-tyʳ : {Γ : Ctx ★} (T : Ty (◄ (constantly-ctx Γ))) →
-                    forever-ty (▻ T) ≅ᵗʸ forever-ty (T [ to (earlier-constantly-ctx Γ) ])
-limit (func (from (forever-later-tyʳ T)) l) = λ n → limit l (suc n)
-limit-natural (func (from (forever-later-tyʳ T)) l) m≤n = limit-natural l (s≤s m≤n)
-_↣_.naturality (from (forever-later-tyʳ T)) = to-ω-limit-eq (λ _ → ty-cong T refl)
-limit (func (to (forever-later-tyʳ T)) l) = λ { zero → _ ; (suc n) → limit l n }
-limit-natural (func (to (forever-later-tyʳ T)) l) = λ { z≤n → refl ; (s≤s m≤n) → limit-natural l m≤n }
-_↣_.naturality (to (forever-later-tyʳ T)) = to-ω-limit-eq (λ { zero → refl ; (suc n) → ty-cong T refl })
-eq (isoˡ (forever-later-tyʳ T)) l = to-ω-limit-eq (λ { zero → refl ; (suc n) → refl })
-eq (isoʳ (forever-later-tyʳ T)) l = to-ω-limit-eq (λ _ → refl)
+frv≤frvⓓltr : TwoCell forever (forever ⓓ later)
+transf-op (transf frv≤frvⓓltr) _ = from-earlier _
+CtxNatTransf.naturality (transf frv≤frvⓓltr) σ = from-earlier-natural _
 
 forever-later : forever ⓓ later ≅ᵈ forever
-eq-lock forever-later = earlier-constantly-ctx
-eq (eq-lock-natural-to forever-later σ) δ = refl
-eq-dra-tyʳ forever-later = forever-later-tyʳ
+from forever-later = frvⓓltr≤frv
+to forever-later = frv≤frvⓓltr
+eq (key-subst-eq (isoˡ forever-later)) _ = refl
+eq (key-subst-eq (isoʳ forever-later)) _ = refl
 
 forever-later'-ty : {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) →
                     forever-ty (▻' T) ≅ᵗʸ forever-ty T
@@ -62,32 +54,21 @@ forever-later'-ty = eq-dra-tyˡ forever-later
 --------------------------------------------------
 -- Interaction between the forever and constantly modalities
 
-now-constantly-ctx : (Γ : Ctx ★) → now (constantly-ctx Γ) ≅ᶜ Γ
-func (from (now-constantly-ctx Γ)) = id
-_⇒_.naturality (from (now-constantly-ctx Γ)) {f = tt} = ctx-id Γ
-func (to (now-constantly-ctx Γ)) = id
-_⇒_.naturality (to (now-constantly-ctx Γ)) {f = tt} = sym (ctx-id Γ)
-eq (isoˡ (now-constantly-ctx Γ)) _ = refl
-eq (isoʳ (now-constantly-ctx Γ)) _ = refl
+frvⓓcst≤𝟙 : TwoCell (forever ⓓ constantly) 𝟙
+func (transf-op (transf frvⓓcst≤𝟙) Γ) γ = γ
+_⇒_.naturality (transf-op (transf frvⓓcst≤𝟙) Γ) {f = tt} = sym (ctx-id Γ)
+eq (CtxNatTransf.naturality (transf frvⓓcst≤𝟙) σ) _ = refl
 
-now-constantly-natural : {Δ : Ctx ★} {Γ : Ctx ★} (σ : Δ ⇒ Γ) →
-                         from (now-constantly-ctx Γ) ⊚ now-subst (constantly-subst σ) ≅ˢ σ ⊚ from (now-constantly-ctx Δ)
-eq (now-constantly-natural σ) _ = refl
-
-forever-constantly-tyʳ : {Γ : Ctx ★} (T : Ty (now (constantly-ctx Γ))) →
-                         forever-ty (constantly-ty T) ≅ᵗʸ T [ to (now-constantly-ctx Γ) ]
-func (from (forever-constantly-tyʳ T)) l = limit l 0
-_↣_.naturality (from (forever-constantly-tyʳ T)) = ty-cong T refl
-limit (func (to (forever-constantly-tyʳ T)) t) = λ n → t
-limit-natural (func (to (forever-constantly-tyʳ T)) t) = λ m≤n → ty-id T
-_↣_.naturality (to (forever-constantly-tyʳ T)) = to-ω-limit-eq (λ _ → ty-cong T refl)
-eq (isoˡ (forever-constantly-tyʳ T)) l = to-ω-limit-eq (λ _ → trans (sym (limit-natural l z≤n)) (ty-id T))
-eq (isoʳ (forever-constantly-tyʳ T)) _ = refl
+𝟙≤frvⓓcst : TwoCell 𝟙 (forever ⓓ constantly)
+func (transf-op (transf 𝟙≤frvⓓcst) Γ) γ = γ
+_⇒_.naturality (transf-op (transf 𝟙≤frvⓓcst) Γ) {f = tt} = ctx-id Γ
+eq (CtxNatTransf.naturality (transf 𝟙≤frvⓓcst) σ) _ = refl
 
 forever-constantly : forever ⓓ constantly ≅ᵈ 𝟙
-eq-lock forever-constantly = now-constantly-ctx
-eq (eq-lock-natural-to forever-constantly σ) δ = refl
-eq-dra-tyʳ forever-constantly = forever-constantly-tyʳ
+from forever-constantly = frvⓓcst≤𝟙
+to forever-constantly = 𝟙≤frvⓓcst
+eq (key-subst-eq (isoˡ forever-constantly)) _ = refl
+eq (key-subst-eq (isoʳ forever-constantly)) _ = refl
 
 now-constantly-ctx-intro : {A : ClosedTy ★} → IsClosedNatural A → {Γ : Ctx ★} →
                            Tm Γ A → Tm (now (constantly-ctx Γ)) A

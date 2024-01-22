@@ -112,6 +112,11 @@ module _ (μ : DRA C D) where
                        ty-subst-map σ (dra-map μ η) ⊙ to (dra-natural μ σ {T = T})
   dra-natural-map-to σ η = exchange-from-to-out (dra-natural μ σ) (dra-natural μ σ) (dra-natural-map μ σ η)
 
+  dra-map-cong-2-0 : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {φ : T ↣ S} {η : S ↣ T} →
+                     η ⊙ φ ≅ⁿ id-trans T →
+                     dra-map μ η ⊙ dra-map μ φ ≅ⁿ id-trans ⟨ μ ∣ T ⟩
+  dra-map-cong-2-0 𝔢 = transⁿ (symⁿ (dra-map-⊙ μ)) (transⁿ (dra-map-cong μ 𝔢) (dra-map-id μ))
+
   dra-cong : {Γ : Ctx D} {T S : Ty (lock μ Γ)} →
              T ≅ᵗʸ S → ⟨ μ ∣ T ⟩ ≅ᵗʸ ⟨ μ ∣ S ⟩
   from (dra-cong e) = dra-map μ (from e)

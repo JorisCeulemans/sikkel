@@ -38,14 +38,14 @@ infer-two-cell : TwoCellExpr → TCM TwoCellInferResult
 
 check-two-cell id-cell μ ρ = do
   μ=ρ ← μ ≃ᵐ? ρ
-  return (≅ᵈ-to-2-cell μ=ρ)
+  return (from μ=ρ)
 check-two-cell α {m} {n} μ ρ = do
   infer-result m' n' μ' ρ' ⟦α⟧ ← infer-two-cell α
   refl ← m ≟mode m'
   refl ← n ≟mode n'
   μ=μ' ← μ ≃ᵐ? μ'
   ρ'=ρ ← ρ' ≃ᵐ? ρ
-  return (≅ᵈ-to-2-cell ρ'=ρ DRA.ⓣ-vert ⟦α⟧ DRA.ⓣ-vert ≅ᵈ-to-2-cell μ=μ')
+  return (from ρ'=ρ DRA.ⓣ-vert ⟦α⟧ DRA.ⓣ-vert from μ=μ')
 
 infer-two-cell id-cell = type-error "Cannot infer the domain and codomain of the trivial 2-cell"
 infer-two-cell (α ⓣ-vert β) = do
@@ -54,7 +54,7 @@ infer-two-cell (α ⓣ-vert β) = do
   refl ← mα ≟mode mβ
   refl ← nα ≟mode nβ
   ρβ=μα ← ρβ ≃ᵐ? μα
-  return (infer-result mα nα μβ ρα (⟦α⟧ DRA.ⓣ-vert ≅ᵈ-to-2-cell ρβ=μα DRA.ⓣ-vert ⟦β⟧))
+  return (infer-result mα nα μβ ρα (⟦α⟧ DRA.ⓣ-vert from ρβ=μα DRA.ⓣ-vert ⟦β⟧))
 infer-two-cell (α ⓣ-hor β) = do
   infer-result mα nα μα ρα ⟦α⟧ ← infer-two-cell α
   infer-result mβ nβ μβ ρβ ⟦β⟧ ← infer-two-cell β

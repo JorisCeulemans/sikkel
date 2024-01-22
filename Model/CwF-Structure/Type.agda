@@ -348,6 +348,11 @@ move-symᵗʸ-out : {T S S' R : Ty Γ} {e1 : S ≅ᵗʸ T} {e2 : S ≅ᵗʸ R} {
                  transᵗʸ (symᵗʸ e1) e2 ≅ᵉ transᵗʸ e1' (symᵗʸ e2')
 move-symᵗʸ-out 𝑒 = to-symᵗʸ-eqˡ (symᵉ (transᵉ (symᵉ transᵗʸ-assoc) (to-symᵗʸ-eqʳ (symᵉ 𝑒))))
 
+move-symᵗʸ-in : {T S S' R : Ty Γ} {e1 : T ≅ᵗʸ S} {e2 : R ≅ᵗʸ S} {e1' : S' ≅ᵗʸ T} {e2' : S' ≅ᵗʸ R} →
+                transᵗʸ e1' e1 ≅ᵉ transᵗʸ e2' e2 →
+                transᵗʸ e1 (symᵗʸ e2) ≅ᵉ transᵗʸ (symᵗʸ e1') e2'
+move-symᵗʸ-in 𝑒 = to-symᵗʸ-eqʳ (symᵉ (transᵉ transᵗʸ-assoc (to-symᵗʸ-eqˡ (symᵉ 𝑒))))
+
 exchange-to-from-out : {T T' S R : Ty Γ} (e : T ≅ᵗʸ S) (e' : R ≅ᵗʸ T') {φ : T ↣ R} {φ' : S ↣ T'} →
                        φ ⊙ to e ≅ⁿ to e' ⊙ φ' →
                        from e' ⊙ φ ≅ⁿ φ' ⊙ from e
@@ -400,11 +405,17 @@ ty-subst-id-to : (T : Ty Γ) → T ↣ T [ id-subst Γ ]
 func (ty-subst-id-to T) = id
 naturality (ty-subst-id-to T) = ty-cong T refl
 
+ty-subst-id-to-from : (T : Ty Γ) → ty-subst-id-to T ⊙ ty-subst-id-from T ≅ⁿ id-trans _
+eq (ty-subst-id-to-from T) _ = refl
+
+ty-subst-id-from-to : (T : Ty Γ) → ty-subst-id-from T ⊙ ty-subst-id-to T ≅ⁿ id-trans T
+eq (ty-subst-id-from-to T) _ = refl
+
 ty-subst-id : (T : Ty Γ) → T [ id-subst Γ ] ≅ᵗʸ T
 from (ty-subst-id T) = ty-subst-id-from T
 to (ty-subst-id T) = ty-subst-id-to T
-eq (isoˡ (ty-subst-id T)) _ = refl
-eq (isoʳ (ty-subst-id T)) _ = refl
+isoˡ (ty-subst-id T) = ty-subst-id-to-from T
+isoʳ (ty-subst-id T) = ty-subst-id-from-to T
 
 ty-subst-comp-from : (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ↣ T [ τ ⊚ σ ]
 func (ty-subst-comp-from T τ σ) = id
@@ -515,11 +526,21 @@ ty-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
                           T [ σ2 ] [ σ1 ] ≅ᵗʸ T [ τ ]
 ty-subst-cong-subst-2-1 T ε = transᵗʸ (ty-subst-comp T _ _) (ty-subst-cong-subst ε T)
 
+ty-subst-cong-subst-2-0 : {σ : Γ ⇒ Δ} {τ : Δ ⇒ Γ} (T : Ty Γ) →
+                          τ ⊚ σ ≅ˢ id-subst Γ → T [ τ ] [ σ ] ≅ᵗʸ T
+ty-subst-cong-subst-2-0 T ε = transᵗʸ (ty-subst-cong-subst-2-1 T ε) (ty-subst-id T)
+
 ty-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
                           (T : Ty Θ) → σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1 →
                           T [ σ2 ] [ σ1 ] ≅ᵗʸ T [ τ2 ] [ τ1 ]
 ty-subst-cong-subst-2-2 T ε =
   transᵗʸ (ty-subst-comp T _ _) (transᵗʸ (ty-subst-cong-subst ε T) (symᵗʸ (ty-subst-comp T _ _)))
+
+ty-subst-cong-subst-2-0-iso : {σ : Γ ⇒ Δ} {τ : Δ ⇒ Γ} (T : Ty Δ)
+                              (ε :  σ ⊚ τ ≅ˢ id-subst Δ)
+                              (ε' : τ ⊚ σ ≅ˢ id-subst Γ) →
+                              ty-subst-cong-ty σ (ty-subst-cong-subst-2-0 T ε) ≅ᵉ ty-subst-cong-subst-2-0 (T [ σ ]) ε'
+eq (from-eq (ty-subst-cong-subst-2-0-iso T ε ε')) _ = ty-cong T refl
 
 ty-subst-cong-subst-2-2-id : {σ : Γ ⇒ Δ} (T : Ty Δ) →
                              transᵗʸ (ty-subst-cong-subst-2-2 T (transˢ (id-subst-unitˡ σ) (symˢ (id-subst-unitʳ σ)))) (ty-subst-id (T [ σ ]))

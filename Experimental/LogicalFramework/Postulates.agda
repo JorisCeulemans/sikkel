@@ -46,9 +46,9 @@ postulate
   unlock𝟙-bprop-sound : (φ : bProp (Γ ,lock⟨ 𝟙 ⟩)) → ⟦ unlock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
   lock𝟙-bprop-sound : (φ : bProp Γ) → ⟦ lock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
   unfuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⓜ ρ ⟩)) →
-                            ⟦ unfuselocks-bprop {μ = μ} φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.to (eq-lock (⟦ⓜ⟧-sound μ ρ) _) ]
+                            ⟦ unfuselocks-bprop {μ = μ} φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.to (lock-iso (⟦ⓜ⟧-sound μ ρ)) ]
   fuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)) →
-                          ⟦ fuselocks-bprop φ ⟧bprop M.[ M.to (eq-lock (⟦ⓜ⟧-sound μ ρ) _) ] M.≅ᵗʸ ⟦ φ ⟧bprop
+                          ⟦ fuselocks-bprop φ ⟧bprop M.[ M.to (lock-iso (⟦ⓜ⟧-sound μ ρ)) ] M.≅ᵗʸ ⟦ φ ⟧bprop
 
   ren-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ π-ren {Γ = Γ} {μ = μ} {x} {T} ⟧ren M.≅ˢ M.π
 

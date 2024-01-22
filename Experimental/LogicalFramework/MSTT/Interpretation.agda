@@ -109,7 +109,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦⟧ltel {m} ◇ = M.reflᶜ
 ⟦⟧ltel (Λ ,lock⟨ μ ⟩) =
   M.transᶜ (M.ctx-functor-cong (DRA.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
-           (M.symᶜ (DRA.eq-lock (⟦ⓜ⟧-sound (locks-ltel Λ) μ) _))
+           (M.symᶜ (DRA.lock-iso (⟦ⓜ⟧-sound (locks-ltel Λ) μ)))
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _

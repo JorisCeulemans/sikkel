@@ -72,7 +72,7 @@ extract-term (extract-stream {A} clA exA) s = vecs-to-stream (λ n → Vec.map (
     Tm.naturality (to-★-nowtmlss◇-term a) tt refl = ty-id A
 
     to-◇A-term : A {now (constantly-ctx ◇)} ⟨ tt , tt ⟩ → Tm ◇ A
-    to-◇A-term = ι⁻¹[ closed-natural clA _ ]_ ∘ _[ to (now-constantly-ctx ◇) ]' ∘ to-★-nowtmlss◇-term
+    to-◇A-term = ι⁻¹[ closed-natural clA _ ]_ ∘ _[ key-subst (from forever-constantly) ]' ∘ to-★-nowtmlss◇-term
 embed-term (extract-stream {A = A} clA exA) s = forever-tm (MkTm (λ n _ → Vec.map (λ a → now-constantly-ctx-intro clA (embed-term exA a) ⟨ tt , tt ⟩')
                                                                             (take (suc n) s))
                                                            (λ { m≤n refl → nat (s≤s m≤n) s }))

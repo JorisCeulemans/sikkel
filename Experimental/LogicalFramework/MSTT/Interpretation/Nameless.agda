@@ -48,7 +48,7 @@ private variable
     M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
 ⟦⟧var-helper {T = T} (vsuc v) ρ α = (⟦⟧var-helper v ρ α) M.[ ty-closed-natural T ∣ lock-fmap ⟦ ρ ⟧mod M.π ]cl
 ⟦⟧var-helper {T = T} (skip-lock {κ = κ} φ v) ρ α =
-  (⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ ty-closed-natural T ∣ M.to (DRA.eq-lock (⟦ⓜ⟧-sound φ ρ) _) ]cl
+  (⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound φ ρ)) ]cl
 
 ⟦_,_⟧var-nmls : {μ κ : Modality m n} → (v : Var _ μ T κ Γ) → TwoCell μ κ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 ⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
