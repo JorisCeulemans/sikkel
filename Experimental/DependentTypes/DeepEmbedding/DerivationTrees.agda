@@ -192,8 +192,8 @@ module AllContextsTypes where
   interpret-tm dΓ dT (d-true x) = {!!}
   interpret-tm dΓ dT (d-false x) = {!!}
   interpret-tm dΓ dT (d-if dt dt₁ dt₂) = {!!}
-  interpret-tm dΓ (d-⊠ dT dS) (d-pair dt ds) = M.pair $ interpret-tm dΓ dT dt $ interpret-tm dΓ dS ds
-  interpret-tm dΓ dT (d-fst dp) = M.fst $ interpret-tm dΓ {!!} dp
+  interpret-tm dΓ (d-⊠ dT dS) (d-pair dt ds) = M.pair (interpret-tm dΓ dT dt) (interpret-tm dΓ dS ds)
+  interpret-tm dΓ dT (d-fst dp) = M.fst (interpret-tm dΓ {!!} dp)
   interpret-tm dΓ dT (d-snd dt) = {!!}
   interpret-tm dΓ dT (d-refl dt) = {!!}
   interpret-tm dΓ dT (d-tm-subst dt x) = {!!}

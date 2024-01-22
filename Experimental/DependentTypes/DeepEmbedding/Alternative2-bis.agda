@@ -150,7 +150,7 @@ interpret-tm (lam A t) R R-ok (Γ⊢A , T , R=A⇛T , Γ,,A⊢t∈T) =
 interpret-tm (app .(T₁ ⇛ T₂) f t) S S-ok (fun-ty T₁ T₂ , (T₁-ok , T₂-ok) , Γ⊢f∈T , Γ⊢t∈T₁ , S≃T₂) =
   ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] M.app (interpret-tm f (T₁ ⇛ T₂) (T₁-ok , T₂-ok) Γ⊢f∈T) (interpret-tm t T₁ T₁-ok Γ⊢t∈T₁)
 interpret-tm (lit n) T T-ok T=Nat = ι[ ≃ᵗʸ-sound T-ok tt T=Nat ] M.const n
-interpret-tm suc (Nat ⇛ Nat) T-ok T=Nat⇛Nat = M.suc'
+interpret-tm suc (Nat ⇛ Nat) T-ok T=Nat⇛Nat = {!M.suc'!}
 interpret-tm plus (Nat ⇛ Nat ⇛ Nat) T-ok T=Nat⇛Nat⇛Nat = M.nat-sum
 interpret-tm true T T-ok T=Bool = ι[ ≃ᵗʸ-sound T-ok tt T=Bool ] M.true'
 interpret-tm false T T-ok T=Bool = ι[ ≃ᵗʸ-sound T-ok tt T=Bool ] M.false'
@@ -158,12 +158,12 @@ interpret-tm (if c t f) T T-ok (Γ⊢c∈Bool , Γ⊢t∈T , Γ⊢f∈T) =
   M.if' interpret-tm c Bool tt Γ⊢c∈Bool
   then' interpret-tm t T T-ok Γ⊢t∈T
   else' interpret-tm f T T-ok Γ⊢f∈T
-interpret-tm (pair t s) P (Γ⊢T , Γ⊢S) (prod-ty T S , Γ⊢t∈T , Γ⊢s∈S) = M.pair $ interpret-tm t T Γ⊢T Γ⊢t∈T
-                                                                             $ interpret-tm s S Γ⊢S Γ⊢s∈S
+interpret-tm (pair t s) P (Γ⊢T , Γ⊢S) (prod-ty T S , Γ⊢t∈T , Γ⊢s∈S) = M.pair (interpret-tm t T Γ⊢T Γ⊢t∈T)
+                                                                             (interpret-tm s S Γ⊢S Γ⊢s∈S)
 interpret-tm (fst .(S₁ ⊠ S₂) p) T T-ok (prod-ty S₁ S₂ , (S₁-ok , S₂-ok) , T≃S₁ , Γ⊢p∈S) =
-  ι[ ≃ᵗʸ-sound T-ok S₁-ok T≃S₁ ] (M.fst $ interpret-tm p (S₁ ⊠ S₂) (S₁-ok , S₂-ok) Γ⊢p∈S)
+  ι[ ≃ᵗʸ-sound T-ok S₁-ok T≃S₁ ] (M.fst (interpret-tm p (S₁ ⊠ S₂) (S₁-ok , S₂-ok) Γ⊢p∈S))
 interpret-tm (snd .(T₁ ⊠ T₂) p) S S-ok (prod-ty T₁ T₂ , (T₁-ok , T₂-ok) , S≃T₂ , Γ⊢p∈T) =
-  ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] (M.snd $ interpret-tm p (T₁ ⊠ T₂) (T₁-ok , T₂-ok) Γ⊢p∈T)
+  ι[ ≃ᵗʸ-sound S-ok T₂-ok S≃T₂ ] (M.snd (interpret-tm p (T₁ ⊠ T₂) (T₁-ok , T₂-ok) Γ⊢p∈T))
 interpret-tm (refl T t) {Γ-ok = Γ-ok} (Id R x y) IdRxy-ok@(R-ok , x-ok , y-ok) (T=Idtt , IdTtt-ok@(T-ok , t-ok , t-ok')) =
   ι[ ≃ᵗʸ-sound {T = Id R x y} {S = Id T t t} IdRxy-ok (T-ok , t-ok , t-ok) T=Idtt ] M.refl' (interpret-tm t T T-ok t-ok)
   -- Two different proofs of Γ ⊢ t ∈ T give rise to interpretations that are not definitionally equal,

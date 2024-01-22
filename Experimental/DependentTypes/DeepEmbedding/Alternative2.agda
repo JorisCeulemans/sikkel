@@ -144,7 +144,7 @@ interpret-tm (lam A t) {Γ} S S-ok t∈T with infer-type t (Γ ,, A) in t∈T
 interpret-tm (TmExpr.lam A t) {Γ} .(A ⇛ T) (A-ok , T-ok) refl | ok T = M.lam _ {!interpret-tm t {!T!} {!!} {!t∈T!}!}
 interpret-tm (f ∙ t) S T-ok t∈T = {!!}
 interpret-tm (lit n) .Nat T-ok refl = M.const n
-interpret-tm suc .(Nat ⇛ Nat) T-ok refl = M.suc'
+interpret-tm suc .(Nat ⇛ Nat) T-ok refl = {!M.suc'!}
 interpret-tm plus .(Nat ⇛ Nat ⇛ Nat) T-ok refl = M.nat-sum
 interpret-tm true .Bool T-ok refl = M.true'
 interpret-tm false .Bool T-ok refl = M.false'

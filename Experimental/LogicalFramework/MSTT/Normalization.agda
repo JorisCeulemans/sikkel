@@ -1,18 +1,19 @@
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
 
 module Experimental.LogicalFramework.MSTT.Normalization
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯 _)
   where
 
-open import Data.Nat
+open import Data.Nat hiding (_/_)
 open import Data.Maybe
 open import Function
 
 open ModeTheory ℳ
 
 open import Experimental.LogicalFramework.MSTT.Normalization.Helpers
-open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax.Nameless ℳ 𝒯 𝓉
 
 private variable
   m n o : Mode

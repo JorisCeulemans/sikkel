@@ -238,7 +238,7 @@ interpret-tm (TmExpr.app T t₁ t₂) Γ {T₂} Γ-ok T₂-ok (tt , (tt , T₁-o
   M.app (ι[ ⇛-cong M.reflᵗʸ (interpret-ty-eq T₂ T₂′ Γ Γ-ok T₂-ok T₂′-ok eq₂) ] interpret-tm t₁ Γ {T₁ ⇛ T₂′} Γ-ok (tt , T₁-ok , T₂′-ok) t₁-ok)
     (interpret-tm t₂ Γ {T₁} Γ-ok T₁-ok t₂-ok)
 interpret-tm (lit x) Γ {T} Γ-ok T-ok t-ok = ι[ interpret-ty-eq T Nat Γ Γ-ok T-ok (lift refl) t-ok ] const x
-interpret-tm suc Γ {Nat ⇛ Nat} Γ-ok T-ok t-ok = M.suc'
+interpret-tm suc Γ {Nat ⇛ Nat} Γ-ok T-ok t-ok = {!M.suc'!}
 interpret-tm plus Γ {Nat ⇛ Nat ⇛ Nat} Γ-ok T-ok t-ok = nat-sum
 interpret-tm true Γ {T} Γ-ok T-ok t-ok =
   ι[ interpret-ty-eq T Bool Γ Γ-ok T-ok (lift refl) t-ok ] const Bool.true
