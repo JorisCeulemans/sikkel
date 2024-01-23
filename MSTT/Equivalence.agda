@@ -61,7 +61,7 @@ Bool' ≃ᵗʸ? Bool' = return reflᵗʸ
   refl ← mT ≟mode mS
   μ=ρ ← μ ≃ᵐ? ρ
   T=S ← T ≃ᵗʸ? S
-  return (transᵗʸ (eq-dra-closed μ=ρ (⟦⟧ty-natural T))
+  return (transᵗʸ (eq-dra-ty-closed μ=ρ (⟦⟧ty-natural T))
                   (dra-cong ⟦ ρ ⟧modality T=S))
 (Ext {margs1} c1 args1) ≃ᵗʸ? (Ext {margs2} c2 args2) = do
   refl ← margs1 ≟list-mode margs2

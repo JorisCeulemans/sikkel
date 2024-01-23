@@ -60,7 +60,7 @@ apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T →
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim {T = T} {S = S} ρ μ _ t s ⟧tm-nmls =
   ⟦ s ⟧tm-nmls M.[ ty-closed-natural S
-                 ∣ M.tm-to-subst (M.ι[ eq-dra-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T) ]
+                 ∣ M.tm-to-subst (M.ι[ eq-dra-ty-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T) ]
                                      dra-intro ⟦ ρ ⟧mod ⟦ t ⟧tm-nmls)
                  ]cl
 ⟦ lam[_∣_∈_]_ {S = S} _ _ _ t ⟧tm-nmls = M.lamcl (ty-closed-natural S) ⟦ t ⟧tm-nmls

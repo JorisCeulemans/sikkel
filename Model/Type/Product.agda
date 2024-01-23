@@ -38,6 +38,16 @@ to (⊠-cong T=T' S=S') = ⊠-bimap (to T=T') (to S=S')
 eq (isoˡ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoˡ T=T') t) (eq (isoˡ S=S') s)
 eq (isoʳ (⊠-cong T=T' S=S')) [ t , s ] = cong₂ [_,_] (eq (isoʳ T=T') t) (eq (isoʳ S=S') s)
 
+⊠-cong-trans : {T T' T'' S S' S'' : Ty Γ}
+               {T=T' : T ≅ᵗʸ T'} {T'=T'' : T' ≅ᵗʸ T''} {S=S' : S ≅ᵗʸ S'} {S'=S'' : S' ≅ᵗʸ S''} →
+               ⊠-cong (transᵗʸ T=T' T'=T'') (transᵗʸ S=S' S'=S'') ≅ᵉ transᵗʸ (⊠-cong T=T' S=S') (⊠-cong T'=T'' S'=S'')
+eq (from-eq ⊠-cong-trans) _ = refl
+
+⊠-cong-cong : {T1 T2 S1 S2 : Ty Γ} {eT eT' : T1 ≅ᵗʸ T2} {eS eS' : S1 ≅ᵗʸ S2} →
+              eT ≅ᵉ eT' → eS ≅ᵉ eS' → ⊠-cong eT eS ≅ᵉ ⊠-cong eT' eS'
+eq (from-eq (⊠-cong-cong 𝑒T 𝑒S)) [ t , s ] = cong₂ [_,_] (eq (from-eq 𝑒T) t) (eq (from-eq 𝑒S) s)
+
+
 pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
 pair t s ⟨ x , γ ⟩' = [ t ⟨ x , γ ⟩' , s ⟨ x , γ ⟩' ]
 naturality (pair t s) f eγ = cong₂ [_,_] (naturality t f eγ) (naturality s f eγ)
@@ -99,6 +109,12 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
   snd-natural : (p : Tm Γ (T ⊠ S)) → (snd p) [ σ ]' ≅ᵗᵐ snd (ι⁻¹[ ⊠-natural ] (p [ σ ]'))
   eq (snd-natural p) _ = refl
 
+⊠-natural-cong : {T T' S S' : Ty Δ} {σ : Γ ⇒ Δ} {T=T' : T ≅ᵗʸ T'} {S=S' : S ≅ᵗʸ S'} →
+                 transᵗʸ (ty-subst-cong-ty σ (⊠-cong T=T' S=S')) (⊠-natural σ)
+                   ≅ᵉ
+                 transᵗʸ (⊠-natural σ) (⊠-cong (ty-subst-cong-ty σ T=T') (ty-subst-cong-ty σ S=S'))
+eq (from-eq ⊠-natural-cong) _ = refl
+
 module _ (t : Tm Γ T) (s : Tm Γ S) where
   β-⊠-fst : fst (pair t s) ≅ᵗᵐ t
   eq β-⊠-fst _ = refl
@@ -156,3 +172,16 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
   snd-cl-natural : {σ : Γ ⇒ Δ} {p : Tm Δ (A ⊠ B)} →
                    (snd p) [ clB ∣ σ ]cl ≅ᵗᵐ snd (p [ prod-closed ∣ σ ]cl)
   snd-cl-natural = transᵗᵐ (ι⁻¹-cong (snd-natural _ _)) (transᵗᵐ (snd-ι⁻¹ _) (snd-cong (symᵗᵐ ι⁻¹-trans)))
+
+⊠-closed-cong : {A A' B B' : ClosedTy C}
+                {clA : IsClosedNatural A} {clA' : IsClosedNatural A'} {clB : IsClosedNatural B} {clB' : IsClosedNatural B'} →
+                clA ≅ᶜᵗʸ clA' → clB ≅ᶜᵗʸ clB' → prod-closed clA clB ≅ᶜᵗʸ prod-closed clA' clB'
+closed-ty-eq (⊠-closed-cong eA eB) = ⊠-cong (closed-ty-eq eA) (closed-ty-eq eB)
+closed-ty-eq-natural (⊠-closed-cong eA eB) σ =
+  transᵉ (symᵉ transᵗʸ-assoc) (
+  transᵉ (transᵗʸ-congˡ ⊠-natural-cong) (
+  transᵉ transᵗʸ-assoc (
+  transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ ⊠-cong-trans) (
+                         transᵉ (⊠-cong-cong (closed-ty-eq-natural eA _) (closed-ty-eq-natural eB _))
+                         ⊠-cong-trans))) (
+  symᵉ transᵗʸ-assoc))))

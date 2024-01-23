@@ -72,7 +72,7 @@ eq (key-subst-eq (isoʳ forever-constantly)) _ = refl
 
 now-constantly-ctx-intro : {A : ClosedTy ★} → IsClosedNatural A → {Γ : Ctx ★} →
                            Tm Γ A → Tm (now (constantly-ctx Γ)) A
-now-constantly-ctx-intro clA t = unconstantly-tm (unforever-tm (ι[ eq-dra-closed forever-constantly clA ] t))
+now-constantly-ctx-intro clA t = unconstantly-tm (unforever-tm (ι[ eq-dra-ty-closed forever-constantly clA ] t))
 
 to-constantly-now-ctx : (Γ : Ctx ω) → (Γ ⇒ constantly-ctx (now Γ))
 func (to-constantly-now-ctx Γ) = Γ ⟪ z≤n ⟫_

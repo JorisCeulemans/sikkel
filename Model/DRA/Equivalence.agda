@@ -169,11 +169,11 @@ eq-dra-tyˡ : {μ ρ : DRA C D} (ℯ : μ ≅ᵈ ρ) {Γ : Ctx D} (T : Ty (lock 
              ⟨ μ ∣ T [ key-subst (to ℯ) ] ⟩ ≅ᵗʸ ⟨ ρ ∣ T ⟩
 eq-dra-tyˡ ℯ T = symᵗʸ (eq-dra-tyʳ (symᵈ ℯ) T)
 
-eq-dra-closed : {μ ρ : DRA C D} → μ ≅ᵈ ρ →
-                {A : ClosedTy C} → IsClosedNatural A →
-                {Γ : Ctx D} →
-                ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
-eq-dra-closed {ρ = ρ} ℯ {A} clA = transᵗʸ (eq-dra-tyʳ ℯ A) (dra-cong ρ (closed-natural clA _))
+eq-dra-ty-closed : {μ ρ : DRA C D} → μ ≅ᵈ ρ →
+                   {A : ClosedTy C} → IsClosedNatural A →
+                   {Γ : Ctx D} →
+                   ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
+eq-dra-ty-closed {ρ = ρ} ℯ {A} clA = transᵗʸ (eq-dra-tyʳ ℯ A) (dra-cong ρ (closed-natural clA _))
 
 
 𝟙-unitʳ : (μ : DRA C D) → μ ⓓ 𝟙 ≅ᵈ μ
@@ -285,3 +285,21 @@ key-subst-eq 𝟙-ⓓ-triangle = id-subst-unitˡ _
 key-subst-eq (ⓓ-pentagon {μ = μ} {ρ} {κ} {θ})  =
   transˢ (⊚-congʳ (transˢ (id-subst-unitˡ _) (transˢ (id-subst-unitˡ _) (lock-fmap-id (ρ ⓓ κ ⓓ θ)))))
          (transˢ (id-subst-unitʳ _) (⊚-congʳ (lock-fmap-id θ)))
+
+
+eq-dra-closed : {μ ρ : DRA C D} → μ ≅ᵈ ρ →
+                {A : ClosedTy C} (clA : IsClosedNatural A) →
+                dra-closed μ clA ≅ᶜᵗʸ dra-closed ρ clA
+closed-ty-eq (eq-dra-closed e clA) = eq-dra-ty-closed e clA
+closed-ty-eq-natural (eq-dra-closed {ρ = ρ} ℯ clA) σ =
+  transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-trans) (
+    transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc))) (
+  transᵉ (transᵗʸ-congʳ (transᵗʸ-congˡ (symᵉ (dra-natural-ty-eq ρ σ _)))) (
+    transᵉ (transᵗʸ-congʳ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ (dra-cong-trans ρ))))) (
+  transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ (dra-cong-cong ρ (closed-substs-eq-2-2 clA (key-subst-natural (from ℯ)))))) (
+    transᵉ (transᵉ (transᵗʸ-congʳ (transᵉ (transᵗʸ-congʳ (dra-cong-trans ρ)) (symᵉ transᵗʸ-assoc))) (symᵉ transᵗʸ-assoc)) (
+  transᵉ (transᵗʸ-congˡ (eq-dra-tyʳ-natural ℯ σ)) (
+    transᵉ transᵗʸ-assoc (transᵉ (transᵗʸ-congʳ (
+    transᵉ (transᵉ (transᵗʸ-congʳ (dra-cong-trans ρ)) (symᵉ transᵗʸ-assoc)) (
+  transᵉ (transᵗʸ-congˡ (eq-dra-tyʳ-cong ℯ (closed-natural clA _))) (
+    transᵗʸ-assoc)))) (symᵉ transᵗʸ-assoc)))))))))

@@ -144,6 +144,16 @@ eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
 ξ-convert : (φ : T ↣ S) → convert-tm (ty-subst-map π φ) ξ ≅ᵗᵐ ι⁻¹[ ty-subst-cong-subst-2-1 S (,,-map-π φ) ] (ξ [ ,,-map φ ]')
 eq (ξ-convert {S = S} φ) _ = sym (strong-ty-id S)
 
+,,-cong-ξ : (e : T ≅ᵗʸ S) →
+  ξ [ from (,,-cong e) ]'
+    ≅ᵗᵐ
+  ι[ ty-subst-comp S π (from (,,-cong e)) ] ι[ ty-subst-cong-subst (,,-map-π (from e)) S ]  ι⁻¹[ ty-subst-cong-ty π e ] ξ
+eq (,,-cong-ξ {S = S} e) _ = sym (strong-ty-id S)
+
+,,-cong-ext-subst : (e : T ≅ᵗʸ S) {σ : Γ ⇒ Δ} {t : Tm Γ (T [ σ ])} →
+                    from (,,-cong e) ⊚ to-ext-subst T σ t ≅ˢ to-ext-subst S σ (ι⁻¹[ ty-subst-cong-ty σ e ] t)
+eq (,,-cong-ext-subst e) _ = refl
+
 -- Context extension which includes a variable name
 _,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C
 Γ ,, v ∈ T = Γ ,, T

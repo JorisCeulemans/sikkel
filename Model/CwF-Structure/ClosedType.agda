@@ -19,7 +19,7 @@ private
     C : BaseCategory
     Γ Δ Θ : Ctx C
 
-infix 1 _≅ᶜᵗʸ_
+infix 1 _≅ᶜⁿ_ _≅ᶜᵗʸ_
 
 
 --------------------------------------------------
@@ -45,6 +45,18 @@ record IsClosedNatural {C} (U : ClosedTy C) : Set₁ where
                       transᵗʸ (ty-subst-cong-subst ε U) (closed-natural τ) ≅ᵉ closed-natural σ
 
 open IsClosedNatural public
+
+closed-substs-eq-2-2 : {Γ Δ Θ1 Θ2 : Ctx C} {σ1 : Θ1 ⇒ Δ} {τ1 : Γ ⇒ Θ1} {σ2 : Θ2 ⇒ Δ} {τ2 : Γ ⇒ Θ2} →
+                       {A : ClosedTy C} (clA : IsClosedNatural A) (ε : σ1 ⊚ τ1 ≅ˢ σ2 ⊚ τ2) →
+                       transᵗʸ (ty-subst-cong-ty τ1 (closed-natural clA σ1)) (closed-natural clA τ1)
+                         ≅ᵉ
+                       transᵗʸ (ty-subst-cong-subst-2-2 A ε) (transᵗʸ (ty-subst-cong-ty τ2 (closed-natural clA σ2)) (closed-natural clA τ2))
+closed-substs-eq-2-2 clA ε =
+  transᵉ (closed-⊚ clA _ _) (
+  transᵉ (transᵗʸ-congʳ (symᵉ (closed-subst-eq clA ε))) (
+  transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ (symᵉ transᵗʸ-cancelˡ-symˡ))) (
+  transᵉ (transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ transᵗʸ-assoc) (transᵉ (transᵗʸ-congˡ (symᵉ transᵗʸ-assoc)) transᵗʸ-assoc))) (symᵉ transᵗʸ-assoc)) (
+  transᵗʸ-congʳ (symᵉ (closed-⊚ clA _ _))))))
 
 
 --------------------------------------------------
@@ -253,12 +265,12 @@ module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) 
 -- need to express equivalence of such naturality proofs (e.g. when
 -- comparing ⟨ 𝟙 ∣ T ⟩ and T).
 
-record _≅ᶜᵗʸ_ {A : ClosedTy C} (clA clA' : IsClosedNatural A) : Set₁ where
+record _≅ᶜⁿ_ {A : ClosedTy C} (clA clA' : IsClosedNatural A) : Set₁ where
   field
     closed-natural-eq : (σ : Γ ⇒ Δ) → closed-natural clA σ ≅ᵉ closed-natural clA' σ
-open _≅ᶜᵗʸ_ public
+open _≅ᶜⁿ_ public
 
-module _ {A : ClosedTy C} {clA clA' : IsClosedNatural A} (e : clA ≅ᶜᵗʸ clA') where
+module _ {A : ClosedTy C} {clA clA' : IsClosedNatural A} (e : clA ≅ᶜⁿ clA') where
   cl-tm-subst-cong-cl : {σ : Γ ⇒ Δ} {t : Tm Δ A} →
                         t [ clA ∣ σ ]cl ≅ᵗᵐ t [ clA' ∣ σ ]cl
   cl-tm-subst-cong-cl {σ = σ} = ι⁻¹-congᵉ (closed-natural-eq e σ)
@@ -271,3 +283,91 @@ module _ {A : ClosedTy C} {clA clA' : IsClosedNatural A} (e : clA ≅ᶜᵗʸ cl
 
   /cl-cong-cl : {t : Tm Γ A} → (t /cl⟨ clA ⟩) ≅ˢ (t /cl⟨ clA' ⟩)
   /cl-cong-cl = ,cl-cong-cl
+
+
+--------------------------------------------------
+-- Definition of equivalence of closed types and some consequences.
+-- Note that the notion _≅ᶜⁿ_ is a specialization of _≅ᶜᵗʸ_ where closed-ty-eq is constantly reflᵗʸ.
+-- It is however cleaner to separate the two concepts.
+
+-- Naturality amounts to the following diagram to be commutative:
+--   A [ σ ]  <-->  B [ σ ]
+--      ^              ^
+--      |              |
+--      v              v
+--      A     <-->     B
+record _≅ᶜᵗʸ_ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) : Set₁ where
+  field
+    closed-ty-eq : {Γ : Ctx C} → A {Γ} ≅ᵗʸ B
+    closed-ty-eq-natural : (σ : Γ ⇒ Δ) →
+      transᵗʸ (ty-subst-cong-ty σ closed-ty-eq) (closed-natural clB σ)
+        ≅ᵉ
+      transᵗʸ (closed-natural clA σ) closed-ty-eq
+open _≅ᶜᵗʸ_ public
+
+module _ {A B : ClosedTy C} {clA : IsClosedNatural A} {clB : IsClosedNatural B} (e : clA ≅ᶜᵗʸ clB) where
+  cl-tm-subst-ι : (σ : Γ ⇒ Δ) (t : Tm Δ B) → (ι[ closed-ty-eq e ] t) [ clA ∣ σ ]cl ≅ᵗᵐ ι[ closed-ty-eq e ] (t [ clB ∣ σ ]cl)
+  cl-tm-subst-ι σ t =
+    begin
+      ι⁻¹[ closed-natural clA σ ] ((ι[ closed-ty-eq e ] t) [ σ ]')
+    ≅⟨ ι⁻¹-cong ι-subst-commute ⟨
+      ι⁻¹[ closed-natural clA σ ] (ι[ ty-subst-cong-ty σ (closed-ty-eq e) ] (t [ σ ]'))
+    ≅⟨ ι-congᵉ-2-2 (to-symᵗʸ-eqˡ (transᵉ (symᵉ (to-symᵗʸ-eqʳ (symᵉ (closed-ty-eq-natural e σ)))) transᵗʸ-assoc)) ⟩
+      ι[ closed-ty-eq e ] ι⁻¹[ closed-natural clB σ ] (t [ σ ]') ∎
+    where open ≅ᵗᵐ-Reasoning
+
+  ,cl-,,-cong : (σ : Γ ⇒ Δ) (t : Tm Γ A) → from (,,-cong (closed-ty-eq e)) ⊚ (σ ,cl⟨ clA ⟩ t) ≅ˢ σ ,cl⟨ clB ⟩ (ι⁻¹[ closed-ty-eq e ] t)
+  ,cl-,,-cong σ t =
+    begin
+      from (,,-cong (closed-ty-eq e)) ⊚ to-ext-subst A σ (ι[ closed-natural clA σ ] t)
+    ≅⟨ ,,-cong-ext-subst (closed-ty-eq e) ⟩
+      to-ext-subst B σ (ι⁻¹[ ty-subst-cong-ty σ (closed-ty-eq e) ] (ι[ closed-natural clA σ ] t))
+    ≅⟨ ctx-ext-subst-cong-tm σ (ι-congᵉ-2-2 (to-symᵗʸ-eqˡ (transᵉ (symᵉ (to-symᵗʸ-eqʳ (closed-ty-eq-natural e σ))) transᵗʸ-assoc))) ⟩
+      to-ext-subst B σ (ι[ closed-natural clB σ ] ι⁻¹[ closed-ty-eq e ] t) ∎
+    where open ≅ˢ-Reasoning
+
+  ξcl-,,-cong : {Γ : Ctx C} → ξcl clB {Γ = Γ} [ clB ∣ from (,,-cong (closed-ty-eq e)) ]cl ≅ᵗᵐ ι⁻¹[ closed-ty-eq e ] ξcl clA
+  ξcl-,,-cong =
+    begin
+      ι⁻¹[ closed-natural clB (from (,,-cong (closed-ty-eq e))) ] ((ι⁻¹[ closed-natural clB π ] ξ) [ from (,,-cong (closed-ty-eq e)) ]')
+    ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟨
+      ι⁻¹[ closed-natural clB (from (,,-cong (closed-ty-eq e))) ] ι⁻¹[ ty-subst-cong-ty (from (,,-cong (closed-ty-eq e))) (closed-natural clB π) ]
+           (ξ [ from (,,-cong (closed-ty-eq e)) ]')
+    ≅⟨ ι⁻¹-cong (ι⁻¹-cong (,,-cong-ξ (closed-ty-eq e))) ⟩
+      ι⁻¹[ closed-natural clB (from (,,-cong (closed-ty-eq e))) ]
+        ι⁻¹[ ty-subst-cong-ty (from (,,-cong (closed-ty-eq e))) (closed-natural clB π) ]
+        ι[ ty-subst-comp B π (from (,,-cong (closed-ty-eq e))) ]
+        ι[ ty-subst-cong-subst (,,-map-π (from (closed-ty-eq e))) B ]
+        ι⁻¹[ ty-subst-cong-ty π (closed-ty-eq e) ] ξ
+    ≅⟨ ι⁻¹-congᵉ-2-2 (closed-⊚ clB π (from (,,-cong (closed-ty-eq e)))) ⟩
+      ι⁻¹[ closed-natural clB (π ⊚ from (,,-cong (closed-ty-eq e))) ]
+        ι⁻¹[ ty-subst-comp B π (from (,,-cong (closed-ty-eq e))) ]
+        ι[ ty-subst-comp B π (from (,,-cong (closed-ty-eq e))) ]
+        ι[ ty-subst-cong-subst (,,-map-π (from (closed-ty-eq e))) B ]
+        ι⁻¹[ ty-subst-cong-ty π (closed-ty-eq e) ] ξ
+    ≅⟨ ι⁻¹-cong ι-symˡ ⟩
+      ι⁻¹[ closed-natural clB (π ⊚ from (,,-cong (closed-ty-eq e))) ]
+        ι[ ty-subst-cong-subst (,,-map-π (from (closed-ty-eq e))) B ]
+        ι⁻¹[ ty-subst-cong-ty π (closed-ty-eq e) ] ξ
+    ≅⟨ ι⁻¹-cong (ι-congᵉ (transᵉ (symᵗʸ-cong ty-subst-cong-subst-sym) symᵗʸ-involutive)) ⟨
+      ι⁻¹[ closed-natural clB (π ⊚ from (,,-cong (closed-ty-eq e))) ]
+        ι⁻¹[ ty-subst-cong-subst (symˢ (,,-map-π (from (closed-ty-eq e)))) B ]
+        ι⁻¹[ ty-subst-cong-ty π (closed-ty-eq e) ] ξ
+    ≅⟨ ι⁻¹-congᵉ-2-1 (closed-subst-eq clB (symˢ (,,-map-π (from (closed-ty-eq e))))) ⟩
+      ι⁻¹[ closed-natural clB π ] ι⁻¹[ ty-subst-cong-ty π (closed-ty-eq e) ] ξ
+    ≅⟨ ι⁻¹-congᵉ-2-2 (closed-ty-eq-natural e π) ⟩
+      ι⁻¹[ closed-ty-eq e ] ι⁻¹[ closed-natural clA π ] ξ ∎
+    where open ≅ᵗᵐ-Reasoning
+
+  lift-cl-,,-cong-commute : (σ : Γ ⇒ Δ) → from (,,-cong (closed-ty-eq e)) ⊚ lift-cl-subst clA σ ≅ˢ lift-cl-subst clB σ ⊚ from (,,-cong (closed-ty-eq e))
+  lift-cl-,,-cong-commute σ =
+    begin
+      from (,,-cong (closed-ty-eq e)) ⊚ ((σ ⊚ π) ,cl⟨ clA ⟩ ξcl clA)
+    ≅⟨ ,cl-,,-cong (σ ⊚ π) (ξcl clA) ⟩
+      (σ ⊚ π) ,cl⟨ clB ⟩ (ι⁻¹[ closed-ty-eq e ] ξcl clA)
+    ≅⟨ ,cl-cong clB (transˢ ⊚-assoc (⊚-congʳ (,,-map-π (from (closed-ty-eq e)))))
+                     ξcl-,,-cong ⟨
+        (σ ⊚ π ⊚ from (,,-cong (closed-ty-eq e))) ,cl⟨ clB ⟩ (ξcl clB [ clB ∣ from (,,-cong (closed-ty-eq e)) ]cl)
+    ≅⟨ ,cl-⊚ clB (σ ⊚ π) (ξcl clB) (from (,,-cong (closed-ty-eq e))) ⟨
+      ((σ ⊚ π) ,cl⟨ clB ⟩ ξcl clB) ⊚ from (,,-cong (closed-ty-eq e)) ∎
+    where open ≅ˢ-Reasoning

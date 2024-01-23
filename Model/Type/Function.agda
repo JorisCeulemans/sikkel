@@ -193,6 +193,16 @@ eq (isoʳ (⇛-cong T=T' S=S')) f = to-pshfun-eq (λ ρ eγ t' →
              ⇛-cong (symᵗʸ T=T') (symᵗʸ S=S') ≅ᵉ symᵗʸ (⇛-cong T=T' S=S')
 eq (from-eq ⇛-cong-sym) f = to-pshfun-eq (λ _ _ _ → refl)
 
+⇛-cong-trans : {T T' T'' S S' S'' : Ty Γ}
+               {T=T' : T ≅ᵗʸ T'} {T'=T'' : T' ≅ᵗʸ T''} {S=S' : S ≅ᵗʸ S'} {S'=S'' : S' ≅ᵗʸ S''} →
+               ⇛-cong (transᵗʸ T=T' T'=T'') (transᵗʸ S=S' S'=S'') ≅ᵉ transᵗʸ (⇛-cong T=T' S=S') (⇛-cong T'=T'' S'=S'')
+eq (from-eq ⇛-cong-trans) _ = to-pshfun-eq (λ _ _ _ → refl)
+
+⇛-cong-cong : {T1 T2 S1 S2 : Ty Γ} {eT eT' : T1 ≅ᵗʸ T2} {eS eS' : S1 ≅ᵗʸ S2} →
+              eT ≅ᵉ eT' → eS ≅ᵉ eS' → ⇛-cong eT eS ≅ᵉ ⇛-cong eT' eS'
+eq (from-eq (⇛-cong-cong {eS' = eS'} 𝑒T 𝑒S)) f =
+  to-pshfun-eq (λ ρ eγ _ → trans (eq (from-eq 𝑒S) _) (cong (λ x → func (from eS') (f $⟨ ρ , eγ ⟩ x)) (eq (to-eq 𝑒T) _)))
+
 lam-cong : (T : Ty Γ) {b b' : Tm (Γ ,, T) (S [ π ])} →
            b ≅ᵗᵐ b' → lam T b ≅ᵗᵐ lam T b'
 eq (lam-cong T b=b') γ = to-pshfun-eq (λ _ {γ'} _ t → eq b=b' [ γ' , t ])
@@ -363,6 +373,12 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
                 (app f t) [ σ ]' ≅ᵗᵐ app (ι⁻¹[ ⇛-natural ] (f [ σ ]')) (t [ σ ]')
   eq (app-natural f t) δ = $-cong (f ⟨ _ , func σ δ ⟩') refl
 
+⇛-natural-cong : {T T' S S' : Ty Δ} {σ : Γ ⇒ Δ} {T=T' : T ≅ᵗʸ T'} {S=S' : S ≅ᵗʸ S'} →
+                 transᵗʸ (ty-subst-cong-ty σ (⇛-cong T=T' S=S')) (⇛-natural σ)
+                   ≅ᵉ
+                 transᵗʸ (⇛-natural σ) (⇛-cong (ty-subst-cong-ty σ T=T') (ty-subst-cong-ty σ S=S'))
+eq (from-eq ⇛-natural-cong) _ = to-pshfun-eq (λ _ _ _ → refl)
+
 
 --------------------------------------------------
 -- β and η laws for functions
@@ -493,3 +509,16 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
                                                        reflᵗʸ-unitˡ)))))
                                   (symᵗᵐ ι-symʳ))
                         (app-ι _ _)))
+
+⇛-closed-cong : {A A' B B' : ClosedTy C}
+                {clA : IsClosedNatural A} {clA' : IsClosedNatural A'} {clB : IsClosedNatural B} {clB' : IsClosedNatural B'} →
+                clA ≅ᶜᵗʸ clA' → clB ≅ᶜᵗʸ clB' → fun-closed clA clB ≅ᶜᵗʸ fun-closed clA' clB'
+closed-ty-eq (⇛-closed-cong eA eB) = ⇛-cong (closed-ty-eq eA) (closed-ty-eq eB)
+closed-ty-eq-natural (⇛-closed-cong eA eB) _ =
+  transᵉ (symᵉ transᵗʸ-assoc) (
+  transᵉ (transᵗʸ-congˡ ⇛-natural-cong) (
+  transᵉ transᵗʸ-assoc (
+  transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ ⇛-cong-trans) (
+                         transᵉ (⇛-cong-cong (closed-ty-eq-natural eA _) (closed-ty-eq-natural eB _))
+                         ⇛-cong-trans))) (
+  symᵉ transᵗʸ-assoc))))

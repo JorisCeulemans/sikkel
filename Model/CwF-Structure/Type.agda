@@ -504,6 +504,17 @@ ty-subst-cong-natural : {σ τ : Γ ⇒ Δ} (ε : σ ≅ˢ τ) (e : T ≅ᵗʸ S
                         transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-ty τ e) ≅ᵉ transᵗʸ (ty-subst-cong-ty σ e) (ty-subst-cong-subst ε S)
 eq (from-eq (ty-subst-cong-natural ε e)) _ = sym (naturality (from e))
 
+ty-subst-cong-ty-id : (e : T ≅ᵗʸ S) → transᵗʸ (ty-subst-id T) e ≅ᵉ transᵗʸ (ty-subst-cong-ty (id-subst _) e) (ty-subst-id S)
+eq (from-eq (ty-subst-cong-ty-id e)) _ = refl
+
+ty-subst-cong-ty-id-sym : (e : T ≅ᵗʸ S) →
+                          transᵗʸ e (symᵗʸ (ty-subst-id S)) ≅ᵉ transᵗʸ (symᵗʸ (ty-subst-id T)) (ty-subst-cong-ty (id-subst _) e)
+eq (from-eq (ty-subst-cong-ty-id-sym e)) _ = refl
+
+ty-subst-cong-ty-⊚ : {τ : Δ ⇒ Θ} {σ : Γ ⇒ Δ} (e : T ≅ᵗʸ S) →
+                     transᵗʸ (ty-subst-comp T τ σ) (ty-subst-cong-ty _ e) ≅ᵉ transᵗʸ (ty-subst-cong-ty σ (ty-subst-cong-ty τ e)) (ty-subst-comp S τ σ)
+eq (from-eq (ty-subst-cong-ty-⊚ e)) _ = refl
+
 ty-subst-cong-subst-refl : {σ : Γ ⇒ Δ} → ty-subst-cong-subst (reflˢ {σ = σ}) T ≅ᵉ reflᵗʸ
 from-eq ty-subst-cong-subst-refl = ty-subst-eq-subst-morph-refl
 
@@ -514,12 +525,17 @@ ty-subst-cong-subst-trans : {σ1 σ2 σ3 : Γ ⇒ Δ} {ε : σ1 ≅ˢ σ2} {ε' 
                             ty-subst-cong-subst (transˢ ε ε') T ≅ᵉ transᵗʸ (ty-subst-cong-subst ε T) (ty-subst-cong-subst ε' T)
 from-eq ty-subst-cong-subst-trans = ty-subst-eq-subst-morph-trans
 
-ty-subst-cong-ty-id : (e : T ≅ᵗʸ S) → transᵗʸ (ty-subst-id T) e ≅ᵉ transᵗʸ (ty-subst-cong-ty (id-subst _) e) (ty-subst-id S)
-eq (from-eq (ty-subst-cong-ty-id e)) _ = refl
+ty-subst-id-⊚ˡ : {σ : Γ ⇒ Δ} {T : Ty Δ} →
+                 transᵗʸ (ty-subst-comp T (id-subst Δ) σ) (ty-subst-cong-subst (id-subst-unitˡ σ) T)
+                   ≅ᵉ
+                 ty-subst-cong-ty σ (ty-subst-id T)
+eq (from-eq (ty-subst-id-⊚ˡ {T = T})) t = strong-ty-id T
 
-ty-subst-cong-ty-id-sym : (e : T ≅ᵗʸ S) →
-                          transᵗʸ e (symᵗʸ (ty-subst-id S)) ≅ᵉ transᵗʸ (symᵗʸ (ty-subst-id T)) (ty-subst-cong-ty (id-subst _) e)
-eq (from-eq (ty-subst-cong-ty-id-sym e)) _ = refl
+ty-subst-id-⊚ʳ : {σ : Γ ⇒ Δ} {T : Ty Δ} →
+                 transᵗʸ (ty-subst-comp T σ (id-subst Γ)) (ty-subst-cong-subst (id-subst-unitʳ σ) T)
+                   ≅ᵉ
+                 ty-subst-id (T [ σ ])
+eq (from-eq (ty-subst-id-⊚ʳ {T = T})) t = strong-ty-id T
 
 ty-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
                           (T : Ty Θ) → σ2 ⊚ σ1 ≅ˢ τ →
@@ -535,6 +551,19 @@ ty-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1
                           T [ σ2 ] [ σ1 ] ≅ᵗʸ T [ τ2 ] [ τ1 ]
 ty-subst-cong-subst-2-2 T ε =
   transᵗʸ (ty-subst-comp T _ _) (transᵗʸ (ty-subst-cong-subst ε T) (symᵗʸ (ty-subst-comp T _ _)))
+
+ty-subst-cong-subst-2-0-natural : {τ : Δ ⇒ Γ} {σ : Γ ⇒ Δ} (ε : τ ⊚ σ ≅ˢ id-subst Γ) (e : T ≅ᵗʸ S) →
+                                  transᵗʸ (ty-subst-cong-subst-2-0 T ε) e
+                                    ≅ᵉ
+                                  transᵗʸ (ty-subst-cong-ty σ (ty-subst-cong-ty τ e)) (ty-subst-cong-subst-2-0 S ε)
+ty-subst-cong-subst-2-0-natural ε e =
+    transᵉ transᵗʸ-assoc (
+  transᵉ (transᵗʸ-congʳ (ty-subst-cong-ty-id e)) (
+    transᵉ (transᵉ (symᵉ transᵗʸ-assoc) (transᵗʸ-congˡ transᵗʸ-assoc)) (
+  transᵉ (transᵗʸ-congˡ (transᵗʸ-congʳ (ty-subst-cong-natural ε e))) (
+    transᵉ (transᵗʸ-congˡ (symᵉ transᵗʸ-assoc)) (
+  transᵉ (transᵗʸ-congˡ (transᵗʸ-congˡ (ty-subst-cong-ty-⊚ e))) (
+    transᵉ (transᵗʸ-congˡ transᵗʸ-assoc) transᵗʸ-assoc))))))
 
 ty-subst-cong-subst-2-0-iso : {σ : Γ ⇒ Δ} {τ : Δ ⇒ Γ} (T : Ty Δ)
                               (ε :  σ ⊚ τ ≅ˢ id-subst Δ)

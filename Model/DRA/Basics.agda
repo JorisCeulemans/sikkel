@@ -257,6 +257,20 @@ module _ (μ : DRA C D) {T : ClosedTy C} (clT : IsClosedNatural T) where
     (transᵗᵐ (dra-elim-ι μ _)
     (dra-elim-cong μ (transᵗᵐ (ι-congᵉ (dra-cong-sym μ)) (symᵗᵐ ι⁻¹-trans))))
 
+dra-closed-cong : (μ : DRA C D)
+                  {A B : ClosedTy C}
+                  {clA : IsClosedNatural A} {clB : IsClosedNatural B} →
+                  clA ≅ᶜᵗʸ clB → dra-closed μ clA ≅ᶜᵗʸ dra-closed μ clB
+closed-ty-eq (dra-closed-cong μ e) = dra-cong μ (closed-ty-eq e)
+closed-ty-eq-natural (dra-closed-cong μ e) σ =
+  transᵉ (symᵉ transᵗʸ-assoc) (
+  transᵉ (transᵗʸ-congˡ (symᵉ (dra-natural-ty-eq μ σ (closed-ty-eq e)))) (
+  transᵉ transᵗʸ-assoc (
+  transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ (dra-cong-trans μ))
+                                (transᵉ (dra-cong-cong μ (closed-ty-eq-natural e (ctx-fmap (ctx-functor μ) σ)))
+                                        (dra-cong-trans μ)))) (
+  symᵉ transᵗʸ-assoc))))
+
 
 --------------------------------------------------
 -- Constructing new DRAs
@@ -356,10 +370,10 @@ dra-cong-ⓓ : {ρ : DRA C D} {μ : DRA D E} {Γ : Ctx E} {T S : Ty (Γ ,lock⟨
              dra-cong (μ ⓓ ρ) e ≅ᵉ dra-cong μ (dra-cong ρ e)
 from-eq dra-cong-ⓓ = reflⁿ
 
-𝟙-preserves-cl : {A : ClosedTy C} (clA : IsClosedNatural A) → dra-closed 𝟙 clA ≅ᶜᵗʸ clA
+𝟙-preserves-cl : {A : ClosedTy C} (clA : IsClosedNatural A) → dra-closed 𝟙 clA ≅ᶜⁿ clA
 closed-natural-eq (𝟙-preserves-cl clA) σ = transᵉ reflᵗʸ-unitˡ dra-cong-𝟙
 
 ⓓ-preserves-cl : (μ : DRA D E) (ρ : DRA C D) {A : ClosedTy C} (clA : IsClosedNatural A) →
-                 dra-closed (μ ⓓ ρ) clA ≅ᶜᵗʸ dra-closed μ (dra-closed ρ clA)
+                 dra-closed (μ ⓓ ρ) clA ≅ᶜⁿ dra-closed μ (dra-closed ρ clA)
 closed-natural-eq (ⓓ-preserves-cl μ ρ clA) σ =
   transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (transᵗʸ-congʳ dra-cong-ⓓ) (symᵉ (dra-cong-trans μ))))

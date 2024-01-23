@@ -123,7 +123,7 @@ infer-interpret (ann t ∈ T) Γ = do
 infer-interpret (var x α) Γ = infer-interpret-var x α Γ
 infer-interpret (lam[ x ∈ T ] b) Γ = do
   S , ⟦b⟧ ← infer-interpret b (Γ , 𝟙 ∣ x ∈ T)
-  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-dra-closed 𝟙-interpretation (⟦⟧ty-natural T)) reflᵗʸ ]
+  return (T ⇛ S , ι⁻¹[ ⇛-cong (eq-dra-ty-closed 𝟙-interpretation (⟦⟧ty-natural T)) reflᵗʸ ]
                   M.lam ⟦ ⟨ 𝟙 ∣ T ⟩ ⟧ty (ι[ closed-natural (⟦⟧ty-natural S) π ] ⟦b⟧))
 infer-interpret (t1 ∙ t2) Γ = do
   T1 , ⟦t1⟧ ← infer-interpret t1 Γ
@@ -173,9 +173,9 @@ infer-interpret (mod-elim {mρ} {m} {mμ} ρ μ x t s) Γ = do
   μ=μ' ← μ ≃ᵐ? μ'
   S , ⟦s⟧ ← infer-interpret s (Γ , ρ ⓜ μ ∣ x ∈ A)
   return (S , ι⁻¹[ closed-natural (⟦⟧ty-natural S) _ ] (
-              ⟦s⟧ [ tm-to-subst (ι[ eq-dra-closed (ⓜ-interpretation ρ μ) (⟦⟧ty-natural A) ]
+              ⟦s⟧ [ tm-to-subst (ι[ eq-dra-ty-closed (ⓜ-interpretation ρ μ) (⟦⟧ty-natural A) ]
                                  DRA.dra-intro ⟦ ρ ⟧modality (
-                                 ι[ eq-dra-closed μ=μ' (⟦⟧ty-natural A) ] ⟦t⟧))
+                                 ι[ eq-dra-ty-closed μ=μ' (⟦⟧ty-natural A) ] ⟦t⟧))
                   ]'))
 infer-interpret (ext c args) Γ = infer-interpret-ext-args (infer-interpret-code c) args Γ
 
