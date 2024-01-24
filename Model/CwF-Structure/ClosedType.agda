@@ -305,6 +305,29 @@ record _≅ᶜᵗʸ_ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClose
       transᵗʸ (closed-natural clA σ) closed-ty-eq
 open _≅ᶜᵗʸ_ public
 
+reflᶜᵗʸ : {A : ClosedTy C} (clA : IsClosedNatural A) → clA ≅ᶜᵗʸ clA
+closed-ty-eq (reflᶜᵗʸ clA) = reflᵗʸ
+closed-ty-eq-natural (reflᶜᵗʸ clA) σ = transᵉ (transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-refl) reflᵗʸ-unitˡ) (symᵉ reflᵗʸ-unitʳ)
+
+symᶜᵗʸ : {A B : ClosedTy C} {clA : IsClosedNatural A} {clB : IsClosedNatural B} →
+         clA ≅ᶜᵗʸ clB → clB ≅ᶜᵗʸ clA
+closed-ty-eq (symᶜᵗʸ e) = symᵗʸ (closed-ty-eq e)
+closed-ty-eq-natural (symᶜᵗʸ e) σ = transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-sym) (move-symᵗʸ-out (symᵉ (closed-ty-eq-natural e σ)))
+
+transᶜᵗʸ : {A1 A2 A3 : ClosedTy C} {clA1 : IsClosedNatural A1} {clA2 : IsClosedNatural A2} {clA3 : IsClosedNatural A3} →
+           clA1 ≅ᶜᵗʸ clA2 → clA2 ≅ᶜᵗʸ clA3 → clA1 ≅ᶜᵗʸ clA3
+closed-ty-eq (transᶜᵗʸ e e') = transᵗʸ (closed-ty-eq e) (closed-ty-eq e')
+closed-ty-eq-natural (transᶜᵗʸ {clA1 = clA1} {clA2} {clA3} e e') σ =
+  begin
+    transᵗʸ (ty-subst-cong-ty σ (transᵗʸ (closed-ty-eq e) (closed-ty-eq e'))) (closed-natural clA3 σ)
+  ≅⟨ transᵉ (transᵗʸ-congˡ ty-subst-cong-ty-trans) transᵗʸ-assoc ⟩
+    transᵗʸ (ty-subst-cong-ty σ (closed-ty-eq e)) (transᵗʸ (ty-subst-cong-ty σ (closed-ty-eq e')) (closed-natural clA3 σ))
+  ≅⟨ transᵉ (transᵗʸ-congʳ (closed-ty-eq-natural e' σ)) (symᵉ transᵗʸ-assoc) ⟩
+    transᵗʸ (transᵗʸ (ty-subst-cong-ty σ (closed-ty-eq e)) (closed-natural clA2 σ)) (closed-ty-eq e')
+  ≅⟨ transᵉ (transᵗʸ-congˡ (closed-ty-eq-natural e σ)) transᵗʸ-assoc ⟩
+    transᵗʸ (closed-natural clA1 σ) (transᵗʸ (closed-ty-eq e) (closed-ty-eq e')) ∎
+  where open ≅ᵉ-Reasoning
+
 module _ {A B : ClosedTy C} {clA : IsClosedNatural A} {clB : IsClosedNatural B} (e : clA ≅ᶜᵗʸ clB) where
   cl-tm-subst-ι : (σ : Γ ⇒ Δ) (t : Tm Δ B) → (ι[ closed-ty-eq e ] t) [ clA ∣ σ ]cl ≅ᵗᵐ ι[ closed-ty-eq e ] (t [ clB ∣ σ ]cl)
   cl-tm-subst-ι σ t =

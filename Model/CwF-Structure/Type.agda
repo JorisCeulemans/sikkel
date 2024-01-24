@@ -289,6 +289,12 @@ from-eq (symᵉ 𝑒) = symⁿ (from-eq 𝑒)
 transᵉ : {e1 e2 e3 : T ≅ᵗʸ S} → e1 ≅ᵉ e2 → e2 ≅ᵉ e3 → e1 ≅ᵉ e3
 from-eq (transᵉ 𝑒 𝑒') = transⁿ (from-eq 𝑒) (from-eq 𝑒')
 
+module ≅ᵉ-Reasoning {Γ}{T S : Ty Γ} where
+  open begin-syntax {A = T ≅ᵗʸ S} _≅ᵉ_ id public
+  open ≅-syntax {A = T ≅ᵗʸ S} _≅ᵉ_ _≅ᵉ_ transᵉ symᵉ public
+  open end-syntax {A = T ≅ᵗʸ S} _≅ᵉ_ reflᵉ public
+
+
 -- symᵗʸ and transᵗʸ respect equality of natural isomorphisms.
 symᵗʸ-cong : {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → symᵗʸ e ≅ᵉ symᵗʸ e'
 from-eq (symᵗʸ-cong 𝑒) = to-eq 𝑒
