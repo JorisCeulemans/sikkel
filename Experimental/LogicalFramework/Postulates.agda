@@ -10,7 +10,7 @@ module Experimental.LogicalFramework.Postulates (𝒫 : MSTT-Parameter) where
 open import Data.String using (String)
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell)
+open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
 import Model.Type.Function as M
 
 open MSTT-Parameter 𝒫
@@ -34,6 +34,11 @@ postulate
              ⟦ v0 {Γ = Γ} {μ = μ} {x} {T} ⟧tm M.≅ᵗᵐ dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
   v0-𝟙-sound : (Γ : Ctx m) (x : String) (T : Ty m) →
                ⟦ v0-𝟙 {Γ = Γ} {x = x} {T = T} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T)
+  v0-2lock-sound : (μ : Modality n o) (κ : Modality m n) (x : String) (Γ : Ctx o) (T : Ty m) →
+                   ⟦ var' {Γ = Γ ,, μ ⓜ κ ∣ x ∈ T ,lock⟨ μ ⟩ ,lock⟨ κ ⟩} x {skip-lock κ (skip-lock μ vzero)} id-cell ⟧tm
+                     M.≅ᵗᵐ
+                   dra-elim ⟦ κ ⟧mod (dra-elim ⟦ μ ⟧mod (
+                     M.ι⁻¹[ eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T) ] (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩) {Γ = ⟦ Γ ⟧ctx})))
   v1-sound : (Γ : Ctx n) (μ : Modality m n) (x : String) (T : Ty m) (κ : Modality o n) (y : String) (S : Ty o) →
              ⟦ v1 {Γ = Γ} {μ = μ} {x} {T} {κ = κ} {y} {S} ⟧tm
                M.≅ᵗᵐ

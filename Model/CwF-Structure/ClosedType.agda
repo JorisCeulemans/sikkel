@@ -124,6 +124,12 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
                         t ≅ᵗᵐ s → t [ clT ∣ σ ]cl ≅ᵗᵐ s [ clT ∣ σ ]cl
   cl-tm-subst-cong-tm t=s = ι⁻¹-cong (tm-subst-cong-tm _ t=s)
 
+  cl-tm-subst-cong-subst-2-1 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ} {t : Tm Θ T} →
+                               σ2 ⊚ σ1 ≅ˢ τ →
+                               t [ clT ∣ σ2 ]cl [ clT ∣ σ1 ]cl ≅ᵗᵐ t [ clT ∣ τ ]cl
+  cl-tm-subst-cong-subst-2-1 ε =
+    transᵗᵐ (cl-tm-subst-⊚ _) (cl-tm-subst-cong-subst ε)
+
   cl-tm-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} {t : Tm Θ T} →
                                σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1 →
                                t [ clT ∣ σ2 ]cl [ clT ∣ σ1 ]cl ≅ᵗᵐ t [ clT ∣ τ2 ]cl [ clT ∣ τ1 ]cl
@@ -283,6 +289,9 @@ module _ {A : ClosedTy C} {clA clA' : IsClosedNatural A} (e : clA ≅ᶜⁿ clA'
 
   /cl-cong-cl : {t : Tm Γ A} → (t /cl⟨ clA ⟩) ≅ˢ (t /cl⟨ clA' ⟩)
   /cl-cong-cl = ,cl-cong-cl
+
+  lift-cl-subst-cong-cl : {σ : Γ ⇒ Δ} → lift-cl-subst clA σ ≅ˢ lift-cl-subst clA' σ
+  lift-cl-subst-cong-cl = transˢ ,cl-cong-cl (,cl-cong-tm clA' ξcl-cong-cl)
 
 
 --------------------------------------------------

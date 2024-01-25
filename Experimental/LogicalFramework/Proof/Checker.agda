@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality as Ag using (refl)
 open import Relation.Nullary hiding (¬_)
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell)
+open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.IdentityType.Modal as M
 import Experimental.DependentTypes.Model.Constant as M
@@ -326,9 +326,6 @@ check-proof Ξ (zero≠sucn m) φ = do
     M.zero≠sucn) M.[ _ ]' ⟆
 check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
-  refl ← mod-dom μ ≟mode mod-cod μ
-  refl ← μ ≟mod 𝟙
-  refl ← T ≟ty Bool'
   refl ← return Δ=Γ,x∈Bool
   ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true / x ]bprop)
   ⟅ goalsf , ⟦pf⟧ ⟆ ← check-proof Ξ' pf (φ [ false / x ]bprop)
@@ -350,8 +347,6 @@ check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
                  ⟦pf⟧ sgoalsf))) ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
-  refl ← mod-dom μ ≟mode mod-cod μ
-  refl ← μ ≟mod 𝟙
   refl ← return Δ=Γ,x∈Nat
     -- ^ Before this step, ps is a proof in Δ = to-ctx Ξ' ,,ᵛ μ ∣ x ∈ T and p0 is a proof in Γ.
     -- By pattern matching on Δ=Γ,x∈Nat : Δ ≡ Γ ,, x ∈ Nat', Γ gets unified with to-ctx Ξ', μ with 𝟙 and T with Nat'.
@@ -391,6 +386,36 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
                                           _)
                                         (bprop-sub-sound φ _)) ]
                       ⟦ps⟧ sgoals2)))))) ⟆
+
+check-proof Ξ (mod-induction' {T = T} κ μ x ctx-eq p) φ = do
+  ends-in-prog-var Ξ' μ' y _ ← ends-in-prog-var? Ξ
+  refl ← return ctx-eq
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ⓜ κ ∣ x ∈ T) p (φ [ π ∷ˢ mod⟨ κ ⟩ (var' x {skip-lock κ (skip-lock μ vzero)} id-cell) / y ]bprop)
+  return ⟅ goals , sgoals ↦
+    M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 _ (M.symˢ (M.lift-cl-,,-cong-commute (M.symᶜᵗʸ (eq-dra-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T))) (to-ctx-subst Ξ')))) (
+           M.transᵗʸ (M.ty-subst-cong-subst (M.lift-cl-subst-cong-cl (ⓓ-preserves-cl ⟦ μ ⟧mod ⟦ κ ⟧mod (ty-closed-natural T))) _) (
+           M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-0 ⟦ φ ⟧bprop (
+             M.transˢ (M.,cl-⊚ (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) _ _ _) (
+             M.transˢ (M.,cl-cong (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) (M.transˢ (M.,,-map-π _) (M.symˢ (M.id-subst-unitʳ M.π))) (
+               M.transᵗᵐ (M.cl-tm-subst-cong-tm (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) (M.transᵗᵐ (dra-intro-cong ⟦ μ ⟧mod (dra-η ⟦ κ ⟧mod _)) (dra-η ⟦ μ ⟧mod _))) (
+               M.transᵗᵐ (M.cl-tm-subst-cong-tm (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) (M.symᵗᵐ (M.ξcl-,,-cong (eq-dra-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T))))) (
+               M.transᵗᵐ (M.cl-tm-subst-cong-tm (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) (
+                 M.transᵗᵐ (M.cl-tm-subst-cong-cl (ⓓ-preserves-cl ⟦ μ ⟧mod ⟦ κ ⟧mod (ty-closed-natural T)))
+                           (M.cl-tm-subst-cong-tm (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) (M.ξcl-cong-cl (ⓓ-preserves-cl ⟦ μ ⟧mod ⟦ κ ⟧mod (ty-closed-natural T))))))
+                         (M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩)
+                                                       {Δ' = ⟦ to-ctx Ξ' ⟧ctx M.,, DRA.⟨ ⟦ μ ⟧mod ∣ DRA.⟨ ⟦ κ ⟧mod ∣ ⟦ T ⟧ty ⟩ ⟩}
+                                                       (M.isoʳ (M.,,-cong (eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T))))))))) (
+             M.symˢ (M.,cl-η (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩) _))))))) ]
+    M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (
+         M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (
+           M.transˢ (∷ˢ-sound (π {Γ = to-ctx Ξ'} {T = T}) (mod⟨ κ ⟩ var' x {skip-lock κ (skip-lock μ vzero)} id-cell) y)
+                    (M.,cl-cong (ty-closed-natural ⟨ μ ∣ ⟨ κ ∣ T ⟩ ⟩)
+                                (sub-π-sound (to-ctx Ξ') y (μ ⓜ κ) T)
+                                (dra-intro-cong ⟦ μ ⟧mod (dra-intro-cong ⟦ κ ⟧mod (v0-2lock-sound μ κ x (to-ctx Ξ') T))))))
+                    ⟦ φ ⟧bprop) (
+         bprop-sub-sound φ _))) ] (
+    M.ιc⁻¹[ M.,,-cong (DRA.eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T)) ]'
+    ⟦p⟧ sgoals) ⟆
 check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do
   is-eq lhs rhs ← is-eq? φ
   app {T = T2} {μ = ρ}  f s  ← is-app? lhs

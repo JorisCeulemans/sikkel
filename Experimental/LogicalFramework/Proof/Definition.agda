@@ -122,18 +122,27 @@ data Proof {m : Mode} : Ctx m → Set where
 
   -- Induction schemata for Bool' and Nat'
   bool-induction' : {Γ Δ : Ctx m} {x : String} → Δ Ag.≡ (Γ ,, x ∈ Bool') →
-                    Proof Γ →  -- Ξ ⊢ φ [ true / x ]bprop
+                    Proof Γ →  -- Ξ ⊢ φ [ true / x  ]bprop
                     Proof Γ     -- Ξ ⊢ φ [ false / x ]bprop
                     →
                     Proof Δ     -- Ξ ,,ᵛ x ∈ Bool' ⊢ φ
+    -- ^ We cannot just return a proof of type Proof (Γ ,, x ∈ Nat')
+    -- because in that case pattern matching in the proof checker
+    -- would fail. Users are intended to use bool-induction defined below.
   nat-induction' : {Γ Δ : Ctx m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, x ∈ Nat') →
                    Proof Γ →  -- Ξ ⊢ φ [ zero / x ]bprop
                    Proof Δ     -- Ξ ,,ᵛ n ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ φ ⊢ φ [ suc n / n ]bprop
                    →
                    Proof Δ     -- Ξ ,,ᵛ n ∈ Nat' ⊢ φ
-    -- ^ We cannot just return a proof of type Proof (Γ ,, x ∈ Nat')
-    -- because in that case pattern matching in the proof checker
-    -- would fail. Users are intended to use nat-induction defined below.
+    -- ^ Same remark as for bool-induction'.
+
+  -- Dependent eliminator for modal types
+  mod-induction' : {Γ Δ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : String) {y : String} →
+                   Δ Ag.≡ (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩) →
+                                               -- φ : bProp (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩)
+                   Proof (Γ ,, μ ⓜ κ ∣ x ∈ T)  -- Ξ ,,ᵛ μ ⓜ κ ∣ x ∈ T ⊢ φ [ mod⟨ κ ⟩ x / y ]bprop
+                   →
+                   Proof Δ                     -- Ξ ,,ᵛ μ ∣ y ∈ ⟨ κ ∣ T ⟩ ⊢ φ
 
   fun-cong : Proof Γ → Tm (Γ ,lock⟨ μ ⟩) T → Proof Γ
   cong : {T S : Ty m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Proof (Γ ,lock⟨ μ ⟩) → Proof Γ
@@ -146,3 +155,7 @@ bool-induction = bool-induction' Ag.refl
 nat-induction : {Γ : Ctx m} {x : String} (hyp : String) →
                 Proof Γ → Proof (Γ ,, x ∈ Nat') → Proof (Γ ,, x ∈ Nat')
 nat-induction hyp = nat-induction' hyp Ag.refl
+
+mod-induction : {Γ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : String) {y : String} →
+                Proof (Γ ,, μ ⓜ κ ∣ x ∈ T) → Proof (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩)
+mod-induction κ μ x = mod-induction' κ μ x Ag.refl
