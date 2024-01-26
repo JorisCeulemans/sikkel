@@ -50,7 +50,6 @@ TyExt._≟ty-code_ triv-ty-ext () ()
 TyExt.show-ty-code triv-ty-ext ()
 TyExt.⟦ triv-ty-ext ⟧ty-code ()
 TyExt.sem-ty-code-natural triv-ty-ext ()
-TyExt.sem-ty-code-cong triv-ty-ext ()
 
 triv-tm-ext : TmExt triv-mt triv-ty-ext String
 TmExt.TmExtCode triv-tm-ext _ = ⊥

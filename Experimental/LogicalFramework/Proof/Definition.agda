@@ -122,7 +122,7 @@ data Proof {m : Mode} : Ctx m → Set where
 
   -- Induction schemata for Bool' and Nat'
   bool-induction' : {Γ Δ : Ctx m} {x : String} → Δ Ag.≡ (Γ ,, x ∈ Bool') →
-                    Proof Γ →  -- Ξ ⊢ φ [ true / x  ]bprop
+                    Proof Γ →  -- Ξ ⊢ φ [ true  / x ]bprop
                     Proof Γ     -- Ξ ⊢ φ [ false / x ]bprop
                     →
                     Proof Δ     -- Ξ ,,ᵛ x ∈ Bool' ⊢ φ

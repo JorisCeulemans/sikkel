@@ -26,4 +26,3 @@ TyExt._≟ty-code_ guarded-ty-ext GStream-code GStream-code = return refl
 TyExt.show-ty-code guarded-ty-ext GStream-code = λ x → "GStream " Str.++ x
 TyExt.⟦_⟧ty-code guarded-ty-ext GStream-code = λ A → M.GStream A
 TyExt.sem-ty-code-natural guarded-ty-ext GStream-code = M.gstream-closed
-TyExt.sem-ty-code-cong guarded-ty-ext GStream-code = λ A=B → M.gstream-cong A=B
