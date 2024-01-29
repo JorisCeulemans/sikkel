@@ -76,6 +76,6 @@ apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T →
 ⟦ snd p ⟧tm-nmls = M.snd ⟦ p ⟧tm-nmls
 ⟦ ext c args refl ⟧tm-nmls = apply-sem-tm-constructor ⟦ c ⟧tm-code args
 
-apply-sem-tm-constructor {arginfos = []}                 t args         = t
-apply-sem-tm-constructor {arginfos = arginfo ∷ arginfos} f (arg , args) =
+apply-sem-tm-constructor {arginfos = []}    t args         = t
+apply-sem-tm-constructor {arginfos = _ ∷ _} f (arg , args) =
   apply-sem-tm-constructor (f ⟦ arg ⟧tm-nmls) args
