@@ -2,9 +2,15 @@
 -- Interpretation of propositions in a presheaf model
 --------------------------------------------------
 
+open import Data.String
 open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.Parameter.bPropExtension
+open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
 
-module Experimental.LogicalFramework.bProp.Interpretation (𝒫 : MSTT-Parameter) where
+module Experimental.LogicalFramework.bProp.Interpretation
+  (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
+  (𝒷 : bPropExt ℳ 𝒯 String 𝓉) (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 _ _)
+  where
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy) using (_≅ᵗʸ_)
 import Model.Type.Function as M
@@ -12,12 +18,11 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
-open MSTT-Parameter 𝒫
-
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp.Named 𝒫
-open import Experimental.LogicalFramework.bProp.AlphaEquivalence 𝒫
-open import Experimental.LogicalFramework.bProp.Interpretation.Nameless 𝒫
+open import Experimental.LogicalFramework.bProp.Named 𝒫 𝒷
+open import Experimental.LogicalFramework.bProp.AlphaEquivalence 𝒫 𝒷
+open import Experimental.LogicalFramework.bProp.AlphaEquivalence.bPropExtension 𝒫
+open import Experimental.LogicalFramework.bProp.Interpretation.Nameless 𝒫 (erase-names-bpext 𝒷) ⟦𝒷⟧
 
 private variable
   m : Mode

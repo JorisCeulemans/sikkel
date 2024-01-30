@@ -12,4 +12,4 @@ module Experimental.LogicalFramework.bProp.Named
   where
 
 
-open import Experimental.LogicalFramework.bProp.General ℳ 𝒯 String 𝓉 public
+open import Experimental.LogicalFramework.bProp.General ℳ 𝒯 String 𝓉 𝒷 public

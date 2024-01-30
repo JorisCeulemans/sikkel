@@ -13,7 +13,7 @@ open ModeTheory ℳ
 
 
 record ArgInfo (m : Mode) : Set where
-  constructor tmarginfo
+  constructor arginfo
   field
     {n} : Mode
     arg-tel : Telescope m n
