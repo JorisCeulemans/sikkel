@@ -1,6 +1,8 @@
-open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.Parameter
 
-module Experimental.LogicalFramework.Proof.Context (𝒫 : MSTT-Parameter) where
+module Experimental.LogicalFramework.Proof.Context
+  (ℬ : BiSikkelParameter)
+  where
 
 open import Data.String as Str
 open import Function using (id)
@@ -10,13 +12,13 @@ open import Relation.Nullary
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell)
 
-open MSTT-Parameter 𝒫
+open BiSikkelParameter ℬ
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp 𝒫
+open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.CheckingMonad
-open import Experimental.LogicalFramework.Proof.Equality 𝒫
-open import Experimental.LogicalFramework.Postulates 𝒫
+open import Experimental.LogicalFramework.Proof.Equality ℬ
+open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
 
 private variable
   m n o p : Mode

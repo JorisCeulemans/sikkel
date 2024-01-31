@@ -1,6 +1,8 @@
-open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.Parameter
 
-module Experimental.LogicalFramework.Proof.Equality (𝒫 : MSTT-Parameter) where
+module Experimental.LogicalFramework.Proof.Equality
+  (ℬ : BiSikkelParameter)
+  where
 
 open import Data.List using (List; []; _∷_)
 open import Data.Nat as Nat hiding (_≟_)
@@ -11,14 +13,16 @@ open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
 open import Model.Helpers -- we need uip for term equality
 
-open MSTT-Parameter 𝒫
+open BiSikkelParameter ℬ
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension ℳ
 open TyExt 𝒯
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 String
 open TmExt 𝓉
+open import Experimental.LogicalFramework.Parameter.bPropExtension
+open bPropExt 𝒷
 
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
-open import Experimental.LogicalFramework.bProp.Named 𝒫
+open import Experimental.LogicalFramework.bProp.Named 𝒫 𝒷
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 private variable
@@ -71,7 +75,7 @@ tm-msg = "Terms are not equal."
 
 infix 10 _≟tm_
 _≟tm_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
-tmext-args-equal? : ∀ {arginfos} (args1 args2 : ExtTmArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
+ext-tmargs-equal? : ∀ {arginfos} (args1 args2 : ExtTmArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
 
 var' {n = n} {κ = κ} {μ = μ} x {v} α ≟tm var' {n = n'} {κ = κ'} {μ = μ'} y {w} β = do
   refl ← from-dec tm-msg (x Str.≟ y)
@@ -136,14 +140,14 @@ snd {T = T} p ≟tm snd {T = T'} p' = do
   return Ag.refl
 (ext c1 args1 ty-eq1) ≟tm (ext c2 args2 ty-eq2) = do
   refl ← c1 ≟tm-code c2
-  refl ← tmext-args-equal? args1 args2
+  refl ← ext-tmargs-equal? args1 args2
   refl ← return (uip ty-eq1 ty-eq2)
   return Ag.refl
 _ ≟tm _ = throw-error tm-msg
 
-tmext-args-equal? {arginfos = []}                 _              _              = return Ag.refl
-tmext-args-equal? {arginfos = arginfo ∷ arginfos} (arg1 , args1) (arg2 , args2) =
-  Ag.cong₂ _,_ <$> arg1 ≟tm arg2 <*> tmext-args-equal? args1 args2
+ext-tmargs-equal? {arginfos = []}                 _              _              = return Ag.refl
+ext-tmargs-equal? {arginfos = arginfo ∷ arginfos} (arg1 , args1) (arg2 , args2) =
+  Ag.cong₂ _,_ <$> arg1 ≟tm arg2 <*> ext-tmargs-equal? args1 args2
 
 
 bprop-msg : ErrorMsg
@@ -151,6 +155,8 @@ bprop-msg = "Propositions are not equal."
 
 infix 10 _≟bprop_
 _≟bprop_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
+ext-bpargs-equal? : ∀ {arginfos} (args1 args2 : ExtBPArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
+
 ⊤ᵇ ≟bprop ⊤ᵇ = return Ag.refl
 ⊥ᵇ ≟bprop ⊥ᵇ = return Ag.refl
 (_≡ᵇ_ {T} t1 t2) ≟bprop (_≡ᵇ_ {S} s1 s2) = do
@@ -180,4 +186,13 @@ _≟bprop_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
   refl ← μ ≟mod κ
   refl ← φ ≟bprop ψ
   return Ag.refl
+(ext c1 tmargs1 bpargs1) ≟bprop (ext c2 tmargs2 bpargs2) = do
+  refl ← c1 ≟bp-code c2
+  refl ← ext-tmargs-equal? tmargs1 tmargs2
+  refl ← ext-bpargs-equal? bpargs1 bpargs2
+  return Ag.refl
 _ ≟bprop _ = throw-error bprop-msg
+
+ext-bpargs-equal? {arginfos = []}    bps1         bps2         = return Ag.refl
+ext-bpargs-equal? {arginfos = _ ∷ _} (bp1 , bps1) (bp2 , bps2) =
+  Ag.cong₂ _,_ <$> bp1 ≟bprop bp2 <*> ext-bpargs-equal? bps1 bps2

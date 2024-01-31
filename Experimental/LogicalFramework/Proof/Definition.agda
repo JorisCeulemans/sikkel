@@ -2,17 +2,19 @@
 -- Definition of proofs
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.Parameter
 
-module Experimental.LogicalFramework.Proof.Definition (𝒫 : MSTT-Parameter) where
+module Experimental.LogicalFramework.Proof.Definition
+  (ℬ : BiSikkelParameter)
+  where
 
 open import Data.String as Str hiding (_≟_)
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
-open MSTT-Parameter 𝒫
+open BiSikkelParameter ℬ
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp.Named 𝒫
+open import Experimental.LogicalFramework.bProp.Named 𝒫 𝒷
 
 private variable
   m n o p : Mode
