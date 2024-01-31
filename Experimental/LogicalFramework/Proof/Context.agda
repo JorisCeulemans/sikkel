@@ -15,10 +15,10 @@ open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell)
 open BiSikkelParameter ℬ
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.bProp ℬ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality ℬ
-open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Postulates ℬ
 
 private variable
   m n o p : Mode

@@ -25,12 +25,12 @@ import Model.Type.Product as M
 open BiSikkelParameter ℬ
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.bProp ℬ
 open import Experimental.LogicalFramework.Proof.Definition ℬ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality ℬ
 open import Experimental.LogicalFramework.Proof.Context ℬ
-open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Postulates ℬ
 
 private variable
   m n o p : Mode
