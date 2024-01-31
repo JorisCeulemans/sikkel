@@ -45,13 +45,9 @@ infixl 9 _∧_
 infix 12 _≡ᵇ_
 
 
-bPropExtTmArgs : {m : Mode} → List (TmArgInfo m) → Ctx m → Set
-bPropExtTmArgs []               Γ = ⊤
-bPropExtTmArgs (info ∷ tminfos) Γ = Tm (Γ ++tel tmarg-tel info) (tmarg-ty info) × bPropExtTmArgs tminfos Γ
-
 -- TODO: include connective for disjunction and existential quantification.
 data bProp {m} (Γ : Ctx m) : Set
-bPropExtBPArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
+ExtBPArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
 
 data bProp {m} Γ where
   ⊤ᵇ ⊥ᵇ : bProp Γ
@@ -60,13 +56,13 @@ data bProp {m} Γ where
   _∧_ : (φ ψ : bProp Γ) → bProp Γ
   ∀[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → bProp (Γ ,, μ ∣ x ∈ T) → bProp Γ
   ⟨_∣_⟩ : (μ : Modality n m) → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
-  ext : (c : bPropExtCode m) → bPropExtTmArgs (bp-code-tmarg-infos c) Γ → bPropExtBPArgs (bp-code-bparg-infos c) Γ → bProp Γ
+  ext : (c : bPropExtCode m) → ExtTmArgs (bp-code-tmarg-infos c) Γ → ExtBPArgs (bp-code-bparg-infos c) Γ → bProp Γ
     -- ^ This constructor is not intended for direct use. An instantiation of BiSikkel with
     --   specific proposition extensions should rather provide more convenient bProp formers
     --   via pattern synonyms.
 
-bPropExtBPArgs []               Γ = ⊤
-bPropExtBPArgs (info ∷ bpinfos) Γ = bProp (Γ ++tel arg-tel info) × bPropExtBPArgs bpinfos Γ
+ExtBPArgs []               Γ = ⊤
+ExtBPArgs (info ∷ bpinfos) Γ = bProp (Γ ++tel arg-tel info) × ExtBPArgs bpinfos Γ
 
 
 ¬⟨_⟩_ : (μ : Modality m n) {Γ : Ctx n} → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
@@ -74,6 +70,10 @@ bPropExtBPArgs (info ∷ bpinfos) Γ = bProp (Γ ++tel arg-tel info) × bPropExt
 
 
 -- A proposition can be traversed whenever terms can be traversed
+--   Note that this record has a special field specifying how a
+--   traversal object acts on terms.  This way, we can instantiate
+--   this with the exact definition of substitution or renaming for
+--   terms, rather than having some equivalent reimplementation of it.
 record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
     trav-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
@@ -85,13 +85,13 @@ record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   lift-trav-tel σ (Θ ,, μ ∣ x ∈ T) = lift (lift-trav-tel σ Θ)
   lift-trav-tel σ (Θ ,lock⟨ μ ⟩) = lock (lift-trav-tel σ Θ)
 
-  traverse-ext-tm-args : {tminfos : List (TmArgInfo m)} → bPropExtTmArgs tminfos Δ → Trav Γ Δ → bPropExtTmArgs tminfos Γ
-  traverse-ext-tm-args {tminfos = []}               _                  σ = tt
-  traverse-ext-tm-args {tminfos = tminfo ∷ tminfos} [ tmarg , tmargs ] σ =
-    [ trav-tm tmarg (lift-trav-tel σ (tmarg-tel tminfo)) , traverse-ext-tm-args tmargs σ ]
+  trav-ext-tmargs : ∀ {infos} → ExtTmArgs infos Δ → Trav Γ Δ → ExtTmArgs infos Γ
+  trav-ext-tmargs {infos = []}       _                  σ = tt
+  trav-ext-tmargs {infos = info ∷ _} [ tmarg , tmargs ] σ =
+    [ trav-tm tmarg (lift-trav-tel σ (tmarg-tel info)) , trav-ext-tmargs tmargs σ ]
 
   traverse-bprop : bProp Δ → Trav Γ Δ → bProp Γ
-  traverse-ext-bp-args : {bpinfos : List (ArgInfo m)} → bPropExtBPArgs bpinfos Δ → Trav Γ Δ → bPropExtBPArgs bpinfos Γ
+  traverse-ext-bpargs : {bpinfos : List (ArgInfo m)} → ExtBPArgs bpinfos Δ → Trav Γ Δ → ExtBPArgs bpinfos Γ
 
   traverse-bprop ⊤ᵇ σ = ⊤ᵇ
   traverse-bprop ⊥ᵇ σ = ⊥ᵇ
@@ -100,11 +100,11 @@ record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-bprop (φ ∧ ψ) σ = traverse-bprop φ σ ∧ traverse-bprop ψ σ
   traverse-bprop (∀[ μ ∣ x ∈ T ] φ) σ = ∀[ μ ∣ x ∈ T ] traverse-bprop φ (lift σ)
   traverse-bprop ⟨ μ ∣ φ ⟩ σ = ⟨ μ ∣ traverse-bprop φ (lock σ) ⟩
-  traverse-bprop (ext c tmargs bpargs) σ = ext c (traverse-ext-tm-args tmargs σ) (traverse-ext-bp-args bpargs σ)
+  traverse-bprop (ext c tmargs bpargs) σ = ext c (trav-ext-tmargs tmargs σ) (traverse-ext-bpargs bpargs σ)
 
-  traverse-ext-bp-args {bpinfos = []}               _                  σ = tt
-  traverse-ext-bp-args {bpinfos = bpinfo ∷ bpinfos} [ bparg , bpargs ] σ =
-    [ traverse-bprop bparg (lift-trav-tel σ (arg-tel bpinfo)) , traverse-ext-bp-args bpargs σ ]
+  traverse-ext-bpargs {bpinfos = []}               _                  σ = tt
+  traverse-ext-bpargs {bpinfos = bpinfo ∷ bpinfos} [ bparg , bpargs ] σ =
+    [ traverse-bprop bparg (lift-trav-tel σ (arg-tel bpinfo)) , traverse-ext-bpargs bpargs σ ]
 
 open bPropTravStruct using (traverse-bprop)
 

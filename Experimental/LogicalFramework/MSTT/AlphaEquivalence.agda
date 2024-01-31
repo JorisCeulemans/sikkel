@@ -38,7 +38,7 @@ erase-names-var (vsuc v) = NMLS.vsuc (erase-names-var v)
 erase-names-var (skip-lock ρ v) = NMLS.skip-lock ρ (erase-names-var v)
 
 erase-names-tm : Tm Γ T → NMLS.Tm (erase-names-ctx Γ) T
-erase-names-tmext-args : ∀ {arginfos} → TmExtArgs arginfos Γ → NMLS.TmExtArgs (map erase-names-tmarg-info arginfos) (erase-names-ctx Γ)
+erase-names-ext-tmargs : ∀ {arginfos} → ExtTmArgs arginfos Γ → NMLS.ExtTmArgs (map erase-names-tmarg-info arginfos) (erase-names-ctx Γ)
 
 erase-names-tm (var' x {v} α) = NMLS.var' _ {erase-names-var v} α
 erase-names-tm (mod⟨ μ ⟩ t) = NMLS.mod⟨ μ ⟩ erase-names-tm t
@@ -54,11 +54,11 @@ erase-names-tm (if b t f) = NMLS.if (erase-names-tm b) (erase-names-tm t) (erase
 erase-names-tm (pair t s) = NMLS.pair (erase-names-tm t) (erase-names-tm s)
 erase-names-tm (fst p) = NMLS.fst (erase-names-tm p)
 erase-names-tm (snd p) = NMLS.snd (erase-names-tm p)
-erase-names-tm (ext c args ty-eq) = NMLS.ext c (erase-names-tmext-args args) ty-eq
+erase-names-tm (ext c args ty-eq) = NMLS.ext c (erase-names-ext-tmargs args) ty-eq
 
-erase-names-tmext-args {arginfos = []}                 args         = tt
-erase-names-tmext-args {arginfos = arginfo ∷ arginfos} (arg , args) =
-  (subst (λ Γ → NMLS.Tm Γ (tmarg-ty arginfo)) (erase-names-tel-++ _ (tmarg-tel arginfo)) (erase-names-tm arg)) , (erase-names-tmext-args args)
+erase-names-ext-tmargs {arginfos = []}                 args         = tt
+erase-names-ext-tmargs {arginfos = arginfo ∷ arginfos} (arg , args) =
+  (subst (λ Γ → NMLS.Tm Γ (tmarg-ty arginfo)) (erase-names-tel-++ _ (tmarg-tel arginfo)) (erase-names-tm arg)) , (erase-names-ext-tmargs args)
 
 
 infix 2 _≈α_

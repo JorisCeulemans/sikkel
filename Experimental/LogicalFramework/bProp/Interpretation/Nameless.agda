@@ -42,8 +42,8 @@ private variable
 ⟦_⟧bprop-nmls : bProp Γ → SemTy ⟦ Γ ⟧ctx-nmls
 apply-sem-bprop-constructor : ∀ {m tmarginfos bparginfos} {Γ : Ctx m} →
   SemPropConstructor tmarginfos bparginfos Γ →
-  bPropExtTmArgs tmarginfos Γ →
-  bPropExtBPArgs bparginfos Γ →
+  ExtTmArgs tmarginfos Γ →
+  ExtBPArgs bparginfos Γ →
   SemTy ⟦ Γ ⟧ctx-nmls
 
 ⟦ ⊤ᵇ ⟧bprop-nmls = M.Unit'

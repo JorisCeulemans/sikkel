@@ -30,17 +30,9 @@ private variable
   Γ : Ctx m
 
 
-erase-names-bpropext-tmargs : ∀ {arginfos} {Γ : Ctx m} → bPropExtTmArgs arginfos Γ →
-                              NMLS.bPropExtTmArgs (map erase-names-tmarg-info arginfos) (erase-names-ctx Γ)
-erase-names-bpropext-tmargs {arginfos = []}           _             = tt
-erase-names-bpropext-tmargs {arginfos = info ∷ _} {Γ} (tm , tmargs) =
-  subst (λ Δ → NMLS-MSTT.Tm Δ (tmarg-ty info)) (erase-names-tel-++ Γ (tmarg-tel info)) (erase-names-tm tm)
-  ,
-  erase-names-bpropext-tmargs tmargs
-
 erase-names-bprop : bProp Γ → NMLS.bProp (erase-names-ctx Γ)
-erase-names-bpropext-bpargs : ∀ {arginfos} {Γ : Ctx m} → bPropExtBPArgs arginfos Γ →
-                              NMLS.bPropExtBPArgs (map erase-names-arg-info arginfos) (erase-names-ctx Γ)
+erase-names-ext-bpargs : ∀ {arginfos} {Γ : Ctx m} → ExtBPArgs arginfos Γ →
+                         NMLS.ExtBPArgs (map erase-names-arg-info arginfos) (erase-names-ctx Γ)
 
 erase-names-bprop ⊤ᵇ = NMLS.⊤ᵇ
 erase-names-bprop ⊥ᵇ = NMLS.⊥ᵇ
@@ -49,13 +41,13 @@ erase-names-bprop (⟨ μ ∣ φ ⟩⊃ ψ) = NMLS.⟨ μ ∣ erase-names-bprop 
 erase-names-bprop (φ ∧ ψ) = erase-names-bprop φ NMLS.∧ erase-names-bprop ψ
 erase-names-bprop (∀[ μ ∣ x ∈ T ] φ) = NMLS.∀[ μ ∣ _ ∈ T ] erase-names-bprop φ
 erase-names-bprop ⟨ μ ∣ φ ⟩ = NMLS.⟨ μ ∣ erase-names-bprop φ ⟩
-erase-names-bprop (ext c tmargs bpargs) = NMLS.ext c (erase-names-bpropext-tmargs tmargs) (erase-names-bpropext-bpargs bpargs)
+erase-names-bprop (ext c tmargs bpargs) = NMLS.ext c (erase-names-ext-tmargs tmargs) (erase-names-ext-bpargs bpargs)
 
-erase-names-bpropext-bpargs {arginfos = []}           _                = tt
-erase-names-bpropext-bpargs {arginfos = info ∷ _} {Γ} (bparg , bpargs) =
+erase-names-ext-bpargs {arginfos = []}           _                = tt
+erase-names-ext-bpargs {arginfos = info ∷ _} {Γ} (bparg , bpargs) =
   subst (λ Δ → NMLS.bProp Δ) (erase-names-tel-++ Γ _) (erase-names-bprop bparg)
   ,
-  erase-names-bpropext-bpargs bpargs
+  erase-names-ext-bpargs bpargs
 
 
 _≈αᵇ_ : (φ ψ : bProp Γ) → Set

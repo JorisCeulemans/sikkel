@@ -54,7 +54,7 @@ private variable
 ⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
 
 ⟦_⟧tm-nmls : Tm Γ T → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
-apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T → TmExtArgs arginfos Γ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
+apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T → ExtTmArgs arginfos Γ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 
 ⟦ var' _ {v} α ⟧tm-nmls = ⟦ v , α ⟧var-nmls
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls

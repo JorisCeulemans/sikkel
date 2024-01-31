@@ -71,7 +71,7 @@ tm-msg = "Terms are not equal."
 
 infix 10 _≟tm_
 _≟tm_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
-tmext-args-equal? : ∀ {arginfos} (args1 args2 : TmExtArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
+tmext-args-equal? : ∀ {arginfos} (args1 args2 : ExtTmArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
 
 var' {n = n} {κ = κ} {μ = μ} x {v} α ≟tm var' {n = n'} {κ = κ'} {μ = μ'} y {w} β = do
   refl ← from-dec tm-msg (x Str.≟ y)
