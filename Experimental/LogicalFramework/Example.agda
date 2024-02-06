@@ -1,5 +1,5 @@
 --------------------------------------------------
--- Examples of STT programs and proofs of their properties
+-- Examples of MSTT programs and proofs of their properties
 --------------------------------------------------
 
 module Experimental.LogicalFramework.Example where
@@ -9,10 +9,7 @@ open import Data.Nat hiding (_+_; _≡ᵇ_)
 open import Relation.Binary.PropositionalEquality using (_≡_) -- ; refl)
 
 open import Experimental.LogicalFramework.Instances.Trivial
-open import Experimental.LogicalFramework.MSTT triv-mstt
-open import Experimental.LogicalFramework.bProp triv-mstt
-open import Experimental.LogicalFramework.Proof triv-mstt
--- open import Experimental.LogicalFramework.BetaReduction
+open import Experimental.LogicalFramework triv-param
 open import Extraction
 
 open import Model.BaseCategory hiding (★; ω)

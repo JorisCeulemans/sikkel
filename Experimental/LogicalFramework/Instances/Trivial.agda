@@ -66,3 +66,35 @@ MSTT-Parameter.ℳ triv-mstt = triv-mt
 MSTT-Parameter.𝒯 triv-mstt = triv-ty-ext
 MSTT-Parameter.𝓉 triv-mstt = triv-tm-ext
 MSTT-Parameter.⟦𝓉⟧ triv-mstt = triv-tm-ext-sem
+
+
+
+open import Experimental.LogicalFramework.Parameter.bPropExtension
+open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
+open import Experimental.LogicalFramework.Parameter.ProofExtension
+open import Experimental.LogicalFramework.Parameter
+open import Experimental.LogicalFramework.bProp.AlphaEquivalence.bPropExtension
+
+
+triv-bp-ext : bPropExt triv-mt triv-ty-ext String triv-tm-ext
+bPropExt.bPropExtCode triv-bp-ext _ = ⊥
+bPropExt._≟bp-code_ triv-bp-ext () ()
+bPropExt.bp-code-tmarg-infos triv-bp-ext ()
+bPropExt.bp-code-bparg-infos triv-bp-ext ()
+
+triv-bp-ext-sem : bPropExtSem triv-mt triv-ty-ext (erase-names-tmext _ _ triv-tm-ext) (erase-names-bpext triv-mstt triv-bp-ext)
+bPropExtSem.⟦_⟧bp-code triv-bp-ext-sem ()
+
+triv-pf-ext : ProofExt triv-mstt triv-bp-ext triv-bp-ext-sem
+ProofExt.ProofExtCode triv-pf-ext _ = ⊥
+ProofExt._≟pf-code_ triv-pf-ext () ()
+ProofExt.pf-code-tmarg-infos triv-pf-ext ()
+ProofExt.pf-code-bparg-infos triv-pf-ext ()
+ProofExt.pf-code-pfarg-infos triv-pf-ext ()
+ProofExt.pf-code-check triv-pf-ext ()
+
+triv-param : BiSikkelParameter
+BiSikkelParameter.𝒫 triv-param = triv-mstt
+BiSikkelParameter.𝒷 triv-param = triv-bp-ext
+BiSikkelParameter.⟦𝒷⟧ triv-param = triv-bp-ext-sem
+BiSikkelParameter.𝓅 triv-param = triv-pf-ext
