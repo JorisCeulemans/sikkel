@@ -87,7 +87,6 @@ bPropExtSem.⟦_⟧bp-code triv-bp-ext-sem ()
 
 triv-pf-ext : ProofExt triv-mstt triv-bp-ext triv-bp-ext-sem
 ProofExt.ProofExtCode triv-pf-ext _ = ⊥
-ProofExt._≟pf-code_ triv-pf-ext () ()
 ProofExt.pf-code-tmarg-infos triv-pf-ext ()
 ProofExt.pf-code-bparg-infos triv-pf-ext ()
 ProofExt.pf-code-pfarg-infos triv-pf-ext ()

@@ -34,7 +34,6 @@ record ProofExt : Set₁ where
   no-eta-equality
   field
     ProofExtCode : Mode → Set
-    _≟pf-code_ : (c1 c2 : ProofExtCode m) → PCM (c1 ≡ c2)
     pf-code-tmarg-infos : (c : ProofExtCode m) → List (TmArgInfo m)
     pf-code-bparg-infos : (c : ProofExtCode m) → List (ArgInfo m)
     pf-code-pfarg-infos : (c : ProofExtCode m) → List (ArgInfo m)
