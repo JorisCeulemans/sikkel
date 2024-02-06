@@ -34,6 +34,7 @@ private variable
 -- argument, how the context should be modified, and the type of the
 -- argument.
 record TmArgInfo (m : Mode) : Set where
+  no-eta-equality
   constructor tmarginfo
   field
     {n} : Mode
@@ -43,6 +44,7 @@ open TmArgInfo public hiding (n)
 
 
 record TmExt : Set₁ where
+  no-eta-equality
   field
     TmExtCode : (m : Mode) → Set
       -- ^ The universe of codes, every code corresponds to a new term former.

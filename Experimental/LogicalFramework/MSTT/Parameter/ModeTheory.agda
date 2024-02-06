@@ -11,6 +11,7 @@ open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 
 record MTBasis : Set₁ where
+  no-eta-equality
   field
     Mode : Set
     NonTrivModality : Mode → Mode → Set
@@ -57,6 +58,8 @@ record MTBasis : Set₁ where
 
 
 record MTComposition (mtb : MTBasis) : Set₁ where
+  no-eta-equality
+
   open MTBasis mtb
 
   field
@@ -77,6 +80,8 @@ record MTComposition (mtb : MTBasis) : Set₁ where
 
 
 record MTCompositionLaws (mtb : MTBasis) (mtc : MTComposition mtb) : Set where
+  no-eta-equality
+
   open MTBasis mtb
   open MTComposition mtc
   
@@ -99,6 +104,8 @@ record MTCompositionLaws (mtb : MTBasis) (mtc : MTComposition mtb) : Set where
 
 
 record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
+  no-eta-equality
+
   open MTBasis mtb
   open MTComposition mtc
 
@@ -127,6 +134,7 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
   α ≟cell β = from-maybe "Two-cells are not equal." (two-cell-eq? α β)
 
 record ModeTheory : Set₁ where
+  no-eta-equality
   field
     mtb : MTBasis
     mtc : MTComposition mtb

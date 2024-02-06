@@ -12,6 +12,7 @@ open import Experimental.LogicalFramework.bProp.AlphaEquivalence.bPropExtension
 
 
 record BiSikkelParameter : Set₁ where
+  no-eta-equality
   field
     𝒫 : MSTT-Parameter
 

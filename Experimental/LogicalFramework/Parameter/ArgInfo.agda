@@ -13,6 +13,7 @@ open ModeTheory ℳ
 
 
 record ArgInfo (m : Mode) : Set where
+  no-eta-equality
   constructor arg-info
   field
     {mode} : Mode

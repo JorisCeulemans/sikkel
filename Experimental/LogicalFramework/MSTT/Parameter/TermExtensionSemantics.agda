@@ -30,5 +30,6 @@ SemTmConstructor (arginfo ∷ arginfos) Γ T =
   SemTm ⟦ Γ ++tel tmarg-tel arginfo ⟧ctx-nmls ⟦ tmarg-ty arginfo ⟧ty → SemTmConstructor arginfos Γ T
 
 record TmExtSem (𝓉 : TmExt) : Set where
+  no-eta-equality
   field
     ⟦_⟧tm-code : ∀ {m} → (c : TmExtCode 𝓉 m) → {Γ : Ctx m} → SemTmConstructor (tm-code-arginfos 𝓉 c) Γ (tm-code-ty 𝓉 c)

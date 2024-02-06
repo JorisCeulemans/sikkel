@@ -41,6 +41,7 @@ SemTyConstructorNatural {[]}        T = IsClosedNatural T
 SemTyConstructorNatural {m ∷ margs} F = {S : ClosedTy ⟦ m ⟧mode} → IsClosedNatural S → SemTyConstructorNatural (F S)
 
 record TyExt : Set₁ where
+  no-eta-equality
   field
     TyExtCode : List Mode → Mode → Set
     _≟ty-code_ : (c1 c2 : TyExtCode margs m) → PCM (c1 ≡ c2)

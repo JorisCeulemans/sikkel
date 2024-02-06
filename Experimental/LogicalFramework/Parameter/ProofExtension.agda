@@ -31,6 +31,7 @@ ProofCheckExt (info ∷ infos) Ξ φ =
   → ProofCheckExt infos Ξ φ
 
 record ProofExt : Set₁ where
+  no-eta-equality
   field
     ProofExtCode : Mode → Set
     _≟pf-code_ : (c1 c2 : ProofExtCode m) → PCM (c1 ≡ c2)

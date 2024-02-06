@@ -29,6 +29,7 @@ SemPropConstructor (tm-info ∷ tm-infos) bp-infos             Γ =
   SemTm ⟦ Γ ++tel tmarg-tel tm-info ⟧ctx-nmls ⟦ tmarg-ty tm-info ⟧ty → SemPropConstructor tm-infos bp-infos Γ
 
 record bPropExtSem (𝒷 : bPropExt) : Set₁ where
+  no-eta-equality
   field
     ⟦_⟧bp-code : ∀ {m} → (c : bPropExtCode 𝒷 m) → {Γ : Ctx m} →
                  SemPropConstructor (bp-code-tmarg-infos 𝒷 c) (bp-code-bparg-infos 𝒷 c) Γ

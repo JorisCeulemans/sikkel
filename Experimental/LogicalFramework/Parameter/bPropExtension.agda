@@ -22,6 +22,7 @@ private variable
 
 
 record bPropExt : Set₁ where
+  no-eta-equality
   field
     bPropExtCode : Mode → Set
       -- ^ The universe of codes, every code corresponds to a new proposition former.

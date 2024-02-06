@@ -11,6 +11,7 @@ open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension
 
 
 record MSTT-Parameter : Set₁ where
+  no-eta-equality
   field
     ℳ : ModeTheory
     𝒯 : TyExt ℳ
