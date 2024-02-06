@@ -18,7 +18,7 @@ import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 ⊤ as NMLSArg
 
 
 erase-names-arg-info : ∀ {m} → ArgInfo m → NMLSArg.ArgInfo m
-erase-names-arg-info info = NMLSArg.arginfo (erase-names-tel (arg-tel info))
+erase-names-arg-info info = NMLSArg.arg-info (erase-names-tel (arg-tel info))
 
 erase-names-bpext : bPropExt → NMLS.bPropExt
 NMLS.bPropExt.bPropExtCode (erase-names-bpext 𝒷) = bPropExt.bPropExtCode 𝒷

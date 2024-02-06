@@ -20,4 +20,4 @@ record BiSikkelParameter : Set₁ where
   field
     𝒷 : bPropExt ℳ 𝒯 String 𝓉
     ⟦𝒷⟧ : bPropExtSem ℳ 𝒯 (erase-names-tmext ℳ 𝒯 𝓉) (erase-names-bpext 𝒫 𝒷)
-    𝓅 : ProofExt 𝒫 𝒷
+    𝓅 : ProofExt 𝒫 𝒷 ⟦𝒷⟧

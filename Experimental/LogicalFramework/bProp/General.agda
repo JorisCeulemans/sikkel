@@ -9,7 +9,7 @@
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
-open import Experimental.LogicalFramework.Parameter.bPropExtension
+open import Experimental.LogicalFramework.Parameter.bPropExtension using (bPropExt)
 
 module Experimental.LogicalFramework.bProp.General
   (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set) (𝓉 : TmExt ℳ 𝒯 Name)
@@ -29,6 +29,7 @@ open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
 open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 Name 𝓉
 
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 Name
+open import Experimental.LogicalFramework.Parameter.bPropExtension ℳ 𝒯 Name 𝓉
 open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 Name
 
 private variable

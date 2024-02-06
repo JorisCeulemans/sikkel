@@ -7,10 +7,7 @@ module Experimental.LogicalFramework.Proof.Checker
 open import Data.List
 open import Data.String as Str hiding (_≟_; _++_)
 open import Data.Product
-open import Data.Unit
-open import Function using (id)
-open import Relation.Binary.PropositionalEquality as Ag using (refl)
-open import Relation.Nullary hiding (¬_)
+import Relation.Binary.PropositionalEquality as Ag
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
@@ -23,14 +20,18 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 
 open BiSikkelParameter ℬ
+open import Experimental.LogicalFramework.Parameter.ProofExtension 𝒫 𝒷 ⟦𝒷⟧
+open ProofExt 𝓅
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 String
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp ℬ
+open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Definition ℬ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
-open import Experimental.LogicalFramework.Proof.Equality ℬ
-open import Experimental.LogicalFramework.Proof.Context ℬ
-open import Experimental.LogicalFramework.Postulates ℬ
+open import Experimental.LogicalFramework.Proof.Equality 𝒫 𝒷
+open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Proof.Checker.ResultType 𝒫 𝒷 ⟦𝒷⟧
 
 private variable
   m n o p : Mode
@@ -134,39 +135,6 @@ ends-in-prog-var? (Ξ ,,ᵛ μ ∣ x ∈ T) = return (ends-in-prog-var Ξ μ x T
 ends-in-prog-var? _ = throw-error "Expected variable at head of proof context."
 
 
--- If a proof is incomplete (i.e. it contains one or more holes), the
--- proof checker should output the remaining goals to solve (i.e. the
--- goal proposition to prove and the proof context at that point).
-record Goal : Set where
-  constructor goal
-  field
-    gl-identifier : String
-    {gl-mode} : Mode
-    gl-ctx    : ProofCtx gl-mode
-    gl-prop   : bProp (to-ctx gl-ctx)
-open Goal
-
-SemGoals : List Goal → Set
-SemGoals [] = ⊤
-SemGoals (goal _ Ξ φ ∷ gls) = SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ]) × SemGoals gls
-
-split-sem-goals : (gls1 gls2 : List Goal) → SemGoals (gls1 ++ gls2) → SemGoals gls1 × SemGoals gls2
-split-sem-goals []          gls2 sgls         = tt , sgls
-split-sem-goals (gl ∷ gls1) gls2 (sgl , sgls) = let (sgls1 , sgls2) = split-sem-goals gls1 gls2 sgls in (sgl , sgls1) , sgls2
-
-record PCResult (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) : Set where
-  constructor ⟅_,_⟆
-  field
-    goals : List Goal
-    denotation : SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])
-
-pc-result : (goals : List Goal) →
-            (SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])) →
-            PCResult Ξ φ
-pc-result = ⟅_,_⟆
-
-syntax pc-result goals (λ sgoals → b) = ⟅ goals , sgoals ↦ b ⟆
-
 -- A useful lemma
 sub-to-ctx-sub : (Ξ : ProofCtx m) (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) (t : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T) →
                  ⟦ φ [ t / x ]bprop ⟧bprop M.[ to-ctx-subst Ξ ]
@@ -179,6 +147,15 @@ sub-to-ctx-sub {μ = μ} {x} {T} Ξ φ t =
   M.ty-subst-cong-subst (M.,cl-cong-tm (ty-closed-natural ⟨ μ ∣ T ⟩) (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm)) _))
 
 check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (PCResult Ξ φ)
+check-proof-explicit-constraint : (Ξ : ProofCtx m) {Γ : Ctx m} → to-ctx Ξ Ag.≡ Γ →
+                                  Proof Γ → (φ : bProp (to-ctx Ξ)) →
+                                  PCM (PCResult Ξ φ)
+check-proof-ext : {infos : List (ArgInfo m)} →
+                  (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) →
+                  ExtPfArgs infos (to-ctx Ξ) →
+                  ProofCheckExt infos Ξ φ →
+                  PCM (PCResult Ξ φ)
+
 check-proof Ξ refl φ = do
   is-eq t1 t2 ← is-eq? φ
   refl ← t1 ≟tm t2
@@ -454,3 +431,10 @@ check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
     M.cong' _ (M.ι[ M.Id-cong (dra-natural ⟦ μ ⟧mod _) (dra-intro-natural ⟦ μ ⟧mod _ _) (dra-intro-natural ⟦ μ ⟧mod _ _) ]
               M.id-dra-intro-cong ⟦ μ ⟧mod (M.ι⁻¹[ M.Id-natural _ ] ⟦p⟧ sgoals)) ⟆
 check-proof Ξ (hole name) φ = return ⟅ [ goal name Ξ φ ] , (sgl , _) ↦ sgl ⟆
+check-proof Ξ (ext c tmargs bpargs pfargs) φ = check-proof-ext Ξ φ pfargs (pf-code-check c Ξ φ tmargs bpargs)
+
+check-proof-explicit-constraint Ξ Ag.refl pf φ = check-proof Ξ pf φ
+
+check-proof-ext {infos = []}    Ξ φ _                f = f
+check-proof-ext {infos = _ ∷ _} Ξ φ (pfarg , pfargs) f =
+  check-proof-ext Ξ φ pfargs (f (λ Ξ' ψ e → check-proof-explicit-constraint Ξ' e pfarg ψ))

@@ -13,8 +13,8 @@ open ModeTheory ℳ
 
 
 record ArgInfo (m : Mode) : Set where
-  constructor arginfo
+  constructor arg-info
   field
-    {n} : Mode
-    arg-tel : Telescope m n
-open ArgInfo public hiding (n)
+    {mode} : Mode
+    arg-tel : Telescope m mode
+open ArgInfo public hiding (mode)

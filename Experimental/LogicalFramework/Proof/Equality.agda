@@ -1,7 +1,10 @@
-open import Experimental.LogicalFramework.Parameter
+open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.Parameter.bPropExtension
+open import Data.String
 
 module Experimental.LogicalFramework.Proof.Equality
-  (ℬ : BiSikkelParameter)
+  (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
+  (𝒷 : bPropExt ℳ 𝒯 String 𝓉)
   where
 
 open import Data.List using (List; []; _∷_)
@@ -13,7 +16,6 @@ open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
 open import Model.Helpers -- we need uip for term equality
 
-open BiSikkelParameter ℬ
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension ℳ
 open TyExt 𝒯
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 String

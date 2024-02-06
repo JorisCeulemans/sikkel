@@ -8,13 +8,21 @@ module Experimental.LogicalFramework.Proof.Definition
   (ℬ : BiSikkelParameter)
   where
 
+open import Data.List
+open import Data.Product
 open import Data.String as Str hiding (_≟_)
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
 open BiSikkelParameter ℬ
 
 open import Experimental.LogicalFramework.MSTT 𝒫
 open import Experimental.LogicalFramework.bProp.Named 𝒫 𝒷
+open import Experimental.LogicalFramework.Parameter.ProofExtension 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 String
+open ProofExt 𝓅
+
+open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
 
 private variable
   m n o p : Mode
@@ -25,7 +33,10 @@ private variable
   x y : String
 
 
-data Proof {m : Mode} : Ctx m → Set where
+data Proof {m : Mode} : Ctx m → Set
+ExtPfArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
+
+data Proof {m} where
   {-
   -- Functoriality of the locks in a proof context
   lock𝟙-der : (Ξ ⊢ φ) → (Ξ ,lock⟨ 𝟙 ⟩ ⊢ lock𝟙-bprop φ)
@@ -148,7 +159,18 @@ data Proof {m : Mode} : Ctx m → Set where
 
   fun-cong : Proof Γ → Tm (Γ ,lock⟨ μ ⟩) T → Proof Γ
   cong : {T S : Ty m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Proof (Γ ,lock⟨ μ ⟩) → Proof Γ
+
+  -- Extras: holes in proofs and custom extensions of the proof system
   hole : String → Proof Γ
+  ext : (c : ProofExtCode m) {Γ : Ctx m} →
+        ExtTmArgs (pf-code-tmarg-infos c) Γ →
+        ExtBPArgs (pf-code-bparg-infos c) Γ →
+        ExtPfArgs (pf-code-pfarg-infos c) Γ →
+        Proof Γ
+
+ExtPfArgs []             Γ = ⊤
+ExtPfArgs (info ∷ infos) Γ = Proof (Γ ++tel (arg-tel info)) × ExtPfArgs infos Γ
+
 
 bool-induction : {Γ : Ctx m} {x : String} →
                  Proof Γ → Proof Γ → Proof (Γ ,, x ∈ Bool')

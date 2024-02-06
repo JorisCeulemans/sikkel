@@ -19,8 +19,6 @@ open ModeTheory ℳ
 
 private variable
   m : Mode
-  margs : List Mode
-
 
 
 record bPropExt : Set₁ where

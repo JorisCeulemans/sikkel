@@ -13,9 +13,9 @@ open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 ⊤
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 ⊤
-open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 ⊤
 open import Experimental.LogicalFramework.Parameter.bPropExtension ℳ 𝒯 ⊤ 𝓉
 open bPropExt
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 ⊤
 
 open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Interpretation.Nameless ℳ 𝒯
