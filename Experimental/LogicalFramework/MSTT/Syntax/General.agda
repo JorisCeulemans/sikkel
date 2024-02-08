@@ -473,8 +473,13 @@ open SubM
   using (_⊚a_)
   public
 
+infix 19 _/_ _//_
+
 _/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Sub Γ (Γ ,, μ ∣ x ∈ T)
 t / x = id-sub ∷ˢ t / x
+
+_//_ : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ ρ ⟩) S → (y : Name) → Sub (Γ ,, μ ∣ x ∈ T) (Γ ,, ρ ∣ y ∈ S)
+s // y = π ∷ˢ s / y
 
 {-
 --------------------------------------------------

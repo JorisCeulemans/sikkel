@@ -9,16 +9,6 @@ open import Data.String as Str hiding (_≟_; _++_)
 open import Data.Product
 import Relation.Binary.PropositionalEquality as Ag
 
-open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
-import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
-import Experimental.DependentTypes.Model.IdentityType.Modal as M
-import Experimental.DependentTypes.Model.Constant as M
-import Experimental.DependentTypes.Model.Function as M renaming (lam to dlam)
-import Model.Type.Constant as M
-import Model.Type.Function as M
-import Model.Type.Product as M
-
 open BiSikkelParameter ℬ
 open import Experimental.LogicalFramework.Parameter.ProofExtension 𝒫 𝒷 ⟦𝒷⟧
 open ProofExt 𝓅
@@ -43,20 +33,18 @@ private variable
   x y : String
   Ξ : ProofCtx m
 
+open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
+import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
+import Experimental.DependentTypes.Model.IdentityType.Modal as M
+import Experimental.DependentTypes.Model.Constant as M
+import Experimental.DependentTypes.Model.Function as M renaming (lam to dlam)
+import Model.Type.Constant as M
+import Model.Type.Function as M
+import Model.Type.Product as M
+open import Experimental.LogicalFramework.Proof.Checker.Soundness ℬ
 
 
-
-
--- A useful lemma
-sub-to-ctx-sub : (Ξ : ProofCtx m) (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) (t : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T) →
-                 ⟦ φ [ t / x ]bprop ⟧bprop M.[ to-ctx-subst Ξ ]
-                   M.≅ᵗʸ
-                 (⟦ φ ⟧bprop M.[ to-ctx-subst (Ξ ,,ᵛ μ ∣ x ∈ T) ]) M.[
-                    dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ]
-sub-to-ctx-sub {μ = μ} {x} {T} Ξ φ t =
-  M.transᵗʸ (M.symᵗʸ (M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound t x)) ⟦ φ ⟧bprop) (bprop-sub-sound φ (t / x))))) (
-  M.transᵗʸ (M.ty-subst-cong-subst-2-2 _ (M./cl-⊚ (ty-closed-natural ⟨ μ ∣ T ⟩) _ _)) (
-  M.ty-subst-cong-subst (M.,cl-cong-tm (ty-closed-natural ⟨ μ ∣ T ⟩) (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm)) _))
 
 check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (PCResult Ξ φ)
 check-proof-explicit-constraint : (Ξ : ProofCtx m) {Γ : Ctx m} → to-ctx Ξ Ag.≡ Γ →
@@ -90,10 +78,10 @@ check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (φ [ t1 / x ]bprop)
   refl ← ψ ≟bprop φ [ t2 / x ]bprop
   return ⟅ goalse ++ goals1 , sgoals ↦ (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
-    M.ι[ sub-to-ctx-sub Ξ φ t2 ]
+    M.ι[ to-ctx-/-commute Ξ φ t2 ]
     M.ι[ M.ty-subst-cong-subst (M./cl-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (dra-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (
            M.eq-reflect (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] ⟦pe⟧ sgoalse))))) _ ]
-    M.ι⁻¹[ sub-to-ctx-sub Ξ φ t1 ] ⟦p1⟧ sgoals1) ⟆
+    M.ι⁻¹[ to-ctx-/-commute Ξ φ t1 ] ⟦p1⟧ sgoals1) ⟆
 check-proof Ξ ⊤ᵇ-intro φ = do
   refl ← φ ≟bprop ⊤ᵇ
   return ⟅ [] , _ ↦ M.tt' M.[ _ ]' ⟆
@@ -158,7 +146,7 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   refl ← T ≟ty S
   refl ← φ ≟bprop (ψ' [ t / y ]bprop)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
-  return ⟅ goals , sgoals ↦ M.ι[ sub-to-ctx-sub Ξ ψ' t ]
+  return ⟅ goals , sgoals ↦ M.ι[ to-ctx-/-commute Ξ ψ' t ]
          (M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] (⟦p⟧ sgoals))
                                                  (dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl))) ⟆
 check-proof Ξ fun-β φ = do
@@ -218,24 +206,14 @@ check-proof Ξ (zero≠sucn m) φ = do
 check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← return Δ=Γ,x∈Bool
-  ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true / x ]bprop)
+  ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true  / x ]bprop)
   ⟅ goalsf , ⟦pf⟧ ⟆ ← check-proof Ξ' pf (φ [ false / x ]bprop)
   return ⟅ goalst ++ goalsf , sgoals ↦ (let sgoalst , sgoalsf = split-sem-goals goalst goalsf sgoals in
     M.bool-ind _
-               (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 ⟦ φ ⟧bprop (M./cl-⊚ (ty-closed-natural ⟨ 𝟙 ∣ Bool' ⟩) (to-ctx-subst Ξ') M.true'))
-                                 (M.ty-subst-cong-subst (M.transˢ (M./cl-cong-cl (𝟙-preserves-cl M.const-closed))
-                                                                  (M./cl-cong M.const-closed (M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl M.const-closed))
-                                                                                                        (M.const-cl-natural (to-ctx-subst Ξ'))))) _) ]
-                 (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound {Γ = to-ctx Ξ'} {μ = 𝟙} true x)) _)
-                                                       (bprop-sub-sound φ _)) ]
-                 ⟦pt⟧ sgoalst))
-               (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 ⟦ φ ⟧bprop (M./cl-⊚ (ty-closed-natural ⟨ 𝟙 ∣ Bool' ⟩) (to-ctx-subst Ξ') M.false'))
-                                 (M.ty-subst-cong-subst (M.transˢ (M./cl-cong-cl (𝟙-preserves-cl M.const-closed))
-                                                                  (M./cl-cong M.const-closed (M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl M.const-closed))
-                                                                                                        (M.const-cl-natural (to-ctx-subst Ξ'))))) _) ]
-                 (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound {Γ = to-ctx Ξ'} {μ = 𝟙} false x)) _)
-                                                       (bprop-sub-sound φ _)) ]
-                 ⟦pf⟧ sgoalsf))) ⟆
+               (M.ι⁻¹[ M.ty-subst-cong-subst (M./cl-cong M.const-closed (M.const-cl-natural (to-ctx-subst Ξ'))) _ ] (
+                 M.ι⁻¹[ to-ctx-/-commute-𝟙 Ξ' φ true ] ⟦pt⟧ sgoalst))
+               (M.ι⁻¹[ M.ty-subst-cong-subst (M./cl-cong M.const-closed (M.const-cl-natural (to-ctx-subst Ξ'))) _ ] (
+                 M.ι⁻¹[ to-ctx-/-commute-𝟙 Ξ' φ false ] ⟦pf⟧ sgoalsf))) ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← return Δ=Γ,x∈Nat
@@ -246,16 +224,11 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
   ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]bprop)
   ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ 𝟙 ∣ x ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ lock𝟙-bprop φ)
                                   ps
-                                  (φ [ π ∷ˢ suc v0 / x ]bprop)
+                                  (φ [ suc v0 // x ]bprop)
   return ⟅ goals1 ++ goals2 , sgoals ↦
     (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals
-     in M.nat-ind _ (M.ι[ M.transᵗʸ (M.ty-subst-cong-subst (M.transˢ (M./v-cong (M.symᵗᵐ (M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl M.const-closed))
-                                                                                                                           (M.const-cl-natural _))))
-                                                                     (M./v-/cl (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩) _))
-                                                           _)
-                                    (M.ty-subst-cong-subst-2-2 _ (M.symˢ (M./cl-⊚ (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩) _ M.zero'))) ]
-                      (M.ι[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (/cl-sound {Γ = to-ctx Ξ'} {μ = 𝟙} zero x)) _) (bprop-sub-sound φ (zero / x))) ]
-                      (⟦p0⟧ sgoals1)))
+     in M.nat-ind _ (M.ι⁻¹[ M.ty-subst-cong-subst (M./cl-cong M.const-closed (M.const-cl-natural (to-ctx-subst Ξ'))) _ ]
+                      (M.ι⁻¹[ to-ctx-/-commute-𝟙 Ξ' φ zero ] ⟦p0⟧ sgoals1))
                     (M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.transˢ M.⊚-assoc (M.⊚-congʳ (M.,,-map-π _))) ]
                       (M.ιc⁻¹[ M.,,-cong (M.ty-subst-cong-ty _ (lock𝟙-bprop-sound φ)) ]'
                       (M.ι⁻¹[ M.ty-subst-cong-subst (M.⊚-congˡ (
@@ -277,11 +250,10 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
                                           _)
                                         (bprop-sub-sound φ _)) ]
                       ⟦ps⟧ sgoals2)))))) ⟆
-
 check-proof Ξ (mod-induction' {T = T} κ μ x ctx-eq p) φ = do
   ends-in-prog-var Ξ' μ' y _ ← ends-in-prog-var? Ξ
   refl ← return ctx-eq
-  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ⓜ κ ∣ x ∈ T) p (φ [ π ∷ˢ mod⟨ κ ⟩ (var' x {skip-lock κ (skip-lock μ vzero)} id-cell) / y ]bprop)
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ⓜ κ ∣ x ∈ T) p (φ [ mod⟨ κ ⟩ (var' x {skip-lock κ (skip-lock μ vzero)} id-cell) // y ]bprop)
   return ⟅ goals , sgoals ↦
     M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 _ (M.symˢ (M.lift-cl-,,-cong-commute (M.symᶜᵗʸ (eq-dra-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T))) (to-ctx-subst Ξ')))) (
            M.transᵗʸ (M.ty-subst-cong-subst (M.lift-cl-subst-cong-cl (ⓓ-preserves-cl ⟦ μ ⟧mod ⟦ κ ⟧mod (ty-closed-natural T))) _) (

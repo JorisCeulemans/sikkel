@@ -195,7 +195,7 @@ eq (η-bool t) γ | false = refl
 eq (η-bool t) γ | true  = refl
 
 bool-ind : (T : Ty (Γ ,, Bool')) →
-           Tm Γ (T [ true' /cl⟨ const-closed ⟩ ]) →
+           Tm Γ (T [ true'  /cl⟨ const-closed ⟩ ]) →
            Tm Γ (T [ false' /cl⟨ const-closed ⟩ ]) →
            Tm (Γ ,, Bool') T
 bool-ind T t f ⟨ x , [ γ , false ] ⟩' = f ⟨ x , γ ⟩'
@@ -328,7 +328,7 @@ nat-sum = const-func₂ _+_
 
 -- The (dependent) induction principle for natural numbers.
 nat-ind : (T : Ty (Γ ,, Nat')) →
-          Tm Γ (T [ zero' /v ]) →
+          Tm Γ (T [ zero' /cl⟨ const-closed ⟩ ]) →
           Tm (Γ ,, Nat' ,, T) (T [ (π ,cl⟨ const-closed ⟩ suc' (ξcl const-closed)) ⊚ π ]) →
           Tm (Γ ,, Nat') T
 nat-ind T z s ⟨ x , [ γ , zero  ] ⟩' = z ⟨ x , γ ⟩'

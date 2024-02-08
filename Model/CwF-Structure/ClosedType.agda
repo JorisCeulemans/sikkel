@@ -264,6 +264,10 @@ module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) 
       (π ,cl⟨ clS ⟩ s) ⊚ lift-cl-subst clT σ ∎
     where open ≅ˢ-Reasoning
 
+_//cl⟨_⟩ : {S : ClosedTy C} {Γ : Ctx C} {T : Ty Γ} (s : Tm (Γ ,, T) S) → IsClosedNatural S →
+           (Γ ,, T ⇒ Γ ,, S)
+s //cl⟨ clS ⟩ = π ,cl⟨ clS ⟩ s
+
 
 --------------------------------------------------
 -- Since Ty Γ is a groupoid (and not a setoid), naturality of a closed
