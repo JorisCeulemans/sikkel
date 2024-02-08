@@ -35,7 +35,7 @@ private variable
 -- argument.
 record TmArgInfo (m : Mode) : Set where
   no-eta-equality
-  constructor tmarginfo
+  constructor tmarg-info
   field
     {n} : Mode
     tmarg-tel : Telescope m n

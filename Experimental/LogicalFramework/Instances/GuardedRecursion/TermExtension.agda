@@ -55,13 +55,13 @@ tm-code-ty (g-head-code A) = ⟨ constantly ∣ A ⟩
 tm-code-ty (g-tail-code A) = ⟨ later ∣ GStream A ⟩
 
 tm-code-arginfos : TmExtCode m → List (TmArgInfo guarded-mt guarded-ty-ext String m)
-tm-code-arginfos (löb-code x A) = tmarginfo (◇ ,, later ∣ x ∈ A) A ∷ []
+tm-code-arginfos (löb-code x A) = tmarg-info (◇ ,, later ∣ x ∈ A) A ∷ []
 tm-code-arginfos (g-cons-code A) =
-  tmarginfo (◇ ,lock⟨ constantly ⟩) A ∷
-  tmarginfo (◇ ,lock⟨ later ⟩) (GStream A) ∷
+  tmarg-info (◇ ,lock⟨ constantly ⟩) A ∷
+  tmarg-info (◇ ,lock⟨ later ⟩) (GStream A) ∷
   []
-tm-code-arginfos (g-head-code A) = tmarginfo ◇ (GStream A) ∷ []
-tm-code-arginfos (g-tail-code A) = tmarginfo ◇ (GStream A) ∷ []
+tm-code-arginfos (g-head-code A) = tmarg-info ◇ (GStream A) ∷ []
+tm-code-arginfos (g-tail-code A) = tmarg-info ◇ (GStream A) ∷ []
 
 guarded-tm-ext : TmExt guarded-mt guarded-ty-ext String
 TmExt.TmExtCode guarded-tm-ext = TmExtCode

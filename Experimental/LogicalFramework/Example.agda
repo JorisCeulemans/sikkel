@@ -9,6 +9,7 @@ open import Data.Nat hiding (_+_; _≡ᵇ_)
 open import Relation.Binary.PropositionalEquality using (_≡_) -- ; refl)
 
 open import Experimental.LogicalFramework.Instances.Trivial
+open import Experimental.LogicalFramework.MSTT triv-mstt
 open import Experimental.LogicalFramework triv-param
 open import Extraction
 

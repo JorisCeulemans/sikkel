@@ -21,7 +21,7 @@ private variable
 
 
 erase-names-tmarg-info : TmArgInfo m → NMLS.TmArgInfo m
-erase-names-tmarg-info arginfo = NMLS.tmarginfo (erase-names-tel (tmarg-tel arginfo)) (tmarg-ty arginfo)
+erase-names-tmarg-info arginfo = NMLS.tmarg-info (erase-names-tel (tmarg-tel arginfo)) (tmarg-ty arginfo)
 
 erase-names-tmext : TmExt → NMLS.TmExt
 NMLS.TmExt.TmExtCode (erase-names-tmext 𝓉) = TmExt.TmExtCode 𝓉
