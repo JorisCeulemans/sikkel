@@ -23,6 +23,10 @@ open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.ResultType 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.SyntaxViews 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Proof.Checker.Soundness 𝒫 𝒷 ⟦𝒷⟧
+
+open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
+import Model.Type.Constant as M
 
 private variable
   m n o p : Mode
@@ -32,17 +36,6 @@ private variable
   φ ψ : bProp Γ
   x y : String
   Ξ : ProofCtx m
-
-open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
-open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
-import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
-import Experimental.DependentTypes.Model.IdentityType.Modal as M
-import Experimental.DependentTypes.Model.Constant as M
-import Experimental.DependentTypes.Model.Function as M renaming (lam to dlam)
-import Model.Type.Constant as M
-import Model.Type.Function as M
-import Model.Type.Product as M
-open import Experimental.LogicalFramework.Proof.Checker.Soundness ℬ
 
 
 

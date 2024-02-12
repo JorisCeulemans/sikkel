@@ -1,7 +1,11 @@
-open import Experimental.LogicalFramework.Parameter
+open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.Parameter.bPropExtension
+open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
 
 module Experimental.LogicalFramework.Proof.Checker.Soundness
-  (ℬ : BiSikkelParameter)
+  (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
+  (𝒷 : bPropExt ℳ 𝒯 _ 𝓉)
+  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 _ _)
   where
 
 open import Data.String
@@ -16,20 +20,10 @@ import Model.Type.Constant as M
 import Model.Type.Function as M
 import Model.Type.Product as M
 
-open BiSikkelParameter ℬ
--- open import Experimental.LogicalFramework.Parameter.ProofExtension 𝒫 𝒷 ⟦𝒷⟧
--- open ProofExt 𝓅
--- open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 String
-
 open import Experimental.LogicalFramework.MSTT 𝒫
 open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
--- open import Experimental.LogicalFramework.Proof.Definition ℬ
--- open import Experimental.LogicalFramework.Proof.CheckingMonad
--- open import Experimental.LogicalFramework.Proof.Equality 𝒫 𝒷
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
--- open import Experimental.LogicalFramework.Proof.Checker.ResultType 𝒫 𝒷 ⟦𝒷⟧
--- open import Experimental.LogicalFramework.Proof.Checker.SyntaxViews 𝒫 𝒷 ⟦𝒷⟧
 
 private variable
   m n o : Mode
