@@ -126,55 +126,57 @@ ty-comp (GStream A) {f = k≤m} {g = m≤n} {eγ-zy = eγ-nm} {eγ-yx = eγ-mk} 
   where open ≡-Reasoning
 
 module _ {A : Ty (now Γ)} where
-  g-head : Tm Γ (GStream A ⇛ constantly-ty A)
-  _$⟨_,_⟩_ (g-head ⟨ n , γn ⟩') _ _ = head
-  naturality (g-head ⟨ n , γn ⟩') {t = v} =
+  g-head : Tm Γ (GStream A) → Tm Γ (constantly-ty A)
+  g-head s ⟨ n , γ ⟩' = head (s ⟨ n , γ ⟩')
+  naturality (g-head s) {x = m} {n} {γn} {γm} m≤n eγ =
     begin
-      head (map (constantly-ty A ⟪ _ , _ ⟫_) (first-≤ (s≤s _) v))
-    ≡⟨ map-head (first-≤ (s≤s _) v) ⟩
-      constantly-ty A ⟪ _ , _ ⟫ (head (first-≤ (s≤s _) v))
-    ≡⟨ cong (constantly-ty A ⟪ _ , _ ⟫_) (first-≤-head v) ⟩
-      constantly-ty A ⟪ _ , _ ⟫ head v ∎
-    where open ≡-Reasoning
-  naturality g-head m≤n eγ = to-pshfun-eq λ _ _ _ → refl
-
-  g-tail : Tm Γ (GStream A ⇛ ▻' (GStream A))
-  _$⟨_,_⟩_ (g-tail ⟨ n , γn ⟩') z≤n       _ = λ _ → _ -- = tt
-  _$⟨_,_⟩_ (g-tail ⟨ n , γn ⟩') (s≤s m≤n) _ = map (constantly-ty A ⟪ n≤1+n _ , refl ⟫_) ∘ tail
-  naturality (g-tail ⟨ n , γn ⟩') {ρ-xy = z≤n}     {ρ-yz = m≤n}             = refl
-  naturality (g-tail ⟨ n , γn ⟩') {ρ-xy = s≤s k≤m} {ρ-yz = s≤s m≤n} {t = v} =
-    begin
-      map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (map (constantly-ty A ⟪ s≤s k≤m , _ ⟫_) (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ cong (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_)) (map-tail (first-≤ (s≤s (s≤s k≤m)) v)) ⟩
-      map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (map (constantly-ty A ⟪ s≤s k≤m , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ map-map-cong (λ _ → ty-cong-2-2 (constantly-ty A) (≤-irrelevant _ _)) ⟩
-      map (constantly-ty A ⟪ k≤m , _ ⟫_) (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (tail (first-≤ (s≤s (s≤s k≤m)) v)))
-    ≡⟨ cong (map (constantly-ty A ⟪ k≤m , _ ⟫_) ∘ map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_)) (first-≤-tail v) ⟩
-      map (constantly-ty A ⟪ k≤m , _ ⟫_) (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (first-≤ (s≤s k≤m) (tail v)))
-    ≡⟨ cong (map (constantly-ty A ⟪ k≤m , _ ⟫_)) map-first-≤ ⟩
-      map (constantly-ty A ⟪ k≤m , _ ⟫_) (first-≤ (s≤s k≤m) (map (constantly-ty A ⟪ n≤1+n _ , _ ⟫_) (tail v))) ∎
-    where open ≡-Reasoning
-  naturality g-tail z≤n       eγ = to-pshfun-eq λ { z≤n _ _ → refl }
-  naturality g-tail (s≤s m≤n) eγ = to-pshfun-eq λ { z≤n _ _ → refl ; (s≤s k≤m) _ _ → refl }
-
-  prim-g-cons : Tm (Γ ,, constantly-ty A ,, (▻' (GStream A)) [ π ]) (((GStream A) [ π ]) [ π ])
-  prim-g-cons ⟨ zero ,    [ [ γn , a ] , t ] ⟩' = a ∷ []
-  prim-g-cons ⟨ (suc n) , [ [ γn , a ] , t ] ⟩' = a ∷ map (ty-ctx-subst A (sym (ctx-comp Γ))) t
-  naturality prim-g-cons {y = zero}  z≤n       refl = refl
-  naturality prim-g-cons {y = suc n} z≤n       refl = refl
-  naturality prim-g-cons             (s≤s m≤n) refl = cong (constantly-ty A ⟪ s≤s m≤n , refl ⟫ _ ∷_) (sym (
-    begin
-      map (ty-ctx-subst A _) (map (constantly-ty A ⟪ m≤n , _ ⟫_) (first-≤ (s≤s m≤n) _))
-    ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
-      map (constantly-ty A ⟪ s≤s m≤n , refl ⟫_) (map (ty-ctx-subst A _) (first-≤ (s≤s m≤n) _))
-    ≡⟨ cong (map (constantly-ty A ⟪ s≤s m≤n , refl ⟫_)) map-first-≤ ⟩
-      map (constantly-ty A ⟪ s≤s m≤n , refl ⟫_) (first-≤ (s≤s m≤n) (map (ty-ctx-subst A _) _)) ∎))
+      A ⟪ tt , _ ⟫ head (s ⟨ n , γn ⟩')
+    ≡⟨ cong (A ⟪ tt , _ ⟫_) (first-≤-head (s ⟨ n , γn ⟩')) ⟨
+      A ⟪ tt , _ ⟫ head (first-≤ (s≤s m≤n) (s ⟨ n , γn ⟩'))
+    ≡⟨ map-head (first-≤ (s≤s m≤n) (s ⟨ n , γn ⟩')) ⟨
+      head (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s m≤n) (s ⟨ n , γn ⟩')))
+    ≡⟨ cong head (naturality s m≤n eγ) ⟩
+      head (s ⟨ m , γm ⟩') ∎
     where open ≡-Reasoning
 
-  g-cons : Tm Γ (constantly-ty A ⇛ ▻' (GStream A) ⇛ GStream A)
-  g-cons = lam (constantly-ty A) (ι[ ⇛-natural π ]
-               lam (▻' (GStream A) [ π ])
-                   prim-g-cons)
+  g-tail : Tm Γ (GStream A) → Tm Γ (▻' (GStream A))
+  g-tail s ⟨ zero ,  γ ⟩' = _
+  g-tail s ⟨ suc n , γ ⟩' = map (ty-ctx-subst A (ctx-comp Γ)) (tail (s ⟨ suc n , γ ⟩'))
+  naturality (g-tail s) z≤n eγ = refl
+  naturality (g-tail s) {x = suc m} {y = suc n} {γy = γn} {γx = γm} (s≤s m≤n) eγ =
+    let α = _ in
+    begin
+      map (A ⟪ tt , α ⟫_) (first-≤ (s≤s m≤n) (map (A ⟪ tt , ctx-comp Γ ⟫_) (tail (s ⟨ suc n , γn ⟩'))))
+    ≡⟨ trans (map-tail (first-≤ (s≤s (s≤s m≤n)) (map (A ⟪ tt , _ ⟫_) (s ⟨ suc n , γn ⟩')))) (
+       trans (cong (map (A ⟪ tt , α ⟫_)) (first-≤-tail (map (A ⟪ tt , _ ⟫_) (s ⟨ suc n , γn ⟩')))) (
+       (cong (map (A ⟪ tt , α ⟫_)) (cong (first-≤ (s≤s m≤n)) (map-tail (s ⟨ suc n , γn ⟩')))))) ⟨
+      tail (map (A ⟪ tt , α ⟫_) (first-≤ (s≤s (s≤s m≤n)) (map (A ⟪ tt , ctx-comp Γ ⟫_) (s ⟨ suc n , γn ⟩'))))
+    ≡⟨ cong tail (cong (map (A ⟪ tt , α ⟫_)) (map-first-≤ {m≤n = s≤s (s≤s m≤n)} {as = s ⟨ suc n , γn ⟩'})) ⟨
+      tail (map (A ⟪ tt , α ⟫_) (map (A ⟪ tt , ctx-comp Γ ⟫_) (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩'))))
+    ≡⟨ cong tail (map-map-cong (λ _ → ty-cong-2-2 A refl) {as = first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩')}) ⟩
+      tail (map (ty-ctx-subst A (ctx-comp Γ)) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩'))))
+    ≡⟨ cong tail (cong (map (ty-ctx-subst A (ctx-comp Γ))) (naturality s (s≤s m≤n) eγ)) ⟩
+      tail (map (ty-ctx-subst A (ctx-comp Γ)) (s ⟨ suc m , γm ⟩'))
+    ≡⟨ map-tail (s ⟨ suc m , γm ⟩') ⟩
+      map (ty-ctx-subst A (ctx-comp Γ)) (tail (s ⟨ suc m , γm ⟩')) ∎
+    where open ≡-Reasoning
+
+  g-cons : Tm Γ (constantly-ty A) → Tm Γ (▻' (GStream A)) → Tm Γ (GStream A)
+  g-cons a s ⟨ zero  , γ ⟩' = a ⟨ zero , γ ⟩' ∷ []
+  g-cons a s ⟨ suc n , γ ⟩' = a ⟨ suc n , γ ⟩' ∷ map (ty-ctx-subst A (sym (ctx-comp Γ))) (s ⟨ suc n , γ ⟩')
+  naturality (g-cons a s) {y = zero}  z≤n eγ = cong (_∷ []) (naturality a z≤n eγ)
+  naturality (g-cons a s) {y = suc _} z≤n eγ = cong (_∷ []) (naturality a z≤n eγ)
+  naturality (g-cons a s) {x = suc m} {y = suc n} {γy = γn} {γx = γm} (s≤s m≤n) eγ =
+    cong₂ _∷_ (naturality a (s≤s m≤n) eγ) (
+      begin
+        map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s m≤n) (map (A ⟪ tt , _ ⟫_) (s ⟨ suc n , γn ⟩')))
+      ≡⟨ cong (map (A ⟪ tt , _ ⟫_)) map-first-≤ ⟨
+        map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s m≤n) (s ⟨ suc n , γn ⟩')))
+      ≡⟨ map-map-cong (λ _ → ty-cong-2-2 A refl) ⟩
+        map (A ⟪ tt , _ ⟫_) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s m≤n) (s ⟨ suc n , γn ⟩')))
+      ≡⟨ cong (map (A ⟪ tt , _ ⟫_)) (naturality s (s≤s m≤n) eγ) ⟩
+        map (A ⟪ tt , _ ⟫_) (s ⟨ suc m , γm ⟩') ∎)
+    where open ≡-Reasoning
 
   gstream-natural : (σ : Δ ⇒ Γ) → (GStream A) [ σ ] ≅ᵗʸ GStream (A [ now-subst σ ])
   func (from (gstream-natural σ)) = map (ty-ctx-subst A (naturality σ))

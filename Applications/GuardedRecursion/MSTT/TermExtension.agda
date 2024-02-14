@@ -9,7 +9,7 @@ open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure as M
-open import Model.DRA as DRA hiding (⟨_∣_⟩)
+open import Model.DRA as DRA hiding (⟨_∣_⟩; _,lock⟨_⟩)
 open import Model.Type.Function as M hiding (_⇛_)
 open import Applications.GuardedRecursion.Model.Modalities as M
   hiding (later; constantly; forever; ▻)
@@ -35,7 +35,9 @@ private variable
 data GRTmCode : List ModeExpr → ModeExpr → Set where
   constantly-if-code : GRTmCode (ω ∷ ω ∷ ω ∷ []) ω
   löb-code : String → TyExpr ω → GRTmCode (ω ∷ []) ω
-  g-cons-code g-head-code g-tail-code : TyExpr ★ → GRTmCode [] ω
+  g-cons-code : GRTmCode (★ ∷ ω ∷ []) ω
+  g-head-code g-tail-code : GRTmCode (ω ∷ []) ω
+
 
 infer-interpret-gr-code : GRTmCode margs m → InferInterpretExt margs m
 infer-interpret-gr-code constantly-if-code = λ infer-c infer-t infer-f Γ → do
@@ -55,13 +57,20 @@ infer-interpret-gr-code (löb-code x T) = λ infer-t Γ → do
   return (T , löb' ⟦ T ⟧ty (ι[ transᵗʸ (closed-natural (⟦⟧ty-natural T) π) T=S ]
                             ι⁻¹[ closed-natural (⟦⟧ty-natural S) _ ]
                             ιc[ ,,-cong (▻-cong (closed-natural (⟦⟧ty-natural T) (from-earlier _))) ]' ⟦t⟧))
-infer-interpret-gr-code (g-cons-code A) = λ Γ →
-  return (⟨ constantly ∣ A ⟩ ⇛ ▻ (GStream A) ⇛ GStream A
-         , ι⁻¹[ ⇛-cong reflᵗʸ (⇛-cong (▻-cong (closed-natural (⟦⟧ty-natural (GStream A)) _)) reflᵗʸ) ] M.g-cons)
-infer-interpret-gr-code (g-head-code A) = λ Γ → return (GStream A ⇛ ⟨ constantly ∣ A ⟩ , M.g-head)
-infer-interpret-gr-code (g-tail-code A) = λ Γ →
-  return (GStream A ⇛ ▻ (GStream A)
-         , (ι⁻¹[ ⇛-cong reflᵗʸ (▻-cong (closed-natural (⟦⟧ty-natural (GStream A)) (from-earlier _))) ] M.g-tail))
+infer-interpret-gr-code g-cons-code = λ infer-h infer-t Γ → do
+  A , ⟦h⟧ ← infer-h (Γ ,lock⟨ constantly ⟩)
+  B , ⟦t⟧ ← infer-t (Γ ,lock⟨ later ⟩)
+  StrA=B ← GStream A ≃ᵗʸ? B
+  return (GStream A
+         , M.g-cons (M.constantly-tm ⟦h⟧) (M.ι[ ▻-cong (transᵗʸ (closed-natural (⟦⟧ty-natural (GStream A)) _) StrA=B) ] M.next ⟦t⟧))
+infer-interpret-gr-code g-head-code = λ infer-s Γ → do
+  B , ⟦s⟧ ← infer-s Γ
+  gstr-ty A ← is-gstr-ty B
+  return (⟨ constantly ∣ A ⟩ , M.g-head ⟦s⟧)
+infer-interpret-gr-code g-tail-code = λ infer-s Γ → do
+  B , ⟦s⟧ ← infer-s Γ
+  gstr-ty A ← is-gstr-ty B
+  return (▻ (GStream A) , (M.ι⁻¹[ ▻-cong (closed-natural (⟦⟧ty-natural (GStream A)) _) ] M.g-tail ⟦s⟧))
 
 GR-tm-ext : TmExt
 TmExt.TmExtCode GR-tm-ext = GRTmCode

@@ -24,18 +24,6 @@ open import Extraction
 open import Applications.GuardedRecursion.MSTT
 
 
---------------------------------------------------
---------------------------------------------------
--- Abbreviations for frequently used combinations
-
-g-consN = g-cons Nat'
-g-headN = g-head Nat'
-g-tailN = g-tail Nat'
-
-g-consB = g-cons Bool'
-g-headB = g-head Bool'
-g-tailB = g-tail Bool'
-
 
 --------------------------------------------------
 --------------------------------------------------
@@ -75,10 +63,10 @@ g-map A B =
   lam[ constantly ∣ "f" ∈ A ⇛ B ]
     löb[later∣ "m" ∈ GStream A ⇛ GStream B ]
       lam[ "s" ∈ GStream A ]
-        let' mod⟨ constantly ⟩ "head-s" ← g-head A ∙ svar "s" in'
-        let' mod⟨ later ⟩ "tail-s" ← g-tail A ∙ svar "s" in' (
-        g-cons B ∙⟨ constantly ⟩ (svar "f" ∙ svar "head-s")
-                 ∙⟨ later ⟩ (svar "m" ∙ svar "tail-s"))
+        let' mod⟨ constantly ⟩ "head-s" ← g-head (svar "s") in'
+        let' mod⟨ later ⟩ "tail-s" ← g-tail (svar "s") in' (
+        g-cons (svar "f" ∙ svar "head-s")
+               (svar "m" ∙ svar "tail-s"))
 
 g-map-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Nat')
 g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
@@ -87,9 +75,7 @@ g-map-sem = ⟦ g-map Nat' Nat' ⟧tm
 g-nats : TmExpr ω
 g-nats =
   löb[later∣ "s" ∈ GStream Nat' ]
-    g-consN ∙⟨ constantly ⟩ lit 0
-            ∙⟨ later ⟩ (g-map Nat' Nat' ∙⟨ constantly ⟩ suc
-                                        ∙ svar "s")
+    g-cons (lit 0) (g-map Nat' Nat' ∙⟨ constantly ⟩ suc ∙ svar "s")
 
 g-nats-sem : Tm ′◇ (′GStream ′Nat')
 g-nats-sem = ⟦ g-nats ⟧tm
@@ -104,14 +90,14 @@ g-nats-sem = ⟦ g-nats ⟧tm
 
 -- Γ ⊢ g-snd A : GStream A ⇛ ▻ ⟨ constantly ∣ A ⟩
 g-snd : TyExpr ★ → TmExpr ω
-g-snd A = lam[ "s" ∈ GStream A ] g-head A ⟨$-later⟩ (g-tail A ∙ svar "s")
+g-snd A = lam[ "s" ∈ GStream A ] g-head' A ⟨$-later⟩ (g-tail(svar "s"))
 
 g-snd-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ ′⟨ ′constantly ∣ ′Nat' ⟩)
 g-snd-sem = ⟦ g-snd Nat' ⟧tm
 
 -- Γ ⊢ g-thrd A : GStream A ⇛ ▻ (▻ ⟨ constantly ∣ A ⟩)
 g-thrd : TyExpr ★ → TmExpr ω
-g-thrd A = lam[ "s" ∈ GStream A ] g-snd A ⟨$-later⟩ (g-tail A ∙ svar "s")
+g-thrd A = lam[ "s" ∈ GStream A ] g-snd A ⟨$-later⟩ (g-tail (svar "s"))
 
 g-thrd-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′▻ ′⟨ ′constantly ∣ ′Bool' ⟩))
 g-thrd-sem = ⟦ g-thrd Bool' ⟧tm
@@ -120,8 +106,7 @@ g-thrd-sem = ⟦ g-thrd Bool' ⟧tm
 g-zeros : TmExpr ω
 g-zeros =
   löb[later∣ "s" ∈ GStream Nat' ]
-    g-consN ∙⟨ constantly ⟩ lit 0
-            ∙⟨ later ⟩ svar "s"
+    g-cons (lit 0) (svar "s")
 
 g-zeros-sem : Tm ′◇ (′GStream ′Nat')
 g-zeros-sem = ⟦ g-zeros ⟧tm
@@ -132,8 +117,8 @@ g-iterate' A =
   lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]
     löb[later∣ "g" ∈ ⟨ constantly ∣ A ⟩ ⇛ GStream A ]
       lam[ constantly ∣ "x" ∈ A ]
-        g-cons A ∙⟨ constantly ⟩ svar "x"
-                 ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (svar "f" ∙ var "x" const⇒later∘const))
+        g-cons (svar "x")
+               ((svar "g" ∙⟨ constantly ⟩ (svar "f" ∙ var "x" const⇒later∘const)))
 
 g-iterate'-sem : Tm ′◇ (′▻ ′⟨ ′constantly ∣ ′Nat' ′⇛ ′Nat' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Nat' ⟩ ′⇛ ′GStream ′Nat')
 g-iterate'-sem = ⟦ g-iterate' Nat' ⟧tm
@@ -148,9 +133,8 @@ g-iterate A =
   lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]
     lam[ constantly ∣ "a" ∈ A ]
       löb[later∣ "s" ∈ GStream A ]
-        g-cons A ∙⟨ constantly ⟩ svar "a"
-                 ∙⟨ later ⟩ (g-map A A ∙⟨ constantly ⟩ svar "f"
-                                       ∙ svar "s")
+        g-cons (svar "a")
+               (g-map A A ∙⟨ constantly ⟩ svar "f" ∙ svar "s")
 
 g-iterate-sem : Tm ′◇ (′▻ ′⟨ ′constantly ∣ ′Bool' ′⇛ ′Bool' ⟩ ′⇛ ′⟨ ′constantly ∣ ′Bool' ⟩ ′⇛ ′GStream ′Bool')
 g-iterate-sem = ⟦ g-iterate Bool' ⟧tm
@@ -168,10 +152,10 @@ g-interleave A =
   löb[later∣ "g" ∈ GStream A ⇛ ▻ (GStream A) ⇛ GStream A ]
     lam[ "s" ∈ GStream A ]
       lam[ later ∣ "t" ∈ GStream A ]
-        let' mod⟨ constantly ⟩ "head-s" ← g-head A ∙ svar "s" in'
-        let' mod⟨ later ⟩ "tail-s" ← g-tail A ∙ svar "s" in' (
-        g-cons A ∙⟨ constantly ⟩ svar "head-s"
-                 ∙⟨ later ⟩ (svar "g" ∙ svar "t" ∙ next (svar "tail-s")))
+        let' mod⟨ constantly ⟩ "head-s" ← g-head' A ∙ svar "s" in'
+        let' mod⟨ later ⟩ "tail-s" ← g-tail' A ∙ svar "s" in' (
+        g-cons (svar "head-s")
+               (svar "g" ∙ svar "t" ∙ next (svar "tail-s")))
 
 g-interleave-sem : Tm ′◇ (′GStream ′Nat' ′⇛ ′▻ (′GStream ′Nat') ′⇛ ′GStream ′Nat')
 g-interleave-sem = ⟦ g-interleave Nat' ⟧tm
@@ -180,9 +164,7 @@ g-interleave-sem = ⟦ g-interleave Nat' ⟧tm
 g-toggle : TmExpr ω
 g-toggle =
   löb[later∣ "s" ∈ GStream Nat' ]
-    g-consN ∙⟨ constantly ⟩ lit 1
-            ∙⟨ later ⟩ (g-consN ∙⟨ constantly ⟩ lit 0
-                                ∙⟨ later ⟩ var "s" later⇒later∘later)
+    g-cons (lit 1) (g-cons (lit 0) (var "s" later⇒later∘later))
 
 g-toggle-sem : Tm ′◇ (′GStream ′Nat')
 g-toggle-sem = ⟦ g-toggle ⟧tm
@@ -204,9 +186,8 @@ g-initial A T =
   lam[ "f" ∈ (⟨ constantly ∣ A ⟩ ⊠ ▻ T) ⇛ T ]
     löb[later∣ "g" ∈ GStream A ⇛ T ]
       lam[ "s" ∈ GStream A ]
-        svar "f" ∙ (pair (g-head A ∙ svar "s")
-                         ((mod⟨ later ⟩ svar "g") ⊛⟨ later ⟩ (g-tail A ∙ svar "s")))
-
+        svar "f" ∙ (pair (g-head (svar "s"))
+                         ((mod⟨ later ⟩ svar "g") ⊛⟨ later ⟩ (g-tail (svar "s"))))
 
 g-initial-sem : Tm ′◇ (((′⟨ ′constantly ∣ ′Nat' ⟩ ′⊠ ′▻ ′Bool') ′⇛ ′Bool') ′⇛ ′GStream ′Nat' ′⇛ ′Bool')
 g-initial-sem = ⟦ g-initial Nat' Bool' ⟧tm
@@ -220,8 +201,8 @@ g-final A T =
       lam[ "t" ∈ T ]
         let' mod⟨ constantly ⟩ "a" ← fst (svar "f" ∙ svar "t") in'
         let' mod⟨ later ⟩ "new-t" ← snd (svar "f" ∙ svar "t") in'
-        g-cons A ∙⟨ constantly ⟩ svar "a"
-                 ∙⟨ later ⟩ (svar "g" ∙ svar "new-t")
+        g-cons (svar "a")
+               (svar "g" ∙ svar "new-t")
 
 g-final-sem : Tm ′◇ ((′Bool' ′⇛ (′⟨ ′constantly ∣ ′Nat' ⟩ ′⊠ ′▻ ′Bool')) ′⇛ ′Bool' ′⇛ ′GStream ′Nat')
 g-final-sem = ⟦ g-final Nat' Bool' ⟧tm
@@ -234,22 +215,18 @@ g-final-sem = ⟦ g-final Nat' Bool' ⟧tm
 g-thumorse : TmExpr ω
 g-thumorse =
   löb[later∣ "t-m" ∈ GStream Bool' ]
-    let⟨ later ⟩ mod⟨ later ⟩ "s" ← g-tailB ∙ (h ∙ svar "t-m") in'
-    g-consB ∙⟨ constantly ⟩ false
-            ∙⟨ later ⟩ (g-consB ∙⟨ constantly ⟩ true
-                                ∙⟨ later ⟩ (h ∙ svar "s"))
+    let⟨ later ⟩ mod⟨ later ⟩ "s" ← g-tail (h ∙ svar "t-m") in'
+    g-cons false (g-cons true (h ∙ svar "s"))
   where
     -- Γ ⊢ h : GStream Bool' ⇛ GStream Bool'
     h : TmExpr ω
     h =
       löb[later∣ "g" ∈ GStream Bool' ⇛ GStream Bool' ]
         lam[ "s" ∈ GStream Bool' ]
-          let' mod⟨ later ⟩ "new-tail" ← (mod⟨ later ⟩ svar "g") ⊛⟨ later ⟩ (g-tailB ∙ svar "s") in'
-          constantly-if (g-headB ∙ svar "s")
-                        (g-consB ∙⟨ constantly ⟩ true
-                                 ∙⟨ later ⟩ (g-consB ∙⟨ constantly ⟩ false ∙⟨ later ⟩ var "new-tail" later⇒later∘later))
-                        (g-consB ∙⟨ constantly ⟩ false
-                                 ∙⟨ later ⟩ (g-consB ∙⟨ constantly ⟩ true ∙⟨ later ⟩ var "new-tail" later⇒later∘later))
+          let' mod⟨ later ⟩ "new-tail" ← (mod⟨ later ⟩ svar "g") ⊛⟨ later ⟩ (g-tail (svar "s")) in'
+          constantly-if (g-head (svar "s"))
+                        (g-cons true  (g-cons false (var "new-tail" later⇒later∘later)))
+                        (g-cons false (g-cons true  (var "new-tail" later⇒later∘later)))
 
 g-thumorse-sem : Tm ′◇ (′GStream ′Bool')
 g-thumorse-sem = ⟦ g-thumorse ⟧tm
@@ -258,21 +235,18 @@ g-thumorse-sem = ⟦ g-thumorse ⟧tm
 g-fibonacci-word : TmExpr ω
 g-fibonacci-word =
   löb[later∣ "fw" ∈ GStream Bool' ]
-    let⟨ later ⟩ mod⟨ later ⟩ "s" ← g-tailB ∙ (f ∙ svar "fw") in'
-    g-consB ∙⟨ constantly ⟩ false
-            ∙⟨ later ⟩ (g-consB ∙⟨ constantly ⟩ true
-                                ∙⟨ later ⟩ (f ∙ svar "s"))
+    let⟨ later ⟩ mod⟨ later ⟩ "s" ← g-tail (f ∙ svar "fw") in'
+    g-cons false (g-cons true (f ∙ svar "s"))
   where
     -- Γ ⊢ f : GStream Bool' ⇛ GStream Bool'
     f : TmExpr ω
     f =
       löb[later∣ "g" ∈ GStream Bool' ⇛ GStream Bool' ]
         lam[ "s" ∈ GStream Bool' ]
-          let' mod⟨ later ⟩ "new-tail" ← (mod⟨ later ⟩ svar "g") ⊛⟨ later ⟩ (g-tailB ∙ svar "s") in'
-          constantly-if (g-headB ∙ svar "s")
-                        (g-consB ∙⟨ constantly ⟩ false ∙⟨ later ⟩ svar "new-tail")
-                        (g-consB ∙⟨ constantly ⟩ false ∙⟨ later ⟩ (
-                                 g-consB ∙⟨ constantly ⟩ true ∙⟨ later ⟩ var "new-tail" later⇒later∘later))
+          let' mod⟨ later ⟩ "new-tail" ← (mod⟨ later ⟩ svar "g") ⊛⟨ later ⟩ (g-tail (svar "s")) in'
+          constantly-if (g-head (svar "s"))
+                        (g-cons false (svar "new-tail"))
+                        (g-cons false (g-cons true (var "new-tail" later⇒later∘later)))
 
 g-fibonacci-word-sem : Tm ′◇ (′GStream ′Bool')
 g-fibonacci-word-sem = ⟦ g-fibonacci-word ⟧tm
@@ -292,10 +266,10 @@ g-mergef A B C =
     löb[later∣ "g" ∈ GStream A ⇛ GStream B ⇛ GStream C ]
       lam[ "xs" ∈ GStream A ]
         lam[ "ys" ∈ GStream B ]
-          let' mod⟨ constantly ⟩ "head-xs" ← g-head A ∙ svar "xs" in'
-          let' mod⟨ constantly ⟩ "head-ys" ← g-head B ∙ svar "ys" in'
-          let' mod⟨ later ⟩ "tail-xs" ← g-tail A ∙ svar "xs" in'
-          let' mod⟨ later ⟩ "tail-ys" ← g-tail B ∙ svar "ys" in'
+          let' mod⟨ constantly ⟩ "head-xs" ← g-head (svar "xs") in'
+          let' mod⟨ constantly ⟩ "head-ys" ← g-head (svar "ys") in'
+          let' mod⟨ later ⟩ "tail-xs" ← g-tail (svar "xs") in'
+          let' mod⟨ later ⟩ "tail-ys" ← g-tail (svar "ys") in'
           svar "f" ∙⟨ constantly ⟩ svar "head-xs"
                    ∙⟨ constantly ⟩ svar "head-ys"
                    ∙⟨ later ⟩ (svar "g" ∙ svar "tail-xs" ∙ svar "tail-ys")
@@ -314,12 +288,12 @@ g-zipWith A B C =
     löb[later∣ "g" ∈ GStream A ⇛ GStream B ⇛ GStream C ]
       lam[ "as" ∈ GStream A ]
         lam[ "bs" ∈ GStream B ]
-          let' mod⟨ constantly ⟩ "head-as" ← g-head A ∙ svar "as" in'
-          let' mod⟨ constantly ⟩ "head-bs" ← g-head B ∙ svar "bs" in'
-          let' mod⟨ later ⟩ "tail-as" ← g-tail A ∙ svar "as" in'
-          let' mod⟨ later ⟩ "tail-bs" ← g-tail B ∙ svar "bs" in'
-          g-cons C ∙⟨ constantly ⟩ (svar "f" ∙ svar "head-as" ∙ svar "head-bs")
-                   ∙⟨ later ⟩ (svar "g" ∙ svar "tail-as" ∙ svar "tail-bs")
+          let' mod⟨ constantly ⟩ "head-as" ← g-head (svar "as") in'
+          let' mod⟨ constantly ⟩ "head-bs" ← g-head (svar "bs") in'
+          let' mod⟨ later ⟩ "tail-as" ← g-tail (svar "as") in'
+          let' mod⟨ later ⟩ "tail-bs" ← g-tail (svar "bs") in'
+          g-cons (svar "f" ∙ svar "head-as" ∙ svar "head-bs")
+                 (svar "g" ∙ svar "tail-as" ∙ svar "tail-bs")
 
 g-zipWith-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Bool' ′⇛ ′Nat' ′⇛ ′Bool' ⟩ ′⇛ ′GStream ′Bool' ′⇛ ′GStream ′Nat' ′⇛ ′GStream ′Bool')
 g-zipWith-sem = ⟦ g-zipWith Bool' Nat' Bool' ⟧tm
@@ -328,12 +302,10 @@ g-zipWith-sem = ⟦ g-zipWith Bool' Nat' Bool' ⟧tm
 g-fibs : TmExpr ω
 g-fibs =
   löb[later∣ "s" ∈ GStream Nat' ]
-    let⟨ later ⟩ mod⟨ later ⟩ "tail-s" ← g-tailN ∙ svar "s" in'
-    g-consN ∙⟨ constantly ⟩ lit 1
-            ∙⟨ later ⟩ (g-consN ∙⟨ constantly ⟩ lit 1
-                                ∙⟨ later ⟩ (g-zipWith Nat' Nat' Nat' ∙⟨ constantly ⟩ plus
-                                                                     ∙ var "s" later⇒later∘later
-                                                                     ∙ svar "tail-s"))
+    let⟨ later ⟩ mod⟨ later ⟩ "tail-s" ← g-tail (svar "s") in'
+    g-cons (lit 1) (g-cons (lit 1) (g-zipWith Nat' Nat' Nat' ∙⟨ constantly ⟩ plus
+                                                             ∙ var "s" later⇒later∘later
+                                                             ∙ svar "tail-s"))
 
 g-fibs-sem : Tm ′◇ (′GStream ′Nat')
 g-fibs-sem = ⟦ g-fibs ⟧tm
@@ -342,8 +314,8 @@ g-fibs-sem = ⟦ g-fibs ⟧tm
 g-flipFst : TyExpr ★ → TmExpr ω
 g-flipFst A =
   lam[ "s" ∈ GStream A ]
-    g-cons A ⟨$-later⟩ g-snd A ∙ svar "s" ⊛⟨ later ⟩ next (
-    g-cons A ⟨$-later⟩ next (g-head A ∙ svar "s") ⊛⟨ later ⟩ (g-tail A ⟨$-later⟩ g-tail A ∙ svar "s"))
+    g-cons' A ⟨$-later⟩ g-snd A ∙ svar "s" ⊛⟨ later ⟩ next (
+    g-cons' A ⟨$-later⟩ next (g-head (svar "s")) ⊛⟨ later ⟩ (g-tail' A ⟨$-later⟩ g-tail (svar "s")))
 
 g-flipFst-sem : Tm ′◇ (′GStream ′Bool' ′⇛ ′▻ (′GStream ′Bool'))
 g-flipFst-sem = ⟦ g-flipFst Bool' ⟧tm
@@ -421,9 +393,9 @@ fibonacci-word-test = refl
 -- Γ ⊢ head' A : Stream' A ⇛ A
 head' : TyExpr ★ → TmExpr ★
 head' A =
-  lam[ "s" ∈ Stream' A ]
+  lam[ forever ∣ "s" ∈ GStream A ]
     triv⁻¹ (comp forever constantly
-    ((mod⟨ forever ⟩ g-head A) ⊛⟨ forever ⟩ svar "s"))
+    (mod⟨ forever ⟩ g-head (svar "s")))
 
 head-nats : TmExpr ★
 head-nats = head' Nat' ∙ nats
@@ -440,8 +412,8 @@ head-nats-test = refl
 -- which is equal to the type given above since forever ⓜ later ≃ᵐ forever.
 tail' : TyExpr ★ → TmExpr ★
 tail' A = ann
-  lam[ "s" ∈ Stream' A ]
-    comp forever later ((mod⟨ forever ⟩ g-tail A) ⊛⟨ forever ⟩ svar "s")
+  lam[ forever ∣ "s" ∈ GStream A ]
+    comp forever later (mod⟨ forever ⟩ (g-tail (svar "s")))
   ∈ (Stream' A ⇛ Stream' A)
 
 tailN-sem : Tm ′◇ (′Stream' ′Nat' ′⇛ ′Stream' ′Nat')
@@ -450,10 +422,8 @@ tailN-sem = ⟦ tail' Nat' ⟧tm
 -- Γ ⊢ cons' A : A ⇛ Stream' A ⇛ Stream' A
 cons' : TyExpr ★ → TmExpr ★
 cons' A = ann
-  lam[ "a" ∈ A ] lam[ "as" ∈ Stream' A ]
-    let' mod⟨ forever ⟩ "g-as" ← svar "as" in'
-    (mod⟨ forever ⟩ g-cons A ∙⟨ constantly ⟩ svar "a"
-                            ∙⟨ later ⟩ svar "g-as")
+  lam[ "a" ∈ A ] lam[ forever ∣ "as" ∈ GStream A ]
+    (mod⟨ forever ⟩ g-cons (svar "a") (svar "as"))
   ∈ (A ⇛ Stream' A ⇛ Stream' A)
 
 consB-sem : Tm ′◇ (′Bool' ′⇛ ′Stream' ′Bool' ′⇛ ′Stream' ′Bool')
@@ -476,8 +446,8 @@ g-every2nd : TyExpr ★ → TmExpr ω
 g-every2nd A =
   löb[later∣ "g" ∈ ⟨ constantly ∣ Stream' A ⟩ ⇛ GStream A ]
     lam[ constantly ∣ "s" ∈ Stream' A ]
-      g-cons A ∙⟨ constantly ⟩ (head' A ∙ svar "s")
-               ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (tail' A ∙ (tail' A ∙ var "s" const⇒later∘const)))
+      g-cons (head' A ∙ svar "s")
+             (svar "g" ∙⟨ constantly ⟩ (tail' A ∙ (tail' A ∙ var "s" const⇒later∘const)))
 
 g-every2ndB-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Stream' ′Bool' ⟩ ′⇛ ′GStream ′Bool')
 g-every2ndB-sem = ⟦ g-every2nd Bool' ⟧tm
@@ -500,9 +470,9 @@ g-diag : TyExpr ★ → TmExpr ω
 g-diag A =
   löb[later∣ "g" ∈ ⟨ constantly ∣ Stream' (Stream' A) ⟩ ⇛ GStream A ]
     lam[ constantly ∣ "xss" ∈ Stream' (Stream' A) ]
-      g-cons A ∙⟨ constantly ⟩ (head' A ∙ (head' (Stream' A) ∙ svar "xss"))
-               ∙⟨ later ⟩ (svar "g" ∙⟨ constantly ⟩ (map' (Stream' A) (Stream' A) ∙ tail' A
-                                                                                  ∙ (tail' (Stream' A) ∙ var "xss" const⇒later∘const)))
+      g-cons (head' A ∙ (head' (Stream' A) ∙ svar "xss"))
+             (svar "g" ∙⟨ constantly ⟩ (map' (Stream' A) (Stream' A) ∙ tail' A
+                                                                     ∙ (tail' (Stream' A) ∙ var "xss" const⇒later∘const)))
 
 g-diagB-sem : Tm ′◇ (′⟨ ′constantly ∣ ′Stream' (′Stream' ′Bool') ⟩ ′⇛ ′GStream ′Bool')
 g-diagB-sem = ⟦ g-diag Bool' ⟧tm
@@ -536,12 +506,12 @@ fibs-test = refl
 -- Γ ⊢ g-pascalNext : GStream Nat' ⇛ GStream Nat'
 g-pascalNext : TmExpr ω
 g-pascalNext =
-  lam[ "xs" ∈ GStream Nat' ] let' mod⟨ later ⟩ "tail-xs" ← (g-tailN ∙ svar "xs") in' (
+  lam[ "xs" ∈ GStream Nat' ] let' mod⟨ later ⟩ "tail-xs" ← (g-tail (svar "xs")) in' (
     löb[later∣ "ys" ∈ GStream Nat' ]
-      g-cons Nat' ∙⟨ constantly ⟩ lit 1
-                  ∙⟨ later ⟩ (g-zipWith Nat' Nat' Nat' ∙⟨ constantly ⟩ plus
-                                                       ∙ svar "tail-xs"
-                                                       ∙ svar "ys"))
+      g-cons (lit 1)
+             (g-zipWith Nat' Nat' Nat' ∙⟨ constantly ⟩ plus
+                                        ∙ svar "tail-xs"
+                                        ∙ svar "ys"))
 
 -- Γ ⊢ pascalNext : Stream' Nat' ⇛ Stream' Nat'
 pascalNext : TmExpr ★
@@ -550,14 +520,14 @@ pascalNext =
 
 -- Γ ⊢ g-ones : GStream Nat'
 g-ones : TmExpr ω
-g-ones = löb[later∣ "g-ones" ∈ GStream Nat' ] g-consN ∙⟨ constantly ⟩ lit 1 ∙⟨ later ⟩ svar "g-ones"
+g-ones = löb[later∣ "g-ones" ∈ GStream Nat' ] g-cons (lit 1) (svar "g-ones")
 
 -- Γ ⊢ g-pascal : GStream Nat'
 g-pascal : TmExpr ω
 g-pascal =
   löb[later∣ "pascal" ∈ GStream (Stream' Nat') ]
-    g-cons (Stream' Nat') ∙⟨ constantly ⟩ (mod⟨ forever ⟩ g-ones)
-                          ∙⟨ later ⟩ (g-map (Stream' Nat') (Stream' Nat') ∙⟨ constantly ⟩ pascalNext ∙ svar "pascal")
+    g-cons (mod⟨ forever ⟩ g-ones)
+           (g-map (Stream' Nat') (Stream' Nat') ∙⟨ constantly ⟩ pascalNext ∙ svar "pascal")
 
 -- Γ ⊢ pascal : Stream' Nat'
 pascal : TmExpr ★

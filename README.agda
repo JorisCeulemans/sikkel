@@ -85,8 +85,8 @@ import Applications.GuardedRecursion.MSTT.TermExtension
   in the following module. Note that the type checker an extraction mechanism
   are also already used in this file.
 
-  The example about g-map and (g-)nats can be found at lines 70 and 362.
-  The implementation of cons' is at line 450.
+  The example about g-map and (g-)nats can be found at lines 58 and 334.
+  The implementation of cons' is at line 422.
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
@@ -198,7 +198,7 @@ import Applications.GuardedRecursion.MSTT.TermExtension
 
 {-
   The semantics of the nats example from the end of the section is implemented
-  in Applications.GuardedRecursion.StreamsExamples (lines 94 and 368).
+  in Applications.GuardedRecursion.StreamsExamples (lines 80 and 340).
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
@@ -224,7 +224,7 @@ import Applications.GuardedRecursion.Model.Streams.Standard
 
 {-
   Again, the example nats-agda is found in Applications.GuardedRecursion.StreamsExamples
-  (line 371).
+  (line 343).
 -}
 
 import Applications.GuardedRecursion.StreamsExamples
