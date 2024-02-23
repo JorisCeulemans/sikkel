@@ -37,25 +37,23 @@ private variable
 --------------------------------------------------
 -- Definition of MSTT terms
 
--- The predicate Var x μ T κ Γ expresses that a variable named x is
--- present in context Γ under modality μ with type T and with κ the
--- composition of all locks to the right of x. In other words,
--- Γ = Δ ,, μ ∣ x ∈ T ,, Θ for some Δ and Θ with locks(Θ) = κ. Note
--- that this is a proof-relevant predicate and names in Γ may not be
--- unique (but this is of course discouraged).  As a result, MSTT terms
--- internally represent variables using De Bruijn indices, but we do
--- keep track of the names of the variables.
-data Var (x : Name) (μ : Modality n o) (T : Ty n) : Modality m o → Ctx m → Set where
-  vzero : Var x μ T 𝟙 (Γ ,, μ ∣ x ∈ T)
-  vsuc : Var x μ T κ Γ → Var x μ T κ (Γ ,, ρ ∣ y ∈ S)
-  skip-lock : (ρ : Modality m p) → Var x μ T κ Γ → Var x μ T (κ ⓜ ρ) (Γ ,lock⟨ ρ ⟩)
+data Var (x : Name) (T : Ty m) (Γ : Ctx m) : Set where
+  vzero : {Δ : Ctx n} {μ : Modality m n} {Λ : LockTele n m} →
+          Γ ≈ (Δ ,, μ ∣ x ∈ T) ++lt Λ →
+          TwoCell μ (locks-lt Λ) →
+          Var x T Γ
+  vsuc : {Δ : Ctx n} {μ : Modality o n} {y : Name} {S : Ty o} {Λ : LockTele n m} →
+         Γ ≈ (Δ ,, μ ∣ y ∈ S) ++lt Λ →
+         Var x T (Δ ++lt Λ) →
+         Var x T Γ
+
 
 infixl 50 _∙_
 data Tm : Ctx m → Ty m → Set
 ExtTmArgs : {m : Mode} → List (TmArgInfo m) → Ctx m → Set
 
 data Tm where
-  var' : {μ : Modality m n} (x : Name) {v : Var x μ T κ Γ} → TwoCell μ κ → Tm Γ T
+  var' : (x : Name) {v : Var x T Γ}  → Tm Γ T
     -- ^ When writing programs, one should not directly use var' but rather combine
     --   it with a decision procedure for Var, which will resolve the name.
   mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
@@ -81,16 +79,16 @@ ExtTmArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty 
 
 
 v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
-v0 = var' _ {skip-lock _ vzero} id-cell
+v0 {μ = μ} = var' _ {vzero (lock⟨ μ ⟩, ◇) id-cell}
 
 v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
-v1 = var' _ {skip-lock _ (vsuc vzero)} id-cell
+v1 {μ = μ} = var' _ {vsuc (lock⟨ μ ⟩, ◇) (vzero (lock⟨ μ ⟩, ◇) id-cell)}
 
 v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
-v0-𝟙 = var' _ {vzero} id-cell
+v0-𝟙 = var' _ {vzero ◇ id-cell}
 
 v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
-v1-𝟙 = var' _ {vsuc vzero} id-cell
+v1-𝟙 = var' _ {vsuc ◇ (vzero ◇ id-cell)}
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
@@ -104,7 +102,7 @@ syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 -- traversals.
 record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
-    vr : Var x μ T κ Δ → TwoCell μ κ → Trav Γ Δ → Tm Γ T
+    vr : Var x T Δ → Trav Γ Δ → Tm Γ T
     lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
     lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
@@ -116,7 +114,7 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
   traverse-ext-tmargs : {arginfos : List (TmArgInfo m)} → ExtTmArgs arginfos Δ → Trav Γ Δ → ExtTmArgs arginfos Γ
   
-  traverse-tm (var' x {v} α) σ = vr v α σ
+  traverse-tm (var' x {v}) σ = vr v σ
   traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lock σ)
   traverse-tm (mod-elim ρ μ x t s) σ = mod-elim ρ μ x (traverse-tm t (lock σ)) (traverse-tm s (lift σ))
   traverse-tm (lam[ μ ∣ x ∈ T ] s) σ = lam[ μ ∣ x ∈ T ] traverse-tm s (lift σ)
@@ -137,7 +135,7 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
     (traverse-tm arg (lift-trav-tel σ (tmarg-tel arginfo))) , (traverse-ext-tmargs args σ)
 
 open TravStruct using (traverse-tm)
-
+{-
 
 --------------------------------------------------
 -- Some operations regarding telescopes and variables
@@ -533,4 +531,5 @@ tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (snd p) = cong snd (tm-weaken-subs
 
 tm-weaken-subst-trivial : (t : Tm Γ T) (s : Tm Γ S) → (t [ π ]tm) [ s / x ]tm ≡ t
 tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-multi ◇ t
+-}
 -}

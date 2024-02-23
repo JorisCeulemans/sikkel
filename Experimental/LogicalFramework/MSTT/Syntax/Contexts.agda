@@ -34,6 +34,8 @@ _,,_∈_ : Ctx m → Name → Ty m → Ctx m
 --------------------------------------------------
 -- Telescopes of locks and/or variables
 
+-- Telescopes can contain variables and locks.
+-- They are defined as "well-moded" snoc lists (just like contexts).
 data Telescope : Mode → Mode → Set where
   ◇ : Telescope m m
   _,,_∣_∈_ : Telescope m n → Modality o n → Name → Ty o → Telescope m n
@@ -49,18 +51,24 @@ locks-tel ◇ = 𝟙
 locks-tel (Θ ,, μ ∣ x ∈ T) = locks-tel Θ
 locks-tel (Θ ,lock⟨ μ ⟩) = locks-tel Θ ⓜ μ
 
--- A telescope consisting of only locks, no variables.
--- TODO: we might be able to unify this definition with that of
--- Telescope, by constructing a general Telescope data type that is
--- parametrized by a "permission" to use variables and/or locks.
-data LockTele : Mode → Mode → Set where
+
+-- Lock telescopes consist of only locks (so no variables).
+-- They are defined as "well-moded" cons lists since the cons
+-- constructor is actually used in practice when implementing renaming
+-- and substitution.
+data LockTele (m : Mode) : Mode → Set where
   ◇ : LockTele m m
-  _,lock⟨_⟩ : LockTele m o → Modality n o → LockTele m n
+  lock⟨_⟩,_ : (μ : Modality o m) (Λ : LockTele o n) → LockTele m n
 
-_++ltel_ : Ctx m → LockTele m n → Ctx n
-Γ ++ltel ◇ = Γ
-Γ ++ltel (Θ ,lock⟨ μ ⟩) = (Γ ++ltel Θ) ,lock⟨ μ ⟩
+_++lt_ : Ctx m → LockTele m n → Ctx n
+Γ ++lt ◇ = Γ
+Γ ++lt (lock⟨ μ ⟩, Λ) = (Γ ,lock⟨ μ ⟩) ++lt Λ
 
-locks-ltel : LockTele m n → Modality n m
-locks-ltel ◇ = 𝟙
-locks-ltel (Θ ,lock⟨ μ ⟩) = locks-ltel Θ ⓜ μ
+locks-lt : LockTele m n → Modality n m
+locks-lt ◇ = 𝟙
+locks-lt (lock⟨ μ ⟩, ◇) = μ
+locks-lt (lock⟨ μ ⟩, Λ) = μ ⓜ locks-lt Λ
+
+data _≈_++lt_ (Γ : Ctx n) : Ctx m → LockTele m n → Set where
+  ◇ : Γ ≈ Γ ++lt ◇
+  lock⟨_⟩,_ : {Δ : Ctx o} {Λ : LockTele m n} (μ : Modality m o) → Γ ≈ Δ ,lock⟨ μ ⟩ ++lt Λ → Γ ≈ Δ ++lt (lock⟨ μ ⟩, Λ)
