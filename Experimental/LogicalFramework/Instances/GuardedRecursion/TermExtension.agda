@@ -11,6 +11,7 @@ import Model.Type.Function as M
 open import Model.DRA as DRA using (dra-intro)
 import Applications.GuardedRecursion.Model.Streams.Guarded as M
 import Applications.GuardedRecursion.Model.Modalities as M
+import Applications.GuardedRecursion.Model.Modalities.Later.Closed as M
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
@@ -72,8 +73,7 @@ TmExt.tm-code-arginfos guarded-tm-ext = tm-code-arginfos
 
 guarded-tm-ext-sem : TmExtSem guarded-mt guarded-ty-ext (erase-names-tmext guarded-mt guarded-ty-ext guarded-tm-ext)
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (löb-code x A) =
-  λ t → M.löb' ⟦ A ⟧ty (M.ι[ M.transᵗʸ (ty-natural A) (M.symᵗʸ (ty-natural A)) ]
-                         (M.ιc[ M.,,-cong (M.▻-cong (ty-natural A)) ]' t))
+  λ t → M.löb-cl (ty-closed-natural A) t
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (g-cons-code A) =
   λ h t → M.g-cons (dra-intro ⟦ constantly ⟧mod h)
                    (M.ι[ M.▻-cong (ty-natural (GStream A)) ] dra-intro ⟦ later ⟧mod t)

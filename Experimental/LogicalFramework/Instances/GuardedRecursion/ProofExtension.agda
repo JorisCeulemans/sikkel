@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Experimental.LogicalFramework.Instances.GuardedRecursion.ProofExtension where
 
 open import Data.List
@@ -13,6 +11,7 @@ open import Experimental.LogicalFramework.Instances.GuardedRecursion.MSTT
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.TypeExtension
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.TermExtension
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.bPropExtension
+open import Experimental.LogicalFramework.Instances.GuardedRecursion.Soundness
 
 open import Experimental.LogicalFramework.Proof.Equality guarded-mstt guarded-bp-ext
 open import Experimental.LogicalFramework.Proof.Context guarded-mstt guarded-bp-ext guarded-bp-ext-sem
@@ -92,23 +91,23 @@ pf-code-check : (c : ProofExtCode m) (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) 
 pf-code-check gstream-β-head-code Ξ φ _ _ = do
   is-eq lhs rhs ← is-eq? φ
   is-g-head s ← is-g-head? lhs
-  is-g-cons a _ ← is-g-cons? s
-  refl ← rhs ≟tm (mod⟨ constantly ⟩ a)
-  return ⟅ [] , _ ↦ {!M.≅ᵗᵐ-to-Id {!!} M.[ _ ]'!} ⟆
+  is-g-cons h t ← is-g-cons? s
+  refl ← rhs ≟tm (mod⟨ constantly ⟩ h)
+  return ⟅ [] , _ ↦ gstream-β-head-sound Ξ h t ⟆
 pf-code-check gstream-β-tail-code Ξ φ _ _ = do
   is-eq lhs rhs ← is-eq? φ
   is-g-tail tail-arg ← is-g-tail? lhs
-  is-g-cons _ s ← is-g-cons? tail-arg
-  refl ← rhs ≟tm (mod⟨ later ⟩ s)
-  return ⟅ [] , _ ↦ {!M.≅ᵗᵐ-to-Id {!!} M.[ _ ]'!} ⟆
+  is-g-cons h t ← is-g-cons? tail-arg
+  refl ← rhs ≟tm (mod⟨ later ⟩ t)
+  return ⟅ [] , _ ↦ gstream-β-tail-sound Ξ h t ⟆
 pf-code-check tmlöb-β-code Ξ φ _ _ = do
   is-eq lhs rhs ← is-eq? φ
   is-lob x T t ← is-lob? lhs
   refl ← rhs ≟tm (t [ rename-tm ((löb[later∣ x ∈ T ] t)) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x ]tm)
-  return ⟅ [] , _ ↦ {!M.≅ᵗᵐ-to-Id {!!} M.[ _ ]'!} ⟆
+  return ⟅ [] , _ ↦ tmlöb-β-sound Ξ x t ⟆
 pf-code-check (pflöb-code x) Ξ φ _ _ = λ check-subpf → do
   ⟅ goals , ⟦p⟧ ⟆ ← check-subpf (Ξ ,,ᵇ later ∣ x ∈ rename-bprop φ (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr)) φ Ag.refl
-  return ⟅ goals , sgoals ↦ {!!} ⟆
+  return ⟅ goals , sgoals ↦ pf-löb-sound Ξ φ x (⟦p⟧ sgoals) ⟆
 
 guarded-pf-ext : ProofExt
 ProofExt.ProofExtCode guarded-pf-ext = ProofExtCode

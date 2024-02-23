@@ -200,6 +200,17 @@ löb-is-fixpoint : {T : Ty Γ} (f : Tm Γ (▻' T ⇛ T)) →
 eq (löb-is-fixpoint f) {zero}  γ = refl
 eq (löb-is-fixpoint f) {suc n} γ = refl
 
+löb'-β : {T : Ty Γ} {t : Tm (Γ ,, ▻' T) (T [ π ])} →
+         ι⁻¹[ ty-weaken-subst _ ] (t [ next' (löb' T t) /v ]') ≅ᵗᵐ löb' T t
+löb'-β {T = T} {t = t} =
+  begin
+    ι⁻¹[ ty-weaken-subst _ ] (t [ next' (löb' T t) /v ]')
+  ≅⟨ ⇛-β t _ ⟨
+    app (lam (▻' T) t) (next' (löb' T t))
+  ≅⟨ löb-is-fixpoint _ ⟩
+    löb' T t ∎
+  where open ≅ᵗᵐ-Reasoning
+
 fixpoint-unique : {T : Ty Γ} (f  : Tm Γ (▻' T ⇛ T)) (t s : Tm Γ T) →
                   app f (next' t) ≅ᵗᵐ t → app f (next' s) ≅ᵗᵐ s → t ≅ᵗᵐ s
 eq (fixpoint-unique f t s t-fix s-fix) {x = zero}  γ =
@@ -291,6 +302,10 @@ module _ {Γ : Ctx ω} {T : Ty (◄ Γ)} {T' : Ty (◄ Γ)} {T=T' : T ≅ᵗʸ T
 
   prev-ι : (t : Tm Γ (▻ T')) → ι[ T=T' ] (prev t) ≅ᵗᵐ prev (ι[ ▻-cong T=T' ] t)
   eq (prev-ι t) _ = refl
+
+next-ι⁻¹ : {T T' : Ty (◄ Γ)} {T=T' : T ≅ᵗʸ T'} (t : Tm (◄ Γ) T) →
+           ι⁻¹[ ▻-cong T=T' ] next t ≅ᵗᵐ next (ι⁻¹[ T=T' ] t)
+next-ι⁻¹ t = transᵗᵐ (ι-congᵉ (symᵉ ▻-cong-sym)) (next-ι t)
 
 löb-ι : {T : Ty Γ} {T' : Ty Γ} {T=T' : T ≅ᵗʸ T'} (f : Tm Γ (▻' T' ⇛ T')) →
         ι[ T=T' ] (löb T' f) ≅ᵗᵐ löb T (ι[ ⇛-cong (▻'-cong T=T') T=T' ] f)
@@ -391,14 +406,6 @@ module _ {Δ : Ctx ω} {Γ : Ctx ω} (σ : Δ ⇒ Γ) {T : Ty Γ} where
       g : Tm Δ (▻' (T [ σ ]) ⇛ (T [ σ ]))
       g = ι⁻¹[ ⇛-cong ▻'-natural reflᵗʸ ] (ι⁻¹[ ⇛-natural σ ] (f [ σ ]'))
 
-{-
-instance
-  ▻'-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻' A)
-  closed-natural {{▻'-closed}} σ = transᵗʸ (▻'-natural σ) (▻'-cong (closed-natural σ))
-
-  ▻-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (▻ A)
-  closed-natural {{▻-closed}} σ = transᵗʸ (▻-natural σ) (▻-cong (closed-natural (◄-subst σ)))
--}
 
 -- ▻' is an applicative functor as well (but this requires ▻-cong).
 module _ {T : Ty Γ} {S : Ty Γ} where

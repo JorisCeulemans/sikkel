@@ -58,6 +58,16 @@ closed-substs-eq-2-2 clA ε =
   transᵉ (transᵉ (transᵗʸ-congʳ (transᵉ (symᵉ transᵗʸ-assoc) (transᵉ (transᵗʸ-congˡ (symᵉ transᵗʸ-assoc)) transᵗʸ-assoc))) (symᵉ transᵗʸ-assoc)) (
   transᵗʸ-congʳ (symᵉ (closed-⊚ clA _ _))))))
 
+closed-substs-eq-2-1 : {Γ Δ Θ : Ctx C} {σ1 : Δ ⇒ Θ} {σ2 : Γ ⇒ Δ} {τ : Γ ⇒ Θ} →
+                       {A : ClosedTy C} (clA : IsClosedNatural A) (ε : σ1 ⊚ σ2 ≅ˢ τ) →
+                       transᵗʸ (ty-subst-cong-ty σ2 (closed-natural clA σ1)) (closed-natural clA σ2)
+                         ≅ᵉ
+                       transᵗʸ (ty-subst-cong-subst-2-1 A ε) (closed-natural clA τ)
+closed-substs-eq-2-1 clA ε =
+  transᵉ (closed-⊚ clA _ _) (
+  transᵉ (transᵗʸ-congʳ (symᵉ (closed-subst-eq clA ε)))
+  (symᵉ transᵗʸ-assoc))
+
 
 --------------------------------------------------
 -- A type in the empty context gives rise to a closed type.
@@ -243,7 +253,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
       lift-cl-subst σ ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)) ∎
     where open ≅ˢ-Reasoning
 
-  /v-/cl : (t : Tm Δ T) → (t /v) ≅ˢ (id-subst Δ ,cl⟨ clT ⟩ t)
+  /v-/cl : (t : Tm Δ T) → (t /v) ≅ˢ t /cl⟨ clT ⟩
   /v-/cl t = ctx-ext-subst-cong-tm _ (transᵗᵐ (tm-subst-id t) (ι-congᵉ (symᵉ (closed-id clT))))
 
 module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) where

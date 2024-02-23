@@ -225,6 +225,11 @@ tm-subst-comp : (t : Tm Θ T) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) →
                 t [ τ ]' [ σ ]' ≅ᵗᵐ ι[ ty-subst-comp T τ σ ] (t [ τ ⊚ σ ]')
 eq (tm-subst-comp t τ σ) _ = refl
 
+tm-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
+                          {T : Ty Θ} (t : Tm Θ T) (ε : σ2 ⊚ σ1 ≅ˢ τ) →
+                          t [ σ2 ]' [ σ1 ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-1 T ε ] (t [ τ ]')
+eq (tm-subst-cong-subst-2-1 t ε) γ = sym (naturality t _ _)
+
 tm-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
                           {T : Ty Θ} (t : Tm Θ T) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
                           t [ σ2 ]' [ σ1 ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-2 T ε ] (t [ τ2 ]' [ τ1 ]')

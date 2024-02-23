@@ -15,3 +15,5 @@ import Experimental.LogicalFramework.MSTT
 import Experimental.LogicalFramework.bProp
 import Experimental.LogicalFramework.Proof
 import Experimental.LogicalFramework.Example
+import Experimental.LogicalFramework.Instances.GuardedRecursion
+import Experimental.LogicalFramework.Applications.GuardedRecursion.Proof.Example

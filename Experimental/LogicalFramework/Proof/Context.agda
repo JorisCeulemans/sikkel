@@ -120,7 +120,7 @@ to-ctx-subst (Ξ ,lock⟨ μ ⟩) = DRA.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ
 interp-assumption-helper : (a : Assumption x μ κ Ξ) (ρ : Modality _ _) (α : TwoCell μ (κ ⓜ ρ)) →
                            SemTm ⟦ Ξ ,lock⟨ ρ ⟩ ⟧pctx (⟦ lookup-assumption' a ρ α ⟧bprop M.[ to-ctx-subst (Ξ ,lock⟨ ρ ⟩) ])
 interp-assumption-helper {μ = μ} (azero {Ξ = Ξ} {φ = φ}) ρ α =
-  M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (key-sub-sound α {to-ctx Ξ}) _) (bprop-sub-sound φ _)) ] (
+  M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (sub-key-sound α {to-ctx Ξ}) _) (bprop-sub-sound φ _)) ] (
   M.ι[ M.ty-subst-cong-subst-2-2 _ (DRA.key-subst-natural ⟦ α ⟧two-cell) ] (
   dra-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (dra-natural ⟦ μ ⟧mod _) ] M.ξ)
   M.[ DRA.key-subst ⟦ α ⟧two-cell ]'))

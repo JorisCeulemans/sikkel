@@ -13,6 +13,7 @@ open import Model.DRA as DRA hiding (⟨_∣_⟩; _,lock⟨_⟩)
 open import Model.Type.Function as M hiding (_⇛_)
 open import Applications.GuardedRecursion.Model.Modalities as M
   hiding (later; constantly; forever; ▻)
+open import Applications.GuardedRecursion.Model.Modalities.Later.Closed as M using (löb-cl)
 open import Applications.GuardedRecursion.Model.Streams.Guarded as M
   hiding (GStream; g-cons; g-head; g-tail)
 
@@ -54,9 +55,7 @@ infer-interpret-gr-code constantly-if-code = λ infer-c infer-t infer-f Γ → d
 infer-interpret-gr-code (löb-code x T) = λ infer-t Γ → do
   S , ⟦t⟧ ← infer-t (Γ , later ∣ x ∈ T)
   T=S ← T ≃ᵗʸ? S
-  return (T , löb' ⟦ T ⟧ty (ι[ transᵗʸ (closed-natural (⟦⟧ty-natural T) π) T=S ]
-                            ι⁻¹[ closed-natural (⟦⟧ty-natural S) _ ]
-                            ιc[ ,,-cong (▻-cong (closed-natural (⟦⟧ty-natural T) (from-earlier _))) ]' ⟦t⟧))
+  return (T , löb-cl (⟦⟧ty-natural T) (M.ι[ T=S ] ⟦t⟧))
 infer-interpret-gr-code g-cons-code = λ infer-h infer-t Γ → do
   A , ⟦h⟧ ← infer-h (Γ ,lock⟨ constantly ⟩)
   B , ⟦t⟧ ← infer-t (Γ ,lock⟨ later ⟩)

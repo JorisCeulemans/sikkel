@@ -144,6 +144,10 @@ eq (isoʳ (,,-cong T=S)) [ γ , s ] = cong [ γ ,_] (eq (isoʳ T=S) s)
 ξ-convert : (φ : T ↣ S) → convert-tm (ty-subst-map π φ) ξ ≅ᵗᵐ ι⁻¹[ ty-subst-cong-subst-2-1 S (,,-map-π φ) ] (ξ [ ,,-map φ ]')
 eq (ξ-convert {S = S} φ) _ = sym (strong-ty-id S)
 
+,,-cong-/v : (e : T ≅ᵗʸ S) (t : Tm Γ T) →
+             from (,,-cong e) ⊚ (t /v) ≅ˢ (ι⁻¹[ e ] t) /v
+eq (,,-cong-/v e t) γ = refl
+
 ,,-cong-ξ : (e : T ≅ᵗʸ S) →
   ξ [ from (,,-cong e) ]'
     ≅ᵗᵐ

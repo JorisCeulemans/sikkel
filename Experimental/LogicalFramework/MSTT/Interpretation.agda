@@ -142,8 +142,9 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
                              M.⊚ M.from (⟦⟧ltel Λ₁) 
 
 ⟦_⟧ren : Ren Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ Syn.Ren.id ⟧ren = M.id-subst _
-⟦ σs ⊚a σ ⟧ren = ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren
+⟦ id-ren ⟧ren = M.id-subst _
+⟦ id-ren ⊚a σ ⟧ren = ⟦ σ ⟧aren
+⟦ σs     ⊚a σ ⟧ren = ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren
 
 {-
 ⊹-sound : ∀ {x} (σ : Subst Δ Γ) {T : Ty} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst

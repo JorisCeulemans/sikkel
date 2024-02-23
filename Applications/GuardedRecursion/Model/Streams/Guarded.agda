@@ -200,6 +200,16 @@ module _ {A : Ty (now Γ)} where
   eq (isoˡ (gstream-natural σ)) _ = map-inverse (λ _ → ty-ctx-subst-inverseˡ A)
   eq (isoʳ (gstream-natural σ)) _ = map-inverse (λ _ → ty-ctx-subst-inverseʳ A)
 
+  gstream-β-head : (a : Tm Γ (constantly-ty A)) (s : Tm Γ (▻' (GStream A))) →
+                   g-head (g-cons a s) ≅ᵗᵐ a
+  eq (gstream-β-head a s) {x = zero}  γ = refl
+  eq (gstream-β-head a s) {x = suc _} γ = refl
+
+  gstream-β-tail : (a : Tm Γ (constantly-ty A)) (s : Tm Γ (▻' (GStream A))) →
+                   g-tail (g-cons a s) ≅ᵗᵐ s
+  eq (gstream-β-tail a s) {x = zero}  γ = refl
+  eq (gstream-β-tail a s) {x = suc _} γ = map-inverse (λ _ → trans (ty-cong-2-1 A refl) (ty-id A))
+
 gstream-cong : {A : Ty (now Γ)} {A' : Ty (now Γ)} →
                A ≅ᵗʸ A' → GStream A ≅ᵗʸ GStream A'
 func (from (gstream-cong A=A')) = map (func (from A=A'))

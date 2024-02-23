@@ -60,9 +60,11 @@ postulate
   fuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)) →
                           ⟦ fuselocks-bprop φ ⟧bprop M.[ M.to (lock-iso (⟦ⓜ⟧-sound μ ρ)) ] M.≅ᵗʸ ⟦ φ ⟧bprop
 
+  ren-key-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
+                  DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ key-ren {Γ = Γ} (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⟩) α ⟧ren
   ren-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ π-ren {Γ = Γ} {μ = μ} {x} {T} ⟧ren M.≅ˢ M.π
 
-  key-sub-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
+  sub-key-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
                   DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ key-sub {Γ = Γ} (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⟩) α ⟧sub
   sub-lock-sound : (σ : Sub Γ Δ) (μ : Modality m n) → ⟦ σ ,slock⟨ μ ⟩ ⟧sub M.≅ˢ lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧sub
   sub-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ π {Γ = Γ} {μ = μ} {x} {T} ⟧sub M.≅ˢ M.π
@@ -75,22 +77,26 @@ atomic-rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : AtomicRen.A
                   ⟦ AtomicRen.atomic-rename-tm t σ ⟧tm M.≅ᵗᵐ (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl )
 atomic-rename-tm-sound  σ = {!!}
 
-rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : Ren Δ Γ) →
-                  ⟦ rename-tm t σ ⟧tm M.≅ᵗᵐ (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧ren ]cl )
-rename-tm-sound  {μ} {m} {Γ} {T} t Syn.RenSub.id =
-  M.symᵗᵐ (M.cl-tm-subst-id (ty-closed-natural T) ⟦ t ⟧tm)
-rename-tm-sound {Γ = Γ} {T = T} t (σs ⊚a σ) = M.transᵗᵐ step3 (M.transᵗᵐ step1 step2)
-  where step0 : ⟦ rename-tm t σs ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl
-        step0 = rename-tm-sound t σs
-        step1 : ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl M.≅ᵗᵐ
-                ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
-        step1 = M.cl-tm-subst-cong-tm (ty-closed-natural T) step0
-        step2 : ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl  M.≅ᵗᵐ
-                ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren ]cl
-        step2 = M.cl-tm-subst-⊚ (ty-closed-natural T) ⟦ t ⟧tm
-        step3 : ⟦ AtomicRen.atomic-rename-tm (rename-tm t σs) σ ⟧tm M.≅ᵗᵐ
-                  ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
-        step3 = atomic-rename-tm-sound (rename-tm t σs) σ
+postulate
+  rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : Ren Δ Γ) →
+                    ⟦ rename-tm t σ ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧ren ]cl
+  rename-bprop-sound : {Γ : Ctx m} (φ : bProp Γ) (σ : Ren Δ Γ) →
+                       ⟦ rename-bprop φ σ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ ⟦ σ ⟧ren ]
+  -- rename-tm-sound  {μ} {m} {Γ} {T} t Syn.RenSub.id =
+  --   M.symᵗᵐ (M.cl-tm-subst-id (ty-closed-natural T) ⟦ t ⟧tm)
+  -- rename-tm-sound t (id-ren ⊚a σ) = {!!}
+  -- rename-tm-sound {Γ = Γ} {T = T} t (σs@(_ ⊚a _) ⊚a σ) = M.transᵗᵐ step3 (M.transᵗᵐ step1 step2)
+  --   where step0 : ⟦ rename-tm t σs ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl
+  --         step0 = rename-tm-sound t σs
+  --         step1 : ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl M.≅ᵗᵐ
+  --                 ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
+  --         step1 = M.cl-tm-subst-cong-tm (ty-closed-natural T) step0
+  --         step2 : ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl  M.≅ᵗᵐ
+  --                 ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren ]cl
+  --         step2 = M.cl-tm-subst-⊚ (ty-closed-natural T) ⟦ t ⟧tm
+  --         step3 : ⟦ AtomicRen.atomic-rename-tm (rename-tm t σs) σ ⟧tm M.≅ᵗᵐ
+  --                   ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
+  --         step3 = atomic-rename-tm-sound (rename-tm t σs) σ
 
 lock𝟙-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) → ⟦ lock𝟙-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm
 lock𝟙-sound t = M.transᵗᵐ (rename-tm-sound t lock𝟙-ren)
