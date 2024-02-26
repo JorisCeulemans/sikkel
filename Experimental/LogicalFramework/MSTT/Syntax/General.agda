@@ -39,11 +39,11 @@ private variable
 
 data Var (x : Name) (T : Ty m) (Γ : Ctx m) : Set where
   vzero : {Δ : Ctx n} {μ : Modality m n} {Λ : LockTele n m} →
-          Γ ≈ Δ ,, μ ∣ x ∈ T ,ˡᵗ Λ →
+          Γ ≡ Δ ,, μ ∣ x ∈ T ,ˡᵗ Λ →
           TwoCell μ (locksˡᵗ Λ) →
           Var x T Γ
   vsuc : {Δ : Ctx n} {μ : Modality o n} {y : Name} {S : Ty o} {Λ : LockTele n m} →
-         Γ ≈ Δ ,, μ ∣ y ∈ S ,ˡᵗ Λ →
+         Γ ≡ Δ ,, μ ∣ y ∈ S ,ˡᵗ Λ →
          Var x T (Δ ,ˡᵗ Λ) →
          Var x T Γ
 
@@ -79,16 +79,16 @@ ExtTmArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty 
 
 
 v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
-v0 {μ = μ} = var' _ {vzero (lock⟨ μ ⟩, ◇) id-cell}
+v0 = var' _ {vzero refl id-cell}
 
 v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
-v1 {μ = μ} = var' _ {vsuc (lock⟨ μ ⟩, ◇) (vzero (lock⟨ μ ⟩, ◇) id-cell)}
+v1 = var' _ {vsuc refl (vzero refl id-cell)}
 
 v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
-v0-𝟙 = var' _ {vzero ◇ id-cell}
+v0-𝟙 = var' _ {vzero refl id-cell}
 
 v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
-v1-𝟙 = var' _ {vsuc ◇ (vzero ◇ id-cell)}
+v1-𝟙 = var' _ {vsuc refl (vzero refl id-cell)}
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
@@ -275,7 +275,7 @@ module RenSub
 
 --------------------------------------------------
 -- Renaming for MSTT
-
+{-
 record RenData (μ : Modality n m) (T : Ty n) (Γ : Ctx m) : Set where
   constructor rendata
   field

@@ -20,7 +20,7 @@ private variable
   x y : Name
 
 
-infixl 4 _,,_∣_∈_ _,lock⟨_⟩
+infixl 6 _,,_∣_∈_ _,lock⟨_⟩
 data Ctx (m : Mode) : Set where
   ◇ : Ctx m
   _,,_∣_∈_ : (Γ : Ctx m) (μ : Modality n m) (x : Name) (T : Ty n) → Ctx m
@@ -53,24 +53,26 @@ locks-tel (Θ ,lock⟨ μ ⟩) = locks-tel Θ ⓜ μ
 
 
 -- Lock telescopes consist of only locks (so no variables).
--- They are defined as "well-moded" cons lists since the cons
--- constructor is actually used in practice when implementing renaming
--- and substitution.
-infixl 4 lock⟨_⟩,_
+-- They are defined as "well-moded" snoc lists.
 data LockTele (m : Mode) : Mode → Set where
   ◇ : LockTele m m
-  lock⟨_⟩,_ : (μ : Modality o m) (Λ : LockTele o n) → LockTele m n
+  _,lock⟨_⟩ : (Λ : LockTele m o) (μ : Modality n o) → LockTele m n
+
+lock⟨_⟩,_ : Modality o m → LockTele o n → LockTele m n
+lock⟨ μ ⟩, ◇ = ◇ ,lock⟨ μ ⟩
+lock⟨ μ ⟩, (Λ ,lock⟨ ρ ⟩) = (lock⟨ μ ⟩, Λ) ,lock⟨ ρ ⟩
 
 infixl 5 _,ˡᵗ_
 _,ˡᵗ_ : Ctx m → LockTele m n → Ctx n
 Γ ,ˡᵗ ◇ = Γ
-Γ ,ˡᵗ (lock⟨ μ ⟩, Λ) = (Γ ,lock⟨ μ ⟩) ,ˡᵗ Λ
+Γ ,ˡᵗ (Λ ,lock⟨ μ ⟩) = (Γ ,ˡᵗ Λ) ,lock⟨ μ ⟩
 
-
-data _≈_,ˡᵗ_ (Γ : Ctx n) : Ctx m → LockTele m n → Set where
-  ◇ : Γ ≈ Γ ,ˡᵗ ◇
-  lock⟨_⟩,_ : {Δ : Ctx o} {Λ : LockTele m n} (μ : Modality m o) → Γ ≈ Δ ,lock⟨ μ ⟩ ,ˡᵗ Λ → Γ ≈ Δ ,ˡᵗ (lock⟨ μ ⟩, Λ)
 locksˡᵗ : LockTele m n → Modality n m
 locksˡᵗ ◇ = 𝟙
-locksˡᵗ (lock⟨ μ ⟩, ◇) = μ
-locksˡᵗ (lock⟨ μ ⟩, Λ) = μ ⓜ locksˡᵗ Λ
+locksˡᵗ (◇ ,lock⟨ μ ⟩) = μ
+locksˡᵗ (Λ ,lock⟨ μ ⟩) = locksˡᵗ Λ ⓜ μ
+
+infixl 6 _++ˡᵗ_
+_++ˡᵗ_ : LockTele m n → LockTele n o → LockTele m o
+Λ ++ˡᵗ ◇ = Λ
+Λ ++ˡᵗ (Θ ,lock⟨ μ ⟩) = (Λ ++ˡᵗ Θ) ,lock⟨ μ ⟩
