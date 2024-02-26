@@ -60,15 +60,15 @@ data LockTele (m : Mode) : Mode → Set where
   ◇ : LockTele m m
   lock⟨_⟩,_ : (μ : Modality o m) (Λ : LockTele o n) → LockTele m n
 
-_++lt_ : Ctx m → LockTele m n → Ctx n
-Γ ++lt ◇ = Γ
-Γ ++lt (lock⟨ μ ⟩, Λ) = (Γ ,lock⟨ μ ⟩) ++lt Λ
+_,ˡᵗ_ : Ctx m → LockTele m n → Ctx n
+Γ ,ˡᵗ ◇ = Γ
+Γ ,ˡᵗ (lock⟨ μ ⟩, Λ) = (Γ ,lock⟨ μ ⟩) ,ˡᵗ Λ
 
 locks-lt : LockTele m n → Modality n m
 locks-lt ◇ = 𝟙
 locks-lt (lock⟨ μ ⟩, ◇) = μ
 locks-lt (lock⟨ μ ⟩, Λ) = μ ⓜ locks-lt Λ
 
-data _≈_++lt_ (Γ : Ctx n) : Ctx m → LockTele m n → Set where
-  ◇ : Γ ≈ Γ ++lt ◇
-  lock⟨_⟩,_ : {Δ : Ctx o} {Λ : LockTele m n} (μ : Modality m o) → Γ ≈ Δ ,lock⟨ μ ⟩ ++lt Λ → Γ ≈ Δ ++lt (lock⟨ μ ⟩, Λ)
+data _≈_,ˡᵗ_ (Γ : Ctx n) : Ctx m → LockTele m n → Set where
+  ◇ : Γ ≈ Γ ,ˡᵗ ◇
+  lock⟨_⟩,_ : {Δ : Ctx o} {Λ : LockTele m n} (μ : Modality m o) → Γ ≈ Δ ,lock⟨ μ ⟩ ,ˡᵗ Λ → Γ ≈ Δ ,ˡᵗ (lock⟨ μ ⟩, Λ)

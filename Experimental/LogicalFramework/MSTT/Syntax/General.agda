@@ -39,12 +39,12 @@ private variable
 
 data Var (x : Name) (T : Ty m) (Γ : Ctx m) : Set where
   vzero : {Δ : Ctx n} {μ : Modality m n} {Λ : LockTele n m} →
-          Γ ≈ (Δ ,, μ ∣ x ∈ T) ++lt Λ →
+          Γ ≈ Δ ,, μ ∣ x ∈ T ,ˡᵗ Λ →
           TwoCell μ (locks-lt Λ) →
           Var x T Γ
   vsuc : {Δ : Ctx n} {μ : Modality o n} {y : Name} {S : Ty o} {Λ : LockTele n m} →
-         Γ ≈ (Δ ,, μ ∣ y ∈ S) ++lt Λ →
-         Var x T (Δ ++lt Λ) →
+         Γ ≈ Δ ,, μ ∣ y ∈ S ,ˡᵗ Λ →
+         Var x T (Δ ,ˡᵗ Λ) →
          Var x T Γ
 
 
@@ -135,17 +135,17 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
     (traverse-tm arg (lift-trav-tel σ (tmarg-tel arginfo))) , (traverse-ext-tmargs args σ)
 
 open TravStruct using (traverse-tm)
-{-
+
 
 --------------------------------------------------
 -- Some operations regarding telescopes and variables
-
-skip-locks : {Γ : Ctx m} (Λ : LockTele m n) → Var x μ T κ Γ → Var x μ T (κ ⓜ locks-ltel Λ) (Γ ++ltel Λ)
+{-
+skip-locks : {Γ : Ctx m} (Λ : LockTele m n) → Var x μ T κ Γ → Var x μ T (κ ⓜ locks-ltel Λ) (Γ ,ˡᵗ Λ)
 skip-locks ◇ v = Ag.subst (λ - → Var _ _ _ - _) (sym mod-unitʳ) v
 skip-locks {κ = κ} (Λ ,lock⟨ μ ⟩) v =
   Ag.subst (λ - → Var _ _ _ - _) (mod-assoc κ) (skip-lock μ (skip-locks Λ v))
 
--- If we have a variable in Γ ++ltel Λ, we actually have a variable in
+-- If we have a variable in Γ ,ˡᵗ Λ, we actually have a variable in
 -- Γ with less locks to the right of it.
 record SplitLtelVar (Γ : Ctx m) (Λ : LockTele m n) (x : Name) (μ : Modality o p) (T : Ty o) (κ : Modality n p) : Set where
   constructor ltel-splitting
@@ -154,11 +154,12 @@ record SplitLtelVar (Γ : Ctx m) (Λ : LockTele m n) (x : Name) (μ : Modality o
     v' : Var x μ T κ/Λ Γ
     lock-div : κ/Λ ⓜ locks-ltel Λ ≡ κ
 
-split-ltel-var : (Λ : LockTele m n) → Var x μ T κ (Γ ++ltel Λ) → SplitLtelVar Γ Λ x μ T κ
+split-ltel-var : (Λ : LockTele m n) → Var x μ T κ (Γ ,ˡᵗ Λ) → SplitLtelVar Γ Λ x μ T κ
 split-ltel-var {κ = κ} ◇ v = ltel-splitting κ v mod-unitʳ
 split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock {κ = κ} .ρ v) =
   let ltel-splitting κ/Λ v' lock-div = split-ltel-var Λ v
   in  ltel-splitting κ/Λ v' (trans (sym (mod-assoc κ/Λ)) (cong (_ⓜ ρ) lock-div))
+-}
 
 
 --------------------------------------------------
@@ -188,8 +189,8 @@ module AtomicRenSubDef (V : RenSubData) where
     _∷_/_ : AtomicRenSub Γ Δ → V μ T Γ → (x : Name) → AtomicRenSub Γ (Δ ,, μ ∣ x ∈ T)
     _⊚π : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) Δ
     _,lock⟨_⟩ : AtomicRenSub Γ Δ → (μ : Modality n m) → AtomicRenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-    atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → AtomicRenSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
-
+    atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-lt Λ₂) (locks-lt Λ₁) → AtomicRenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
+{-
 -- In order to obtain useful results for renamings/substitutions, the
 -- type family representing the data assigned to variables must be
 -- equipped with some extra structure.
@@ -260,7 +261,7 @@ module RenSub
   id        ,rslock⟨ μ ⟩ = id
   (σ ⊚a τᵃ) ,rslock⟨ μ ⟩ = (σ ,rslock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
 
-  key-rensub : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → RenSub (Γ ++ltel Λ₁) (Γ ++ltel Λ₂)
+  key-rensub : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locks-ltel Λ₂) (locks-ltel Λ₁) → RenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
   key-rensub Λ₁ Λ₂ α = id ⊚a atomic-key Λ₁ Λ₂ α
 
   _⊚rs_ : RenSub Δ Θ → RenSub Γ Δ → RenSub Γ Θ
