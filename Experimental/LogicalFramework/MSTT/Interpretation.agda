@@ -105,11 +105,11 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 -- Interpretation of substitutions as presheaf morphisms
 --   and soundness proof of term substitution
 
-⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ,ˡᵗ Λ ⟧ctx M.≅ᶜ DRA.lock ⟦ locks-ltel Λ ⟧mod ⟦ Γ ⟧ctx
+⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ,ˡᵗ Λ ⟧ctx M.≅ᶜ DRA.lock ⟦ locksˡᵗ Λ ⟧mod ⟦ Γ ⟧ctx
 ⟦⟧ltel {m} ◇ = M.reflᶜ
 ⟦⟧ltel (Λ ,lock⟨ μ ⟩) =
   M.transᶜ (M.ctx-functor-cong (DRA.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
-           (M.symᶜ (DRA.lock-iso (⟦ⓜ⟧-sound (locks-ltel Λ) μ)))
+           (M.symᶜ (DRA.lock-iso (⟦ⓜ⟧-sound (locksˡᵗ Λ) μ)))
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _
