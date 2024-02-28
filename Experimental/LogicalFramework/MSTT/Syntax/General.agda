@@ -39,11 +39,11 @@ private variable
 
 data Var (x : Name) (T : Ty m) (Γ : Ctx m) : Set where
   vzero : {Δ : Ctx n} {μ : Modality m n} {Λ : LockTele n m} →
-          Γ ≡ Δ ,, μ ∣ x ∈ T ,ˡᵗ Λ →
+          Γ ≈ Δ ,, μ ∣ x ∈ T ,ˡᵗ Λ →
           TwoCell μ (locksˡᵗ Λ) →
           Var x T Γ
   vsuc : {Δ : Ctx n} {μ : Modality o n} {y : Name} {S : Ty o} {Λ : LockTele n m} →
-         Γ ≡ Δ ,, μ ∣ y ∈ S ,ˡᵗ Λ →
+         Γ ≈ Δ ,, μ ∣ y ∈ S ,ˡᵗ Λ →
          Var x T (Δ ,ˡᵗ Λ) →
          Var x T Γ
 
@@ -79,16 +79,16 @@ ExtTmArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty 
 
 
 v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
-v0 = var' _ {vzero refl id-cell}
+v0 = var' _ {vzero split-refl id-cell}
 
 v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
-v1 = var' _ {vsuc refl (vzero refl id-cell)}
+v1 = var' _ {vsuc split-refl (vzero split-refl id-cell)}
 
 v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
-v0-𝟙 = var' _ {vzero refl id-cell}
+v0-𝟙 = var' _ {vzero split-refl id-cell}
 
 v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
-v1-𝟙 = var' _ {vsuc refl (vzero refl id-cell)}
+v1-𝟙 = var' _ {vsuc split-refl (vzero split-refl id-cell)}
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
@@ -135,31 +135,6 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
     (traverse-tm arg (lift-trav-tel σ (tmarg-tel arginfo))) , (traverse-ext-tmargs args σ)
 
 open TravStruct using (traverse-tm)
-
-
---------------------------------------------------
--- Some operations regarding telescopes and variables
-{-
-skip-locks : {Γ : Ctx m} (Λ : LockTele m n) → Var x μ T κ Γ → Var x μ T (κ ⓜ locksˡᵗ Λ) (Γ ,ˡᵗ Λ)
-skip-locks ◇ v = Ag.subst (λ - → Var _ _ _ - _) (sym mod-unitʳ) v
-skip-locks {κ = κ} (Λ ,lock⟨ μ ⟩) v =
-  Ag.subst (λ - → Var _ _ _ - _) (mod-assoc κ) (skip-lock μ (skip-locks Λ v))
-
--- If we have a variable in Γ ,ˡᵗ Λ, we actually have a variable in
--- Γ with less locks to the right of it.
-record SplitLtelVar (Γ : Ctx m) (Λ : LockTele m n) (x : Name) (μ : Modality o p) (T : Ty o) (κ : Modality n p) : Set where
-  constructor ltel-splitting
-  field
-    κ/Λ : Modality m p
-    v' : Var x μ T κ/Λ Γ
-    lock-div : κ/Λ ⓜ locksˡᵗ Λ ≡ κ
-
-split-ltel-var : (Λ : LockTele m n) → Var x μ T κ (Γ ,ˡᵗ Λ) → SplitLtelVar Γ Λ x μ T κ
-split-ltel-var {κ = κ} ◇ v = ltel-splitting κ v mod-unitʳ
-split-ltel-var (Λ ,lock⟨ ρ ⟩) (skip-lock {κ = κ} .ρ v) =
-  let ltel-splitting κ/Λ v' lock-div = split-ltel-var Λ v
-  in  ltel-splitting κ/Λ v' (trans (sym (mod-assoc κ/Λ)) (cong (_ⓜ ρ) lock-div))
--}
 
 
 --------------------------------------------------
@@ -274,23 +249,37 @@ module RenSub
 
 
 --------------------------------------------------
+-- Prerequisite: applying a 2-cell to a variable
+
+apply-2-cell-var : (Θ Ψ : LockTele n m) (α : TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ)) →
+                   Var x T (Γ ,ˡᵗ Θ) → Var x T (Γ ,ˡᵗ Ψ)
+apply-2-cell-var Θ Ψ α (vzero Γ,Θ=Δ,x,Φ β) =
+  let split-lt-var-res Λ Λ,Θ=Φ Γ=Δ,x,Λ = split-tele-var Θ Γ,Θ=Δ,x,Φ
+  in vzero (split-append-locks Γ=Δ,x,Λ Ψ)
+           (whiskerˡᵗ-left Θ Ψ α ⓣ-vert ≈++ˡᵗ-right-cell Λ,Θ=Φ ⓣ-vert β)
+apply-2-cell-var {x = x} {T = T} Θ Ψ α (vsuc Γ,Θ=Δ,y,Φ v) =
+  let split-lt-var-res Λ Λ,Θ=Φ Γ=Δ,y,Λ = split-tele-var Θ Γ,Θ=Δ,y,Φ
+  in vsuc (split-append-locks Γ=Δ,y,Λ Ψ) (subst (Var x T) (sym (,ˡᵗ-++ˡᵗ Ψ)) (apply-2-cell-var Θ Ψ α {!!}))
+
+
+--------------------------------------------------
 -- Renaming for MSTT
-{-
+
 record RenData (μ : Modality n m) (T : Ty n) (Γ : Ctx m) : Set where
   constructor rendata
   field
-    new-name : Name
-    new-var : Var new-name μ T 𝟙 Γ
+    ren-name : Name
+    ren-var : Var ren-name T (Γ ,lock⟨ μ ⟩)
 
 newRenData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → RenData μ T (Γ ,, μ ∣ x ∈ T)
-newRenData = rendata _ vzero
+newRenData {μ = μ} = rendata _ (vzero split-refl id-cell)
 
 
 module AtomicRenDef = AtomicRenSubDef RenData renaming (AtomicRenSub to AtomicRen)
 
 module AtomicRenVar where
   open AtomicRenDef
-
+{-
   -- When a (atomic) renaming acts on a variable, it does not need to
   -- have the same name or the same locks to the right in the
   -- context. However, when the locks change, we can provide a two-cell
@@ -302,7 +291,18 @@ module AtomicRenVar where
       new-locks : Modality m n
       two-cell : TwoCell κ new-locks
       v : Var new-name μ T new-locks Γ
+-}
 
+  atomic-ren-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) →
+                    Var x T (Δ ,ˡᵗ Λ) → AtomicRen Γ Δ → Var x T (Γ ,ˡᵗ Λ)
+  atomic-ren-var' Λ v [] = {!v!}
+  atomic-ren-var' Λ (vzero x α) (σ ∷ w / y) = {!!}
+  atomic-ren-var' Λ (vsuc x v) (σ ∷ w / y) = {!!}
+  atomic-ren-var' Λ v (σ ⊚π) = vsuc split-refl (atomic-ren-var' Λ v σ)
+  atomic-ren-var' Λ v (σ ,lock⟨ μ ⟩) = {!atomic-ren-var' (lock⟨ μ ⟩, Λ) ? σ!}
+  atomic-ren-var' Λ v (atomic-key Λ₁ Λ₂ α) = {!!}
+
+{-
   atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
   atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
     let ltel-splitting κ/Λ₂ v' lock-div = split-ltel-var Λ₂ v
