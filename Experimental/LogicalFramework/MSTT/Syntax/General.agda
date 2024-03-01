@@ -35,25 +35,52 @@ private variable
 
 
 --------------------------------------------------
--- Definition of MSTT terms
+-- Definition of MSTT variables
 
-data Var (x : Name) (T : Ty m) (Γ : Ctx m) : Set where
-  vzero : {Δ : Ctx n} {μ : Modality m n} {Λ : LockTele n m} →
-          Γ ≈ Δ ,, μ ∣ x ∈ T ,ˡᵗ Λ →
+-- A value of type Var μ x T Γ Λ expresses that there is a valid
+-- variable (including the necessary 2-cell) with name x, type T, and
+-- bound under modality μ in the context Γ ,ˡᵗ Λ. We explicitly keep
+-- track of the lock telescope Λ in order to match the recursion
+-- structure of many of the variable-manipulating functions further in
+-- this file. Note that Λ is required to be empty when constructing a term.
+data Var (μ : Modality n o) (x : Name) (T : Ty n) : Ctx m → LockTele m n → Set where
+  vzero : {Γ : Ctx o} {Λ : LockTele o n} →
           TwoCell μ (locksˡᵗ Λ) →
-          Var x T Γ
-  vsuc : {Δ : Ctx n} {μ : Modality o n} {y : Name} {S : Ty o} {Λ : LockTele n m} →
-         Γ ≈ Δ ,, μ ∣ y ∈ S ,ˡᵗ Λ →
-         Var x T (Δ ,ˡᵗ Λ) →
-         Var x T Γ
+          Var μ x T (Γ ,, μ ∣ x ∈ T) Λ
+  vsuc : {Γ : Ctx m} {Λ : LockTele m n} {ρ : Modality p m} {y : Name} {S : Ty p} →
+         Var μ x T Γ Λ →
+         Var μ x T (Γ ,, ρ ∣ y ∈ S) Λ
+  vlock : {Γ : Ctx p} {ρ : Modality m p} {Λ : LockTele m n} →
+          Var μ x T Γ (lock⟨ ρ ⟩, Λ) →
+          Var μ x T (Γ ,lock⟨ ρ ⟩) Λ
 
+vlocks : {μ : Modality n o} {x : Name} {T : Ty n} {Γ : Ctx p} (Θ : LockTele p m) {Λ : LockTele m n} →
+         Var μ x T Γ (Θ ++ˡᵗ Λ) →
+         Var μ x T (Γ ,ˡᵗ Θ) Λ
+vlocks ◇             v = v
+vlocks (lock⟨ ρ ⟩, Θ) v = vlocks Θ (vlock v)
+
+unvlock : {μ : Modality n o} {x : Name} {T : Ty n} {Γ : Ctx p} {ρ : Modality m p} {Λ : LockTele m n} →
+          Var μ x T (Γ ,lock⟨ ρ ⟩) Λ →
+          Var μ x T Γ (lock⟨ ρ ⟩, Λ)
+unvlock (vlock v) = v
+
+unvlocks : {μ : Modality n o} {x : Name} {T : Ty n} {Γ : Ctx p} (Θ : LockTele p m) {Λ : LockTele m n} →
+           Var μ x T (Γ ,ˡᵗ Θ) Λ →
+           Var μ x T Γ (Θ ++ˡᵗ Λ)
+unvlocks ◇             v = v
+unvlocks (lock⟨ μ ⟩, Θ) v = unvlock (unvlocks Θ v)
+
+
+--------------------------------------------------
+-- Definition of MSTT terms
 
 infixl 50 _∙_
 data Tm : Ctx m → Ty m → Set
 ExtTmArgs : {m : Mode} → List (TmArgInfo m) → Ctx m → Set
 
 data Tm where
-  var' : (x : Name) {v : Var x T Γ}  → Tm Γ T
+  var' : (x : Name) {v : Var μ x T Γ ◇} → Tm Γ T
     -- ^ When writing programs, one should not directly use var' but rather combine
     --   it with a decision procedure for Var, which will resolve the name.
   mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
@@ -79,16 +106,16 @@ ExtTmArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty 
 
 
 v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
-v0 = var' _ {vzero split-refl id-cell}
+v0 = var' _ {vlock (vzero id-cell)}
 
 v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
-v1 = var' _ {vsuc split-refl (vzero split-refl id-cell)}
+v1 = var' _ {vlock (vsuc (vzero id-cell))}
 
 v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
-v0-𝟙 = var' _ {vzero split-refl id-cell}
+v0-𝟙 = var' _ {vzero id-cell}
 
 v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
-v1-𝟙 = var' _ {vsuc split-refl (vzero split-refl id-cell)}
+v1-𝟙 = var' _ {vsuc (vzero id-cell)}
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
@@ -102,7 +129,8 @@ syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 -- traversals.
 record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
-    vr : Var x T Δ → Trav Γ Δ → Tm Γ T
+    vr : {μ : Modality m n} {Γ Δ : Ctx m} {T : Ty m} →
+         Var μ x T Δ ◇ → Trav Γ Δ → Tm Γ T
     lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
     lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
 
@@ -172,8 +200,8 @@ module AtomicRenSubDef (V : RenSubData) where
 record RenSubDataStructure (V : RenSubData) : Set where
   field
     newV : ∀ {x m n} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → V μ T (Γ ,, μ ∣ x ∈ T)
-    atomic-rensub-lookup-var : ∀ {x m} {Γ Δ : Ctx m} {T : Ty m} →
-                               Var x T Δ → AtomicRenSubDef.AtomicRenSub V Γ Δ → Tm Γ T
+    atomic-rensub-lookup-var : ∀ {x m n} {μ : Modality m n} {Γ Δ : Ctx m} {T : Ty m} →
+                               Var μ x T Δ ◇ → AtomicRenSubDef.AtomicRenSub V Γ Δ → Tm Γ T
 
 module AtomicRenSub
   (V : RenSubData)
