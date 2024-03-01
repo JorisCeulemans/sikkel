@@ -280,75 +280,56 @@ module RenSub
 -- Prerequisite: applying a 2-cell to a variable
 
 apply-2-cell-var : (Θ Ψ : LockTele n m) (α : TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ)) →
-                   Var x T (Γ ,ˡᵗ Θ) → Var x T (Γ ,ˡᵗ Ψ)
-apply-2-cell-var Θ Ψ α (vzero Γ,Θ=Δ,x,Φ β) =
-  let split-lt-var-res Λ Λ,Θ=Φ Γ=Δ,x,Λ = split-tele-var Θ Γ,Θ=Δ,x,Φ
-  in vzero (split-append-locks Γ=Δ,x,Λ Ψ)
-           (whiskerˡᵗ-left Θ Ψ α ⓣ-vert ≈++ˡᵗ-right-cell Λ,Θ=Φ ⓣ-vert β)
-apply-2-cell-var {x = x} {T = T} Θ Ψ α (vsuc Γ,Θ=Δ,y,Φ v) =
-  let split-lt-var-res Λ Λ,Θ=Φ Γ=Δ,y,Λ = split-tele-var Θ Γ,Θ=Δ,y,Φ
-  in vsuc (split-append-locks Γ=Δ,y,Λ Ψ) (subst (Var x T) (sym (,ˡᵗ-++ˡᵗ Ψ)) (apply-2-cell-var Θ Ψ α {!!}))
+                   Var μ x T Γ Θ → Var μ x T Γ Ψ
+apply-2-cell-var Θ Ψ α (vzero β) = vzero (α ⓣ-vert β)
+apply-2-cell-var Θ Ψ α (vsuc v) = vsuc (apply-2-cell-var Θ Ψ α v)
+apply-2-cell-var Θ Ψ α (vlock v) = vlock (apply-2-cell-var _ _ (id-cell ⓣ-hor α) v)
 
 
 --------------------------------------------------
 -- Renaming for MSTT
 
-record RenData (μ : Modality n m) (T : Ty n) (Γ : Ctx m) : Set where
-  constructor rendata
+-- A value of type SomeVar T Γ Λ represents a variable in Γ ,ˡᵗ Λ with
+-- unkown name and modality.
+record SomeVar (T : Ty n) (Γ : Ctx m) (Λ : LockTele m n) : Set where
+  constructor somevar
   field
+    {ren-mode} : Mode
+    ren-mod : Modality n ren-mode
     ren-name : Name
-    ren-var : Var ren-name T (Γ ,lock⟨ μ ⟩)
+    ren-var : Var ren-mod ren-name T Γ Λ
+
+RenData : RenSubData
+RenData μ T Γ = SomeVar T Γ (lock⟨ μ ⟩, ◇)
 
 newRenData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → RenData μ T (Γ ,, μ ∣ x ∈ T)
-newRenData {μ = μ} = rendata _ (vzero split-refl id-cell)
-
+newRenData = somevar _ _ (vzero id-cell)
 
 module AtomicRenDef = AtomicRenSubDef RenData renaming (AtomicRenSub to AtomicRen)
 
 module AtomicRenVar where
   open AtomicRenDef
-{-
-  -- When a (atomic) renaming acts on a variable, it does not need to
-  -- have the same name or the same locks to the right in the
-  -- context. However, when the locks change, we can provide a two-cell
-  -- between the old and new locks.
-  record RenVarResult (μ : Modality o n) (T : Ty o) (κ : Modality m n) (Γ : Ctx m) : Set where
-    constructor renvar
-    field
-      new-name : Name
-      new-locks : Modality m n
-      two-cell : TwoCell κ new-locks
-      v : Var new-name μ T new-locks Γ
--}
 
   atomic-ren-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) →
-                    Var x T (Δ ,ˡᵗ Λ) → AtomicRen Γ Δ → Var x T (Γ ,ˡᵗ Λ)
-  atomic-ren-var' Λ v [] = {!v!}
-  atomic-ren-var' Λ (vzero x α) (σ ∷ w / y) = {!!}
-  atomic-ren-var' Λ (vsuc x v) (σ ∷ w / y) = {!!}
-  atomic-ren-var' Λ v (σ ⊚π) = vsuc split-refl (atomic-ren-var' Λ v σ)
-  atomic-ren-var' Λ v (σ ,lock⟨ μ ⟩) = {!atomic-ren-var' (lock⟨ μ ⟩, Λ) ? σ!}
-  atomic-ren-var' Λ v (atomic-key Λ₁ Λ₂ α) = {!!}
+                    Var μ x T Δ Λ → AtomicRen Γ Δ → SomeVar T Γ Λ
+  atomic-ren-var' Λ v (atomic-key Θ Ψ α) =
+    somevar _ _ (vlocks Θ (apply-2-cell-var (Ψ ++ˡᵗ Λ) (Θ ++ˡᵗ Λ) (whiskerˡᵗ-right Ψ Θ α) (unvlocks Ψ v)))
+  atomic-ren-var' Λ (vzero α) (σ ∷ somevar ρ z w / x) = somevar ρ z (apply-2-cell-var (lock⟨ _ ⟩, ◇) Λ α w)
+  atomic-ren-var' Λ (vsuc v)  (σ ∷ _ / y)             = atomic-ren-var' Λ v σ
+  atomic-ren-var' Λ v (σ ⊚π) =
+    let somevar ρ y w = atomic-ren-var' Λ v σ
+    in  somevar ρ y (vsuc w)
+  atomic-ren-var' Λ (vlock v) (σ ,lock⟨ μ ⟩) =
+    let somevar ρ y w = atomic-ren-var' (lock⟨ μ ⟩, Λ) v σ
+    in  somevar ρ y (vlock w)
 
-{-
-  atomic-ren-var' : Var x μ T κ Δ → AtomicRen Γ Δ → RenVarResult μ T κ Γ
-  atomic-ren-var' {x = x} v (atomic-key Λ₁ Λ₂ α) =
-    let ltel-splitting κ/Λ₂ v' lock-div = split-ltel-var Λ₂ v
-    in renvar x (κ/Λ₂ ⓜ locksˡᵗ Λ₁) (transp-cellˡ lock-div (id-cell {μ = κ/Λ₂} ⓣ-hor α)) (skip-locks Λ₁ v')
-  atomic-ren-var' vzero (σ ∷ rendata y w / x) = renvar y _ id-cell w
-  atomic-ren-var' (vsuc v) (σ ∷ rendata y w / x) = atomic-ren-var' v σ
-  atomic-ren-var' v (σ ⊚π) = let renvar y κ' α w = atomic-ren-var' v σ in renvar y κ' α (vsuc w)
-  atomic-ren-var' (skip-lock .μ v) (σ ,lock⟨ μ ⟩) =
-    let renvar y κ' α w = atomic-ren-var' v σ
-    in renvar y (κ' ⓜ μ) (α ⓣ-hor id-cell) (skip-lock μ w)
-
-  atomic-ren-var : Var x μ T κ Δ → TwoCell μ κ → AtomicRen Γ Δ → Tm Γ T
-  atomic-ren-var v α σ = let renvar y κ' β w = atomic-ren-var' v σ in var' y {w} (β ⓣ-vert α)
+  atomic-ren-var : Var μ x T Δ ◇ → AtomicRen Γ Δ → Tm Γ T
+  atomic-ren-var v σ = let somevar ρ y w = atomic-ren-var' ◇ v σ in var' y {w}
 
   ren-data-struct : RenSubDataStructure RenData
   RenSubDataStructure.newV ren-data-struct = newRenData
   RenSubDataStructure.atomic-rensub-lookup-var ren-data-struct = atomic-ren-var
-
+{-
 module AtomicRen = AtomicRenSub RenData AtomicRenVar.ren-data-struct
   renaming
     ( AtomicRenSub to AtomicRen
