@@ -189,10 +189,14 @@ module AtomicRenSubDef (V : RenSubData) where
   -- the data type RenSub, which seems to be impossible.
   data AtomicRenSub : Ctx m → Ctx m → Set where
     [] : AtomicRenSub Γ ◇
-    _∷_/_ : AtomicRenSub Γ Δ → V μ T Γ → (x : Name) → AtomicRenSub Γ (Δ ,, μ ∣ x ∈ T)
+    idᵃ : AtomicRenSub Γ Γ
+      -- ^ The identity atomic rensub could be implemented in multiple
+      --    ways using the other constructors, but those are generally
+      --    more expensive to apply to a term.
     _⊚π : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) Δ
     _,lock⟨_⟩ : AtomicRenSub Γ Δ → (μ : Modality n m) → AtomicRenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
     atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locksˡᵗ Λ₂) (locksˡᵗ Λ₁) → AtomicRenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
+    _∷_/_ : AtomicRenSub Γ Δ → V μ T Γ → (x : Name) → AtomicRenSub Γ (Δ ,, μ ∣ x ∈ T)
 
 -- In order to obtain useful results for renamings/substitutions, the
 -- type family representing the data assigned to variables must be
@@ -211,8 +215,8 @@ module AtomicRenSub
   open AtomicRenSubDef V public
   open RenSubDataStructure rensub-struct
 
-  id-atomic-rensub : AtomicRenSub Γ Γ
-  id-atomic-rensub = atomic-key ◇ ◇ id-cell
+  πᵃ : AtomicRenSub (Γ ,, μ ∣ x ∈ T) Γ
+  πᵃ = idᵃ ⊚π
 
   lift-atomic-rensub : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
   lift-atomic-rensub {x = x} σ = (σ ⊚π) ∷ newV / x
@@ -252,12 +256,12 @@ module RenSub
   []rs = id ⊚a []
 
   π-rensub : RenSub (Γ ,, μ ∣ x ∈ T) Γ
-  π-rensub = id ⊚a (id-atomic-rensub ⊚π)
+  π-rensub = id ⊚a πᵃ
 
   -- Case splitting on the first argument is not strictly necessary
   -- here, but it avoids 1 additional term traversal in the second case.
   _∷ʳˢ_/_ : RenSub Γ Δ → V μ T Γ → (x : Name) → RenSub Γ (Δ ,, μ ∣ x ∈ T)
-  id        ∷ʳˢ v / x = id ⊚a (id-atomic-rensub ∷ v / x)
+  id        ∷ʳˢ v / x = id ⊚a (idᵃ ∷ v / x)
   (σ ⊚a τᵃ) ∷ʳˢ v / x = lift-rensub σ ⊚a (τᵃ ∷ v / x)
 
   _,rslock⟨_⟩ : RenSub Γ Δ → (μ : Modality m n) → RenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
@@ -295,15 +299,16 @@ record SomeVar (T : Ty n) (Γ : Ctx m) (Λ : LockTele m n) : Set where
   constructor somevar
   field
     {ren-mode} : Mode
-    ren-mod : Modality n ren-mode
-    ren-name : Name
-    ren-var : Var ren-mod ren-name T Γ Λ
+    {ren-mod} : Modality n ren-mode
+    {ren-name} : Name
+    get-var : Var ren-mod ren-name T Γ Λ
+open SomeVar using (get-var)
 
 RenData : RenSubData
 RenData μ T Γ = SomeVar T Γ (lock⟨ μ ⟩, ◇)
 
 newRenData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → RenData μ T (Γ ,, μ ∣ x ∈ T)
-newRenData = somevar _ _ (vzero id-cell)
+newRenData = somevar (vzero id-cell)
 
 module AtomicRenDef = AtomicRenSubDef RenData renaming (AtomicRenSub to AtomicRen)
 
@@ -312,19 +317,16 @@ module AtomicRenVar where
 
   atomic-ren-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) →
                     Var μ x T Δ Λ → AtomicRen Γ Δ → SomeVar T Γ Λ
-  atomic-ren-var' Λ v (atomic-key Θ Ψ α) =
-    somevar _ _ (vlocks Θ (apply-2-cell-var (Ψ ++ˡᵗ Λ) (Θ ++ˡᵗ Λ) (whiskerˡᵗ-right Ψ Θ α) (unvlocks Ψ v)))
-  atomic-ren-var' Λ (vzero α) (σ ∷ somevar ρ z w / x) = somevar ρ z (apply-2-cell-var (lock⟨ _ ⟩, ◇) Λ α w)
-  atomic-ren-var' Λ (vsuc v)  (σ ∷ _ / y)             = atomic-ren-var' Λ v σ
-  atomic-ren-var' Λ v (σ ⊚π) =
-    let somevar ρ y w = atomic-ren-var' Λ v σ
-    in  somevar ρ y (vsuc w)
-  atomic-ren-var' Λ (vlock v) (σ ,lock⟨ μ ⟩) =
-    let somevar ρ y w = atomic-ren-var' (lock⟨ μ ⟩, Λ) v σ
-    in  somevar ρ y (vlock w)
+  atomic-ren-var' Λ v         idᵃ                 = somevar v
+  atomic-ren-var' Λ v         (σ ⊚π)              = somevar (vsuc (get-var (atomic-ren-var' Λ v σ)))
+  atomic-ren-var' Λ (vlock v) (σ ,lock⟨ μ ⟩)      = somevar (vlock (get-var (atomic-ren-var' (lock⟨ μ ⟩, Λ) v σ)))
+  atomic-ren-var' Λ v         (atomic-key Θ Ψ α)  =
+    somevar (vlocks Θ (apply-2-cell-var (Ψ ++ˡᵗ Λ) (Θ ++ˡᵗ Λ) (whiskerˡᵗ-right Ψ Θ α) (unvlocks Ψ v)))
+  atomic-ren-var' Λ (vzero α) (σ ∷ somevar w / x) = somevar (apply-2-cell-var (lock⟨ _ ⟩, ◇) Λ α w)
+  atomic-ren-var' Λ (vsuc v)  (σ ∷ _ / y)         = atomic-ren-var' Λ v σ
 
   atomic-ren-var : Var μ x T Δ ◇ → AtomicRen Γ Δ → Tm Γ T
-  atomic-ren-var v σ = let somevar ρ y w = atomic-ren-var' ◇ v σ in var' y {w}
+  atomic-ren-var v σ = var' _ {get-var (atomic-ren-var' ◇ v σ)}
 
   ren-data-struct : RenSubDataStructure RenData
   RenSubDataStructure.newV ren-data-struct = newRenData
