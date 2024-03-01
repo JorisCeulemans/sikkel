@@ -119,6 +119,10 @@ v1-𝟙 = var' _ {vsuc (vzero id-cell)}
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 
+var-lt : (Λ : LockTele n m) → Var x T Γ Λ → Tm (Γ ,ˡᵗ Λ) T
+var-lt ◇              v = var' _ {v}
+var-lt (lock⟨ μ ⟩, Λ) v = var-lt Λ (vlock v)
+
 
 --------------------------------------------------
 -- Traversals of MSTT terms
@@ -221,6 +225,10 @@ module AtomicRenSub
   lift-atomic-rensub : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
   lift-atomic-rensub {x = x} σ = (σ ⊚π) ∷ newV / x
 
+  _,locks⟨_⟩ : AtomicRenSub Γ Δ → (Λ : LockTele m n) → AtomicRenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
+  σ ,locks⟨ ◇ ⟩            = σ
+  σ ,locks⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,lock⟨ μ ⟩) ,locks⟨ Λ ⟩
+
   AtomicRenSubTrav : TravStruct AtomicRenSub
   TravStruct.vr AtomicRenSubTrav = atomic-rensub-lookup-var
   TravStruct.lift AtomicRenSubTrav = lift-atomic-rensub
@@ -286,8 +294,13 @@ module RenSub
 apply-2-cell-var : (Θ Ψ : LockTele n m) (α : TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ)) →
                    Var x T Γ Θ → Var x T Γ Ψ
 apply-2-cell-var Θ Ψ α (vzero β) = vzero (α ⓣ-vert β)
-apply-2-cell-var Θ Ψ α (vsuc v) = vsuc (apply-2-cell-var Θ Ψ α v)
+apply-2-cell-var Θ Ψ α (vsuc v)  = vsuc (apply-2-cell-var Θ Ψ α v)
 apply-2-cell-var Θ Ψ α (vlock v) = vlock (apply-2-cell-var _ _ (id-cell ⓣ-hor α) v)
+
+apply-2-cell-var-lt : (Θ Ψ : LockTele n m) (α : TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ)) {Λ : LockTele m o} →
+                      Var x T (Γ ,ˡᵗ Θ) Λ → Var x T (Γ ,ˡᵗ Ψ) Λ
+apply-2-cell-var-lt Θ Ψ α {Λ} v =
+  vlocks Ψ (apply-2-cell-var (Θ ++ˡᵗ Λ) (Ψ ++ˡᵗ Λ) (whiskerˡᵗ-right Θ Ψ α) (unvlocks Θ v))
 
 
 --------------------------------------------------
@@ -318,8 +331,7 @@ module AtomicRenVar where
   atomic-ren-var' Λ v         idᵃ                 = somevar v
   atomic-ren-var' Λ v         (σ ⊚π)              = somevar (vsuc (get-var (atomic-ren-var' Λ v σ)))
   atomic-ren-var' Λ (vlock v) (σ ,lock⟨ μ ⟩)      = somevar (vlock (get-var (atomic-ren-var' (lock⟨ μ ⟩, Λ) v σ)))
-  atomic-ren-var' Λ v         (atomic-key Θ Ψ α)  =
-    somevar (vlocks Θ (apply-2-cell-var (Ψ ++ˡᵗ Λ) (Θ ++ˡᵗ Λ) (whiskerˡᵗ-right Ψ Θ α) (unvlocks Ψ v)))
+  atomic-ren-var' Λ v         (atomic-key Θ Ψ α)  = somevar (apply-2-cell-var-lt Ψ Θ α v)
   atomic-ren-var' Λ (vzero α) (σ ∷ somevar w / x) = somevar (apply-2-cell-var (lock⟨ _ ⟩, ◇) Λ α w)
   atomic-ren-var' Λ (vsuc v)  (σ ∷ _ / y)         = atomic-ren-var' Λ v σ
 
@@ -329,8 +341,10 @@ module AtomicRenVar where
   ren-data-struct : RenSubDataStructure RenData
   RenSubDataStructure.newV ren-data-struct = newRenData
   RenSubDataStructure.atomic-rensub-lookup-var ren-data-struct = atomic-ren-var
-{-
-module AtomicRen = AtomicRenSub RenData AtomicRenVar.ren-data-struct
+
+module AtomicRenM = AtomicRenSub RenData AtomicRenVar.ren-data-struct
+
+open AtomicRenM public
   renaming
     ( AtomicRenSub to AtomicRen
     ; [] to []ar
@@ -338,48 +352,51 @@ module AtomicRen = AtomicRenSub RenData AtomicRenVar.ren-data-struct
     ; _⊚π to _⊚ᵃʳπ
     ; _,lock⟨_⟩ to _,arlock⟨_⟩
     ; atomic-key to atomic-key-ren
-    ; id-atomic-rensub to id-atomic-ren
+    ; idᵃ to idᵃʳ
+    ; πᵃ to πᵃʳ
     ; atomic-rensub-tm to atomic-rename-tm
-    ; lift-atomic-rensub to lift-atomic-ren)
+    ; lift-atomic-rensub to lift-atomic-ren
+    ; _,locks⟨_⟩ to _,arlocks⟨_⟩)
+  using ()
 
 module RenM = RenSub RenData AtomicRenVar.ren-data-struct
 
 open RenM
   renaming
     ( RenSub to Ren
-    ; id to id-ren
+    ; id to idʳ
     ; rensub-tm to rename-tm
     ; lift-rensub to lift-ren
     ; []rs to []r
-    ; π-rensub to π-ren
-    ; _,rslock⟨_⟩ to _,rlock⟨_⟩
+    ; π-rensub to πʳ
+    ; _,rslock⟨_⟩ to _,lockʳ⟨_⟩
     ; key-rensub to key-ren
     ; _⊚rs_ to _⊚r_
     ; rensub-tm-⊚ to ren-tm-⊚)
   using (_⊚a_)
   public
 
-_∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y μ T 𝟙 Γ → (x : Name) → Ren Γ (Δ ,, μ ∣ x ∈ T)
-σ ∷ʳ y , v / x = σ RenM.∷ʳˢ rendata y v / x
+_∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y T (Γ ,lock⟨ μ ⟩) ◇ → (x : Name) → Ren Γ (Δ ,, μ ∣ x ∈ T)
+σ ∷ʳ y , v / x = σ RenM.∷ʳˢ somevar (unvlock v) / x
 
 -- Some special renamings for introducing/removing a trivial lock and
 -- for (un)fusing locks.
 lock𝟙-ren : Ren (Γ ,lock⟨ 𝟙 ⟩) Γ
-lock𝟙-ren = key-ren (◇ ,lock⟨ 𝟙 ⟩) ◇ id-cell
+lock𝟙-ren = key-ren (lock⟨ 𝟙 ⟩, ◇) ◇ id-cell
 
 unlock𝟙-ren : Ren Γ (Γ ,lock⟨ 𝟙 ⟩)
-unlock𝟙-ren = key-ren ◇ (◇ ,lock⟨ 𝟙 ⟩) id-cell
+unlock𝟙-ren = key-ren ◇ (lock⟨ 𝟙 ⟩, ◇) id-cell
 
 fuselocks-ren : Ren (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-fuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⓜ ρ ⟩) (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) id-cell
+fuselocks-ren {μ = μ} {ρ = ρ} = key-ren (lock⟨ μ ⓜ ρ ⟩, ◇) (lock⟨ μ ⟩, lock⟨ ρ ⟩, ◇) id-cell
 
 unfuselocks-ren : Ren (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
-unfuselocks-ren {μ = μ} {ρ = ρ} = key-ren (◇ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (◇ ,lock⟨ μ ⓜ ρ ⟩) id-cell
+unfuselocks-ren {μ = μ} {ρ = ρ} = key-ren (lock⟨ μ ⟩, lock⟨ ρ ⟩, ◇) (lock⟨ μ ⓜ ρ ⟩, ◇) id-cell
 
 -- Specific opertations for weakening a term and for the functorial
 -- behaviour of locks.
 weaken-tm : Tm Γ T → Tm (Γ ,, μ ∣ x ∈ S) T
-weaken-tm t = rename-tm t π-ren
+weaken-tm t = rename-tm t πʳ
 
 lock𝟙-tm : Tm Γ T → Tm (Γ ,lock⟨ 𝟙 ⟩) T
 lock𝟙-tm t = rename-tm t (lock𝟙-ren)
@@ -398,7 +415,7 @@ unfuselocks-tm t = rename-tm t unfuselocks-ren
 -- implementation depends on the functoriality of locks proved above.
 mod-elim' : (μ : Modality n m) (x : Name) (t : Tm Γ ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, μ ∣ x ∈ T) S) → Tm Γ S
 mod-elim' {Γ = Γ} {T = T} {S = S} μ x t s =
-  mod-elim 𝟙 μ x (lock𝟙-tm t) s
+  mod-elim 𝟙 μ x (lock𝟙-tm t) (subst (λ - → Tm (Γ ,, - ∣ x ∈ T) S) (sym mod-unitˡ) s)
 
 syntax mod-elim' μ x t s = let' mod⟨ μ ⟩ x ← t in' s
 
@@ -417,7 +434,7 @@ SubData : Modality n m → Ty n → Ctx m → Set
 SubData μ T Γ = Tm (Γ ,lock⟨ μ ⟩) T
 
 newSubData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → SubData μ T (Γ ,, μ ∣ x ∈ T)
-newSubData {x = x} = var' x {skip-lock _ vzero} id-cell
+newSubData {x = x} = var' x {vlock (vzero id-cell)}
 
 
 module AtomicSubDef = AtomicRenSubDef SubData renaming (AtomicRenSub to AtomicSub)
@@ -426,32 +443,29 @@ module AtomicSubVar where
 
   open AtomicSubDef
 
-  -- TODO: possible performance optimizations
-  --   * Use a "reverse LockTele" (i.e. a cons list instead of a snoc list of modalities) instead of the 1 modality ρ.
-  --     This has the advantage that we do not fuse all the locks together in 1 modality, which is not really necessary,
-  --     and that we do not lock the context with 𝟙 in the final function atomic-sub-var.
+  -- TODO: possible performance optimization
   --   * Instead of immediately applying a renaming, build up 1 renaming in the substitution process and apply it at the end.
   --     In this way, the number of term traversals is reduced.
-  atomic-sub-var' : {Γ Δ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var x μ T κ Γ) →
-                    (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → AtomicSub Δ Γ → Tm (Δ ,lock⟨ ρ ⟩) T
-  atomic-sub-var' {x = x} v ρ α (atomic-key Λ₁ Λ₂ β) =
-    let ltel-splitting κ/Λ₂ w lock-div = split-ltel-var Λ₂ v
-    in var' x {skip-lock ρ (skip-locks Λ₁ w)}
-            (((id-cell {μ = κ/Λ₂}) ⓣ-hor β ⓣ-hor (id-cell {μ = ρ})) ⓣ-vert transp-cellʳ (cong (_ⓜ ρ) (sym lock-div)) α)
-  atomic-sub-var' vzero    ρ α (σ ∷ t / x) = rename-tm t (key-ren (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) α)
-  atomic-sub-var' (vsuc v) ρ α (σ ∷ t / x) = atomic-sub-var' v ρ α σ
-  atomic-sub-var' v ρ α (σ ⊚π) = rename-tm (atomic-sub-var' v ρ α σ) (π-ren ,rlock⟨ _ ⟩)
-  atomic-sub-var' (skip-lock {κ = κ} .μ v) ρ α (σ ,lock⟨ μ ⟩) = unfuselocks-tm (atomic-sub-var' v (μ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α) σ)
+  atomic-sub-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) (σ : AtomicSub Γ Δ) →
+                    Var x T Δ Λ → Tm (Γ ,ˡᵗ Λ) T
+  atomic-sub-var' Λ idᵃ                v         = var-lt Λ v
+  atomic-sub-var' Λ (σ ⊚π)             v         = atomic-rename-tm (atomic-sub-var' Λ σ v) (πᵃʳ ,arlocks⟨ Λ ⟩)
+  atomic-sub-var' Λ (σ ,lock⟨ μ ⟩)     (vlock v) = atomic-sub-var' (lock⟨ μ ⟩, Λ) σ v
+  atomic-sub-var' Λ (atomic-key Θ Ψ α) v         = var-lt Λ (apply-2-cell-var-lt Ψ Θ α v)
+  atomic-sub-var' Λ (σ ∷ t / x)        (vzero α) = atomic-rename-tm t (atomic-key-ren Λ (lock⟨ _ ⟩, ◇) α)
+  atomic-sub-var' Λ (σ ∷ t / y)        (vsuc v)  = atomic-sub-var' Λ σ v
 
-  atomic-sub-var : Var x μ T κ Δ → TwoCell μ κ → AtomicSub Γ Δ → Tm Γ T
-  atomic-sub-var v α σ = unlock𝟙-tm (atomic-sub-var' v 𝟙 (transp-cellʳ (sym mod-unitʳ) α) σ)
+  atomic-sub-var : Var x T Δ ◇ → AtomicSub Γ Δ → Tm Γ T
+  atomic-sub-var v σ = atomic-sub-var' ◇ σ v
 
   sub-data-struct : RenSubDataStructure SubData
   RenSubDataStructure.newV sub-data-struct = newSubData
   RenSubDataStructure.atomic-rensub-lookup-var sub-data-struct = atomic-sub-var
 
 
-module AtomicSub = AtomicRenSub SubData AtomicSubVar.sub-data-struct
+module AtomicSubM = AtomicRenSub SubData AtomicSubVar.sub-data-struct
+
+open AtomicSubM
   renaming
     ( AtomicRenSub to AtomicSub
     ; [] to []as
@@ -459,9 +473,13 @@ module AtomicSub = AtomicRenSub SubData AtomicSubVar.sub-data-struct
     ; _⊚π to _⊚ᵃˢπ
     ; _,lock⟨_⟩ to _,aslock⟨_⟩
     ; atomic-key to atomic-key-sub
-    ; id-atomic-rensub to id-atomic-sub
+    ; idᵃ to idᵃˢ
+    ; πᵃ to πᵃˢ
     ; atomic-rensub-tm to atomic-sub-tm
-    ; lift-atomic-rensub to lift-atomic-sub)
+    ; lift-atomic-rensub to lift-atomic-sub
+    ; _,locks⟨_⟩ to _,aslocks⟨_⟩)
+  using ()
+  public
 
 module SubM = RenSub SubData AtomicSubVar.sub-data-struct
 
@@ -541,5 +559,4 @@ tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (snd p) = cong snd (tm-weaken-subs
 
 tm-weaken-subst-trivial : (t : Tm Γ T) (s : Tm Γ S) → (t [ π ]tm) [ s / x ]tm ≡ t
 tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-multi ◇ t
--}
 -}
