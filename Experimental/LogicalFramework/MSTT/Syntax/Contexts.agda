@@ -75,8 +75,8 @@ _++ˡᵗ_ : LockTele m n → LockTele n o → LockTele m o
 (lock⟨ μ ⟩, Λ) ++ˡᵗ Θ = lock⟨ μ ⟩, (Λ ++ˡᵗ Θ)
 
 ++ˡᵗ-locks : (Λ : LockTele m n) {Θ : LockTele n o} → locksˡᵗ Λ ⓜ locksˡᵗ Θ ≡ locksˡᵗ (Λ ++ˡᵗ Θ)
-++ˡᵗ-locks ◇ = refl
-++ˡᵗ-locks (lock⟨ μ ⟩, Λ) = trans (mod-assoc μ) (cong (μ ⓜ_) (++ˡᵗ-locks Λ))
+++ˡᵗ-locks ◇ = mod-unitˡ
+++ˡᵗ-locks (lock⟨ μ ⟩, Λ) {Θ = Θ} = trans (mod-assoc (locksˡᵗ Θ)) (cong (μ ⓜ_) (++ˡᵗ-locks Λ))
 
 ,ˡᵗ-++ˡᵗ : {Γ : Ctx m} (Λ : LockTele m n) {Θ : LockTele n o} →
          Γ ,ˡᵗ (Λ ++ˡᵗ Θ) ≡ Γ ,ˡᵗ Λ ,ˡᵗ Θ
@@ -88,6 +88,6 @@ whiskerˡᵗ-left : (Λ : LockTele m n) {Θ Ψ : LockTele n o} → TwoCell (lock
 whiskerˡᵗ-left ◇ α = α
 whiskerˡᵗ-left (lock⟨ μ ⟩, Λ) α = (id-cell {μ = μ}) ⓣ-hor (whiskerˡᵗ-left Λ α)
 
-whiskerˡᵗ-right : {Θ Ψ : LockTele m n} (Λ : LockTele n o) → TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ) →
+whiskerˡᵗ-right : (Θ Ψ : LockTele m n) {Λ : LockTele n o} → TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ) →
                   TwoCell (locksˡᵗ (Θ ++ˡᵗ Λ)) (locksˡᵗ (Ψ ++ˡᵗ Λ))
-whiskerˡᵗ-right {Θ = Θ} {Ψ} Λ α = transp-cellʳ (++ˡᵗ-locks Ψ) (transp-cellˡ (++ˡᵗ-locks Θ) (α ⓣ-hor id-cell {μ = locksˡᵗ Λ}))
+whiskerˡᵗ-right Θ Ψ {Λ} α = transp-cellʳ (++ˡᵗ-locks Ψ) (transp-cellˡ (++ˡᵗ-locks Θ) (α ⓣ-hor id-cell {μ = locksˡᵗ Λ}))

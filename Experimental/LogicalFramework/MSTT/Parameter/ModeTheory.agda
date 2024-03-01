@@ -69,13 +69,13 @@ record MTComposition (mtb : MTBasis) : Set₁ where
                          ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵈ ⟦ μ ⟧non-triv-mod DRA.ⓓ ⟦ κ ⟧non-triv-mod
 
   _ⓜ_ : ∀ {m n o} → Modality n o → Modality m n → Modality m o
-  𝟙 ⓜ ρ = ρ
-  ‵ μ ⓜ 𝟙 = ‵ μ
+  μ   ⓜ 𝟙 = μ
+  𝟙   ⓜ ‵ ρ = ‵ ρ
   ‵ μ ⓜ ‵ ρ = μ ⓜnon-triv ρ
 
   ⟦ⓜ⟧-sound : ∀ {m n o} (μ : Modality n o) (κ : Modality m n) → ⟦ μ ⓜ κ ⟧mod ≅ᵈ ⟦ μ ⟧mod ⓓ ⟦ κ ⟧mod
-  ⟦ⓜ⟧-sound 𝟙     κ     = symᵈ (𝟙-unitˡ _)
-  ⟦ⓜ⟧-sound (‵ μ) 𝟙     = symᵈ (𝟙-unitʳ _)
+  ⟦ⓜ⟧-sound μ     𝟙     = symᵈ (𝟙-unitʳ _)
+  ⟦ⓜ⟧-sound 𝟙     (‵ κ) = symᵈ (𝟙-unitˡ _)
   ⟦ⓜ⟧-sound (‵ μ) (‵ κ) = ⟦ⓜ⟧-non-triv-sound μ κ
 
 
@@ -90,17 +90,17 @@ record MTCompositionLaws (mtb : MTBasis) (mtc : MTComposition mtb) : Set where
                          (μ ⓜnon-triv ρ) ⓜ ‵ κ ≡ ‵ μ ⓜ (ρ ⓜnon-triv κ)
 
   mod-unitˡ : ∀ {m n} {μ : Modality m n} → 𝟙 ⓜ μ ≡ μ
-  mod-unitˡ  = refl
+  mod-unitˡ {μ = 𝟙}   = refl
+  mod-unitˡ {μ = ‵ μ} = refl
 
   mod-unitʳ : ∀ {m n} {μ : Modality m n} → μ ⓜ 𝟙 ≡ μ
-  mod-unitʳ {μ = 𝟙} = refl
-  mod-unitʳ {μ = ‵ μ} = refl
+  mod-unitʳ = refl
 
-  mod-assoc : ∀ {m n o p} (μ : Modality o p) {ρ : Modality n o} {κ : Modality m n} → (μ ⓜ ρ) ⓜ κ ≡ μ ⓜ (ρ ⓜ κ)
+  mod-assoc : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) → (μ ⓜ ρ) ⓜ κ ≡ μ ⓜ (ρ ⓜ κ)
   mod-assoc 𝟙 = refl
-  mod-assoc (‵ μ) {ρ = 𝟙} = refl
-  mod-assoc (‵ μ) {ρ = ‵ ρ} {κ = 𝟙} = mod-unitʳ
-  mod-assoc (‵ μ) {ρ = ‵ ρ} {κ = ‵ κ} = mod-non-triv-assoc μ ρ κ
+  mod-assoc {ρ = 𝟙} (‵ κ) = refl
+  mod-assoc {μ = 𝟙} {ρ = ‵ ρ} (‵ κ) = sym mod-unitˡ
+  mod-assoc {μ = ‵ μ} {ρ = ‵ ρ} (‵ κ) = mod-non-triv-assoc μ ρ κ
 
 
 record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
