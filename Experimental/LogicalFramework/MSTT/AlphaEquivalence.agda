@@ -28,19 +28,20 @@ private variable
   m n : Mode
   μ κ : Modality m n
   Γ : Ctx m
+  Λ : LockTele m n
   T : Ty m
   x : String
 
 
-erase-names-var : Var x μ T κ Γ → NMLS.Var _ μ T κ (erase-names-ctx Γ)
-erase-names-var vzero = NMLS.vzero
+erase-names-var : Var x T Γ Λ → NMLS.Var _ T (erase-names-ctx Γ) Λ
+erase-names-var (vzero α) = NMLS.vzero α
 erase-names-var (vsuc v) = NMLS.vsuc (erase-names-var v)
-erase-names-var (skip-lock ρ v) = NMLS.skip-lock ρ (erase-names-var v)
+erase-names-var (vlock v) = NMLS.vlock (erase-names-var v)
 
 erase-names-tm : Tm Γ T → NMLS.Tm (erase-names-ctx Γ) T
 erase-names-ext-tmargs : ∀ {arginfos} → ExtTmArgs arginfos Γ → NMLS.ExtTmArgs (map erase-names-tmarg-info arginfos) (erase-names-ctx Γ)
 
-erase-names-tm (var' x {v} α) = NMLS.var' _ {erase-names-var v} α
+erase-names-tm (var' x {v}) = NMLS.var' _ {erase-names-var v}
 erase-names-tm (mod⟨ μ ⟩ t) = NMLS.mod⟨ μ ⟩ erase-names-tm t
 erase-names-tm (mod-elim ρ μ x t s) = NMLS.mod-elim ρ μ _ (erase-names-tm t) (erase-names-tm s)
 erase-names-tm (lam[ μ ∣ x ∈ T ] t) = NMLS.lam[ μ ∣ _ ∈ T ] erase-names-tm t

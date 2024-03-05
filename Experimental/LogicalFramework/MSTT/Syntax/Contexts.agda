@@ -54,29 +54,15 @@ locks-tel (Θ ,, μ ∣ x ∈ T) = locks-tel Θ
 locks-tel (Θ ,lock⟨ μ ⟩) = locks-tel Θ ⓜ μ
 
 
--- Lock telescopes consist of only locks (so no variables).
--- They are defined as "well-moded" cons lists which reflects their usage.
-data LockTele (m : Mode) : Mode → Set where
-  ◇ : LockTele m m
-  lock⟨_⟩,_ : (μ : Modality o m) (Λ : LockTele o n) → LockTele m n
+--------------------------------------------------
+-- Operations relating to lock telescopes
+
+open import Experimental.LogicalFramework.MSTT.Syntax.LockTele.Base ℳ public
 
 infixl 5 _,ˡᵗ_
 _,ˡᵗ_ : Ctx m → LockTele m n → Ctx n
 Γ ,ˡᵗ ◇ = Γ
 Γ ,ˡᵗ (lock⟨ μ ⟩, Λ) = (Γ ,lock⟨ μ ⟩) ,ˡᵗ Λ
-
-locksˡᵗ : LockTele m n → Modality n m
-locksˡᵗ ◇ = 𝟙
-locksˡᵗ (lock⟨ μ ⟩, Λ) = μ ⓜ locksˡᵗ Λ
-
-infixl 6 _++ˡᵗ_
-_++ˡᵗ_ : LockTele m n → LockTele n o → LockTele m o
-◇ ++ˡᵗ Θ = Θ
-(lock⟨ μ ⟩, Λ) ++ˡᵗ Θ = lock⟨ μ ⟩, (Λ ++ˡᵗ Θ)
-
-++ˡᵗ-locks : (Λ : LockTele m n) {Θ : LockTele n o} → locksˡᵗ Λ ⓜ locksˡᵗ Θ ≡ locksˡᵗ (Λ ++ˡᵗ Θ)
-++ˡᵗ-locks ◇ = mod-unitˡ
-++ˡᵗ-locks (lock⟨ μ ⟩, Λ) {Θ = Θ} = trans (mod-assoc (locksˡᵗ Θ)) (cong (μ ⓜ_) (++ˡᵗ-locks Λ))
 
 ,ˡᵗ-++ˡᵗ : {Γ : Ctx m} (Λ : LockTele m n) {Θ : LockTele n o} →
          Γ ,ˡᵗ (Λ ++ˡᵗ Θ) ≡ Γ ,ˡᵗ Λ ,ˡᵗ Θ
