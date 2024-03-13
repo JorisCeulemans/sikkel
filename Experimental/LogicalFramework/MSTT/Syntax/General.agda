@@ -486,7 +486,7 @@ module SubM = RenSub SubData AtomicSubVar.sub-data-struct
 open SubM
   renaming
     ( RenSub to Sub
-    ; id to id-sub
+    ; id to idˢ
     ; rensub-tm to _[_]tm
     ; lift-rensub to lift-sub
     ; []rs to []s
@@ -502,7 +502,7 @@ open SubM
 infix 19 _/_ _//_
 
 _/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Sub Γ (Γ ,, μ ∣ x ∈ T)
-t / x = id-sub ∷ˢ t / x
+t / x = idˢ ∷ˢ t / x
 
 _//_ : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ ρ ⟩) S → (y : Name) → Sub (Γ ,, μ ∣ x ∈ T) (Γ ,, ρ ∣ y ∈ S)
 s // y = π ∷ˢ s / y

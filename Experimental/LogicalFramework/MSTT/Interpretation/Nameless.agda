@@ -41,22 +41,21 @@ private variable
   T : Ty m
 
 
-⟦⟧var-helper : {Γ : Ctx m} {μ : Modality n o} {κ : Modality m o} (v : Var _ μ T κ Γ) →
-               (ρ : Modality n m) → TwoCell μ (κ ⓜ ρ) → SemTm ⟦ Γ ,lock⟨ ρ ⟩ ⟧ctx-nmls ⟦ T ⟧ty
-⟦⟧var-helper {T = T} {μ = μ} vzero ρ α =
-  (DRA.dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
+⟦_⟧var : {T : Ty n} {Γ : Ctx m} {Λ : LockTele m n} →
+         Var _ T Γ Λ →
+         SemTm (⟦ Γ ⟧ctx-nmls DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩) ⟦ T ⟧ty
+⟦_⟧var {T = T} (vzero {μ = μ} α) =
+  (dra-elim ⟦ μ ⟧mod (ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
     M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
-⟦⟧var-helper {T = T} (vsuc v) ρ α = (⟦⟧var-helper v ρ α) M.[ ty-closed-natural T ∣ lock-fmap ⟦ ρ ⟧mod M.π ]cl
-⟦⟧var-helper {T = T} (skip-lock {κ = κ} φ v) ρ α =
-  (⟦⟧var-helper v (φ ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)) M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound φ ρ)) ]cl
-
-⟦_,_⟧var-nmls : {μ κ : Modality m n} → (v : Var _ μ T κ Γ) → TwoCell μ κ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
-⟦_,_⟧var-nmls {m = m} {T = T} v α = ⟦⟧var-helper v 𝟙 (transp-cellʳ (sym mod-unitʳ) α)
+⟦_⟧var {T = T} {Λ = Λ} (vsuc v) =
+  ⟦ v ⟧var M.[ ty-closed-natural T ∣ lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]cl
+⟦_⟧var {T = T} (vlock {ρ = ρ} {Λ = Λ} v) =
+  ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]cl
 
 ⟦_⟧tm-nmls : Tm Γ T → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T → ExtTmArgs arginfos Γ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 
-⟦ var' _ {v} α ⟧tm-nmls = ⟦ v , α ⟧var-nmls
+⟦ var' _ {v} ⟧tm-nmls = ⟦ v ⟧var
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim {T = T} {S = S} ρ μ _ t s ⟧tm-nmls =
   ⟦ s ⟧tm-nmls M.[ ty-closed-natural S

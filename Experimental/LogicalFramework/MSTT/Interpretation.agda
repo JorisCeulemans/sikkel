@@ -105,46 +105,43 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 -- Interpretation of substitutions as presheaf morphisms
 --   and soundness proof of term substitution
 
-⟦⟧ltel : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ,ˡᵗ Λ ⟧ctx M.≅ᶜ DRA.lock ⟦ locksˡᵗ Λ ⟧mod ⟦ Γ ⟧ctx
-⟦⟧ltel {m} ◇ = M.reflᶜ
-⟦⟧ltel (Λ ,lock⟨ μ ⟩) =
-  M.transᶜ (M.ctx-functor-cong (DRA.ctx-functor ⟦ μ ⟧mod) (⟦⟧ltel Λ))
-           (M.symᶜ (DRA.lock-iso (⟦ⓜ⟧-sound (locksˡᵗ Λ) μ)))
+,ˡᵗ-sound : {Γ : Ctx m} (Λ : LockTele m n) → ⟦ Γ ,ˡᵗ Λ ⟧ctx M.≅ᶜ DRA.lock ⟦ locksˡᵗ Λ ⟧mod ⟦ Γ ⟧ctx
+,ˡᵗ-sound {m} ◇ = M.reflᶜ
+,ˡᵗ-sound (lock⟨ μ ⟩, Λ) =
+  M.transᶜ (,ˡᵗ-sound Λ) (M.symᶜ (lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ []as ⟧asub = M.!◇ _
+⟦ idᵃˢ ⟧asub = M.id-subst _
 ⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
 ⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
 ⟦ σ ,aslock⟨ μ ⟩ ⟧asub = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
 ⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
-  M.to (⟦⟧ltel Λ₂)
+  M.to (,ˡᵗ-sound Λ₂)
   M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
-  M.⊚ M.from (⟦⟧ltel Λ₁)
+  M.⊚ M.from (,ˡᵗ-sound Λ₁)
 
 ⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ id-sub ⟧sub = M.id-subst _
-⟦ id-sub ⊚a τᵃ ⟧sub = ⟦ τᵃ ⟧asub
-⟦ σ      ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
-
-⟦_⟧var : ∀ {x μ} → Syn.Var x μ T 𝟙 Γ → SemTm ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx ⟦ T ⟧ty
-⟦_⟧var {x = x} {μ = μ} v = ⟦⟧var-helper (erase-names-var v) μ (eq-cell (sym mod-unitˡ))
-
-⟦_⟧rd : ∀ {μ} → RenData μ T Γ → SemTm ⟦ Γ ⟧ctx DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦_⟧rd {μ = μ} (Syn.rendata new-name new-var) = dra-intro ⟦ μ ⟧mod ⟦ new-var ⟧var
+⟦ idˢ ⟧sub = M.id-subst _
+⟦ idˢ ⊚a τᵃ ⟧sub = ⟦ τᵃ ⟧asub
+⟦ σ   ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
 
 ⟦_⟧aren : AtomicRen Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
 ⟦ [] ⟧aren = M.!◇ _
-⟦ _∷_/_ {μ = μ} {T = T} σ t x ⟧aren = ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ⟦ t ⟧rd
+⟦ idᵃʳ ⟧aren = M.id-subst _
+⟦ _∷_/_ {μ = μ} {T = T} σ (somevar v) x ⟧aren =
+  ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ erase-names-var v ⟧var)
 ⟦ σ ⊚π ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
 ⟦ σ ,lock⟨ μ ⟩ ⟧aren = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
-⟦ atomic-key Λ₁ Λ₂ α ⟧aren = M.to (⟦⟧ltel Λ₂)
-                             M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
-                             M.⊚ M.from (⟦⟧ltel Λ₁) 
+⟦ atomic-key Λ₁ Λ₂ α ⟧aren =
+  M.to (,ˡᵗ-sound Λ₂)
+  M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
+  M.⊚ M.from (,ˡᵗ-sound Λ₁)
 
 ⟦_⟧ren : Ren Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ id-ren ⟧ren = M.id-subst _
-⟦ id-ren ⊚a σ ⟧ren = ⟦ σ ⟧aren
-⟦ σs     ⊚a σ ⟧ren = ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren
+⟦ idʳ ⟧ren = M.id-subst _
+⟦ idʳ ⊚a σ ⟧ren = ⟦ σ ⟧aren
+⟦ σs  ⊚a σ ⟧ren = ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren
 
 {-
 ⊹-sound : ∀ {x} (σ : Subst Δ Γ) {T : Ty} → (⟦ σ ⟧subst s⊹) M.≅ˢ ⟦ _⊹⟨_⟩ {T = T} σ x ⟧subst
