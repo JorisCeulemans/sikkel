@@ -47,5 +47,5 @@ infixl 50 _⊛_
 _⊛_ : Tm Γ ⟨ μ ∣ T ⇛ S ⟩ → Tm Γ ⟨ μ ∣ T ⟩ → Tm Γ ⟨ μ ∣ S ⟩
 _⊛_ {μ = μ} f t =
   let' mod⟨ μ ⟩ "dummy f" ← f in'
-  let' mod⟨ μ ⟩ "dummy t" ← t [ π ]tm in'
+  let' mod⟨ μ ⟩ "dummy t" ← weaken-tm t in'
   (mod⟨ μ ⟩ (svar "dummy f" ∙¹ svar "dummy t"))

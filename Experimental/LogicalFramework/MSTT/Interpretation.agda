@@ -26,9 +26,6 @@ import Model.Type.Product as M
 import Model.Type.Constant as M
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Named ℳ 𝒯 𝓉 as Syn
-open Syn.AtomicSub
-open Syn.AtomicRen
-open Syn.AtomicRenSub
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence ℳ 𝒯 𝓉
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.Context ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension ℳ 𝒯 hiding (erase-names-tmext)
@@ -111,12 +108,12 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
   M.transᶜ (,ˡᵗ-sound Λ) (M.symᶜ (lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
 
 ⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ []as ⟧asub = M.!◇ _
+⟦ []ᵃˢ ⟧asub = M.!◇ _
 ⟦ idᵃˢ ⟧asub = M.id-subst _
 ⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
-⟦ σ ⊚ᵃˢπ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
-⟦ σ ,aslock⟨ μ ⟩ ⟧asub = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
-⟦ atomic-key-sub Λ₁ Λ₂ α ⟧asub =
+⟦ σ ⊚πᵃˢ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
+⟦ σ ,lockᵃˢ⟨ μ ⟩ ⟧asub = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
+⟦ keyᵃˢ Λ₁ Λ₂ α ⟧asub =
   M.to (,ˡᵗ-sound Λ₂)
   M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
   M.⊚ M.from (,ˡᵗ-sound Λ₁)
@@ -127,13 +124,13 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦ σ   ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
 
 ⟦_⟧aren : AtomicRen Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ [] ⟧aren = M.!◇ _
+⟦ []ᵃʳ ⟧aren = M.!◇ _
 ⟦ idᵃʳ ⟧aren = M.id-subst _
-⟦ _∷_/_ {μ = μ} {T = T} σ (somevar v) x ⟧aren =
+⟦ _∷ᵃʳ_/_ {μ = μ} {T = T} σ (somevar v) x ⟧aren =
   ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ erase-names-var v ⟧var)
-⟦ σ ⊚π ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
-⟦ σ ,lock⟨ μ ⟩ ⟧aren = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
-⟦ atomic-key Λ₁ Λ₂ α ⟧aren =
+⟦ σ ⊚πᵃʳ ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
+⟦ σ ,lockᵃʳ⟨ μ ⟩ ⟧aren = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
+⟦ keyᵃʳ Λ₁ Λ₂ α ⟧aren =
   M.to (,ˡᵗ-sound Λ₂)
   M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
   M.⊚ M.from (,ˡᵗ-sound Λ₁)

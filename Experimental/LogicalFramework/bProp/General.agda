@@ -111,35 +111,35 @@ open bPropTravStruct using (traverse-bprop)
 
 
 renbPropTrav : bPropTravStruct Ren
-bPropTravStruct.trav-tm renbPropTrav = rename-tm
-bPropTravStruct.lift renbPropTrav = lift-ren
-bPropTravStruct.lock renbPropTrav = λ σ → σ ,rlock⟨ _ ⟩
+bPropTravStruct.trav-tm renbPropTrav = _[_]tmʳ
+bPropTravStruct.lift renbPropTrav = liftʳ
+bPropTravStruct.lock renbPropTrav {μ = μ} = _,lockʳ⟨ μ ⟩
 
-rename-bprop : bProp Δ → Ren Γ Δ → bProp Γ
-rename-bprop = traverse-bprop renbPropTrav
+_[_]bpropʳ : bProp Δ → Ren Γ Δ → bProp Γ
+_[_]bpropʳ = traverse-bprop renbPropTrav
 
 
 subbPropTrav : bPropTravStruct Sub
-bPropTravStruct.trav-tm subbPropTrav = _[_]tm
-bPropTravStruct.lift subbPropTrav = lift-sub
-bPropTravStruct.lock subbPropTrav = λ σ → σ ,slock⟨ _ ⟩
+bPropTravStruct.trav-tm subbPropTrav = _[_]tmˢ
+bPropTravStruct.lift subbPropTrav = liftˢ
+bPropTravStruct.lock subbPropTrav {μ = μ} = _,lockˢ⟨ μ ⟩
 
-_[_]bprop : bProp Δ → Sub Γ Δ → bProp Γ
-φ [ σ ]bprop = traverse-bprop subbPropTrav φ σ
+_[_]bpropˢ : bProp Δ → Sub Γ Δ → bProp Γ
+φ [ σ ]bpropˢ = traverse-bprop subbPropTrav φ σ
 
 
 -- Isomorphisms witnessing the functoriality of locks (wrt propositions)
 lock𝟙-bprop : bProp Γ → bProp (Γ ,lock⟨ 𝟙 ⟩)
-lock𝟙-bprop t = rename-bprop t (lock𝟙-ren)
+lock𝟙-bprop t = t [ lock𝟙-ren ]bpropʳ
 
 unlock𝟙-bprop : bProp (Γ ,lock⟨ 𝟙 ⟩) → bProp Γ
-unlock𝟙-bprop t = rename-bprop t (unlock𝟙-ren)
+unlock𝟙-bprop t = t [ unlock𝟙-ren ]bpropʳ
 
 fuselocks-bprop : bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) → bProp (Γ ,lock⟨ μ ⓜ ρ ⟩)
-fuselocks-bprop t = rename-bprop t fuselocks-ren
+fuselocks-bprop t = t [ fuselocks-ren ]bpropʳ
 
 unfuselocks-bprop : bProp (Γ ,lock⟨ μ ⓜ ρ ⟩) → bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-unfuselocks-bprop t = rename-bprop t unfuselocks-ren
+unfuselocks-bprop t = t [ unfuselocks-ren ]bpropʳ
 
 
 _⊃_ : (φ ψ : bProp Γ) → bProp Γ

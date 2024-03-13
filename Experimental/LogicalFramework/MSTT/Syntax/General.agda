@@ -347,16 +347,16 @@ module AtomicRenM = AtomicRenSub RenData AtomicRenVar.ren-data-struct
 open AtomicRenM public
   renaming
     ( AtomicRenSub to AtomicRen
-    ; [] to []ar
+    ; [] to []ᵃʳ
     ; _∷_/_ to _∷ᵃʳ_/_
-    ; _⊚π to _⊚ᵃʳπ
-    ; _,lock⟨_⟩ to _,arlock⟨_⟩
-    ; atomic-key to atomic-key-ren
+    ; _⊚π to _⊚πᵃʳ
+    ; _,lock⟨_⟩ to _,lockᵃʳ⟨_⟩
+    ; atomic-key to keyᵃʳ
     ; idᵃ to idᵃʳ
     ; πᵃ to πᵃʳ
-    ; atomic-rensub-tm to atomic-rename-tm
-    ; lift-atomic-rensub to lift-atomic-ren
-    ; _,locks⟨_⟩ to _,arlocks⟨_⟩)
+    ; atomic-rensub-tm to infixl 8 _[_]tmᵃʳ
+    ; lift-atomic-rensub to liftᵃʳ
+    ; _,locks⟨_⟩ to _,locksᵃʳ⟨_⟩)
   using ()
 
 module RenM = RenSub RenData AtomicRenVar.ren-data-struct
@@ -365,13 +365,13 @@ open RenM
   renaming
     ( RenSub to Ren
     ; id to idʳ
-    ; rensub-tm to rename-tm
-    ; lift-rensub to lift-ren
-    ; []rs to []r
+    ; rensub-tm to infixl 8 _[_]tmʳ
+    ; lift-rensub to liftʳ
+    ; []rs to []ʳ
     ; π-rensub to πʳ
     ; _,rslock⟨_⟩ to _,lockʳ⟨_⟩
-    ; key-rensub to key-ren
-    ; _⊚rs_ to _⊚r_
+    ; key-rensub to keyʳ
+    ; _⊚rs_ to _⊚ʳ_
     ; rensub-tm-⊚ to ren-tm-⊚)
   using (_⊚a_)
   public
@@ -382,33 +382,33 @@ _∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y T (Γ ,lock⟨ μ ⟩) ◇ → 
 -- Some special renamings for introducing/removing a trivial lock and
 -- for (un)fusing locks.
 lock𝟙-ren : Ren (Γ ,lock⟨ 𝟙 ⟩) Γ
-lock𝟙-ren = key-ren (lock⟨ 𝟙 ⟩, ◇) ◇ id-cell
+lock𝟙-ren = keyʳ (lock⟨ 𝟙 ⟩, ◇) ◇ id-cell
 
 unlock𝟙-ren : Ren Γ (Γ ,lock⟨ 𝟙 ⟩)
-unlock𝟙-ren = key-ren ◇ (lock⟨ 𝟙 ⟩, ◇) id-cell
+unlock𝟙-ren = keyʳ ◇ (lock⟨ 𝟙 ⟩, ◇) id-cell
 
 fuselocks-ren : Ren (Γ ,lock⟨ μ ⓜ ρ ⟩) (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)
-fuselocks-ren {μ = μ} {ρ = ρ} = key-ren (lock⟨ μ ⓜ ρ ⟩, ◇) (lock⟨ μ ⟩, lock⟨ ρ ⟩, ◇) id-cell
+fuselocks-ren {μ = μ} {ρ = ρ} = keyʳ (lock⟨ μ ⓜ ρ ⟩, ◇) (lock⟨ μ ⟩, lock⟨ ρ ⟩, ◇) id-cell
 
 unfuselocks-ren : Ren (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) (Γ ,lock⟨ μ ⓜ ρ ⟩)
-unfuselocks-ren {μ = μ} {ρ = ρ} = key-ren (lock⟨ μ ⟩, lock⟨ ρ ⟩, ◇) (lock⟨ μ ⓜ ρ ⟩, ◇) id-cell
+unfuselocks-ren {μ = μ} {ρ = ρ} = keyʳ (lock⟨ μ ⟩, lock⟨ ρ ⟩, ◇) (lock⟨ μ ⓜ ρ ⟩, ◇) id-cell
 
 -- Specific opertations for weakening a term and for the functorial
 -- behaviour of locks.
 weaken-tm : Tm Γ T → Tm (Γ ,, μ ∣ x ∈ S) T
-weaken-tm t = rename-tm t πʳ
+weaken-tm t = t [ πʳ ]tmʳ
 
 lock𝟙-tm : Tm Γ T → Tm (Γ ,lock⟨ 𝟙 ⟩) T
-lock𝟙-tm t = rename-tm t (lock𝟙-ren)
+lock𝟙-tm t = t [ lock𝟙-ren ]tmʳ
 
 unlock𝟙-tm : Tm (Γ ,lock⟨ 𝟙 ⟩) T → Tm Γ T
-unlock𝟙-tm t = rename-tm t (unlock𝟙-ren)
+unlock𝟙-tm t = t [ unlock𝟙-ren ]tmʳ
 
 fuselocks-tm : Tm (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T
-fuselocks-tm t = rename-tm t fuselocks-ren
+fuselocks-tm t = t [ fuselocks-ren ]tmʳ
 
 unfuselocks-tm : Tm (Γ ,lock⟨ μ ⓜ ρ ⟩) T → Tm (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) T
-unfuselocks-tm t = rename-tm t unfuselocks-ren
+unfuselocks-tm t = t [ unfuselocks-ren ]tmʳ
 
 
 -- Some simpler term formers than the ones in the original syntax. The
@@ -449,10 +449,10 @@ module AtomicSubVar where
   atomic-sub-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) (σ : AtomicSub Γ Δ) →
                     Var x T Δ Λ → Tm (Γ ,ˡᵗ Λ) T
   atomic-sub-var' Λ idᵃ                v         = var-lt Λ v
-  atomic-sub-var' Λ (σ ⊚π)             v         = atomic-rename-tm (atomic-sub-var' Λ σ v) (πᵃʳ ,arlocks⟨ Λ ⟩)
+  atomic-sub-var' Λ (σ ⊚π)             v         = (atomic-sub-var' Λ σ v) [ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ]tmᵃʳ
   atomic-sub-var' Λ (σ ,lock⟨ μ ⟩)     (vlock v) = atomic-sub-var' (lock⟨ μ ⟩, Λ) σ v
   atomic-sub-var' Λ (atomic-key Θ Ψ α) v         = var-lt Λ (apply-2-cell-var-lt Ψ Θ α v)
-  atomic-sub-var' Λ (σ ∷ t / x)        (vzero α) = atomic-rename-tm t (atomic-key-ren Λ (lock⟨ _ ⟩, ◇) α)
+  atomic-sub-var' Λ (σ ∷ t / x)        (vzero α) = t [ keyᵃʳ Λ (lock⟨ _ ⟩, ◇) α ]tmᵃʳ
   atomic-sub-var' Λ (σ ∷ t / y)        (vsuc v)  = atomic-sub-var' Λ σ v
 
   atomic-sub-var : Var x T Δ ◇ → AtomicSub Γ Δ → Tm Γ T
@@ -468,16 +468,16 @@ module AtomicSubM = AtomicRenSub SubData AtomicSubVar.sub-data-struct
 open AtomicSubM
   renaming
     ( AtomicRenSub to AtomicSub
-    ; [] to []as
+    ; [] to []ᵃˢ
     ; _∷_/_ to _∷ᵃˢ_/_
-    ; _⊚π to _⊚ᵃˢπ
-    ; _,lock⟨_⟩ to _,aslock⟨_⟩
-    ; atomic-key to atomic-key-sub
+    ; _⊚π to _⊚πᵃˢ
+    ; _,lock⟨_⟩ to _,lockᵃˢ⟨_⟩
+    ; atomic-key to keyᵃˢ
     ; idᵃ to idᵃˢ
     ; πᵃ to πᵃˢ
-    ; atomic-rensub-tm to atomic-sub-tm
-    ; lift-atomic-rensub to lift-atomic-sub
-    ; _,locks⟨_⟩ to _,aslocks⟨_⟩)
+    ; atomic-rensub-tm to _[_]tmᵃˢ
+    ; lift-atomic-rensub to liftᵃˢ
+    ; _,locks⟨_⟩ to _,locksᵃˢ⟨_⟩)
   using ()
   public
 
@@ -487,14 +487,14 @@ open SubM
   renaming
     ( RenSub to Sub
     ; id to idˢ
-    ; rensub-tm to _[_]tm
-    ; lift-rensub to lift-sub
-    ; []rs to []s
+    ; rensub-tm to _[_]tmˢ
+    ; lift-rensub to liftˢ
+    ; []rs to []ˢ
     ; _∷ʳˢ_/_ to _∷ˢ_/_
-    ; π-rensub to π
-    ; _,rslock⟨_⟩ to _,slock⟨_⟩
-    ; key-rensub to key-sub
-    ; _⊚rs_ to _⊚s_
+    ; π-rensub to πˢ
+    ; _,rslock⟨_⟩ to _,lockˢ⟨_⟩
+    ; key-rensub to keyˢ
+    ; _⊚rs_ to _⊚ˢ_
     ; rensub-tm-⊚ to sub-tm-⊚)
   using (_⊚a_)
   public
@@ -505,7 +505,7 @@ _/_ : Tm (Γ ,lock⟨ μ ⟩) T → (x : Name) → Sub Γ (Γ ,, μ ∣ x ∈ T)
 t / x = idˢ ∷ˢ t / x
 
 _//_ : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ ρ ⟩) S → (y : Name) → Sub (Γ ,, μ ∣ x ∈ T) (Γ ,, ρ ∣ y ∈ S)
-s // y = π ∷ˢ s / y
+s // y = πˢ ∷ˢ s / y
 
 {-
 --------------------------------------------------
