@@ -36,39 +36,16 @@ private variable
   x y : String
 
 
-bisubst : {A B : Set} (C : A → B → Set) {x y : A} {z w : B} → x Ag.≡ y → z Ag.≡ w → C x z → C y w
-bisubst C refl refl c = c
-
-bisubst-uip : {A B : Set} (C : A → B → Set) {x : A} {z : B} (p : x Ag.≡ x) (q : z Ag.≡ z) (c : C x z) →
-              c Ag.≡ bisubst C p q c
-bisubst-uip C refl refl c = Ag.refl
-
-record IsLockSkip {μ : Modality p n} {T : Ty p} {κ : Modality m n} {Γ : Ctx m} (v : Var x μ T κ Γ) : Set where
-  constructor is-lock-skip
-  field
-    {lockmode} : Mode
-    lockmod : Modality m lockmode
-    κ/lockmod : Modality lockmode n
-    Γ-unlocked : Ctx lockmode
-    ctx-locked : (Γ-unlocked ,lock⟨ lockmod ⟩) Ag.≡ Γ
-    mod-eq : κ/lockmod ⓜ lockmod Ag.≡ κ
-    locked-var : Var x μ T κ/lockmod Γ-unlocked
-    is-locked : bisubst (Var x μ T) mod-eq ctx-locked (skip-lock lockmod locked-var) Ag.≡ v
-
-is-lockskip? : (v : Var x μ T κ Γ) → PCM (IsLockSkip v)
-is-lockskip? (skip-lock ρ v) = return (is-lock-skip ρ _ _ Ag.refl Ag.refl v Ag.refl)
-is-lockskip? _ = throw-error "Expected a lock-skip in the De Bruijn representation of the variable."
-
-_≟var_ : (v w : Var x μ T κ Γ) → PCM (v Ag.≡ w)
-vzero ≟var vzero = return Ag.refl
-vsuc v ≟var (vsuc w) = do
+_≟var_ : {Λ : LockTele m n} (v w : Var x T Γ Λ) → PCM (v Ag.≡ w)
+vzero α ≟var vzero β = do
+  refl ← α ≟cell β
+  return Ag.refl
+vsuc v  ≟var vsuc w  = do
   refl ← v ≟var w
   return Ag.refl
-skip-lock {κ = κ} ρ v ≟var w = do
-  is-lock-skip _ κ' _ refl mod-eq w' var-eq ← is-lockskip? w
-  refl ← κ ≟mod κ'
-  refl ← v ≟var w'
-  return (Ag.trans (bisubst-uip (Var _ _ _) mod-eq Ag.refl (skip-lock ρ v)) var-eq)
+vlock v ≟var vlock w = do
+  refl ← v ≟var w
+  return Ag.refl
 _ ≟var _ = throw-error "Variables are not equal."
 
 
@@ -79,13 +56,9 @@ infix 10 _≟tm_
 _≟tm_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
 ext-tmargs-equal? : ∀ {arginfos} (args1 args2 : ExtTmArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
 
-var' {n = n} {κ = κ} {μ = μ} x {v} α ≟tm var' {n = n'} {κ = κ'} {μ = μ'} y {w} β = do
+var' x {v} ≟tm var' y {w} = do
   refl ← from-dec tm-msg (x Str.≟ y)
-  refl ← n ≟mode n'
-  refl ← κ ≟mod κ'
-  refl ← μ ≟mod μ'
   refl ← v ≟var w
-  refl ← α ≟cell β
   return Ag.refl
 (mod⟨ μ ⟩ t) ≟tm (mod⟨ μ ⟩ s) = do
   refl ← t ≟tm s
