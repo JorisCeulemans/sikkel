@@ -29,7 +29,7 @@ g-iterate' {A = A} = lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]
   löb[later∣ "it" ∈ ⟨ constantly ∣ A ⟩⇛ GStream A ]
   lam[ constantly ∣ "a" ∈ A ]
     g-cons (svar "a")
-           (svar "it" ∙ (svar "f" ∙ var "a" (𝟙≤ltr ⓣ-hor id-cell)))
+           (svar "it" ∙ (svar "f" ∙ var "a" (𝟙≤ltr ⓣ-hor id-cell {μ = constantly})))
 
 
 g-zeros : Tm Γ (GStream Nat')

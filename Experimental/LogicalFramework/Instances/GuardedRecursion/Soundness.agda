@@ -35,11 +35,11 @@ gstream-β-tail-sound Ξ a s =
   M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.ι⁻¹-cong (M.gstream-β-tail _ _)) M.ι-symˡ) M.[ _ ]'
 
 tmlöb-β-sound : (Ξ : ProofCtx ω) {T : Ty ω} (x : String) (t : Tm (to-ctx Ξ ,, later ∣ x ∈ T) T) →
-                Evidence Ξ (löb[later∣ x ∈ T ] t ≡ᵇ t [ rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x ]tm)
+                Evidence Ξ (löb[later∣ x ∈ T ] t ≡ᵇ t [ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ]tmˢ)
 tmlöb-β-sound Ξ {T = T} x t = M.≅ᵗᵐ-to-Id proof M.[ _ ]'
   where
     open M.≅ᵗᵐ-Reasoning
-    proof : M.löb-cl (ty-closed-natural T) ⟦ t ⟧tm M.≅ᵗᵐ ⟦ t [ rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x ]tm ⟧tm
+    proof : M.löb-cl (ty-closed-natural T) ⟦ t ⟧tm M.≅ᵗᵐ ⟦ t [ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ]tmˢ ⟧tm
     proof =
       begin
         M.löb-cl (ty-closed-natural T) ⟦ t ⟧tm
@@ -52,30 +52,30 @@ tmlöb-β-sound Ξ {T = T} x t = M.≅ᵗᵐ-to-Id proof M.[ _ ]'
                                                   M.[ ty-closed-natural T ∣ M.from-earlier ⟦ to-ctx Ξ ⟧ctx ]cl)
                                           M./cl⟨ ty-closed-natural ⟨ later ∣ T ⟩ ⟩ ]cl
       ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (M./cl-cong (ty-closed-natural ⟨ later ∣ T ⟩) (M.next-cong (M.cl-tm-subst-cong-subst (ty-closed-natural T)
-         (M.transˢ (M.⊚-congʳ (M.transˢ (M.id-subst-unitˡ _) M.◄-subst-id)) (M.transˢ (M.id-subst-unitʳ _) (M.id-subst-unitˡ _)))))) ⟨
+         (M.transˢ (M.⊚-congʳ (M.id-subst-unitˡ _)) (M.transˢ (M.id-subst-unitʳ _) (M.id-subst-unitˡ _)))))) ⟨
         ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.next ((M.löb-cl (ty-closed-natural T) ⟦ t ⟧tm)
-                                                  M.[ ty-closed-natural T ∣ ⟦ key-ren {Γ = to-ctx Ξ} (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr ⟧ren ]cl)
+                                                  M.[ ty-closed-natural T ∣ ⟦ keyʳ {Γ = to-ctx Ξ} (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ⟧ren ]cl)
                                           M./cl⟨ ty-closed-natural ⟨ later ∣ T ⟩ ⟩ ]cl
       ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (M./cl-cong (ty-closed-natural ⟨ later ∣ T ⟩) (M.next-cong
-         (rename-tm-sound (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr)))) ⟨
-        ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.next ⟦ rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) ⟧tm
+         (rename-tm-sound (löb[later∣ x ∈ T ] t) (keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr)))) ⟨
+        ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.next ⟦ (löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ ⟧tm
                                           M./cl⟨ ty-closed-natural ⟨ later ∣ T ⟩ ⟩ ]cl
-      ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (/cl-sound (rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr)) x) ⟨
-        ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x ⟧sub
+      ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (/cl-sound ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) x) ⟨
+        ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ⟧sub
                   ]cl
-      ≅⟨ tm-sub-sound t (rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x) ⟩
-        ⟦ t [ rename-tm (löb[later∣ x ∈ T ] t) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x ]tm ⟧tm ∎
+      ≅⟨ tm-sub-sound t (((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x) ⟩
+        ⟦ t [ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ]tmˢ ⟧tm ∎
 
 pf-löb-sound : (Ξ : ProofCtx ω) (φ : bProp (to-ctx Ξ)) (x : String) →
-               Evidence (Ξ ,,ᵇ later ∣ x ∈ rename-bprop φ (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr)) φ →
+               Evidence (Ξ ,,ᵇ later ∣ x ∈ φ [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]bpropʳ) φ →
                Evidence Ξ φ
 pf-löb-sound Ξ φ _ p = M.löb' _ (
   M.ι⁻¹[ M.ty-subst-cong-subst-2-2 _ (M.transˢ M.⊚-assoc (M.⊚-congʳ (M.,,-map-π _))) ] (
   M.ιc⁻¹[ M.,,-cong (
     M.transᵗʸ (M.▻-natural _) (M.▻-cong (
     M.transᵗʸ (M.ty-subst-cong-ty _ (
-      M.transᵗʸ (rename-bprop-sound φ (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr))
-                (M.ty-subst-cong-subst (M.transˢ (M.⊚-congʳ (M.transˢ (M.id-subst-unitˡ _) M.◄-subst-id)) (M.transˢ (M.id-subst-unitʳ _) (M.id-subst-unitˡ _))) _)))
+      M.transᵗʸ (rename-bprop-sound φ (keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr))
+                (M.ty-subst-cong-subst (M.transˢ (M.⊚-congʳ (M.id-subst-unitˡ _)) (M.transˢ (M.id-subst-unitʳ _) (M.id-subst-unitˡ _))) _)))
     (M.ty-subst-cong-subst-2-2 _ (M.from-earlier-natural _)))))
         ]'
   p))

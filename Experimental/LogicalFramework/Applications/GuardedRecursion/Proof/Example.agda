@@ -14,8 +14,8 @@ g-cons-cong : (h1 h2 : Tm (Γ ,lock⟨ constantly ⟩) A) (t1 t2 : Tm (Γ ,lock�
               Proof (Γ ,lock⟨ constantly ⟩) → Proof (Γ ,lock⟨ later ⟩) → Proof Γ
 g-cons-cong h1 h2 t1 t2 ph pt =
   trans (g-cons h2 t1)
-    (subst {x = "dummy"} (g-cons (h1 [ π ,slock⟨ constantly ⟩ ]tm) (t1 [ π ,slock⟨ later ⟩ ]tm) ≡ᵇ g-cons v0 (t1 [ π ,slock⟨ later ⟩ ]tm)) h1 h2 ph refl)
-    (subst {x = "dummy"} (g-cons (h2 [ π ,slock⟨ constantly ⟩ ]tm) (t1 [ π ,slock⟨ later ⟩ ]tm) ≡ᵇ g-cons (h2 [ π ,slock⟨ constantly ⟩ ]tm) v0) t1 t2 pt refl)
+    (subst {x = "dummy"} (g-cons (h1 [ πʳ ,lockʳ⟨ constantly ⟩ ]tmʳ) (t1 [ πʳ ,lockʳ⟨ later ⟩ ]tmʳ) ≡ᵇ g-cons v0 (t1 [ πʳ ,lockʳ⟨ later ⟩ ]tmʳ)) h1 h2 ph refl)
+    (subst {x = "dummy"} (g-cons (h2 [ πʳ ,lockʳ⟨ constantly ⟩ ]tmʳ) (t1 [ πʳ ,lockʳ⟨ later ⟩ ]tmʳ) ≡ᵇ g-cons (h2 [ πʳ ,lockʳ⟨ constantly ⟩ ]tmʳ) v0) t1 t2 pt refl)
 
 test : Proof ◇
 test = g-cons-cong zero zero g-zeros g-zeros refl refl

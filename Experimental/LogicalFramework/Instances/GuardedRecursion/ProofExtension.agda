@@ -103,10 +103,10 @@ pf-code-check gstream-β-tail-code Ξ φ _ _ = do
 pf-code-check tmlöb-β-code Ξ φ _ _ = do
   is-eq lhs rhs ← is-eq? φ
   is-lob x T t ← is-lob? lhs
-  refl ← rhs ≟tm (t [ rename-tm ((löb[later∣ x ∈ T ] t)) (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr) / x ]tm)
+  refl ← rhs ≟tm (t [ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ]tmˢ)
   return ⟅ [] , _ ↦ tmlöb-β-sound Ξ x t ⟆
 pf-code-check (pflöb-code x) Ξ φ _ _ = λ check-subpf → do
-  ⟅ goals , ⟦p⟧ ⟆ ← check-subpf (Ξ ,,ᵇ later ∣ x ∈ rename-bprop φ (key-ren (◇ ,lock⟨ later ⟩) ◇ 𝟙≤ltr)) φ Ag.refl
+  ⟅ goals , ⟦p⟧ ⟆ ← check-subpf (Ξ ,,ᵇ later ∣ x ∈ φ [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]bpropʳ) φ Ag.refl
   return ⟅ goals , sgoals ↦ pf-löb-sound Ξ φ x (⟦p⟧ sgoals) ⟆
 
 guarded-pf-ext : ProofExt
