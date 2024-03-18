@@ -34,7 +34,7 @@ private variable
 
 -- A useful lemma
 to-ctx-/-commute : (Ξ : ProofCtx m) (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) (t : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T) →
-                   ⟦ φ [ t / x ]bprop ⟧bprop M.[ to-ctx-subst Ξ ]
+                   ⟦ φ [ t / x ]bpropˢ ⟧bprop M.[ to-ctx-subst Ξ ]
                      M.≅ᵗʸ
                    (⟦ φ ⟧bprop M.[ to-ctx-subst (Ξ ,,ᵛ μ ∣ x ∈ T) ]) M.[
                     dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ to-ctx-subst (Ξ ,lock⟨ μ ⟩) ]cl) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ ]
@@ -45,7 +45,7 @@ to-ctx-/-commute {μ = μ} {x} {T} Ξ φ t =
 
 -- Specialisation of the previous lemma to the case μ = 𝟙
 to-ctx-/-commute-𝟙 : (Ξ : ProofCtx m) (φ : bProp (to-ctx (Ξ ,,ᵛ 𝟙 ∣ x ∈ T))) (t : Tm (to-ctx Ξ ,lock⟨ 𝟙 ⟩) T) →
-                     ⟦ φ [ t / x ]bprop ⟧bprop M.[ to-ctx-subst Ξ ]
+                     ⟦ φ [ t / x ]bpropˢ ⟧bprop M.[ to-ctx-subst Ξ ]
                        M.≅ᵗʸ
                      (⟦ φ ⟧bprop M.[ to-ctx-subst (Ξ ,,ᵛ 𝟙 ∣ x ∈ T) ]) M.[
                        (⟦ t ⟧tm M.[ ty-closed-natural T ∣ to-ctx-subst Ξ ]cl) M./cl⟨ ty-closed-natural T ⟩ ]
@@ -84,8 +84,8 @@ module _ (Ξ : ProofCtx m) where
 
   subst-sound : (t1 t2 : Tm (to-ctx Ξ ,lock⟨ μ ⟩) T) (φ : bProp (to-ctx Ξ ,, μ ∣ x ∈ T)) →
                 Evidence (Ξ ,lock⟨ μ ⟩) (t1 ≡ᵇ t2) →
-                Evidence Ξ (φ [ t1 / x ]bprop) →
-                Evidence Ξ (φ [ t2 / x ]bprop)
+                Evidence Ξ (φ [ t1 / x ]bpropˢ) →
+                Evidence Ξ (φ [ t2 / x ]bpropˢ)
   subst-sound {μ = μ} {T} t1 t2 φ pe p1 =
     M.ι[ to-ctx-/-commute Ξ φ t2 ]
       M.ι[ M.ty-subst-cong-subst (M./cl-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (dra-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (
@@ -152,14 +152,14 @@ module _ (Ξ : ProofCtx m) where
   ∀-elim-sound : (x : String) (T : Ty n) (φ : bProp (to-ctx Ξ ,, μ ∣ x ∈ T)) →
                  Evidence Ξ (∀[ μ ∣ x ∈ T ] φ) →
                  (t : Tm (to-ctx Ξ ,lock⟨ μ ⟩) T) →
-                 Evidence Ξ (φ [ t / x ]bprop)
+                 Evidence Ξ (φ [ t / x ]bpropˢ)
   ∀-elim-sound {μ = μ} x T φ p t =
     M.ι[ to-ctx-/-commute Ξ φ t ]
       (M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] p)
                                               (dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl)))
 
   fun-β-sound : (b : Tm (to-ctx Ξ ,, μ ∣ x ∈ T) S) (t : Tm (to-ctx Ξ ,lock⟨ μ ⟩) T) →
-                Evidence Ξ ((lam[ μ ∣ x ∈ T ] b) ∙ t ≡ᵇ b [ t / x ]tm)
+                Evidence Ξ ((lam[ μ ∣ x ∈ T ] b) ∙ t ≡ᵇ b [ t / x ]tmˢ)
   fun-β-sound {μ = μ} {x = x} {T = T} {S = S} b t =
     M.≅ᵗᵐ-to-Id (
       M.transᵗᵐ (M.⇛-cl-β (ty-closed-natural ⟨ μ ∣ T ⟩) (ty-closed-natural S) _ _) (
@@ -209,8 +209,8 @@ module _ (Ξ : ProofCtx m) where
     M.zero≠sucn) M.[ _ ]'
 
   bool-induction-sound : (φ : bProp (to-ctx Ξ ,, 𝟙 ∣ x ∈ Bool')) →
-                         Evidence Ξ (φ [ true  / x ]bprop) →
-                         Evidence Ξ (φ [ false / x ]bprop) →
+                         Evidence Ξ (φ [ true  / x ]bpropˢ) →
+                         Evidence Ξ (φ [ false / x ]bpropˢ) →
                          Evidence (Ξ ,,ᵛ 𝟙 ∣ x ∈ Bool') φ
   bool-induction-sound φ pt pf =
     M.bool-ind _
@@ -220,8 +220,8 @@ module _ (Ξ : ProofCtx m) where
                  M.ι⁻¹[ to-ctx-/-commute-𝟙 Ξ φ false ] pf))
 
   nat-induction-sound : (φ : bProp (to-ctx Ξ ,, 𝟙 ∣ x ∈ Nat')) (y : String) →
-                        Evidence Ξ (φ [ zero / x ]bprop) →
-                        Evidence (Ξ ,,ᵛ 𝟙 ∣ x ∈ Nat' ,,ᵇ 𝟙 ∣ y ∈ lock𝟙-bprop φ) (φ [ suc v0 // x ]bprop) →
+                        Evidence Ξ (φ [ zero / x ]bpropˢ) →
+                        Evidence (Ξ ,,ᵛ 𝟙 ∣ x ∈ Nat' ,,ᵇ 𝟙 ∣ y ∈ lock𝟙-bprop φ) (φ [ suc v0 // x ]bpropˢ) →
                         Evidence (Ξ ,,ᵛ 𝟙 ∣ x ∈ Nat') φ
   nat-induction-sound {x = x} φ y p0 ps =
     M.nat-ind _ (M.ι⁻¹[ M.ty-subst-cong-subst (M./cl-cong M.const-closed (M.const-cl-natural (to-ctx-subst Ξ))) _ ]
@@ -240,7 +240,7 @@ module _ (Ξ : ProofCtx m) where
                                                     M.⊚-assoc)) ]
                   (M.ι[ M.ty-subst-cong-ty _ (
                           M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ
-                                      (M.transˢ (∷ˢ-sound {Δ = to-ctx Ξ} π (suc (v0 {μ = 𝟙} {x = x})) x)
+                                      (M.transˢ (∷ˢ-sound {Δ = to-ctx Ξ} πˢ (suc (v0 {μ = 𝟙} {x = x})) x)
                                                 (M.,cl-cong (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩)
                                                             (sub-π-sound (to-ctx Ξ) x 𝟙 Nat')
                                                             (M.const-map-cong _ (v0-sound (to-ctx Ξ) 𝟙 x Nat')))))
@@ -249,7 +249,7 @@ module _ (Ξ : ProofCtx m) where
                   ps)))))
 
   mod-induction-sound : (ρ : Modality n m) (μ : Modality o n) (φ : bProp (to-ctx Ξ ,, ρ ∣ x ∈ ⟨ μ ∣ T ⟩)) →
-                        Evidence (Ξ ,,ᵛ ρ ⓜ μ ∣ y ∈ T) (φ [ mod⟨ μ ⟩ (var' y {skip-lock μ (skip-lock ρ vzero)} id-cell) // x ]bprop) →
+                        Evidence (Ξ ,,ᵛ ρ ⓜ μ ∣ y ∈ T) (φ [ mod⟨ μ ⟩ (var' y {vlock (vlock (vzero id-cell))}) // x ]bpropˢ) →
                         Evidence (Ξ ,,ᵛ ρ ∣ x ∈ ⟨ μ ∣ T ⟩) φ
   mod-induction-sound {x = x} {T = T} {y = y} ρ μ φ p =
     M.ι⁻¹[ M.transᵗʸ (M.ty-subst-cong-subst-2-2 _ (M.symˢ (M.lift-cl-,,-cong-commute (M.symᶜᵗʸ (eq-dra-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T))) (to-ctx-subst Ξ)))) (
@@ -268,7 +268,7 @@ module _ (Ξ : ProofCtx m) where
              M.symˢ (M.,cl-η (ty-closed-natural ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩) _))))))) ]
     M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (
          M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (
-           M.transˢ (∷ˢ-sound (π {Γ = to-ctx Ξ} {T = T}) (mod⟨ μ ⟩ var' x {skip-lock μ (skip-lock ρ vzero)} id-cell) y)
+           M.transˢ (∷ˢ-sound (πˢ {Γ = to-ctx Ξ} {T = T}) (mod⟨ μ ⟩ var' x {vlock (vlock (vzero id-cell))}) y)
                     (M.,cl-cong (ty-closed-natural ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩)
                                 (sub-π-sound (to-ctx Ξ) y (ρ ⓜ μ) T)
                                 (dra-intro-cong ⟦ ρ ⟧mod (dra-intro-cong ⟦ μ ⟧mod (v0-2lock-sound ρ μ x (to-ctx Ξ) T))))))

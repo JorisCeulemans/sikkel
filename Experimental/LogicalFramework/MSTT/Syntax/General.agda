@@ -225,9 +225,9 @@ module AtomicRenSub
   lift-atomic-rensub : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
   lift-atomic-rensub {x = x} σ = (σ ⊚π) ∷ newV / x
 
-  _,locks⟨_⟩ : AtomicRenSub Γ Δ → (Λ : LockTele m n) → AtomicRenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
-  σ ,locks⟨ ◇ ⟩            = σ
-  σ ,locks⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,lock⟨ μ ⟩) ,locks⟨ Λ ⟩
+  _,alocks⟨_⟩ : AtomicRenSub Γ Δ → (Λ : LockTele m n) → AtomicRenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
+  σ ,alocks⟨ ◇ ⟩            = σ
+  σ ,alocks⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,lock⟨ μ ⟩) ,alocks⟨ Λ ⟩
 
   AtomicRenSubTrav : TravStruct AtomicRenSub
   TravStruct.vr AtomicRenSubTrav = atomic-rensub-lookup-var
@@ -275,6 +275,10 @@ module RenSub
   _,rslock⟨_⟩ : RenSub Γ Δ → (μ : Modality m n) → RenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
   id        ,rslock⟨ μ ⟩ = id
   (σ ⊚a τᵃ) ,rslock⟨ μ ⟩ = (σ ,rslock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
+
+  _,rslocks⟨_⟩ : RenSub Γ Δ → (Λ : LockTele m n) → RenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
+  σ ,rslocks⟨ ◇ ⟩           = σ
+  σ ,rslocks⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,rslock⟨ μ ⟩) ,rslocks⟨ Λ ⟩
 
   key-rensub : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locksˡᵗ Λ₂) (locksˡᵗ Λ₁) → RenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
   key-rensub Λ₁ Λ₂ α = id ⊚a atomic-key Λ₁ Λ₂ α
@@ -356,7 +360,7 @@ open AtomicRenM public
     ; πᵃ to πᵃʳ
     ; atomic-rensub-tm to infixl 8 _[_]tmᵃʳ
     ; lift-atomic-rensub to liftᵃʳ
-    ; _,locks⟨_⟩ to _,locksᵃʳ⟨_⟩)
+    ; _,alocks⟨_⟩ to _,locksᵃʳ⟨_⟩)
   using ()
 
 module RenM = RenSub RenData AtomicRenVar.ren-data-struct
@@ -370,6 +374,7 @@ open RenM
     ; []rs to []ʳ
     ; π-rensub to πʳ
     ; _,rslock⟨_⟩ to _,lockʳ⟨_⟩
+    ; _,rslocks⟨_⟩ to _,locksʳ⟨_⟩
     ; key-rensub to keyʳ
     ; _⊚rs_ to _⊚ʳ_
     ; rensub-tm-⊚ to ren-tm-⊚)
@@ -477,7 +482,7 @@ open AtomicSubM
     ; πᵃ to πᵃˢ
     ; atomic-rensub-tm to _[_]tmᵃˢ
     ; lift-atomic-rensub to liftᵃˢ
-    ; _,locks⟨_⟩ to _,locksᵃˢ⟨_⟩)
+    ; _,alocks⟨_⟩ to _,locksᵃˢ⟨_⟩)
   using ()
   public
 
@@ -493,6 +498,7 @@ open SubM
     ; _∷ʳˢ_/_ to _∷ˢ_/_
     ; π-rensub to πˢ
     ; _,rslock⟨_⟩ to _,lockˢ⟨_⟩
+    ; _,rslocks⟨_⟩ to _,locksˢ⟨_⟩
     ; key-rensub to keyˢ
     ; _⊚rs_ to _⊚ˢ_
     ; rensub-tm-⊚ to sub-tm-⊚)

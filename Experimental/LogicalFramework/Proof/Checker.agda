@@ -68,8 +68,8 @@ check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
          ⟆
 check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   ⟅ goalse , ⟦pe⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) pe (t1 ≡ᵇ t2)
-  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (φ [ t1 / x ]bprop)
-  refl ← ψ ≟bprop φ [ t2 / x ]bprop
+  ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (φ [ t1 / x ]bpropˢ)
+  refl ← ψ ≟bprop φ [ t2 / x ]bpropˢ
   return ⟅ goalse ++ goals1 , sgoals ↦
     (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
     subst-sound Ξ t1 t2 φ (⟦pe⟧ sgoalse) (⟦p1⟧ sgoals1)) ⟆
@@ -130,14 +130,14 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   refl ← n ≟mode n'
   refl ← μ ≟mod κ
   refl ← T ≟ty S
-  refl ← φ ≟bprop (ψ' [ t / y ]bprop)
+  refl ← φ ≟bprop (ψ' [ t / y ]bpropˢ)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
   return ⟅ goals , sgoals ↦ ∀-elim-sound Ξ y T ψ' (⟦p⟧ sgoals) t ⟆
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   lam {T = A} {S = B} μ x b ← is-lam? f
-  refl ← rhs ≟tm (b [ t / x ]tm)
+  refl ← rhs ≟tm (b [ t / x ]tmˢ)
   return ⟅ [] , _ ↦ fun-β-sound Ξ b t ⟆
 check-proof Ξ nat-rec-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
@@ -173,8 +173,8 @@ check-proof Ξ (zero≠sucn m) φ = do
 check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← return Δ=Γ,x∈Bool
-  ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true  / x ]bprop)
-  ⟅ goalsf , ⟦pf⟧ ⟆ ← check-proof Ξ' pf (φ [ false / x ]bprop)
+  ⟅ goalst , ⟦pt⟧ ⟆ ← check-proof Ξ' pt (φ [ true  / x ]bpropˢ)
+  ⟅ goalsf , ⟦pf⟧ ⟆ ← check-proof Ξ' pf (φ [ false / x ]bpropˢ)
   return ⟅ goalst ++ goalsf , sgoals ↦ (let sgoalst , sgoalsf = split-sem-goals goalst goalsf sgoals in
     bool-induction-sound Ξ' φ (⟦pt⟧ sgoalst) (⟦pf⟧ sgoalsf)) ⟆
 check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
@@ -184,17 +184,17 @@ check-proof Ξ (nat-induction' hyp Δ=Γ,x∈Nat p0 ps) φ = do
     -- By pattern matching on Δ=Γ,x∈Nat : Δ ≡ Γ ,, x ∈ Nat', Γ gets unified with to-ctx Ξ', μ with 𝟙 and T with Nat'.
     -- Pattern matching on this proof only works since we already established that Ξ is of the form Ξ' ,,ᵛ μ ∣ x ∈ T.
     -- Otherwise, unification would fail.
-  ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]bprop)
+  ⟅ goals1 , ⟦p0⟧ ⟆ ← check-proof Ξ' p0 (φ [ zero / x ]bpropˢ)
   ⟅ goals2 , ⟦ps⟧ ⟆ ← check-proof (Ξ' ,,ᵛ 𝟙 ∣ x ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ lock𝟙-bprop φ)
                                   ps
-                                  (φ [ suc v0 // x ]bprop)
+                                  (φ [ suc v0 // x ]bpropˢ)
   return ⟅ goals1 ++ goals2 , sgoals ↦
     (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals
      in nat-induction-sound Ξ' φ hyp (⟦p0⟧ sgoals1) (⟦ps⟧ sgoals2)) ⟆
 check-proof Ξ (mod-induction' {T = T} κ μ x ctx-eq p) φ = do
   ends-in-prog-var Ξ' μ' y _ ← ends-in-prog-var? Ξ
   refl ← return ctx-eq
-  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ⓜ κ ∣ x ∈ T) p (φ [ mod⟨ κ ⟩ (var' x {skip-lock κ (skip-lock μ vzero)} id-cell) // y ]bprop)
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ' ,,ᵛ μ ⓜ κ ∣ x ∈ T) p (φ [ mod⟨ κ ⟩ (var' x {vlock (vlock (vzero id-cell))}) // y ]bpropˢ)
   return ⟅ goals , sgoals ↦ mod-induction-sound Ξ' μ κ φ (⟦p⟧ sgoals) ⟆
 check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do
   is-eq lhs rhs ← is-eq? φ
