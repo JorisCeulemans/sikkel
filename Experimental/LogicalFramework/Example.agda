@@ -68,7 +68,7 @@ proof-plus-zeroʳ {Γ = Γ} =
     (trans (id ∙ zero) (fun-cong {μ = 𝟙} nat-rec-β-zero zero) fun-β)
     (trans (plus-helper ∙ plus' (svar "n") ∙ zero)
            (fun-cong {μ = 𝟙} nat-rec-β-suc zero)
-           (trans ((lam[ "n" ∈ Nat' ] suc ((plus' (var' _ {vsuc vzero} id-cell)) ∙ svar "n")) ∙ zero)
+           (trans ((lam[ "n" ∈ Nat' ] suc ((plus' (var' _ {vsuc (vzero id-cell)})) ∙ svar "n")) ∙ zero)
                   (fun-cong {μ = 𝟙} fun-β zero)
                   (trans (suc (plus' (svar "n") ∙ zero))
                          fun-β
@@ -91,7 +91,7 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
            (trans (suc (svar "n"))
                   fun-β
                   (sym (cong-suc (plus' zero ∙ svar "n") (svar "n")
-                                 (trans (id ∙ svar "n") (fun-cong nat-rec-β-zero (svar "n")) fun-β))))))
+                                 (trans (id ∙ svar "n") (fun-cong {μ = 𝟙} nat-rec-β-zero (svar "n")) fun-β))))))
   (∀-intro[ 𝟙 ∣ "n" ∈ Nat' ]
     (trans (plus-helper ∙ plus' (svar "m") ∙ suc (svar "n"))
            (fun-cong nat-rec-β-suc (suc (svar "n")))
@@ -103,9 +103,9 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                                   (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (svar "m") ∙ suc (svar "n") ≡ᵇ suc (plus' (svar "m") ∙ svar "n"))
                                             (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (svar "n"))
                                   (sym (trans (plus-helper ∙ plus' (svar "m") ∙ svar "n")
-                                              (fun-cong nat-rec-β-suc (svar "n"))
+                                              (fun-cong {μ = 𝟙} nat-rec-β-suc (svar "n"))
                                               (trans ((lam[ "n" ∈ Nat' ] suc (plus' (svar "m") ∙ svar "n")) ∙ svar "n")
-                                                     (fun-cong fun-β (svar "n"))
+                                                     (fun-cong {μ = 𝟙} fun-β (svar "n"))
                                                      fun-β)))))))))
 
 test-plus-sucʳ : (PCResult.goals <$> check-proof ◇ proof-plus-sucʳ plus-sucʳ) ≡ ok []
@@ -132,8 +132,8 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
                                          (plus' (svar "n") ∙ svar "m")
                                          (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (svar "m") ∙ svar "n" ≡ᵇ plus' (svar "n") ∙ svar "m")
                                                    (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) (svar "n")))
-                               (sym (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (var' "n" {vsuc vzero} id-cell) ∙ suc (svar "n") ≡ᵇ
-                                                                         suc (plus' (var' "n" {vsuc vzero} id-cell) ∙ svar "n"))
+                               (sym (∀-elim 𝟙 (∀[ 𝟙 ∣ "n" ∈ Nat' ] plus' (var' "n" {vsuc (vzero id-cell)}) ∙ suc (svar "n") ≡ᵇ
+                                                                         suc (plus' (var' "n" {vsuc (vzero id-cell)}) ∙ svar "n"))
                                               (∀-elim 𝟙 plus-sucʳ proof-plus-sucʳ (svar "n")) (svar "m")))))))
 
 test-plus-comm : (PCResult.goals <$> check-proof ◇ proof-plus-comm plus-comm) ≡ ok []
