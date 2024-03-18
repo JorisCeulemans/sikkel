@@ -28,6 +28,7 @@ private variable
   m n o p : Mode
   μ ρ κ : Modality m n
   Γ Δ : Ctx m
+  Λ : LockTele m n
   T S R U : Ty m
   φ ψ : bProp Γ
   x y : String
@@ -55,52 +56,65 @@ private variable
 
 -- In the same way as variables in MSTT, assumptions are internally
 --  referred to using De Bruijn indices, but we keep track of their
---  names. The (proof-relevant) predicate Assumption x μ κ Ξ expresses
---  that an assumption with name x is present in proof context Ξ under
---  modality μ and with κ the composition of all locks to the right of
---  x. Note that we do not keep track of the proposition in the Assumption
---  type (in contrast to the type of variables in MSTT).
-data Assumption (x : String) (μ : Modality n o) : Modality m o → ProofCtx m → Set where
-  azero : Assumption x μ 𝟙 (Ξ ,,ᵇ μ ∣ x ∈ φ)
-  asuc  : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ,,ᵇ ρ ∣ y ∈ ψ)
-  skip-var : Assumption x μ κ Ξ → Assumption x μ κ (Ξ ,,ᵛ ρ ∣ y ∈ T)
-  skip-lock : (ρ : Modality m p) → Assumption x μ κ Ξ → Assumption x μ (κ ⓜ ρ) (Ξ ,lock⟨ ρ ⟩)
+--  names. The (proof-relevant) predicate Assumption x Ξ Λ expresses
+--  that an assumption with name x is present in proof context Ξ ,ˡᵗ Λ.
+--  Note that we do not keep track of the proposition in the
+--  Assumption type (in contrast to the type of variables in MSTT).
+--  It is not guaranteed that the assumption can be used. For that purpose,
+--  an additional 2-cell is needed.
+data Assumption (x : String) : ProofCtx m → LockTele m n → Set where
+  azero : {Ξ : ProofCtx m} {μ : Modality n m} {φ : bProp (to-ctx Ξ ,lock⟨ μ ⟩)} {Λ : LockTele m n} →
+          Assumption x (Ξ ,,ᵇ μ ∣ x ∈ φ) Λ
+  asuc  : {Ξ : ProofCtx m} {Λ : LockTele m n}
+          {ρ : Modality o m} {y : String} {ψ : bProp (to-ctx Ξ ,lock⟨ ρ ⟩)} →
+          Assumption x Ξ Λ →
+          Assumption x (Ξ ,,ᵇ ρ ∣ y ∈ ψ) Λ
+  avar  : {Ξ : ProofCtx m} {Λ : LockTele m n}
+          {ρ : Modality o m} {y : String} {T : Ty o} →
+          Assumption x Ξ Λ →
+          Assumption x (Ξ ,,ᵛ ρ ∣ y ∈ T) Λ
+  alock : {Ξ : ProofCtx p} {ρ : Modality m p} {Λ : LockTele m n} →
+          Assumption x Ξ (lock⟨ ρ ⟩, Λ) →
+          Assumption x (Ξ ,lock⟨ ρ ⟩) Λ
 
-lookup-assumption' : Assumption x μ κ Ξ → (ρ : Modality _ _) →
-                     TwoCell μ (κ ⓜ ρ) → bProp ((to-ctx Ξ) ,lock⟨ ρ ⟩)
-lookup-assumption' (azero {φ = φ}) ρ α = φ [ key-sub (◇ ,lock⟨ ρ ⟩) (◇ ,lock⟨ _ ⟩) α ]bprop
-lookup-assumption' (asuc a) ρ α = lookup-assumption' a ρ α
-lookup-assumption' (skip-var a) ρ α = (lookup-assumption' a ρ α) [ π ,slock⟨ ρ ⟩ ]bprop
-lookup-assumption' (skip-lock {κ = κ} ρ' a) ρ α = unfuselocks-bprop (lookup-assumption' a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α))
+as-cod-mode : Assumption x Ξ Λ → Mode
+as-cod-mode (azero {m = m}) = m
+as-cod-mode (asuc a) = as-cod-mode a
+as-cod-mode (avar a) = as-cod-mode a
+as-cod-mode (alock a) = as-cod-mode a
 
-lookup-assumption : Assumption x μ κ Ξ → TwoCell μ κ → bProp (to-ctx Ξ)
-lookup-assumption a α = unlock𝟙-bprop (lookup-assumption' a 𝟙 (transp-cellʳ (Ag.sym mod-unitʳ) α))
+as-mod : {Λ : LockTele m n} (a : Assumption x Ξ Λ) → Modality n (as-cod-mode a)
+as-mod (azero {μ = μ}) = μ
+as-mod (asuc a) = as-mod a
+as-mod (avar a) = as-mod a
+as-mod (alock a) = as-mod a
 
-record ContainsAssumption (x : String) (μ : Modality n o) (Ξ : ProofCtx m) : Set where
-  constructor contains-assumption
-  field
-    locks : Modality m o
-    as : Assumption x μ locks Ξ
+as-lt : {Λ : LockTele m n} (a : Assumption x Ξ Λ) → LockTele (as-cod-mode a) n
+as-lt (azero {Λ = Λ}) = Λ
+as-lt (asuc a) = as-lt a
+as-lt (avar a) = as-lt a
+as-lt (alock a) = as-lt a
 
-map-contains : {m m' : Mode} {x : String} {μ : Modality n o}
-               {Ξ : ProofCtx m} {Ξ' : ProofCtx m'}
-               (F : Modality m o → Modality m' o) →
-               (∀ {κ} → Assumption x μ κ Ξ → Assumption x μ (F κ) Ξ') →
-               ContainsAssumption x μ Ξ → ContainsAssumption x μ Ξ'
-map-contains F G (contains-assumption locks as) = contains-assumption (F locks) (G as)
+lookup-assumption : {Ξ : ProofCtx m} {Λ : LockTele m n}
+                    (a : Assumption x Ξ Λ) →
+                    TwoCell (as-mod a) (locksˡᵗ (as-lt a)) →
+                    bProp (to-ctx Ξ ,ˡᵗ Λ)
+lookup-assumption (azero {μ = μ} {φ = φ} {Λ = Λ}) α = φ [ keyʳ Λ (lock⟨ μ ⟩, ◇) α ]bpropʳ
+lookup-assumption (asuc a) α = lookup-assumption a α
+lookup-assumption (avar {Λ = Λ} a) α = (lookup-assumption a α) [ πʳ ,locksʳ⟨ Λ ⟩ ]bpropʳ
+lookup-assumption (alock a) α = lookup-assumption a α
 
-contains-assumption? : (x : String) (μ : Modality n o) (Ξ : ProofCtx m) →
-                       PCM (ContainsAssumption x μ Ξ)
-contains-assumption? x μ ◇ = throw-error "Assumption not found in context."
-contains-assumption? x μ (Ξ ,,ᵛ ρ ∣ y ∈ T) = map-contains id skip-var <$> contains-assumption? x μ Ξ
-contains-assumption? x μ (Ξ ,,ᵇ ρ ∣ y ∈ φ) with x Str.≟ y
-contains-assumption? {n = n} {o} {m} x μ (_,,ᵇ_∣_∈_ {n = n'} Ξ ρ .x φ) | yes refl = do
-  refl ← m ≟mode o
-  refl ← n ≟mode n'
-  refl ← μ ≟mod ρ
-  return (contains-assumption 𝟙 azero)
-contains-assumption? x μ (Ξ ,,ᵇ ρ ∣ y ∈ φ) | no ¬x=y = map-contains id asuc <$> contains-assumption? x μ Ξ
-contains-assumption? x μ (Ξ ,lock⟨ ρ ⟩) = map-contains (_ⓜ ρ) (skip-lock ρ) <$> contains-assumption? x μ Ξ
+
+contains-assumption? : (x : String) (Ξ : ProofCtx m) (Λ : LockTele m n) →
+                       PCM (Assumption x Ξ Λ)
+contains-assumption? x ◇                 Λ = throw-error "Assumption not found in context."
+contains-assumption? x (Ξ ,,ᵛ μ ∣ y ∈ T) Λ = avar <$> contains-assumption? x Ξ Λ
+contains-assumption? {n = m} x (_,,ᵇ_∣_∈_ {n = n} Ξ μ y φ) Λ with x Str.≟ y
+... | yes refl = do
+  refl ← n ≟mode m
+  return azero
+... | no _     = asuc <$> contains-assumption? x Ξ Λ
+contains-assumption? x (Ξ ,lock⟨ μ ⟩)    Λ = alock <$> contains-assumption? x Ξ (lock⟨ μ ⟩, Λ)
 
 
 ⟦_⟧pctx : ProofCtx m → SemCtx ⟦ m ⟧mode
@@ -117,30 +131,35 @@ to-ctx-subst (Ξ ,,ᵇ _ ∣ _ ∈ _) = to-ctx-subst Ξ M.⊚ M.π
 to-ctx-subst (Ξ ,lock⟨ μ ⟩) = DRA.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ)
 
 
-interp-assumption-helper : (a : Assumption x μ κ Ξ) (ρ : Modality _ _) (α : TwoCell μ (κ ⓜ ρ)) →
-                           SemTm ⟦ Ξ ,lock⟨ ρ ⟩ ⟧pctx (⟦ lookup-assumption' a ρ α ⟧bprop M.[ to-ctx-subst (Ξ ,lock⟨ ρ ⟩) ])
-interp-assumption-helper {μ = μ} (azero {Ξ = Ξ} {φ = φ}) ρ α =
-  M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (sub-key-sound α {to-ctx Ξ}) _) (bprop-sub-sound φ _)) ] (
+interp-assumption-helper :
+  {Ξ : ProofCtx m} {Λ : LockTele m n}
+  (a : Assumption x Ξ Λ) (α : TwoCell (as-mod a) (locksˡᵗ (as-lt a))) →
+  SemTm (⟦ Ξ ⟧pctx DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩)
+        ((⟦ lookup-assumption a α ⟧bprop M.[ M.to (,ˡᵗ-sound Λ) ]) M.[ lock-fmap ⟦ locksˡᵗ Λ ⟧mod (to-ctx-subst Ξ) ])
+interp-assumption-helper (azero {μ = μ} {φ = φ} {Λ = Λ}) α =
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (M.transᵗʸ (rename-bprop-sound φ _) (M.ty-subst-cong-subst (M.symˢ (ren-key-sound-cod Λ α)) _))) ] (
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-1 _ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.isoʳ (,ˡᵗ-sound Λ))) (M.id-subst-unitʳ _)))) ] (
   M.ι[ M.ty-subst-cong-subst-2-2 _ (DRA.key-subst-natural ⟦ α ⟧two-cell) ] (
   dra-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (dra-natural ⟦ μ ⟧mod _) ] M.ξ)
-  M.[ DRA.key-subst ⟦ α ⟧two-cell ]'))
-interp-assumption-helper (asuc a) ρ α =
-  M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.symˢ (DRA.lock-fmap-⊚ ⟦ ρ ⟧mod _ _)) ] (
-  interp-assumption-helper a ρ α
-  M.[ DRA.lock-fmap ⟦ ρ ⟧mod M.π ]')
-interp-assumption-helper (skip-var {Ξ = Ξ} {ρ = ρ'} {T = T} a) ρ α =
-  let x = _
-  in
-  M.ι⁻¹[ M.ty-subst-cong-ty _ (M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ (sub-lock-sound (π {Γ = to-ctx Ξ} {μ = ρ'} {x} {T}) ρ)) _)
-                                         (bprop-sub-sound (lookup-assumption' a ρ α) ((π {x = x}) ,slock⟨ ρ ⟩))) ] (
-  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (DRA.ctx-functor ⟦ ρ ⟧mod) (M.transˢ (M.⊚-congˡ (sub-π-sound (to-ctx Ξ) x ρ' T))
-                                                                                             (M.lift-cl-subst-π-commute (ty-closed-natural ⟨ ρ' ∣ T ⟩)))) ] (
-  interp-assumption-helper a ρ α M.[ DRA.lock-fmap ⟦ ρ ⟧mod M.π ]'))
-interp-assumption-helper (skip-lock {κ = κ} ρ' a) ρ α =
-  M.ι[ M.ty-subst-cong-ty _ (unfuselocks-bprop-sound {μ = ρ'} (lookup-assumption' a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α))) ] (
-  M.ι[ M.ty-subst-cong-subst-2-2 _ (key-subst-natural (from (⟦ⓜ⟧-sound ρ' ρ))) ] (
-  interp-assumption-helper a (ρ' ⓜ ρ) (transp-cellʳ (mod-assoc κ) α)
-  M.[ _ ]'))
+    M.[ DRA.key-subst ⟦ α ⟧two-cell ]')))
+interp-assumption-helper (asuc {Λ = Λ} a) α =
+  M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.symˢ (DRA.lock-fmap-⊚ ⟦ locksˡᵗ Λ ⟧mod _ _)) ]
+  ((interp-assumption-helper a α) M.[ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]')
+interp-assumption-helper (avar {Ξ = Ξ} {Λ = Λ} {ρ = ρ} {y = y} {T = T} a) α =
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (rename-bprop-sound (lookup-assumption a α) _)) ] (
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-2 _ (,ˡᵗ-sound-to-naturalʳ Λ πʳ)) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (ctx-functor ⟦ locksˡᵗ Λ ⟧mod) (
+       M.transˢ (M.⊚-congˡ (ren-π-sound (to-ctx Ξ) y ρ T))
+                (M.lift-cl-subst-π-commute (ty-closed-natural ⟨ ρ ∣ T ⟩)))) ] (
+  (interp-assumption-helper a α)
+    M.[ lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]')))
+interp-assumption-helper (alock {ρ = ρ} {Λ = Λ} a) α =
+  M.ι⁻¹[ M.ty-subst-cong-subst-2-0 _ (M.isoʳ (lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ)))) ] (
+    (M.ι⁻¹[ M.ty-subst-cong-subst-2-2 _ (key-subst-natural (DRA.to (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ)))) ] (
+     M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-comp _ _ _) ] (
+     interp-assumption-helper a α)))
+      M.[ M.to (lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]')
 
-⟦_,_⟧assumption : (a : Assumption x μ κ Ξ) (α : TwoCell μ κ) → SemTm ⟦ Ξ ⟧pctx (⟦ lookup-assumption a α ⟧bprop M.[ to-ctx-subst Ξ ])
-⟦ a , α ⟧assumption = M.ι[ M.ty-subst-cong-ty _ (unlock𝟙-bprop-sound (lookup-assumption' a 𝟙 _)) ] interp-assumption-helper a 𝟙 _
+⟦_,_⟧assumption : {Ξ : ProofCtx m} (a : Assumption x Ξ ◇) (α : TwoCell (as-mod a) (locksˡᵗ (as-lt a))) →
+                  SemTm ⟦ Ξ ⟧pctx (⟦ lookup-assumption a α ⟧bprop M.[ to-ctx-subst Ξ ])
+⟦ a , α ⟧assumption = M.ι⁻¹[ M.ty-subst-cong-ty _ (M.ty-subst-id _) ] (interp-assumption-helper a α)

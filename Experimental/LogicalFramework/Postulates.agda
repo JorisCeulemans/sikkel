@@ -62,6 +62,9 @@ postulate
 
   ren-key-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
                   DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ keyʳ {Γ = Γ} (lock⟨ ρ ⟩, ◇) (lock⟨ μ ⟩, ◇) α ⟧ren
+  ren-key-sound-cod : {μ : Modality m n} (Λ : LockTele n m) (α : TwoCell μ (locksˡᵗ Λ)) {Γ : Ctx n} →
+                      DRA.key-subst ⟦ α ⟧two-cell M.⊚ M.from (,ˡᵗ-sound {Γ = Γ} Λ) M.≅ˢ ⟦ keyʳ Λ (lock⟨ μ ⟩, ◇) α ⟧ren
+  ren-lock-sound : (σ : Ren Γ Δ) (μ : Modality m n) → ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren M.≅ˢ lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧ren
   ren-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ πʳ {Γ = Γ} {μ = μ} {x} {T} ⟧ren M.≅ˢ M.π
 
   sub-key-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
@@ -128,3 +131,25 @@ v1-sound-𝟙 Γ x T κ y S =
   M.transᵗᵐ (v1-sound Γ 𝟙 x T κ y S) (
   M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl (ty-closed-natural T))) (
   M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))))
+
+,ˡᵗ-sound-to-naturalʳ : (Λ : LockTele m n) {Γ Δ : Ctx m} (σ : Ren Γ Δ) →
+                        ⟦ σ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ M.to (,ˡᵗ-sound Λ)
+                          M.≅ˢ
+                        M.to (,ˡᵗ-sound Λ) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧ren
+,ˡᵗ-sound-to-naturalʳ ◇ σ = M.transˢ (M.id-subst-unitʳ _) (M.symˢ (M.id-subst-unitˡ _))
+,ˡᵗ-sound-to-naturalʳ (lock⟨ μ ⟩, Λ) σ =
+  begin
+    ⟦ σ ,lockʳ⟨ μ ⟩ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ (M.to (,ˡᵗ-sound Λ) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
+  ≅⟨ M.⊚-assoc ⟨
+    (⟦ σ ,lockʳ⟨ μ ⟩ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ M.to (,ˡᵗ-sound Λ)) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))
+  ≅⟨ M.⊚-congˡ (,ˡᵗ-sound-to-naturalʳ Λ (σ ,lockʳ⟨ μ ⟩)) ⟩
+    (M.to (,ˡᵗ-sound Λ) M.⊚ lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))
+  ≅⟨ M.⊚-assoc ⟩
+    M.to (,ˡᵗ-sound Λ) M.⊚ (lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
+  ≅⟨ M.⊚-congʳ (M.⊚-congˡ (lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (ren-lock-sound σ μ))) ⟩
+    M.to (,ˡᵗ-sound Λ) M.⊚ (lock-fmap ⟦ locksˡᵗ Λ ⟧mod (lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧ren) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
+  ≅⟨ M.⊚-congʳ (key-subst-natural (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))) ⟨
+    M.to (,ˡᵗ-sound Λ) M.⊚ (key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧ren)
+  ≅⟨ M.⊚-assoc ⟨
+    M.to (,ˡᵗ-sound Λ) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧ren ∎
+  where open M.≅ˢ-Reasoning

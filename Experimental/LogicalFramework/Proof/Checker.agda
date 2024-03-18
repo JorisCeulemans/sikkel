@@ -112,9 +112,11 @@ check-proof Ξ (mod-elim ρ μ x φ p1 p2) ψ = do
   ⟅ goals2 , ⟦p2⟧ ⟆ ← check-proof (Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ) p2 ψ
   return ⟅ goals1 ++ goals2 , sgoals ↦ (let sgoals1 , sgoals2 = split-sem-goals goals1 goals2 sgoals in
     mod-elim-sound Ξ φ ψ x (⟦p1⟧ sgoals1) (⟦p2⟧ sgoals2)) ⟆
-check-proof Ξ (assumption' x {μ = μ} {κ = κ} α) φ = do
-  contains-assumption κ' a ← contains-assumption? x μ Ξ
-  refl ← κ' ≟mod κ
+check-proof Ξ (assumption' {m = m} {n = n} x {μ = μ} {κ = κ} α) φ = do
+  a ← contains-assumption? x Ξ ◇
+  refl ← n ≟mode as-cod-mode a
+  refl ← μ ≟mod as-mod a
+  refl ← κ ≟mod locksˡᵗ (as-lt a)
   refl ← φ ≟bprop lookup-assumption a α
   return ⟅ [] , _ ↦ ⟦ a , α ⟧assumption ⟆
 check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do

@@ -33,10 +33,10 @@ private variable
   x y : String
 
 
-data Proof {m : Mode} : Ctx m → Set
+data Proof : {m : Mode} → Ctx m → Set
 ExtPfArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
 
-data Proof {m} where
+data Proof where
   {-
   -- Functoriality of the locks in a proof context
   lock𝟙-der : (Ξ ⊢ φ) → (Ξ ,lock⟨ 𝟙 ⟩ ⊢ lock𝟙-bprop φ)
@@ -75,7 +75,7 @@ data Proof {m} where
            Proof (Γ ,lock⟨ μ ⟩)  -- Ξ ,lock⟨ μ ⟩ ⊢ φ
            →
            Proof Γ               -- Ξ ⊢ ψ
-  assumption' : (x : String) {μ κ : Modality m n} (α : TwoCell μ κ) → Proof Γ
+  assumption' : {m n : Mode} {Γ : Ctx m} (x : String) {μ κ : Modality m n} (α : TwoCell μ κ) → Proof Γ
   ∧-intro : Proof Γ →  -- Ξ ⊢ φ
             Proof Γ     -- Ξ ⊢ ψ
             →
