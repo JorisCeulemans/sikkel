@@ -32,6 +32,41 @@ private variable
   T S : Ty m
 
 
+-- Assumptions
+interp-assumption-helper :
+  {Ξ : ProofCtx m} {Λ : LockTele m n}
+  (a : Assumption x Ξ Λ) (α : TwoCell (as-mod a) (locksˡᵗ (as-lt a))) →
+  SemTm (⟦ Ξ ⟧pctx DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩)
+        ((⟦ lookup-assumption a α ⟧bprop M.[ M.to (,ˡᵗ-sound Λ) ]) M.[ lock-fmap ⟦ locksˡᵗ Λ ⟧mod (to-ctx-subst Ξ) ])
+interp-assumption-helper (azero {μ = μ} {φ = φ} {Λ = Λ}) α =
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (M.transᵗʸ (rename-bprop-sound φ _) (M.ty-subst-cong-subst (M.symˢ (ren-key-sound-cod Λ α)) _))) ] (
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-1 _ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.isoʳ (,ˡᵗ-sound Λ))) (M.id-subst-unitʳ _)))) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (DRA.key-subst-natural ⟦ α ⟧two-cell) ] (
+  dra-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (dra-natural ⟦ μ ⟧mod _) ] M.ξ)
+    M.[ DRA.key-subst ⟦ α ⟧two-cell ]')))
+interp-assumption-helper (asuc {Λ = Λ} a) α =
+  M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.symˢ (DRA.lock-fmap-⊚ ⟦ locksˡᵗ Λ ⟧mod _ _)) ]
+  ((interp-assumption-helper a α) M.[ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]')
+interp-assumption-helper (avar {Ξ = Ξ} {Λ = Λ} {ρ = ρ} {y = y} {T = T} a) α =
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (rename-bprop-sound (lookup-assumption a α) _)) ] (
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-2 _ (,ˡᵗ-sound-to-naturalʳ Λ πʳ)) ] (
+  M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (ctx-functor ⟦ locksˡᵗ Λ ⟧mod) (
+       M.transˢ (M.⊚-congˡ (ren-π-sound (to-ctx Ξ) y ρ T))
+                (M.lift-cl-subst-π-commute (ty-closed-natural ⟨ ρ ∣ T ⟩)))) ] (
+  (interp-assumption-helper a α)
+    M.[ lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]')))
+interp-assumption-helper (alock {ρ = ρ} {Λ = Λ} a) α =
+  M.ι⁻¹[ M.ty-subst-cong-subst-2-0 _ (M.isoʳ (lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ)))) ] (
+    (M.ι⁻¹[ M.ty-subst-cong-subst-2-2 _ (key-subst-natural (DRA.to (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ)))) ] (
+     M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-comp _ _ _) ] (
+     interp-assumption-helper a α)))
+      M.[ M.to (lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]')
+
+⟦_,_⟧assumption : {Ξ : ProofCtx m} (a : Assumption x Ξ ◇) (α : TwoCell (as-mod a) (locksˡᵗ (as-lt a))) →
+                  SemTm ⟦ Ξ ⟧pctx (⟦ lookup-assumption a α ⟧bprop M.[ to-ctx-subst Ξ ])
+⟦ a , α ⟧assumption = M.ι⁻¹[ M.ty-subst-cong-ty _ (M.ty-subst-id _) ] (interp-assumption-helper a α)
+
+
 -- A useful lemma
 to-ctx-/-commute : (Ξ : ProofCtx m) (φ : bProp (to-ctx (Ξ ,,ᵛ μ ∣ x ∈ T))) (t : Tm (to-ctx (Ξ ,lock⟨ μ ⟩)) T) →
                    ⟦ φ [ t / x ]bpropˢ ⟧bprop M.[ to-ctx-subst Ξ ]
