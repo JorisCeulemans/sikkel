@@ -6,7 +6,7 @@ module Experimental.LogicalFramework.Example where
 
 open import Data.List
 open import Data.Nat hiding (_+_; _≡ᵇ_)
-open import Relation.Binary.PropositionalEquality using (_≡_) -- ; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_)
 
 open import Experimental.LogicalFramework.Instances.Trivial
 open import Experimental.LogicalFramework.MSTT triv-mstt

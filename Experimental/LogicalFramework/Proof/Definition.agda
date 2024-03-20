@@ -124,6 +124,7 @@ data Proof where
                (Ξ ⊢ fst (pair t s) ≡ᵇ t)
   pair-β-snd : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
                (Ξ ⊢ snd (pair t s) ≡ᵇ s)
+  mod-β
   -}
   fun-η : String → Proof Γ  -- Ξ ⊢ f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ svar "x")
   ⊠-η : Proof Γ  -- Ξ ⊢ p ≡ᵇ pair (fst p) (snd p)

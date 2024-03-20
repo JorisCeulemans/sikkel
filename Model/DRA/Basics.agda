@@ -273,6 +273,37 @@ closed-ty-eq-natural (dra-closed-cong μ e) σ =
 
 
 --------------------------------------------------
+-- Semantic form of the MTT modal induction rule (for closed types)
+
+module _
+  (ρ : DRA D E) (μ : DRA C D)
+  {T : ClosedTy C} (clT : IsClosedNatural T)
+  {S : ClosedTy E} (clS : IsClosedNatural S)
+  where
+
+  dra-let : {Γ : Ctx E} (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩) S) →
+            Tm Γ S
+  dra-let t s = s [ clS ∣ dra-intro ρ t /cl⟨ dra-closed ρ (dra-closed μ clT) ⟩ ]cl
+
+  dra-let-cong : {Γ : Ctx E}
+                 {t t' : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩} → t ≅ᵗᵐ t' →
+                 {s s' : Tm (Γ ,, ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩) S} → s ≅ᵗᵐ s' →
+                 dra-let t s ≅ᵗᵐ dra-let t' s'
+  dra-let-cong 𝒆t 𝒆s =
+    transᵗᵐ (cl-tm-subst-cong-tm clS 𝒆s)
+            (cl-tm-subst-cong-subst clS (/cl-cong (dra-closed ρ (dra-closed μ clT)) (dra-intro-cong ρ 𝒆t)))
+
+  dra-let-natural : {Γ Δ : Ctx E} (σ : Γ ⇒ Δ)
+                    {t : Tm (Δ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩} {s : Tm (Δ ,, ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩) S} →
+                    (dra-let t s) [ clS ∣ σ ]cl
+                      ≅ᵗᵐ
+                    dra-let (t [ dra-closed μ clT ∣ lock-fmap ρ σ ]cl) (s [ clS ∣ lift-cl-subst (dra-closed ρ (dra-closed μ clT)) σ ]cl)
+  dra-let-natural σ = cl-tm-subst-cong-subst-2-2 clS (
+    transˢ (/cl-⊚ (dra-closed ρ (dra-closed μ clT)) σ _)
+           (⊚-congʳ (/cl-cong (dra-closed ρ (dra-closed μ clT)) (dra-intro-cl-natural ρ (dra-closed μ clT) _))))
+
+
+--------------------------------------------------
 -- Constructing new DRAs
 
 -- The unit DRA
