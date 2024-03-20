@@ -63,6 +63,11 @@ ext-ty-natural {margs = m ∷ margs} nat (A , Args) = ext-ty-natural (nat (ty-cl
 ty-natural : (T : Ty m) {Γ Δ : SemCtx ⟦ m ⟧mode} {σ : Γ M.⇒ Δ} → ⟦ T ⟧ty M.[ σ ] M.≅ᵗʸ ⟦ T ⟧ty
 ty-natural T = closed-natural (ty-closed-natural T) _
 
+⇛-closed-natural : (T S : Ty m) → ty-closed-natural (T ⇛ S) M.≅ᶜⁿ M.fun-closed (ty-closed-natural T) (ty-closed-natural S)
+⇛-closed-natural T S =
+  M.fun-closed-congᶜⁿ (DRA.𝟙-preserves-cl (ty-closed-natural T)) (M.reflᶜⁿ (ty-closed-natural S))
+
+
 ⟦_⟧ctx-nmls : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ ◇ ⟧ctx-nmls = M.◇
 ⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls M.,, DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩

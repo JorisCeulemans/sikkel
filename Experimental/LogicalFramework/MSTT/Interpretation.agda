@@ -42,7 +42,7 @@ private variable
 --------------------------------------------------
 -- Re-export interpretation of modes, modalities, and types
 
-open NMLS-TySEM public using (⟦_⟧ty; ty-natural; ty-closed-natural)
+open NMLS-TySEM public using (⟦_⟧ty; ty-natural; ty-closed-natural; ⇛-closed-natural)
 
 
 --------------------------------------------------

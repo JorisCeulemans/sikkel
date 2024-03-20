@@ -290,6 +290,17 @@ record _≅ᶜⁿ_ {A : ClosedTy C} (clA clA' : IsClosedNatural A) : Set₁ wher
     closed-natural-eq : (σ : Γ ⇒ Δ) → closed-natural clA σ ≅ᵉ closed-natural clA' σ
 open _≅ᶜⁿ_ public
 
+reflᶜⁿ : {A : ClosedTy C} (clA : IsClosedNatural A) → clA ≅ᶜⁿ clA
+closed-natural-eq (reflᶜⁿ clA) _ = reflᵉ
+
+symᶜⁿ : {A : ClosedTy C} {clA clA' : IsClosedNatural A} →
+        clA ≅ᶜⁿ clA' → clA' ≅ᶜⁿ clA
+closed-natural-eq (symᶜⁿ e) σ = symᵉ (closed-natural-eq e σ)
+
+transᶜⁿ : {A : ClosedTy C} {clA1 clA2 clA3 : IsClosedNatural A} →
+          clA1 ≅ᶜⁿ clA2 → clA2 ≅ᶜⁿ clA3 → clA1 ≅ᶜⁿ clA3
+closed-natural-eq (transᶜⁿ e12 e23) σ = transᵉ (closed-natural-eq e12 σ) (closed-natural-eq e23 σ)
+
 module _ {A : ClosedTy C} {clA clA' : IsClosedNatural A} (e : clA ≅ᶜⁿ clA') where
   cl-tm-subst-cong-cl : {σ : Γ ⇒ Δ} {t : Tm Δ A} →
                         t [ clA ∣ σ ]cl ≅ᵗᵐ t [ clA' ∣ σ ]cl

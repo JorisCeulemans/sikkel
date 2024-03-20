@@ -510,6 +510,13 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
                                   (symᵗᵐ ι-symʳ))
                         (app-ι _ _)))
 
+fun-closed-congᶜⁿ : {A B : ClosedTy C}
+                    {clA clA' : IsClosedNatural A} {clB clB' : IsClosedNatural B} →
+                    clA ≅ᶜⁿ clA' → clB ≅ᶜⁿ clB' →
+                    fun-closed clA clB ≅ᶜⁿ fun-closed clA' clB'
+closed-natural-eq (fun-closed-congᶜⁿ eA eB) σ =
+  transᵗʸ-congʳ (⇛-cong-cong (closed-natural-eq eA σ) (closed-natural-eq eB σ))
+
 ⇛-closed-cong : {A A' B B' : ClosedTy C}
                 {clA : IsClosedNatural A} {clA' : IsClosedNatural A'} {clB : IsClosedNatural B} {clB' : IsClosedNatural B'} →
                 clA ≅ᶜᵗʸ clA' → clB ≅ᶜᵗʸ clB' → fun-closed clA clB ≅ᶜᵗʸ fun-closed clA' clB'
