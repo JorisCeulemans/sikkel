@@ -41,21 +41,21 @@ private variable
   T : Ty m
 
 
-⟦_⟧var : {T : Ty n} {Γ : Ctx m} {Λ : LockTele m n} →
-         Var _ T Γ Λ →
-         SemTm (⟦ Γ ⟧ctx-nmls DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩) ⟦ T ⟧ty
-⟦_⟧var {T = T} (vzero {μ = μ} α) =
+⟦_⟧var-nmls : {T : Ty n} {Γ : Ctx m} {Λ : LockTele m n} →
+              Var _ T Γ Λ →
+              SemTm (⟦ Γ ⟧ctx-nmls DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩) ⟦ T ⟧ty
+⟦_⟧var-nmls {T = T} (vzero {μ = μ} α) =
   (dra-elim ⟦ μ ⟧mod (ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
     M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
-⟦_⟧var {T = T} {Λ = Λ} (vsuc v) =
-  ⟦ v ⟧var M.[ ty-closed-natural T ∣ lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]cl
-⟦_⟧var {T = T} (vlock {ρ = ρ} {Λ = Λ} v) =
-  ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]cl
+⟦_⟧var-nmls {T = T} {Λ = Λ} (vsuc v) =
+  ⟦ v ⟧var-nmls M.[ ty-closed-natural T ∣ lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]cl
+⟦_⟧var-nmls {T = T} (vlock {ρ = ρ} {Λ = Λ} v) =
+  ⟦ v ⟧var-nmls M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]cl
 
 ⟦_⟧tm-nmls : Tm Γ T → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T → ExtTmArgs arginfos Γ → SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
 
-⟦ var' _ {v} ⟧tm-nmls = ⟦ v ⟧var
+⟦ var' _ {v} ⟧tm-nmls = ⟦ v ⟧var-nmls
 ⟦ mod⟨ μ ⟩ t ⟧tm-nmls = dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm-nmls
 ⟦ mod-elim {T = T} {S = S} ρ μ _ t s ⟧tm-nmls =
   dra-let ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T) (ty-closed-natural S)

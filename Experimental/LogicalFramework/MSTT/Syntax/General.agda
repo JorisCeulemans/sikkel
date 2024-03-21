@@ -127,11 +127,12 @@ var-lt (lock⟨ μ ⟩, Λ) v = var-lt Λ (vlock v)
 --------------------------------------------------
 -- Traversals of MSTT terms
 
--- An element of type Trav Δ Γ can be used to tranform terms in Γ to
--- terms in Δ. For this to work, we must specify how such a traversal
+-- An element of type Trav Γ Δ can be used to tranform terms in Δ to
+-- terms in Γ. For this to work, we must specify how such a traversal
 -- acts on variables and provide a lifting and lock operation for such
 -- traversals.
 record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
+  no-eta-equality
   field
     vr : {Γ Δ : Ctx m} {T : Ty m} →
          Var x T Δ ◇ → Trav Γ Δ → Tm Γ T

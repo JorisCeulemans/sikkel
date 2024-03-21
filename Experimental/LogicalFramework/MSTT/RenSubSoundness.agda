@@ -20,49 +20,74 @@ private variable
   Γ Δ : Ctx m
   T S : Ty m
   μ ρ : Modality m n
+  x y : String
 
 
-tm-aren-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : AtomicRen Δ Γ) →
-                (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl ) M.≅ᵗᵐ ⟦ t [ σ ]tmᵃʳ ⟧tm
-tm-aren-sound (var' x {v}) σ = {!!}
-tm-aren-sound (mod⟨_⟩_ {T = T} μ t) σ =
-  M.transᵗᵐ (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm) (dra-intro-cong ⟦ μ ⟧mod (tm-aren-sound t (σ ,lockᵃʳ⟨ μ ⟩)))
-tm-aren-sound (mod-elim {T = T} {S = S} ρ μ x t s) σ =
-  M.transᵗᵐ (dra-let-natural ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T) (ty-closed-natural S) ⟦ σ ⟧aren) (
-  dra-let-cong ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T) (ty-closed-natural S)
-               (tm-aren-sound t (σ ,lockᵃʳ⟨ ρ ⟩))
-               (M.transᵗᵐ (M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural S)
-                                                        (M.transˢ (M.⊚-congʳ (M.symˢ (M.lift-cl-subst-cong-cl (ⓓ-preserves-cl ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T)))))
-                                                                  (M.lift-cl-,,-cong-commute (M.symᶜᵗʸ (eq-dra-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T))) ⟦ σ ⟧aren)))
-                          (M.cl-tm-subst-cong-tm (ty-closed-natural S)
-                                                 (M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural S) {!liftᵃʳ-sound!})
-                                                            (tm-aren-sound s (liftᵃʳ σ))))))
-tm-aren-sound (lam[_∣_∈_]_ {S = S} μ x T s) σ =
-  M.transᵗᵐ (M.lamcl-natural (ty-closed-natural ⟨ μ ∣ T ⟩) (ty-closed-natural S)) (
-  M.transᵗᵐ (M.lamcl-cong (ty-closed-natural S) (M.cl-tm-subst-cong-subst (ty-closed-natural S) {!liftᵃʳ-sound!})) (
-  M.lamcl-cong (ty-closed-natural S) (tm-aren-sound s (liftᵃʳ σ))))
-tm-aren-sound (_∙_ {T = T} {S = S} {μ = μ} f t) σ =
-  M.transᵗᵐ (M.app-cl-natural (ty-closed-natural ⟨ μ ∣ T ⟩) (ty-closed-natural S)) (
-  M.transᵗᵐ (M.app-cong M.reflᵗᵐ (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm)) (
-  M.app-cong (tm-aren-sound f σ) (dra-intro-cong ⟦ μ ⟧mod (tm-aren-sound t (σ ,lockᵃʳ⟨ μ ⟩)))))
-tm-aren-sound zero σ = M.const-cl-natural ⟦ σ ⟧aren
-tm-aren-sound (suc t) σ = M.transᵗᵐ (M.suc'-cl-natural ⟦ σ ⟧aren) (M.suc'-cong (tm-aren-sound t σ))
-tm-aren-sound (nat-rec {A = A} z s n) σ =
-  M.transᵗᵐ (M.nat-rec-cl-natural (ty-closed-natural A)) (
-  M.nat-rec-cong (tm-aren-sound z σ)
-                 (M.transᵗᵐ (M.symᵗᵐ (M.cl-tm-subst-cong-cl (⇛-closed-natural A A))) (tm-aren-sound s σ))
-                 (tm-aren-sound n σ))
-tm-aren-sound true σ = M.const-cl-natural ⟦ σ ⟧aren
-tm-aren-sound false σ = M.const-cl-natural ⟦ σ ⟧aren
-tm-aren-sound (if {A = A} b t f) σ =
-  M.transᵗᵐ (M.if'-cl-natural (ty-closed-natural A)) (M.if'-cong (tm-aren-sound b σ) (tm-aren-sound t σ) (tm-aren-sound f σ))
-tm-aren-sound (pair {T = T} {S = S} t s) σ =
-  M.transᵗᵐ (M.pair-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.pair-cong (tm-aren-sound t σ) (tm-aren-sound s σ))
-tm-aren-sound (fst {T = T} {S = S} p) σ =
-  M.transᵗᵐ (M.fst-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.fst-cong (tm-aren-sound p σ))
-tm-aren-sound (snd {T = T} {S = S} p) σ =
-  M.transᵗᵐ (M.snd-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.snd-cong (tm-aren-sound p σ))
-tm-aren-sound (ext c tmargs e) σ = {!!}
+record TravStructSemantics
+  {Trav : ∀ {m} → Ctx m → Ctx m → Set}
+  (trav-struct : TravStruct Trav)
+  : Set where
+
+  no-eta-equality
+
+  module TS = TravStruct trav-struct
+  open TS
+
+  field
+    ⟦_⟧trav : Trav Γ Δ → (⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx)
+    vr-sound : {Γ Δ : Ctx m} {T : Ty m} →
+               (v : Var x T Δ ◇) (σ : Trav Γ Δ) →
+               ⟦ v ⟧var M.[ ty-closed-natural T ∣ ⟦ σ ⟧trav ]cl M.≅ᵗᵐ ⟦ vr v σ ⟧tm
+    lift-sound : {Γ Δ : Ctx m} {μ : Modality n m} {x : String} {T : Ty n} (σ : Trav Γ Δ) →
+                 M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧trav M.≅ˢ ⟦ lift {μ = μ} {x = x} {T = T} σ ⟧trav
+    lock-sound : {Γ Δ : Ctx m} (σ : Trav Γ Δ) (μ : Modality n m) →
+                 lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧trav M.≅ˢ ⟦ TS.lock {μ = μ} σ ⟧trav
+
+  traverse-tm-sound : (t : Tm Δ T) (σ : Trav Γ Δ) →
+                      ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧trav ]cl M.≅ᵗᵐ ⟦ traverse-tm t σ ⟧tm
+  traverse-tm-sound (var' x {v}) σ = vr-sound v σ
+  traverse-tm-sound (mod⟨_⟩_ {T = T} μ t) σ =
+    M.transᵗᵐ (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm) (
+    M.transᵗᵐ (dra-intro-cong ⟦ μ ⟧mod (M.cl-tm-subst-cong-subst (ty-closed-natural T) (lock-sound σ μ))) (
+    dra-intro-cong ⟦ μ ⟧mod (traverse-tm-sound t (TS.lock σ))))
+  traverse-tm-sound (mod-elim {T = T} {S = S} ρ μ x t s) σ =
+    M.transᵗᵐ (dra-let-natural ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T) (ty-closed-natural S) ⟦ σ ⟧trav) (
+    dra-let-cong ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T) (ty-closed-natural S)
+                 (M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural ⟨ μ ∣ T ⟩) (lock-sound σ ρ))
+                            (traverse-tm-sound t (TS.lock σ)))
+                 (M.transᵗᵐ (M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural S)
+                                                          (M.transˢ (M.⊚-congʳ (M.symˢ (M.lift-cl-subst-cong-cl (ⓓ-preserves-cl ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T)))))
+                                                                    (M.lift-cl-,,-cong-commute (M.symᶜᵗʸ (eq-dra-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T))) ⟦ σ ⟧trav)))
+                            (M.cl-tm-subst-cong-tm (ty-closed-natural S)
+                                                   (M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural S) (lift-sound σ))
+                                                              (traverse-tm-sound s (TS.lift σ))))))
+  traverse-tm-sound (lam[_∣_∈_]_ {S = S} μ x T s) σ =
+    M.transᵗᵐ (M.lamcl-natural (ty-closed-natural ⟨ μ ∣ T ⟩) (ty-closed-natural S)) (
+    M.transᵗᵐ (M.lamcl-cong (ty-closed-natural S) (M.cl-tm-subst-cong-subst (ty-closed-natural S) (lift-sound σ))) (
+    M.lamcl-cong (ty-closed-natural S) (traverse-tm-sound s (TS.lift σ))))
+  traverse-tm-sound (_∙_ {T = T} {S = S} {μ = μ} f t) σ =
+    M.transᵗᵐ (M.app-cl-natural (ty-closed-natural ⟨ μ ∣ T ⟩) (ty-closed-natural S)) (
+    M.transᵗᵐ (M.app-cong M.reflᵗᵐ (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm)) (
+    M.app-cong (traverse-tm-sound f σ)
+               (dra-intro-cong ⟦ μ ⟧mod (M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (lock-sound σ μ))
+                                                   (traverse-tm-sound t (TS.lock σ))))))
+  traverse-tm-sound zero σ = M.const-cl-natural ⟦ σ ⟧trav
+  traverse-tm-sound (suc t) σ = M.transᵗᵐ (M.suc'-cl-natural ⟦ σ ⟧trav) (M.suc'-cong (traverse-tm-sound t σ))
+  traverse-tm-sound (nat-rec {A = A} z s n) σ =
+    M.transᵗᵐ (M.nat-rec-cl-natural (ty-closed-natural A)) (
+    M.nat-rec-cong (traverse-tm-sound z σ)
+                   (M.transᵗᵐ (M.symᵗᵐ (M.cl-tm-subst-cong-cl (⇛-closed-natural A A))) (traverse-tm-sound s σ))
+                   (traverse-tm-sound n σ))
+  traverse-tm-sound true σ = M.const-cl-natural ⟦ σ ⟧trav
+  traverse-tm-sound false σ = M.const-cl-natural ⟦ σ ⟧trav
+  traverse-tm-sound (if {A = A} b t f) σ =
+    M.transᵗᵐ (M.if'-cl-natural (ty-closed-natural A)) (M.if'-cong (traverse-tm-sound b σ) (traverse-tm-sound t σ) (traverse-tm-sound f σ))
+  traverse-tm-sound (pair {T = T} {S = S} t s) σ =
+    M.transᵗᵐ (M.pair-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.pair-cong (traverse-tm-sound t σ) (traverse-tm-sound s σ))
+  traverse-tm-sound (fst {T = T} {S = S} p) σ = M.transᵗᵐ (M.fst-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.fst-cong (traverse-tm-sound p σ))
+  traverse-tm-sound (snd {T = T} {S = S} p) σ = M.transᵗᵐ (M.snd-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.snd-cong (traverse-tm-sound p σ))
+  traverse-tm-sound (Tm.ext c tm-args e) σ = {!!}
+
 
 {-
 postulate

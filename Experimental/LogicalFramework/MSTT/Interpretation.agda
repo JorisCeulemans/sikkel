@@ -14,6 +14,7 @@ module Experimental.LogicalFramework.MSTT.Interpretation
   where
 
 open import Data.Maybe
+open import Data.String using (String)
 open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
@@ -37,6 +38,7 @@ private variable
   m n : Mode
   Γ Δ : Ctx m
   T S : Ty m
+  x : String
 
 
 --------------------------------------------------
@@ -54,6 +56,10 @@ open NMLS-TySEM public using (⟦_⟧ty; ty-natural; ty-closed-natural; ⇛-clos
 
 ⟦_⟧ctx : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ Γ ⟧ctx = ⟦ erase-names-ctx Γ ⟧ctx-nmls
+
+⟦_⟧var : {Γ : Ctx m} {Λ : LockTele m n} → Var x T Γ Λ →
+         SemTm (⟦ Γ ⟧ctx DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩) ⟦ T ⟧ty
+⟦ v ⟧var = ⟦ erase-names-var v ⟧var-nmls
 
 ⟦_⟧tm : Tm Γ T → SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 ⟦ t ⟧tm = ⟦ erase-names-tm t ⟧tm-nmls
@@ -127,7 +133,7 @@ weaken-tm-sound t = mid-weaken-tm-sound ◇ t
 ⟦ []ᵃʳ ⟧aren = M.!◇ _
 ⟦ idᵃʳ ⟧aren = M.id-subst _
 ⟦ _∷ᵃʳ_/_ {μ = μ} {T = T} σ (somevar v) x ⟧aren =
-  ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ erase-names-var v ⟧var)
+  ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ v ⟧var)
 ⟦ σ ⊚πᵃʳ ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
 ⟦ σ ,lockᵃʳ⟨ μ ⟩ ⟧aren = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
 ⟦ keyᵃʳ Λ₁ Λ₂ α ⟧aren =
