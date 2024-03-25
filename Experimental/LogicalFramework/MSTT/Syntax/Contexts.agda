@@ -6,9 +6,10 @@ open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 
 module Experimental.LogicalFramework.MSTT.Syntax.Contexts
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
   where
 
+open import Data.String
 open import Relation.Binary.PropositionalEquality
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
@@ -19,6 +20,13 @@ private variable
   m n o p : Mode
   μ ρ κ φ : Modality m n
   T S : Ty m
+
+
+-- Provide an alias for when strings are used as variable names
+Name : Set
+Name = String
+
+private variable
   x y : Name
 
 
@@ -55,9 +63,25 @@ locks-tel (Θ ,lock⟨ μ ⟩) = locks-tel Θ ⓜ μ
 
 
 --------------------------------------------------
--- Operations relating to lock telescopes
+-- Lock telescopes consisting of only locks (so no variables)
 
-open import Experimental.LogicalFramework.MSTT.Syntax.LockTele.Base ℳ public
+-- Lock telescopes are defined as "well-moded" cons lists which reflects their usage.
+data LockTele (m : Mode) : Mode → Set where
+  ◇ : LockTele m m
+  lock⟨_⟩,_ : (μ : Modality o m) (Λ : LockTele o n) → LockTele m n
+
+locksˡᵗ : LockTele m n → Modality n m
+locksˡᵗ ◇ = 𝟙
+locksˡᵗ (lock⟨ μ ⟩, Λ) = μ ⓜ locksˡᵗ Λ
+
+infixl 6 _++ˡᵗ_
+_++ˡᵗ_ : LockTele m n → LockTele n o → LockTele m o
+◇ ++ˡᵗ Θ = Θ
+(lock⟨ μ ⟩, Λ) ++ˡᵗ Θ = lock⟨ μ ⟩, (Λ ++ˡᵗ Θ)
+
+++ˡᵗ-locks : (Λ : LockTele m n) {Θ : LockTele n o} → locksˡᵗ Λ ⓜ locksˡᵗ Θ ≡ locksˡᵗ (Λ ++ˡᵗ Θ)
+++ˡᵗ-locks ◇ = mod-unitˡ
+++ˡᵗ-locks (lock⟨ μ ⟩, Λ) {Θ = Θ} = trans (mod-assoc (locksˡᵗ Θ)) (cong (μ ⓜ_) (++ˡᵗ-locks Λ))
 
 infixl 5 _,ˡᵗ_
 _,ˡᵗ_ : Ctx m → LockTele m n → Ctx n

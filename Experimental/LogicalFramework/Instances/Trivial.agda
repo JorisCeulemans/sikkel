@@ -2,7 +2,6 @@ module Experimental.LogicalFramework.Instances.Trivial where
 
 open import Data.Empty
 open import Data.Maybe
-open import Data.String
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
@@ -12,7 +11,6 @@ import Model.DRA as DRA
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
 open import Experimental.LogicalFramework.MSTT.Parameter
 
@@ -51,13 +49,13 @@ TyExt.show-ty-code triv-ty-ext ()
 TyExt.⟦ triv-ty-ext ⟧ty-code ()
 TyExt.sem-ty-code-natural triv-ty-ext ()
 
-triv-tm-ext : TmExt triv-mt triv-ty-ext String
+triv-tm-ext : TmExt triv-mt triv-ty-ext
 TmExt.TmExtCode triv-tm-ext _ = ⊥
 TmExt._≟tm-code_ triv-tm-ext () ()
 TmExt.tm-code-ty triv-tm-ext ()
 TmExt.tm-code-arginfos triv-tm-ext ()
 
-triv-tm-ext-sem : TmExtSem triv-mt triv-ty-ext (erase-names-tmext triv-mt triv-ty-ext triv-tm-ext)
+triv-tm-ext-sem : TmExtSem triv-mt triv-ty-ext triv-tm-ext
 TmExtSem.⟦ triv-tm-ext-sem ⟧tm-code ()
 
 
@@ -73,16 +71,15 @@ open import Experimental.LogicalFramework.Parameter.bPropExtension
 open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
 open import Experimental.LogicalFramework.Parameter.ProofExtension
 open import Experimental.LogicalFramework.Parameter
-open import Experimental.LogicalFramework.bProp.AlphaEquivalence.bPropExtension
 
 
-triv-bp-ext : bPropExt triv-mt triv-ty-ext String triv-tm-ext
+triv-bp-ext : bPropExt triv-mt triv-ty-ext triv-tm-ext
 bPropExt.bPropExtCode triv-bp-ext _ = ⊥
 bPropExt._≟bp-code_ triv-bp-ext () ()
 bPropExt.bp-code-tmarg-infos triv-bp-ext ()
 bPropExt.bp-code-bparg-infos triv-bp-ext ()
 
-triv-bp-ext-sem : bPropExtSem triv-mt triv-ty-ext (erase-names-tmext _ _ triv-tm-ext) (erase-names-bpext triv-mstt triv-bp-ext)
+triv-bp-ext-sem : bPropExtSem triv-mt triv-ty-ext triv-tm-ext triv-bp-ext
 bPropExtSem.⟦_⟧bp-code triv-bp-ext-sem ()
 
 triv-pf-ext : ProofExt triv-mstt triv-bp-ext triv-bp-ext-sem

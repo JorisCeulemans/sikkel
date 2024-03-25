@@ -1,12 +1,11 @@
 open import Experimental.LogicalFramework.MSTT.Parameter
 open import Experimental.LogicalFramework.Parameter.bPropExtension
 open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
-open import Data.String
 
 module Experimental.LogicalFramework.Proof.Checker.SyntaxViews
   (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
-  (𝒷 : bPropExt ℳ 𝒯 String 𝓉)
-  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 _ _)
+  (𝒷 : bPropExt ℳ 𝒯 𝓉)
+  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 𝓉 𝒷)
   where
 
 open import Experimental.LogicalFramework.Proof.CheckingMonad
@@ -29,7 +28,7 @@ is-eq? (t1 ≡ᵇ t2) = return (is-eq t1 t2)
 is-eq? φ = throw-error "bProp is not an equation"
 
 data IsForall : bProp Γ → Set where
-  is-forall : {Γ : Ctx m} (μ : Modality n m) (x : String) (T : Ty n) (φ : bProp (Γ ,, μ ∣ x ∈ T)) →
+  is-forall : {Γ : Ctx m} (μ : Modality n m) (x : Name) (T : Ty n) (φ : bProp (Γ ,, μ ∣ x ∈ T)) →
               IsForall (∀[ μ ∣ x ∈ T ] φ)
 
 is-forall? : (φ : bProp Γ) → PCM (IsForall φ)
@@ -61,7 +60,7 @@ is-modal? _ = throw-error "bProp is not of the form ⟨ μ ∣ φ ⟩."
 
 
 data IsLam : Tm Γ T → Set where
-  lam : (μ : Modality n m) (x : String) (b : Tm (Γ ,, μ ∣ x ∈ T) S) → IsLam (lam[ μ ∣ x ∈ T ] b)
+  lam : (μ : Modality n m) (x : Name) (b : Tm (Γ ,, μ ∣ x ∈ T) S) → IsLam (lam[ μ ∣ x ∈ T ] b)
 
 is-lam? : (t : Tm Γ T) → PCM (IsLam t)
 is-lam? (lam[ μ ∣ x ∈ T ] b) = return (lam μ x b)
@@ -105,7 +104,7 @@ is-prod-ty? _  = throw-error "Product type expected"
 
 
 data EndsInProgVar : ProofCtx m → Set where
-  ends-in-prog-var : (Ξ : ProofCtx m) (μ : Modality n m) (x : String) (T : Ty n) → EndsInProgVar (Ξ ,,ᵛ μ ∣ x ∈ T)
+  ends-in-prog-var : (Ξ : ProofCtx m) (μ : Modality n m) (x : Name) (T : Ty n) → EndsInProgVar (Ξ ,,ᵛ μ ∣ x ∈ T)
 
 ends-in-prog-var? : (Ξ : ProofCtx m) → PCM (EndsInProgVar Ξ)
 ends-in-prog-var? (Ξ ,,ᵛ μ ∣ x ∈ T) = return (ends-in-prog-var Ξ μ x T)

@@ -8,11 +8,10 @@ module Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
 open import Data.List
 open import Data.Unit
 
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 ⊤
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
 open TmExt
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 ⊤
-
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ 𝒯
 
 open import Model.CwF-Structure as M
@@ -24,10 +23,13 @@ private variable
   m : Mode
 
 
+-- A SemTmConstructor refers to an MSTT context and not a semantic
+-- context. This has the advantage that it corresponds to the
+-- arguments of the contructor Tm.ext.
 SemTmConstructor : List (TmArgInfo m) → Ctx m → Ty m → Set
-SemTmConstructor []                   Γ T = SemTm ⟦ Γ ⟧ctx-nmls ⟦ T ⟧ty
+SemTmConstructor []                   Γ T = SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 SemTmConstructor (arginfo ∷ arginfos) Γ T =
-  SemTm ⟦ Γ ++tel tmarg-tel arginfo ⟧ctx-nmls ⟦ tmarg-ty arginfo ⟧ty → SemTmConstructor arginfos Γ T
+  SemTm ⟦ Γ ++tel tmarg-tel arginfo ⟧ctx ⟦ tmarg-ty arginfo ⟧ty → SemTmConstructor arginfos Γ T
 
 record TmExtSem (𝓉 : TmExt) : Set where
   no-eta-equality

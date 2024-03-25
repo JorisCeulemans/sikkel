@@ -5,14 +5,14 @@ module Experimental.LogicalFramework.Proof.Checker
   where
 
 open import Data.List
-open import Data.String as Str hiding (_≟_; _++_)
+import Data.String as Str
 open import Data.Product
 import Relation.Binary.PropositionalEquality as Ag
 
 open BiSikkelParameter ℬ
 open import Experimental.LogicalFramework.Parameter.ProofExtension 𝒫 𝒷 ⟦𝒷⟧
 open ProofExt 𝓅
-open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 String
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
 
 open import Experimental.LogicalFramework.MSTT 𝒫
 open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
@@ -34,7 +34,7 @@ private variable
   Γ Δ : Ctx m
   T S R U : Ty m
   φ ψ : bProp Γ
-  x y : String
+  x y : Name
   Ξ : ProofCtx m
 
 

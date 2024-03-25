@@ -5,15 +5,15 @@ open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
 
 module Experimental.LogicalFramework.Parameter.ProofExtension
   (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
-  (𝒷 : bPropExt ℳ 𝒯 String 𝓉)
-  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 _ _)
+  (𝒷 : bPropExt ℳ 𝒯 𝓉)
+  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 𝓉 𝒷)
   where
 
 open import Data.List
 open import Relation.Binary.PropositionalEquality
 
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 String
-open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 String
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT 𝒫
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧

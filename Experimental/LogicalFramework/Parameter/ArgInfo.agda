@@ -3,11 +3,11 @@ open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
 
 module Experimental.LogicalFramework.Parameter.ArgInfo
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
   where
 
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯
 
 open ModeTheory ℳ
 

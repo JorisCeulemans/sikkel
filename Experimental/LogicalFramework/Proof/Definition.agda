@@ -10,16 +10,17 @@ module Experimental.LogicalFramework.Proof.Definition
 
 open import Data.List
 open import Data.Product
-open import Data.String as Str hiding (_≟_)
+open import Data.String as Str using (String)
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality as Ag using (refl)
 
 open BiSikkelParameter ℬ
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.bProp.Named 𝒫 𝒷
+open import Experimental.LogicalFramework.bProp.Syntax 𝒫 𝒷
 open import Experimental.LogicalFramework.Parameter.ProofExtension 𝒫 𝒷 ⟦𝒷⟧
-open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 String
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
+
 open ProofExt 𝓅
 
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
@@ -30,7 +31,7 @@ private variable
   Γ Δ : Ctx m
   T S R U : Ty m
   φ ψ : bProp Γ
-  x y : String
+  x y : Name
 
 
 data Proof : {m : Mode} → Ctx m → Set
@@ -66,7 +67,7 @@ data Proof where
   ⊥ᵇ-elim : Proof Γ  -- Ξ ⊢ ⊥ᵇ
             →
             Proof Γ  -- Ξ ⊢ φ
-  ⊃-intro : (x : String) →
+  ⊃-intro : (x : Name) →
             Proof Γ  -- Ξ ,,ᵇ μ ∣ x ∈ φ ⊢ ψ
             →
             Proof Γ  -- Ξ ⊢ ⟨ μ ∣ φ ⟩⊃ ψ
@@ -75,7 +76,7 @@ data Proof where
            Proof (Γ ,lock⟨ μ ⟩)  -- Ξ ,lock⟨ μ ⟩ ⊢ φ
            →
            Proof Γ               -- Ξ ⊢ ψ
-  assumption' : {m n : Mode} {Γ : Ctx m} (x : String) {μ κ : Modality m n} (α : TwoCell μ κ) → Proof Γ
+  assumption' : {m n : Mode} {Γ : Ctx m} (x : Name) {μ κ : Modality m n} (α : TwoCell μ κ) → Proof Γ
   ∧-intro : Proof Γ →  -- Ξ ⊢ φ
             Proof Γ     -- Ξ ⊢ ψ
             →
@@ -88,7 +89,7 @@ data Proof where
             Proof Γ  -- Ξ ⊢ φ ∧ ψ
             →
             Proof Γ  -- Ξ ⊢ ψ
-  ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : String) (T : Ty n) →
+  ∀-intro[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) →
                     Proof (Γ ,, μ ∣ x ∈ T)  -- Ξ ,,ᵛ μ ∣ x ∈ T ⊢ φ
                     →
                     Proof Γ                 -- Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ
@@ -103,7 +104,7 @@ data Proof where
             Proof (Γ ,lock⟨ μ ⟩)  -- Ξ ,lock⟨ μ ⟩ ⊢ φ
             →
             Proof Γ               -- Ξ ⊢ ⟨ μ ∣ φ ⟩
-  mod-elim : (ρ : Modality n m) (μ : Modality o n) (x : String) (φ : bProp (Γ ,lock⟨ ρ ⟩ ,lock⟨ μ ⟩)) →
+  mod-elim : (ρ : Modality n m) (μ : Modality o n) (x : Name) (φ : bProp (Γ ,lock⟨ ρ ⟩ ,lock⟨ μ ⟩)) →
              Proof (Γ ,lock⟨ ρ ⟩) →  -- Ξ ,lock⟨ ρ ⟩ ⊢ ⟨ μ ∣ φ ⟩
              Proof Γ                 -- Ξ ,,ᵇ ρ ⓜ μ ∣ x ∈ fuselocks-bprop φ ⊢ ψ
              →
@@ -126,16 +127,16 @@ data Proof where
                (Ξ ⊢ snd (pair t s) ≡ᵇ s)
   mod-β
   -}
-  fun-η : String → Proof Γ  -- Ξ ⊢ f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ svar "x")
+  fun-η : Name → Proof Γ  -- Ξ ⊢ f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ svar "x")
   ⊠-η : Proof Γ  -- Ξ ⊢ p ≡ᵇ pair (fst p) (snd p)
 
   -- Axioms specifying distinctness of booleans and natural numbers
   true≠false : Proof Γ  -- Ξ ⊢ ¬ (true ≡ᵇ false)
-  suc-inj : (x y : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ∀[ 𝟙 ∣ y ∈ Nat' ] (suc (svar x) ≡ᵇ suc (svar y)) ⊃ (svar x ≡ᵇ svar y)
-  zero≠sucn : (x : String) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ¬ (zero ≡ᵇ suc (svar x))
+  suc-inj : (x y : Name) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ∀[ 𝟙 ∣ y ∈ Nat' ] (suc (svar x) ≡ᵇ suc (svar y)) ⊃ (svar x ≡ᵇ svar y)
+  zero≠sucn : (x : Name) → Proof Γ  -- Ξ ⊢ ∀[ 𝟙 ∣ x ∈ Nat' ] ¬ (zero ≡ᵇ suc (svar x))
 
   -- Induction schemata for Bool' and Nat'
-  bool-induction' : {Γ Δ : Ctx m} {x : String} → Δ Ag.≡ (Γ ,, x ∈ Bool') →
+  bool-induction' : {Γ Δ : Ctx m} {x : Name} → Δ Ag.≡ (Γ ,, x ∈ Bool') →
                     Proof Γ →  -- Ξ ⊢ φ [ true  / x ]bprop
                     Proof Γ     -- Ξ ⊢ φ [ false / x ]bprop
                     →
@@ -143,7 +144,7 @@ data Proof where
     -- ^ We cannot just return a proof of type Proof (Γ ,, x ∈ Nat')
     -- because in that case pattern matching in the proof checker
     -- would fail. Users are intended to use bool-induction defined below.
-  nat-induction' : {Γ Δ : Ctx m} {x : String} (hyp : String) → Δ Ag.≡ (Γ ,, x ∈ Nat') →
+  nat-induction' : {Γ Δ : Ctx m} {x : Name} (hyp : String) → Δ Ag.≡ (Γ ,, x ∈ Nat') →
                    Proof Γ →  -- Ξ ⊢ φ [ zero / x ]bprop
                    Proof Δ     -- Ξ ,,ᵛ n ∈ Nat' ,,ᵇ 𝟙 ∣ hyp ∈ φ ⊢ φ [ suc n / n ]bprop
                    →
@@ -151,7 +152,7 @@ data Proof where
     -- ^ Same remark as for bool-induction'.
 
   -- Dependent eliminator for modal types
-  mod-induction' : {Γ Δ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : String) {y : String} →
+  mod-induction' : {Γ Δ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : Name) {y : Name} →
                    Δ Ag.≡ (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩) →
                                                -- φ : bProp (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩)
                    Proof (Γ ,, μ ⓜ κ ∣ x ∈ T)  -- Ξ ,,ᵛ μ ⓜ κ ∣ x ∈ T ⊢ φ [ mod⟨ κ ⟩ x / y ]bprop
@@ -181,6 +182,6 @@ nat-induction : {Γ : Ctx m} {x : String} (hyp : String) →
                 Proof Γ → Proof (Γ ,, x ∈ Nat') → Proof (Γ ,, x ∈ Nat')
 nat-induction hyp = nat-induction' hyp Ag.refl
 
-mod-induction : {Γ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : String) {y : String} →
+mod-induction : {Γ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : Name) {y : Name} →
                 Proof (Γ ,, μ ⓜ κ ∣ x ∈ T) → Proof (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩)
 mod-induction κ μ x = mod-induction' κ μ x Ag.refl

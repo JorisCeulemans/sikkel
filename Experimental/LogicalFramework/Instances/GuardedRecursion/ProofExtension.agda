@@ -2,7 +2,6 @@ module Experimental.LogicalFramework.Instances.GuardedRecursion.ProofExtension w
 
 open import Data.List
 open import Data.Product
-open import Data.String as Str using (String)
 open import Relation.Binary.PropositionalEquality as Ag
 
 open import Experimental.LogicalFramework.Proof.CheckingMonad
@@ -19,8 +18,8 @@ open import Experimental.LogicalFramework.Proof.Checker.SyntaxViews guarded-mstt
 open import Experimental.LogicalFramework.Proof.Checker.ResultType guarded-mstt guarded-bp-ext guarded-bp-ext-sem
 open import Experimental.LogicalFramework.bProp guarded-mstt guarded-bp-ext guarded-bp-ext-sem
 
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension guarded-mt guarded-ty-ext String
-open import Experimental.LogicalFramework.Parameter.ArgInfo guarded-mt guarded-ty-ext String
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension guarded-mt guarded-ty-ext
+open import Experimental.LogicalFramework.Parameter.ArgInfo guarded-mt guarded-ty-ext
 open import Experimental.LogicalFramework.Parameter.ProofExtension guarded-mstt guarded-bp-ext guarded-bp-ext-sem
 
 private variable
@@ -32,7 +31,7 @@ private variable
 data ProofExtCode : Mode → Set where
   gstream-β-head-code gstream-β-tail-code : ProofExtCode ω
   tmlöb-β-code : ProofExtCode ω
-  pflöb-code : (x : String) → ProofExtCode ω
+  pflöb-code : (x : Name) → ProofExtCode ω
 
 pf-code-tmarg-infos : ProofExtCode m → List (TmArgInfo m)
 pf-code-tmarg-infos gstream-β-head-code = []
@@ -77,7 +76,7 @@ is-g-cons? (g-cons a s) = return (is-g-cons a s)
 is-g-cons? _ = throw-error "cons of guarded stream expected"
 
 data IsLob : Tm Γ T → Set where
-  is-lob : (x : String) (T : Ty ω) (t : Tm (Γ ,, later ∣ x ∈ T) T) → IsLob (löb[later∣ x ∈ T ] t)
+  is-lob : (x : Name) (T : Ty ω) (t : Tm (Γ ,, later ∣ x ∈ T) T) → IsLob (löb[later∣ x ∈ T ] t)
 
 is-lob? : (t : Tm Γ T) → PCM (IsLob t)
 is-lob? (löb[later∣ x ∈ T ] t) = return (is-lob x T t)

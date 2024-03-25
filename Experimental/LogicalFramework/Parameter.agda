@@ -7,9 +7,6 @@ open import Experimental.LogicalFramework.Parameter.bPropExtension
 open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
 open import Experimental.LogicalFramework.Parameter.ProofExtension
 
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension
-open import Experimental.LogicalFramework.bProp.AlphaEquivalence.bPropExtension
-
 
 record BiSikkelParameter : Set₁ where
   no-eta-equality
@@ -19,6 +16,6 @@ record BiSikkelParameter : Set₁ where
   open MSTT-Parameter 𝒫 public
 
   field
-    𝒷 : bPropExt ℳ 𝒯 String 𝓉
-    ⟦𝒷⟧ : bPropExtSem ℳ 𝒯 (erase-names-tmext ℳ 𝒯 𝓉) (erase-names-bpext 𝒫 𝒷)
+    𝒷 : bPropExt ℳ 𝒯 𝓉
+    ⟦𝒷⟧ : bPropExtSem ℳ 𝒯 𝓉 𝒷
     𝓅 : ProofExt 𝒫 𝒷 ⟦𝒷⟧

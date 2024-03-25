@@ -4,7 +4,7 @@ open import Data.String
 
 module Experimental.LogicalFramework.Proof.Equality
   (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
-  (𝒷 : bPropExt ℳ 𝒯 String 𝓉)
+  (𝒷 : bPropExt ℳ 𝒯 𝓉)
   where
 
 open import Data.List using (List; []; _∷_)
@@ -18,13 +18,13 @@ open import Model.Helpers -- we need uip for term equality
 
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension ℳ
 open TyExt 𝒯
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 String
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
 open TmExt 𝓉
 open import Experimental.LogicalFramework.Parameter.bPropExtension
 open bPropExt 𝒷
 
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
-open import Experimental.LogicalFramework.bProp.Named 𝒫 𝒷
+open import Experimental.LogicalFramework.bProp.Syntax 𝒫 𝒷
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 private variable

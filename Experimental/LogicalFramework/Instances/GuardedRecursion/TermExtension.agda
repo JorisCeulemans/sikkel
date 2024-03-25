@@ -2,7 +2,7 @@ module Experimental.LogicalFramework.Instances.GuardedRecursion.TermExtension wh
 
 open import Data.List
 open import Data.Product using (_,_)
-open import Data.String as Str
+import Data.String as Str
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
@@ -16,7 +16,6 @@ import Applications.GuardedRecursion.Model.Modalities.Later.Closed as M
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
-open import Experimental.LogicalFramework.MSTT.AlphaEquivalence.TermExtension
 
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
@@ -38,7 +37,7 @@ private
   GStream A = Ext GStream-code (A , tt)
 
 data TmExtCode : Mode → Set where
-  löb-code : String → Ty ω → TmExtCode ω
+  löb-code : Name → Ty ω → TmExtCode ω
   g-cons-code g-head-code g-tail-code : Ty ★ → TmExtCode ω
 
 _≟tm-code_ : (c1 c2 : TmExtCode m) → PCM (c1 ≡ c2)
@@ -55,7 +54,7 @@ tm-code-ty (g-cons-code A) = GStream A
 tm-code-ty (g-head-code A) = ⟨ constantly ∣ A ⟩
 tm-code-ty (g-tail-code A) = ⟨ later ∣ GStream A ⟩
 
-tm-code-arginfos : TmExtCode m → List (TmArgInfo guarded-mt guarded-ty-ext String m)
+tm-code-arginfos : TmExtCode m → List (TmArgInfo guarded-mt guarded-ty-ext m)
 tm-code-arginfos (löb-code x A) = tmarg-info (◇ ,, later ∣ x ∈ A) A ∷ []
 tm-code-arginfos (g-cons-code A) =
   tmarg-info (◇ ,lock⟨ constantly ⟩) A ∷
@@ -64,14 +63,14 @@ tm-code-arginfos (g-cons-code A) =
 tm-code-arginfos (g-head-code A) = tmarg-info ◇ (GStream A) ∷ []
 tm-code-arginfos (g-tail-code A) = tmarg-info ◇ (GStream A) ∷ []
 
-guarded-tm-ext : TmExt guarded-mt guarded-ty-ext String
+guarded-tm-ext : TmExt guarded-mt guarded-ty-ext
 TmExt.TmExtCode guarded-tm-ext = TmExtCode
 TmExt._≟tm-code_ guarded-tm-ext = _≟tm-code_
 TmExt.tm-code-ty guarded-tm-ext = tm-code-ty
 TmExt.tm-code-arginfos guarded-tm-ext = tm-code-arginfos
 
 
-guarded-tm-ext-sem : TmExtSem guarded-mt guarded-ty-ext (erase-names-tmext guarded-mt guarded-ty-ext guarded-tm-ext)
+guarded-tm-ext-sem : TmExtSem guarded-mt guarded-ty-ext guarded-tm-ext
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (löb-code x A) =
   λ t → M.löb-cl (ty-closed-natural A) t
 TmExtSem.⟦_⟧tm-code guarded-tm-ext-sem (g-cons-code A) =

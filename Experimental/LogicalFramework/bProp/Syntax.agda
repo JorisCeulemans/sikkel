@@ -1,19 +1,13 @@
 --------------------------------------------------
 -- Definition of BiSikkel propositions and their substitution
---   Just as MSTT syntax, the general definition of propositions is
---   parametrised by a type of names to represent variables. It is not
---   recommended to directly import this module, but rather use
---   bProp.Named.
 --------------------------------------------------
 
-open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
-open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
+open import Experimental.LogicalFramework.MSTT.Parameter
 open import Experimental.LogicalFramework.Parameter.bPropExtension using (bPropExt)
 
-module Experimental.LogicalFramework.bProp.General
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set) (𝓉 : TmExt ℳ 𝒯 Name)
-  (𝒷 : bPropExt ℳ 𝒯 Name 𝓉)
+module Experimental.LogicalFramework.bProp.Syntax
+  (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
+  (𝒷 : bPropExt ℳ 𝒯 𝓉)
   where
 
 open import Data.List
@@ -21,16 +15,13 @@ open import Data.Product renaming (_,_ to [_,_])
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
-open ModeTheory ℳ
 open bPropExt 𝒷
 
-open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
-open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 Name 𝓉
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 Name
-open import Experimental.LogicalFramework.Parameter.bPropExtension ℳ 𝒯 Name 𝓉
-open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 Name
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
+open import Experimental.LogicalFramework.Parameter.bPropExtension ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
 
 private variable
   m n : Mode
@@ -45,6 +36,9 @@ infixr 6 _⊃_
 infixl 9 _∧_
 infix 12 _≡ᵇ_
 
+
+--------------------------------------------------
+-- Definition of BiSikkel propositions
 
 -- TODO: include connective for disjunction and existential quantification.
 data bProp {m} (Γ : Ctx m) : Set
@@ -70,11 +64,14 @@ ExtBPArgs (info ∷ bpinfos) Γ = bProp (Γ ++tel arg-tel info) × ExtBPArgs bpi
 ¬⟨ μ ⟩ φ = ⟨ μ ∣ φ ⟩⊃ ⊥ᵇ
 
 
--- A proposition can be traversed whenever terms can be traversed
+--------------------------------------------------
+-- Renaming and substitution for BiSikkel propositions
+
+-- A proposition can be traversed whenever terms can be traversed.
 --   Note that this record has a special field specifying how a
---   traversal object acts on terms.  This way, we can instantiate
---   this with the exact definition of substitution or renaming for
---   terms, rather than having some equivalent reimplementation of it.
+--   traversal object acts on terms. This way, we can instantiate this
+--   with the exact definition of substitution or renaming for terms,
+--   rather than having some equivalent reimplementation of it.
 record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   field
     trav-tm : Tm Δ T → Trav Γ Δ → Tm Γ T

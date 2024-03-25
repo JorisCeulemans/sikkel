@@ -1,30 +1,27 @@
 --------------------------------------------------
--- Definition of MSTT contexts, terms and their associated operations
---   The general syntax is parametrised by a type of names to represent
---   variables. It is not recommended to directly import this module,
---   but rather use MSTT.Syntax.Named.
+-- Definition and implementation of renaming and substitution for MSTT
 --------------------------------------------------
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
 
-module Experimental.LogicalFramework.MSTT.Syntax.General
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set) (𝓉 : TmExt ℳ 𝒯 Name)
+module Experimental.LogicalFramework.MSTT.Syntax.Substitution
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯)
   where
 
 open import Data.List
-open import Data.Maybe
 open import Data.Product
 open import Data.Unit
-open import Relation.Binary.PropositionalEquality as Ag
+open import Relation.Binary.PropositionalEquality
 
 open ModeTheory ℳ
 open TmExt 𝓉
 
-open Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 Name hiding (TmExt)
+open Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 hiding (TmExt)
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 Name
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Syntax.Terms ℳ 𝒯 𝓉 hiding (refl)
 
 private variable
   m n o p : Mode
@@ -32,96 +29,7 @@ private variable
   T S : Ty m
   x y : Name
   Γ Δ Θ : Ctx m
-
-
---------------------------------------------------
--- Definition of MSTT variables
-
--- A value of type Var x T Γ Λ expresses that there is a valid
--- variable (including the necessary 2-cell) with name x and type T in
--- the context Γ ,ˡᵗ Λ. We explicitly keep track of the lock telescope
--- Λ in order to match the recursion structure of many of the
--- variable-manipulating functions further in this file. Note that Λ
--- is required to be empty when constructing a term.
-data Var (x : Name) (T : Ty n) : Ctx m → LockTele m n → Set where
-  vzero : {μ : Modality n m} {Γ : Ctx m} {Λ : LockTele m n} →
-          TwoCell μ (locksˡᵗ Λ) →
-          Var x T (Γ ,, μ ∣ x ∈ T) Λ
-  vsuc : {Γ : Ctx m} {Λ : LockTele m n} {ρ : Modality o m} {y : Name} {S : Ty o} →
-         Var x T Γ Λ →
-         Var x T (Γ ,, ρ ∣ y ∈ S) Λ
-  vlock : {Γ : Ctx o} {ρ : Modality m o} {Λ : LockTele m n} →
-          Var x T Γ (lock⟨ ρ ⟩, Λ) →
-          Var x T (Γ ,lock⟨ ρ ⟩) Λ
-
-vlocks : {x : Name} {T : Ty n} {Γ : Ctx o} (Θ : LockTele o m) {Λ : LockTele m n} →
-         Var x T Γ (Θ ++ˡᵗ Λ) →
-         Var x T (Γ ,ˡᵗ Θ) Λ
-vlocks ◇             v = v
-vlocks (lock⟨ μ ⟩, Θ) v = vlocks Θ (vlock v)
-
-unvlock : {x : Name} {T : Ty n} {Γ : Ctx o} {μ : Modality m o} {Λ : LockTele m n} →
-          Var x T (Γ ,lock⟨ μ ⟩) Λ →
-          Var x T Γ (lock⟨ μ ⟩, Λ)
-unvlock (vlock v) = v
-
-unvlocks : {x : Name} {T : Ty n} {Γ : Ctx o} (Θ : LockTele o m) {Λ : LockTele m n} →
-           Var x T (Γ ,ˡᵗ Θ) Λ →
-           Var x T Γ (Θ ++ˡᵗ Λ)
-unvlocks ◇             v = v
-unvlocks (lock⟨ μ ⟩, Θ) v = unvlock (unvlocks Θ v)
-
-
---------------------------------------------------
--- Definition of MSTT terms
-
-infixl 50 _∙_
-data Tm : Ctx m → Ty m → Set
-ExtTmArgs : {m : Mode} → List (TmArgInfo m) → Ctx m → Set
-
-data Tm where
-  var' : (x : Name) {v : Var x T Γ ◇} → Tm Γ T
-    -- ^ When writing programs, one should not directly use var' but rather combine
-    --   it with a decision procedure for Var, which will resolve the name.
-  mod⟨_⟩_ : (μ : Modality n m) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ ⟨ μ ∣ T ⟩
-  mod-elim : (ρ : Modality o m) (μ : Modality n o) (x : Name)
-             (t : Tm (Γ ,lock⟨ ρ ⟩) ⟨ μ ∣ T ⟩) (s : Tm (Γ ,, ρ ⓜ μ ∣ x ∈ T) S) →
-             Tm Γ S
-  lam[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → Tm (Γ ,, μ ∣ x ∈ T) S → Tm Γ (⟨ μ ∣ T ⟩⇛ S)
-  _∙_ : {μ : Modality n m} → Tm Γ (⟨ μ ∣ T ⟩⇛ S) → Tm (Γ ,lock⟨ μ ⟩) T → Tm Γ S
-  zero : Tm Γ Nat'
-  suc : Tm Γ Nat' → Tm Γ Nat'
-  nat-rec : {A : Ty m} → Tm Γ A → Tm Γ (A ⇛ A) → Tm Γ Nat' → Tm Γ A
-  true false : Tm Γ Bool'
-  if : {A : Ty m} → Tm Γ Bool' → (t f : Tm Γ A) → Tm Γ A
-  pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
-  fst : Tm Γ (T ⊠ S) → Tm Γ T
-  snd : Tm Γ (T ⊠ S) → Tm Γ S
-  ext : (c : TmExtCode m) → ExtTmArgs (tm-code-arginfos c) Γ → T ≡ tm-code-ty c → Tm Γ T
-    -- ^ This constructor is not intended for direct use. An instantiation of MSTT with
-    --   specific term extensions should rather provide more convenient term formers via pattern synonyms.
-
-ExtTmArgs []                   Γ = ⊤
-ExtTmArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty arginfo) × ExtTmArgs arginfos Γ
-
-
-v0 : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ μ ⟩) T
-v0 = var' _ {vlock (vzero id-cell)}
-
-v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
-v1 = var' _ {vlock (vsuc (vzero id-cell))}
-
-v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
-v0-𝟙 = var' _ {vzero id-cell}
-
-v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
-v1-𝟙 = var' _ {vsuc (vzero id-cell)}
-
-syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
-
-var-lt : (Λ : LockTele n m) → Var x T Γ Λ → Tm (Γ ,ˡᵗ Λ) T
-var-lt ◇              v = var' _ {v}
-var-lt (lock⟨ μ ⟩, Λ) v = var-lt Λ (vlock v)
+  Λ : LockTele m n
 
 
 --------------------------------------------------

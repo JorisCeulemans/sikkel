@@ -22,7 +22,7 @@ import Model.Type.Constant as M
 import Model.DRA as DRA
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯 ⊤
+open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯
 
 private variable
   m n o : Mode
@@ -30,6 +30,9 @@ private variable
   Γ : Ctx m
   T : Ty m
 
+
+--------------------------------------------------
+-- Interpretation of types
 
 ⟦_⟧ty : Ty m → ClosedTy ⟦ m ⟧mode
 apply-sem-ty-constructor : ∀ {margs} → SemTyConstructor margs m → TyExtArgs margs → ClosedTy ⟦ m ⟧mode
@@ -68,7 +71,10 @@ ty-natural T = closed-natural (ty-closed-natural T) _
   M.fun-closed-congᶜⁿ (DRA.𝟙-preserves-cl (ty-closed-natural T)) (M.reflᶜⁿ (ty-closed-natural S))
 
 
-⟦_⟧ctx-nmls : Ctx m → SemCtx ⟦ m ⟧mode
-⟦ ◇ ⟧ctx-nmls = M.◇
-⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx-nmls = ⟦ Γ ⟧ctx-nmls M.,, DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
-⟦ Γ ,lock⟨ μ ⟩ ⟧ctx-nmls = DRA.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx-nmls
+--------------------------------------------------
+-- Interpretation of contexts
+
+⟦_⟧ctx : Ctx m → SemCtx ⟦ m ⟧mode
+⟦ ◇ ⟧ctx = M.◇
+⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx = ⟦ Γ ⟧ctx M.,, DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = DRA.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx

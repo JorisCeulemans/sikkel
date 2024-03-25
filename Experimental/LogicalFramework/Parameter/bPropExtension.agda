@@ -3,7 +3,7 @@ open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
 
 module Experimental.LogicalFramework.Parameter.bPropExtension
-  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (Name : Set) (𝓉 : TmExt ℳ 𝒯 Name)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯)
   where
 
 
@@ -11,9 +11,9 @@ open import Data.List
 open import Relation.Binary.PropositionalEquality
 
 open import Experimental.LogicalFramework.Proof.CheckingMonad
-open import Experimental.LogicalFramework.MSTT.Syntax.General ℳ 𝒯 Name 𝓉
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 Name
-open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯 Name
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
 
 open ModeTheory ℳ
 

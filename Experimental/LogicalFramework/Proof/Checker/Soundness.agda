@@ -4,8 +4,8 @@ open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
 
 module Experimental.LogicalFramework.Proof.Checker.Soundness
   (𝒫 : MSTT-Parameter) (let open MSTT-Parameter 𝒫)
-  (𝒷 : bPropExt ℳ 𝒯 _ 𝓉)
-  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 _ _)
+  (𝒷 : bPropExt ℳ 𝒯 𝓉)
+  (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 𝓉 𝒷)
   where
 
 open import Data.String
