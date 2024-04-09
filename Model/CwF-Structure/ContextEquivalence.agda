@@ -19,6 +19,8 @@ private
 
 -- Two contexts are equivalent if they are naturally equivalent as presheaves.
 record _≅ᶜ_ (Δ : Ctx C) (Γ : Ctx C) : Set where
+  no-eta-equality
+
   field
     from : Δ ⇒ Γ
     to : Γ ⇒ Δ

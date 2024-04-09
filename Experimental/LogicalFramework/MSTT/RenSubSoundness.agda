@@ -4,7 +4,10 @@ module Experimental.LogicalFramework.MSTT.RenSubSoundness
   (𝒫 : MSTT-Parameter)
   where
 
+open import Data.List
 open import Data.String using (String)
+open import Data.Product
+open import Data.Unit using (⊤; tt)
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell)
@@ -13,6 +16,9 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 
 open MSTT-Parameter 𝒫
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics ℳ 𝒯
+open TmExtSem ⟦𝓉⟧
 open import Experimental.LogicalFramework.MSTT 𝒫
 
 private variable
@@ -43,8 +49,22 @@ record TravStructSemantics
     lock-sound : {Γ Δ : Ctx m} (σ : Trav Γ Δ) (μ : Modality n m) →
                  lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧trav M.≅ˢ ⟦ TS.lock {μ = μ} σ ⟧trav
 
+  lift-trav-tel-sound : (σ : Trav Γ Δ) (Θ : Telescope m n) →
+                        lift-sem-tel Θ ⟦ σ ⟧trav M.≅ˢ ⟦ lift-trav-tel σ Θ ⟧trav
+  lift-trav-tel-sound σ ◇ = M.reflˢ
+  lift-trav-tel-sound σ (Θ ,, μ ∣ x ∈ T) =
+    M.transˢ (M.lift-cl-subst-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (lift-trav-tel-sound σ Θ)) (lift-sound {μ = μ} {T = T} (lift-trav-tel σ Θ))
+  lift-trav-tel-sound σ (Θ ,lock⟨ μ ⟩) =
+    M.transˢ (DRA.lock-fmap-cong ⟦ μ ⟧mod (lift-trav-tel-sound σ Θ)) (lock-sound (lift-trav-tel σ Θ) μ)
+
+
   traverse-tm-sound : (t : Tm Δ T) (σ : Trav Γ Δ) →
                       ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧trav ]cl M.≅ᵗᵐ ⟦ traverse-tm t σ ⟧tm
+  traverse-ext-tmargs-sound : ∀ {arginfos} (args : ExtTmArgs arginfos Δ) (σ : Trav Γ Δ) →
+                              semtms-subst ⟦ args ⟧extargs ⟦ σ ⟧trav
+                                ≅ᵗᵐˢ
+                              ⟦ traverse-ext-tmargs args σ ⟧extargs
+
   traverse-tm-sound (var' x {v}) σ = vr-sound v σ
   traverse-tm-sound (mod⟨_⟩_ {T = T} μ t) σ =
     M.transᵗᵐ (dra-intro-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) ⟦ t ⟧tm) (
@@ -86,7 +106,15 @@ record TravStructSemantics
     M.transᵗᵐ (M.pair-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.pair-cong (traverse-tm-sound t σ) (traverse-tm-sound s σ))
   traverse-tm-sound (fst {T = T} {S = S} p) σ = M.transᵗᵐ (M.fst-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.fst-cong (traverse-tm-sound p σ))
   traverse-tm-sound (snd {T = T} {S = S} p) σ = M.transᵗᵐ (M.snd-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.snd-cong (traverse-tm-sound p σ))
-  traverse-tm-sound (Tm.ext c tm-args e) σ = {!!}
+  traverse-tm-sound {Γ = Γ} (Tm.ext c tm-args refl) σ =
+    M.transᵗᵐ (apply-sem-tm-constructor-natural {Γ = Γ} ⟦ c ⟧tm-code (⟦⟧tm-code-natural c) ⟦ σ ⟧trav _)
+              (apply-sem-tm-constructor-cong {Γ = Γ} ⟦ c ⟧tm-code (⟦⟧tm-code-cong c) (traverse-ext-tmargs-sound tm-args σ))
+
+  traverse-ext-tmargs-sound {arginfos = []}          _            σ = tt
+  traverse-ext-tmargs-sound {arginfos = arginfo ∷ _} (arg , args) σ =
+    M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural (tmarg-ty arginfo)) (lift-trav-tel-sound σ (tmarg-tel arginfo)))
+              (traverse-tm-sound arg (lift-trav-tel σ (tmarg-tel arginfo)))
+    , traverse-ext-tmargs-sound args σ
 
 
 {-

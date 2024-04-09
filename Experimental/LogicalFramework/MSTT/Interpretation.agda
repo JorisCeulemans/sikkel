@@ -13,6 +13,7 @@ module Experimental.LogicalFramework.MSTT.Interpretation
 
 open import Data.List
 open import Data.Product
+open import Data.Unit
 
 open ModeTheory ℳ
 open TmExtSem ⟦𝓉⟧
@@ -54,7 +55,7 @@ open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ �
   ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]cl
 
 ⟦_⟧tm : Tm Γ T → SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
-apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T → ExtTmArgs arginfos Γ → SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
+⟦_⟧extargs : ∀ {arginfos} → ExtTmArgs arginfos Γ → SemTms arginfos Γ
 
 ⟦ var' _ {v} ⟧tm = ⟦ v ⟧var
 ⟦ mod⟨ μ ⟩ t ⟧tm = dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm
@@ -73,11 +74,10 @@ apply-sem-tm-constructor : ∀ {arginfos} → SemTmConstructor arginfos Γ T →
 ⟦ pair t s ⟧tm = M.pair ⟦ t ⟧tm ⟦ s ⟧tm
 ⟦ fst p ⟧tm = M.fst ⟦ p ⟧tm
 ⟦ snd p ⟧tm = M.snd ⟦ p ⟧tm
-⟦ ext c args refl ⟧tm = apply-sem-tm-constructor ⟦ c ⟧tm-code args
+⟦ ext c args refl ⟧tm = apply-sem-tm-constructor ⟦ c ⟧tm-code ⟦ args ⟧extargs
 
-apply-sem-tm-constructor {arginfos = []}    t args         = t
-apply-sem-tm-constructor {arginfos = _ ∷ _} f (arg , args) =
-  apply-sem-tm-constructor (f ⟦ arg ⟧tm) args
+⟦_⟧extargs {arginfos = []}                 _            = tt
+⟦_⟧extargs {arginfos = arginfo ∷ arginfos} (arg , args) = ⟦ arg ⟧tm , ⟦ args ⟧extargs
 
 
 --------------------------------------------------

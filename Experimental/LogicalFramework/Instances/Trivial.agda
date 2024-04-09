@@ -57,6 +57,8 @@ TmExt.tm-code-arginfos triv-tm-ext ()
 
 triv-tm-ext-sem : TmExtSem triv-mt triv-ty-ext triv-tm-ext
 TmExtSem.⟦ triv-tm-ext-sem ⟧tm-code ()
+TmExtSem.⟦⟧tm-code-natural triv-tm-ext-sem ()
+TmExtSem.⟦⟧tm-code-cong triv-tm-ext-sem ()
 
 
 triv-mstt : MSTT-Parameter

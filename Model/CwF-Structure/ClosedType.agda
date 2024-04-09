@@ -214,6 +214,9 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   lift-cl-subst : (Γ ⇒ Δ) → (Γ ,, T ⇒ Δ ,, T)
   lift-cl-subst σ = (σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
 
+  lift-cl-subst-cong : {σ τ : Γ ⇒ Δ} → σ ≅ˢ τ → lift-cl-subst σ ≅ˢ lift-cl-subst τ
+  lift-cl-subst-cong ε = ,cl-cong-subst (⊚-congˡ ε)
+
   lift-cl-subst-π-commute : {σ : Γ ⇒ Δ} → π ⊚ (lift-cl-subst σ) ≅ˢ σ ⊚ π
   lift-cl-subst-π-commute = ctx-ext-subst-β₁ _ _
 
