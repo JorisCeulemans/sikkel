@@ -13,11 +13,15 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Type.Constant
+open import Model.DRA
 
 private
   variable
     Δ Γ Θ : Ctx ω
 
+
+--------------------------------------------------
+-- The "now" functor
 
 now : Ctx ω → Ctx ★
 now Γ ⟨ _ ⟩ = Γ ⟨ 0 ⟩
@@ -38,12 +42,9 @@ eq now-subst-id _ = refl
 now-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → now-subst (σ ⊚ τ) ≅ˢ now-subst σ ⊚ now-subst τ
 eq (now-subst-⊚ σ τ) _ = refl
 
-instance
-  now-is-functor : IsCtxFunctor now
-  ctx-map {{now-is-functor}} = now-subst
-  ctx-map-cong {{now-is-functor}} = now-subst-cong
-  ctx-map-id {{now-is-functor}} = now-subst-id
-  ctx-map-⊚ {{now-is-functor}} = now-subst-⊚
+
+--------------------------------------------------
+-- The constantly type constructor and related term formers
 
 constantly-ty : Ty (now Γ) → Ty Γ
 constantly-ty {Γ = Γ} T ⟨ n , γ ⟩ = T ⟨ tt , Γ ⟪ z≤n ⟫ γ ⟩
@@ -88,6 +89,10 @@ module _ {T : Ty (now Γ)} where
   constantly-ty-β : (t : Tm (now Γ) T) → unconstantly-tm (constantly-tm t) ≅ᵗᵐ t
   eq (constantly-ty-β t) γ = Tm.naturality t tt _
 
+
+--------------------------------------------------
+-- Functoriality of constantly-ty
+
 constantly-ty-map : {T S : Ty (now Γ)} → (T ↣ S) → constantly-ty T ↣ constantly-ty S
 func (constantly-ty-map η) = func η
 _↣_.naturality (constantly-ty-map η) = _↣_.naturality η
@@ -102,24 +107,6 @@ constantly-ty-map-⊙ : {R S T : Ty (now Γ)} {η : R ↣ S} {φ : S ↣ T} →
                       constantly-ty-map (φ ⊙ η) ≅ⁿ constantly-ty-map φ ⊙ constantly-ty-map η
 eq constantly-ty-map-⊙ _ = refl
 
-constantly-ty-cong : {T : Ty (now Γ)} {S : Ty (now Γ)} → T ≅ᵗʸ S → constantly-ty T ≅ᵗʸ constantly-ty S
-from (constantly-ty-cong T=S) = constantly-ty-map (from T=S)
-to (constantly-ty-cong T=S) = constantly-ty-map (to T=S)
-eq (isoˡ (constantly-ty-cong T=S)) = eq (isoˡ T=S)
-eq (isoʳ (constantly-ty-cong T=S)) = eq (isoʳ T=S)
-
-constantly-ty-cong-refl : {T : Ty (now Γ)} → constantly-ty-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
-eq (from-eq constantly-ty-cong-refl) _ = refl
-
-constantly-ty-cong-sym : {T S : Ty (now Γ)} {e : T ≅ᵗʸ S} → constantly-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (constantly-ty-cong e)
-eq (from-eq constantly-ty-cong-sym) _ = refl
-
-constantly-ty-cong-trans : {R S T : Ty (now Γ)} {e1 : R ≅ᵗʸ S} {e2 : S ≅ᵗʸ T} → constantly-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (constantly-ty-cong e1) (constantly-ty-cong e2)
-eq (from-eq constantly-ty-cong-trans) _ = refl
-
-constantly-ty-cong-cong : {T S : Ty (now Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → constantly-ty-cong e ≅ᵉ constantly-ty-cong e'
-eq (from-eq (constantly-ty-cong-cong 𝑒)) t = eq (from-eq 𝑒) t
-
 module _ {T : Ty (now Γ)} where
   constantly-tm-cong : {t s : Tm (now Γ) T} → t ≅ᵗᵐ s → constantly-tm t ≅ᵗᵐ constantly-tm s
   eq (constantly-tm-cong t=s) γ = eq t=s (Γ ⟪ z≤n ⟫ γ)
@@ -127,18 +114,15 @@ module _ {T : Ty (now Γ)} where
   unconstantly-tm-cong : {t s : Tm Γ (constantly-ty T)} → t ≅ᵗᵐ s → unconstantly-tm t ≅ᵗᵐ unconstantly-tm s
   eq (unconstantly-tm-cong t=s) γ = cong (T ⟪ tt , _ ⟫_) (eq t=s γ)
 
+
 module _ {T S : Ty (now Γ)} where
   constantly-tm-convert : {φ : T ↣ S} (t : Tm (now Γ) T) →
                           convert-tm (constantly-ty-map φ) (constantly-tm t) ≅ᵗᵐ constantly-tm (convert-tm φ t)
   eq (constantly-tm-convert t) _ = refl
 
-  constantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm (now Γ) S) →
-                    ι[ constantly-ty-cong T=S ] constantly-tm s ≅ᵗᵐ constantly-tm (ι[ T=S ] s)
-  eq (constantly-tm-ι s) _ = refl
 
-  unconstantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm Γ (constantly-ty S)) →
-                      ι[ T=S ] unconstantly-tm s ≅ᵗᵐ unconstantly-tm (ι[ constantly-ty-cong T=S ] s)
-  eq (unconstantly-tm-ι {T=S = T=S} s) γ = sym (_↣_.naturality (to T=S))
+--------------------------------------------------
+-- Naturality of constantly-ty
 
 constantly-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (now Γ)} → (constantly-ty T) [ σ ] ≅ᵗʸ constantly-ty (T [ now-subst σ ])
 func (from (constantly-ty-natural σ {T})) = ty-ctx-subst T (_⇒_.naturality σ)
@@ -190,12 +174,6 @@ constantly-ty-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (now Δ)} (ε :
   constantly-ty-map (ty-subst-eq-subst-morph (now-subst-cong ε) T) ⊙ from (constantly-ty-natural σ)
 eq (constantly-ty-natural-subst-eq-map {T = T} _) _ = ty-cong-2-2 T refl
 
-{-
-instance
-  constantly-closed : {A : ClosedTy ★} {{_ : IsClosedNatural A}} → IsClosedNatural (constantly-ty A)
-  closed-natural {{constantly-closed}} σ = transᵗʸ (constantly-ty-natural σ) (constantly-ty-cong (closed-natural (now-subst σ)))
--}
-
 module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
   constantly-tm-natural : (t : Tm (now Γ) T) →
                           (constantly-tm t) [ σ ]' ≅ᵗᵐ ι[ constantly-ty-natural σ ] constantly-tm (t [ now-subst σ ]')
@@ -205,7 +183,58 @@ module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
                             (unconstantly-tm t) [ now-subst σ ]' ≅ᵗᵐ unconstantly-tm (ι⁻¹[ constantly-ty-natural σ ] (t [ σ ]'))
   eq (unconstantly-tm-natural t) δ = sym (ty-cong-2-1 T refl)
 
--- A modal version of the eliminator for booleans for the constantly modality.
+
+--------------------------------------------------
+-- Constantly as a DRA
+
+instance
+  now-is-functor : IsCtxFunctor now
+  ctx-map {{now-is-functor}} = now-subst
+  ctx-map-cong {{now-is-functor}} = now-subst-cong
+  ctx-map-id {{now-is-functor}} = now-subst-id
+  ctx-map-⊚ {{now-is-functor}} = now-subst-⊚
+
+now-functor : CtxFunctor ω ★
+ctx-op now-functor = now
+is-functor now-functor = now-is-functor
+
+constantly : DRA ★ ω
+ctx-functor constantly = now-functor
+⟨_∣_⟩ constantly = constantly-ty
+dra-map constantly = constantly-ty-map
+dra-map-cong constantly = constantly-ty-map-cong
+dra-map-id constantly = constantly-ty-map-id
+dra-map-⊙ constantly = constantly-ty-map-⊙
+dra-natural constantly = constantly-ty-natural
+dra-natural-map constantly = constantly-ty-natural-map
+dra-natural-id-map constantly = constantly-ty-natural-id-map
+dra-natural-⊚-map constantly = constantly-ty-natural-⊚-map
+dra-natural-subst-eq-map constantly = constantly-ty-natural-subst-eq-map
+dra-intro constantly = constantly-tm
+dra-intro-cong constantly = constantly-tm-cong
+dra-intro-natural constantly = constantly-tm-natural
+dra-intro-convert constantly = constantly-tm-convert
+dra-elim constantly = unconstantly-tm
+dra-elim-cong constantly = unconstantly-tm-cong
+dra-β constantly = constantly-ty-β
+dra-η constantly = constantly-ty-η
+
+constantly-ty-cong : {T : Ty (now Γ)} {S : Ty (now Γ)} → T ≅ᵗʸ S → constantly-ty T ≅ᵗʸ constantly-ty S
+constantly-ty-cong e = dra-cong constantly e
+
+module _ {T S : Ty (now Γ)} where
+  constantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm (now Γ) S) →
+                    ι[ constantly-ty-cong T=S ] constantly-tm s ≅ᵗᵐ constantly-tm (ι[ T=S ] s)
+  constantly-tm-ι s = dra-intro-ι constantly s
+
+  unconstantly-tm-ι : {T=S : T ≅ᵗʸ S} (s : Tm Γ (constantly-ty S)) →
+                      ι[ T=S ] unconstantly-tm s ≅ᵗᵐ unconstantly-tm (ι[ constantly-ty-cong T=S ] s)
+  unconstantly-tm-ι s = dra-elim-ι constantly s
+
+
+--------------------------------------------------
+-- A modal version of the eliminator for booleans for the constantly modality
+
 constantly-if'_then'_else'_ : {T : Ty Γ} → Tm Γ (constantly-ty Bool') → Tm Γ T → Tm Γ T → Tm Γ T
 constantly-if' c then' t else' f ⟨ n , γ ⟩' = if c ⟨ n , γ ⟩' then t ⟨ n , γ ⟩' else f ⟨ n , γ ⟩'
 Tm.naturality (constantly-if'_then'_else'_ c t f) {m} {n} {γ} {γ'} m≤n eγ with c ⟨ m , γ' ⟩' | c ⟨ n , γ ⟩' | Tm.naturality c m≤n eγ

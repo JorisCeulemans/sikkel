@@ -184,6 +184,10 @@ module _ (μ : DRA C D) where
                 ι[ dra-cong T=S ] (dra-intro μ t) ≅ᵗᵐ dra-intro μ (ι[ T=S ] t)
   dra-intro-ι t = transᵗᵐ ι-convert (transᵗᵐ (dra-intro-convert μ t) (dra-intro-cong μ (symᵗᵐ ι-convert)))
 
+  dra-intro-ι⁻¹ : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm (lock μ Γ) T) →
+                  ι⁻¹[ dra-cong T=S ] (dra-intro μ t) ≅ᵗᵐ dra-intro μ (ι⁻¹[ T=S ] t)
+  dra-intro-ι⁻¹ t = transᵗᵐ (ι-congᵉ (symᵉ dra-cong-sym)) (dra-intro-ι t)
+
   dra-elim-natural : {Δ Γ : Ctx D} (σ : Δ ⇒ Γ) {T : Ty (lock μ Γ)} (t : Tm Γ ⟨ μ ∣ T ⟩) →
                      (dra-elim μ t) [ lock-fmap μ σ ]' ≅ᵗᵐ dra-elim μ (ι⁻¹[ dra-natural μ σ ] (t [ σ ]'))
   dra-elim-natural σ t = begin
@@ -214,6 +218,10 @@ module _ (μ : DRA C D) where
     ≅⟨ dra-elim-cong μ (ι-cong (dra-η μ t)) ⟩
       dra-elim μ (ι[ dra-cong T=S ] t) ∎
     where open ≅ᵗᵐ-Reasoning
+
+  dra-elim-ι⁻¹ : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm Γ ⟨ μ ∣ T ⟩) →
+                 ι⁻¹[ T=S ] (dra-elim μ t) ≅ᵗᵐ dra-elim μ (ι⁻¹[ dra-cong T=S ] t)
+  dra-elim-ι⁻¹ t = transᵗᵐ (dra-elim-ι t) (dra-elim-cong μ (ι-congᵉ dra-cong-sym))
 
 
 --------------------------------------------------

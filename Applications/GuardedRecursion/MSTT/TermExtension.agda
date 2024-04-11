@@ -13,7 +13,7 @@ open import Model.DRA as DRA hiding (⟨_∣_⟩; _,lock⟨_⟩)
 open import Model.Type.Function as M hiding (_⇛_)
 open import Applications.GuardedRecursion.Model.Modalities as M
   hiding (later; constantly; forever; ▻)
-open import Applications.GuardedRecursion.Model.Modalities.Later.Closed as M using (löb-cl)
+open import Applications.GuardedRecursion.Model.Lob using (löb-cl)
 open import Applications.GuardedRecursion.Model.Streams.Guarded as M
   hiding (GStream; g-cons; g-head; g-tail)
 

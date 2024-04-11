@@ -12,11 +12,15 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Model.Helpers
 open import Model.BaseCategory
 open import Model.CwF-Structure
+open import Model.DRA
 
 private
   variable
     Δ Γ Θ : Ctx ★
 
+
+--------------------------------------------------
+-- The constantly context functor
 
 constantly-ctx : Ctx ★ → Ctx ω
 constantly-ctx Γ ⟨ _ ⟩ = Γ ⟨ tt ⟩
@@ -37,12 +41,9 @@ eq constantly-subst-id _ = refl
 constantly-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → constantly-subst (σ ⊚ τ) ≅ˢ constantly-subst σ ⊚ constantly-subst τ
 eq (constantly-subst-⊚ σ τ) _ = refl
 
-instance
-  constantly-ctx-is-functor : IsCtxFunctor constantly-ctx
-  ctx-map {{constantly-ctx-is-functor}} = constantly-subst
-  ctx-map-cong {{constantly-ctx-is-functor}} = constantly-subst-cong
-  ctx-map-id {{constantly-ctx-is-functor}} = constantly-subst-id
-  ctx-map-⊚ {{constantly-ctx-is-functor}} = constantly-subst-⊚
+
+--------------------------------------------------
+-- The forever type constructor and related term formers
 
 -- A type constructor equivalent to OmegaLimit could also be defined
 -- in terms of the Agda type family of semantic terms Tm. However, Tm
@@ -93,6 +94,10 @@ module _ {T : Ty (constantly-ctx Γ)} where
   forever-ty-η : (t : Tm Γ (forever-ty T)) → forever-tm (unforever-tm t) ≅ᵗᵐ t
   eq (forever-ty-η t) _ = to-ω-limit-eq (λ _ → refl)
 
+
+--------------------------------------------------
+-- Functoriality of forever-ty
+
 forever-ty-map : {T S : Ty (constantly-ctx Γ)} → (T ↣ S) → forever-ty T ↣ forever-ty S
 func (forever-ty-map η) = ω-limit-map η
 _↣_.naturality (forever-ty-map η) = to-ω-limit-eq (λ n → _↣_.naturality η)
@@ -107,25 +112,6 @@ eq forever-ty-map-⊙ _ = to-ω-limit-eq (λ _ → refl)
 forever-ty-map-cong : {T S : Ty (constantly-ctx Γ)} {η φ : T ↣ S} → η ≅ⁿ φ → forever-ty-map η ≅ⁿ forever-ty-map φ
 eq (forever-ty-map-cong 𝔢) _ = to-ω-limit-eq (λ _ → eq 𝔢 _)
 
-forever-ty-cong : {T : Ty (constantly-ctx Γ)} {S : Ty (constantly-ctx Γ)} →
-                  T ≅ᵗʸ S → forever-ty T ≅ᵗʸ forever-ty S
-from (forever-ty-cong T=S) = forever-ty-map (from T=S)
-to (forever-ty-cong T=S) = forever-ty-map (to T=S)
-eq (isoˡ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoˡ T=S) _)
-eq (isoʳ (forever-ty-cong T=S)) _ = to-ω-limit-eq (λ n → eq (isoʳ T=S) _)
-
-forever-ty-cong-refl : {T : Ty (constantly-ctx Γ)} → forever-ty-cong (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
-eq (from-eq forever-ty-cong-refl) _ = to-ω-limit-eq (λ _ → refl)
-
-forever-ty-cong-sym : {T S : Ty (constantly-ctx Γ)} {e : T ≅ᵗʸ S} → forever-ty-cong (symᵗʸ e) ≅ᵉ symᵗʸ (forever-ty-cong e)
-eq (from-eq forever-ty-cong-sym) _ = refl
-
-forever-ty-cong-trans : {R S T : Ty (constantly-ctx Γ)} {e1 : R ≅ᵗʸ S} {e2 : S ≅ᵗʸ T} → forever-ty-cong (transᵗʸ e1 e2) ≅ᵉ transᵗʸ (forever-ty-cong e1) (forever-ty-cong e2)
-eq (from-eq forever-ty-cong-trans) _ = to-ω-limit-eq (λ _ → refl)
-
-forever-ty-cong-cong : {T S : Ty (constantly-ctx Γ)} {e e' : T ≅ᵗʸ S} → e ≅ᵉ e' → forever-ty-cong e ≅ᵉ forever-ty-cong e'
-eq (from-eq (forever-ty-cong-cong 𝑒)) t = to-ω-limit-eq (λ n → eq (from-eq 𝑒) (limit t n))
-
 module _ {T : Ty (constantly-ctx Γ)} where
   forever-tm-cong : {t s : Tm (constantly-ctx Γ) T} → t ≅ᵗᵐ s → forever-tm t ≅ᵗᵐ forever-tm s
   eq (forever-tm-cong t=s) γ = to-ω-limit-eq (λ n → eq t=s γ)
@@ -133,17 +119,13 @@ module _ {T : Ty (constantly-ctx Γ)} where
   unforever-tm-cong : {t s : Tm Γ (forever-ty T)} → t ≅ᵗᵐ s → unforever-tm t ≅ᵗᵐ unforever-tm s
   eq (unforever-tm-cong t=s) γ = cong (λ x → limit x _) (eq t=s γ)
 
-
 forever-convert-tm : {T S : Ty (constantly-ctx Γ)} {η : T ↣ S} (t : Tm (constantly-ctx Γ) T) →
                      convert-tm (forever-ty-map η) (forever-tm t) ≅ᵗᵐ forever-tm (convert-tm η t)
 eq (forever-convert-tm t) _ = to-ω-limit-eq (λ _ → refl)
 
-module _ {T S : Ty (constantly-ctx Γ)} {T=S : T ≅ᵗʸ S} where
-  forever-tm-ι : (s : Tm (constantly-ctx Γ) S) → ι[ forever-ty-cong T=S ] forever-tm s ≅ᵗᵐ forever-tm (ι[ T=S ] s)
-  eq (forever-tm-ι s) _ = to-ω-limit-eq (λ _ → refl)
 
-  unforever-tm-ι : (s : Tm Γ (forever-ty S)) → ι[ T=S ] unforever-tm s ≅ᵗᵐ unforever-tm (ι[ forever-ty-cong T=S ] s)
-  eq (unforever-tm-ι s) _ = refl
+--------------------------------------------------
+-- Naturality of forever-ty
 
 forever-ty-natural : (σ : Δ ⇒ Γ) {T : Ty (constantly-ctx Γ)} → (forever-ty T) [ σ ] ≅ᵗʸ forever-ty (T [ constantly-subst σ ])
 limit (func (from (forever-ty-natural σ {T})) l) = limit l
@@ -183,15 +165,6 @@ forever-ty-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (constantly-ctx Δ
   forever-ty-map (ty-subst-eq-subst-morph (constantly-subst-cong ε) T) ⊙ from (forever-ty-natural σ)
 eq (forever-ty-natural-subst-eq-map {T = T} _) _ = to-ω-limit-eq (λ _ → ty-cong T refl)
 
-{-
-instance
-  forever-closed : {A : ClosedTy ω} {{_ : IsClosedNatural A}} → IsClosedNatural (forever-ty A)
-  closed-natural {{forever-closed}} σ = transᵗʸ (forever-ty-natural σ) (forever-ty-cong (closed-natural (constantly-subst σ)))
-  closed-id {{forever-closed}} = {!!}
-  closed-⊚ {{forever-closed}} σ τ = {!!}
-  closed-subst-eq {{forever-closed}} ε = {!!}
--}
-
 module _ (σ : Δ ⇒ Γ) {T : Ty (constantly-ctx Γ)} where
   forever-tm-natural : (t : Tm (constantly-ctx Γ) T) →
                        (forever-tm t) [ σ ]' ≅ᵗᵐ ι[ forever-ty-natural σ ] forever-tm (t [ constantly-subst σ ]')
@@ -200,3 +173,50 @@ module _ (σ : Δ ⇒ Γ) {T : Ty (constantly-ctx Γ)} where
   unforever-tm-natural : (t : Tm Γ (forever-ty T)) →
                          (unforever-tm t) [ constantly-subst σ ]' ≅ᵗᵐ unforever-tm (ι⁻¹[ forever-ty-natural σ ] (t [ σ ]'))
   eq (unforever-tm-natural t) _ = refl
+
+
+--------------------------------------------------
+-- Forever as a DRA
+
+instance
+  constantly-ctx-is-functor : IsCtxFunctor constantly-ctx
+  ctx-map {{constantly-ctx-is-functor}} = constantly-subst
+  ctx-map-cong {{constantly-ctx-is-functor}} = constantly-subst-cong
+  ctx-map-id {{constantly-ctx-is-functor}} = constantly-subst-id
+  ctx-map-⊚ {{constantly-ctx-is-functor}} = constantly-subst-⊚
+
+constantly-ctx-functor : CtxFunctor ★ ω
+ctx-op constantly-ctx-functor = constantly-ctx
+is-functor constantly-ctx-functor = constantly-ctx-is-functor
+
+forever : DRA ω ★
+ctx-functor forever = constantly-ctx-functor
+⟨_∣_⟩ forever = forever-ty
+dra-map forever = forever-ty-map
+dra-map-cong forever = forever-ty-map-cong
+dra-map-id forever = forever-ty-map-id
+dra-map-⊙ forever = forever-ty-map-⊙
+dra-natural forever = forever-ty-natural
+dra-natural-map forever = forever-ty-natural-map
+dra-natural-id-map forever = forever-ty-natural-id-map
+dra-natural-⊚-map forever = forever-ty-natural-⊚-map
+dra-natural-subst-eq-map forever = forever-ty-natural-subst-eq-map
+dra-intro forever = forever-tm
+dra-intro-cong forever = forever-tm-cong
+dra-intro-natural forever = forever-tm-natural
+dra-intro-convert forever = forever-convert-tm
+dra-elim forever = unforever-tm
+dra-elim-cong forever = unforever-tm-cong
+dra-β forever = forever-ty-β
+dra-η forever = forever-ty-η
+
+forever-ty-cong : {T : Ty (constantly-ctx Γ)} {S : Ty (constantly-ctx Γ)} →
+                  T ≅ᵗʸ S → forever-ty T ≅ᵗʸ forever-ty S
+forever-ty-cong e = dra-cong forever e
+
+module _ {T S : Ty (constantly-ctx Γ)} {T=S : T ≅ᵗʸ S} where
+  forever-tm-ι : (s : Tm (constantly-ctx Γ) S) → ι[ forever-ty-cong T=S ] forever-tm s ≅ᵗᵐ forever-tm (ι[ T=S ] s)
+  forever-tm-ι s = dra-intro-ι forever s
+
+  unforever-tm-ι : (s : Tm Γ (forever-ty S)) → ι[ T=S ] unforever-tm s ≅ᵗᵐ unforever-tm (ι[ forever-ty-cong T=S ] s)
+  unforever-tm-ι s = dra-elim-ι forever s

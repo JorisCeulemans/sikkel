@@ -16,7 +16,7 @@ open import Model.Type.Constant renaming (Nat' to ′Nat'; Bool' to ′Bool')
 open import Model.Type.Function hiding (lam; lam[_∈_]_) renaming (_⇛_ to _′⇛_)
 open import Model.Type.Product hiding (pair; fst; snd) renaming (_⊠_ to _′⊠_)
 open import Applications.GuardedRecursion.Model.Modalities
-  hiding (next; löb; lift▻; lift2▻; 𝟙≤later) renaming (▻ to ′▻; constantly to ′constantly; forever to ′forever; later to ′later)
+  hiding (next; 𝟙≤later) renaming (▻ to ′▻; constantly to ′constantly; forever to ′forever; later to ′later)
 open import Applications.GuardedRecursion.Model.Streams.Guarded hiding (g-cons; g-head; g-tail) renaming (GStream to ′GStream)
 open import Applications.GuardedRecursion.Model.Streams.Standard renaming (Stream' to ′Stream')
 open import Extraction

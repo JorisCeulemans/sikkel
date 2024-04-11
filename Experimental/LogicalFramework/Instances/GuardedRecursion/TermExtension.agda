@@ -11,7 +11,7 @@ import Model.Type.Function as M
 open import Model.DRA as DRA using (dra-intro)
 import Applications.GuardedRecursion.Model.Streams.Guarded as M
 import Applications.GuardedRecursion.Model.Modalities as M
-import Applications.GuardedRecursion.Model.Modalities.Later.Closed as M
+import Applications.GuardedRecursion.Model.Lob as M
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension

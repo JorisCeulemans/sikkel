@@ -9,7 +9,7 @@ open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality
 
 open import Model.DRA as DRA hiding (𝟙; ⟨_∣_⟩)
-open import Applications.GuardedRecursion.Model.Modalities as M hiding (constantly; forever; later; _⊛_)
+open import Applications.GuardedRecursion.Model.Modalities as M hiding (constantly; forever; later)
 
 open import MSTT.TCMonad
 open import Applications.GuardedRecursion.MSTT.ModeTheory.Expressions

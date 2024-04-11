@@ -15,8 +15,7 @@ import Model.CwF-Structure as M
 import Model.DRA as M
 import Applications.GuardedRecursion.Model.Streams.Guarded as M
 import Applications.GuardedRecursion.Model.Modalities as M
-import Applications.GuardedRecursion.Model.Modalities.Later.Closed as M
-import Applications.GuardedRecursion.Model.Modalities.Later as M
+import Applications.GuardedRecursion.Model.Lob as M
 import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 
 
@@ -47,7 +46,8 @@ tmlöb-β-sound Ξ {T = T} x t = M.≅ᵗᵐ-to-Id proof M.[ _ ]'
         ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.next-cl (ty-closed-natural T) (M.löb-cl (ty-closed-natural T) ⟦ t ⟧tm)
                                           M./cl⟨ ty-closed-natural ⟨ later ∣ T ⟩ ⟩
                   ]cl
-      ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (M./cl-cong (ty-closed-natural ⟨ later ∣ T ⟩) (M.next-ι⁻¹ _)) ⟩
+      ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T)
+                                  (M./cl-cong (ty-closed-natural ⟨ later ∣ T ⟩) (M.next-ι⁻¹ {T=T' = M.▻-cong (M.closed-natural (ty-closed-natural T) (M.from-earlier _))} _)) ⟩
         ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.next ((M.löb-cl (ty-closed-natural T) ⟦ t ⟧tm)
                                                   M.[ ty-closed-natural T ∣ M.from-earlier ⟦ to-ctx Ξ ⟧ctx ]cl)
                                           M./cl⟨ ty-closed-natural ⟨ later ∣ T ⟩ ⟩ ]cl

@@ -17,15 +17,6 @@ open import Applications.GuardedRecursion.Model.Modalities.Later
 open import Applications.GuardedRecursion.Model.Modalities.Constantly
 open import Applications.GuardedRecursion.Model.Modalities.Forever
 open OmegaLimit
-open import Applications.GuardedRecursion.Model.Modalities.Bundles
-
-
---------------------------------------------------
--- Interaction between the later and unit modalities
-
-𝟙≤later : TwoCell 𝟙 later
-transf-op (transf 𝟙≤later) = from-earlier
-CtxNatTransf.naturality (transf 𝟙≤later) = from-earlier-natural
 
 
 --------------------------------------------------
