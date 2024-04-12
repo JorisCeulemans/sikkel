@@ -94,7 +94,7 @@ RenSubDataSemantics V =
   {m n : Mode} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → V μ T Γ → SemTm ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx ⟦ T ⟧ty
 
 module RenSubSemantics
-  {V : RenSubData} (⟦_⟧rensubdata : RenSubDataSemantics V)
+  (V : RenSubData) (⟦_⟧rensubdata : RenSubDataSemantics V)
   where
 
   open AtomicRenSubDef V
@@ -118,13 +118,13 @@ module RenSubSemantics
   ⟦ σ  ⊚a τᵃ ⟧rensub = ⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub
 
 
-module RenSemantics = RenSubSemantics {RenData} (λ v → ⟦ get-var v ⟧var)
+module RenSemantics = RenSubSemantics RenData (λ v → ⟦ get-var v ⟧var)
 open RenSemantics renaming
   ( ⟦_⟧arensub to ⟦_⟧aren
   ; ⟦_⟧rensub to ⟦_⟧ren
   ) public
 
-module SubSemantics = RenSubSemantics {SubData} ⟦_⟧tm
+module SubSemantics = RenSubSemantics SubData ⟦_⟧tm
 open SubSemantics renaming
   ( ⟦_⟧arensub to ⟦_⟧asub
   ; ⟦_⟧rensub to ⟦_⟧sub

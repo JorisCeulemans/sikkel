@@ -116,6 +116,59 @@ record TravStructSoundness
               (traverse-tm-sound arg (lift-trav-tel σ (tmarg-tel arginfo)))
     , traverse-ext-tmargs-sound args σ
 
+open TravStructSoundness using (traverse-tm-sound)
+
+
+record RenSubDataStructureSound
+  (V : RenSubData)
+  (rensub-struct : RenSubDataStructure V)
+  (⟦_⟧rensubdata : RenSubDataSemantics V)
+  : Set where
+
+  open RenSubDataStructure rensub-struct
+  open AtomicRenSubDef V
+  open RenSubSemantics V ⟦_⟧rensubdata
+
+  field
+    newV-sound : ∀ {x m n} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} →
+                 dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)) M.≅ᵗᵐ ⟦ newV {x} {μ = μ} {T = T} {Γ = Γ} ⟧rensubdata
+    atomic-rensub-lookup-var-sound :
+      ∀ {x m} {Γ Δ : Ctx m} {T : Ty m} (v : Var x T Δ ◇) (σ : AtomicRenSub Γ Δ) →
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ ⟦ σ ⟧arensub ]cl M.≅ᵗᵐ ⟦ atomic-rensub-lookup-var v σ ⟧tm
+
+
+module AtomicRenSubSoundness
+  (V : RenSubData)
+  (rensub-struct : RenSubDataStructure V)
+  (⟦_⟧rensubdata : RenSubDataSemantics V)
+  (rensub-struct-sound : RenSubDataStructureSound V rensub-struct ⟦_⟧rensubdata)
+  where
+
+  open AtomicRenSub V rensub-struct
+  open RenSubSemantics V ⟦_⟧rensubdata
+  open RenSubDataStructureSound rensub-struct-sound
+
+  πᵃ-sound : ∀ {m n x} {Γ : Ctx n} {μ : Modality m n} {T : Ty m} →
+             M.π M.≅ˢ ⟦ πᵃ {Γ = Γ} {μ = μ} {x = x} {T = T} ⟧arensub
+  πᵃ-sound = M.symˢ (M.id-subst-unitˡ _)
+
+  liftᵃ-sound : ∀ {m n x} {Γ Δ : Ctx n} {μ : Modality m n} {T : Ty m} (σ : AtomicRenSub Γ Δ) →
+                M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧arensub
+                  M.≅ˢ
+                ⟦ liftᵃ {μ = μ} {x = x} {T = T} σ ⟧arensub
+  liftᵃ-sound {μ = μ} {T} σ =
+    M.,cl-cong-tm (ty-closed-natural ⟨ μ ∣ T ⟩) (M.transᵗᵐ (M.symᵗᵐ (dra-η ⟦ μ ⟧mod _)) (dra-intro-cong ⟦ μ ⟧mod newV-sound))
+
+  AtomicRenSubTravSound : TravStructSoundness AtomicRenSubTrav
+  TravStructSoundness.⟦_⟧trav AtomicRenSubTravSound = ⟦_⟧arensub
+  TravStructSoundness.vr-sound AtomicRenSubTravSound = atomic-rensub-lookup-var-sound
+  TravStructSoundness.lift-sound AtomicRenSubTravSound {μ = μ} σ = liftᵃ-sound {μ = μ} σ
+  TravStructSoundness.lock-sound AtomicRenSubTravSound σ μ = M.reflˢ
+
+  tm-arensub-sound : (t : Tm Δ T) (σ : AtomicRenSub Γ Δ) →
+                     ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧arensub ]cl M.≅ᵗᵐ ⟦ t [ σ ]tmᵃ ⟧tm
+  tm-arensub-sound t σ = traverse-tm-sound AtomicRenSubTravSound t σ
+
 
 {-
 postulate
