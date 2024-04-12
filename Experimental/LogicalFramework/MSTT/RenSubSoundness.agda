@@ -170,6 +170,100 @@ module AtomicRenSubSoundness
   tm-arensub-sound t σ = traverse-tm-sound AtomicRenSubTravSound t σ
 
 
+module RenSubSoundness
+  (V : RenSubData)
+  (rensub-struct : RenSubDataStructure V)
+  (⟦_⟧rensubdata : RenSubDataSemantics V)
+  (rensub-struct-sound : RenSubDataStructureSound V rensub-struct ⟦_⟧rensubdata)
+  where
+
+  open RenSub V rensub-struct
+  open RenSubSemantics V ⟦_⟧rensubdata
+  open RenSubDataStructureSound rensub-struct-sound
+  open AtomicRenSub V rensub-struct
+  open AtomicRenSubSoundness V rensub-struct ⟦_⟧rensubdata rensub-struct-sound
+
+  tm-rensub-sound : (t : Tm Δ T) (σ : RenSub Γ Δ) →
+                    ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧rensub ]cl M.≅ᵗᵐ ⟦ t [ σ ]tmʳˢ ⟧tm
+  tm-rensub-sound {T = T} t id = M.cl-tm-subst-id (ty-closed-natural T) ⟦ t ⟧tm
+  tm-rensub-sound t (id ⊚a τᵃ) = tm-arensub-sound t τᵃ
+  tm-rensub-sound {T = T} t (σ@(_ ⊚a _) ⊚a τᵃ) =
+    begin
+      ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub ]cl
+    ≅⟨ M.cl-tm-subst-⊚ (ty-closed-natural T) ⟦ t ⟧tm ⟨
+      (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧rensub ]cl) M.[ ty-closed-natural T ∣ ⟦ τᵃ ⟧arensub ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (tm-rensub-sound t σ) ⟩
+      ⟦ t [ σ ]tmʳˢ ⟧tm M.[ ty-closed-natural T ∣ ⟦ τᵃ ⟧arensub ]cl
+    ≅⟨ tm-arensub-sound (t [ σ ]tmʳˢ) τᵃ ⟩
+      ⟦ (t [ σ ]tmʳˢ) [ τᵃ ]tmᵃ ⟧tm ∎
+    where open M.≅ᵗᵐ-Reasoning
+
+  liftʳˢ-sound : ∀ {m n x} {Γ Δ : Ctx n} {μ : Modality m n} {T : Ty m} (σ : RenSub Γ Δ) →
+                 M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧rensub
+                   M.≅ˢ
+                 ⟦ liftʳˢ {μ = μ} {x = x} {T = T} σ ⟧rensub
+  liftʳˢ-sound {μ = μ} {T = T} id = M.lift-cl-subst-id (ty-closed-natural ⟨ μ ∣ T ⟩)
+  liftʳˢ-sound {μ = μ} (id ⊚a τᵃ) = liftᵃ-sound {μ = μ} τᵃ
+  liftʳˢ-sound {x = x} {μ = μ} {T = T} (σ@(_ ⊚a _) ⊚a τᵃ) =
+    begin
+      M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) (⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub)
+    ≅⟨ M.lift-cl-subst-⊚ (ty-closed-natural ⟨ μ ∣ T ⟩) ⟩
+      M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧rensub M.⊚ M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ τᵃ ⟧arensub
+    ≅⟨ M.⊚-congˡ (liftʳˢ-sound {x = x} {μ = μ} {T = T} σ) ⟩
+      ⟦ liftʳˢ σ ⟧rensub M.⊚ M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ τᵃ ⟧arensub
+    ≅⟨ M.⊚-congʳ (liftᵃ-sound {μ = μ} τᵃ) ⟩
+      ⟦ liftʳˢ σ ⟧rensub M.⊚ ⟦ liftᵃ {μ = μ} {T = T} τᵃ ⟧arensub ∎
+    where open M.≅ˢ-Reasoning
+
+  []ʳˢ-sound : {Γ : Ctx m} → M.!◇ _ M.≅ˢ ⟦ []ʳˢ {Γ = Γ} ⟧rensub
+  []ʳˢ-sound = M.reflˢ
+
+  πʳˢ-sound : ∀ {m n x} {Γ : Ctx n} {μ : Modality m n} {T : Ty m} →
+              M.π M.≅ˢ ⟦ πʳˢ {Γ = Γ} {μ = μ} {x = x} {T = T} ⟧rensub
+  πʳˢ-sound {x = x} {Γ = Γ} {μ = μ} {T = T} = πᵃ-sound {x = x} {Γ = Γ} {μ = μ} {T = T}
+
+  ∷ʳˢ-sound : (σ : RenSub Γ Δ) (v : V μ T Γ) (x : Name) →
+              ⟦ σ ⟧rensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata
+                M.≅ˢ
+              ⟦ σ ∷ʳˢ v / x ⟧rensub
+  ∷ʳˢ-sound id v x = M.reflˢ
+  ∷ʳˢ-sound (id ⊚a τᵃ) v x = M.reflˢ
+  ∷ʳˢ-sound {μ = μ} {T = T} (σ@(_ ⊚a _) ⊚a τᵃ) v x =
+    begin
+      (⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub) M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata
+    ≅⟨ M.lift-cl-,cl (ty-closed-natural ⟨ μ ∣ T ⟩) ⟨
+      M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧rensub M.⊚ (⟦ τᵃ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)
+    ≅⟨ M.⊚-congˡ (liftʳˢ-sound σ) ⟩
+      ⟦ liftʳˢ σ ⟧rensub M.⊚ (⟦ τᵃ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)  ∎
+    where open M.≅ˢ-Reasoning
+
+  lockʳˢ-sound : {Γ Δ : Ctx n} (σ : RenSub Γ Δ) (μ : Modality m n) →
+                 lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧rensub M.≅ˢ ⟦ σ ,lockʳˢ⟨ μ ⟩ ⟧rensub
+  lockʳˢ-sound id μ = lock-fmap-id ⟦ μ ⟧mod
+  lockʳˢ-sound (id ⊚a τᵃ) μ = M.reflˢ
+  lockʳˢ-sound (σ@(_ ⊚a _) ⊚a τᵃ) μ =
+    begin
+      lock-fmap ⟦ μ ⟧mod (⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub)
+    ≅⟨ lock-fmap-⊚ ⟦ μ ⟧mod _ _ ⟩
+      lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧rensub M.⊚ lock-fmap ⟦ μ ⟧mod ⟦ τᵃ ⟧arensub
+    ≅⟨ M.⊚-congˡ (lockʳˢ-sound σ μ) ⟩
+      ⟦ σ ,lockʳˢ⟨ μ ⟩ ⟧rensub M.⊚ lock-fmap ⟦ μ ⟧mod ⟦ τᵃ ⟧arensub ∎
+    where open M.≅ˢ-Reasoning
+
+  ⊚ʳˢ-sound : {Γ Δ Θ : Ctx m} (σ : RenSub Δ Θ) (τ : RenSub Γ Δ) →
+              ⟦ σ ⟧rensub M.⊚ ⟦ τ ⟧rensub M.≅ˢ ⟦ σ ⊚ʳˢ τ ⟧rensub
+  ⊚ʳˢ-sound σ id = M.id-subst-unitʳ _
+  ⊚ʳˢ-sound id (id ⊚a τᵃ) = M.id-subst-unitˡ _
+  ⊚ʳˢ-sound (σ ⊚a σᵃ) (id ⊚a τᵃ) = M.reflˢ
+  ⊚ʳˢ-sound σ (τ@(_ ⊚a _) ⊚a τᵃ) =
+    begin
+      ⟦ σ ⟧rensub M.⊚ (⟦ τ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub)
+    ≅⟨ M.⊚-assoc ⟨
+      (⟦ σ ⟧rensub M.⊚ ⟦ τ ⟧rensub) M.⊚ ⟦ τᵃ ⟧arensub
+    ≅⟨ M.⊚-congˡ (⊚ʳˢ-sound σ τ) ⟩
+      ⟦ σ ⊚ʳˢ τ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub ∎
+    where open M.≅ˢ-Reasoning
+
 {-
 postulate
   tm-sub-sound : (t : Tm Δ T) (σ : Sub Γ Δ) → ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧sub ]cl M.≅ᵗᵐ ⟦ t [ σ ]tmˢ ⟧tm

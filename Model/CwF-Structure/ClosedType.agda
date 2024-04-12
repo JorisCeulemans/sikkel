@@ -211,23 +211,6 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   /cl-cong : {t t' : Tm Γ T} → t ≅ᵗᵐ t' → (t /cl⟨ clT ⟩) ≅ˢ (t' /cl⟨ clT ⟩)
   /cl-cong = ,cl-cong-tm
 
-  lift-cl-subst : (Γ ⇒ Δ) → (Γ ,, T ⇒ Δ ,, T)
-  lift-cl-subst σ = (σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
-
-  lift-cl-subst-cong : {σ τ : Γ ⇒ Δ} → σ ≅ˢ τ → lift-cl-subst σ ≅ˢ lift-cl-subst τ
-  lift-cl-subst-cong ε = ,cl-cong-subst (⊚-congˡ ε)
-
-  lift-cl-subst-π-commute : {σ : Γ ⇒ Δ} → π ⊚ (lift-cl-subst σ) ≅ˢ σ ⊚ π
-  lift-cl-subst-π-commute = ctx-ext-subst-β₁ _ _
-
-  lift-cl-ξcl : {σ : Γ ⇒ Δ} → (ξcl clT) [ clT ∣ lift-cl-subst σ ]cl ≅ᵗᵐ ξcl clT
-  lift-cl-ξcl = ,cl-β2 _ _
-
-  lift-cl-subst-⊹ : (σ : Γ ⇒ Δ) → (σ ⊹) ≅ˢ lift-cl-subst σ ⊚ from (,,-cong (closed-natural clT σ))
-  eq (lift-cl-subst-⊹ σ) (γ , t) =
-    cong (func σ γ ,_) (sym (trans (cong (func (to (closed-natural clT (σ ⊚ π)))) (eq (from-eq (closed-⊚ clT σ π)) t))
-                                   (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
-
   ,cl-⊚ : (σ : Δ ⇒ Θ) (t : Tm Δ T) (τ : Γ ⇒ Δ) → (σ ,cl⟨ clT ⟩ t) ⊚ τ ≅ˢ (σ ⊚ τ) ,cl⟨ clT ⟩ (t [ clT ∣ τ ]cl)
   ,cl-⊚ σ t τ =
     begin
@@ -241,6 +224,58 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     ≅⟨ ,cl-cong-tm (cl-tm-subst-cong-tm clT (,cl-β2 σ t)) ⟩
       (σ ⊚ τ) ,cl⟨ clT ⟩ (t [ clT ∣ τ ]cl) ∎
     where open ≅ˢ-Reasoning
+
+  /v-/cl : (t : Tm Δ T) → (t /v) ≅ˢ t /cl⟨ clT ⟩
+  /v-/cl t = ctx-ext-subst-cong-tm _ (transᵗᵐ (tm-subst-id t) (ι-congᵉ (symᵉ (closed-id clT))))
+
+
+  lift-cl-subst : (Γ ⇒ Δ) → (Γ ,, T ⇒ Δ ,, T)
+  lift-cl-subst σ = (σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
+
+  lift-cl-subst-cong : {σ τ : Γ ⇒ Δ} → σ ≅ˢ τ → lift-cl-subst σ ≅ˢ lift-cl-subst τ
+  lift-cl-subst-cong ε = ,cl-cong-subst (⊚-congˡ ε)
+
+  lift-cl-subst-π-commute : {σ : Γ ⇒ Δ} → π ⊚ (lift-cl-subst σ) ≅ˢ σ ⊚ π
+  lift-cl-subst-π-commute = ctx-ext-subst-β₁ _ _
+
+  lift-cl-ξcl : {σ : Γ ⇒ Δ} → (ξcl clT) [ clT ∣ lift-cl-subst σ ]cl ≅ᵗᵐ ξcl clT
+  lift-cl-ξcl = ,cl-β2 _ _
+
+  lift-cl-subst-id : lift-cl-subst (id-subst Γ) ≅ˢ id-subst (Γ ,, T)
+  lift-cl-subst-id =
+    begin
+      (id-subst _ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
+    ≅⟨ ,cl-cong (transˢ (id-subst-unitʳ _) (symˢ (id-subst-unitˡ _))) (cl-tm-subst-id clT _) ⟨
+      (π ⊚ id-subst _) ,cl⟨ clT ⟩ (ξcl clT [ clT ∣ id-subst _ ]cl)
+    ≅⟨ ,cl-η _ ⟨
+      id-subst _ ∎
+    where open ≅ˢ-Reasoning
+
+  lift-cl-subst-⊚ : {σ : Δ ⇒ Θ} {τ : Γ ⇒ Δ} → lift-cl-subst (σ ⊚ τ) ≅ˢ lift-cl-subst σ ⊚ lift-cl-subst τ
+  lift-cl-subst-⊚ {σ = σ} {τ} =
+    begin
+      (σ ⊚ τ ⊚ π) ,cl⟨ clT ⟩ ξcl clT
+    ≅⟨ ,cl-cong (transˢ ⊚-assoc (transˢ (⊚-congʳ lift-cl-subst-π-commute) (symˢ ⊚-assoc))) lift-cl-ξcl ⟨
+      (σ ⊚ π ⊚ lift-cl-subst τ) ,cl⟨ clT ⟩ (ξcl clT [ clT ∣ lift-cl-subst τ ]cl)
+    ≅⟨ ,cl-⊚ _ _ _ ⟨
+      ((σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT) ⊚ lift-cl-subst τ ∎
+    where open ≅ˢ-Reasoning
+
+  lift-cl-,cl : {σ : Δ ⇒ Θ} {τ : Γ ⇒ Δ} {t : Tm Γ T} →
+                (lift-cl-subst σ) ⊚ (τ ,cl⟨ clT ⟩ t) ≅ˢ (σ ⊚ τ) ,cl⟨ clT ⟩ t
+  lift-cl-,cl {σ = σ} {τ} {t} =
+    begin
+      ((σ ⊚ π) ,cl⟨ clT ⟩ ξcl clT) ⊚ (τ ,cl⟨ clT ⟩ t)
+    ≅⟨ ,cl-⊚ _ _ _ ⟩
+      (σ ⊚ π ⊚ (τ ,cl⟨ clT ⟩ t)) ,cl⟨ clT ⟩ (ξcl clT [ clT ∣ τ ,cl⟨ clT ⟩ t ]cl)
+    ≅⟨ ,cl-cong (transˢ ⊚-assoc (⊚-congʳ (,cl-β1 τ t))) (,cl-β2 τ t) ⟩
+      (σ ⊚ τ) ,cl⟨ clT ⟩ t ∎
+    where open ≅ˢ-Reasoning
+
+  lift-cl-subst-⊹ : (σ : Γ ⇒ Δ) → (σ ⊹) ≅ˢ lift-cl-subst σ ⊚ from (,,-cong (closed-natural clT σ))
+  eq (lift-cl-subst-⊹ σ) (γ , t) =
+    cong (func σ γ ,_) (sym (trans (cong (func (to (closed-natural clT (σ ⊚ π)))) (eq (from-eq (closed-⊚ clT σ π)) t))
+                                   (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
 
   /cl-⊚ : (σ : Γ ⇒ Δ) (t : Tm Δ T) → (t /cl⟨ clT ⟩) ⊚ σ ≅ˢ lift-cl-subst σ ⊚ ((t [ clT ∣ σ ]cl) /cl⟨ clT ⟩)
   /cl-⊚ σ t =
@@ -256,13 +291,11 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
       lift-cl-subst σ ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)) ∎
     where open ≅ˢ-Reasoning
 
-  /v-/cl : (t : Tm Δ T) → (t /v) ≅ˢ t /cl⟨ clT ⟩
-  /v-/cl t = ctx-ext-subst-cong-tm _ (transᵗᵐ (tm-subst-id t) (ι-congᵉ (symᵉ (closed-id clT))))
 
 module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) where
-  lift-cl-,cl : (σ : Γ ⇒ Δ) (s : Tm (Δ ,, T) S) →
-                lift-cl-subst clS σ ⊚ (π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl)) ≅ˢ (π ,cl⟨ clS ⟩ s) ⊚ lift-cl-subst clT σ
-  lift-cl-,cl σ s =
+  lift-cl-,cl-2ty : (σ : Γ ⇒ Δ) (s : Tm (Δ ,, T) S) →
+                    lift-cl-subst clS σ ⊚ (π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl)) ≅ˢ (π ,cl⟨ clS ⟩ s) ⊚ lift-cl-subst clT σ
+  lift-cl-,cl-2ty σ s =
     begin
       ((σ ⊚ π) ,cl⟨ clS ⟩ ξcl clS) ⊚ (π ,cl⟨ clS ⟩ (s [ clS ∣ lift-cl-subst clT σ ]cl))
     ≅⟨ ,cl-⊚ clS _ _ _ ⟩

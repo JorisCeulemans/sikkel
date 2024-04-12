@@ -293,7 +293,7 @@ open RenM
     ; keyʳˢ to keyʳ
     ; _⊚ʳˢ_ to _⊚ʳ_
     ; rensub-tm-⊚ to ren-tm-⊚)
-  using (_⊚a_)
+  using ()
   public
 
 _∷ʳ_,_/_ : Ren Γ Δ → (y : Name) → Var y T (Γ ,lock⟨ μ ⟩) ◇ → (x : Name) → Ren Γ (Δ ,, μ ∣ x ∈ T)
@@ -417,7 +417,7 @@ open SubM
     ; keyʳˢ to keyˢ
     ; _⊚ʳˢ_ to _⊚ˢ_
     ; rensub-tm-⊚ to sub-tm-⊚)
-  using (_⊚a_)
+  using ()
   public
 
 infix 19 _/_ _//_
