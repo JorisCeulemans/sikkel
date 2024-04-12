@@ -101,15 +101,16 @@ module AtomicRenSubDef (V : RenSubData) where
   -- renamings/substitutions are not uniquely represented by values of
   -- the data type RenSub, which seems to be impossible.
   data AtomicRenSub : Ctx m → Ctx m → Set where
-    [] : AtomicRenSub Γ ◇
+    []ᵃ : AtomicRenSub Γ ◇
     idᵃ : AtomicRenSub Γ Γ
       -- ^ The identity atomic rensub could be implemented in multiple
       --    ways using the other constructors, but those are generally
-      --    more expensive to apply to a term.
-    _⊚π : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) Δ
-    _,lock⟨_⟩ : AtomicRenSub Γ Δ → (μ : Modality n m) → AtomicRenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-    atomic-key : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locksˡᵗ Λ₂) (locksˡᵗ Λ₁) → AtomicRenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
-    _∷_/_ : AtomicRenSub Γ Δ → V μ T Γ → (x : Name) → AtomicRenSub Γ (Δ ,, μ ∣ x ∈ T)
+      --    more expensive to apply to a term, and we don't have a
+      --    unique representation of atomic rensubs anyway.
+    _⊚πᵃ : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) Δ
+    _,lockᵃ⟨_⟩ : AtomicRenSub Γ Δ → (μ : Modality n m) → AtomicRenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+    keyᵃ : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locksˡᵗ Λ₂) (locksˡᵗ Λ₁) → AtomicRenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
+    _∷ᵃ_/_ : AtomicRenSub Γ Δ → V μ T Γ → (x : Name) → AtomicRenSub Γ (Δ ,, μ ∣ x ∈ T)
 
 -- In order to obtain useful results for renamings/substitutions, the
 -- type family representing the data assigned to variables must be
@@ -129,22 +130,22 @@ module AtomicRenSub
   open RenSubDataStructure rensub-struct
 
   πᵃ : AtomicRenSub (Γ ,, μ ∣ x ∈ T) Γ
-  πᵃ = idᵃ ⊚π
+  πᵃ = idᵃ ⊚πᵃ
 
-  lift-atomic-rensub : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-  lift-atomic-rensub {x = x} σ = (σ ⊚π) ∷ newV / x
+  liftᵃ : AtomicRenSub Γ Δ → AtomicRenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+  liftᵃ {x = x} σ = (σ ⊚πᵃ) ∷ᵃ newV / x
 
-  _,alocks⟨_⟩ : AtomicRenSub Γ Δ → (Λ : LockTele m n) → AtomicRenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
-  σ ,alocks⟨ ◇ ⟩            = σ
-  σ ,alocks⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,lock⟨ μ ⟩) ,alocks⟨ Λ ⟩
+  _,locksᵃ⟨_⟩ : AtomicRenSub Γ Δ → (Λ : LockTele m n) → AtomicRenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
+  σ ,locksᵃ⟨ ◇ ⟩            = σ
+  σ ,locksᵃ⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,lockᵃ⟨ μ ⟩) ,locksᵃ⟨ Λ ⟩
 
   AtomicRenSubTrav : TravStruct AtomicRenSub
   TravStruct.vr AtomicRenSubTrav = atomic-rensub-lookup-var
-  TravStruct.lift AtomicRenSubTrav = lift-atomic-rensub
-  TravStruct.lock AtomicRenSubTrav {μ = μ} σ = σ ,lock⟨ μ ⟩
+  TravStruct.lift AtomicRenSubTrav = liftᵃ
+  TravStruct.lock AtomicRenSubTrav {μ = μ} σ = σ ,lockᵃ⟨ μ ⟩
 
-  atomic-rensub-tm : Tm Δ T → AtomicRenSub Γ Δ → Tm Γ T
-  atomic-rensub-tm = traverse-tm AtomicRenSubTrav
+  _[_]tmᵃ : Tm Δ T → AtomicRenSub Γ Δ → Tm Γ T
+  _[_]tmᵃ = traverse-tm AtomicRenSubTrav
 
 
 module RenSub
@@ -159,46 +160,46 @@ module RenSub
     id : RenSub Γ Γ
     _⊚a_ : RenSub Δ Θ → AtomicRenSub Γ Δ → RenSub Γ Θ
 
-  rensub-tm : Tm Δ T → RenSub Γ Δ → Tm Γ T
-  rensub-tm t id = t
-  rensub-tm t (τ ⊚a σᵃ) = atomic-rensub-tm (rensub-tm t τ) σᵃ
+  _[_]tmʳˢ : Tm Δ T → RenSub Γ Δ → Tm Γ T
+  t [ id ]tmʳˢ = t
+  t [ τ ⊚a σᵃ ]tmʳˢ = (t [ τ ]tmʳˢ) [ σᵃ ]tmᵃ
 
-  lift-rensub : RenSub Γ Δ → RenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-  lift-rensub id = id
-  lift-rensub (σ ⊚a τᵃ) = lift-rensub σ ⊚a lift-atomic-rensub τᵃ
+  liftʳˢ : RenSub Γ Δ → RenSub (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
+  liftʳˢ id = id
+  liftʳˢ (σ ⊚a τᵃ) = liftʳˢ σ ⊚a liftᵃ τᵃ
 
   -- All MTT constructors for producing renamings/substitutions, can
   -- be implemented as operations producing something of type RenSub.
-  []rs : RenSub Γ ◇
-  []rs = id ⊚a []
+  []ʳˢ : RenSub Γ ◇
+  []ʳˢ = id ⊚a []ᵃ
 
-  π-rensub : RenSub (Γ ,, μ ∣ x ∈ T) Γ
-  π-rensub = id ⊚a πᵃ
+  πʳˢ : RenSub (Γ ,, μ ∣ x ∈ T) Γ
+  πʳˢ = id ⊚a πᵃ
 
   -- Case splitting on the first argument is not strictly necessary
   -- here, but it avoids 1 additional term traversal in the second case.
   _∷ʳˢ_/_ : RenSub Γ Δ → V μ T Γ → (x : Name) → RenSub Γ (Δ ,, μ ∣ x ∈ T)
-  id        ∷ʳˢ v / x = id ⊚a (idᵃ ∷ v / x)
-  (σ ⊚a τᵃ) ∷ʳˢ v / x = lift-rensub σ ⊚a (τᵃ ∷ v / x)
+  id        ∷ʳˢ v / x = id ⊚a (idᵃ ∷ᵃ v / x)
+  (σ ⊚a τᵃ) ∷ʳˢ v / x = liftʳˢ σ ⊚a (τᵃ ∷ᵃ v / x)
 
-  _,rslock⟨_⟩ : RenSub Γ Δ → (μ : Modality m n) → RenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
-  id        ,rslock⟨ μ ⟩ = id
-  (σ ⊚a τᵃ) ,rslock⟨ μ ⟩ = (σ ,rslock⟨ μ ⟩) ⊚a (τᵃ ,lock⟨ μ ⟩)
+  _,lockʳˢ⟨_⟩ : RenSub Γ Δ → (μ : Modality m n) → RenSub (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+  id        ,lockʳˢ⟨ μ ⟩ = id
+  (σ ⊚a τᵃ) ,lockʳˢ⟨ μ ⟩ = (σ ,lockʳˢ⟨ μ ⟩) ⊚a (τᵃ ,lockᵃ⟨ μ ⟩)
 
-  _,rslocks⟨_⟩ : RenSub Γ Δ → (Λ : LockTele m n) → RenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
-  σ ,rslocks⟨ ◇ ⟩           = σ
-  σ ,rslocks⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,rslock⟨ μ ⟩) ,rslocks⟨ Λ ⟩
+  _,locksʳˢ⟨_⟩ : RenSub Γ Δ → (Λ : LockTele m n) → RenSub (Γ ,ˡᵗ Λ) (Δ ,ˡᵗ Λ)
+  σ ,locksʳˢ⟨ ◇ ⟩           = σ
+  σ ,locksʳˢ⟨ lock⟨ μ ⟩, Λ ⟩ = (σ ,lockʳˢ⟨ μ ⟩) ,locksʳˢ⟨ Λ ⟩
 
-  key-rensub : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locksˡᵗ Λ₂) (locksˡᵗ Λ₁) → RenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
-  key-rensub Λ₁ Λ₂ α = id ⊚a atomic-key Λ₁ Λ₂ α
+  keyʳˢ : (Λ₁ Λ₂ : LockTele n m) → TwoCell (locksˡᵗ Λ₂) (locksˡᵗ Λ₁) → RenSub (Γ ,ˡᵗ Λ₁) (Γ ,ˡᵗ Λ₂)
+  keyʳˢ Λ₁ Λ₂ α = id ⊚a keyᵃ Λ₁ Λ₂ α
 
-  _⊚rs_ : RenSub Δ Θ → RenSub Γ Δ → RenSub Γ Θ
-  τ ⊚rs id = τ
-  τ ⊚rs (σ ⊚a σᵃ) = (τ ⊚rs σ) ⊚a σᵃ
+  _⊚ʳˢ_ : RenSub Δ Θ → RenSub Γ Δ → RenSub Γ Θ
+  τ ⊚ʳˢ id = τ
+  τ ⊚ʳˢ (σ ⊚a σᵃ) = (τ ⊚ʳˢ σ) ⊚a σᵃ
 
-  rensub-tm-⊚ : {τ : RenSub Δ Θ} (σ : RenSub Γ Δ) {t : Tm Θ T} → rensub-tm (rensub-tm t τ) σ ≡ rensub-tm t (τ ⊚rs σ)
+  rensub-tm-⊚ : {τ : RenSub Δ Θ} (σ : RenSub Γ Δ) {t : Tm Θ T} → t [ τ ]tmʳˢ [ σ ]tmʳˢ ≡ t [ τ ⊚ʳˢ σ ]tmʳˢ
   rensub-tm-⊚ id = refl
-  rensub-tm-⊚ (σ ⊚a σᵃ) = cong (λ - → atomic-rensub-tm - σᵃ) (rensub-tm-⊚ σ)
+  rensub-tm-⊚ (σ ⊚a σᵃ) = cong (_[ σᵃ ]tmᵃ) (rensub-tm-⊚ σ)
 
 
 --------------------------------------------------
@@ -241,12 +242,12 @@ module AtomicRenVar where
 
   atomic-ren-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) →
                     Var x T Δ Λ → AtomicRen Γ Δ → SomeVar T Γ Λ
-  atomic-ren-var' Λ v         idᵃ                 = somevar v
-  atomic-ren-var' Λ v         (σ ⊚π)              = somevar (vsuc (get-var (atomic-ren-var' Λ v σ)))
-  atomic-ren-var' Λ (vlock v) (σ ,lock⟨ μ ⟩)      = somevar (vlock (get-var (atomic-ren-var' (lock⟨ μ ⟩, Λ) v σ)))
-  atomic-ren-var' Λ v         (atomic-key Θ Ψ α)  = somevar (apply-2-cell-var-lt Ψ Θ α v)
-  atomic-ren-var' Λ (vzero α) (σ ∷ somevar w / x) = somevar (apply-2-cell-var (lock⟨ _ ⟩, ◇) Λ α w)
-  atomic-ren-var' Λ (vsuc v)  (σ ∷ _ / y)         = atomic-ren-var' Λ v σ
+  atomic-ren-var' Λ v         idᵃ                  = somevar v
+  atomic-ren-var' Λ v         (σ ⊚πᵃ)              = somevar (vsuc (get-var (atomic-ren-var' Λ v σ)))
+  atomic-ren-var' Λ (vlock v) (σ ,lockᵃ⟨ μ ⟩)      = somevar (vlock (get-var (atomic-ren-var' (lock⟨ μ ⟩, Λ) v σ)))
+  atomic-ren-var' Λ v         (keyᵃ Θ Ψ α)         = somevar (apply-2-cell-var-lt Ψ Θ α v)
+  atomic-ren-var' Λ (vzero α) (σ ∷ᵃ somevar w / x) = somevar (apply-2-cell-var (lock⟨ _ ⟩, ◇) Λ α w)
+  atomic-ren-var' Λ (vsuc v)  (σ ∷ᵃ _ / y)         = atomic-ren-var' Λ v σ
 
   atomic-ren-var : Var x T Δ ◇ → AtomicRen Γ Δ → Tm Γ T
   atomic-ren-var v σ = var' _ {get-var (atomic-ren-var' ◇ v σ)}
@@ -260,16 +261,16 @@ module AtomicRenM = AtomicRenSub RenData AtomicRenVar.ren-data-struct
 open AtomicRenM public
   renaming
     ( AtomicRenSub to AtomicRen
-    ; [] to []ᵃʳ
-    ; _∷_/_ to _∷ᵃʳ_/_
-    ; _⊚π to _⊚πᵃʳ
-    ; _,lock⟨_⟩ to _,lockᵃʳ⟨_⟩
-    ; atomic-key to keyᵃʳ
+    ; []ᵃ to []ᵃʳ
+    ; _∷ᵃ_/_ to _∷ᵃʳ_/_
+    ; _⊚πᵃ to _⊚πᵃʳ
+    ; _,lockᵃ⟨_⟩ to _,lockᵃʳ⟨_⟩
+    ; keyᵃ to keyᵃʳ
     ; idᵃ to idᵃʳ
     ; πᵃ to πᵃʳ
-    ; atomic-rensub-tm to infixl 8 _[_]tmᵃʳ
-    ; lift-atomic-rensub to liftᵃʳ
-    ; _,alocks⟨_⟩ to _,locksᵃʳ⟨_⟩)
+    ; _[_]tmᵃ to infixl 8 _[_]tmᵃʳ
+    ; liftᵃ to liftᵃʳ
+    ; _,locksᵃ⟨_⟩ to _,locksᵃʳ⟨_⟩)
   using ()
 
 module RenM = RenSub RenData AtomicRenVar.ren-data-struct
@@ -278,14 +279,14 @@ open RenM
   renaming
     ( RenSub to Ren
     ; id to idʳ
-    ; rensub-tm to infixl 8 _[_]tmʳ
-    ; lift-rensub to liftʳ
-    ; []rs to []ʳ
-    ; π-rensub to πʳ
-    ; _,rslock⟨_⟩ to _,lockʳ⟨_⟩
-    ; _,rslocks⟨_⟩ to _,locksʳ⟨_⟩
-    ; key-rensub to keyʳ
-    ; _⊚rs_ to _⊚ʳ_
+    ; _[_]tmʳˢ to infixl 8 _[_]tmʳ
+    ; liftʳˢ to liftʳ
+    ; []ʳˢ to []ʳ
+    ; πʳˢ to πʳ
+    ; _,lockʳˢ⟨_⟩ to _,lockʳ⟨_⟩
+    ; _,locksʳˢ⟨_⟩ to _,locksʳ⟨_⟩
+    ; keyʳˢ to keyʳ
+    ; _⊚ʳˢ_ to _⊚ʳ_
     ; rensub-tm-⊚ to ren-tm-⊚)
   using (_⊚a_)
   public
@@ -362,12 +363,12 @@ module AtomicSubVar where
   --     In this way, the number of term traversals is reduced.
   atomic-sub-var' : {Γ Δ : Ctx n} (Λ : LockTele n m) (σ : AtomicSub Γ Δ) →
                     Var x T Δ Λ → Tm (Γ ,ˡᵗ Λ) T
-  atomic-sub-var' Λ idᵃ                v         = var-lt Λ v
-  atomic-sub-var' Λ (σ ⊚π)             v         = (atomic-sub-var' Λ σ v) [ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ]tmᵃʳ
-  atomic-sub-var' Λ (σ ,lock⟨ μ ⟩)     (vlock v) = atomic-sub-var' (lock⟨ μ ⟩, Λ) σ v
-  atomic-sub-var' Λ (atomic-key Θ Ψ α) v         = var-lt Λ (apply-2-cell-var-lt Ψ Θ α v)
-  atomic-sub-var' Λ (σ ∷ t / x)        (vzero α) = t [ keyᵃʳ Λ (lock⟨ _ ⟩, ◇) α ]tmᵃʳ
-  atomic-sub-var' Λ (σ ∷ t / y)        (vsuc v)  = atomic-sub-var' Λ σ v
+  atomic-sub-var' Λ idᵃ             v         = var-lt Λ v
+  atomic-sub-var' Λ (σ ⊚πᵃ)         v         = (atomic-sub-var' Λ σ v) [ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ]tmᵃʳ
+  atomic-sub-var' Λ (σ ,lockᵃ⟨ μ ⟩) (vlock v) = atomic-sub-var' (lock⟨ μ ⟩, Λ) σ v
+  atomic-sub-var' Λ (keyᵃ Θ Ψ α)    v         = var-lt Λ (apply-2-cell-var-lt Ψ Θ α v)
+  atomic-sub-var' Λ (σ ∷ᵃ t / x)    (vzero α) = t [ keyᵃʳ Λ (lock⟨ _ ⟩, ◇) α ]tmᵃʳ
+  atomic-sub-var' Λ (σ ∷ᵃ t / y)    (vsuc v)  = atomic-sub-var' Λ σ v
 
   atomic-sub-var : Var x T Δ ◇ → AtomicSub Γ Δ → Tm Γ T
   atomic-sub-var v σ = atomic-sub-var' ◇ σ v
@@ -382,16 +383,16 @@ module AtomicSubM = AtomicRenSub SubData AtomicSubVar.sub-data-struct
 open AtomicSubM
   renaming
     ( AtomicRenSub to AtomicSub
-    ; [] to []ᵃˢ
-    ; _∷_/_ to _∷ᵃˢ_/_
-    ; _⊚π to _⊚πᵃˢ
-    ; _,lock⟨_⟩ to _,lockᵃˢ⟨_⟩
-    ; atomic-key to keyᵃˢ
+    ; []ᵃ to []ᵃˢ
+    ; _∷ᵃ_/_ to _∷ᵃˢ_/_
+    ; _⊚πᵃ to _⊚πᵃˢ
+    ; _,lockᵃ⟨_⟩ to _,lockᵃˢ⟨_⟩
+    ; keyᵃ to keyᵃˢ
     ; idᵃ to idᵃˢ
     ; πᵃ to πᵃˢ
-    ; atomic-rensub-tm to _[_]tmᵃˢ
-    ; lift-atomic-rensub to liftᵃˢ
-    ; _,alocks⟨_⟩ to _,locksᵃˢ⟨_⟩)
+    ; _[_]tmᵃ to _[_]tmᵃˢ
+    ; liftᵃ to liftᵃˢ
+    ; _,locksᵃ⟨_⟩ to _,locksᵃˢ⟨_⟩)
   using ()
   public
 
@@ -401,15 +402,15 @@ open SubM
   renaming
     ( RenSub to Sub
     ; id to idˢ
-    ; rensub-tm to _[_]tmˢ
-    ; lift-rensub to liftˢ
-    ; []rs to []ˢ
+    ; _[_]tmʳˢ to _[_]tmˢ
+    ; liftʳˢ to liftˢ
+    ; []ʳˢ to []ˢ
     ; _∷ʳˢ_/_ to _∷ˢ_/_
-    ; π-rensub to πˢ
-    ; _,rslock⟨_⟩ to _,lockˢ⟨_⟩
-    ; _,rslocks⟨_⟩ to _,locksˢ⟨_⟩
-    ; key-rensub to keyˢ
-    ; _⊚rs_ to _⊚ˢ_
+    ; πʳˢ to πˢ
+    ; _,lockʳˢ⟨_⟩ to _,lockˢ⟨_⟩
+    ; _,locksʳˢ⟨_⟩ to _,locksˢ⟨_⟩
+    ; keyʳˢ to keyˢ
+    ; _⊚ʳˢ_ to _⊚ˢ_
     ; rensub-tm-⊚ to sub-tm-⊚)
   using (_⊚a_)
   public
@@ -421,57 +422,3 @@ t / x = idˢ ∷ˢ t / x
 
 _//_ : Tm (Γ ,, μ ∣ x ∈ T ,lock⟨ ρ ⟩) S → (y : Name) → Sub (Γ ,, μ ∣ x ∈ T) (Γ ,, ρ ∣ y ∈ S)
 s // y = πˢ ∷ˢ s / y
-
-{-
---------------------------------------------------
--- Proving that substituting the most recently added variable in a
---   weakened term has no effect.
-
-multi⊹ : (Θ : Ctx) → Subst Γ Δ → Subst (Γ ++tel Θ) (Δ ++tel Θ)
-multi⊹ ◇            σ = σ
-multi⊹ (Θ ,, x ∈ T) σ = (multi⊹ Θ σ) ⊹⟨ x ⟩
-
-cong₃ : {A B C D : Set} (f : A → B → C → D)
-        {a a' : A} {b b' : B} {c c' : C} →
-        a ≡ a' → b ≡ b' → c ≡ c' →
-        f a b c ≡ f a' b' c'
-cong₃ f refl refl refl = refl
-
-var-weaken-subst-trivial-multi : (Θ : Ctx) (v : Var x (Γ ++tel Θ) T) {s : Tm Γ S} →
-  (var' x {mid-weaken-var Θ v}) [ multi⊹ Θ (s / y) ]tm ≡ var' x {v}
-var-weaken-subst-trivial-multi ◇ v = refl
-var-weaken-subst-trivial-multi (Θ ,, x ∈ T) vzero = refl
-var-weaken-subst-trivial-multi (◇ ,, x ∈ T) (vsuc v) = refl
-var-weaken-subst-trivial-multi (Θ ,, x ∈ T ,, y ∈ S) (vsuc v) = cong weaken-tm (var-weaken-subst-trivial-multi (Θ ,, x ∈ T) v)
-
-tm-weaken-subst-trivial-multi : (Θ : Ctx) (t : Tm (Γ ++tel Θ) T) {s : Tm Γ S} → (mid-weaken-tm Θ t) [ multi⊹ Θ (s / x) ]tm ≡ t
-tm-weaken-subst-trivial-multi ◇ (var' x {_}) = refl
-tm-weaken-subst-trivial-multi ◇ (lam[ _ ∈ _ ] t) = cong (lam[ _ ∈ _ ]_) (tm-weaken-subst-trivial-multi (◇ ,, _ ∈ _) t)
-tm-weaken-subst-trivial-multi ◇ (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-multi ◇ f) (tm-weaken-subst-trivial-multi ◇ t)
-tm-weaken-subst-trivial-multi ◇ zero = refl
-tm-weaken-subst-trivial-multi ◇ suc = refl
-tm-weaken-subst-trivial-multi ◇ (nat-rec a f) = cong₂ nat-rec (tm-weaken-subst-trivial-multi ◇ a) (tm-weaken-subst-trivial-multi ◇ f)
-tm-weaken-subst-trivial-multi ◇ true = refl
-tm-weaken-subst-trivial-multi ◇ false = refl
-tm-weaken-subst-trivial-multi ◇ (if b t f) =
-  cong₃ if (tm-weaken-subst-trivial-multi ◇ b) (tm-weaken-subst-trivial-multi ◇ t) (tm-weaken-subst-trivial-multi ◇ f)
-tm-weaken-subst-trivial-multi ◇ (pair t s) = cong₂ pair (tm-weaken-subst-trivial-multi ◇ t) (tm-weaken-subst-trivial-multi ◇ s)
-tm-weaken-subst-trivial-multi ◇ (fst p) = cong fst (tm-weaken-subst-trivial-multi ◇ p)
-tm-weaken-subst-trivial-multi ◇ (snd p) = cong snd (tm-weaken-subst-trivial-multi ◇ p)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (var' _ {v}) = var-weaken-subst-trivial-multi (Θ ,, _ ∈ T) v
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (lam[ _ ∈ _ ] t) = cong (lam[ _ ∈ _ ]_) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T ,, _ ∈ _) t)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (f ∙ t) = cong₂ _∙_ (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) f) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) t)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) zero = refl
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) suc = refl
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (nat-rec a f) = cong₂ nat-rec (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) a) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) f)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) true = refl
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) false = refl
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (if b t f) =
-  cong₃ if (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) b) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) t) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) f)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (pair t s) = cong₂ pair (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) t) (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) s)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (fst p) = cong fst (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) p)
-tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) (snd p) = cong snd (tm-weaken-subst-trivial-multi (Θ ,, _ ∈ T) p)
-
-tm-weaken-subst-trivial : (t : Tm Γ T) (s : Tm Γ S) → (t [ π ]tm) [ s / x ]tm ≡ t
-tm-weaken-subst-trivial t s = tm-weaken-subst-trivial-multi ◇ t
--}
