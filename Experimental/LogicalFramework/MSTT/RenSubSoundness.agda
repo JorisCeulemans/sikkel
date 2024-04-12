@@ -29,7 +29,7 @@ private variable
   x y : String
 
 
-record TravStructSemantics
+record TravStructSoundness
   {Trav : ∀ {m} → Ctx m → Ctx m → Set}
   (trav-struct : TravStruct Trav)
   : Set where

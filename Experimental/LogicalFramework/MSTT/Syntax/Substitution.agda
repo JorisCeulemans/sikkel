@@ -148,17 +148,22 @@ module AtomicRenSub
   _[_]tmᵃ = traverse-tm AtomicRenSubTrav
 
 
+module RenSubDef (V : RenSubData) where
+  open AtomicRenSubDef V
+
+  -- An actual renaming/substitution is a well-typed (snoc) list of atomic renamings/substitutions.
+  data RenSub : Ctx m → Ctx m → Set where
+    id : RenSub Γ Γ
+    _⊚a_ : RenSub Δ Θ → AtomicRenSub Γ Δ → RenSub Γ Θ
+
+
 module RenSub
   (V : RenSubData)
   (rensub-struct : RenSubDataStructure V)
   where
 
   open AtomicRenSub V rensub-struct
-
-  -- An actual renaming/substitution is a well-typed (snoc) list of atomic renamings/substitutions.
-  data RenSub : Ctx m → Ctx m → Set where
-    id : RenSub Γ Γ
-    _⊚a_ : RenSub Δ Θ → AtomicRenSub Γ Δ → RenSub Γ Θ
+  open RenSubDef V public
 
   _[_]tmʳˢ : Tm Δ T → RenSub Γ Δ → Tm Γ T
   t [ id ]tmʳˢ = t

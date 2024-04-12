@@ -26,6 +26,7 @@ import Model.Type.Constant as M
 
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics ℳ 𝒯 hiding (TmExtSem)
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
+open SomeVar using (get-var)
 
 private variable
   m n : Mode
@@ -88,35 +89,43 @@ open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ �
 ,ˡᵗ-sound (lock⟨ μ ⟩, Λ) =
   M.transᶜ (,ˡᵗ-sound Λ) (M.symᶜ (lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
 
-⟦_⟧asub : AtomicSub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ []ᵃˢ ⟧asub = M.!◇ _
-⟦ idᵃˢ ⟧asub = M.id-subst _
-⟦ _∷ᵃˢ_/_ {μ = μ} {T = T} σ t x ⟧asub = ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
-⟦ σ ⊚πᵃˢ ⟧asub = ⟦ σ ⟧asub M.⊚ M.π
-⟦ σ ,lockᵃˢ⟨ μ ⟩ ⟧asub = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub
-⟦ keyᵃˢ Λ₁ Λ₂ α ⟧asub =
-  M.to (,ˡᵗ-sound Λ₂)
-  M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
-  M.⊚ M.from (,ˡᵗ-sound Λ₁)
+RenSubDataSemantics : RenSubData → Set
+RenSubDataSemantics V =
+  {m n : Mode} {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → V μ T Γ → SemTm ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx ⟦ T ⟧ty
 
-⟦_⟧sub : Sub Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ idˢ ⟧sub = M.id-subst _
-⟦ idˢ ⊚a τᵃ ⟧sub = ⟦ τᵃ ⟧asub
-⟦ σ   ⊚a τᵃ ⟧sub = ⟦ σ ⟧sub M.⊚ ⟦ τᵃ ⟧asub
+module RenSubSemantics
+  {V : RenSubData} (⟦_⟧rensubdata : RenSubDataSemantics V)
+  where
 
-⟦_⟧aren : AtomicRen Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ []ᵃʳ ⟧aren = M.!◇ _
-⟦ idᵃʳ ⟧aren = M.id-subst _
-⟦ _∷ᵃʳ_/_ {μ = μ} {T = T} σ (somevar v) x ⟧aren =
-  ⟦ σ ⟧aren M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ v ⟧var)
-⟦ σ ⊚πᵃʳ ⟧aren = ⟦ σ ⟧aren M.⊚ M.π
-⟦ σ ,lockᵃʳ⟨ μ ⟩ ⟧aren = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧aren
-⟦ keyᵃʳ Λ₁ Λ₂ α ⟧aren =
-  M.to (,ˡᵗ-sound Λ₂)
-  M.⊚ (DRA.key-subst ⟦ α ⟧two-cell)
-  M.⊚ M.from (,ˡᵗ-sound Λ₁)
+  open AtomicRenSubDef V
+  open RenSubDef V
 
-⟦_⟧ren : Ren Δ Γ → (⟦ Δ ⟧ctx M.⇒ ⟦ Γ ⟧ctx)
-⟦ idʳ ⟧ren = M.id-subst _
-⟦ idʳ ⊚a σ ⟧ren = ⟦ σ ⟧aren
-⟦ σs  ⊚a σ ⟧ren = ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren
+  ⟦_⟧arensub : AtomicRenSub Γ Δ → (⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx)
+  ⟦ []ᵃ ⟧arensub = M.!◇ _
+  ⟦ idᵃ ⟧arensub = M.id-subst _
+  ⟦ σ ⊚πᵃ ⟧arensub = ⟦ σ ⟧arensub M.⊚ M.π
+  ⟦ σ ,lockᵃ⟨ μ ⟩ ⟧arensub = lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧arensub
+  ⟦ keyᵃ Λ₁ Λ₂ α ⟧arensub =
+    M.to (,ˡᵗ-sound Λ₂)
+    M.⊚ DRA.key-subst ⟦ α ⟧two-cell
+    M.⊚ M.from (,ˡᵗ-sound Λ₁)
+  ⟦ _∷ᵃ_/_ {μ = μ} {T = T} σ v x ⟧arensub =
+    ⟦ σ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)
+
+  ⟦_⟧rensub : RenSub Γ Δ → (⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx)
+  ⟦ id ⟧rensub = M.id-subst _
+  ⟦ id ⊚a τᵃ ⟧rensub = ⟦ τᵃ ⟧arensub
+  ⟦ σ  ⊚a τᵃ ⟧rensub = ⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub
+
+
+module RenSemantics = RenSubSemantics {RenData} (λ v → ⟦ get-var v ⟧var)
+open RenSemantics renaming
+  ( ⟦_⟧arensub to ⟦_⟧aren
+  ; ⟦_⟧rensub to ⟦_⟧ren
+  ) public
+
+module SubSemantics = RenSubSemantics {SubData} ⟦_⟧tm
+open SubSemantics renaming
+  ( ⟦_⟧arensub to ⟦_⟧asub
+  ; ⟦_⟧rensub to ⟦_⟧sub
+  ) public
