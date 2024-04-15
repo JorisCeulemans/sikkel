@@ -1,6 +1,6 @@
 open import Experimental.LogicalFramework.MSTT.Parameter
 
-module Experimental.LogicalFramework.MSTT.RenSubSoundness
+module Experimental.LogicalFramework.MSTT.Soundness.Substitution
   (𝒫 : MSTT-Parameter)
   where
 
@@ -191,11 +191,11 @@ module RenSubSoundness
     begin
       ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub ]cl
     ≅⟨ M.cl-tm-subst-⊚ (ty-closed-natural T) ⟦ t ⟧tm ⟨
-      (⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧rensub ]cl) M.[ ty-closed-natural T ∣ ⟦ τᵃ ⟧arensub ]cl
+      ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧rensub ]cl M.[ ty-closed-natural T ∣ ⟦ τᵃ ⟧arensub ]cl
     ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (tm-rensub-sound t σ) ⟩
       ⟦ t [ σ ]tmʳˢ ⟧tm M.[ ty-closed-natural T ∣ ⟦ τᵃ ⟧arensub ]cl
     ≅⟨ tm-arensub-sound (t [ σ ]tmʳˢ) τᵃ ⟩
-      ⟦ (t [ σ ]tmʳˢ) [ τᵃ ]tmᵃ ⟧tm ∎
+      ⟦ t [ σ ]tmʳˢ [ τᵃ ]tmᵃ ⟧tm ∎
     where open M.≅ᵗᵐ-Reasoning
 
   liftʳˢ-sound : ∀ {m n x} {Γ Δ : Ctx n} {μ : Modality m n} {T : Ty m} (σ : RenSub Γ Δ) →
@@ -232,7 +232,7 @@ module RenSubSoundness
     begin
       (⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub) M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata
     ≅⟨ M.lift-cl-,cl (ty-closed-natural ⟨ μ ∣ T ⟩) ⟨
-      M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧rensub M.⊚ (⟦ τᵃ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)
+      (M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧rensub) M.⊚ (⟦ τᵃ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)
     ≅⟨ M.⊚-congˡ (liftʳˢ-sound σ) ⟩
       ⟦ liftʳˢ σ ⟧rensub M.⊚ (⟦ τᵃ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)  ∎
     where open M.≅ˢ-Reasoning
