@@ -134,7 +134,7 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
                         t ≅ᵗᵐ s → t [ clT ∣ σ ]cl ≅ᵗᵐ s [ clT ∣ σ ]cl
   cl-tm-subst-cong-tm t=s = ι⁻¹-cong (tm-subst-cong-tm _ t=s)
 
-  cl-tm-subst-cong-subst-2-1 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ} {t : Tm Θ T} →
+  cl-tm-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ} {t : Tm Θ T} →
                                σ2 ⊚ σ1 ≅ˢ τ →
                                t [ clT ∣ σ2 ]cl [ clT ∣ σ1 ]cl ≅ᵗᵐ t [ clT ∣ τ ]cl
   cl-tm-subst-cong-subst-2-1 ε =
