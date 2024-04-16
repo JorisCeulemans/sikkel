@@ -253,11 +253,19 @@ isoʳ (ⓓ-congˡ μ ℯ) = begin
 
 
 module _ {μ ρ : DRA C D} (α : TwoCell μ ρ) where
-  𝟙-unitʳ-natural : α ⓣ-vert from (𝟙-unitʳ μ) ≅ᵗᶜ from (𝟙-unitʳ ρ) ⓣ-vert (α ⓣ-hor id-cell)
-  key-subst-eq 𝟙-unitʳ-natural = symˢ (id-subst-unitʳ _)
+  𝟙-unitʳ-natural-from : α ⓣ-vert from (𝟙-unitʳ μ) ≅ᵗᶜ from (𝟙-unitʳ ρ) ⓣ-vert (α ⓣ-hor id-cell)
+  key-subst-eq 𝟙-unitʳ-natural-from = symˢ (id-subst-unitʳ _)
 
-  𝟙-unitˡ-natural : α ⓣ-vert from (𝟙-unitˡ μ) ≅ᵗᶜ from (𝟙-unitˡ ρ) ⓣ-vert (id-cell ⓣ-hor α)
-  key-subst-eq 𝟙-unitˡ-natural = transˢ (id-subst-unitˡ _) (symˢ (transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-id ρ)) (id-subst-unitʳ _))))
+  𝟙-unitˡ-natural-from : α ⓣ-vert from (𝟙-unitˡ μ) ≅ᵗᶜ from (𝟙-unitˡ ρ) ⓣ-vert (id-cell ⓣ-hor α)
+  key-subst-eq 𝟙-unitˡ-natural-from = transˢ (id-subst-unitˡ _) (symˢ (transˢ (id-subst-unitʳ _) (transˢ (⊚-congʳ (lock-fmap-id ρ)) (id-subst-unitʳ _))))
+
+  -- The following are consequences of the versions for `from`, but it
+  -- is easier to prove them directly.
+  𝟙-unitʳ-natural-to : (α ⓣ-hor id-cell) ⓣ-vert to (𝟙-unitʳ μ) ≅ᵗᶜ to (𝟙-unitʳ ρ) ⓣ-vert α
+  key-subst-eq 𝟙-unitʳ-natural-to = transˢ (id-subst-unitˡ _) (transˢ (id-subst-unitˡ _) (symˢ (id-subst-unitʳ _)))
+
+  𝟙-unitˡ-natural-to : (id-cell ⓣ-hor α) ⓣ-vert to (𝟙-unitˡ μ) ≅ᵗᶜ to (𝟙-unitˡ ρ) ⓣ-vert α
+  key-subst-eq 𝟙-unitˡ-natural-to = transˢ (id-subst-unitˡ _) (⊚-congʳ (lock-fmap-id ρ))
 
 ⓓ-assoc-natural : {C1 C2 C3 C4 : BaseCategory}
                   {μ μ' : DRA C3 C4} {ρ ρ' : DRA C2 C3} {κ κ' : DRA C1 C2}

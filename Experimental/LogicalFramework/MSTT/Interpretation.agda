@@ -118,13 +118,20 @@ module RenSubSemantics
   ⟦ σ  ⊚a τᵃ ⟧rensub = ⟦ σ ⟧rensub M.⊚ ⟦ τᵃ ⟧arensub
 
 
-module RenSemantics = RenSubSemantics RenData (λ v → ⟦ get-var v ⟧var)
+ren-data-semantics : RenSubDataSemantics RenData
+ren-data-semantics v = ⟦ get-var v ⟧var
+
+module RenSemantics = RenSubSemantics RenData ren-data-semantics
 open RenSemantics renaming
   ( ⟦_⟧arensub to ⟦_⟧aren
   ; ⟦_⟧rensub to ⟦_⟧ren
   ) public
 
-module SubSemantics = RenSubSemantics SubData ⟦_⟧tm
+
+sub-data-semantics : RenSubDataSemantics SubData
+sub-data-semantics t = ⟦ t ⟧tm
+
+module SubSemantics = RenSubSemantics SubData sub-data-semantics
 open SubSemantics renaming
   ( ⟦_⟧arensub to ⟦_⟧asub
   ; ⟦_⟧rensub to ⟦_⟧sub

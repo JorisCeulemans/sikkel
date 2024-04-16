@@ -34,6 +34,10 @@ MTTwoCell._ⓣ-vert_ (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {ρ = MTBasis.
 MTTwoCell._ⓣ-hor_ (ModeTheory.mt2 triv-mt) {μ1 = MTBasis.𝟙} {MTBasis.𝟙} {MTBasis.𝟙} {MTBasis.𝟙} _ _ = tt
 MTTwoCell.two-cell-eq? (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {MTBasis.𝟙} tt tt = just refl
 MTTwoCell.⟦_⟧two-cell (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {MTBasis.𝟙} tt = DRA.id-cell
+MTTwoCell.⟦id-cell⟧-sound (ModeTheory.mt2 triv-mt) MTBasis.𝟙 = DRA.reflᵗᶜ
+MTTwoCell.⟦ⓣ-vert⟧-sound (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {κ = MTBasis.𝟙} {ρ = MTBasis.𝟙} _ _ = DRA.symᵗᶜ DRA.ⓣ-vert-unitˡ
+MTTwoCell.⟦ⓜ⟧-sound-natural (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {μ' = MTBasis.𝟙} {ρ = MTBasis.𝟙} {ρ' = MTBasis.𝟙} _ _ =
+  DRA.symᵗᶜ (DRA.𝟙-unitʳ-natural-to DRA.id-cell)
 
 open ModeTheory triv-mt public hiding (id-cell)
 

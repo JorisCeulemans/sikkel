@@ -121,6 +121,19 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
 
     ⟦_⟧two-cell : ∀ {m n} {μ κ : Modality m n} → TwoCell μ κ → DRA.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 
+    -- TODO: add comment that we are constructing a pseudofunctor from
+    -- the mode theory to the 2-category of base categories and DRAs.
+    -- (and possibly find better name for ⟦ⓜ⟧-sound)
+    ⟦id-cell⟧-sound : ∀ {m n} (μ : Modality m n) → ⟦ id-cell {μ = μ} ⟧two-cell DRA.≅ᵗᶜ DRA.id-cell
+    ⟦ⓣ-vert⟧-sound : ∀ {m n} {μ κ ρ : Modality m n}
+                     (β : TwoCell κ ρ) (α : TwoCell μ κ) →
+                     ⟦ β ⓣ-vert α ⟧two-cell DRA.≅ᵗᶜ ⟦ β ⟧two-cell DRA.ⓣ-vert ⟦ α ⟧two-cell
+    ⟦ⓜ⟧-sound-natural : ∀ {m n o} {μ μ' : Modality n o} {ρ ρ' : Modality m n}
+                        (α : TwoCell μ μ') (β : TwoCell ρ ρ') →
+                        from (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ⟦ α ⓣ-hor β ⟧two-cell
+                          DRA.≅ᵗᶜ
+                        (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)
+
   eq-cell : ∀ {m n} {μ ρ : Modality m n} → μ ≡ ρ → TwoCell μ ρ
   eq-cell refl = id-cell
 

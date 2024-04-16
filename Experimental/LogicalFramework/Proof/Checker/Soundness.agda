@@ -298,7 +298,6 @@ module _ (Ξ : ProofCtx m) where
                  M.transᵗᵐ (M.cl-tm-subst-cong-cl (ⓓ-preserves-cl ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T)))
                            (M.cl-tm-subst-cong-tm (ty-closed-natural ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩) (M.ξcl-cong-cl (ⓓ-preserves-cl ⟦ ρ ⟧mod ⟦ μ ⟧mod (ty-closed-natural T))))))
                          (M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩)
-                                                       {Δ' = ⟦ to-ctx Ξ ⟧ctx M.,, DRA.⟨ ⟦ ρ ⟧mod ∣ DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩ ⟩}
                                                        (M.isoʳ (M.,,-cong (eq-dra-ty-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T))))))))) (
              M.symˢ (M.,cl-η (ty-closed-natural ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩) _))))))) ]
     M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (

@@ -355,6 +355,14 @@ key-subst-eq (2-cell-interchange {ρ'' = ρ''} {δ = δ}) =
   transˢ (⊚-congʳ (transˢ (symˢ ⊚-assoc) (⊚-congˡ (naturality (transf δ) _)))) (
     transˢ (⊚-congʳ ⊚-assoc) (symˢ ⊚-assoc))))
 
+ⓣ-hor-key-subst : {μ ρ : DRA C D} {κ φ : DRA D E} (α : TwoCell κ φ) (β : TwoCell μ ρ) {Γ : Ctx E} →
+                  key-subst (α ⓣ-hor β) {Γ} ≅ˢ lock-fmap μ (key-subst α) ⊚ key-subst β
+ⓣ-hor-key-subst α β = key-subst-natural β
+
+ⓣ-hor-key-subst-rev : {μ ρ : DRA C D} {κ φ : DRA D E} (α : TwoCell κ φ) (β : TwoCell μ ρ) {Γ : Ctx E} →
+                      key-subst (α ⓣ-hor β) {Γ} ≅ˢ key-subst β ⊚ lock-fmap ρ (key-subst α)
+ⓣ-hor-key-subst-rev α β = reflˢ
+
 -- In order to express that ⓣ-hor is associative and that id-cell is a
 -- unit for ⓣ-hor, we need the associator and unitor in the 2-category
 -- of base categories, DRAs and 2-cells. These proofs are therefore
