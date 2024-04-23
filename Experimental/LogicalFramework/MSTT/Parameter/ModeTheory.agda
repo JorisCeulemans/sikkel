@@ -121,10 +121,32 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
 
     ⟦_⟧two-cell : ∀ {m n} {μ κ : Modality m n} → TwoCell μ κ → DRA.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 
+  eq-cell : ∀ {m n} {μ ρ : Modality m n} → μ ≡ ρ → TwoCell μ ρ
+  eq-cell refl = id-cell
+
+  _≟cell_ : {m n : Mode} {μ κ : Modality m n} (α β : TwoCell μ κ) → PCM (α ≡ β)
+  α ≟cell β = from-maybe "Two-cells are not equal." (two-cell-eq? α β)
+
+
+record MTTwoCellLaws
+  (mtb : MTBasis)
+  (mtc : MTComposition mtb)
+  (mtc-laws : MTCompositionLaws mtb mtc)
+  (mt2 : MTTwoCell mtb mtc)
+  : Set₁
+  where
+  no-eta-equality
+
+  open MTBasis mtb
+  open MTComposition mtc
+  open MTCompositionLaws mtc-laws
+  open MTTwoCell mt2
+
+  field
     -- TODO: add comment that we are constructing a pseudofunctor from
     -- the mode theory to the 2-category of base categories and DRAs.
     -- (and possibly find better name for ⟦ⓜ⟧-sound)
-    ⟦id-cell⟧-sound : ∀ {m n} (μ : Modality m n) → ⟦ id-cell {μ = μ} ⟧two-cell DRA.≅ᵗᶜ DRA.id-cell
+    ⟦id-cell⟧-sound : ∀ {m n} {μ : Modality m n} → ⟦ id-cell {μ = μ} ⟧two-cell DRA.≅ᵗᶜ DRA.id-cell
     ⟦ⓣ-vert⟧-sound : ∀ {m n} {μ κ ρ : Modality m n}
                      (β : TwoCell κ ρ) (α : TwoCell μ κ) →
                      ⟦ β ⓣ-vert α ⟧two-cell DRA.≅ᵗᶜ ⟦ β ⟧two-cell DRA.ⓣ-vert ⟦ α ⟧two-cell
@@ -133,18 +155,14 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
                         from (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ⟦ α ⓣ-hor β ⟧two-cell
                           DRA.≅ᵗᶜ
                         (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)
-
-  eq-cell : ∀ {m n} {μ ρ : Modality m n} → μ ≡ ρ → TwoCell μ ρ
-  eq-cell refl = id-cell
-
-  transp-cellʳ : ∀ {m n} {μ ρ ρ' : Modality m n} → ρ ≡ ρ' → TwoCell μ ρ → TwoCell μ ρ'
-  transp-cellʳ refl α = α
-
-  transp-cellˡ : ∀ {m n} {μ μ' ρ : Modality m n} → μ ≡ μ' → TwoCell μ ρ → TwoCell μ' ρ
-  transp-cellˡ refl α = α
-
-  _≟cell_ : {m n : Mode} {μ κ : Modality m n} (α β : TwoCell μ κ) → PCM (α ≡ β)
-  α ≟cell β = from-maybe "Two-cells are not equal." (two-cell-eq? α β)
+    ⟦associator⟧ : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) →
+                   (DRA.id-cell DRA.ⓣ-hor from (⟦ⓜ⟧-sound ρ κ))
+                   DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ (ρ ⓜ κ))
+                   DRA.ⓣ-vert ⟦ eq-cell (mod-assoc κ) ⟧two-cell
+                     DRA.≅ᵗᶜ
+                   from (DRA.ⓓ-assoc ⟦ μ ⟧mod ⟦ ρ ⟧mod ⟦ κ ⟧mod)
+                   DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-hor DRA.id-cell)
+                   DRA.ⓣ-vert from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)
 
 record ModeTheory : Set₁ where
   no-eta-equality
@@ -153,8 +171,116 @@ record ModeTheory : Set₁ where
     mtc : MTComposition mtb
     mtc-laws : MTCompositionLaws mtb mtc
     mt2 : MTTwoCell mtb mtc
+    mt2-laws : MTTwoCellLaws mtb mtc mtc-laws mt2
 
   open MTBasis mtb public
   open MTComposition mtc public
   open MTCompositionLaws mtc-laws public
   open MTTwoCell mt2 public
+  open MTTwoCellLaws mt2-laws public
+
+  -- Some extra laws that we can prove about a mode theory
+  ⟦eq-cell-symˡ⟧ : ∀ {m n} {μ ρ : Modality m n} (e : μ ≡ ρ) →
+                   ⟦ eq-cell (sym e) ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell e ⟧two-cell DRA.≅ᵗᶜ DRA.id-cell
+  ⟦eq-cell-symˡ⟧ refl = transᵗᶜ (DRA.ⓣ-vert-congˡ ⟦id-cell⟧-sound) (transᵗᶜ (DRA.ⓣ-vert-congʳ ⟦id-cell⟧-sound) DRA.ⓣ-vert-unitˡ)
+
+  ⟦eq-cell-symʳ⟧ : ∀ {m n} {μ ρ : Modality m n} (e : μ ≡ ρ) →
+                   ⟦ eq-cell e ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell (sym e) ⟧two-cell DRA.≅ᵗᶜ DRA.id-cell
+  ⟦eq-cell-symʳ⟧ refl = transᵗᶜ (DRA.ⓣ-vert-congˡ ⟦id-cell⟧-sound) (transᵗᶜ (DRA.ⓣ-vert-congʳ ⟦id-cell⟧-sound) DRA.ⓣ-vert-unitˡ)
+
+  ⟦eq-cell-trans⟧ : ∀ {m n} {μ ρ κ : Modality m n} (e : μ ≡ ρ) (e' : ρ ≡ κ) →
+                    ⟦ eq-cell (trans e e') ⟧two-cell
+                      DRA.≅ᵗᶜ
+                    ⟦ eq-cell e' ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell e ⟧two-cell
+  ⟦eq-cell-trans⟧ refl e' = symᵗᶜ (transᵗᶜ (ⓣ-vert-congʳ ⟦id-cell⟧-sound) DRA.ⓣ-vert-unitʳ)
+
+
+  ⟦ⓣ-hor-id-cell⟧ : ∀ {m n o} {μ : Modality n o} (ρ : Modality m n) →
+                    ⟦ id-cell {μ = μ} ⓣ-hor id-cell {μ = ρ} ⟧two-cell
+                      DRA.≅ᵗᶜ
+                    ⟦ id-cell {μ = μ ⓜ ρ} ⟧two-cell
+  ⟦ⓣ-hor-id-cell⟧ {μ = μ} ρ =
+    begin
+      ⟦ id-cell ⓣ-hor id-cell ⟧two-cell
+    ≅⟨ DRA.transᵗᶜ (DRA.symᵗᶜ DRA.ⓣ-vert-assoc) (DRA.transᵗᶜ (ⓣ-vert-congˡ (isoˡ (⟦ⓜ⟧-sound μ ρ))) DRA.ⓣ-vert-unitˡ) ⟨
+      to (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-vert ⟦ (id-cell {μ = μ}) ⓣ-hor (id-cell {μ = ρ}) ⟧two-cell)
+    ≅⟨ DRA.ⓣ-vert-congʳ (⟦ⓜ⟧-sound-natural id-cell id-cell) ⟩
+      to (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-vert ((⟦ id-cell {μ = μ} ⟧two-cell DRA.ⓣ-hor ⟦ id-cell {μ = ρ} ⟧two-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ))
+    ≅⟨ DRA.ⓣ-vert-congʳ (DRA.ⓣ-vert-congˡ (ⓣ-hor-cong ⟦id-cell⟧-sound ⟦id-cell⟧-sound)) ⟩
+      to (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-vert ((DRA.id-cell DRA.ⓣ-hor DRA.id-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ))
+    ≅⟨ DRA.ⓣ-vert-congʳ (DRA.transᵗᶜ (DRA.ⓣ-vert-congˡ DRA.ⓣ-hor-id) DRA.ⓣ-vert-unitˡ) ⟩
+      to (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)
+    ≅⟨ isoˡ (⟦ⓜ⟧-sound μ ρ) ⟩
+      DRA.id-cell
+    ≅⟨ ⟦id-cell⟧-sound ⟨
+      ⟦ id-cell ⟧two-cell ∎
+    where open DRA.≅ᵗᶜ-Reasoning
+
+  ⟦eq-cell-whisker-left⟧ : ∀ {m n o} (μ : Modality n o) {ρ κ : Modality m n} (e : ρ ≡ κ) →
+                           ⟦ eq-cell (cong (μ ⓜ_) e) ⟧two-cell
+                             DRA.≅ᵗᶜ
+                           ⟦ id-cell ⓣ-hor (eq-cell e) ⟧two-cell
+  ⟦eq-cell-whisker-left⟧ μ {ρ} refl = DRA.symᵗᶜ (⟦ⓣ-hor-id-cell⟧ ρ)
+
+  ⟦eq-cell-whisker-right⟧ : ∀ {m n o} {ρ κ : Modality n o} (e : ρ ≡ κ) (μ : Modality m n) →
+                            ⟦ eq-cell (cong (_ⓜ μ) e) ⟧two-cell
+                              DRA.≅ᵗᶜ
+                            ⟦ eq-cell e ⓣ-hor (id-cell {μ = μ}) ⟧two-cell
+  ⟦eq-cell-whisker-right⟧ refl μ = DRA.symᵗᶜ (⟦ⓣ-hor-id-cell⟧ μ)
+
+
+  ⟦unitorˡ⟧ : ∀ {m n} {μ : Modality m n} →
+              ⟦ eq-cell (mod-unitˡ {μ = μ}) ⟧two-cell
+                DRA.≅ᵗᶜ
+              from (DRA.𝟙-unitˡ ⟦ μ ⟧mod) DRA.ⓣ-vert from (⟦ⓜ⟧-sound 𝟙 μ)
+  ⟦unitorˡ⟧ {μ = MTBasis.𝟙} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (record { key-subst-eq = M.id-subst-unitʳ _ }))
+  ⟦unitorˡ⟧ {μ = MTBasis.‵ μ} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (isoʳ (𝟙-unitˡ _)))
+
+  ⟦unitorˡ-sym⟧ : ∀ {m n} {μ : Modality m n} →
+                  ⟦ eq-cell (sym (mod-unitˡ {μ = μ})) ⟧two-cell
+                    DRA.≅ᵗᶜ
+                  to (⟦ⓜ⟧-sound 𝟙 μ) DRA.ⓣ-vert to (DRA.𝟙-unitˡ ⟦ μ ⟧mod)
+  ⟦unitorˡ-sym⟧ {μ = MTBasis.𝟙} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (record { key-subst-eq = M.id-subst-unitʳ _ }))
+  ⟦unitorˡ-sym⟧ {μ = MTBasis.‵ μ} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (isoʳ (𝟙-unitˡ _)))
+
+  -- Because 𝟙 is a strict right unit of ⓜ, the pseudofunctor law for
+  -- the right unitor is actually trivial.
+  ⟦unitorʳ⟧ : ∀ {m n} {μ : Modality m n} →
+              ⟦ eq-cell (mod-unitʳ {μ = μ}) ⟧two-cell
+                DRA.≅ᵗᶜ
+              DRA.id-cell
+  ⟦unitorʳ⟧ = ⟦id-cell⟧-sound
+
+  ⟦associator-sym-key⟧ : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) {Γ : M.Ctx ⟦ p ⟧mode} →
+                         DRA.key-subst ⟦ eq-cell (sym (mod-assoc κ)) ⟧two-cell {Γ}
+                         M.⊚ DRA.key-subst (from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+                         M.⊚ DRA.lock-fmap ⟦ κ ⟧mod (DRA.key-subst (from (⟦ⓜ⟧-sound μ ρ)))
+                           M.≅ˢ
+                         DRA.key-subst (from (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))
+                         M.⊚ DRA.key-subst (from (⟦ⓜ⟧-sound ρ κ))
+  ⟦associator-sym-key⟧ {μ = μ} {ρ} κ =
+    begin
+      key-subst ⟦ eq-cell (sym (mod-assoc κ)) ⟧two-cell
+      M.⊚ key-subst (from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+      M.⊚ lock-fmap ⟦ κ ⟧mod (key-subst (from (⟦ⓜ⟧-sound μ ρ)))
+    ≅⟨ M.transˢ M.⊚-assoc (M.symˢ (M.⊚-congʳ (M.⊚-congʳ (M.transˢ (M.id-subst-unitʳ _) (M.id-subst-unitˡ _))))) ⟩
+      key-subst ⟦ eq-cell (sym (mod-assoc κ)) ⟧two-cell M.⊚
+      (key-subst (from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)) M.⊚
+      (M.id-subst _ M.⊚
+      DRA.lock-fmap ⟦ κ ⟧mod (key-subst (from (⟦ⓜ⟧-sound μ ρ))) M.⊚
+      M.id-subst _))
+    ≅⟨ M.⊚-congʳ (key-subst-eq (⟦associator⟧ κ)) ⟨
+      key-subst ⟦ eq-cell (sym (mod-assoc κ)) ⟧two-cell M.⊚
+      (key-subst ⟦ eq-cell (mod-assoc κ) ⟧two-cell M.⊚
+      (key-subst (from (⟦ⓜ⟧-sound μ (ρ ⓜ κ))) M.⊚
+      (key-subst (from (⟦ⓜ⟧-sound ρ κ)) M.⊚
+      DRA.lock-fmap ⟦ κ ⟧mod (DRA.lock-fmap ⟦ ρ ⟧mod (M.id-subst _)))))
+    ≅⟨ M.⊚-congʳ (M.⊚-congʳ (M.⊚-congʳ (M.transˢ (M.⊚-congʳ (M.transˢ (lock-fmap-cong ⟦ κ ⟧mod (lock-fmap-id ⟦ ρ ⟧mod)) (lock-fmap-id ⟦ κ ⟧mod))) (M.id-subst-unitʳ _)))) ⟩
+      key-subst ⟦ eq-cell (sym (mod-assoc κ)) ⟧two-cell M.⊚
+      (key-subst ⟦ eq-cell (mod-assoc κ) ⟧two-cell M.⊚
+      (key-subst (from (⟦ⓜ⟧-sound μ (ρ ⓜ κ))) M.⊚
+      key-subst (from (⟦ⓜ⟧-sound ρ κ))))
+    ≅⟨ M.transˢ (M.symˢ M.⊚-assoc) (M.transˢ (M.⊚-congˡ (DRA.key-subst-eq (⟦eq-cell-symʳ⟧ (mod-assoc κ)))) (M.id-subst-unitˡ _)) ⟩
+      key-subst (from (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))
+      M.⊚ key-subst (from (⟦ⓜ⟧-sound ρ κ)) ∎
+    where open M.≅ˢ-Reasoning

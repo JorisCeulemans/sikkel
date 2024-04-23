@@ -26,7 +26,7 @@ v0-sound Γ μ x T =
   ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
     dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
       M.[ ty-closed-natural T ∣ M.id-subst _ ]cl
-  ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq (⟦id-cell⟧-sound μ)) ⟨
+  ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq ⟦id-cell⟧-sound) ⟨
     dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
       M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ} ⟧two-cell ]cl
   ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨

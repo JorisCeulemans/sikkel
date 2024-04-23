@@ -297,7 +297,7 @@ module TwoCellSoundness where
     ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.ⓣ-hor-key-subst (DRA.id-cell {μ = ⟦ ρ ⟧mod}) ⟦ α ⟧two-cell) ⟨
       ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound ρ (locksˡᵗ Θ))) ]cl
                M.[ ty-closed-natural T ∣ DRA.key-subst (DRA.id-cell {μ = ⟦ ρ ⟧mod} DRA.ⓣ-hor ⟦ α ⟧two-cell) ]cl
-    ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq (DRA.ⓣ-hor-congˡ {α = ⟦ α ⟧two-cell} (⟦id-cell⟧-sound ρ))) ⟨
+    ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq (DRA.ⓣ-hor-congˡ {α = ⟦ α ⟧two-cell} ⟦id-cell⟧-sound)) ⟨
       ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound ρ (locksˡᵗ Θ))) ]cl
                M.[ ty-closed-natural T ∣ DRA.key-subst (⟦ id-cell {μ = ρ} ⟧two-cell DRA.ⓣ-hor ⟦ α ⟧two-cell) ]cl
     ≅⟨ M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (DRA.key-subst-eq (⟦ⓜ⟧-sound-natural id-cell α)) ⟨
