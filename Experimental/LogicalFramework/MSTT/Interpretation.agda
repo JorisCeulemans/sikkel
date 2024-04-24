@@ -112,6 +112,7 @@ module RenSubSemantics
   ⟦ _∷ᵃ_/_ {μ = μ} {T = T} σ v x ⟧arensub =
     ⟦ σ ⟧arensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ (dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata)
 
+  -- TODO: commentaar
   ⟦_⟧rensub : RenSub Γ Δ → (⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx)
   ⟦ id ⟧rensub = M.id-subst _
   ⟦ id ⊚a τᵃ ⟧rensub = ⟦ τᵃ ⟧arensub

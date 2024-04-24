@@ -238,7 +238,7 @@ RenData : RenSubData
 RenData μ T Γ = SomeVar T Γ (lock⟨ μ ⟩, ◇)
 
 newRenData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → RenData μ T (Γ ,, μ ∣ x ∈ T)
-newRenData = somevar (vzero id-cell)
+newRenData = somevar vzero-id
 
 module AtomicRenDef = AtomicRenSubDef RenData renaming (AtomicRenSub to AtomicRen)
 
@@ -354,7 +354,7 @@ SubData : Modality n m → Ty n → Ctx m → Set
 SubData μ T Γ = Tm (Γ ,lock⟨ μ ⟩) T
 
 newSubData : {μ : Modality n m} {T : Ty n} {Γ : Ctx m} → SubData μ T (Γ ,, μ ∣ x ∈ T)
-newSubData {x = x} = var' x {vlock (vzero id-cell)}
+newSubData {x = x} = v0
 
 
 module AtomicSubDef = AtomicRenSubDef SubData renaming (AtomicRenSub to AtomicSub)
