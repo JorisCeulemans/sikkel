@@ -5,7 +5,6 @@ module Experimental.LogicalFramework.MSTT.Soundness.Variable
   where
 
 import Relation.Binary.PropositionalEquality as Ag
-import Relation.Binary.PropositionalEquality.Properties as Ag
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm) using ()
 open import Model.DRA as DRA hiding
@@ -14,6 +13,7 @@ open import Model.DRA as DRA hiding
 
 open MSTT-Parameter 𝒫
 open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.LockTele 𝒫
 
 private variable
   m n o p : Mode
@@ -35,43 +35,6 @@ v0-sound Γ μ x T =
       M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ} ⟧two-cell ]cl
       M.[ ty-closed-natural T ∣ M.id-subst _ ]cl ∎
   where open M.≅ᵗᵐ-Reasoning
-
-
-⟦eq-cell-++ˡᵗ-locks⟧ : (μ : Modality m p) (Λ : LockTele m n) {Θ : LockTele n o} →
-                       ⟦ eq-cell (++ˡᵗ-locks (lock⟨ μ ⟩, Λ) {Θ}) ⟧two-cell
-                         DRA.≅ᵗᶜ
-                       ⟦ id-cell ⓣ-hor eq-cell (++ˡᵗ-locks Λ) ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell (mod-assoc (locksˡᵗ Θ)) ⟧two-cell
-⟦eq-cell-++ˡᵗ-locks⟧ μ Λ {Θ} =
-  begin
-    ⟦ eq-cell (Ag.trans (mod-assoc (locksˡᵗ Θ)) (Ag.cong (μ ⓜ_) (++ˡᵗ-locks Λ))) ⟧two-cell
-  ≅⟨ ⟦eq-cell-trans⟧ (mod-assoc (locksˡᵗ Θ)) _ ⟩
-    ⟦ eq-cell (Ag.cong (μ ⓜ_) (++ˡᵗ-locks Λ)) ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell (mod-assoc (locksˡᵗ Θ)) ⟧two-cell
-  ≅⟨ DRA.ⓣ-vert-congˡ (⟦eq-cell-whisker-left⟧ μ (++ˡᵗ-locks Λ)) ⟩
-    ⟦ id-cell ⓣ-hor eq-cell (++ˡᵗ-locks Λ) ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell (mod-assoc (locksˡᵗ Θ)) ⟧two-cell ∎
-  where open DRA.≅ᵗᶜ-Reasoning
-
-sym-trans : ∀ {ℓ} {A : Set ℓ} {x y z : A} (e : x Ag.≡ y) {e' : y Ag.≡ z} →
-            Ag.sym (Ag.trans e e') Ag.≡ Ag.trans (Ag.sym e') (Ag.sym e)
-sym-trans Ag.refl {Ag.refl} = Ag.refl
-
--- We could prove this from ⟦eq-cell-++ˡᵗ-locks⟧ but proving it directly is easier.
-⟦eq-cell-++ˡᵗ-sym-locks⟧ : (μ : Modality m p) (Λ : LockTele m n) {Θ : LockTele n o} →
-                           ⟦ eq-cell (Ag.sym (++ˡᵗ-locks (lock⟨ μ ⟩, Λ) {Θ})) ⟧two-cell
-                             DRA.≅ᵗᶜ
-                           ⟦ eq-cell (Ag.sym (mod-assoc (locksˡᵗ Θ))) ⟧two-cell DRA.ⓣ-vert ⟦ id-cell ⓣ-hor eq-cell (Ag.sym (++ˡᵗ-locks Λ)) ⟧two-cell
-⟦eq-cell-++ˡᵗ-sym-locks⟧ μ Λ {Θ} =
-  begin
-    ⟦ eq-cell (Ag.sym (Ag.trans (mod-assoc (locksˡᵗ Θ)) (Ag.cong (μ ⓜ_) (++ˡᵗ-locks Λ)))) ⟧two-cell
-  ≅⟨ Ag.subst (λ e → ⟦ eq-cell (Ag.sym (Ag.trans (mod-assoc (locksˡᵗ Θ)) (Ag.cong (μ ⓜ_) (++ˡᵗ-locks Λ)))) ⟧two-cell DRA.≅ᵗᶜ ⟦ eq-cell e ⟧two-cell)
-              {Ag.sym (Ag.trans (mod-assoc (locksˡᵗ Θ)) (Ag.cong (μ ⓜ_) (++ˡᵗ-locks Λ)))}
-              (Ag.trans (sym-trans (mod-assoc (locksˡᵗ Θ))) (Ag.cong (λ x → Ag.trans x (Ag.sym (mod-assoc (locksˡᵗ Θ)))) (Ag.sym-cong (++ˡᵗ-locks Λ))))
-              DRA.reflᵗᶜ ⟩
-    ⟦ eq-cell (Ag.trans (Ag.cong (μ ⓜ_) (Ag.sym (++ˡᵗ-locks Λ))) (Ag.sym (mod-assoc (locksˡᵗ Θ)))) ⟧two-cell
-  ≅⟨ ⟦eq-cell-trans⟧ (Ag.cong (μ ⓜ_) (Ag.sym (++ˡᵗ-locks Λ))) _ ⟩
-    ⟦ eq-cell (Ag.sym (mod-assoc (locksˡᵗ Θ))) ⟧two-cell DRA.ⓣ-vert ⟦ eq-cell (Ag.cong (μ ⓜ_) (Ag.sym (++ˡᵗ-locks Λ))) ⟧two-cell
-  ≅⟨ DRA.ⓣ-vert-congʳ (⟦eq-cell-whisker-left⟧ μ (Ag.sym (++ˡᵗ-locks Λ))) ⟩
-    ⟦ eq-cell (Ag.sym (mod-assoc (locksˡᵗ Θ))) ⟧two-cell DRA.ⓣ-vert ⟦ id-cell ⓣ-hor eq-cell (Ag.sym (++ˡᵗ-locks Λ)) ⟧two-cell ∎
-  where open DRA.≅ᵗᶜ-Reasoning
 
 
 vlocks-sound : {x : Name} {T : Ty n} {Γ : Ctx o} (Θ : LockTele o m) {Λ : LockTele m n} →

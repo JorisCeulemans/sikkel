@@ -100,4 +100,7 @@ whiskerˡᵗ-left (lock⟨ μ ⟩, Λ) α = (id-cell {μ = μ}) ⓣ-hor (whisker
 
 whiskerˡᵗ-right : (Θ Ψ : LockTele m n) {Λ : LockTele n o} → TwoCell (locksˡᵗ Θ) (locksˡᵗ Ψ) →
                   TwoCell (locksˡᵗ (Θ ++ˡᵗ Λ)) (locksˡᵗ (Ψ ++ˡᵗ Λ))
-whiskerˡᵗ-right Θ Ψ {Λ} α = transp-cellʳ (++ˡᵗ-locks Ψ) (transp-cellˡ (++ˡᵗ-locks Θ) (α ⓣ-hor id-cell {μ = locksˡᵗ Λ}))
+whiskerˡᵗ-right Θ Ψ {Λ} α =
+  eq-cell (++ˡᵗ-locks Ψ)
+  ⓣ-vert ((α ⓣ-hor (id-cell {μ = locksˡᵗ Λ}))
+  ⓣ-vert eq-cell (sym (++ˡᵗ-locks Θ)))
