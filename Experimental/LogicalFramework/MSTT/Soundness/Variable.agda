@@ -17,6 +17,9 @@ open import Experimental.LogicalFramework.MSTT.Soundness.LockTele 𝒫
 
 private variable
   m n o p : Mode
+  x : Name
+  T : Ty m
+  Γ : Ctx m
 
 
 vzero-id-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
@@ -162,4 +165,20 @@ unvlocks-sound {T = T} (lock⟨ μ ⟩, Θ) {Λ} v =
     ⟦ unvlocks Θ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ (Θ ++ˡᵗ Λ)))) ]cl
   ≅⟨ unvlock-sound (unvlocks Θ v) ⟩
     ⟦ unvlock (unvlocks Θ v) ⟧var ∎
+  where open M.≅ᵗᵐ-Reasoning
+
+
+var-lt-sound : (Λ : LockTele n m) (v : Var x T Γ Λ) →
+               ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+                 M.≅ᵗᵐ
+               ⟦ var-lt Λ v ⟧tm
+var-lt-sound {T = T} ◇ v = M.cl-tm-subst-id (ty-closed-natural T) _
+var-lt-sound {T = T} (lock⟨ μ ⟩, Λ) v =
+  begin
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ M.from (,ˡᵗ-sound Λ) ]cl
+  ≅⟨ M.cl-tm-subst-⊚ (ty-closed-natural T) _ ⟨
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) ]cl
+             M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+  ≅⟨ var-lt-sound Λ (vlock v) ⟩
+    ⟦ var-lt Λ (vlock v) ⟧tm ∎
   where open M.≅ᵗᵐ-Reasoning

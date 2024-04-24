@@ -164,6 +164,31 @@ module AtomicRenSubSoundness
   liftᵃ-sound {μ = μ} {T} σ =
     M.,cl-cong-tm (ty-closed-natural ⟨ μ ∣ T ⟩) (M.transᵗᵐ (M.symᵗᵐ (dra-η ⟦ μ ⟧mod _)) (dra-intro-cong ⟦ μ ⟧mod newV-sound))
 
+  locksᵃ-sound : ∀ {m n} {Γ Δ : Ctx m} (σ : AtomicRenSub Γ Δ) (Λ : LockTele m n) →
+                 M.to (,ˡᵗ-sound Λ)
+                 M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧arensub
+                 M.⊚ M.from (,ˡᵗ-sound Λ)
+                   M.≅ˢ
+                 ⟦ σ ,locksᵃ⟨ Λ ⟩ ⟧arensub
+  locksᵃ-sound σ ◇ = M.transˢ (M.id-subst-unitʳ _) (M.id-subst-unitˡ _)
+  locksᵃ-sound σ (lock⟨ μ ⟩, Λ) =
+    begin
+      (M.to (,ˡᵗ-sound Λ) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
+      M.⊚ DRA.lock-fmap ⟦ μ ⓜ locksˡᵗ Λ ⟧mod ⟦ σ ⟧arensub
+      M.⊚ (DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ M.from (,ˡᵗ-sound Λ))
+    ≅⟨ M.⊚-congˡ (M.transˢ M.⊚-assoc (M.⊚-congʳ (DRA.key-subst-natural (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))))) ⟩
+      M.to (,ˡᵗ-sound Λ)
+      M.⊚ (DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (DRA.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧arensub) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
+      M.⊚ (DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ M.from (,ˡᵗ-sound Λ))
+    ≅⟨ M.transˢ (M.symˢ M.⊚-assoc) (M.⊚-congˡ (M.transˢ (M.⊚-congˡ (M.symˢ M.⊚-assoc)) (M.transˢ M.⊚-assoc (
+                M.transˢ (M.⊚-congʳ (DRA.key-subst-eq (isoʳ (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))) (M.id-subst-unitʳ _))))) ⟩
+      M.to (,ˡᵗ-sound Λ)
+      M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (DRA.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧arensub)
+      M.⊚ M.from (,ˡᵗ-sound Λ)
+    ≅⟨ locksᵃ-sound (σ ,lockᵃ⟨ μ ⟩) Λ ⟩
+      ⟦ (σ ,lockᵃ⟨ μ ⟩) ,locksᵃ⟨ Λ ⟩ ⟧arensub ∎
+    where open M.≅ˢ-Reasoning
+
   AtomicRenSubTravSound : TravStructSoundness AtomicRenSubTrav
   TravStructSoundness.⟦_⟧trav AtomicRenSubTravSound = ⟦_⟧arensub
   TravStructSoundness.vr-sound AtomicRenSubTravSound = atomic-rensub-lookup-var-sound
@@ -475,6 +500,17 @@ module AtomicRenVarSound where
   RenSubDataStructureSound.newV-sound ren-data-struct-sound {x = x} {μ = μ} {T = T} {Γ = Γ} = vzero-id-sound Γ μ x T
   RenSubDataStructureSound.atomic-rensub-lookup-var-sound ren-data-struct-sound = atomic-ren-var-sound
 
+module AtomicRenSoundM = AtomicRenSubSoundness RenData AtomicRenVar.ren-data-struct ren-data-semantics AtomicRenVarSound.ren-data-struct-sound
+
+open AtomicRenSoundM renaming
+  ( tm-arensub-sound to tm-aren-sound
+  ; πᵃ-sound to πᵃʳ-sound
+  ; liftᵃ-sound to liftᵃʳ-sound
+  ; locksᵃ-sound to locksᵃʳ-sound
+  )
+  using ()
+  public
+
 module RenSoundM = RenSubSoundness RenData AtomicRenVar.ren-data-struct ren-data-semantics AtomicRenVarSound.ren-data-struct-sound
 
 open RenSoundM renaming
@@ -486,6 +522,155 @@ open RenSoundM renaming
   ; lockʳˢ-sound to lockʳ-sound
   ; ⊚ʳˢ-sound to ⊚ʳ-sound
   )
+  using ()
+  public
+
+
+module AtomicSubVarSound where
+  open AtomicSubVar
+  open TwoCellSoundness
+
+  open M.≅ᵗᵐ-Reasoning
+
+  atomic-sub-var'-sound : {Γ Δ : Ctx n} (Λ : LockTele n m) (σ : AtomicSub Γ Δ) (v : Var x T Δ Λ) →
+                          ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧asub ]cl
+                                   M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+                            M.≅ᵗᵐ
+                          ⟦ atomic-sub-var' Λ σ v ⟧tm
+  atomic-sub-var'-sound {T = T} Λ idᵃˢ v =
+    begin
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.id-subst _) ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (
+         M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.lock-fmap-id ⟦ locksˡᵗ Λ ⟧mod))
+                   (M.cl-tm-subst-id (ty-closed-natural T) _)) ⟩
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ var-lt-sound Λ v ⟩
+      ⟦ var-lt Λ v ⟧tm ∎
+  atomic-sub-var'-sound {T = T} Λ (_⊚πᵃˢ {Γ = Γ} {μ = μ} {x = x} {T = S} σ) v =
+    begin
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (⟦ σ ⟧asub M.⊚ M.π) ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural T) (M.symˢ (DRA.lock-fmap-⊚ ⟦ locksˡᵗ Λ ⟧mod _ _))) ⟨
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧asub ]cl
+               M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (
+          M.transˢ (M.⊚-congʳ M.⊚-assoc) (M.transˢ (M.symˢ M.⊚-assoc) (M.transˢ (M.⊚-congˡ (M.isoʳ (,ˡᵗ-sound Λ))) (M.id-subst-unitˡ _)))) ⟨
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧asub ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+               M.[ ty-closed-natural T ∣ M.to (,ˡᵗ-sound Λ) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π M.⊚ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (atomic-sub-var'-sound Λ σ v) ⟩
+      ⟦ atomic-sub-var' Λ σ v ⟧tm
+        M.[ ty-closed-natural T ∣ M.to (,ˡᵗ-sound Λ) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π M.⊚ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (
+          M.transˢ (M.⊚-congˡ (M.⊚-congʳ (DRA.lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (πᵃʳ-sound {x = x} {Γ = Γ} {μ = μ} {T = S})))) (locksᵃʳ-sound πᵃʳ Λ)) ⟩
+      ⟦ atomic-sub-var' Λ σ v ⟧tm M.[ ty-closed-natural T ∣ ⟦ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ⟧aren ]cl
+    ≅⟨ tm-aren-sound (atomic-sub-var' Λ σ v) _ ⟩
+      ⟦ (atomic-sub-var' Λ σ v) [ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ]tmᵃʳ ⟧tm ∎
+  atomic-sub-var'-sound {T = T} Λ (σ ,lockᵃˢ⟨ μ ⟩) (vlock v) =
+    begin
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) ]cl
+               M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (DRA.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧asub) ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (DRA.key-subst-natural (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))) ⟩
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧asub ]cl
+               M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-⊚ (ty-closed-natural T) _ ⟩
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧asub ]cl
+               M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ atomic-sub-var'-sound (lock⟨ μ ⟩, Λ) σ v ⟩
+      ⟦ atomic-sub-var' (lock⟨ μ ⟩, Λ) σ v ⟧tm ∎
+  atomic-sub-var'-sound {T = T} Λ (keyᵃˢ Θ Ψ α) v =
+    begin
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Ψ) M.⊚ DRA.key-subst ⟦ α ⟧two-cell M.⊚ M.from (,ˡᵗ-sound Θ)) ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (apply-2-cell-var-lt-sound Ψ Θ α v) ⟩
+      ⟦ apply-2-cell-var-lt Ψ Θ α v ⟧var M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ var-lt-sound Λ (apply-2-cell-var-lt Ψ Θ α v) ⟩
+      ⟦ var-lt Λ (apply-2-cell-var-lt Ψ Θ α v) ⟧tm ∎
+  atomic-sub-var'-sound {T = T} Λ (_∷ᵃˢ_/_ {μ = μ} σ t x) (vzero α) =
+    begin
+      (dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
+        M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+        M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm) ]cl
+        M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (DRA.key-subst-natural ⟦ α ⟧two-cell)) ⟩
+      (dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)))
+        M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod (⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm) ]cl
+        M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+        M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-tm (ty-closed-natural T) (dra-elim-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) _)) ⟩
+      dra-elim ⟦ μ ⟧mod
+           (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ ⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm ]cl)
+        M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+        M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-tm (ty-closed-natural T) (dra-elim-cong ⟦ μ ⟧mod (M.,cl-β2 (ty-closed-natural ⟨ μ ∣ T ⟩) _ _))) ⟩
+      dra-elim ⟦ μ ⟧mod (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm)
+        M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+        M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-tm (ty-closed-natural T) (dra-β ⟦ μ ⟧mod _)) ⟩
+      ⟦ t ⟧tm
+        M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+        M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural T) (M.symˢ (M.⊚-congˡ (M.transˢ (M.⊚-congˡ (M.id-subst-unitˡ _)) (M.id-subst-unitˡ _)))) ⟩
+      ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.id-subst _ M.⊚ M.id-subst _ M.⊚ DRA.key-subst ⟦ α ⟧two-cell M.⊚ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ tm-aren-sound t _ ⟩
+      ⟦ t [ keyᵃʳ Λ (lock⟨ μ ⟩, ◇) α ]tmᵃʳ ⟧tm ∎
+  atomic-sub-var'-sound {T = T} Λ (_∷ᵃˢ_/_ {μ = ρ} {T = S} σ s y) (vsuc v) =
+    begin
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]cl
+               M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (⟦ σ ⟧asub M.,cl⟨ ty-closed-natural ⟨ ρ ∣ S ⟩ ⟩ dra-intro ⟦ ρ ⟧mod ⟦ s ⟧tm) ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural T) (
+        M.transˢ (M.symˢ (DRA.lock-fmap-⊚ ⟦ locksˡᵗ Λ ⟧mod _ _)) (DRA.lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (M.,cl-β1 (ty-closed-natural ⟨ ρ ∣ S ⟩) _ _)))) ⟩
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧asub ]cl
+               M.[ ty-closed-natural T ∣ M.from (,ˡᵗ-sound Λ) ]cl
+    ≅⟨ atomic-sub-var'-sound Λ σ v ⟩
+      ⟦ atomic-sub-var' Λ σ v ⟧tm ∎
+
+  atomic-sub-var-sound : (v : Var x T Δ ◇) (σ : AtomicSub Γ Δ) →
+                         ⟦ v ⟧var M.[ ty-closed-natural T ∣ ⟦ σ ⟧asub ]cl
+                           M.≅ᵗᵐ
+                         ⟦ atomic-sub-var v σ ⟧tm
+  atomic-sub-var-sound {T = T} v σ =
+    begin
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ ⟦ σ ⟧asub ]cl
+    ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
+      ⟦ v ⟧var M.[ ty-closed-natural T ∣ ⟦ σ ⟧asub ]cl
+               M.[ ty-closed-natural T ∣ M.id-subst _ ]cl
+    ≅⟨ atomic-sub-var'-sound ◇ σ v ⟩
+      ⟦ atomic-sub-var' ◇ σ v ⟧tm ∎
+    where open M.≅ᵗᵐ-Reasoning
+
+  sub-data-struct-sound : RenSubDataStructureSound SubData sub-data-struct sub-data-semantics
+  RenSubDataStructureSound.newV-sound sub-data-struct-sound {x = x} {μ = μ} {T = T} {Γ = Γ} = v0-sound Γ μ x T
+  RenSubDataStructureSound.atomic-rensub-lookup-var-sound sub-data-struct-sound = atomic-sub-var-sound
+
+module AtomicSubSoundM = AtomicRenSubSoundness SubData AtomicSubVar.sub-data-struct sub-data-semantics AtomicSubVarSound.sub-data-struct-sound
+
+open AtomicSubSoundM renaming
+  ( tm-arensub-sound to tm-asub-sound
+  ; πᵃ-sound to πᵃˢ-sound
+  ; liftᵃ-sound to liftᵃˢ-sound
+  ; locksᵃ-sound to locksᵃˢ-sound
+  )
+  using ()
+  public
+
+module SubSoundM = RenSubSoundness SubData AtomicSubVar.sub-data-struct sub-data-semantics AtomicSubVarSound.sub-data-struct-sound
+
+open SubSoundM renaming
+  ( tm-rensub-sound to tm-sub-sound
+  ; liftʳˢ-sound to liftˢ-sound
+  ; []ʳˢ-sound to []ˢ-sound
+  ; πʳˢ-sound to πˢ-sound
+  ; ∷ʳˢ-sound to ∷ˢ-sound
+  ; lockʳˢ-sound to lockˢ-sound
+  ; ⊚ʳˢ-sound to ⊚ˢ-sound
+  )
+  using ()
   public
 
 
