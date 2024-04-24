@@ -229,6 +229,22 @@ record ModeTheory : Set₁ where
   ⟦eq-cell-whisker-right⟧ refl μ = DRA.symᵗᶜ (⟦ⓣ-hor-id-cell⟧ μ)
 
 
+  ⟦ⓜ⟧-sound-natural-to : ∀ {m n o} {μ μ' : Modality n o} {ρ ρ' : Modality m n}
+                         (α : TwoCell μ μ') (β : TwoCell ρ ρ') →
+                         ⟦ α ⓣ-hor β ⟧two-cell DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
+                           DRA.≅ᵗᶜ
+                         to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell)
+  ⟦ⓜ⟧-sound-natural-to {μ = μ} {μ'} {ρ} {ρ'} α β =
+    begin
+      ⟦ α ⓣ-hor β ⟧two-cell DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
+    ≅⟨ DRA.ⓣ-vert-congˡ (DRA.transᵗᶜ (DRA.symᵗᶜ DRA.ⓣ-vert-assoc) (DRA.transᵗᶜ (DRA.ⓣ-vert-congˡ (isoˡ (⟦ⓜ⟧-sound μ' ρ'))) DRA.ⓣ-vert-unitˡ)) ⟨
+      to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ⟦ α ⓣ-hor β ⟧two-cell) DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
+    ≅⟨ DRA.ⓣ-vert-congˡ (DRA.ⓣ-vert-congʳ (⟦ⓜ⟧-sound-natural α β)) ⟩
+      to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)) DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
+    ≅⟨ DRA.transᵗᶜ DRA.ⓣ-vert-assoc (DRA.ⓣ-vert-congʳ (DRA.transᵗᶜ (DRA.transᵗᶜ DRA.ⓣ-vert-assoc (DRA.ⓣ-vert-congʳ (isoʳ (⟦ⓜ⟧-sound μ ρ)))) DRA.ⓣ-vert-unitʳ)) ⟩
+      to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) ∎
+    where open DRA.≅ᵗᶜ-Reasoning
+
   ⟦unitorˡ⟧ : ∀ {m n} {μ : Modality m n} →
               ⟦ eq-cell (mod-unitˡ {μ = μ}) ⟧two-cell
                 DRA.≅ᵗᶜ
@@ -283,4 +299,43 @@ record ModeTheory : Set₁ where
     ≅⟨ M.transˢ (M.symˢ M.⊚-assoc) (M.transˢ (M.⊚-congˡ (DRA.key-subst-eq (⟦eq-cell-symʳ⟧ (mod-assoc κ)))) (M.id-subst-unitˡ _)) ⟩
       key-subst (from (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))
       M.⊚ key-subst (from (⟦ⓜ⟧-sound ρ κ)) ∎
+    where open M.≅ˢ-Reasoning
+
+  ⟦associator-key-to⟧ : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) {Γ : M.Ctx ⟦ p ⟧mode} →
+                        DRA.lock-fmap ⟦ κ ⟧mod (DRA.key-subst (to (⟦ⓜ⟧-sound μ ρ)))
+                        M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+                        M.⊚ DRA.key-subst ⟦ eq-cell (mod-assoc κ) ⟧two-cell {Γ}
+                          M.≅ˢ
+                        DRA.key-subst (to (⟦ⓜ⟧-sound ρ κ))
+                        M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))
+  ⟦associator-key-to⟧ {μ = μ} {ρ} κ =
+    begin
+      DRA.lock-fmap ⟦ κ ⟧mod (key-subst (to (⟦ⓜ⟧-sound μ ρ)))
+      M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+      M.⊚ DRA.key-subst ⟦ eq-cell (mod-assoc κ) ⟧two-cell
+    ≅⟨ M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.transˢ (M.transˢ M.⊚-assoc (M.⊚-congʳ (M.symˢ M.⊚-assoc))) (
+       M.transˢ (M.⊚-congʳ (M.⊚-congˡ (DRA.key-subst-eq (isoˡ (⟦ⓜ⟧-sound ρ κ))))) (
+       M.transˢ (M.⊚-congʳ (M.id-subst-unitˡ _)) (DRA.key-subst-eq (isoˡ (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))))))) (M.id-subst-unitʳ _)) ⟨
+      DRA.lock-fmap ⟦ κ ⟧mod (key-subst (to (⟦ⓜ⟧-sound μ ρ)))
+      M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+      M.⊚ DRA.key-subst ⟦ eq-cell (mod-assoc κ) ⟧two-cell
+      M.⊚ (DRA.key-subst (from (⟦ⓜ⟧-sound μ (ρ ⓜ κ))) M.⊚ DRA.key-subst (from (⟦ⓜ⟧-sound ρ κ)))
+      M.⊚ (DRA.key-subst (to (⟦ⓜ⟧-sound ρ κ)) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (ρ ⓜ κ))))
+    ≅⟨ M.⊚-congˡ (M.⊚-congʳ (⟦associator-sym-key⟧ κ)) ⟨
+      DRA.lock-fmap ⟦ κ ⟧mod (key-subst (to (⟦ⓜ⟧-sound μ ρ)))
+      M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+      M.⊚ DRA.key-subst ⟦ eq-cell (mod-assoc κ) ⟧two-cell
+      M.⊚ (DRA.key-subst ⟦ eq-cell (sym (mod-assoc κ)) ⟧two-cell
+           M.⊚ DRA.key-subst (from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ))
+           M.⊚ DRA.lock-fmap ⟦ κ ⟧mod (DRA.key-subst (from (⟦ⓜ⟧-sound μ ρ))))
+      M.⊚ (DRA.key-subst (to (⟦ⓜ⟧-sound ρ κ)) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (ρ ⓜ κ))))
+    ≅⟨ M.transˢ (M.⊚-congˡ (
+         M.transˢ (M.transˢ M.⊚-assoc (M.⊚-congʳ (M.transˢ (M.⊚-congʳ M.⊚-assoc) (M.transˢ (M.symˢ M.⊚-assoc)
+                  (M.transˢ (M.⊚-congˡ (DRA.key-subst-eq (⟦eq-cell-symˡ⟧ (mod-assoc κ)))) (M.id-subst-unitˡ _))))))(
+         M.transˢ (M.transˢ M.⊚-assoc (M.⊚-congʳ (M.transˢ (M.symˢ M.⊚-assoc) (
+                  M.transˢ (M.⊚-congˡ (DRA.key-subst-eq (isoʳ (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)))) (M.id-subst-unitˡ _))))) (
+         M.ctx-fmap-inverse (DRA.ctx-functor ⟦ κ ⟧mod) (DRA.key-subst-eq (isoʳ (⟦ⓜ⟧-sound μ ρ))))))) (
+       M.id-subst-unitˡ _) ⟩
+      DRA.key-subst (to (⟦ⓜ⟧-sound ρ κ))
+      M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (ρ ⓜ κ))) ∎
     where open M.≅ˢ-Reasoning

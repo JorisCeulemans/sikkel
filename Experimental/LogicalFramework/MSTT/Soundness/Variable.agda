@@ -120,3 +120,76 @@ vlocks-sound {T = T} (lock⟨ μ ⟩, Θ) {Λ} v =
   ≅⟨ vlocks-sound Θ (vlock v) ⟩
     ⟦ vlocks Θ (vlock v) ⟧var ∎
   where open M.≅ᵗᵐ-Reasoning
+
+unvlock-sound : {x : Name} {T : Ty n} {Γ : Ctx o} {μ : Modality m o} {Λ : LockTele m n}
+                (v : Var x T (Γ ,lock⟨ μ ⟩) Λ) →
+                ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.from (DRA.lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) ]cl
+                  M.≅ᵗᵐ
+                ⟦ unvlock v ⟧var
+unvlock-sound {T = T} {μ = μ} {Λ} (vlock v) =
+  begin
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.to (lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) ]cl
+             M.[ ty-closed-natural T ∣ M.from (lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural T) (M.isoˡ (lock-iso (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))) ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.id-subst _ ]cl
+  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟩
+    ⟦ v ⟧var ∎
+  where open M.≅ᵗᵐ-Reasoning
+
+unvlocks-sound : {x : Name} {T : Ty n} {Γ : Ctx o} (Θ : LockTele o m) {Λ : LockTele m n} →
+                 (v : Var x T (Γ ,ˡᵗ Θ) Λ) →
+                 ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Θ)) ]cl
+                          M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound (locksˡᵗ Θ) (locksˡᵗ Λ))) M.⊚ DRA.key-subst ⟦ eq-cell (++ˡᵗ-locks Θ {Λ}) ⟧two-cell ]cl
+                   M.≅ᵗᵐ
+                 ⟦ unvlocks Θ v ⟧var
+unvlocks-sound {T = T} ◇ {Λ} v =
+  begin
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.id-subst _) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound 𝟙 (locksˡᵗ Λ))) M.⊚ DRA.key-subst ⟦ eq-cell (mod-unitˡ {μ = locksˡᵗ Λ}) ⟧two-cell ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T)
+       (M.transˢ (M.⊚-congʳ (DRA.key-subst-eq ⟦unitorˡ⟧)) (M.transˢ (M.symˢ M.⊚-assoc)
+       (M.transˢ (M.⊚-congˡ (DRA.key-subst-eq (isoʳ (⟦ⓜ⟧-sound 𝟙 (locksˡᵗ Λ))))) (M.id-subst-unitˡ _)))) ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.id-subst _) ]cl
+             M.[ ty-closed-natural T ∣ M.id-subst _ ]cl
+  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.id-subst _) ]cl
+  ≅⟨ M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.lock-fmap-id ⟦ locksˡᵗ Λ ⟧mod)) (M.cl-tm-subst-id (ty-closed-natural T) _) ⟩
+    ⟦ v ⟧var ∎
+  where open M.≅ᵗᵐ-Reasoning
+unvlocks-sound {T = T} (lock⟨ μ ⟩, Θ) {Λ} v =
+  begin
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Θ) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Θ)))) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ locksˡᵗ Θ) (locksˡᵗ Λ)))
+                                       M.⊚ DRA.key-subst ⟦ eq-cell (++ˡᵗ-locks (LockTele.lock⟨ μ ⟩, Θ)) ⟧two-cell ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (M.⊚-congʳ (DRA.key-subst-eq (⟦eq-cell-++ˡᵗ-locks⟧ μ Θ))) ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Θ) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Θ)))) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ locksˡᵗ Θ) (locksˡᵗ Λ)))
+                                       M.⊚ (DRA.key-subst ⟦ eq-cell (mod-assoc (locksˡᵗ Λ)) ⟧two-cell
+                                       M.⊚ DRA.key-subst ⟦ id-cell ⓣ-hor eq-cell (++ˡᵗ-locks Θ) ⟧two-cell) ]cl
+  ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (
+       M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.lock-fmap-⊚ ⟦ locksˡᵗ Λ ⟧mod _ _))
+                 (M.symᵗᵐ (M.cl-tm-subst-⊚ (ty-closed-natural T) _))) ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Θ)) ]cl
+             M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Θ)))) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound (μ ⓜ locksˡᵗ Θ) (locksˡᵗ Λ)))
+                                       M.⊚ (DRA.key-subst ⟦ eq-cell (mod-assoc (locksˡᵗ Λ)) ⟧two-cell
+                                       M.⊚ DRA.key-subst ⟦ id-cell ⓣ-hor eq-cell (++ˡᵗ-locks Θ) ⟧two-cell) ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (
+     M.transˢ (M.transˢ (M.symˢ M.⊚-assoc) (M.transˢ (M.symˢ M.⊚-assoc) (M.⊚-congˡ (⟦associator-key-to⟧ (locksˡᵗ Λ))))) M.⊚-assoc) ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Θ)) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound (locksˡᵗ Θ) (locksˡᵗ Λ))) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Θ ⓜ locksˡᵗ Λ)))
+                                       M.⊚ DRA.key-subst ⟦ id-cell ⓣ-hor eq-cell (++ˡᵗ-locks Θ) ⟧two-cell ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (
+     M.transˢ (M.⊚-congʳ (M.transˢ (DRA.key-subst-eq (⟦ⓜ⟧-sound-natural-to id-cell (eq-cell (++ˡᵗ-locks Θ)))) (
+     M.⊚-congˡ (M.transˢ (M.⊚-congʳ (M.transˢ (DRA.lock-fmap-cong ⟦ locksˡᵗ (Θ ++ˡᵗ Λ) ⟧mod (DRA.key-subst-eq ⟦id-cell⟧-sound)) (
+     DRA.lock-fmap-id ⟦ locksˡᵗ (Θ ++ˡᵗ Λ) ⟧mod))) (M.id-subst-unitʳ _))))) (M.symˢ M.⊚-assoc)) ⟩
+    ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.to (,ˡᵗ-sound Θ)) ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound (locksˡᵗ Θ) (locksˡᵗ Λ)))
+                                       M.⊚ DRA.key-subst ⟦ eq-cell (++ˡᵗ-locks Θ) ⟧two-cell ]cl
+             M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ (Θ ++ˡᵗ Λ)))) ]cl
+  ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (unvlocks-sound Θ v) ⟩
+    ⟦ unvlocks Θ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ (Θ ++ˡᵗ Λ)))) ]cl
+  ≅⟨ unvlock-sound (unvlocks Θ v) ⟩
+    ⟦ unvlock (unvlocks Θ v) ⟧var ∎
+  where open M.≅ᵗᵐ-Reasoning
