@@ -120,11 +120,11 @@ v0 = var' _ {vlock vzero-id}
 v1 : Tm (Γ ,, μ ∣ x ∈ T ,, κ ∣ y ∈ S ,lock⟨ μ ⟩) T
 v1 = var' _ {vlock (vsuc vzero-id)}
 
-v0-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
-v0-𝟙 = var' _ {vzero id-cell}
+v0-nolock : Tm (Γ ,, 𝟙 ∣ x ∈ T) T
+v0-nolock = var' _ {vzero id-cell}
 
-v1-𝟙 : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
-v1-𝟙 = var' _ {vsuc (vzero id-cell)}
+v1-nolock : Tm (Γ ,, 𝟙 ∣ x ∈ T ,, μ ∣ y ∈ S) T
+v1-nolock = var' _ {vsuc (vzero id-cell)}
 
 syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 

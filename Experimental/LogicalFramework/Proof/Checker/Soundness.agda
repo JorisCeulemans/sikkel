@@ -228,7 +228,7 @@ module _ (Ξ : ProofCtx m) where
   true≠false-sound = M.true≠false M.[ _ ]'
 
   suc-inj-sound : (m n : String) →
-                  Evidence Ξ (∀[ 𝟙 ∣ m ∈ Nat' ] ∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-𝟙 ≡ᵇ v0-𝟙))
+                  Evidence Ξ (∀[ 𝟙 ∣ m ∈ Nat' ] ∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-nolock ≡ᵇ v0-nolock))
   suc-inj-sound m n =
     (M.ι[ M.Pi-cong-cod (M.Pi-cong-cod (
       M.⇛-cong (M.Id-cong' (M.suc'-cong (v1-sound-𝟙 (to-ctx Ξ) m Nat' 𝟙 n Nat')) (M.suc'-cong (v0-sound-𝟙 (to-ctx Ξ ,, 𝟙 ∣ m ∈ Nat') n Nat')))

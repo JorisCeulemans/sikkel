@@ -22,31 +22,6 @@ private variable
   Γ : Ctx m
 
 
-vzero-id-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
-                 dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)) M.≅ᵗᵐ ⟦ vzero-id {x = x} {T = T} {Γ = Γ} {μ = μ} ⟧var
-vzero-id-sound Γ μ x T =
-  begin
-    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
-  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
-    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
-      M.[ ty-closed-natural T ∣ M.id-subst _ ]cl
-  ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq ⟦id-cell⟧-sound) ⟨
-    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
-      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ} ⟧two-cell ]cl ∎
-  where open M.≅ᵗᵐ-Reasoning
-
-v0-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
-           dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)) M.≅ᵗᵐ ⟦ v0 {Γ = Γ} {μ = μ} {x} {T} ⟧tm
-v0-sound Γ μ x T =
-  begin
-    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
-  ≅⟨ vzero-id-sound Γ μ x T ⟩
-    ⟦ vzero-id {x = x} {T = T} {Γ = Γ} {μ = μ} ⟧var
-  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
-    ⟦ vzero-id {x = x} {T = T} {Γ = Γ} {μ = μ} ⟧var M.[ ty-closed-natural T ∣ M.id-subst _ ]cl ∎
-  where open M.≅ᵗᵐ-Reasoning
-
-
 vlocks-sound : {x : Name} {T : Ty n} {Γ : Ctx o} (Θ : LockTele o m) {Λ : LockTele m n} →
                (v : Var x T Γ (Θ ++ˡᵗ Λ)) →
                ⟦ v ⟧var M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ eq-cell (Ag.sym (++ˡᵗ-locks Θ)) ⟧two-cell M.⊚ DRA.key-subst (from (⟦ⓜ⟧-sound (locksˡᵗ Θ) (locksˡᵗ Λ))) ]cl
@@ -182,3 +157,68 @@ var-lt-sound {T = T} (lock⟨ μ ⟩, Λ) v =
   ≅⟨ var-lt-sound Λ (vlock v) ⟩
     ⟦ var-lt Λ (vlock v) ⟧tm ∎
   where open M.≅ᵗᵐ-Reasoning
+
+
+vzero-id-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
+                 dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)) M.≅ᵗᵐ ⟦ vzero-id {x = x} {T = T} {Γ = Γ} {μ = μ} ⟧var
+vzero-id-sound Γ μ x T =
+  begin
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ M.id-subst _ ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq ⟦id-cell⟧-sound) ⟨
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ} ⟧two-cell ]cl ∎
+  where open M.≅ᵗᵐ-Reasoning
+
+v0-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
+           dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩)) M.≅ᵗᵐ ⟦ v0 {Γ = Γ} {μ = μ} {x} {T} ⟧tm
+v0-sound Γ μ x T =
+  begin
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+  ≅⟨ vzero-id-sound Γ μ x T ⟩
+    ⟦ vzero-id {x = x} {T = T} {Γ = Γ} {μ = μ} ⟧var
+  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
+    ⟦ vzero-id {x = x} {T = T} {Γ = Γ} {μ = μ} ⟧var M.[ ty-closed-natural T ∣ M.id-subst _ ]cl ∎
+  where open M.≅ᵗᵐ-Reasoning
+
+v0-nolock-sound : (Γ : Ctx m) (x : Name) (T : Ty m) →
+                  M.ξcl (ty-closed-natural T) M.≅ᵗᵐ ⟦ v0-nolock {Γ = Γ} {x = x} {T = T} ⟧tm
+v0-nolock-sound Γ x T =
+  begin
+    M.ξcl (ty-closed-natural T)
+  ≅⟨ M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)) ⟨
+    M.ξcl (ty-closed-natural ⟨ 𝟙 ∣ T ⟩)
+  ≅⟨ vzero-id-sound Γ 𝟙 x T ⟩
+    (M.ξcl (ty-closed-natural ⟨ 𝟙 ∣ T ⟩)) M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = 𝟙} ⟧two-cell ]cl ∎
+  where open M.≅ᵗᵐ-Reasoning
+
+{-
+v0-2lock-sound : (μ : Modality n o) (κ : Modality m n) (x : Name) (Γ : Ctx o) (T : Ty m) →
+                 dra-elim ⟦ κ ⟧mod (dra-elim ⟦ μ ⟧mod (
+                          M.ι⁻¹[ eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T) ] (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩) {Γ = ⟦ Γ ⟧ctx})))
+                   M.≅ᵗᵐ
+                 ⟦ var' {Γ = Γ ,, μ ⓜ κ ∣ x ∈ T ,lock⟨ μ ⟩ ,lock⟨ κ ⟩} x {vlock (vlock (vzero id-cell))} ⟧tm
+v0-2lock-sound μ κ x Γ T =
+  begin
+    dra-elim (⟦ μ ⟧mod DRA.ⓓ ⟦ κ ⟧mod) (M.ι⁻¹[ eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T) ] M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩))
+  ≅⟨ {!!} ⟩
+    dra-elim ⟦ μ ⓜ κ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ κ)) ]cl
+  ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (
+       M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (DRA.key-subst-eq ⟦id-cell⟧-sound)) (M.cl-tm-subst-id (ty-closed-natural T) _)) ⟨
+    dra-elim ⟦ μ ⓜ κ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ ⓜ κ} ⟧two-cell ]cl
+      M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ κ)) ]cl
+  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
+    dra-elim ⟦ μ ⓜ κ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ ⓜ κ} ⟧two-cell ]cl
+      M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ κ)) ]cl
+      M.[ ty-closed-natural T ∣ M.id-subst _ ]cl ∎
+  where open M.≅ᵗᵐ-Reasoning
+-}
+
+v1-nolock-sound : (Γ : Ctx m) (x : Name) (T : Ty m) (κ : Modality n m) (y : Name) (S : Ty n) →
+                  M.ξcl (ty-closed-natural T) M.[ ty-closed-natural T ∣ M.π ]cl M.≅ᵗᵐ ⟦ v1-nolock {Γ = Γ} {x = x} {T} {_} {κ} {y} {S} ⟧tm
+v1-nolock-sound Γ x T κ y S = M.cl-tm-subst-cong-tm (ty-closed-natural T) (v0-nolock-sound Γ x T)

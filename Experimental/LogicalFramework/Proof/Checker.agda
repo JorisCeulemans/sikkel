@@ -167,7 +167,7 @@ check-proof Ξ true≠false φ = do
   refl ← φ ≟bprop ¬⟨ 𝟙 ⟩ (true ≡ᵇ false)
   return ⟅ [] , _ ↦ true≠false-sound Ξ ⟆
 check-proof Ξ (suc-inj m n) φ = do
-  refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-𝟙 ≡ᵇ v0-𝟙)))
+  refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-nolock ≡ᵇ v0-nolock)))
   return ⟅ [] , _ ↦ suc-inj-sound Ξ m n ⟆
 check-proof Ξ (zero≠sucn m) φ = do
   refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] ¬⟨ 𝟙 ⟩ (zero ≡ᵇ suc v0))
