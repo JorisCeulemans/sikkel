@@ -39,7 +39,7 @@ interp-assumption-helper :
   SemTm (⟦ Ξ ⟧pctx DRA.,lock⟨ ⟦ locksˡᵗ Λ ⟧mod ⟩)
         ((⟦ lookup-assumption a α ⟧bprop M.[ M.to (,ˡᵗ-sound Λ) ]) M.[ lock-fmap ⟦ locksˡᵗ Λ ⟧mod (to-ctx-subst Ξ) ])
 interp-assumption-helper (azero {μ = μ} {φ = φ} {Λ = Λ}) α =
-  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (M.transᵗʸ (rename-bprop-sound φ _) (M.ty-subst-cong-subst (M.symˢ (ren-key-sound-cod Λ α)) _))) ] (
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (M.transᵗʸ (rename-bprop-sound φ (keyʳ Λ (lock⟨ μ ⟩, ◇) α)) (M.ty-subst-cong-subst (M.symˢ (ren-key-sound-cod Λ α)) _))) ] (
   M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-1 _ (M.transˢ M.⊚-assoc (M.transˢ (M.⊚-congʳ (M.isoʳ (,ˡᵗ-sound Λ))) (M.id-subst-unitʳ _)))) ] (
   M.ι[ M.ty-subst-cong-subst-2-2 _ (DRA.key-subst-natural ⟦ α ⟧two-cell) ] (
   dra-elim ⟦ μ ⟧mod (M.ι⁻¹[ M.transᵗʸ (M.ty-subst-comp _ _ _) (dra-natural ⟦ μ ⟧mod _) ] M.ξ)
@@ -48,7 +48,7 @@ interp-assumption-helper (asuc {Λ = Λ} a) α =
   M.ι⁻¹[ M.ty-subst-cong-subst-2-1 _ (M.symˢ (DRA.lock-fmap-⊚ ⟦ locksˡᵗ Λ ⟧mod _ _)) ]
   ((interp-assumption-helper a α) M.[ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π ]')
 interp-assumption-helper (avar {Ξ = Ξ} {Λ = Λ} {ρ = ρ} {y = y} {T = T} a) α =
-  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (rename-bprop-sound (lookup-assumption a α) _)) ] (
+  M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-ty _ (rename-bprop-sound (lookup-assumption a α) (πʳ ,locksʳ⟨ Λ ⟩))) ] (
   M.ι[ M.ty-subst-cong-ty _ (M.ty-subst-cong-subst-2-2 _ (,ˡᵗ-sound-to-naturalʳ Λ πʳ)) ] (
   M.ι[ M.ty-subst-cong-subst-2-2 _ (M.ctx-fmap-cong-2-2 (ctx-functor ⟦ locksˡᵗ Λ ⟧mod) (
        M.transˢ (M.⊚-congˡ (ren-π-sound (to-ctx Ξ) y ρ T))
@@ -280,7 +280,7 @@ module _ (Ξ : ProofCtx m) where
                                                             (sub-π-sound (to-ctx Ξ) x 𝟙 Nat')
                                                             (M.const-map-cong _ (v0-sound (to-ctx Ξ) 𝟙 x Nat')))))
                                       _)
-                                    (bprop-sub-sound φ _)) ]
+                                    (bprop-sub-sound φ (suc v0 // x))) ]
                   ps)))))
 
   mod-induction-sound : (ρ : Modality n m) (μ : Modality o n) (φ : bProp (to-ctx Ξ ,, ρ ∣ x ∈ ⟨ μ ∣ T ⟩)) →
@@ -307,7 +307,7 @@ module _ (Ξ : ProofCtx m) where
                                 (sub-π-sound (to-ctx Ξ) y (ρ ⓜ μ) T)
                                 (dra-intro-cong ⟦ ρ ⟧mod (dra-intro-cong ⟦ μ ⟧mod (v0-2lock-sound ρ μ x (to-ctx Ξ) T))))))
                     ⟦ φ ⟧bprop) (
-         bprop-sub-sound φ _))) ] (
+         bprop-sub-sound φ (mod⟨ μ ⟩ (var' y {vlock (vlock (vzero id-cell))}) // x)))) ] (
     M.ιc⁻¹[ M.,,-cong (DRA.eq-dra-ty-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T)) ]'
     p)
 

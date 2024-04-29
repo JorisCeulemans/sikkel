@@ -165,6 +165,10 @@ module RenSub
   open AtomicRenSub V rensub-struct
   open RenSubDef V public
 
+  -- Possible performance optimization: only traverse a term once and
+  -- not for every atomic rensub. Once reaching a variable, we should
+  -- then apply every atomic rensub. However, we are not implementing
+  -- this because composite rensubs do not occur often in practice.
   _[_]tmʳˢ : Tm Δ T → RenSub Γ Δ → Tm Γ T
   t [ id ]tmʳˢ = t
   t [ τ ⊚a σᵃ ]tmʳˢ = (t [ τ ]tmʳˢ) [ σᵃ ]tmᵃ

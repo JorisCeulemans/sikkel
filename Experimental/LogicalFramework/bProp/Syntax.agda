@@ -67,65 +67,66 @@ ExtBPArgs (info ∷ bpinfos) Γ = bProp (Γ ++tel arg-tel info) × ExtBPArgs bpi
 --------------------------------------------------
 -- Renaming and substitution for BiSikkel propositions
 
--- A proposition can be traversed whenever terms can be traversed.
---   Note that this record has a special field specifying how a
---   traversal object acts on terms. This way, we can instantiate this
---   with the exact definition of substitution or renaming for terms,
---   rather than having some equivalent reimplementation of it.
-record bPropTravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
-  field
-    trav-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
-    lift : Trav Γ Δ → Trav (Γ ,, μ ∣ x ∈ T) (Δ ,, μ ∣ x ∈ T)
-    lock : Trav Γ Δ → Trav (Γ ,lock⟨ μ ⟩) (Δ ,lock⟨ μ ⟩)
+module bPropTraversal
+  (Trav : ∀ {m} → Ctx m → Ctx m → Set)
+  (trav-struct : TravStruct Trav)
+  where
 
-  lift-trav-tel : Trav Γ Δ → (Θ : Telescope m n) → Trav (Γ ++tel Θ) (Δ ++tel Θ)
-  lift-trav-tel σ ◇ = σ
-  lift-trav-tel σ (Θ ,, μ ∣ x ∈ T) = lift (lift-trav-tel σ Θ)
-  lift-trav-tel σ (Θ ,lock⟨ μ ⟩) = lock (lift-trav-tel σ Θ)
-
-  trav-ext-tmargs : ∀ {infos} → ExtTmArgs infos Δ → Trav Γ Δ → ExtTmArgs infos Γ
-  trav-ext-tmargs {infos = []}       _                  σ = tt
-  trav-ext-tmargs {infos = info ∷ _} [ tmarg , tmargs ] σ =
-    [ trav-tm tmarg (lift-trav-tel σ (tmarg-tel info)) , trav-ext-tmargs tmargs σ ]
+  open TravStruct trav-struct
 
   traverse-bprop : bProp Δ → Trav Γ Δ → bProp Γ
   traverse-ext-bpargs : {bpinfos : List (ArgInfo m)} → ExtBPArgs bpinfos Δ → Trav Γ Δ → ExtBPArgs bpinfos Γ
 
   traverse-bprop ⊤ᵇ σ = ⊤ᵇ
   traverse-bprop ⊥ᵇ σ = ⊥ᵇ
-  traverse-bprop (t1 ≡ᵇ t2) σ = trav-tm t1 σ ≡ᵇ trav-tm t2 σ
+  traverse-bprop (t1 ≡ᵇ t2) σ = traverse-tm t1 σ ≡ᵇ traverse-tm t2 σ
   traverse-bprop (⟨ μ ∣ φ ⟩⊃ ψ) σ = ⟨ μ ∣ traverse-bprop φ (lock σ) ⟩⊃ traverse-bprop ψ σ
   traverse-bprop (φ ∧ ψ) σ = traverse-bprop φ σ ∧ traverse-bprop ψ σ
   traverse-bprop (∀[ μ ∣ x ∈ T ] φ) σ = ∀[ μ ∣ x ∈ T ] traverse-bprop φ (lift σ)
   traverse-bprop ⟨ μ ∣ φ ⟩ σ = ⟨ μ ∣ traverse-bprop φ (lock σ) ⟩
-  traverse-bprop (ext c tmargs bpargs) σ = ext c (trav-ext-tmargs tmargs σ) (traverse-ext-bpargs bpargs σ)
+  traverse-bprop (ext c tmargs bpargs) σ = ext c (traverse-ext-tmargs tmargs σ) (traverse-ext-bpargs bpargs σ)
 
   traverse-ext-bpargs {bpinfos = []}               _                  σ = tt
   traverse-ext-bpargs {bpinfos = bpinfo ∷ bpinfos} [ bparg , bpargs ] σ =
     [ traverse-bprop bparg (lift-trav-tel σ (arg-tel bpinfo)) , traverse-ext-bpargs bpargs σ ]
 
-open bPropTravStruct using (traverse-bprop)
+
+module bPropRenSub
+  (V : RenSubData)
+  (rensub-struct : RenSubDataStructure V)
+  where
+
+  open AtomicRenSub V rensub-struct
+  open RenSub V rensub-struct
+  
+  open bPropTraversal AtomicRenSub AtomicRenSubTrav
+
+  _[_]bpropᵃ : bProp Δ → AtomicRenSub Γ Δ → bProp Γ
+  φ [ σ ]bpropᵃ = traverse-bprop φ σ
+
+  -- Similar to term renaming/substitution, this could be optimized
+  -- for performance by pushing an entire rensub inside a bprop
+  -- instead of every atomic rensub separately. However, composite
+  -- rensubs do not occur in practice, so we do not implement this.
+  _[_]bpropʳˢ : bProp Δ → RenSub Γ Δ → bProp Γ
+  φ [ id ]bpropʳˢ      = φ
+  φ [ σ ⊚a τᵃ ]bpropʳˢ = (φ [ σ ]bpropʳˢ) [ τᵃ ]bpropᵃ
 
 
-renbPropTrav : bPropTravStruct Ren
-bPropTravStruct.trav-tm renbPropTrav = _[_]tmʳ
-bPropTravStruct.lift renbPropTrav = liftʳ
-bPropTravStruct.lock renbPropTrav {μ = μ} = _,lockʳ⟨ μ ⟩
+module bPropRen = bPropRenSub RenData AtomicRenVar.ren-data-struct
+open bPropRen renaming
+  ( _[_]bpropᵃ to _[_]bpropᵃʳ
+  ; _[_]bpropʳˢ to _[_]bpropʳ
+  ) public
 
-_[_]bpropʳ : bProp Δ → Ren Γ Δ → bProp Γ
-_[_]bpropʳ = traverse-bprop renbPropTrav
-
-
-subbPropTrav : bPropTravStruct Sub
-bPropTravStruct.trav-tm subbPropTrav = _[_]tmˢ
-bPropTravStruct.lift subbPropTrav = liftˢ
-bPropTravStruct.lock subbPropTrav {μ = μ} = _,lockˢ⟨ μ ⟩
-
-_[_]bpropˢ : bProp Δ → Sub Γ Δ → bProp Γ
-φ [ σ ]bpropˢ = traverse-bprop subbPropTrav φ σ
+module bPropSub = bPropRenSub SubData AtomicSubVar.sub-data-struct
+open bPropSub renaming
+  ( _[_]bpropᵃ to _[_]bpropᵃˢ
+  ; _[_]bpropʳˢ to _[_]bpropˢ
+  ) public
 
 
--- Isomorphisms witnessing the functoriality of locks (wrt propositions)
+-- Isomorphisms witnessing the functoriality of locks (with respect to propositions)
 lock𝟙-bprop : bProp Γ → bProp (Γ ,lock⟨ 𝟙 ⟩)
 lock𝟙-bprop t = t [ lock𝟙-ren ]bpropʳ
 
