@@ -29,7 +29,7 @@ open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
 open bPropExtSem ⟦𝒷⟧
 
 private variable
-  m : Mode
+  m n o : Mode
   Γ Δ : Ctx m
 
 
@@ -118,3 +118,28 @@ open bPropSubSoundness renaming
   ( bprop-arensub-sound to bprop-asub-sound
   ; bprop-rensub-sound to bprop-sub-sound
   ) public
+
+
+lock𝟙-bprop-sound : (φ : bProp Γ) → ⟦ lock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
+lock𝟙-bprop-sound {Γ = Γ} φ =
+  M.transᵗʸ (M.symᵗʸ (bprop-ren-sound φ lock𝟙-ren)) (
+  M.transᵗʸ (M.ty-subst-cong-subst (lock𝟙-ren-sound Γ) _) (
+  M.ty-subst-id _))
+
+unlock𝟙-bprop-sound : (φ : bProp (Γ ,lock⟨ 𝟙 ⟩)) → ⟦ unlock𝟙-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop
+unlock𝟙-bprop-sound {Γ = Γ} φ =
+  M.transᵗʸ (M.symᵗʸ (bprop-ren-sound φ unlock𝟙-ren)) (
+  M.transᵗʸ (M.ty-subst-cong-subst (unlock𝟙-ren-sound Γ) _) (
+  M.ty-subst-id _))
+
+unfuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⓜ ρ ⟩)) →
+                          ⟦ unfuselocks-bprop {ρ = ρ} φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.to (DRA.lock-iso (⟦ⓜ⟧-sound μ ρ)) ]
+unfuselocks-bprop-sound {Γ = Γ} {μ = μ} {ρ} φ =
+  M.transᵗʸ (M.symᵗʸ (bprop-ren-sound φ (unfuselocks-ren {μ = μ} {ρ = ρ})))
+            (M.ty-subst-cong-subst (unfuselocks-ren-sound μ ρ Γ) _)
+
+fuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)) →
+                        ⟦ fuselocks-bprop φ ⟧bprop M.≅ᵗʸ ⟦ φ ⟧bprop M.[ M.from (DRA.lock-iso (⟦ⓜ⟧-sound μ ρ)) ]
+fuselocks-bprop-sound {Γ = Γ} {μ = μ} {ρ = ρ} φ  =
+  M.transᵗʸ (M.symᵗʸ (bprop-ren-sound φ fuselocks-ren))
+            (M.ty-subst-cong-subst (fuselocks-ren-sound μ ρ Γ) _)

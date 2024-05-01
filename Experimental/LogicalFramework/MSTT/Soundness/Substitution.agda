@@ -673,6 +673,32 @@ open SubSoundM renaming
   using ()
   public
 
+
+lock𝟙-ren-sound : (Γ : Ctx m) → ⟦ lock𝟙-ren {Γ = Γ} ⟧ren M.≅ˢ M.id-subst _
+lock𝟙-ren-sound Γ =
+  M.transˢ (M.⊚-congʳ (M.id-subst-unitʳ _)) (M.transˢ (M.id-subst-unitʳ _) (M.transˢ (M.id-subst-unitˡ _) (DRA.key-subst-eq ⟦id-cell⟧-sound)))
+
+unlock𝟙-ren-sound : (Γ : Ctx m) → ⟦ unlock𝟙-ren {Γ = Γ} ⟧ren M.≅ˢ M.id-subst _
+unlock𝟙-ren-sound Γ =
+  M.transˢ (M.id-subst-unitʳ _) (M.transˢ (M.⊚-congˡ (M.id-subst-unitˡ _)) (M.transˢ (M.id-subst-unitˡ _) (DRA.key-subst-eq ⟦id-cell⟧-sound)))
+
+fuselocks-ren-sound : (μ : Modality n o) (ρ : Modality m n) (Γ : Ctx o) →
+                      ⟦ fuselocks-ren {Γ = Γ} {μ = μ} {ρ = ρ} ⟧ren M.≅ˢ DRA.key-subst (to (⟦ⓜ⟧-sound μ ρ))
+fuselocks-ren-sound μ ρ Γ =
+  M.transˢ (M.⊚-congʳ (M.id-subst-unitʳ _)) (
+  M.transˢ (M.id-subst-unitʳ _) (
+  M.transˢ (M.⊚-congʳ (DRA.key-subst-eq ⟦id-cell⟧-sound)) (
+  M.transˢ (M.id-subst-unitʳ _) (
+  M.transˢ (M.⊚-congˡ (M.id-subst-unitˡ _)) (
+  M.id-subst-unitˡ _)))))
+
+unfuselocks-ren-sound : (μ : Modality n o) (ρ : Modality m n) (Γ : Ctx o) →
+                        ⟦ unfuselocks-ren {Γ = Γ} {μ = μ} {ρ = ρ} ⟧ren M.≅ˢ DRA.key-subst (from (⟦ⓜ⟧-sound μ ρ))
+unfuselocks-ren-sound μ ρ Γ =
+  M.transˢ (M.⊚-congʳ (M.transˢ (M.⊚-congʳ (M.id-subst-unitʳ _)) (M.id-subst-unitʳ _))) (
+  M.transˢ (M.⊚-congˡ (M.transˢ (M.⊚-congˡ (M.id-subst-unitˡ _)) (M.id-subst-unitˡ _))) (
+  M.transˢ (M.⊚-congˡ (DRA.key-subst-eq ⟦id-cell⟧-sound)) (
+  M.id-subst-unitˡ _)))
 {-
 postulate
   v1-sound : (Γ : Ctx n) (μ : Modality m n) (x : String) (T : Ty m) (κ : Modality o n) (y : String) (S : Ty o) →
