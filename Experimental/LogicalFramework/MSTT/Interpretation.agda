@@ -56,7 +56,7 @@ open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ �
   ⟦ v ⟧var M.[ ty-closed-natural T ∣ M.to (DRA.lock-iso (⟦ⓜ⟧-sound ρ (locksˡᵗ Λ))) ]cl
 
 ⟦_⟧tm : Tm Γ T → SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
-⟦_⟧extargs : ∀ {arginfos} → ExtTmArgs arginfos Γ → SemTms arginfos Γ
+⟦_⟧tmextargs : ∀ {arginfos} → ExtTmArgs arginfos Γ → SemTms arginfos Γ
 
 ⟦ var' _ {v} ⟧tm = ⟦ v ⟧var
 ⟦ mod⟨ μ ⟩ t ⟧tm = dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm
@@ -75,10 +75,10 @@ open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ �
 ⟦ pair t s ⟧tm = M.pair ⟦ t ⟧tm ⟦ s ⟧tm
 ⟦ fst p ⟧tm = M.fst ⟦ p ⟧tm
 ⟦ snd p ⟧tm = M.snd ⟦ p ⟧tm
-⟦ ext c args refl ⟧tm = apply-sem-tm-constructor ⟦ c ⟧tm-code ⟦ args ⟧extargs
+⟦ ext c args refl ⟧tm = apply-sem-tm-constructor ⟦ c ⟧tm-code ⟦ args ⟧tmextargs
 
-⟦_⟧extargs {arginfos = []}                 _            = tt
-⟦_⟧extargs {arginfos = arginfo ∷ arginfos} (arg , args) = ⟦ arg ⟧tm , ⟦ args ⟧extargs
+⟦_⟧tmextargs {arginfos = []}                 _            = tt
+⟦_⟧tmextargs {arginfos = arginfo ∷ arginfos} (arg , args) = ⟦ arg ⟧tm , ⟦ args ⟧tmextargs
 
 
 --------------------------------------------------

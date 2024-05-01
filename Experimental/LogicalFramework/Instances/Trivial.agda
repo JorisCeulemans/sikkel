@@ -88,6 +88,8 @@ bPropExt.bp-code-bparg-infos triv-bp-ext ()
 
 triv-bp-ext-sem : bPropExtSem triv-mt triv-ty-ext triv-tm-ext triv-bp-ext
 bPropExtSem.⟦_⟧bp-code triv-bp-ext-sem ()
+bPropExtSem.⟦⟧bp-code-natural triv-bp-ext-sem ()
+bPropExtSem.⟦⟧bp-code-cong triv-bp-ext-sem ()
 
 triv-pf-ext : ProofExt triv-mstt triv-bp-ext triv-bp-ext-sem
 ProofExt.ProofExtCode triv-pf-ext _ = ⊥

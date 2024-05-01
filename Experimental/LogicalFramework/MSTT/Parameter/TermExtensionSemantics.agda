@@ -112,7 +112,7 @@ apply-sem-tm-constr-natural-local : {arginfos : List (TmArgInfo m)} {Γ Δ : Ctx
                                     (σ : ⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx)
                                     (f : SemTmConstructorLocal arginfos Δ T) (g : SemTmConstructorLocal arginfos Γ T) →
                                     SemTmConstructorLocalNatural f g σ →
-                                    (tms : SemTms arginfos Δ)  →
+                                    (tms : SemTms arginfos Δ) →
                                     (apply-sem-tm-constructor f tms) M.[ ty-closed-natural T ∣ σ ]cl
                                       M.≅ᵗᵐ
                                     apply-sem-tm-constructor g (semtms-subst tms σ)
@@ -123,7 +123,7 @@ apply-sem-tm-constr-natural-local {arginfos = arginfo ∷ arginfos} σ f g nat (
 apply-sem-tm-constructor-natural : {arginfos : List (TmArgInfo m)} {Γ Δ : Ctx m} {T : Ty m}
                                    (f : SemTmConstructor arginfos T) → SemTmConstructorNatural f →
                                    (σ : ⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx)
-                                   (tms : SemTms arginfos Δ)  →
+                                   (tms : SemTms arginfos Δ) →
                                    (apply-sem-tm-constructor f tms) M.[ ty-closed-natural T ∣ σ ]cl
                                      M.≅ᵗᵐ
                                    apply-sem-tm-constructor (f {Γ}) (semtms-subst tms σ)
@@ -139,6 +139,6 @@ apply-sem-tm-constr-local-equiv {arginfos = arginfo ∷ arginfos} f g equiv (�
 
 apply-sem-tm-constructor-cong : {arginfos : List (TmArgInfo m)} {Γ : Ctx m} {T : Ty m}
                                 (f : SemTmConstructor arginfos T) → SemTmConstructorCong f →
-                                {tms tms' : SemTms arginfos Γ}  → tms ≅ᵗᵐˢ tms' →
+                                {tms tms' : SemTms arginfos Γ} → tms ≅ᵗᵐˢ tms' →
                                 apply-sem-tm-constructor f tms M.≅ᵗᵐ apply-sem-tm-constructor f tms'
-apply-sem-tm-constructor-cong f fnat 𝒆 = apply-sem-tm-constr-local-equiv f f fnat 𝒆
+apply-sem-tm-constructor-cong f fcong 𝒆 = apply-sem-tm-constr-local-equiv f f fcong 𝒆

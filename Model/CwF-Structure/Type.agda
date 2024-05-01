@@ -196,7 +196,9 @@ eq (⊙-congˡ {η = η} φ=φ') δ = eq φ=φ' (func η δ)
 
 -- Two types are said to be equivalent if they are naturally isomorphic as presheaves.
 -- This turns out to be easier to work with than standard propositional equality.
-record _≅ᵗʸ_ {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) : Set where
+-- Note: T ≅ᵗʸ could live in Set rather than Set₁, but this definition makes it easier
+--   to write types of functions that take a Ty Γ and produce an equivalence.
+record _≅ᵗʸ_ {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) : Set₁ where
   no-eta-equality
 
   field

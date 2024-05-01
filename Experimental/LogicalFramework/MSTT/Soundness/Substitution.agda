@@ -66,9 +66,9 @@ record TravStructSoundness
   traverse-tm-sound : (t : Tm Δ T) (σ : Trav Γ Δ) →
                       ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧trav ]cl M.≅ᵗᵐ ⟦ traverse-tm t σ ⟧tm
   traverse-ext-tmargs-sound : ∀ {arginfos} (args : ExtTmArgs arginfos Δ) (σ : Trav Γ Δ) →
-                              semtms-subst ⟦ args ⟧extargs ⟦ σ ⟧trav
+                              semtms-subst ⟦ args ⟧tmextargs ⟦ σ ⟧trav
                                 ≅ᵗᵐˢ
-                              ⟦ traverse-ext-tmargs args σ ⟧extargs
+                              ⟦ traverse-ext-tmargs args σ ⟧tmextargs
 
   traverse-tm-sound (var' x {v}) σ = vr-sound v σ
   traverse-tm-sound (mod⟨_⟩_ {T = T} μ t) σ =

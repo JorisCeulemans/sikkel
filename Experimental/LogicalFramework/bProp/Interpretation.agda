@@ -13,6 +13,7 @@ module Experimental.LogicalFramework.bProp.Interpretation
 
 open import Data.List
 open import Data.Product
+open import Data.Unit.Polymorphic
 
 open import Model.CwF-Structure as M renaming (Ctx to SemCtx; Ty to SemTy) using (_≅ᵗʸ_)
 import Model.DRA as DRA
@@ -34,11 +35,7 @@ private variable
 
 
 ⟦_⟧bprop : bProp Γ → SemTy ⟦ Γ ⟧ctx
-apply-sem-bprop-constructor : ∀ {m tmarginfos bparginfos} {Γ : Ctx m} →
-  SemPropConstructor tmarginfos bparginfos Γ →
-  ExtTmArgs tmarginfos Γ →
-  ExtBPArgs bparginfos Γ →
-  SemTy ⟦ Γ ⟧ctx
+⟦_⟧bpextargs : ∀ {arginfos} → ExtBPArgs arginfos Γ → SemProps arginfos Γ
 
 ⟦ ⊤ᵇ ⟧bprop = M.Unit'
 ⟦ ⊥ᵇ ⟧bprop = M.Empty'
@@ -47,14 +44,10 @@ apply-sem-bprop-constructor : ∀ {m tmarginfos bparginfos} {Γ : Ctx m} →
 ⟦ φ ∧ ψ ⟧bprop = ⟦ φ ⟧bprop M.⊠ ⟦ ψ ⟧bprop
 ⟦ ∀[ μ ∣ _ ∈ T ] φ ⟧bprop = M.Pi ⟦ ⟨ μ ∣ T ⟩ ⟧ty ⟦ φ ⟧bprop
 ⟦ ⟨ μ ∣ φ ⟩ ⟧bprop = DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧bprop ⟩
-⟦ ext c tmargs bpargs ⟧bprop = apply-sem-bprop-constructor ⟦ c ⟧bp-code tmargs bpargs
+⟦ ext c tmargs bpargs ⟧bprop = apply-sem-prop-constructor ⟦ c ⟧bp-code ⟦ tmargs ⟧tmextargs ⟦ bpargs ⟧bpextargs
 
-apply-sem-bprop-constructor {tmarginfos = []}    {bparginfos = []}    φ tmargs           bpargs           = φ
-apply-sem-bprop-constructor {tmarginfos = []}    {bparginfos = _ ∷ _} F tmargs           (bparg , bpargs) =
-  apply-sem-bprop-constructor (F ⟦ bparg ⟧bprop) tmargs bpargs
-apply-sem-bprop-constructor {tmarginfos = _ ∷ _} {bparginfos = y}     F (tmarg , tmargs) bpargs           =
-  apply-sem-bprop-constructor (F ⟦ tmarg ⟧tm) tmargs bpargs
-
+⟦_⟧bpextargs {arginfos = []}    args         = tt
+⟦_⟧bpextargs {arginfos = _ ∷ _} (arg , args) = ⟦ arg ⟧bprop , ⟦ args ⟧bpextargs
 
 {-
 bprop-subst-sound : (φ : bProp Γ) (σ : SubstExpr Δ Γ) → ⟦ φ ⟧bprop M.[ ⟦ σ ⟧subst ] ≅ᵗʸ ⟦ φ [ σ ]bprop ⟧bprop
