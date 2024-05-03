@@ -5,7 +5,6 @@ module Experimental.LogicalFramework.MSTT.Soundness.Substitution
   where
 
 open import Data.List
-open import Data.String using (String)
 open import Data.Product
 open import Data.Unit using (⊤; tt)
 import Relation.Binary.PropositionalEquality as Ag
@@ -31,7 +30,7 @@ private variable
   Γ Δ : Ctx m
   T S : Ty m
   μ ρ : Modality m n
-  x y : String
+  x y : Name
 
 
 record TravStructSoundness
@@ -49,7 +48,7 @@ record TravStructSoundness
     vr-sound : {Γ Δ : Ctx m} {T : Ty m} →
                (v : Var x T Δ ◇) (σ : Trav Γ Δ) →
                ⟦ v ⟧var M.[ ty-closed-natural T ∣ ⟦ σ ⟧trav ]cl M.≅ᵗᵐ ⟦ vr v σ ⟧tm
-    lift-sound : {Γ Δ : Ctx m} {μ : Modality n m} {x : String} {T : Ty n} (σ : Trav Γ Δ) →
+    lift-sound : {Γ Δ : Ctx m} {μ : Modality n m} {x : Name} {T : Ty n} (σ : Trav Γ Δ) →
                  M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧trav M.≅ˢ ⟦ lift {μ = μ} {x = x} {T = T} σ ⟧trav
     lock-sound : {Γ Δ : Ctx m} (σ : Trav Γ Δ) (μ : Modality n m) →
                  DRA.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧trav M.≅ˢ ⟦ TS.lock {μ = μ} σ ⟧trav
@@ -153,9 +152,9 @@ module AtomicRenSubSoundness
   open RenSubSemantics V ⟦_⟧rensubdata
   open RenSubDataStructureSound rensub-struct-sound
 
-  πᵃ-sound : ∀ {m n x} {Γ : Ctx n} {μ : Modality m n} {T : Ty m} →
+  πᵃ-sound : ∀ {m n} (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
              M.π M.≅ˢ ⟦ πᵃ {Γ = Γ} {μ = μ} {x = x} {T = T} ⟧arensub
-  πᵃ-sound = M.symˢ (M.id-subst-unitˡ _)
+  πᵃ-sound _ _ _ _ = M.symˢ (M.id-subst-unitˡ _)
 
   liftᵃ-sound : ∀ {m n x} {Γ Δ : Ctx n} {μ : Modality m n} {T : Ty m} (σ : AtomicRenSub Γ Δ) →
                 M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) ⟦ σ ⟧arensub
@@ -248,9 +247,9 @@ module RenSubSoundness
   []ʳˢ-sound : {Γ : Ctx m} → M.!◇ _ M.≅ˢ ⟦ []ʳˢ {Γ = Γ} ⟧rensub
   []ʳˢ-sound = M.reflˢ
 
-  πʳˢ-sound : ∀ {m n x} {Γ : Ctx n} {μ : Modality m n} {T : Ty m} →
+  πʳˢ-sound : ∀ {m n} (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) →
               M.π M.≅ˢ ⟦ πʳˢ {Γ = Γ} {μ = μ} {x = x} {T = T} ⟧rensub
-  πʳˢ-sound {x = x} {Γ = Γ} {μ = μ} {T = T} = πᵃ-sound {x = x} {Γ = Γ} {μ = μ} {T = T}
+  πʳˢ-sound Γ μ x T = πᵃ-sound Γ μ x T
 
   ∷ʳˢ-sound : (σ : RenSub Γ Δ) (v : V μ T Γ) (x : Name) →
               ⟦ σ ⟧rensub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ v ⟧rensubdata
@@ -564,7 +563,7 @@ module AtomicSubVarSound where
       ⟦ atomic-sub-var' Λ σ v ⟧tm
         M.[ ty-closed-natural T ∣ M.to (,ˡᵗ-sound Λ) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod M.π M.⊚ M.from (,ˡᵗ-sound Λ) ]cl
     ≅⟨ M.cl-tm-subst-cong-subst (ty-closed-natural T) (
-          M.transˢ (M.⊚-congˡ (M.⊚-congʳ (DRA.lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (πᵃʳ-sound {x = x} {Γ = Γ} {μ = μ} {T = S})))) (locksᵃʳ-sound πᵃʳ Λ)) ⟩
+          M.transˢ (M.⊚-congˡ (M.⊚-congʳ (DRA.lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (πᵃʳ-sound Γ μ x S)))) (locksᵃʳ-sound πᵃʳ Λ)) ⟩
       ⟦ atomic-sub-var' Λ σ v ⟧tm M.[ ty-closed-natural T ∣ ⟦ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ⟧aren ]cl
     ≅⟨ tm-aren-sound (atomic-sub-var' Λ σ v) _ ⟩
       ⟦ (atomic-sub-var' Λ σ v) [ πᵃʳ ,locksᵃʳ⟨ Λ ⟩ ]tmᵃʳ ⟧tm ∎
@@ -699,100 +698,62 @@ unfuselocks-ren-sound μ ρ Γ =
   M.transˢ (M.⊚-congˡ (M.transˢ (M.⊚-congˡ (M.id-subst-unitˡ _)) (M.id-subst-unitˡ _))) (
   M.transˢ (M.⊚-congˡ (DRA.key-subst-eq ⟦id-cell⟧-sound)) (
   M.id-subst-unitˡ _)))
-{-
-postulate
-  v1-sound : (Γ : Ctx n) (μ : Modality m n) (x : String) (T : Ty m) (κ : Modality o n) (y : String) (S : Ty o) →
-             ⟦ v1 {Γ = Γ} {μ = μ} {x} {T} {κ = κ} {y} {S} ⟧tm
-               M.≅ᵗᵐ
-             dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.π ]cl)
 
-  lock𝟙-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) → ⟦ lock𝟙-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm
-
-  ren-key-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
-                  DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ keyʳ {Γ = Γ} (lock⟨ ρ ⟩, ◇) (lock⟨ μ ⟩, ◇) α ⟧ren
-  ren-key-sound-cod : {μ : Modality m n} (Λ : LockTele n m) (α : TwoCell μ (locksˡᵗ Λ)) {Γ : Ctx n} →
-                      DRA.key-subst ⟦ α ⟧two-cell M.⊚ M.from (,ˡᵗ-sound {Γ = Γ} Λ) M.≅ˢ ⟦ keyʳ Λ (lock⟨ μ ⟩, ◇) α ⟧ren
-  ren-lock-sound : (σ : Ren Γ Δ) (μ : Modality m n) → ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren M.≅ˢ lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧ren
-  ren-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ πʳ {Γ = Γ} {μ = μ} {x} {T} ⟧ren M.≅ˢ M.π
-
-  sub-key-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
-                  DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ keyˢ {Γ = Γ} (lock⟨ ρ ⟩, ◇) (lock⟨ μ ⟩, ◇) α ⟧sub
-  sub-lock-sound : (σ : Sub Γ Δ) (μ : Modality m n) → ⟦ σ ,lockˢ⟨ μ ⟩ ⟧sub M.≅ˢ lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧sub
-  sub-π-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (T : Ty n) → ⟦ πˢ {Γ = Γ} {μ = μ} {x} {T} ⟧sub M.≅ˢ M.π
-  /cl-sound : {Γ : Ctx m} {μ : Modality n m} {T : Ty n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : String) →
-              ⟦ t / x ⟧sub M.≅ˢ (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩
-  ∷ˢ-sound : (σ : Sub Γ Δ) {μ : Modality m n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : String) →
-             ⟦ σ ∷ˢ t / x ⟧sub M.≅ˢ ⟦ σ ⟧sub M.,cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩ dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm
-
-postulate
-  rename-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (σ : Ren Δ Γ) →
-                    ⟦ t [ σ ]tmʳ ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧ren ]cl
-  -- rename-tm-sound  {μ} {m} {Γ} {T} t Syn.RenSub.id =
-  --   M.symᵗᵐ (M.cl-tm-subst-id (ty-closed-natural T) ⟦ t ⟧tm)
-  -- rename-tm-sound t (id-ren ⊚a σ) = {!!}
-  -- rename-tm-sound {Γ = Γ} {T = T} t (σs@(_ ⊚a _) ⊚a σ) = M.transᵗᵐ step3 (M.transᵗᵐ step1 step2)
-  --   where step0 : ⟦ rename-tm t σs ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl
-  --         step0 = rename-tm-sound t σs
-  --         step1 : ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl M.≅ᵗᵐ
-  --                 ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
-  --         step1 = M.cl-tm-subst-cong-tm (ty-closed-natural T) step0
-  --         step2 : ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren ]cl M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl  M.≅ᵗᵐ
-  --                 ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σs ⟧ren M.⊚ ⟦ σ ⟧aren ]cl
-  --         step2 = M.cl-tm-subst-⊚ (ty-closed-natural T) ⟦ t ⟧tm
-  --         step3 : ⟦ AtomicRen.atomic-rename-tm (rename-tm t σs) σ ⟧tm M.≅ᵗᵐ
-  --                   ⟦ rename-tm t σs ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧aren ]cl
-  --         step3 = atomic-rename-tm-sound (rename-tm t σs) σ
-
-lock𝟙-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) → ⟦ lock𝟙-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm
-lock𝟙-sound t = M.transᵗᵐ (rename-tm-sound t lock𝟙-ren)
-  {!!}
+lock𝟙-tm-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) → ⟦ lock𝟙-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm
+lock𝟙-tm-sound {Γ = Γ} {T = T} t =
+  M.transᵗᵐ (M.symᵗᵐ (tm-ren-sound t lock𝟙-ren)) (
+  M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (lock𝟙-ren-sound Γ)) (
+  M.cl-tm-subst-id (ty-closed-natural T) _))
 
 ∙¹-sound : {Γ : Ctx m} {A B : Ty m} (f : Tm Γ (A ⇛ B)) (a : Tm Γ A) →
            ⟦ f ∙¹ a ⟧tm M.≅ᵗᵐ M.app ⟦ f ⟧tm ⟦ a ⟧tm
 ∙¹-sound f a = M.app-cong M.reflᵗᵐ (lock𝟙-tm-sound a)
 
-/v-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (x : String) →
-           ⟦ lock𝟙-tm t / x ⟧sub M.≅ˢ (⟦ t ⟧tm M./v)
+/cl-sound : {Γ : Ctx m} {μ : Modality n m} {T : Ty n} (t : Tm (Γ ,lock⟨ μ ⟩) T) (x : Name) →
+            (dra-intro ⟦ μ ⟧mod ⟦ t ⟧tm) M./cl⟨ ty-closed-natural ⟨ μ ∣ T ⟩ ⟩
+              M.≅ˢ
+            ⟦ t / x ⟧sub
+/cl-sound t x = ∷ˢ-sound idˢ t x
+
+/v-sound : {Γ : Ctx m} {T : Ty m} (t : Tm Γ T) (x : Name) →
+           (⟦ t ⟧tm M./v) M.≅ˢ ⟦ lock𝟙-tm t / x ⟧sub
 /v-sound {T = T} t x =
-  M.transˢ (/cl-sound (lock𝟙-tm t) x) (
-  M.transˢ (M.,cl-cong-tm (ty-closed-natural ⟨ 𝟙 ∣ T ⟩) (lock𝟙-tm-sound t)) (
-  M.transˢ (M.,cl-cong-cl (𝟙-preserves-cl (ty-closed-natural T))) (
-  M.symˢ (M./v-/cl (ty-closed-natural T) ⟦ t ⟧tm))))
+  M.transˢ (M./v-/cl (ty-closed-natural T) ⟦ t ⟧tm) (
+  M.transˢ (M.symˢ (M.,cl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))) (
+  M.transˢ (M.symˢ (M.,cl-cong-tm (ty-closed-natural ⟨ 𝟙 ∣ T ⟩) (lock𝟙-tm-sound t))) (
+  /cl-sound (lock𝟙-tm t) x)))
 
-weaken-tm-sound : (Γ : Ctx m) (x : String) (μ : Modality n m) (S : Ty n) {T : Ty m} (t : Tm Γ T) →
-                  ⟦ weaken-tm {μ = μ} {x} {S} t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.π ]cl
-weaken-tm-sound Γ x μ S {T} t = M.transᵗᵐ (rename-tm-sound t πʳ) (M.cl-tm-subst-cong-subst (ty-closed-natural T) (ren-π-sound Γ x μ S))
+keyʳ-sound-cod : {μ : Modality m n} (Λ : LockTele n m) (α : TwoCell μ (locksˡᵗ Λ)) {Γ : Ctx n} →
+                 DRA.key-subst ⟦ α ⟧two-cell M.⊚ M.from (,ˡᵗ-sound {Γ = Γ} Λ) M.≅ˢ ⟦ keyʳ Λ (lock⟨ μ ⟩, ◇) α ⟧ren
+keyʳ-sound-cod Λ α = M.symˢ (M.⊚-congˡ (M.transˢ (M.⊚-congˡ (M.id-subst-unitˡ _)) (M.id-subst-unitˡ _)))
 
-v0-sound-𝟙 : (Γ : Ctx m) (x : String) (T : Ty m) →
-             ⟦ v0 {Γ = Γ} {μ = 𝟙} {x = x} {T = T} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T)
-v0-sound-𝟙 Γ x T = M.transᵗᵐ (v0-sound Γ 𝟙 x T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))
+keyʳ-sound : {μ ρ : Modality m n} (α : TwoCell μ ρ) {Γ : Ctx n} →
+             DRA.key-subst ⟦ α ⟧two-cell M.≅ˢ ⟦ keyʳ {Γ = Γ} (lock⟨ ρ ⟩, ◇) (lock⟨ μ ⟩, ◇) α ⟧ren
+keyʳ-sound {ρ = ρ} α {Γ} =
+  M.transˢ (M.symˢ (M.transˢ (M.⊚-congʳ (M.id-subst-unitʳ _)) (M.id-subst-unitʳ _))) (keyʳ-sound-cod (lock⟨ ρ ⟩, ◇) α {Γ})
 
-v1-sound-𝟙 : (Γ : Ctx m) (x : String) (T : Ty m) (κ : Modality n m) (y : String) (S : Ty n) →
-             ⟦ v1 {Γ = Γ} {μ = 𝟙} {x} {T} {κ = κ} {y} {S} ⟧tm M.≅ᵗᵐ M.ξcl (ty-closed-natural T) M.[ ty-closed-natural T ∣ M.π ]cl
-v1-sound-𝟙 Γ x T κ y S =
-  M.transᵗᵐ (v1-sound Γ 𝟙 x T κ y S) (
-  M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl (ty-closed-natural T))) (
-  M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))))
+weaken-tm-sound : (Γ : Ctx m) (x : Name) (μ : Modality n m) (S : Ty n) {T : Ty m} (t : Tm Γ T) →
+                  ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.π ]cl M.≅ᵗᵐ ⟦ weaken-tm {μ = μ} {x} {S} t ⟧tm
+weaken-tm-sound Γ x μ S {T} t = M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (πʳ-sound Γ μ x S)) (tm-ren-sound t πʳ)
 
 ,ˡᵗ-sound-to-naturalʳ : (Λ : LockTele m n) {Γ Δ : Ctx m} (σ : Ren Γ Δ) →
-                        ⟦ σ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ M.to (,ˡᵗ-sound Λ)
-                          M.≅ˢ
                         M.to (,ˡᵗ-sound Λ) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ⟧ren
-,ˡᵗ-sound-to-naturalʳ ◇ σ = M.transˢ (M.id-subst-unitʳ _) (M.symˢ (M.id-subst-unitˡ _))
+                          M.≅ˢ
+                        ⟦ σ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ M.to (,ˡᵗ-sound Λ)
+,ˡᵗ-sound-to-naturalʳ ◇ σ = M.transˢ (M.id-subst-unitˡ _) (M.symˢ (M.id-subst-unitʳ _))
 ,ˡᵗ-sound-to-naturalʳ (lock⟨ μ ⟩, Λ) σ =
   begin
-    ⟦ σ ,lockʳ⟨ μ ⟩ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ (M.to (,ˡᵗ-sound Λ) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
-  ≅⟨ M.⊚-assoc ⟨
-    (⟦ σ ,lockʳ⟨ μ ⟩ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ M.to (,ˡᵗ-sound Λ)) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))
-  ≅⟨ M.⊚-congˡ (,ˡᵗ-sound-to-naturalʳ Λ (σ ,lockʳ⟨ μ ⟩)) ⟩
-    (M.to (,ˡᵗ-sound Λ) M.⊚ lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))
+    M.to (,ˡᵗ-sound Λ) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧ren
   ≅⟨ M.⊚-assoc ⟩
-    M.to (,ˡᵗ-sound Λ) M.⊚ (lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
-  ≅⟨ M.⊚-congʳ (M.⊚-congˡ (lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (ren-lock-sound σ μ))) ⟩
-    M.to (,ˡᵗ-sound Λ) M.⊚ (lock-fmap ⟦ locksˡᵗ Λ ⟧mod (lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧ren) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
-  ≅⟨ M.⊚-congʳ (key-subst-natural (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))) ⟨
-    M.to (,ˡᵗ-sound Λ) M.⊚ (key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧ren)
+    M.to (,ˡᵗ-sound Λ) M.⊚ (DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧ren)
+  ≅⟨ M.⊚-congʳ (DRA.key-subst-natural (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))) ⟩
+    M.to (,ˡᵗ-sound Λ) M.⊚ (DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (DRA.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧ren) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
+  ≅⟨ M.⊚-congʳ (M.⊚-congˡ (DRA.lock-fmap-cong ⟦ locksˡᵗ Λ ⟧mod (lockʳ-sound σ μ))) ⟩
+    M.to (,ˡᵗ-sound Λ) M.⊚ (DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))))
   ≅⟨ M.⊚-assoc ⟨
-    M.to (,ˡᵗ-sound Λ) M.⊚ key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ))) M.⊚ lock-fmap ⟦ locksˡᵗ (lock⟨ μ ⟩, Λ) ⟧mod ⟦ σ ⟧ren ∎
+    (M.to (,ˡᵗ-sound Λ) M.⊚ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod ⟦ σ ,lockʳ⟨ μ ⟩ ⟧ren) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))
+  ≅⟨ M.⊚-congˡ (,ˡᵗ-sound-to-naturalʳ Λ (σ ,lockʳ⟨ μ ⟩)) ⟩
+    (⟦ σ ,lockʳ⟨ μ ⟩ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ M.to (,ˡᵗ-sound Λ)) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))
+  ≅⟨ M.⊚-assoc ⟩
+    ⟦ σ ,lockʳ⟨ μ ⟩ ,locksʳ⟨ Λ ⟩ ⟧ren M.⊚ (M.to (,ˡᵗ-sound Λ) M.⊚ DRA.key-subst (to (⟦ⓜ⟧-sound μ (locksˡᵗ Λ)))) ∎
   where open M.≅ˢ-Reasoning
--}

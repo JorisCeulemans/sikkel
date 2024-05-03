@@ -143,3 +143,8 @@ fuselocks-bprop-sound : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ 
 fuselocks-bprop-sound {Γ = Γ} {μ = μ} {ρ = ρ} φ  =
   M.transᵗʸ (M.symᵗʸ (bprop-ren-sound φ fuselocks-ren))
             (M.ty-subst-cong-subst (fuselocks-ren-sound μ ρ Γ) _)
+
+fuselocks-bprop-sound-to : {μ : Modality n o} {ρ : Modality m n} (φ : bProp (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩)) →
+                           ⟦ fuselocks-bprop φ ⟧bprop M.[ M.to (DRA.lock-iso (⟦ⓜ⟧-sound μ ρ)) ] M.≅ᵗʸ ⟦ φ ⟧bprop
+fuselocks-bprop-sound-to {Γ = Γ} {μ = μ} {ρ = ρ} φ =
+  M.transᵗʸ (M.ty-subst-cong-ty _ (fuselocks-bprop-sound φ)) (M.ty-subst-cong-subst-2-0 _ (DRA.key-subst-eq (DRA.isoʳ (⟦ⓜ⟧-sound μ ρ))))

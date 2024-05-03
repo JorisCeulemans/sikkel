@@ -232,6 +232,8 @@ apply-2-cell-var-lt Θ Ψ α {Λ} v =
 -- A value of type SomeVar T Γ Λ represents a variable in Γ ,ˡᵗ Λ with
 -- an unkown name.
 record SomeVar (T : Ty n) (Γ : Ctx m) (Λ : LockTele m n) : Set where
+  no-eta-equality
+  pattern
   constructor somevar
   field
     {ren-name} : Name

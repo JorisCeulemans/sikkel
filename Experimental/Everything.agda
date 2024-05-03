@@ -12,7 +12,11 @@ import Experimental.ClosedTypes.Pi
 import Experimental.ClosedTypes.Identity
 
 import Experimental.LogicalFramework.MSTT
+import Experimental.LogicalFramework.MSTT.Soundness.LockTele
+import Experimental.LogicalFramework.MSTT.Soundness.Variable
+import Experimental.LogicalFramework.MSTT.Soundness.Substitution
 import Experimental.LogicalFramework.bProp
+import Experimental.LogicalFramework.bProp.Soundness.Substitution
 import Experimental.LogicalFramework.Proof
 import Experimental.LogicalFramework.Example
 import Experimental.LogicalFramework.Instances.GuardedRecursion

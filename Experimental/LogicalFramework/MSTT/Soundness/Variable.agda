@@ -222,6 +222,40 @@ v0-2lock-sound μ κ x Γ T =
   where open M.≅ᵗᵐ-Reasoning
 -}
 
+v1-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) (κ : Modality o n) (y : Name) (S : Ty o) →
+           dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.π ]cl)
+             M.≅ᵗᵐ
+           ⟦ v1 {Γ = Γ} {μ = μ} {x} {T} {κ = κ} {y} {S} ⟧tm
+v1-sound Γ μ x T κ y S =
+  begin
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.π ]cl)
+  ≅⟨ dra-elim-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) _ ⟨
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod M.π ]cl
+  ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (vzero-id-sound Γ μ x T) ⟩
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ} ⟧two-cell ]cl
+      M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod M.π ]cl
+  ≅⟨ M.cl-tm-subst-id (ty-closed-natural T) _ ⟨
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = μ} ⟧two-cell ]cl
+      M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod M.π ]cl
+      M.[ ty-closed-natural T ∣ M.id-subst _ ]cl ∎
+  where open M.≅ᵗᵐ-Reasoning
+
 v1-nolock-sound : (Γ : Ctx m) (x : Name) (T : Ty m) (κ : Modality n m) (y : Name) (S : Ty n) →
                   M.ξcl (ty-closed-natural T) M.[ ty-closed-natural T ∣ M.π ]cl M.≅ᵗᵐ ⟦ v1-nolock {Γ = Γ} {x = x} {T} {_} {κ} {y} {S} ⟧tm
 v1-nolock-sound Γ x T κ y S = M.cl-tm-subst-cong-tm (ty-closed-natural T) (v0-nolock-sound Γ x T)
+
+v0-sound-𝟙 : (Γ : Ctx m) (x : Name) (T : Ty m) →
+             M.ξcl (ty-closed-natural T) M.≅ᵗᵐ ⟦ v0 {Γ = Γ} {μ = 𝟙} {x = x} {T = T} ⟧tm
+v0-sound-𝟙 Γ x T = M.transᵗᵐ (M.symᵗᵐ (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))) (v0-sound Γ 𝟙 x T)
+
+v1-sound-𝟙 : (Γ : Ctx m) (x : Name) (T : Ty m) (κ : Modality n m) (y : Name) (S : Ty n) →
+             M.ξcl (ty-closed-natural T) M.[ ty-closed-natural T ∣ M.π ]cl
+               M.≅ᵗᵐ
+             ⟦ v1 {Γ = Γ} {μ = 𝟙} {x} {T} {κ = κ} {y} {S} ⟧tm
+v1-sound-𝟙 Γ x T κ y S =
+  M.transᵗᵐ (M.symᵗᵐ (M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T))))) (
+  M.transᵗᵐ (M.symᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))) (
+  v1-sound Γ 𝟙 x T κ y S))
