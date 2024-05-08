@@ -20,7 +20,6 @@ open import Experimental.LogicalFramework.Proof.Definition ℬ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 open import Experimental.LogicalFramework.Proof.Equality 𝒫 𝒷
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
-open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.ResultType 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.SyntaxViews 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.Soundness 𝒫 𝒷 ⟦𝒷⟧

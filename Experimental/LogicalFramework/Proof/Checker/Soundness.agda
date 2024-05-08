@@ -26,7 +26,6 @@ open import Experimental.LogicalFramework.MSTT.Soundness.Variable 𝒫
 open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.bProp.Soundness.Substitution 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
-open import Experimental.LogicalFramework.Postulates 𝒫 𝒷 ⟦𝒷⟧
 
 private variable
   m n o : Mode
@@ -308,7 +307,7 @@ module _ (Ξ : ProofCtx m) where
            M.transˢ (∷ˢ-sound (πˢ {Γ = to-ctx Ξ} {T = T}) (mod⟨ μ ⟩ var' x {vlock (vlock (vzero id-cell))}) y)
                     (M.,cl-cong (ty-closed-natural ⟨ ρ ∣ ⟨ μ ∣ T ⟩ ⟩)
                                 (M.id-subst-unitˡ _)
-                                (dra-intro-cong ⟦ ρ ⟧mod (dra-intro-cong ⟦ μ ⟧mod (v0-2lock-sound ρ μ x (to-ctx Ξ) T))))))
+                                (dra-intro-cong ⟦ ρ ⟧mod (dra-intro-cong ⟦ μ ⟧mod (M.symᵗᵐ (v0-2lock-sound ρ μ x (to-ctx Ξ) T)))))))
                     ⟦ φ ⟧bprop) (
          bprop-sub-sound φ (mod⟨ μ ⟩ (var' y {vlock (vlock (vzero id-cell))}) // x)))) ] (
     M.ιc⁻¹[ M.,,-cong (DRA.eq-dra-ty-closed (⟦ⓜ⟧-sound ρ μ) (ty-closed-natural T)) ]'

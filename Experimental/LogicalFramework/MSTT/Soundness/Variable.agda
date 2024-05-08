@@ -197,7 +197,6 @@ v0-nolock-sound Γ x T =
     (M.ξcl (ty-closed-natural ⟨ 𝟙 ∣ T ⟩)) M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = 𝟙} ⟧two-cell ]cl ∎
   where open M.≅ᵗᵐ-Reasoning
 
-{-
 v0-2lock-sound : (μ : Modality n o) (κ : Modality m n) (x : Name) (Γ : Ctx o) (T : Ty m) →
                  dra-elim ⟦ κ ⟧mod (dra-elim ⟦ μ ⟧mod (
                           M.ι⁻¹[ eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T) ] (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩) {Γ = ⟦ Γ ⟧ctx})))
@@ -206,7 +205,7 @@ v0-2lock-sound : (μ : Modality n o) (κ : Modality m n) (x : Name) (Γ : Ctx o)
 v0-2lock-sound μ κ x Γ T =
   begin
     dra-elim (⟦ μ ⟧mod DRA.ⓓ ⟦ κ ⟧mod) (M.ι⁻¹[ eq-dra-ty-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T) ] M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩))
-  ≅⟨ {!!} ⟩
+  ≅⟨ eq-dra-elim-closed (⟦ⓜ⟧-sound μ κ) (ty-closed-natural T) _ ⟨
     dra-elim ⟦ μ ⓜ κ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ⓜ κ ∣ T ⟩))
       M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ κ)) ]cl
   ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (
@@ -220,7 +219,6 @@ v0-2lock-sound μ κ x Γ T =
       M.[ ty-closed-natural T ∣ DRA.key-subst (from (⟦ⓜ⟧-sound μ κ)) ]cl
       M.[ ty-closed-natural T ∣ M.id-subst _ ]cl ∎
   where open M.≅ᵗᵐ-Reasoning
--}
 
 v1-sound : (Γ : Ctx n) (μ : Modality m n) (x : Name) (T : Ty m) (κ : Modality o n) (y : Name) (S : Ty o) →
            dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.π ]cl)
