@@ -175,6 +175,44 @@ eq-dra-ty-closed : {μ ρ : DRA C D} → μ ≅ᵈ ρ →
                    ⟨ μ ∣ A {Γ ,lock⟨ μ ⟩} ⟩ ≅ᵗʸ ⟨ ρ ∣ A ⟩
 eq-dra-ty-closed {ρ = ρ} ℯ {A} clA = transᵗʸ (eq-dra-tyʳ ℯ A) (dra-cong ρ (closed-natural clA _))
 
+eq-dra-intro : {μ ρ : DRA C D} (ℯ : μ ≅ᵈ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
+               (t : Tm (Γ ,lock⟨ μ ⟩) T) →
+               ι⁻¹[ eq-dra-tyʳ ℯ T ] (dra-intro μ t) ≅ᵗᵐ dra-intro ρ (t [ key-subst (from ℯ) ]')
+eq-dra-intro ℯ t = transᵗᵐ ι-convert (dra-intro-two-cell (from ℯ) t)
+
+eq-dra-elim : {μ ρ : DRA C D} (ℯ : μ ≅ᵈ ρ) {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)}
+              (t : Tm Γ ⟨ μ ∣ T ⟩) →
+              (dra-elim μ t) [ key-subst (from ℯ) ]' ≅ᵗᵐ dra-elim ρ (ι⁻¹[ eq-dra-tyʳ ℯ T ] t)
+eq-dra-elim {ρ = ρ} ℯ t = symᵗᵐ (transᵗᵐ (dra-elim-cong ρ ι-convert) (dra-elim-two-cell (from ℯ) t))
+
+eq-dra-intro-closed : {μ ρ : DRA C D} (ℯ : μ ≅ᵈ ρ) {Γ : Ctx D} {T : ClosedTy C} (clT : IsClosedNatural T)
+                      (t : Tm (Γ ,lock⟨ μ ⟩) T) →
+                      ι⁻¹[ eq-dra-ty-closed ℯ clT ] (dra-intro μ t) ≅ᵗᵐ dra-intro ρ (t [ clT ∣ key-subst (from ℯ) ]cl)
+eq-dra-intro-closed {μ = μ} {ρ} ℯ {T = T} clT t =
+  begin
+    ι⁻¹[ transᵗʸ (eq-dra-tyʳ ℯ T) (dra-cong ρ (closed-natural clT (key-subst (from ℯ)))) ] dra-intro μ t
+  ≅⟨ ι⁻¹-trans ⟩
+    ι⁻¹[ dra-cong ρ (closed-natural clT (key-subst (from ℯ))) ] (ι⁻¹[ eq-dra-tyʳ ℯ T ] dra-intro μ t)
+  ≅⟨ ι⁻¹-cong (eq-dra-intro ℯ t) ⟩
+    ι⁻¹[ dra-cong ρ (closed-natural clT (key-subst (from ℯ))) ] dra-intro ρ (t [ key-subst (from ℯ) ]')
+  ≅⟨ dra-intro-ι⁻¹ ρ _ ⟩
+    dra-intro ρ (ι⁻¹[ closed-natural clT (key-subst (from ℯ)) ] (t [ key-subst (from ℯ) ]')) ∎
+  where open ≅ᵗᵐ-Reasoning
+
+eq-dra-elim-closed : {μ ρ : DRA C D} (ℯ : μ ≅ᵈ ρ) {Γ : Ctx D} {T : ClosedTy C} (clT : IsClosedNatural T)
+                     (t : Tm Γ ⟨ μ ∣ T ⟩) →
+                     (dra-elim μ t) [ clT ∣ key-subst (from ℯ) ]cl ≅ᵗᵐ dra-elim ρ (ι⁻¹[ eq-dra-ty-closed ℯ clT ] t)
+eq-dra-elim-closed {μ = μ} {ρ} ℯ {T = T} clT t =
+  begin
+    ι⁻¹[ closed-natural clT (key-subst (from ℯ)) ] ((dra-elim μ t) [ key-subst (from ℯ) ]')
+  ≅⟨ ι⁻¹-cong (eq-dra-elim ℯ t) ⟩
+    ι⁻¹[ closed-natural clT (key-subst (from ℯ)) ] (dra-elim ρ (ι⁻¹[ eq-dra-tyʳ ℯ T ] t))
+  ≅⟨ dra-elim-ι⁻¹ ρ _ ⟩
+    dra-elim ρ (ι⁻¹[ dra-cong ρ (closed-natural clT (key-subst (from ℯ))) ] (ι⁻¹[ eq-dra-tyʳ ℯ T ] t))
+  ≅⟨ dra-elim-cong ρ ι⁻¹-trans ⟨
+    dra-elim ρ (ι⁻¹[ transᵗʸ (eq-dra-tyʳ ℯ T) (dra-cong ρ (closed-natural clT (key-subst (from ℯ)))) ] t) ∎
+  where open ≅ᵗᵐ-Reasoning
+
 
 𝟙-unitʳ : (μ : DRA C D) → μ ⓓ 𝟙 ≅ᵈ μ
 transf-op (transf (from (𝟙-unitʳ μ))) _ = id-subst _
