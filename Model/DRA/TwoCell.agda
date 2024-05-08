@@ -290,6 +290,86 @@ eq (coe-trans-dra-natural {μ = μ} {ρ = ρ} α σ {T}) t =
 
 
 --------------------------------------------------
+-- Interaction with term formers
+
+coe-tm-subst : {μ ρ : DRA C D} (α : TwoCell μ ρ)
+               {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} (t : Tm Γ ⟨ μ ∣ T ⟩) →
+               (coe-tm α) [ t /v ]'
+                 ≅ᵗᵐ
+               ι[ ty-weaken-subst t ] (dra-intro ρ ((dra-elim μ t) [ key-subst α ]'))
+coe-tm-subst {C = C} {μ = μ} {ρ} α {T = T} t =
+  begin
+    (ι[ dra-natural ρ π ] (dra-intro ρ (ι[ ty-subst-cong-subst-2-2 T (key-subst-natural α) ] (dra-elim μ (ι⁻¹[ dra-natural μ π ] ξ) [ key-subst α ]'))))
+    [ t /v ]'
+  ≅⟨ ι-subst-commute ⟨
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ]
+      (dra-intro ρ (ι[ ty-subst-cong-subst-2-2 T (key-subst-natural α) ] (dra-elim μ (ι⁻¹[ dra-natural μ π ] ξ) [ key-subst α ]')) [ t /v ]')
+  ≅⟨ ι-cong (dra-intro-natural ρ (t /v) _) ⟩
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      (ι[ ty-subst-cong-subst-2-2 T (key-subst-natural α) ] (dra-elim μ (ι⁻¹[ dra-natural μ π ] ξ) [ key-subst α ]')) [ lock-fmap ρ (t /v) ]'))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ ι-subst-commute)) ⟨
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-cong-ty (lock-fmap ρ (t /v)) (ty-subst-cong-subst-2-2 T (key-subst-natural α)) ] (
+      (dra-elim μ (ι⁻¹[ dra-natural μ π ] ξ) [ key-subst α ]') [ lock-fmap ρ (t /v) ]')))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ (ι-cong (tm-subst-cong-subst-2-2 _ (key-subst-natural α))))) ⟩
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-cong-ty (lock-fmap ρ (t /v)) (ty-subst-cong-subst-2-2 T (key-subst-natural α)) ] (
+      ι[ ty-subst-cong-subst-2-2 (T [ lock-fmap μ π ]) (key-subst-natural α) ] (
+      (dra-elim μ (ι⁻¹[ dra-natural μ π ] ξ) [ lock-fmap μ (t /v) ]') [ key-subst α ]'))))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ (ι-cong (ι-cong (tm-subst-cong-tm _ (dra-elim-natural μ _ _)))))) ⟩
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-cong-ty (lock-fmap ρ (t /v)) (ty-subst-cong-subst-2-2 T (key-subst-natural α)) ] (
+      ι[ ty-subst-cong-subst-2-2 (T [ lock-fmap μ π ]) (key-subst-natural α) ] (
+      (dra-elim μ (ι⁻¹[ dra-natural μ (t /v) ] ((ι⁻¹[ dra-natural μ π ] ξ) [ t /v ]'))) [ key-subst α ]'))))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ (ι-cong (ι-cong (tm-subst-cong-tm _ (dra-elim-cong μ (ι⁻¹-cong ι⁻¹-subst-commute))))))) ⟨
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-cong-ty (lock-fmap ρ (t /v)) (ty-subst-cong-subst-2-2 T (key-subst-natural α)) ] (
+      ι[ ty-subst-cong-subst-2-2 (T [ lock-fmap μ π ]) (key-subst-natural α) ] (
+      (dra-elim μ (ι⁻¹[ dra-natural μ (t /v) ] (ι⁻¹[ ty-subst-cong-ty (t /v) (dra-natural μ π) ] (ξ [ t /v ]')))) [ key-subst α ]'))))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ (ι-cong (ι-cong (tm-subst-cong-tm _ (dra-elim-cong μ (ι⁻¹-cong (ι⁻¹-cong (/v-ξ t))))))))) ⟩
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-cong-ty (lock-fmap ρ (t /v)) (ty-subst-cong-subst-2-2 T (key-subst-natural α)) ] (
+      ι[ ty-subst-cong-subst-2-2 (T [ lock-fmap μ π ]) (key-subst-natural α) ] (
+      (dra-elim μ (ι⁻¹[ dra-natural μ (t /v) ] (ι⁻¹[ ty-subst-cong-ty (t /v) (dra-natural μ π) ] (ι[ ty-weaken-subst t ] t)))) [ key-subst α ]'))))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ (ι-cong (ι-cong (tm-subst-cong-tm _ (dra-elim-subst-2-0 μ t _)))))) ⟩
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-cong-ty (lock-fmap ρ (t /v)) (ty-subst-cong-subst-2-2 T (key-subst-natural α)) ] (
+      ι[ ty-subst-cong-subst-2-2 (T [ lock-fmap μ π ]) (key-subst-natural α) ] (
+      (ι[ ty-subst-lock-fmap-2-0 μ T (ctx-ext-subst-β₁ _ _) ] dra-elim μ t) [ key-subst α ]'))))
+  ≅⟨ ι-cong (ι-cong (dra-intro-cong ρ (record { eq = λ γ → trans (sym (ty-comp T)) (trans (sym (ty-comp T)) (ty-cong T (trans hom-idˡ hom-idˡ))) }))) ⟩
+    ι[ ty-subst-cong-ty (t /v) (dra-natural ρ π) ] (ι[ dra-natural ρ (t /v) ] dra-intro ρ (
+      ι[ ty-subst-lock-fmap-2-0 ρ (T [ key-subst α ]) (ctx-ext-subst-β₁ _ _) ] (
+      (dra-elim μ t) [ key-subst α ]')))
+  ≅⟨ dra-intro-subst-2-0 ρ _ _ ⟩
+    ι[ ty-weaken-subst t ] dra-intro ρ ((dra-elim μ t) [ key-subst α ]') ∎
+  where
+    open ≅ᵗᵐ-Reasoning
+    open BaseCategory C
+
+dra-intro-two-cell : {μ ρ : DRA C D} (α : TwoCell μ ρ)
+                     {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} (t : Tm (Γ ,lock⟨ μ ⟩) T) →
+                     convert-tm (coe-trans α) (dra-intro μ t) ≅ᵗᵐ dra-intro ρ (t [ key-subst α ]')
+eq (dra-intro-two-cell {μ = μ} {ρ} α {T = T} t) γ =
+  trans (eq (coe-tm-subst α (dra-intro μ t)) γ) (
+  trans (strong-ty-id ⟨ ρ ∣ T [ key-subst α ] ⟩) (
+  eq (dra-intro-cong ρ (tm-subst-cong-tm _ (dra-β μ t))) γ))
+
+dra-elim-two-cell : {μ ρ : DRA C D} (α : TwoCell μ ρ)
+                    {Γ : Ctx D} {T : Ty (Γ ,lock⟨ μ ⟩)} (t : Tm Γ ⟨ μ ∣ T ⟩) →
+                    dra-elim ρ (convert-tm (coe-trans α) t) ≅ᵗᵐ (dra-elim μ t) [ key-subst α ]'
+dra-elim-two-cell {μ = μ} {ρ} α t =
+  begin
+    dra-elim ρ (convert-tm (coe-trans α) t)
+  ≅⟨ dra-elim-cong ρ (convert-tm-cong-tm (dra-η μ t)) ⟨
+    dra-elim ρ (convert-tm (coe-trans α) (dra-intro μ (dra-elim μ t)))
+  ≅⟨ dra-elim-cong ρ (dra-intro-two-cell α _) ⟩
+    dra-elim ρ (dra-intro ρ (dra-elim μ t [ key-subst α ]'))
+  ≅⟨ dra-β ρ _ ⟩
+    dra-elim μ t [ key-subst α ]' ∎
+  where open ≅ᵗᵐ-Reasoning
+
+
+--------------------------------------------------
 -- Equivalence of two-cells (i.e. equivalence of the underlying natural transformations)
 
 record _≅ᵗᶜ_ {μ ρ : DRA C D} (α β : TwoCell μ ρ) : Set₁ where

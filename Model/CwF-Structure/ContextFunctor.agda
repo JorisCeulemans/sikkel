@@ -9,6 +9,7 @@ open import Level
 open import Model.BaseCategory
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
+open import Model.CwF-Structure.Type
 
 private
   variable
@@ -59,6 +60,14 @@ record IsCtxFunctor (Φ : CtxOp C D) : Set₁ where
       ctx-map τ2 ⊚ ctx-map σ2 ∎
     where open ≅ˢ-Reasoning
 
+  ty-subst-ctx-map-2-0 : {Γ Δ : Ctx C} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} (T : Ty (Φ Γ)) →
+                         σ ⊚ τ ≅ˢ id-subst Γ →
+                         T [ ctx-map σ ] [ ctx-map τ ] ≅ᵗʸ T
+  ty-subst-ctx-map-2-0 T ε =
+    transᵗʸ (ty-subst-comp T _ _) (
+    transᵗʸ (ty-subst-cong-subst (ctx-map-inverse ε) T) (
+    ty-subst-id T))
+
 open IsCtxFunctor {{...}} public
 
 instance
@@ -92,6 +101,7 @@ record CtxFunctor (C D : BaseCategory) : Set₁ where
   ctx-fmap-inverse = ctx-map-inverse {{is-functor}}
   ctx-fmap-cong-2-1 = ctx-map-cong-2-1 {{is-functor}}
   ctx-fmap-cong-2-2 = ctx-map-cong-2-2 {{is-functor}}
+  ty-subst-ctx-fmap-2-0 = ty-subst-ctx-map-2-0 {{is-functor}}
 
 open CtxFunctor public
 

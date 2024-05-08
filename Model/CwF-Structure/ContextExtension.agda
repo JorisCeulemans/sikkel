@@ -114,10 +114,13 @@ ty-eq-to-ext-subst Γ {T = T}{T'} T=T' = ⟨ π , ι⁻¹[ ty-subst-cong-ty π T
 
 π-ext-comp-ty-subst : (σ : Δ ⇒ Γ ) (t : Tm Δ (T [ σ ])) (S : Ty Γ) →
                       S [ π ] [ ⟨ σ , t ∈ T ⟩ ] ≅ᵗʸ S [ σ ]
-π-ext-comp-ty-subst σ t S = transᵗʸ (ty-subst-comp S π ⟨ σ , t ∈ _ ⟩) (ty-subst-cong-subst (ctx-ext-subst-β₁ σ t) S)
+π-ext-comp-ty-subst σ t S = ty-subst-cong-subst-2-1 S (ctx-ext-subst-β₁ σ t)
 
 ty-weaken-subst : (t : Tm Γ T) → S [ π ] [ t /v ] ≅ᵗʸ S
-ty-weaken-subst t = transᵗʸ (π-ext-comp-ty-subst _ _ _) (ty-subst-id _)
+ty-weaken-subst t = ty-subst-cong-subst-2-0 _ (ctx-ext-subst-β₁ _ _)
+
+/v-ξ : (t : Tm Γ T) → ξ [ t /v ]' ≅ᵗᵐ ι[ ty-weaken-subst t ] t
+eq (/v-ξ {T = T} t) γ = sym (strong-ty-id T)
 
 -- Extending a context with two equivalent types leads to equivalent contexts.
 ,,-map : (T ↣ S) → (Γ ,, T ⇒ Γ ,, S)

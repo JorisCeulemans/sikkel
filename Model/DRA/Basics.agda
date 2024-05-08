@@ -35,6 +35,7 @@ record DRA (C D : BaseCategory) : Set₁ where
   lock-fmap-cong = ctx-fmap-cong ctx-functor
   lock-fmap-id = ctx-fmap-id ctx-functor
   lock-fmap-⊚ = ctx-fmap-⊚ ctx-functor
+  ty-subst-lock-fmap-2-0 = ty-subst-ctx-fmap-2-0 ctx-functor
 
   field
     ⟨_∣_⟩ : {Γ : Ctx D} → Ty (lock Γ) → Ty Γ
@@ -222,6 +223,63 @@ module _ (μ : DRA C D) where
   dra-elim-ι⁻¹ : {Γ : Ctx D} {T S : Ty (lock μ Γ)} {T=S : T ≅ᵗʸ S} (t : Tm Γ ⟨ μ ∣ T ⟩) →
                  ι⁻¹[ T=S ] (dra-elim μ t) ≅ᵗᵐ dra-elim μ (ι⁻¹[ dra-cong T=S ] t)
   dra-elim-ι⁻¹ t = transᵗᵐ (dra-elim-ι t) (dra-elim-cong μ (ι-congᵉ dra-cong-sym))
+
+  dra-ty-subst-cong-2-0 : {Γ Δ : Ctx D} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} {T : Ty (Γ ,lock⟨ μ ⟩)}
+                          (ε : σ ⊚ τ ≅ˢ id-subst Γ) →
+                          transᵗʸ (ty-subst-cong-ty τ (dra-natural μ σ)) (transᵗʸ (dra-natural μ τ) (dra-cong (ty-subst-lock-fmap-2-0 μ T ε)))
+                            ≅ᵉ
+                          ty-subst-cong-subst-2-0 ⟨ μ ∣ T ⟩ ε
+  dra-ty-subst-cong-2-0 {σ = σ} {τ} ε =
+    transᵉ (transᵉ (transᵗʸ-congʳ (transᵗʸ-congʳ dra-cong-trans)) (transᵉ (transᵗʸ-congʳ (symᵉ transᵗʸ-assoc)) (symᵉ transᵗʸ-assoc))) (
+    transᵉ (transᵗʸ-congˡ (dra-natural-⊚ σ τ)) (
+    transᵉ transᵗʸ-assoc (
+    transᵉ (transᵗʸ-congʳ (
+    transᵉ (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (transᵉ (symᵉ dra-cong-trans) (dra-cong-cong (transᵉ (symᵉ transᵗʸ-assoc) (
+      transᵗʸ-congˡ (transᵉ (transᵗʸ-congʳ (transᵉ ty-subst-cong-subst-trans (transᵗʸ-congˡ ty-subst-cong-subst-sym))) (transᵉ (symᵉ transᵗʸ-assoc) transᵗʸ-cancelˡ-symʳ)))))))) (
+    transᵉ (transᵉ (transᵗʸ-congʳ dra-cong-trans) (symᵉ transᵗʸ-assoc)) (
+    transᵉ (transᵗʸ-congˡ (transᵗʸ-congʳ (dra-cong-cong (transᵉ ty-subst-cong-subst-trans (transᵗʸ-congʳ (
+       transᵉ ty-subst-cong-subst-trans (transᵉ (transᵗʸ-congʳ ty-subst-cong-subst-refl) reflᵗʸ-unitʳ))))))) (
+    transᵉ (transᵗʸ-congˡ (transᵉ (transᵗʸ-congʳ dra-cong-trans) (symᵉ transᵗʸ-assoc))) (
+    transᵉ (transᵗʸ-congˡ (transᵗʸ-congˡ (symᵉ (dra-natural-subst-eq ε)))) (
+    transᵉ (transᵉ transᵗʸ-assoc transᵗʸ-assoc) (transᵗʸ-congʳ (
+    transᵉ (transᵗʸ-congʳ (symᵉ dra-cong-trans)) (
+    dra-natural-id)))))))))) (
+    symᵉ transᵗʸ-assoc))))
+
+  dra-intro-subst-2-0 : {Γ Δ : Ctx D} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} {T : Ty (Γ ,lock⟨ μ ⟩)} (t : Tm (Γ ,lock⟨ μ ⟩) T) →
+                        (ε : σ ⊚ τ ≅ˢ id-subst Γ) →
+                        ι[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ dra-natural μ τ ] (dra-intro μ (ι[ ty-subst-lock-fmap-2-0 μ T ε ] t)))
+                          ≅ᵗᵐ
+                        ι[ ty-subst-cong-subst-2-0 ⟨ μ ∣ T ⟩ ε ] (dra-intro μ t)
+  dra-intro-subst-2-0 {σ = σ} {τ} {T} t ε =
+    begin
+      ι[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ dra-natural μ τ ] (dra-intro μ (ι[ ty-subst-lock-fmap-2-0 μ T ε ] t)))
+    ≅⟨ ι-cong (ι-cong (dra-intro-ι t)) ⟨
+      ι[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ dra-natural μ τ ] (ι[ dra-cong (ty-subst-lock-fmap-2-0 μ T ε) ] dra-intro μ t))
+    ≅⟨ ι-cong ι-trans ⟨
+      ι[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ transᵗʸ (dra-natural μ τ) (dra-cong (ty-subst-lock-fmap-2-0 μ T ε)) ] dra-intro μ t)
+    ≅⟨ ι-congᵉ-2-1 (dra-ty-subst-cong-2-0 ε) ⟩
+      ι[ ty-subst-cong-subst-2-0 ⟨ μ ∣ T ⟩ ε ] (dra-intro μ t) ∎
+    where open ≅ᵗᵐ-Reasoning
+
+  dra-elim-subst-2-0 : {Γ Δ : Ctx D} {σ : Δ ⇒ Γ} {τ : Γ ⇒ Δ} {T : Ty (Γ ,lock⟨ μ ⟩)} (t : Tm Γ ⟨ μ ∣ T ⟩) →
+                       (ε : σ ⊚ τ ≅ˢ id-subst Γ) →
+                       dra-elim μ (ι⁻¹[ dra-natural μ τ ] (ι⁻¹[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ ty-subst-cong-subst-2-0 _ ε ] t)))
+                         ≅ᵗᵐ
+                       ι[ ty-subst-lock-fmap-2-0 μ T ε ] (dra-elim μ t)
+  dra-elim-subst-2-0 {σ = σ} {τ} {T} t ε =
+    begin
+      dra-elim μ (ι⁻¹[ dra-natural μ τ ] (ι⁻¹[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ ty-subst-cong-subst-2-0 ⟨ μ ∣ T ⟩ ε ] t)))
+    ≅⟨ dra-elim-cong μ (ι⁻¹-cong (ι⁻¹-cong (transᵗᵐ (ι-cong (symᵗᵐ ι-trans)) (ι-congᵉ-2-1 (dra-ty-subst-cong-2-0 ε))))) ⟨
+      dra-elim μ (ι⁻¹[ dra-natural μ τ ] (ι⁻¹[ ty-subst-cong-ty τ (dra-natural μ σ) ] (
+        ι[ ty-subst-cong-ty τ (dra-natural μ σ) ] (ι[ dra-natural μ τ ] (ι[ dra-cong (ty-subst-lock-fmap-2-0 μ T ε) ] t)))))
+    ≅⟨ dra-elim-cong μ (ι⁻¹-cong ι-symˡ) ⟩
+      dra-elim μ (ι⁻¹[ dra-natural μ τ ] (ι[ dra-natural μ τ ] (ι[ dra-cong (ty-subst-lock-fmap-2-0 μ T ε) ] t)))
+    ≅⟨ dra-elim-cong μ ι-symˡ ⟩
+      dra-elim μ (ι[ dra-cong (ty-subst-lock-fmap-2-0 μ T ε) ] t)
+    ≅⟨ dra-elim-ι t ⟨
+      ι[ ty-subst-lock-fmap-2-0 μ T ε ] dra-elim μ t ∎
+    where open ≅ᵗᵐ-Reasoning
 
 
 --------------------------------------------------
