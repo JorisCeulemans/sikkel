@@ -132,19 +132,19 @@ module _ {A : Ty Γ} {B : Ty Γ} (C : Ty Γ) where
   naturality (⊞-elim f g ⟨ _ , _ ⟩') {t = inj₂ b} = sym (€-natural g)
   naturality (⊞-elim f g) _ _ = to-pshfun-eq λ { _ _ (inj₁ a) → refl ; _ _ (inj₂ b) → refl }
 
-  β-⊞-inl : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (a : Tm Γ A) →
+  ⊞-β-inl : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (a : Tm Γ A) →
             app (⊞-elim f g) (inl a) ≅ᵗᵐ app f a
-  eq (β-⊞-inl f g a) _ = refl
+  eq (⊞-β-inl f g a) _ = refl
 
-  β-⊞-inr : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (b : Tm Γ B) →
+  ⊞-β-inr : (f : Tm Γ (A ⇛ C)) (g : Tm Γ (B ⇛ C)) (b : Tm Γ B) →
             app (⊞-elim f g) (inr b) ≅ᵗᵐ app g b
-  eq (β-⊞-inr f g b) _ = refl
+  eq (⊞-β-inr f g b) _ = refl
 
-η-⊞ : {A : Ty Γ} {B : Ty Γ} (t : Tm Γ (A ⊞ B)) →
+⊞-η : {A : Ty Γ} {B : Ty Γ} (t : Tm Γ (A ⊞ B)) →
       t ≅ᵗᵐ app (⊞-elim (A ⊞ B) inl-func inr-func) t
-eq (η-⊞ t) γ with t ⟨ _ , γ ⟩'
-eq (η-⊞ t) γ | inj₁ a = refl
-eq (η-⊞ t) γ | inj₂ b = refl
+eq (⊞-η t) γ with t ⟨ _ , γ ⟩'
+eq (⊞-η t) γ | inj₁ a = refl
+eq (⊞-η t) γ | inj₂ b = refl
 
 module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where
   sum-closed : IsClosedNatural (A ⊞ B)

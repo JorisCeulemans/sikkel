@@ -52,14 +52,14 @@ module _ (μ : DRA C D) {Γ : Ctx D} where
                    (dra-intro-cong μ (snd-cong (dra-β μ p'))) ⟩
         pair (dra-intro μ (fst p'))
              (dra-intro μ (snd p'))
-      ≅⟨ pair-cong (dra-intro-cong μ (β-⊠-fst _ (dra-elim μ (snd p))))
-                   (dra-intro-cong μ (β-⊠-snd (dra-elim μ (fst p)) _)) ⟩
+      ≅⟨ pair-cong (dra-intro-cong μ (⊠-β-fst _ (dra-elim μ (snd p))))
+                   (dra-intro-cong μ (⊠-β-snd (dra-elim μ (fst p)) _)) ⟩
         pair (dra-intro μ (dra-elim μ (fst p)))
              (dra-intro μ (dra-elim μ (snd p)))
       ≅⟨ pair-cong (dra-η μ (fst p)) (dra-η μ (snd p)) ⟩
         pair (fst p)
              (snd p)
-      ≅⟨ η-⊠ p ⟨
+      ≅⟨ ⊠-η p ⟨
         p ∎
       where open ≅ᵗᵐ-Reasoning
 
@@ -70,14 +70,14 @@ module _ (μ : DRA C D) {Γ : Ctx D} where
       in begin
         dra-intro μ (pair (dra-elim μ (fst (pair t s)))
                           (dra-elim μ (snd (pair t s))))
-      ≅⟨ dra-intro-cong μ (pair-cong (dra-elim-cong μ (β-⊠-fst t s))
-                                     (dra-elim-cong μ (β-⊠-snd t s))) ⟩
+      ≅⟨ dra-intro-cong μ (pair-cong (dra-elim-cong μ (⊠-β-fst t s))
+                                     (dra-elim-cong μ (⊠-β-snd t s))) ⟩
         dra-intro μ (pair (dra-elim μ t)
                           (dra-elim μ s))
       ≅⟨ dra-intro-cong μ (pair-cong (dra-β μ _) (dra-β μ _)) ⟩
         dra-intro μ (pair (fst (dra-elim μ p))
                           (snd (dra-elim μ p)))
-      ≅⟨ dra-intro-cong μ (η-⊠ (dra-elim μ p)) ⟨
+      ≅⟨ dra-intro-cong μ (⊠-η (dra-elim μ p)) ⟨
         dra-intro μ (dra-elim μ p)
       ≅⟨ dra-η μ p ⟩
         p ∎
@@ -93,6 +93,6 @@ module _ (μ : DRA C D) {Γ : Ctx D} where
       t
     ≅⟨ dra-η μ t ⟨
       dra-intro μ (dra-elim μ t)
-    ≅⟨ dra-intro-cong μ (η-unit (dra-elim μ t)) ⟩
+    ≅⟨ dra-intro-cong μ (unit-η (dra-elim μ t)) ⟩
       dra-intro μ tt' ∎
     where open ≅ᵗᵐ-Reasoning

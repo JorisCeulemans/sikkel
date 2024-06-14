@@ -206,11 +206,11 @@ module _ (Ξ : ProofCtx m) where
 
   nat-rec-β-zero-sound : (z : Tm (to-ctx Ξ) T) (s : Tm (to-ctx Ξ) (T ⇛ T)) →
                          Evidence Ξ (nat-rec z s zero ≡ᵇ z)
-  nat-rec-β-zero-sound z s = (M.≅ᵗᵐ-to-Id (M.β-nat-zero _ _)) M.[ _ ]'
+  nat-rec-β-zero-sound z s = (M.≅ᵗᵐ-to-Id (M.nat-rec-β-zero _ _)) M.[ _ ]'
 
   nat-rec-β-suc-sound : (z : Tm (to-ctx Ξ) T) (s : Tm (to-ctx Ξ) (T ⇛ T)) (n : Tm (to-ctx Ξ) Nat') →
                         Evidence Ξ (nat-rec z s (suc n) ≡ᵇ s ∙¹ nat-rec z s n)
-  nat-rec-β-suc-sound z s n = M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.β-nat-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-rec z s n)))) M.[ _ ]'
+  nat-rec-β-suc-sound z s n = M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.nat-rec-β-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-rec z s n)))) M.[ _ ]'
 
   fun-η-sound : (f : Tm (to-ctx Ξ) (⟨ μ ∣ T ⟩⇛ S)) →
                 Evidence Ξ (f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ v0))
@@ -224,7 +224,7 @@ module _ (Ξ : ProofCtx m) where
 
   ⊠-η-sound : (p : Tm (to-ctx Ξ) (T ⊠ S)) →
               Evidence Ξ (p ≡ᵇ pair (fst p) (snd p))
-  ⊠-η-sound p = M.≅ᵗᵐ-to-Id (M.η-⊠ ⟦ p ⟧tm) M.[ _ ]'
+  ⊠-η-sound p = M.≅ᵗᵐ-to-Id (M.⊠-η ⟦ p ⟧tm) M.[ _ ]'
 
   true≠false-sound : Evidence Ξ (¬ (true ≡ᵇ false))
   true≠false-sound = M.true≠false M.[ _ ]'

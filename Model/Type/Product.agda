@@ -116,15 +116,15 @@ module _ {T : Ty Γ} {S : Ty Γ} (σ : Δ ⇒ Γ) where
 eq (from-eq ⊠-natural-cong) _ = refl
 
 module _ (t : Tm Γ T) (s : Tm Γ S) where
-  β-⊠-fst : fst (pair t s) ≅ᵗᵐ t
-  eq β-⊠-fst _ = refl
+  ⊠-β-fst : fst (pair t s) ≅ᵗᵐ t
+  eq ⊠-β-fst _ = refl
 
-  β-⊠-snd : snd (pair t s) ≅ᵗᵐ s
-  eq β-⊠-snd _ = refl
+  ⊠-β-snd : snd (pair t s) ≅ᵗᵐ s
+  eq ⊠-β-snd _ = refl
 
-η-⊠ : (p : Tm Γ (T ⊠ S)) →
+⊠-η : (p : Tm Γ (T ⊠ S)) →
       p ≅ᵗᵐ pair (fst p) (snd p)
-eq (η-⊠ p) _ = refl
+eq (⊠-η p) _ = refl
 
 -- Versions of the term constructors pair, fst and snd as Sikkel
 --   functions (i.e. terms of Sikkel's function type) instead of
@@ -144,14 +144,14 @@ sndᶠ : Tm Γ (T ⊠ S ⇛ S)
 sndᶠ {T = T}{S = S} = lam (T ⊠ S) (snd (ι⁻¹[ ⊠-natural π ] ξ))
 
 module _ (t : Tm Γ T) (s : Tm Γ S) where
-  β-⊠-fstᶠ : (app fstᶠ (app (app pairᶠ t) s)) ≅ᵗᵐ t
-  eq β-⊠-fstᶠ γ = trans (ty-cong-2-1 T hom-idʳ) (ty-id T)
+  ⊠-β-fstᶠ : (app fstᶠ (app (app pairᶠ t) s)) ≅ᵗᵐ t
+  eq ⊠-β-fstᶠ γ = trans (ty-cong-2-1 T hom-idʳ) (ty-id T)
 
-  β-⊠-sndᶠ : (app sndᶠ (app (app pairᶠ t) s)) ≅ᵗᵐ s
-  eq β-⊠-sndᶠ γ = trans (ty-cong-2-1 S hom-idʳ) (ty-id S)
+  ⊠-β-sndᶠ : (app sndᶠ (app (app pairᶠ t) s)) ≅ᵗᵐ s
+  eq ⊠-β-sndᶠ γ = trans (ty-cong-2-1 S hom-idʳ) (ty-id S)
 
-η-⊠ᶠ : (p : Tm Γ (T ⊠ S)) → p ≅ᵗᵐ app (app pairᶠ (app fstᶠ p)) (app sndᶠ p)
-eq (η-⊠ᶠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
+⊠-ηᶠ : (p : Tm Γ (T ⊠ S)) → p ≅ᵗᵐ app (app pairᶠ (app fstᶠ p)) (app sndᶠ p)
+eq (⊠-ηᶠ {T = T} {S = S} p) γ = sym (cong₂ [_,_] (trans (ty-cong-2-1 T hom-idʳ) (ty-id T))
                                                  (trans (ty-cong-2-1 S hom-idʳ) (ty-id S)))
 
 module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) where

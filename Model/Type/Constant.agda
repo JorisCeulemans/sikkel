@@ -124,11 +124,11 @@ unit-elim : (T : Ty Γ) → Tm Γ T → Tm Γ (Unit' ⇛ T)
 naturality (unit-elim T t ⟨ _ , _ ⟩') = sym (naturality t _ _)
 naturality (unit-elim T t) _ _ = to-pshfun-eq λ _ _ _ → refl
 
-β-unit : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
-eq (β-unit t) _ = refl
+unit-β : {T : Ty Γ} (t : Tm Γ T) → app (unit-elim T t) tt' ≅ᵗᵐ t
+eq (unit-β t) _ = refl
 
-η-unit : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
-eq (η-unit t) _ = refl
+unit-η : (t : Tm Γ Unit') → t ≅ᵗᵐ tt'
+eq (unit-η t) _ = refl
 
 
 --------------------------------------------------
@@ -183,16 +183,16 @@ if'-cl-natural : {T : ClosedTy C} (clT : IsClosedNatural T) {σ : Γ ⇒ Δ} {b 
 if'-cl-natural clT = transᵗᵐ (ι⁻¹-cong if'-natural) if'-ι
 
 module _ (t t' : Tm Γ T) where
-  β-bool-true : if' true' then' t else' t' ≅ᵗᵐ t
-  eq β-bool-true _ = refl
+  if-β-true : if' true' then' t else' t' ≅ᵗᵐ t
+  eq if-β-true _ = refl
 
-  β-bool-false : if' false' then' t else' t' ≅ᵗᵐ t'
-  eq β-bool-false _ = refl
+  if-β-false : if' false' then' t else' t' ≅ᵗᵐ t'
+  eq if-β-false _ = refl
 
-η-bool : (t : Tm Γ Bool') → t ≅ᵗᵐ if' t then' true' else' false'
-eq (η-bool t) γ with t ⟨ _ , γ ⟩'
-eq (η-bool t) γ | false = refl
-eq (η-bool t) γ | true  = refl
+bool-η : (t : Tm Γ Bool') → t ≅ᵗᵐ if' t then' true' else' false'
+eq (bool-η t) γ with t ⟨ _ , γ ⟩'
+eq (bool-η t) γ | false = refl
+eq (bool-η t) γ | true  = refl
 
 bool-ind : (T : Ty (Γ ,, Bool')) →
            Tm Γ (T [ true'  /cl⟨ const-closed ⟩ ]) →
@@ -306,15 +306,15 @@ nat-rec-cl-natural clT =
   transᵗᵐ (ι⁻¹-cong nat-rec-natural) (transᵗᵐ nat-rec-ι (nat-rec-cong reflᵗᵐ (transᵗᵐ (ι-congᵉ ⇛-cong-sym) (symᵗᵐ ι⁻¹-trans)) reflᵗᵐ))
 
 module _ {T : Ty Γ} (z : Tm Γ T) (s : Tm Γ (T ⇛ T)) where
-  β-nat-zero : nat-rec T z s zero' ≅ᵗᵐ z
-  eq β-nat-zero _ = refl
+  nat-rec-β-zero : nat-rec T z s zero' ≅ᵗᵐ z
+  eq nat-rec-β-zero _ = refl
 
-  β-nat-suc : (k : Tm Γ Nat') →
+  nat-rec-β-suc : (k : Tm Γ Nat') →
               nat-rec T z s (suc' k) ≅ᵗᵐ app s (nat-rec T z s k)
-  eq (β-nat-suc k) _ = refl
+  eq (nat-rec-β-suc k) _ = refl
 
-η-nat : (k : Tm Γ Nat') → k ≅ᵗᵐ nat-rec Nat' zero' suc-func k
-eq (η-nat k) γ = go (k ⟨ _ , γ ⟩')
+nat-η : (k : Tm Γ Nat') → k ≅ᵗᵐ nat-rec Nat' zero' suc-func k
+eq (nat-η k) γ = go (k ⟨ _ , γ ⟩')
   where
     go : (n : ℕ) → n ≡ nat-rec Nat' zero' suc-func (const n) ⟨ _ , γ ⟩'
     go zero    = refl
