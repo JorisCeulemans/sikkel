@@ -39,6 +39,8 @@ ExtPfArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
 
 data Proof where
   {-
+  TODO: Primitive for applying a 2-cell to a proof (and consequently also to the prosposition it proves).
+        This would subsume all constructors below.
   -- Functoriality of the locks in a proof context
   lock𝟙-der : (Ξ ⊢ φ) → (Ξ ,lock⟨ 𝟙 ⟩ ⊢ lock𝟙-bprop φ)
   unlock𝟙-der : (Ξ ,lock⟨ 𝟙 ⟩ ⊢ φ) → (Ξ ⊢ unlock𝟙-bprop φ)

@@ -140,6 +140,11 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
   cl-tm-subst-cong-subst-2-1 ε =
     transᵗᵐ (cl-tm-subst-⊚ _) (cl-tm-subst-cong-subst ε)
 
+  cl-tm-subst-cong-subst-2-0 : {σ : Γ ⇒ Δ} {τ : Δ ⇒ Γ} {t : Tm Δ T} →
+                               σ ⊚ τ ≅ˢ id-subst _ →
+                               t [ clT ∣ σ ]cl [ clT ∣ τ ]cl ≅ᵗᵐ t
+  cl-tm-subst-cong-subst-2-0 ε = transᵗᵐ (cl-tm-subst-cong-subst-2-1 ε) (cl-tm-subst-id _)
+
   cl-tm-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ} {t : Tm Θ T} →
                                σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1 →
                                t [ clT ∣ σ2 ]cl [ clT ∣ σ1 ]cl ≅ᵗᵐ t [ clT ∣ τ2 ]cl [ clT ∣ τ1 ]cl
@@ -418,6 +423,9 @@ module _ {A B : ClosedTy C} {clA : IsClosedNatural A} {clB : IsClosedNatural B} 
     ≅⟨ ctx-ext-subst-cong-tm σ (ι-congᵉ-2-2 (to-symᵗʸ-eqˡ (transᵉ (symᵉ (to-symᵗʸ-eqʳ (closed-ty-eq-natural e σ))) transᵗʸ-assoc))) ⟩
       to-ext-subst B σ (ι[ closed-natural clB σ ] ι⁻¹[ closed-ty-eq e ] t) ∎
     where open ≅ˢ-Reasoning
+
+  /cl-,,-cong : (t : Tm Γ A) → from (,,-cong (closed-ty-eq e)) ⊚ (t /cl⟨ clA ⟩) ≅ˢ (ι⁻¹[ closed-ty-eq e ] t) /cl⟨ clB ⟩
+  /cl-,,-cong t = ,cl-,,-cong _ t
 
   ξcl-,,-cong : {Γ : Ctx C} → ξcl clB {Γ = Γ} [ clB ∣ from (,,-cong (closed-ty-eq e)) ]cl ≅ᵗᵐ ι⁻¹[ closed-ty-eq e ] ξcl clA
   ξcl-,,-cong =

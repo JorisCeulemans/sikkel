@@ -483,7 +483,7 @@ module _ {A B : ClosedTy C} (clA : IsClosedNatural A) (clB : IsClosedNatural B) 
                    (app f a) [ clB ∣ σ ]cl ≅ᵗᵐ app (f [ fun-closed ∣ σ ]cl) (a [ clA ∣ σ ]cl)
   app-cl-natural = transᵗᵐ (ι⁻¹-cong (app-natural _ _ _)) (transᵗᵐ (symᵗᵐ (app-ι⁻¹ _ _)) (app-cong (symᵗᵐ ι⁻¹-trans) reflᵗᵐ))
 
-  ⇛-cl-β : (b : Tm (Γ ,, A) B) (a : Tm Γ A) → app (lamcl clB b) a ≅ᵗᵐ b [ clB ∣ id-subst Γ ,cl⟨ clA ⟩ a ]cl
+  ⇛-cl-β : (b : Tm (Γ ,, A) B) (a : Tm Γ A) → app (lamcl clB b) a ≅ᵗᵐ b [ clB ∣ a /cl⟨ clA ⟩ ]cl
   ⇛-cl-β b a =
     transᵗᵐ (⇛-β _ a) (
     transᵗᵐ (ι⁻¹-cong (transᵗᵐ (symᵗᵐ ι-subst-commute) (ι-cong (tm-subst-cong-subst b (/v-/cl clA a))))) (

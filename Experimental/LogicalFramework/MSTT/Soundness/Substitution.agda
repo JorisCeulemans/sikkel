@@ -705,6 +705,13 @@ lock𝟙-tm-sound {Γ = Γ} {T = T} t =
   M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural T) (lock𝟙-ren-sound Γ)) (
   M.cl-tm-subst-id (ty-closed-natural T) _))
 
+fuselocks-tm-sound : (μ : Modality n o) (ρ : Modality m n) {Γ : Ctx o} {T : Ty m}
+                     (t : Tm (Γ ,lock⟨ μ ⟩ ,lock⟨ ρ ⟩) T) →
+                     ⟦ fuselocks-tm t ⟧tm M.≅ᵗᵐ ⟦ t ⟧tm M.[ ty-closed-natural T ∣ DRA.key-subst (to (⟦ⓜ⟧-sound μ ρ)) ]cl
+fuselocks-tm-sound μ ρ {Γ} {T} t =
+  M.transᵗᵐ (M.symᵗᵐ (tm-ren-sound t fuselocks-ren))
+            (M.cl-tm-subst-cong-subst (ty-closed-natural T) (fuselocks-ren-sound μ ρ Γ))
+
 ∙¹-sound : {Γ : Ctx m} {A B : Ty m} (f : Tm Γ (A ⇛ B)) (a : Tm Γ A) →
            ⟦ f ∙¹ a ⟧tm M.≅ᵗᵐ M.app ⟦ f ⟧tm ⟦ a ⟧tm
 ∙¹-sound f a = M.app-cong M.reflᵗᵐ (lock𝟙-tm-sound a)
