@@ -12,7 +12,8 @@ open import Model.DRA as DRA hiding
   ; TwoCell; id-cell; _ⓣ-vert_; _ⓣ-hor_; key-subst; key-subst-natural; key-subst-eq)
 
 open MSTT-Parameter 𝒫
-open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
 open import Experimental.LogicalFramework.MSTT.Soundness.LockTele 𝒫
 
 private variable

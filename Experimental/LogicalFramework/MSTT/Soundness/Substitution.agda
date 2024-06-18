@@ -21,7 +21,8 @@ open MSTT-Parameter 𝒫
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics ℳ 𝒯
 open TmExtSem ⟦𝓉⟧
-open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
 open import Experimental.LogicalFramework.MSTT.Soundness.LockTele 𝒫
 open import Experimental.LogicalFramework.MSTT.Soundness.Variable 𝒫
 

@@ -9,6 +9,8 @@ open import Data.Maybe
 open import Function
 
 open MSTT-Parameter 𝒫
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionNormalization using (TmExtNormalization)
+open TmExtNormalization 𝓉-norm
 
 import Model.CwF-Structure as M
 import Model.DRA as M
@@ -17,7 +19,8 @@ import Model.Type.Constant as M
 import Model.Type.Product as M
 
 open import Experimental.LogicalFramework.MSTT.Normalization.Helpers
-open import Experimental.LogicalFramework.MSTT 𝒫
+open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
 open import Experimental.LogicalFramework.MSTT.Soundness.Substitution 𝒫
 
 private variable
@@ -27,14 +30,7 @@ private variable
   Γ Δ : Ctx m
 
 
-Fuel : Set
-Fuel = ℕ
-
-record NormalizeResult (t : Tm Γ T) : Set where
-  constructor normres
-  field
-    nt : Tm Γ T
-    sound : ⟦ t ⟧tm M.≅ᵗᵐ ⟦ nt ⟧tm
+open import Experimental.LogicalFramework.MSTT.Normalization.ResultType ℳ 𝒯 𝓉 ⟦𝓉⟧ public
 
 
 normalize : Fuel → (t : Tm Γ T) → Maybe (NormalizeResult t)
@@ -133,4 +129,7 @@ normalize (suc n) (snd p) = normalize-snd <$> normalize (suc n) p
     normalize-snd : NormalizeResult p → NormalizeResult (snd p)
     normalize-snd (normres (pair _ ns) ep) = normres ns (M.transᵗᵐ (M.snd-cong ep) (M.⊠-β-snd _ _))
     normalize-snd (normres np          ep) = normres (snd np) (M.snd-cong ep)
-normalize (suc n) (ext c args e) = {!!}
+normalize (suc n) (ext c args refl) = normalize-tm-code (normalize n) c args
+
+normalize-tm : Fuel → Tm Γ T → Maybe (Tm Γ T)
+normalize-tm n t = map NormalizeResult.nt (normalize n t)

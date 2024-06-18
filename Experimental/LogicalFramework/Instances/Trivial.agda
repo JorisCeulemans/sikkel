@@ -12,6 +12,7 @@ open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionNormalization
 open import Experimental.LogicalFramework.MSTT.Parameter
 
 
@@ -65,12 +66,16 @@ TmExtSem.⟦ triv-tm-ext-sem ⟧tm-code ()
 TmExtSem.⟦⟧tm-code-natural triv-tm-ext-sem ()
 TmExtSem.⟦⟧tm-code-cong triv-tm-ext-sem ()
 
+triv-tm-ext-norm : TmExtNormalization triv-mt triv-ty-ext triv-tm-ext triv-tm-ext-sem
+TmExtNormalization.normalize-tm-code triv-tm-ext-norm _ () _
+
 
 triv-mstt : MSTT-Parameter
 MSTT-Parameter.ℳ triv-mstt = triv-mt
 MSTT-Parameter.𝒯 triv-mstt = triv-ty-ext
 MSTT-Parameter.𝓉 triv-mstt = triv-tm-ext
 MSTT-Parameter.⟦𝓉⟧ triv-mstt = triv-tm-ext-sem
+MSTT-Parameter.𝓉-norm triv-mstt = triv-tm-ext-norm
 
 
 
