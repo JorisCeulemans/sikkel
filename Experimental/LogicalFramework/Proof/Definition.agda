@@ -64,6 +64,9 @@ data Proof where
           →
           Proof Γ                 -- Ξ ⊢ φ [ t2 / x ]bprop
 
+  -- Integration of normalization procedure in proofs
+  by-normalization : Proof Γ
+
   -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
   ⊤ᵇ-intro : Proof Γ  -- Ξ ⊢ ⊤ᵇ
   ⊥ᵇ-elim : Proof Γ  -- Ξ ⊢ ⊥ᵇ
@@ -113,6 +116,7 @@ data Proof where
              Proof Γ                 -- Ξ ⊢ ψ
 
   -- Specific computation rules for term formers
+  -- TODO: remove these β rules, they are handled by the normalizer.
   fun-β : Proof Γ
   nat-rec-β-zero : Proof Γ
   nat-rec-β-suc : Proof Γ

@@ -38,6 +38,9 @@ private variable
 
 
 
+proof-fuel : Fuel
+proof-fuel = 1000000
+
 check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (PCResult Ξ φ)
 check-proof-explicit-constraint : (Ξ : ProofCtx m) {Γ : Ctx m} → to-ctx Ξ Ag.≡ Γ →
                                   Proof Γ → (φ : bProp (to-ctx Ξ)) →
@@ -72,6 +75,12 @@ check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   return ⟅ goalse ++ goals1 , sgoals ↦
     (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
     subst-sound Ξ t1 t2 φ (⟦pe⟧ sgoalse) (⟦p1⟧ sgoals1)) ⟆
+check-proof Ξ by-normalization φ = do
+  is-eq t s ← is-eq? φ
+  normres nt et ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t)
+  normres ns es ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel s)
+  refl ← nt ≟tm ns
+  return ⟅ [] , _ ↦ by-normalization-sound Ξ t s nt et es ⟆
 check-proof Ξ ⊤ᵇ-intro φ = do
   refl ← φ ≟bprop ⊤ᵇ
   return ⟅ [] , _ ↦ M.tt' M.[ _ ]' ⟆

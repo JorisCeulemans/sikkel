@@ -129,6 +129,12 @@ module _ (Ξ : ProofCtx m) where
            M.eq-reflect (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] pe))))) _ ]
       M.ι⁻¹[ to-ctx-/-commute Ξ φ t1 ] p1
 
+  by-normalization-sound : (t s n : Tm (to-ctx Ξ) T) →
+                           ⟦ t ⟧tm M.≅ᵗᵐ ⟦ n ⟧tm →
+                           ⟦ s ⟧tm M.≅ᵗᵐ ⟦ n ⟧tm →
+                           Evidence Ξ (t ≡ᵇ s)
+  by-normalization-sound t s n et es = M.≅ᵗᵐ-to-Id (M.transᵗᵐ et (M.symᵗᵐ es)) M.[ _ ]'
+
   ⊥ᵇ-elim-sound : (φ : bProp (to-ctx Ξ)) →
                   Evidence Ξ ⊥ᵇ →
                   Evidence Ξ φ
