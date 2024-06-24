@@ -258,3 +258,27 @@ v1-sound-𝟙 Γ x T κ y S =
   M.transᵗᵐ (M.symᵗᵐ (M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T))))) (
   M.transᵗᵐ (M.symᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl (ty-closed-natural T)))) (
   v1-sound Γ 𝟙 x T κ y S))
+
+vzero-sem-lift-sub : (Γ Δ : Ctx n) (μ : Modality m n) (x y : Name) (T : Ty m) (Λ : LockTele n m) (α : TwoCell μ (locksˡᵗ Λ))
+                     (σ : ⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx) →
+                     ⟦ vzero {x = x} {T} {Γ = Δ} {Λ} α ⟧var
+                             M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) σ) ]cl
+                       M.≅ᵗᵐ
+                     ⟦ vzero {x = y} {T} {Γ = Γ} {Λ} α ⟧var
+vzero-sem-lift-sub Γ Δ μ x y T Λ α σ =
+  begin
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+      M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ locksˡᵗ Λ ⟧mod (M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) σ) ]cl
+  ≅⟨ M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (DRA.key-subst-natural ⟦ α ⟧two-cell) ⟩
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod (M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) σ) ]cl
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl
+  ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (dra-elim-cl-natural ⟦ μ ⟧mod (ty-closed-natural T) _) ⟩
+    (dra-elim ⟦ μ ⟧mod (
+              M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩) M.[ ty-closed-natural ⟨ μ ∣ T ⟩ ∣ M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) σ ]cl)
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl)
+  ≅⟨ M.cl-tm-subst-cong-tm (ty-closed-natural T) (dra-elim-cong ⟦ μ ⟧mod (M.lift-cl-ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))) ⟩
+    dra-elim ⟦ μ ⟧mod (M.ξcl (ty-closed-natural ⟨ μ ∣ T ⟩))
+      M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ α ⟧two-cell ]cl ∎
+  where open M.≅ᵗᵐ-Reasoning

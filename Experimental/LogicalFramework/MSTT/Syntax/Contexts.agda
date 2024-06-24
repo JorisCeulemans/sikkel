@@ -15,6 +15,7 @@ open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
+open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 open ModeTheory ℳ
 
@@ -122,3 +123,13 @@ whiskerˡᵗ-right Θ Ψ {Λ} α =
   eq-cell (++ˡᵗ-locks Ψ)
   ⓣ-vert ((α ⓣ-hor (id-cell {μ = locksˡᵗ Λ}))
   ⓣ-vert eq-cell (sym (++ˡᵗ-locks Θ)))
+
+
+_≟ltel_ : (Λ1 Λ2 : LockTele m n) → PCM (Λ1 ≡ Λ2)
+◇                ≟ltel ◇                = return refl
+(lock⟨ μ1 ⟩, Λ1) ≟ltel (lock⟨ μ2 ⟩, Λ2) = do
+  refl ← mod-dom μ1 ≟mode mod-dom μ2
+  refl ← μ1 ≟mod μ2
+  refl ← Λ1 ≟ltel Λ2
+  return refl
+_ ≟ltel _ = error "Lock telescopes are not equal"

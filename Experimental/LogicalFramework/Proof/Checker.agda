@@ -5,8 +5,8 @@ module Experimental.LogicalFramework.Proof.Checker
   where
 
 open import Data.List
-import Data.String as Str
 open import Data.Product
+import Data.String as Str
 import Relation.Binary.PropositionalEquality as Ag
 
 open BiSikkelParameter ℬ
@@ -18,7 +18,7 @@ open import Experimental.LogicalFramework.MSTT 𝒫
 open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Definition ℬ
 open import Experimental.LogicalFramework.Proof.CheckingMonad
-open import Experimental.LogicalFramework.Proof.Equality 𝒫 𝒷
+open import Experimental.LogicalFramework.Proof.AlphaEquivalence 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.ResultType 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Checker.SyntaxViews 𝒫 𝒷 ⟦𝒷⟧
@@ -53,8 +53,8 @@ check-proof-ext : {infos : List (ArgInfo m)} {pf-names : ArgBoundNames infos} �
 
 check-proof Ξ refl φ = do
   is-eq t1 t2 ← is-eq? φ
-  refl ← t1 ≟tm t2
-  return ⟅ [] , _ ↦ refl-sound Ξ t1 ⟆
+  et ← t1 ≟tm t2
+  return ⟅ [] , _ ↦ refl-sound Ξ t1 t2 et ⟆
 check-proof Ξ (sym p) φ = do
   is-eq t1 t2 ← is-eq? φ
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (t2 ≡ᵇ t1)
@@ -71,19 +71,19 @@ check-proof Ξ (trans {T = T'} middle-tm p1 p2) φ = do
 check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   ⟅ goalse , ⟦pe⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) pe (t1 ≡ᵇ t2)
   ⟅ goals1 , ⟦p1⟧ ⟆ ← check-proof Ξ p1 (φ [ t1 / x ]bpropˢ)
-  refl ← ψ ≟bprop φ [ t2 / x ]bpropˢ
+  ψ=φ[] ← ψ ≟bprop φ [ t2 / x ]bpropˢ
   return ⟅ goalse ++ goals1 , sgoals ↦
     (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
-    subst-sound Ξ t1 t2 φ (⟦pe⟧ sgoalse) (⟦p1⟧ sgoals1)) ⟆
+    subst-sound Ξ t1 t2 ψ φ (⟦pe⟧ sgoalse) (⟦p1⟧ sgoals1) ψ=φ[]) ⟆
 check-proof Ξ by-normalization φ = do
-  is-eq t s ← is-eq? φ
-  normres nt et ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t)
-  normres ns es ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel s)
-  refl ← nt ≟tm ns
-  return ⟅ [] , _ ↦ by-normalization-sound Ξ t s nt et es ⟆
+  is-eq t1 t2 ← is-eq? φ
+  normres nt1 et1 ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t1)
+  normres nt2 et2 ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t2)
+  ent ← nt1 ≟tm nt2
+  return ⟅ [] , _ ↦ by-normalization-sound Ξ t1 t2 nt1 nt2 et1 et2 ent ⟆
 check-proof Ξ ⊤ᵇ-intro φ = do
-  refl ← φ ≟bprop ⊤ᵇ
-  return ⟅ [] , _ ↦ M.tt' M.[ _ ]' ⟆
+  φ=⊤ ← φ ≟bprop ⊤ᵇ
+  return ⟅ [] , _ ↦ ⊤ᵇ-intro-sound Ξ φ φ=⊤ ⟆
 check-proof Ξ (⊥ᵇ-elim p) φ = do
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ⊥ᵇ
   return ⟅ goals , sgoals ↦ ⊥ᵇ-elim-sound Ξ φ (⟦p⟧ sgoals) ⟆
@@ -125,13 +125,14 @@ check-proof Ξ (assumption' {m = m} {n = n} x {μ = μ} {κ = κ} α) φ = do
   refl ← n ≟mode as-cod-mode a
   refl ← μ ≟mod as-mod a
   refl ← κ ≟mod locksˡᵗ (as-lt a)
-  refl ← φ ≟bprop lookup-assumption a α
-  return ⟅ [] , _ ↦ ⟦ a , α ⟧assumption ⟆
+  φ=assumption ← φ ≟bprop lookup-assumption a α
+  return ⟅ [] , _ ↦ assumption-sound Ξ a α φ φ=assumption ⟆
 check-proof Ξ (∀-intro[_∣_∈_]_ {n = n} μ x T p) φ = do
   is-forall {n = n'} κ y S φ' ← is-forall? φ
   refl ← n ≟mode n'
   refl ← μ ≟mod κ
-  refl ← from-dec "Alpha equivalence is currently not supported" (x Str.≟ y)
+  refl ← from-dec "Names should match when proving proposition of the form ∀[ μ ∣ x ∈ T ] φ" (x Str.≟ y)
+  -- TODO: Should we allow the names to differ and just rename the proposition?
   refl ← T ≟ty S
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,,ᵛ μ ∣ x ∈ T) p φ'
   return ⟅ goals , sgoals ↦ ∀-intro-sound Ξ x T φ' (⟦p⟧ sgoals) ⟆
@@ -140,46 +141,46 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   refl ← n ≟mode n'
   refl ← μ ≟mod κ
   refl ← T ≟ty S
-  refl ← φ ≟bprop (ψ' [ t / y ]bpropˢ)
+  φ=ψ'[] ← φ ≟bprop (ψ' [ t / y ]bpropˢ)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
-  return ⟅ goals , sgoals ↦ ∀-elim-sound Ξ y T ψ' (⟦p⟧ sgoals) t ⟆
+  return ⟅ goals , sgoals ↦ ∀-elim-sound Ξ y T ψ' φ (⟦p⟧ sgoals) t φ=ψ'[] ⟆
 check-proof Ξ fun-β φ = do
   is-eq lhs rhs ← is-eq? φ
   app f t ← is-app? lhs
   lam {T = A} {S = B} μ x b ← is-lam? f
-  refl ← rhs ≟tm (b [ t / x ]tmˢ)
-  return ⟅ [] , _ ↦ fun-β-sound Ξ b t ⟆
+  erhs ← rhs ≟tm (b [ t / x ]tmˢ)
+  return ⟅ [] , _ ↦ {!fun-β-sound Ξ b t!} ⟆
 check-proof Ξ nat-rec-β-zero φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-rec z s n ← is-nat-rec? lhs
-  refl ← n ≟tm zero
-  refl ← rhs ≟tm z
-  return ⟅ [] , _ ↦ nat-rec-β-zero-sound Ξ z s ⟆
+  en ← n ≟tm zero
+  erhs ← rhs ≟tm z
+  return ⟅ [] , _ ↦ {!nat-rec-β-zero-sound Ξ z s!} ⟆
 check-proof Ξ nat-rec-β-suc φ = do
   is-eq lhs rhs ← is-eq? φ
   nat-rec z s n ← is-nat-rec? lhs
   suc-tm n' ← is-suc-tm? n
-  refl ← rhs ≟tm s ∙¹ (nat-rec z s n')
-  return ⟅ [] , _ ↦ nat-rec-β-suc-sound Ξ z s n' ⟆
+  erhs ← rhs ≟tm s ∙¹ (nat-rec z s n')
+  return ⟅ [] , _ ↦ {!nat-rec-β-suc-sound Ξ z s n'!} ⟆
 check-proof Ξ (fun-η x) φ = do
   is-eq {T = T} lhs rhs ← is-eq? φ
   is-fun-ty μ dom cod ← is-fun-ty? T
-  refl ← rhs ≟tm (lam[ μ ∣ x ∈ dom ] (weaken-tm lhs ∙ v0))
-  return ⟅ [] , _ ↦ fun-η-sound Ξ lhs ⟆
+  erhs ← rhs ≟tm (lam[ μ ∣ x ∈ dom ] (weaken-tm lhs ∙ v0))
+  return ⟅ [] , _ ↦ fun-η-sound Ξ lhs rhs erhs ⟆
 check-proof Ξ ⊠-η φ = do
   is-eq {T = P} lhs rhs ← is-eq? φ
   is-prod-ty T S ← is-prod-ty? P
-  refl ← rhs ≟tm (pair (fst lhs) (snd lhs))
-  return ⟅ [] , _ ↦ ⊠-η-sound Ξ lhs ⟆
+  erhs ← rhs ≟tm (pair (fst lhs) (snd lhs))
+  return ⟅ [] , _ ↦ ⊠-η-sound Ξ lhs rhs erhs ⟆
 check-proof Ξ true≠false φ = do
-  refl ← φ ≟bprop ¬⟨ 𝟙 ⟩ (true ≡ᵇ false)
-  return ⟅ [] , _ ↦ true≠false-sound Ξ ⟆
+  eφ ← φ ≟bprop ¬⟨ 𝟙 ⟩ (true ≡ᵇ false)
+  return ⟅ [] , _ ↦ true≠false-sound Ξ φ eφ ⟆
 check-proof Ξ (suc-inj m n) φ = do
-  refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-nolock ≡ᵇ v0-nolock)))
-  return ⟅ [] , _ ↦ suc-inj-sound Ξ m n ⟆
+  eφ ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] (∀[ 𝟙 ∣ n ∈ Nat' ] ⟨ 𝟙 ∣ suc v1 ≡ᵇ suc v0 ⟩⊃ (v1-nolock ≡ᵇ v0-nolock)))
+  return ⟅ [] , _ ↦ suc-inj-sound Ξ φ m n eφ ⟆
 check-proof Ξ (zero≠sucn m) φ = do
-  refl ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] ¬⟨ 𝟙 ⟩ (zero ≡ᵇ suc v0))
-  return ⟅ [] , _ ↦ zero≠sucn-sound Ξ m ⟆
+  eφ ← φ ≟bprop (∀[ 𝟙 ∣ m ∈ Nat' ] ¬⟨ 𝟙 ⟩ (zero ≡ᵇ suc v0))
+  return ⟅ [] , _ ↦ zero≠sucn-sound Ξ φ m eφ ⟆
 check-proof Ξ (bool-induction' Δ=Γ,x∈Bool pt pf) φ = do
   ends-in-prog-var Ξ' μ x T ← ends-in-prog-var? Ξ
   refl ← return Δ=Γ,x∈Bool
@@ -208,22 +209,22 @@ check-proof Ξ (mod-induction' {T = T} κ μ x ctx-eq p) φ = do
   return ⟅ goals , sgoals ↦ mod-induction-sound Ξ' μ κ φ (⟦p⟧ sgoals) ⟆
 check-proof Ξ (fun-cong {μ = μ} {T = T} p t) φ = do
   is-eq lhs rhs ← is-eq? φ
-  app {T = T2} {μ = ρ}  f s  ← is-app? lhs
-  app {T = T3} {μ = ρ'} g s' ← is-app? rhs
+  app {T = T2} {μ = ρ}  f s1 ← is-app? lhs
+  app {T = T3} {μ = ρ'} g s2 ← is-app? rhs
   refl ← mod-dom μ ≟mode mod-dom ρ
   refl ← μ ≟mod ρ
   refl ← mod-dom μ ≟mode mod-dom ρ'
   refl ← μ ≟mod ρ'
   refl ← T ≟ty T2
   refl ← T ≟ty T3
-  refl ← s ≟tm t
-  refl ← s' ≟tm t
+  es1 ← s1 ≟tm t
+  es2 ← s2 ≟tm t
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (f ≡ᵇ g)
-  return ⟅ goals , sgoals ↦ fun-cong-sound Ξ f g t (⟦p⟧ sgoals) ⟆
+  return ⟅ goals , sgoals ↦ fun-cong-sound Ξ f g t s1 s2 es1 es2 (⟦p⟧ sgoals) ⟆
 check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   is-eq {T = S'} lhs rhs ← is-eq? φ
-  app {T = T2} {μ = ρ}  g  t ← is-app? lhs
-  app {T = T3} {μ = ρ'} g' s ← is-app? rhs
+  app {T = T2} {μ = ρ}  g1 t ← is-app? lhs
+  app {T = T3} {μ = ρ'} g2 s ← is-app? rhs
   refl ← mod-dom μ ≟mode mod-dom ρ
   refl ← μ ≟mod ρ
   refl ← mod-dom μ ≟mode mod-dom ρ'
@@ -231,10 +232,10 @@ check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   refl ← S ≟ty S'
   refl ← T ≟ty T2
   refl ← T ≟ty T3
-  refl ← g ≟tm f
-  refl ← g' ≟tm f
+  eg1 ← g1 ≟tm f
+  eg2 ← g2 ≟tm f
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᵇ s)
-  return ⟅ goals , sgoals ↦ cong-sound Ξ f t s (⟦p⟧ sgoals) ⟆
+  return ⟅ goals , sgoals ↦ cong-sound Ξ f g1 g2 t s eg1 eg2 (⟦p⟧ sgoals) ⟆
 check-proof Ξ (hole name) φ = return ⟅ [ goal name Ξ φ ] , (sgl , _) ↦ sgl ⟆
 check-proof Ξ (ext c tmarg-names tmargs bparg-names bpargs pfarg-names pfargs) φ =
   check-proof-ext Ξ φ pfargs (pf-code-check c Ξ φ tmargs bpargs pfarg-names)

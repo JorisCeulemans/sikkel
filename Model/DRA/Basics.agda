@@ -35,6 +35,8 @@ record DRA (C D : BaseCategory) : Set₁ where
   lock-fmap-cong = ctx-fmap-cong ctx-functor
   lock-fmap-id = ctx-fmap-id ctx-functor
   lock-fmap-⊚ = ctx-fmap-⊚ ctx-functor
+  lock-fmap-cong-2-1 = ctx-fmap-cong-2-1 ctx-functor
+  lock-fmap-cong-2-2 = ctx-fmap-cong-2-2 ctx-functor
   ty-subst-lock-fmap-2-0 = ty-subst-ctx-fmap-2-0 ctx-functor
 
   field
