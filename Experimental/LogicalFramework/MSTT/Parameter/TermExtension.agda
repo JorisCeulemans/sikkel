@@ -32,13 +32,16 @@ private variable
 -- A value of type TmArgInfo m contains the information about an
 -- argument to a term constructor in mode m, i.e. the mode of the
 -- argument, how the context should be modified, and the type of the
--- argument.
+-- argument. The names of the variables that get bound in the
+-- arguments should not be provided at this point (hence a
+-- NamelessTele) but when a new term is constructed. This makes
+-- checking for α-equivalence easier.
 record TmArgInfo (m : Mode) : Set where
   no-eta-equality
   constructor tmarg-info
   field
     {n} : Mode
-    tmarg-tel : Telescope m n
+    tmarg-tel : NamelessTele m n
     tmarg-ty : Ty n
 open TmArgInfo public hiding (n)
 

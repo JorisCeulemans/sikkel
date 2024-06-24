@@ -9,7 +9,9 @@ module Experimental.LogicalFramework.MSTT.Syntax.Contexts
   (ℳ : ModeTheory) (𝒯 : TyExt ℳ)
   where
 
+open import Data.Product
 open import Data.String
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
@@ -46,7 +48,7 @@ _,,_∈_ : Ctx m → Name → Ty m → Ctx m
 
 -- Telescopes can contain variables and locks.
 -- They are defined as "well-moded" snoc lists (just like contexts).
-data Telescope : Mode → Mode → Set where
+data Telescope (m : Mode) : Mode → Set where
   ◇ : Telescope m m
   _,,_∣_∈_ : Telescope m n → Modality o n → Name → Ty o → Telescope m n
   _,lock⟨_⟩ : Telescope m o → Modality n o → Telescope m n
@@ -60,6 +62,22 @@ locks-tel : Telescope m n → Modality n m
 locks-tel ◇ = 𝟙
 locks-tel (Θ ,, μ ∣ x ∈ T) = locks-tel Θ
 locks-tel (Θ ,lock⟨ μ ⟩) = locks-tel Θ ⓜ μ
+
+-- A nameless telescope with just information about annotation and type of variables
+data NamelessTele (m : Mode) : Mode → Set where
+  ◇ : NamelessTele m m
+  _,,_∣_ : NamelessTele m n → Modality o n → Ty o → NamelessTele m n
+  _,lock⟨_⟩ : NamelessTele m o → Modality n o → NamelessTele m n
+
+Names : NamelessTele m n → Set
+Names ◇ = ⊤
+Names (Θ ,, μ ∣ T) = Names Θ × Name
+Names (Θ ,lock⟨ μ ⟩) = Names Θ
+
+add-names : (Θ : NamelessTele m n) → Names Θ → Telescope m n
+add-names ◇              names = ◇
+add-names (Θ ,, μ ∣ T)   (names , x) = (add-names Θ names) ,, μ ∣ x ∈ T
+add-names (Θ ,lock⟨ μ ⟩) names = (add-names Θ names) ,lock⟨ μ ⟩
 
 
 --------------------------------------------------

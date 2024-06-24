@@ -72,9 +72,26 @@ ty-natural T = closed-natural (ty-closed-natural T) _
 
 
 --------------------------------------------------
--- Interpretation of contexts
+-- Interpretation of contexts and nameless telescopes
 
 ⟦_⟧ctx : Ctx m → SemCtx ⟦ m ⟧mode
 ⟦ ◇ ⟧ctx = M.◇
 ⟦ Γ ,, μ ∣ _ ∈ T ⟧ctx = ⟦ Γ ⟧ctx M.,, DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
 ⟦ Γ ,lock⟨ μ ⟩ ⟧ctx = DRA.lock ⟦ μ ⟧mod ⟦ Γ ⟧ctx
+
+_++⟦_⟧nltel : SemCtx ⟦ m ⟧mode → NamelessTele m n → SemCtx ⟦ n ⟧mode
+sΓ ++⟦ ◇ ⟧nltel = sΓ
+sΓ ++⟦ Θ ,, μ ∣ T ⟧nltel = (sΓ ++⟦ Θ ⟧nltel) M.,, DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ T ⟧ty ⟩
+sΓ ++⟦ Θ ,lock⟨ μ ⟩ ⟧nltel = DRA.lock ⟦ μ ⟧mod (sΓ ++⟦ Θ ⟧nltel)
+
+++tel-++⟦⟧nltel : (Γ : Ctx m) (Θ : NamelessTele m n) (names : Names Θ) →
+                  ⟦ Γ ++tel add-names Θ names ⟧ctx M.≅ᶜ ⟦ Γ ⟧ctx ++⟦ Θ ⟧nltel
+++tel-++⟦⟧nltel Γ ◇ names = M.reflᶜ
+++tel-++⟦⟧nltel Γ (Θ ,, μ ∣ T) (names , _) = M.ctx-functor-cong (,,-functor (ty-closed-natural ⟨ μ ∣ T ⟩)) (++tel-++⟦⟧nltel Γ Θ names)
+++tel-++⟦⟧nltel Γ (Θ ,lock⟨ μ ⟩) names = M.ctx-functor-cong (DRA.ctx-functor ⟦ μ ⟧mod) (++tel-++⟦⟧nltel Γ Θ names)
+
+apply-nltel-sub : {sΓ sΔ : SemCtx ⟦ m ⟧mode} (σ : sΓ M.⇒ sΔ) (Θ : NamelessTele m n) →
+                  (sΓ ++⟦ Θ ⟧nltel M.⇒ sΔ ++⟦ Θ ⟧nltel)
+apply-nltel-sub σ ◇ = σ
+apply-nltel-sub σ (Θ ,, μ ∣ T) = lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) (apply-nltel-sub σ Θ)
+apply-nltel-sub σ (Θ ,lock⟨ μ ⟩) = DRA.lock-fmap ⟦ μ ⟧mod (apply-nltel-sub σ Θ)

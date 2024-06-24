@@ -11,7 +11,7 @@ module Experimental.LogicalFramework.bProp.Syntax
   where
 
 open import Data.List
-open import Data.Product renaming (_,_ to [_,_])
+open import Data.Product
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
@@ -42,7 +42,7 @@ infix 12 _≡ᵇ_
 
 -- TODO: include connective for disjunction and existential quantification.
 data bProp {m} (Γ : Ctx m) : Set
-ExtBPArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
+ExtBPArgs : {m : Mode} (arginfos : List (ArgInfo m)) → ArgBoundNames arginfos → Ctx m → Set
 
 data bProp {m} Γ where
   ⊤ᵇ ⊥ᵇ : bProp Γ
@@ -51,13 +51,17 @@ data bProp {m} Γ where
   _∧_ : (φ ψ : bProp Γ) → bProp Γ
   ∀[_∣_∈_]_ : (μ : Modality n m) (x : Name) (T : Ty n) → bProp (Γ ,, μ ∣ x ∈ T) → bProp Γ
   ⟨_∣_⟩ : (μ : Modality n m) → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
-  ext : (c : bPropExtCode m) → ExtTmArgs (bp-code-tmarg-infos c) Γ → ExtBPArgs (bp-code-bparg-infos c) Γ → bProp Γ
+  ext : (c : bPropExtCode m)
+        (tmarg-names : TmArgBoundNames (bp-code-tmarg-infos c)) (tmargs : ExtTmArgs (bp-code-tmarg-infos c) tmarg-names Γ)
+        (bparg-names : ArgBoundNames (bp-code-bparg-infos c)) (bpargs : ExtBPArgs (bp-code-bparg-infos c) bparg-names Γ) →
+        bProp Γ
     -- ^ This constructor is not intended for direct use. An instantiation of BiSikkel with
     --   specific proposition extensions should rather provide more convenient bProp formers
     --   via pattern synonyms.
 
-ExtBPArgs []               Γ = ⊤
-ExtBPArgs (info ∷ bpinfos) Γ = bProp (Γ ++tel arg-tel info) × ExtBPArgs bpinfos Γ
+ExtBPArgs []               _                        Γ = ⊤
+ExtBPArgs (info ∷ bpinfos) (arg-names , args-names) Γ =
+  bProp (Γ ++tel add-names (arg-tel info) arg-names) × ExtBPArgs bpinfos args-names Γ
 
 
 ¬⟨_⟩_ : (μ : Modality m n) {Γ : Ctx n} → bProp (Γ ,lock⟨ μ ⟩) → bProp Γ
@@ -75,7 +79,8 @@ module bPropTraversal
   open TravStruct trav-struct
 
   traverse-bprop : bProp Δ → Trav Γ Δ → bProp Γ
-  traverse-ext-bpargs : {bpinfos : List (ArgInfo m)} → ExtBPArgs bpinfos Δ → Trav Γ Δ → ExtBPArgs bpinfos Γ
+  traverse-ext-bpargs : {bpinfos : List (ArgInfo m)} {names : ArgBoundNames bpinfos} →
+                        ExtBPArgs bpinfos names Δ → Trav Γ Δ → ExtBPArgs bpinfos names Γ
 
   traverse-bprop ⊤ᵇ σ = ⊤ᵇ
   traverse-bprop ⊥ᵇ σ = ⊥ᵇ
@@ -84,11 +89,12 @@ module bPropTraversal
   traverse-bprop (φ ∧ ψ) σ = traverse-bprop φ σ ∧ traverse-bprop ψ σ
   traverse-bprop (∀[ μ ∣ x ∈ T ] φ) σ = ∀[ μ ∣ x ∈ T ] traverse-bprop φ (lift σ)
   traverse-bprop ⟨ μ ∣ φ ⟩ σ = ⟨ μ ∣ traverse-bprop φ (lock σ) ⟩
-  traverse-bprop (ext c tmargs bpargs) σ = ext c (traverse-ext-tmargs tmargs σ) (traverse-ext-bpargs bpargs σ)
+  traverse-bprop (ext c tmarg-names tmargs bparg-names bpargs) σ =
+    ext c tmarg-names (traverse-ext-tmargs tmargs σ) bparg-names (traverse-ext-bpargs bpargs σ)
 
-  traverse-ext-bpargs {bpinfos = []}               _                  σ = tt
-  traverse-ext-bpargs {bpinfos = bpinfo ∷ bpinfos} [ bparg , bpargs ] σ =
-    [ traverse-bprop bparg (lift-trav-tel σ (arg-tel bpinfo)) , traverse-ext-bpargs bpargs σ ]
+  traverse-ext-bpargs {bpinfos = []}               _                σ = tt
+  traverse-ext-bpargs {bpinfos = bpinfo ∷ bpinfos} (bparg , bpargs) σ =
+    traverse-bprop bparg (lift-trav-tel σ (add-names (arg-tel bpinfo) _)) , traverse-ext-bpargs bpargs σ
 
 
 module bPropRenSub

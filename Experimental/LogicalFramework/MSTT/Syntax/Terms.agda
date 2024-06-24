@@ -81,9 +81,13 @@ unvlocks (lock⟨ μ ⟩, Θ) v = unvlock (unvlocks Θ v)
 --------------------------------------------------
 -- Definition of MSTT terms
 
+TmArgBoundNames : List (TmArgInfo m) → Set
+TmArgBoundNames []                   = ⊤
+TmArgBoundNames (arginfo ∷ arginfos) = Names (tmarg-tel arginfo) × TmArgBoundNames arginfos
+
 infixl 50 _∙_
 data Tm : Ctx m → Ty m → Set
-ExtTmArgs : {m : Mode} → List (TmArgInfo m) → Ctx m → Set
+ExtTmArgs : {m : Mode} (arginfos : List (TmArgInfo m)) → TmArgBoundNames arginfos → Ctx m → Set
 
 data Tm where
   var' : (x : Name) {v : Var x T Γ ◇} → Tm Γ T
@@ -103,12 +107,16 @@ data Tm where
   pair : Tm Γ T → Tm Γ S → Tm Γ (T ⊠ S)
   fst : Tm Γ (T ⊠ S) → Tm Γ T
   snd : Tm Γ (T ⊠ S) → Tm Γ S
-  ext : (c : TmExtCode m) → ExtTmArgs (tm-code-arginfos c) Γ → T ≡ tm-code-ty c → Tm Γ T
+  ext : (c : TmExtCode m) (names : TmArgBoundNames (tm-code-arginfos c)) →
+        ExtTmArgs (tm-code-arginfos c) names Γ →
+        T ≡ tm-code-ty c →
+        Tm Γ T
     -- ^ This constructor is not intended for direct use. An instantiation of MSTT with
     --   specific term extensions should rather provide more convenient term formers via pattern synonyms.
 
-ExtTmArgs []                   Γ = ⊤
-ExtTmArgs (arginfo ∷ arginfos) Γ = Tm (Γ ++tel tmarg-tel arginfo) (tmarg-ty arginfo) × ExtTmArgs arginfos Γ
+ExtTmArgs []                   _                        Γ = ⊤
+ExtTmArgs (arginfo ∷ arginfos) (arg-names , args-names) Γ =
+  Tm (Γ ++tel add-names (tmarg-tel arginfo) arg-names) (tmarg-ty arginfo) × ExtTmArgs arginfos args-names Γ
 
 
 vzero-id : Var x T (Γ ,, μ ∣ x ∈ T) (lock⟨ μ ⟩, ◇)

@@ -53,7 +53,8 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   lift-trav-tel σ (Θ ,lock⟨ μ ⟩) = lock (lift-trav-tel σ Θ)
 
   traverse-tm : Tm Δ T → Trav Γ Δ → Tm Γ T
-  traverse-ext-tmargs : {arginfos : List (TmArgInfo m)} → ExtTmArgs arginfos Δ → Trav Γ Δ → ExtTmArgs arginfos Γ
+  traverse-ext-tmargs : {arginfos : List (TmArgInfo m)} {names : TmArgBoundNames arginfos} →
+                        ExtTmArgs arginfos names Δ → Trav Γ Δ → ExtTmArgs arginfos names Γ
   
   traverse-tm (var' x {v}) σ = vr v σ
   traverse-tm (mod⟨ μ ⟩ t) σ = mod⟨ μ ⟩ traverse-tm t (lock σ)
@@ -69,11 +70,11 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (pair t s) σ = pair (traverse-tm t σ) (traverse-tm s σ)
   traverse-tm (fst p) σ = fst (traverse-tm p σ)
   traverse-tm (snd p) σ = snd (traverse-tm p σ)
-  traverse-tm (ext c args ty-eq) σ = ext c (traverse-ext-tmargs args σ) ty-eq
+  traverse-tm (ext c names args ty-eq) σ = ext c names (traverse-ext-tmargs args σ) ty-eq
 
-  traverse-ext-tmargs {arginfos = []}                 _            σ = tt
-  traverse-ext-tmargs {arginfos = arginfo ∷ arginfos} (arg , args) σ =
-    (traverse-tm arg (lift-trav-tel σ (tmarg-tel arginfo))) , (traverse-ext-tmargs args σ)
+  traverse-ext-tmargs {arginfos = []}                             _            σ = tt
+  traverse-ext-tmargs {arginfos = arginfo ∷ arginfos} {names , _} (arg , args) σ =
+    (traverse-tm arg (lift-trav-tel σ (add-names (tmarg-tel arginfo) names))) , (traverse-ext-tmargs args σ)
 
 open TravStruct using (traverse-tm)
 

@@ -32,9 +32,9 @@ private variable
 SemPropConstructorLocal : ∀ {m} → List (TmArgInfo m) → List (ArgInfo m) → Ctx m → Set₁
 SemPropConstructorLocal []                   []                   Γ = SemTy ⟦ Γ ⟧ctx
 SemPropConstructorLocal []                   (bp-info ∷ bp-infos) Γ =
-  SemTy ⟦ Γ ++tel arg-tel bp-info ⟧ctx → SemPropConstructorLocal [] bp-infos Γ
+  SemTy (⟦ Γ ⟧ctx ++⟦ arg-tel bp-info ⟧nltel) → SemPropConstructorLocal [] bp-infos Γ
 SemPropConstructorLocal (tm-info ∷ tm-infos) bp-infos             Γ =
-  SemTm ⟦ Γ ++tel tmarg-tel tm-info ⟧ctx ⟦ tmarg-ty tm-info ⟧ty → SemPropConstructorLocal tm-infos bp-infos Γ
+  SemTm (⟦ Γ ⟧ctx ++⟦ tmarg-tel tm-info ⟧nltel) ⟦ tmarg-ty tm-info ⟧ty → SemPropConstructorLocal tm-infos bp-infos Γ
 
 SemPropConstructor : ∀ {m} → List (TmArgInfo m) → List (ArgInfo m) → Set₁
 SemPropConstructor {m} tm-infos bp-infos = {Γ : Ctx m} → SemPropConstructorLocal tm-infos bp-infos Γ
@@ -47,10 +47,11 @@ SemPropConstructorLocalNatural : {tmarginfos : List (TmArgInfo m)} {bparginfos :
 SemPropConstructorLocalNatural {tmarginfos = []}            {[]}                    TΔ TΓ σ =
   TΔ M.[ σ ] M.≅ᵗʸ TΓ
 SemPropConstructorLocalNatural {tmarginfos = []}            {bparginfo ∷ _} {Δ = Δ} FΔ FΓ σ =
-  (φ : SemTy ⟦ Δ ++tel arg-tel bparginfo ⟧ctx) → SemPropConstructorLocalNatural (FΔ φ) (FΓ (φ M.[ lift-sem-tel (arg-tel bparginfo) σ ])) σ
+  (φ : SemTy (⟦ Δ ⟧ctx ++⟦ arg-tel bparginfo ⟧nltel)) →
+  SemPropConstructorLocalNatural (FΔ φ) (FΓ (φ M.[ apply-nltel-sub σ (arg-tel bparginfo) ])) σ
 SemPropConstructorLocalNatural {tmarginfos = tmarginfo ∷ _} {_}             {Δ = Δ} FΔ FΓ σ =
-  (t : SemTm ⟦ Δ ++tel tmarg-tel tmarginfo ⟧ctx ⟦ tmarg-ty tmarginfo ⟧ty) →
-  SemPropConstructorLocalNatural (FΔ t) (FΓ (t M.[ ty-closed-natural (tmarg-ty tmarginfo) ∣ lift-sem-tel (tmarg-tel tmarginfo) σ ]cl)) σ
+  (t : SemTm (⟦ Δ ⟧ctx ++⟦ tmarg-tel tmarginfo ⟧nltel) ⟦ tmarg-ty tmarginfo ⟧ty) →
+  SemPropConstructorLocalNatural (FΔ t) (FΓ (t M.[ ty-closed-natural (tmarg-ty tmarginfo) ∣ apply-nltel-sub σ (tmarg-tel tmarginfo) ]cl)) σ
 
 SemPropConstructorNatural : {tmarginfos : List (TmArgInfo m)} {bparginfos : List (ArgInfo m)} →
                             SemPropConstructor tmarginfos bparginfos → Set₁
@@ -63,9 +64,9 @@ SemPropConstructorLocalEquiv : {tmarginfos : List (TmArgInfo m)} {bparginfos : L
                                Set₁
 SemPropConstructorLocalEquiv {tmarginfos = []} {bparginfos = []} T S = T M.≅ᵗʸ S
 SemPropConstructorLocalEquiv {tmarginfos = []} {bparginfos = bparginfo ∷ _} {Γ} F G =
-  {T S : SemTy ⟦ Γ ++tel arg-tel bparginfo ⟧ctx} → T M.≅ᵗʸ S → SemPropConstructorLocalEquiv (F T) (G S)
+  {T S : SemTy (⟦ Γ ⟧ctx ++⟦ arg-tel bparginfo ⟧nltel)} → T M.≅ᵗʸ S → SemPropConstructorLocalEquiv (F T) (G S)
 SemPropConstructorLocalEquiv {tmarginfos = tmarginfo ∷ _} {bparginfos = _} {Γ} F G =
-  {t s : SemTm ⟦ Γ ++tel tmarg-tel tmarginfo ⟧ctx ⟦ tmarg-ty tmarginfo ⟧ty} →
+  {t s : SemTm (⟦ Γ ⟧ctx ++⟦ tmarg-tel tmarginfo ⟧nltel) ⟦ tmarg-ty tmarginfo ⟧ty} →
   t M.≅ᵗᵐ s → SemPropConstructorLocalEquiv (F t) (G s)
 
 SemPropConstructorLocalCong : {tmarginfos : List (TmArgInfo m)} {bparginfos : List (ArgInfo m)} {Γ : Ctx m} →
@@ -90,7 +91,7 @@ record bPropExtSem (𝒷 : bPropExt) : Set₁ where
 
 SemProps : List (ArgInfo m) → Ctx m → Set₁
 SemProps []                   Γ = ⊤
-SemProps (arginfo ∷ arginfos) Γ = SemTy ⟦ Γ ++tel arg-tel arginfo ⟧ctx × SemProps arginfos Γ
+SemProps (arginfo ∷ arginfos) Γ = SemTy (⟦ Γ ⟧ctx ++⟦ arg-tel arginfo ⟧nltel) × SemProps arginfos Γ
 
 apply-sem-prop-constructor : {tmarginfos : List (TmArgInfo m)} {bparginfos : List (ArgInfo m)} {Γ : Ctx m} →
                              SemPropConstructorLocal tmarginfos bparginfos Γ →
@@ -107,7 +108,7 @@ semprops-subst : {bparginfos : List (ArgInfo m)} {Γ Δ : Ctx m} →
                  SemProps bparginfos Γ
 semprops-subst {bparginfos = []} props σ = tt
 semprops-subst {bparginfos = bparginfo ∷ bparginfos} (prop , props) σ =
-  prop M.[ lift-sem-tel (arg-tel bparginfo) σ ] , semprops-subst props σ
+  prop M.[ apply-nltel-sub σ (arg-tel bparginfo) ] , semprops-subst props σ
 
 _≅ᵇᵖˢ_ : {bparginfos : List (ArgInfo m)} {Γ : Ctx m} (props props' : SemProps bparginfos Γ) → Set₁
 _≅ᵇᵖˢ_ {bparginfos = []} props props' = ⊤

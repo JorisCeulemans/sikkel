@@ -31,17 +31,11 @@ private variable
 SemTmConstructorLocal : List (TmArgInfo m) → Ctx m → Ty m → Set
 SemTmConstructorLocal []                   Γ T = SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty
 SemTmConstructorLocal (arginfo ∷ arginfos) Γ T =
-  SemTm ⟦ Γ ++tel tmarg-tel arginfo ⟧ctx ⟦ tmarg-ty arginfo ⟧ty → SemTmConstructorLocal arginfos Γ T
+  SemTm (⟦ Γ ⟧ctx ++⟦ tmarg-tel arginfo ⟧nltel) ⟦ tmarg-ty arginfo ⟧ty → SemTmConstructorLocal arginfos Γ T
 
 SemTmConstructor : List (TmArgInfo m) → Ty m → Set
 SemTmConstructor {m = m} arginfos T = {Γ : Ctx m} → SemTmConstructorLocal arginfos Γ T
 
-
-lift-sem-tel : {Γ Δ : Ctx m} (Θ : Telescope m n) (σ : ⟦ Γ ⟧ctx M.⇒ ⟦ Δ ⟧ctx) →
-               ⟦ Γ ++tel Θ ⟧ctx M.⇒ ⟦ Δ ++tel Θ ⟧ctx
-lift-sem-tel ◇ σ = σ
-lift-sem-tel (Θ ,, μ  ∣ x ∈ T) σ = M.lift-cl-subst (ty-closed-natural ⟨ μ ∣ T ⟩) (lift-sem-tel Θ σ)
-lift-sem-tel (Θ ,lock⟨ μ ⟩) σ = DRA.lock-fmap ⟦ μ ⟧mod (lift-sem-tel Θ σ)
 
 SemTmConstructorLocalNatural : {arginfos : List (TmArgInfo m)} {Γ Δ : Ctx m} {T : Ty m}
                                (fΔ : SemTmConstructorLocal arginfos Δ T) (fΓ : SemTmConstructorLocal arginfos Γ T)
@@ -50,8 +44,8 @@ SemTmConstructorLocalNatural : {arginfos : List (TmArgInfo m)} {Γ Δ : Ctx m} {
 SemTmConstructorLocalNatural {arginfos = []} {T = T} tΔ tΓ σ =
   tΔ M.[ ty-closed-natural T ∣ σ ]cl M.≅ᵗᵐ tΓ
 SemTmConstructorLocalNatural {arginfos = arginfo ∷ arginfos} {Δ = Δ} fΔ fΓ σ =
-  (t : SemTm ⟦ Δ ++tel tmarg-tel arginfo ⟧ctx ⟦ tmarg-ty arginfo ⟧ty) →
-  SemTmConstructorLocalNatural (fΔ t) (fΓ (t M.[ ty-closed-natural (tmarg-ty arginfo) ∣ lift-sem-tel (tmarg-tel arginfo) σ ]cl)) σ
+  (t : SemTm (⟦ Δ ⟧ctx ++⟦ tmarg-tel arginfo ⟧nltel) ⟦ tmarg-ty arginfo ⟧ty) →
+  SemTmConstructorLocalNatural (fΔ t) (fΓ (t M.[ ty-closed-natural (tmarg-ty arginfo) ∣ apply-nltel-sub σ (tmarg-tel arginfo) ]cl)) σ
 
 SemTmConstructorNatural : {tmarg-infos : List (TmArgInfo m)} {T : Ty m} → SemTmConstructor tmarg-infos T → Set
 SemTmConstructorNatural {m = m} f =
@@ -63,7 +57,7 @@ SemTmConstructorLocalEquiv : {arginfos : List (TmArgInfo m)} {Γ : Ctx m} {T : T
                              Set
 SemTmConstructorLocalEquiv {arginfos = []} t s = t M.≅ᵗᵐ s
 SemTmConstructorLocalEquiv {arginfos = arginfo ∷ arginfos} {Γ} f g =
-  {t s : SemTm ⟦ Γ ++tel tmarg-tel arginfo ⟧ctx ⟦ tmarg-ty arginfo ⟧ty} →
+  {t s : SemTm (⟦ Γ ⟧ctx ++⟦ tmarg-tel arginfo ⟧nltel) ⟦ tmarg-ty arginfo ⟧ty} →
   t M.≅ᵗᵐ s → SemTmConstructorLocalEquiv (f t) (g s)
 
 SemTmConstructorLocalCong : {arginfos : List (TmArgInfo m)} {Γ : Ctx m} {T : Ty m} →
@@ -87,7 +81,7 @@ record TmExtSem (𝓉 : TmExt) : Set where
 
 SemTms : List (TmArgInfo m) → Ctx m → Set
 SemTms []                   Γ = ⊤
-SemTms (arginfo ∷ arginfos) Γ = SemTm ⟦ Γ ++tel tmarg-tel arginfo ⟧ctx ⟦ tmarg-ty arginfo ⟧ty × SemTms arginfos Γ
+SemTms (arginfo ∷ arginfos) Γ = SemTm (⟦ Γ ⟧ctx ++⟦ tmarg-tel arginfo ⟧nltel) ⟦ tmarg-ty arginfo ⟧ty × SemTms arginfos Γ
 
 apply-sem-tm-constructor : {arginfos : List (TmArgInfo m)} {Γ : Ctx m} {T : Ty m} →
                            SemTmConstructorLocal arginfos Γ T →
@@ -102,7 +96,7 @@ semtms-subst : {arginfos : List (TmArgInfo m)} {Γ Δ : Ctx m} →
                SemTms arginfos Γ
 semtms-subst {arginfos = []} tms σ = tt
 semtms-subst {arginfos = arginfo ∷ arginfos} (tm , tms) σ =
-  tm M.[ ty-closed-natural (tmarg-ty arginfo) ∣ lift-sem-tel (tmarg-tel arginfo) σ ]cl , semtms-subst tms σ
+  tm M.[ ty-closed-natural (tmarg-ty arginfo) ∣ apply-nltel-sub σ (tmarg-tel arginfo) ]cl , semtms-subst tms σ
 
 _≅ᵗᵐˢ_ : {arginfos : List (TmArgInfo m)} {Γ : Ctx m} (tms tms' : SemTms arginfos Γ) → Set
 _≅ᵗᵐˢ_ {arginfos = []} tms tms' = ⊤

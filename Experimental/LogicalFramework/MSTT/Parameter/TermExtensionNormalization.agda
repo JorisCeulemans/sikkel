@@ -28,5 +28,6 @@ private variable
 record TmExtNormalization : Set where
   field
     normalize-tm-code : ({n : Mode} {Γ : Ctx n} {T : Ty n} (t : Tm Γ T) → Maybe (NormalizeResult t)) →
-                        {m : Mode} (c : TmExtCode m) {Γ : Ctx m} (tmargs : ExtTmArgs (tm-code-arginfos c) Γ) →
-                        Maybe (NormalizeResult (ext c tmargs refl))
+                        {m : Mode} (c : TmExtCode m) {bound-names : TmArgBoundNames (tm-code-arginfos c)} {Γ : Ctx m}
+                        (tmargs : ExtTmArgs (tm-code-arginfos c) bound-names Γ) →
+                        Maybe (NormalizeResult (ext c bound-names tmargs refl))

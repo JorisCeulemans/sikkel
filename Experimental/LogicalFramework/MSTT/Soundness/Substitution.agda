@@ -54,18 +54,23 @@ record TravStructSoundness
     lock-sound : {Γ Δ : Ctx m} (σ : Trav Γ Δ) (μ : Modality n m) →
                  DRA.lock-fmap ⟦ μ ⟧mod ⟦ σ ⟧trav M.≅ˢ ⟦ TS.lock {μ = μ} σ ⟧trav
 
-  lift-trav-tel-sound : (σ : Trav Γ Δ) (Θ : Telescope m n) →
-                        lift-sem-tel Θ ⟦ σ ⟧trav M.≅ˢ ⟦ lift-trav-tel σ Θ ⟧trav
-  lift-trav-tel-sound σ ◇ = M.reflˢ
-  lift-trav-tel-sound σ (Θ ,, μ ∣ x ∈ T) =
-    M.transˢ (M.lift-cl-subst-cong (ty-closed-natural ⟨ μ ∣ T ⟩) (lift-trav-tel-sound σ Θ)) (lift-sound {μ = μ} {T = T} (lift-trav-tel σ Θ))
+  lift-trav-tel-sound : (σ : Trav Γ Δ) (Θ : NamelessTele m n) {names : Names Θ} →
+                        M.to (++tel-++⟦⟧nltel Δ Θ names) M.⊚ apply-nltel-sub ⟦ σ ⟧trav Θ
+                          M.≅ˢ
+                        ⟦ lift-trav-tel σ (add-names Θ names) ⟧trav M.⊚ M.to (++tel-++⟦⟧nltel Γ Θ names)
+  lift-trav-tel-sound σ ◇ = M.transˢ (M.id-subst-unitˡ _) (M.symˢ (M.id-subst-unitʳ _))
+  lift-trav-tel-sound σ (Θ ,, μ ∣ T) =
+    M.transˢ (M.ctx-fmap-cong-2-2 (M.,,-functor (ty-closed-natural ⟨ μ ∣ T ⟩)) (lift-trav-tel-sound σ Θ))
+             (M.⊚-congˡ (lift-sound {μ = μ} {T = T} (lift-trav-tel σ _)))
   lift-trav-tel-sound σ (Θ ,lock⟨ μ ⟩) =
-    M.transˢ (DRA.lock-fmap-cong ⟦ μ ⟧mod (lift-trav-tel-sound σ Θ)) (lock-sound (lift-trav-tel σ Θ) μ)
+    M.transˢ (M.ctx-fmap-cong-2-2 (DRA.ctx-functor ⟦ μ ⟧mod) (lift-trav-tel-sound σ Θ))
+             (M.⊚-congˡ (lock-sound (lift-trav-tel σ _) μ))
 
 
   traverse-tm-sound : (t : Tm Δ T) (σ : Trav Γ Δ) →
                       ⟦ t ⟧tm M.[ ty-closed-natural T ∣ ⟦ σ ⟧trav ]cl M.≅ᵗᵐ ⟦ traverse-tm t σ ⟧tm
-  traverse-ext-tmargs-sound : ∀ {arginfos} (args : ExtTmArgs arginfos Δ) (σ : Trav Γ Δ) →
+  traverse-ext-tmargs-sound : ∀ {arginfos} {names : TmArgBoundNames arginfos}
+                              (args : ExtTmArgs arginfos names Δ) (σ : Trav Γ Δ) →
                               semtms-subst ⟦ args ⟧tmextargs ⟦ σ ⟧trav
                                 ≅ᵗᵐˢ
                               ⟦ traverse-ext-tmargs args σ ⟧tmextargs
@@ -111,14 +116,14 @@ record TravStructSoundness
     M.transᵗᵐ (M.pair-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.pair-cong (traverse-tm-sound t σ) (traverse-tm-sound s σ))
   traverse-tm-sound (fst {T = T} {S = S} p) σ = M.transᵗᵐ (M.fst-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.fst-cong (traverse-tm-sound p σ))
   traverse-tm-sound (snd {T = T} {S = S} p) σ = M.transᵗᵐ (M.snd-cl-natural (ty-closed-natural T) (ty-closed-natural S)) (M.snd-cong (traverse-tm-sound p σ))
-  traverse-tm-sound {Γ = Γ} (Tm.ext c tm-args refl) σ =
+  traverse-tm-sound {Γ = Γ} (Tm.ext c names tm-args refl) σ =
     M.transᵗᵐ (apply-sem-tm-constructor-natural {Γ = Γ} ⟦ c ⟧tm-code (⟦⟧tm-code-natural c) ⟦ σ ⟧trav _)
               (apply-sem-tm-constructor-cong {Γ = Γ} ⟦ c ⟧tm-code (⟦⟧tm-code-cong c) (traverse-ext-tmargs-sound tm-args σ))
 
   traverse-ext-tmargs-sound {arginfos = []}          _            σ = tt
   traverse-ext-tmargs-sound {arginfos = arginfo ∷ _} (arg , args) σ =
-    M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural (tmarg-ty arginfo)) (lift-trav-tel-sound σ (tmarg-tel arginfo)))
-              (traverse-tm-sound arg (lift-trav-tel σ (tmarg-tel arginfo)))
+    M.transᵗᵐ (M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural (tmarg-ty arginfo)) (lift-trav-tel-sound σ (tmarg-tel arginfo)))
+              (M.cl-tm-subst-cong-tm (ty-closed-natural (tmarg-ty arginfo)) (traverse-tm-sound arg (lift-trav-tel σ _)))
     , traverse-ext-tmargs-sound args σ
 
 open TravStructSoundness using (traverse-tm-sound)

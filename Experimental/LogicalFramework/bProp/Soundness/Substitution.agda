@@ -45,7 +45,7 @@ module bPropTraversalSoundness
 
   traverse-bprop-sound : (φ : bProp Δ) (σ : Trav Γ Δ) →
                          ⟦ φ ⟧bprop M.[ ⟦ σ ⟧trav ] M.≅ᵗʸ ⟦ traverse-bprop φ σ ⟧bprop
-  traverse-ext-bpargs-sound : ∀ {arginfos} (args : ExtBPArgs arginfos Δ) (σ : Trav Γ Δ) →
+  traverse-ext-bpargs-sound : ∀ {arginfos} {bparg-names} (args : ExtBPArgs arginfos bparg-names Δ) (σ : Trav Γ Δ) →
                               semprops-subst ⟦ args ⟧bpextargs ⟦ σ ⟧trav
                                 ≅ᵇᵖˢ
                               ⟦ traverse-ext-bpargs args σ ⟧bpextargs
@@ -68,13 +68,14 @@ module bPropTraversalSoundness
   traverse-bprop-sound ⟨ μ ∣ φ ⟩ σ =
     M.transᵗʸ (dra-natural ⟦ μ ⟧mod ⟦ σ ⟧trav)
               (dra-cong ⟦ μ ⟧mod (M.transᵗʸ (M.ty-subst-cong-subst (lock-sound σ μ) _) (traverse-bprop-sound φ (lock σ))))
-  traverse-bprop-sound (ext c tmargs bpargs) σ =
+  traverse-bprop-sound (ext c tmarg-names tmargs bparg-names bpargs) σ =
     M.transᵗʸ (apply-sem-prop-constructor-natural ⟦ c ⟧bp-code ⟦ σ ⟧trav (⟦⟧bp-code-natural c) ⟦ tmargs ⟧tmextargs ⟦ bpargs ⟧bpextargs)
               (apply-sem-prop-constructor-cong ⟦ c ⟧bp-code (⟦⟧bp-code-cong c) (traverse-ext-tmargs-sound tmargs σ) (traverse-ext-bpargs-sound bpargs σ))
 
   traverse-ext-bpargs-sound {arginfos = []}          _ σ = tt
   traverse-ext-bpargs-sound {arginfos = arginfo ∷ _} (arg , args) σ =
-    M.transᵗʸ (M.ty-subst-cong-subst (lift-trav-tel-sound σ (arg-tel arginfo)) _) (traverse-bprop-sound arg _)
+    M.transᵗʸ (M.ty-subst-cong-subst-2-2 ⟦ arg ⟧bprop (lift-trav-tel-sound σ (arg-tel arginfo)))
+              (M.ty-subst-cong-ty _ (traverse-bprop-sound arg _))
     ,
     traverse-ext-bpargs-sound args σ
 

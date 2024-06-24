@@ -13,6 +13,7 @@ open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
 open import Model.CwF-Structure.ContextExtension
 open import Model.CwF-Structure.ContextEquivalence
+open import Model.CwF-Structure.ContextFunctor
 
 private
   variable
@@ -295,6 +296,13 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     ≅⟨ ,cl-⊚ _ _ _ ⟨
       lift-cl-subst σ ⊚ (id-subst _ ,cl⟨ clT ⟩ (t [ clT ∣ σ ]cl)) ∎
     where open ≅ˢ-Reasoning
+
+  ,,-functor : CtxFunctor C C
+  ctx-op ,,-functor Γ = Γ ,, T
+  IsCtxFunctor.ctx-map (is-functor ,,-functor) = lift-cl-subst
+  IsCtxFunctor.ctx-map-cong (is-functor ,,-functor) = lift-cl-subst-cong
+  IsCtxFunctor.ctx-map-id (is-functor ,,-functor) = lift-cl-subst-id
+  IsCtxFunctor.ctx-map-⊚ (is-functor ,,-functor) τ σ = lift-cl-subst-⊚
 
 
 module _ {T S : ClosedTy C} (clT : IsClosedNatural T) (clS : IsClosedNatural S) where

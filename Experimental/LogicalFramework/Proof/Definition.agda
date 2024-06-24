@@ -35,7 +35,7 @@ private variable
 
 
 data Proof : {m : Mode} → Ctx m → Set
-ExtPfArgs : {m : Mode} → List (ArgInfo m) → Ctx m → Set
+ExtPfArgs : {m : Mode} (pfarg-infos : List (ArgInfo m)) → ArgBoundNames pfarg-infos → Ctx m → Set
 
 data Proof where
   {-
@@ -171,13 +171,15 @@ data Proof where
   -- Extras: holes in proofs and custom extensions of the proof system
   hole : String → Proof Γ
   ext : (c : ProofExtCode m) {Γ : Ctx m} →
-        ExtTmArgs (pf-code-tmarg-infos c) Γ →
-        ExtBPArgs (pf-code-bparg-infos c) Γ →
-        ExtPfArgs (pf-code-pfarg-infos c) Γ →
+        (tmarg-names : TmArgBoundNames (pf-code-tmarg-infos c)) → ExtTmArgs (pf-code-tmarg-infos c) tmarg-names Γ →
+        (bparg-names : ArgBoundNames (pf-code-bparg-infos c)) → ExtBPArgs (pf-code-bparg-infos c) bparg-names Γ →
+        (pfarg-names : ArgBoundNames (pf-code-pfarg-infos c)) →
+        ExtPfArgs (pf-code-pfarg-infos c) pfarg-names Γ →
         Proof Γ
 
-ExtPfArgs []             Γ = ⊤
-ExtPfArgs (info ∷ infos) Γ = Proof (Γ ++tel (arg-tel info)) × ExtPfArgs infos Γ
+ExtPfArgs []             _                        Γ = ⊤
+ExtPfArgs (info ∷ infos) (arg-names , args-names) Γ =
+  Proof (Γ ++tel (add-names (arg-tel info) arg-names)) × ExtPfArgs infos args-names Γ
 
 
 bool-induction : {Γ : Ctx m} {x : String} →

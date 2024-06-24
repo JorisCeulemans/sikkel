@@ -129,7 +129,7 @@ normalize (suc n) (snd p) = normalize-snd <$> normalize (suc n) p
     normalize-snd : NormalizeResult p → NormalizeResult (snd p)
     normalize-snd (normres (pair _ ns) ep) = normres ns (M.transᵗᵐ (M.snd-cong ep) (M.⊠-β-snd _ _))
     normalize-snd (normres np          ep) = normres (snd np) (M.snd-cong ep)
-normalize (suc n) (ext c args refl) = normalize-tm-code (normalize n) c args
+normalize (suc n) (ext c names args refl) = normalize-tm-code (normalize n) c args
 
 normalize-tm : Fuel → Tm Γ T → Maybe (Tm Γ T)
 normalize-tm n t = map NormalizeResult.nt (normalize n t)

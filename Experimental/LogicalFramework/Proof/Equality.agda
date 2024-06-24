@@ -52,9 +52,27 @@ _ ≟var _ = throw-error "Variables are not equal."
 tm-msg : ErrorMsg
 tm-msg = "Terms are not equal."
 
+
+names-eq? : {Θ : NamelessTele m n} (names1 names2 : Names Θ) → PCM (names1 Ag.≡ names2)
+names-eq? {Θ = ◇} names1 names2 = return Ag.refl
+names-eq? {Θ = Θ ,, μ ∣ T} (names1 , name1) (names2 , name2) =
+  Ag.cong₂ _,_ <$> names-eq? {Θ = Θ} names1 names2 <*> from-dec "names not equal" (name1 Str.≟ name2)
+names-eq? {Θ = Θ ,lock⟨ μ ⟩} names1 names2 = names-eq? {Θ = Θ} names1 names2
+
+tmarg-names-eq? : ∀ {m} {arginfos} (names1 names2 : TmArgBoundNames {m = m} arginfos) → PCM (names1 Ag.≡ names2)
+tmarg-names-eq? {arginfos = []} names1 names2 = return Ag.refl
+tmarg-names-eq? {arginfos = arginfo ∷ arginfos} (name1 , names1) (name2 , names2) =
+  Ag.cong₂ _,_ <$> names-eq? {Θ = tmarg-tel arginfo} name1 name2 <*> tmarg-names-eq? names1 names2
+
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
+arg-names-eq? : ∀ {m} {arginfos} (names1 names2 : ArgBoundNames {m = m} arginfos) → PCM (names1 Ag.≡ names2)
+arg-names-eq? {arginfos = []} names1 names2 = return Ag.refl
+arg-names-eq? {arginfos = arginfo ∷ arginfos} (name1 , names1) (name2 , names2) =
+  Ag.cong₂ _,_ <$> names-eq? {Θ = arg-tel arginfo} name1 name2 <*> arg-names-eq? names1 names2
+
 infix 10 _≟tm_
 _≟tm_ : (t s : Tm Γ T) → PCM (t Ag.≡ s)
-ext-tmargs-equal? : ∀ {arginfos} (args1 args2 : ExtTmArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
+ext-tmargs-equal? : ∀ {arginfos} {names} (args1 args2 : ExtTmArgs arginfos names Γ) → PCM (args1 Ag.≡ args2)
 
 var' x {v} ≟tm var' y {w} = do
   refl ← from-dec tm-msg (x Str.≟ y)
@@ -113,8 +131,9 @@ snd {T = T} p ≟tm snd {T = T'} p' = do
   refl ← T ≟ty T'
   refl ← p ≟tm p'
   return Ag.refl
-(ext c1 args1 ty-eq1) ≟tm (ext c2 args2 ty-eq2) = do
+(ext c1 names1 args1 ty-eq1) ≟tm (ext c2 names2 args2 ty-eq2) = do
   refl ← c1 ≟tm-code c2
+  refl ← tmarg-names-eq? names1 names2
   refl ← ext-tmargs-equal? args1 args2
   refl ← return (uip ty-eq1 ty-eq2)
   return Ag.refl
@@ -130,7 +149,7 @@ bprop-msg = "Propositions are not equal."
 
 infix 10 _≟bprop_
 _≟bprop_ : (φ ψ : bProp Γ) → PCM (φ Ag.≡ ψ)
-ext-bpargs-equal? : ∀ {arginfos} (args1 args2 : ExtBPArgs arginfos Γ) → PCM (args1 Ag.≡ args2)
+ext-bpargs-equal? : ∀ {arginfos} {names} (args1 args2 : ExtBPArgs arginfos names Γ) → PCM (args1 Ag.≡ args2)
 
 ⊤ᵇ ≟bprop ⊤ᵇ = return Ag.refl
 ⊥ᵇ ≟bprop ⊥ᵇ = return Ag.refl
@@ -161,9 +180,11 @@ ext-bpargs-equal? : ∀ {arginfos} (args1 args2 : ExtBPArgs arginfos Γ) → PCM
   refl ← μ ≟mod κ
   refl ← φ ≟bprop ψ
   return Ag.refl
-(ext c1 tmargs1 bpargs1) ≟bprop (ext c2 tmargs2 bpargs2) = do
+(ext c1 tmnames1 tmargs1 bpnames1 bpargs1) ≟bprop (ext c2 tmnames2 tmargs2 bpnames2 bpargs2) = do
   refl ← c1 ≟bp-code c2
+  refl ← tmarg-names-eq? tmnames1 tmnames2
   refl ← ext-tmargs-equal? tmargs1 tmargs2
+  refl ← arg-names-eq? bpnames1 bpnames2
   refl ← ext-bpargs-equal? bpargs1 bpargs2
   return Ag.refl
 _ ≟bprop _ = throw-error bprop-msg

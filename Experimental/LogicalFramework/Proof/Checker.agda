@@ -45,10 +45,10 @@ check-proof : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ
 check-proof-explicit-constraint : (Ξ : ProofCtx m) {Γ : Ctx m} → to-ctx Ξ Ag.≡ Γ →
                                   Proof Γ → (φ : bProp (to-ctx Ξ)) →
                                   PCM (PCResult Ξ φ)
-check-proof-ext : {infos : List (ArgInfo m)} →
+check-proof-ext : {infos : List (ArgInfo m)} {pf-names : ArgBoundNames infos} →
                   (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) →
-                  ExtPfArgs infos (to-ctx Ξ) →
-                  ProofCheckExt infos Ξ φ →
+                  ExtPfArgs infos pf-names (to-ctx Ξ) →
+                  ProofCheckExt infos pf-names Ξ φ →
                   PCM (PCResult Ξ φ)
 
 check-proof Ξ refl φ = do
@@ -236,7 +236,8 @@ check-proof Ξ (cong {μ = μ} {T = T} {S = S} f p) φ = do
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof (Ξ ,lock⟨ μ ⟩) p (t ≡ᵇ s)
   return ⟅ goals , sgoals ↦ cong-sound Ξ f t s (⟦p⟧ sgoals) ⟆
 check-proof Ξ (hole name) φ = return ⟅ [ goal name Ξ φ ] , (sgl , _) ↦ sgl ⟆
-check-proof Ξ (ext c tmargs bpargs pfargs) φ = check-proof-ext Ξ φ pfargs (pf-code-check c Ξ φ tmargs bpargs)
+check-proof Ξ (ext c tmarg-names tmargs bparg-names bpargs pfarg-names pfargs) φ =
+  check-proof-ext Ξ φ pfargs (pf-code-check c Ξ φ tmargs bpargs pfarg-names)
 
 check-proof-explicit-constraint Ξ Ag.refl pf φ = check-proof Ξ pf φ
 

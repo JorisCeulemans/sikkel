@@ -10,6 +10,7 @@ module Experimental.LogicalFramework.Parameter.ProofExtension
   where
 
 open import Data.List
+open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
@@ -24,11 +25,15 @@ private variable
   m : Mode
 
 
-ProofCheckExt : List (ArgInfo m) → (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) → Set
-ProofCheckExt []             Ξ φ = PCM (PCResult Ξ φ)
-ProofCheckExt (info ∷ infos) Ξ φ =
-  ((Ξ' : ProofCtx (ArgInfo.mode info)) (ψ : bProp (to-ctx Ξ')) → to-ctx Ξ' ≡ (to-ctx Ξ) ++tel (arg-tel info) → PCM (PCResult Ξ' ψ))
-  → ProofCheckExt infos Ξ φ
+ProofCheckExt : (infos : List (ArgInfo m)) (pfarg-names : ArgBoundNames infos)
+                (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) →
+                Set
+ProofCheckExt []             pfarg-names                  Ξ φ = PCM (PCResult Ξ φ)
+ProofCheckExt (info ∷ infos) (pfarg-names , pfargs-names) Ξ φ =
+  ((Ξ' : ProofCtx (ArgInfo.mode info)) (ψ : bProp (to-ctx Ξ'))
+    → (to-ctx Ξ' ≡ ((to-ctx Ξ) ++tel (add-names (arg-tel info)) pfarg-names))
+    → PCM (PCResult Ξ' ψ))
+  → ProofCheckExt infos pfargs-names Ξ φ
 
 record ProofExt : Set₁ where
   no-eta-equality
@@ -39,6 +44,7 @@ record ProofExt : Set₁ where
     pf-code-pfarg-infos : (c : ProofExtCode m) → List (ArgInfo m)
 
     pf-code-check : (c : ProofExtCode m) (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ))
-                    (tmargs : ExtTmArgs (pf-code-tmarg-infos c) (to-ctx Ξ))
-                    (bpargs : ExtBPArgs (pf-code-bparg-infos c) (to-ctx Ξ)) →
-                    ProofCheckExt (pf-code-pfarg-infos c) Ξ φ
+                    {tmarg-names : TmArgBoundNames (pf-code-tmarg-infos c)} (tmargs : ExtTmArgs (pf-code-tmarg-infos c) tmarg-names (to-ctx Ξ))
+                    {bparg-names : ArgBoundNames (pf-code-bparg-infos c)} (bpargs : ExtBPArgs (pf-code-bparg-infos c) bparg-names (to-ctx Ξ))
+                    (pfarg-names : ArgBoundNames (pf-code-pfarg-infos c)) →
+                    ProofCheckExt (pf-code-pfarg-infos c) pfarg-names Ξ φ

@@ -25,6 +25,7 @@ import Experimental.DependentTypes.Model.Function as M
 
 open import Experimental.LogicalFramework.MSTT 𝒫
 open import Experimental.LogicalFramework.bProp.Syntax 𝒫 𝒷
+open import Experimental.LogicalFramework.Parameter.ArgInfo ℳ 𝒯
 open Experimental.LogicalFramework.Parameter.bPropExtensionSemantics ℳ 𝒯 𝓉 hiding (bPropExtSem)
 
 open bPropExtSem ⟦𝒷⟧
@@ -35,7 +36,7 @@ private variable
 
 
 ⟦_⟧bprop : bProp Γ → SemTy ⟦ Γ ⟧ctx
-⟦_⟧bpextargs : ∀ {arginfos} → ExtBPArgs arginfos Γ → SemProps arginfos Γ
+⟦_⟧bpextargs : ∀ {arginfos} {names : ArgBoundNames arginfos}→ ExtBPArgs arginfos names Γ → SemProps arginfos Γ
 
 ⟦ ⊤ᵇ ⟧bprop = M.Unit'
 ⟦ ⊥ᵇ ⟧bprop = M.Empty'
@@ -44,7 +45,8 @@ private variable
 ⟦ φ ∧ ψ ⟧bprop = ⟦ φ ⟧bprop M.⊠ ⟦ ψ ⟧bprop
 ⟦ ∀[ μ ∣ _ ∈ T ] φ ⟧bprop = M.Pi ⟦ ⟨ μ ∣ T ⟩ ⟧ty ⟦ φ ⟧bprop
 ⟦ ⟨ μ ∣ φ ⟩ ⟧bprop = DRA.⟨ ⟦ μ ⟧mod ∣ ⟦ φ ⟧bprop ⟩
-⟦ ext c tmargs bpargs ⟧bprop = apply-sem-prop-constructor ⟦ c ⟧bp-code ⟦ tmargs ⟧tmextargs ⟦ bpargs ⟧bpextargs
+⟦ ext c _ tmargs _ bpargs ⟧bprop = apply-sem-prop-constructor ⟦ c ⟧bp-code ⟦ tmargs ⟧tmextargs ⟦ bpargs ⟧bpextargs
 
-⟦_⟧bpextargs {arginfos = []}    args         = tt
-⟦_⟧bpextargs {arginfos = _ ∷ _} (arg , args) = ⟦ arg ⟧bprop , ⟦ args ⟧bpextargs
+⟦_⟧bpextargs         {arginfos = []}          args         = tt
+⟦_⟧bpextargs {Γ = Γ} {arginfos = arginfo ∷ _} (arg , args) =
+  (⟦ arg ⟧bprop M.[ M.to (++tel-++⟦⟧nltel Γ (arg-tel arginfo) _) ]) , ⟦ args ⟧bpextargs
