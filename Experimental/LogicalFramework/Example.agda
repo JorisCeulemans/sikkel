@@ -59,7 +59,7 @@ suc' : Tm Γ (Nat' ⇛ Nat')
 suc' = lam[ "n" ∈ Nat' ] suc (svar "n")
 
 cong-suc : {Γ : Ctx ★} (m n : Tm Γ Nat') → Proof (Γ ,lock⟨ 𝟙 ⟩) → Proof Γ
-cong-suc m n p = trans (suc' ∙¹ m) (sym fun-β) (trans (suc' ∙¹ n) (cong suc' p) fun-β)
+cong-suc m n p = trans (suc' ∙¹ m) by-normalization (trans (suc' ∙¹ n) (cong suc' p) by-normalization)
 
 proof-plus-zeroʳ : {Γ : Ctx ★} → Proof Γ
 proof-plus-zeroʳ {Γ = Γ} =

@@ -144,24 +144,6 @@ check-proof Ξ (∀-elim {n = n} {T = T} μ ψ p t) φ = do
   φ=ψ'[] ← φ ≟bprop (ψ' [ t / y ]bpropˢ)
   ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p ψ
   return ⟅ goals , sgoals ↦ ∀-elim-sound Ξ y T ψ' φ (⟦p⟧ sgoals) t φ=ψ'[] ⟆
-check-proof Ξ fun-β φ = do
-  is-eq lhs rhs ← is-eq? φ
-  app f t ← is-app? lhs
-  lam {T = A} {S = B} μ x b ← is-lam? f
-  erhs ← rhs ≟tm (b [ t / x ]tmˢ)
-  return ⟅ [] , _ ↦ {!fun-β-sound Ξ b t!} ⟆
-check-proof Ξ nat-rec-β-zero φ = do
-  is-eq lhs rhs ← is-eq? φ
-  nat-rec z s n ← is-nat-rec? lhs
-  en ← n ≟tm zero
-  erhs ← rhs ≟tm z
-  return ⟅ [] , _ ↦ {!nat-rec-β-zero-sound Ξ z s!} ⟆
-check-proof Ξ nat-rec-β-suc φ = do
-  is-eq lhs rhs ← is-eq? φ
-  nat-rec z s n ← is-nat-rec? lhs
-  suc-tm n' ← is-suc-tm? n
-  erhs ← rhs ≟tm s ∙¹ (nat-rec z s n')
-  return ⟅ [] , _ ↦ {!nat-rec-β-suc-sound Ξ z s n'!} ⟆
 check-proof Ξ (fun-η x) φ = do
   is-eq {T = T} lhs rhs ← is-eq? φ
   is-fun-ty μ dom cod ← is-fun-ty? T

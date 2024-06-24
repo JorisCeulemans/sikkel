@@ -115,24 +115,6 @@ data Proof where
              →
              Proof Γ                 -- Ξ ⊢ ψ
 
-  -- Specific computation rules for term formers
-  -- TODO: remove these β rules, they are handled by the normalizer.
-  fun-β : Proof Γ
-  nat-rec-β-zero : Proof Γ
-  nat-rec-β-suc : Proof Γ
-
-  {-
-  -- postponed, should be handled by the normalizer
-  if-β-true : {t f : Tm (to-ctx Ξ) T} →
-              (Ξ ⊢ if true t f ≡ᵇ t)
-  if-β-false : {t f : Tm (to-ctx Ξ) T} →
-               (Ξ ⊢ if false t f ≡ᵇ f)
-  pair-β-fst : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
-               (Ξ ⊢ fst (pair t s) ≡ᵇ t)
-  pair-β-snd : {t : Tm (to-ctx Ξ) T} {s : Tm (to-ctx Ξ) S} →
-               (Ξ ⊢ snd (pair t s) ≡ᵇ s)
-  mod-β
-  -}
   fun-η : Name → Proof Γ  -- Ξ ⊢ f ≡ᵇ lam[ μ ∣ x ∈ T ] (weaken-tm f ∙ svar "x")
   ⊠-η : Proof Γ  -- Ξ ⊢ p ≡ᵇ pair (fst p) (snd p)
 

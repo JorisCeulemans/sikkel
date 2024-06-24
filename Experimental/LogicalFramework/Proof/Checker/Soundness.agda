@@ -220,23 +220,6 @@ module _ (Ξ : ProofCtx m) where
       (M.cl-app (ty-closed-natural ⟨ μ ∣ T ⟩) (M.ι⁻¹[ M.Pi-natural-closed-dom (ty-closed-natural ⟨ μ ∣ T ⟩) _ ] p)
                                               (dra-intro ⟦ μ ⟧mod (⟦ t ⟧tm M.[ ty-closed-natural T ∣ DRA.lock-fmap ⟦ μ ⟧mod (to-ctx-subst Ξ) ]cl)))
 
-  fun-β-sound : (b : Tm (to-ctx Ξ ,, μ ∣ x ∈ T) S) (t : Tm (to-ctx Ξ ,lock⟨ μ ⟩) T) →
-                Evidence Ξ ((lam[ μ ∣ x ∈ T ] b) ∙ t ≡ᵇ b [ t / x ]tmˢ)
-  fun-β-sound {μ = μ} {x = x} {T = T} {S = S} b t =
-    M.≅ᵗᵐ-to-Id (
-      M.transᵗᵐ (M.⇛-cl-β (ty-closed-natural ⟨ μ ∣ T ⟩) (ty-closed-natural S) _ _) (
-      M.transᵗᵐ (M.cl-tm-subst-cong-subst (ty-closed-natural S) (M.symˢ (/cl-sound t x))) (
-      tm-sub-sound b (t / x))))
-    M.[ _ ]'
-
-  nat-rec-β-zero-sound : (z : Tm (to-ctx Ξ) T) (s : Tm (to-ctx Ξ) (T ⇛ T)) →
-                         Evidence Ξ (nat-rec z s zero ≡ᵇ z)
-  nat-rec-β-zero-sound z s = (M.≅ᵗᵐ-to-Id (M.nat-rec-β-zero _ _)) M.[ _ ]'
-
-  nat-rec-β-suc-sound : (z : Tm (to-ctx Ξ) T) (s : Tm (to-ctx Ξ) (T ⇛ T)) (n : Tm (to-ctx Ξ) Nat') →
-                        Evidence Ξ (nat-rec z s (suc n) ≡ᵇ s ∙¹ nat-rec z s n)
-  nat-rec-β-suc-sound z s n = M.≅ᵗᵐ-to-Id (M.transᵗᵐ (M.nat-rec-β-suc _ _ _) (M.symᵗᵐ (∙¹-sound s (nat-rec z s n)))) M.[ _ ]'
-
   fun-η-sound : (f1 f2 : Tm (to-ctx Ξ) (⟨ μ ∣ T ⟩⇛ S)) →
                 ⟦ f2 ⟧tm M.≅ᵗᵐ ⟦ lam[ μ ∣ x ∈ T ] (weaken-tm f1 ∙ v0) ⟧tm →
                 Evidence Ξ (f1 ≡ᵇ f2)
