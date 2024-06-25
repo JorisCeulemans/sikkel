@@ -121,20 +121,44 @@ test-plus-comm = refl
 
 --------------------------------------------------
 -- Tests for α-equivalence
-{-
-α-test : [] ⊢ (lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] var "f" ∙ var "x"))
-                ≡ᵇ (lam[ "b" ∈ Bool' ] (lam[ "g" ∈ Bool' ⇛ Bool' ] var "g" ∙ var "b"))
-α-test = refl
 
-α-test2 : [] ⊢ ∀[ "b" ∈ Bool' ] ((lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] var "f" ∙ var "x")) ∙ var "b")
-                                       ≡ᵇ (lam[ "g" ∈ Bool' ⇛ Bool' ] var "g" ∙ var "b")
-α-test2 = ∀-intro (withTmAlpha fun-β)
+α-test-prop1 : bProp ◇
+α-test-prop1 = (lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] svar "f" ∙ svar "x"))
+                     ≡ᵇ (lam[ "b" ∈ Bool' ] (lam[ "g" ∈ Bool' ⇛ Bool' ] svar "g" ∙ svar "b"))
 
-α-test3 : [] ⊢ (∀[ "n" ∈ Nat' ] var "n" ≡ᵇ var "n")
-                 ⊃ (∀[ "m" ∈ Nat' ] var "m" ≡ᵇ var "m")
-α-test3 = assume[ "reflexivity" ] withAlpha (assumption "reflexivity")
+α-test1 : (PCResult.goals <$> check-proof ◇ refl α-test-prop1) ≡ ok []
+α-test1 = refl
 
-α-test4 : [] ⊢ (∀[ "n" ∈ Nat' ] (lam[ "m" ∈ Nat' ] var "n") ≡ᵇ (lam[ "n" ∈ Nat' ] var "n"))
-                 ⊃ (∀[ "m" ∈ Nat' ] (lam[ "n" ∈ Nat' ] var "m") ≡ᵇ lam[ "x" ∈ Nat' ] var "x")
-α-test4 = assume[ "silly assumption" ] withAlpha (assumption "silly assumption")
--}
+αβ-test-prop2 : bProp ◇
+αβ-test-prop2 = ∀[ 𝟙 ∣ "b" ∈ Bool' ] ((lam[ "x" ∈ Bool' ] (lam[ "f" ∈ Bool' ⇛ Bool' ] svar "f" ∙ svar "x")) ∙ svar "b")
+                                       ≡ᵇ (lam[ "g" ∈ Bool' ⇛ Bool' ] svar "g" ∙ svar "b")
+
+αβ-test2 : (PCResult.goals <$> check-proof ◇ (∀-intro[ 𝟙 ∣ "b" ∈ Bool' ] by-normalization) αβ-test-prop2) ≡ ok []
+αβ-test2 = refl
+
+α-test-prop3 : bProp ◇
+α-test-prop3 = (∀[ 𝟙 ∣ "n" ∈ Nat' ] svar "n" ≡ᵇ svar "n") ⊃ (∀[ 𝟙 ∣ "m" ∈ Nat' ] svar "m" ≡ᵇ svar "m")
+
+α-test3 : (PCResult.goals <$> check-proof ◇ (⊃-intro "reflexivity" (assumption' "reflexivity" {𝟙} {𝟙} id-cell)) α-test-prop3) ≡ ok []
+α-test3 = refl
+
+α-test-prop4 : bProp ◇
+α-test-prop4 = (∀[ 𝟙 ∣ "n" ∈ Nat' ] (lam[ "m" ∈ Nat' ] svar "n") ≡ᵇ (lam[ "n" ∈ Nat' ] svar "n"))
+                 ⊃ (∀[ 𝟙 ∣ "m" ∈ Nat' ] (lam[ "n" ∈ Nat' ] svar "m") ≡ᵇ lam[ "x" ∈ Nat' ] svar "x")
+
+α-test4 : (PCResult.goals <$> check-proof ◇ (⊃-intro "silly assumption" (assumption' "silly assumption" {𝟙} {𝟙} id-cell)) α-test-prop4) ≡ ok []
+α-test4 = refl
+
+α-test-prop5 : bProp ◇
+α-test-prop5 = ∀[ 𝟙 ∣ "m" ∈ Nat' ] ∀[ 𝟙 ∣ "k" ∈ Nat' ] ∀[ 𝟙 ∣ "x" ∈ Nat' ]
+  plus' (plus' (svar "m") ∙ svar "k") ∙ suc (svar "x") ≡ᵇ suc (plus' (plus' (svar "m") ∙ svar "k") ∙ (svar "x"))
+
+α-test-proof5 : Proof ◇
+α-test-proof5 =
+  ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] (∀-intro[ 𝟙 ∣ "k" ∈ Nat' ]
+    ∀-elim 𝟙 plus-sucʳ
+             proof-plus-sucʳ
+             (plus' (svar "m") ∙ svar "k"))
+
+α-test5 : (PCResult.goals <$> check-proof ◇ α-test-proof5 α-test-prop5) ≡ ok []
+α-test5 = refl
