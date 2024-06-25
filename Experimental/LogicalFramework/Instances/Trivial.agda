@@ -16,36 +16,36 @@ open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionNormalizat
 open import Experimental.LogicalFramework.MSTT.Parameter
 
 
-record TrivMode : Set where
-  constructor ★
-
 triv-mt : ModeTheory
-MTBasis.Mode (ModeTheory.mtb triv-mt) = TrivMode
-MTBasis.NonTrivModality (ModeTheory.mtb triv-mt) _ _ = ⊥
-MTBasis.mode-eq? (ModeTheory.mtb triv-mt) _ _ = just refl
-MTBasis.non-triv-mod-eq? (ModeTheory.mtb triv-mt) () ()
-MTBasis.⟦_⟧mode (ModeTheory.mtb triv-mt) ★ = M.★
-MTBasis.⟦_⟧non-triv-mod (ModeTheory.mtb triv-mt) ()
+MTMode.NonTrivMode (ModeTheory.mtm triv-mt) = ⊥
+MTMode.non-triv-mode-eq? (ModeTheory.mtm triv-mt) _ _ = just refl
+MTMode.⟦_⟧non-triv-mode (ModeTheory.mtm triv-mt) ()
+MTModality.NonTrivModality (ModeTheory.mtμ triv-mt) _ _ = ⊥
+MTModality.non-triv-mod-eq? (ModeTheory.mtμ triv-mt) () ()
+MTModality.⟦_⟧non-triv-mod (ModeTheory.mtμ triv-mt) ()
 MTComposition._ⓜnon-triv_ (ModeTheory.mtc triv-mt) () ()
 MTComposition.⟦ⓜ⟧-non-triv-sound (ModeTheory.mtc triv-mt) () ()
 MTCompositionLaws.mod-non-triv-assoc (ModeTheory.mtc-laws triv-mt) () () ()
-MTTwoCell.TwoCell (ModeTheory.mt2 triv-mt) MTBasis.𝟙 MTBasis.𝟙 = ⊤
-MTTwoCell.id-cell (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} = tt
-MTTwoCell._ⓣ-vert_ (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {ρ = MTBasis.𝟙} {κ = MTBasis.𝟙} _ _ = tt
-MTTwoCell._ⓣ-hor_ (ModeTheory.mt2 triv-mt) {μ1 = MTBasis.𝟙} {MTBasis.𝟙} {MTBasis.𝟙} {MTBasis.𝟙} _ _ = tt
-MTTwoCell.two-cell-eq? (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {MTBasis.𝟙} tt tt = just refl
-MTTwoCell.⟦_⟧two-cell (ModeTheory.mt2 triv-mt) {μ = MTBasis.𝟙} {MTBasis.𝟙} tt = DRA.id-cell
-MTTwoCellLaws.⟦id-cell⟧-sound (ModeTheory.mt2-laws triv-mt) {μ = MTBasis.𝟙} = DRA.reflᵗᶜ
-MTTwoCellLaws.⟦ⓣ-vert⟧-sound (ModeTheory.mt2-laws triv-mt) {μ = MTBasis.𝟙} {κ = MTBasis.𝟙} {ρ = MTBasis.𝟙} _ _ = DRA.symᵗᶜ DRA.ⓣ-vert-unitˡ
-MTTwoCellLaws.⟦ⓜ⟧-sound-natural (ModeTheory.mt2-laws triv-mt) {μ = MTBasis.𝟙} {μ' = MTBasis.𝟙} {ρ = MTBasis.𝟙} {ρ' = MTBasis.𝟙} _ _ =
+MTTwoCell.TwoCell (ModeTheory.mt2 triv-mt) _ _ = ⊤
+MTTwoCell.id-cell (ModeTheory.mt2 triv-mt) = tt
+MTTwoCell._ⓣ-vert_ (ModeTheory.mt2 triv-mt) _ _ = tt
+MTTwoCell._ⓣ-hor_ (ModeTheory.mt2 triv-mt) _ _ = tt
+MTTwoCell.two-cell-eq? (ModeTheory.mt2 triv-mt) _ _ = just refl
+MTTwoCell.⟦ ModeTheory.mt2 triv-mt ⟧two-cell {μ = MTModality.𝟙} {κ = MTModality.𝟙} _ = DRA.id-cell
+MTTwoCellLaws.⟦id-cell⟧-sound (ModeTheory.mt2-laws triv-mt) {μ = MTModality.𝟙} = DRA.reflᵗᶜ
+MTTwoCellLaws.⟦ⓣ-vert⟧-sound (ModeTheory.mt2-laws triv-mt) {μ = MTModality.𝟙} {κ = MTModality.𝟙} {ρ = MTModality.𝟙} _ _ =
+  DRA.symᵗᶜ DRA.ⓣ-vert-unitˡ
+MTTwoCellLaws.⟦ⓜ⟧-sound-natural (ModeTheory.mt2-laws triv-mt) {μ = MTModality.𝟙} {μ' = MTModality.𝟙} {ρ = MTModality.𝟙} {ρ' = MTModality.𝟙} _ _ =
   DRA.symᵗᶜ (DRA.𝟙-unitʳ-natural-to DRA.id-cell)
-MTTwoCellLaws.⟦associator⟧ (ModeTheory.mt2-laws triv-mt) {μ = MTBasis.𝟙} {ρ = MTBasis.𝟙} MTBasis.𝟙 = record { key-subst-eq = record { eq = λ _ → refl } }
+MTTwoCellLaws.⟦associator⟧ (ModeTheory.mt2-laws triv-mt) {μ = MTModality.𝟙} {ρ = MTModality.𝟙} MTModality.𝟙 =
+  record { key-subst-eq = record { eq = λ _ → refl } }
+
 
 open ModeTheory triv-mt public hiding (id-cell)
 
 -- The following type of id-cell works better with Agda's type inference
-id-cell : TwoCell 𝟙 𝟙
-id-cell = ModeTheory.id-cell triv-mt {μ = 𝟙}
+id-cell : TwoCell {★} 𝟙 𝟙
+id-cell = ModeTheory.id-cell triv-mt {m = ★} {μ = 𝟙}
 
 
 triv-ty-ext : TyExt triv-mt

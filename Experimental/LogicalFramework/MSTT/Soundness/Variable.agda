@@ -189,13 +189,13 @@ v0-sound Γ μ x T =
 
 v0-nolock-sound : (Γ : Ctx m) (x : Name) (T : Ty m) →
                   M.ξcl (ty-closed-natural T) M.≅ᵗᵐ ⟦ v0-nolock {Γ = Γ} {x = x} {T = T} ⟧tm
-v0-nolock-sound Γ x T =
+v0-nolock-sound {m = m} Γ x T =
   begin
     M.ξcl (ty-closed-natural T)
   ≅⟨ M.ξcl-cong-cl (𝟙-preserves-cl (ty-closed-natural T)) ⟨
     M.ξcl (ty-closed-natural ⟨ 𝟙 ∣ T ⟩)
   ≅⟨ vzero-id-sound Γ 𝟙 x T ⟩
-    (M.ξcl (ty-closed-natural ⟨ 𝟙 ∣ T ⟩)) M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {μ = 𝟙} ⟧two-cell ]cl ∎
+    (M.ξcl (ty-closed-natural ⟨ 𝟙 ∣ T ⟩)) M.[ ty-closed-natural T ∣ DRA.key-subst ⟦ id-cell {m = m} {μ = 𝟙} ⟧two-cell ]cl ∎
   where open M.≅ᵗᵐ-Reasoning
 
 v0-2lock-sound : (μ : Modality n o) (κ : Modality m n) (x : Name) (Γ : Ctx o) (T : Ty m) →

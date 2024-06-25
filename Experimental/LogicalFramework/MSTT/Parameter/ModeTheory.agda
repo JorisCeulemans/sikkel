@@ -10,10 +10,41 @@ open import Model.DRA as DRA hiding (𝟙; TwoCell; id-cell; _ⓣ-vert_; _ⓣ-ho
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 
-record MTBasis : Set₁ where
+record MTMode : Set₁ where
   no-eta-equality
   field
-    Mode : Set
+    NonTrivMode : Set
+      -- ^ A mode is either the trivial mode ★ or a non-trivial mode
+      --   described above. In this way, we make sure that the
+      --   interpretation of the trivial mode is definitionally the
+      --   trivial base category.
+    non-triv-mode-eq? : (m n : NonTrivMode) → Maybe (m ≡ n)
+    ⟦_⟧non-triv-mode : NonTrivMode → BaseCategory
+
+  data Mode : Set where
+    ★ : Mode
+      -- ^ The trivial mode
+    ‵_ : NonTrivMode → Mode
+
+  mode-msg : ErrorMsg
+  mode-msg = "Modes are not equal."
+
+  _≟mode_ : (m n : Mode) → PCM (m ≡ n)
+  ★ ≟mode ★ = return refl
+  (‵ m) ≟mode (‵ n) = cong (‵_) <$> from-maybe mode-msg (non-triv-mode-eq? m n)
+  _ ≟mode _ = throw-error mode-msg
+
+  ⟦_⟧mode : Mode → BaseCategory
+  ⟦ ★ ⟧mode = M.★
+  ⟦ ‵ m ⟧mode = ⟦ m ⟧non-triv-mode
+
+
+record MTModality (mtm : MTMode) : Set₁ where
+  no-eta-equality
+
+  open MTMode mtm
+
+  field
     NonTrivModality : Mode → Mode → Set
       -- ^ A modality is either the unit modality 𝟙 or a non-trivial modality
       --   described above. This treatment allows for some more definitional
@@ -21,10 +52,7 @@ record MTBasis : Set₁ where
       --   definitionally the semantic unit modality, and 𝟙 is definitionally
       --   a left unit of modality composition ⓜ).
 
-    mode-eq? : (m n : Mode) → Maybe (m ≡ n)
     non-triv-mod-eq? : ∀ {m n} (μ κ : NonTrivModality m n) → Maybe (μ ≡ κ)
-
-    ⟦_⟧mode : Mode → BaseCategory
     ⟦_⟧non-triv-mod : ∀ {m n} → NonTrivModality m n → DRA ⟦ m ⟧mode ⟦ n ⟧mode
 
   infix 50 ‵_
@@ -43,24 +71,20 @@ record MTBasis : Set₁ where
   ⟦𝟙⟧-sound : ∀ {m} → ⟦ 𝟙 {m} ⟧mod ≅ᵈ DRA.𝟙
   ⟦𝟙⟧-sound = DRA.reflᵈ
 
-  _≟mode_ : (m n : Mode) → PCM (m ≡ n)
-  m ≟mode n = from-maybe "Modes are not equal." (mode-eq? m n)
-
   modality-msg : ErrorMsg
   modality-msg = "Modalities are not equal."
 
   _≟mod_ : {m n : Mode} (μ κ : Modality m n) → PCM (μ ≡ κ)
   𝟙 ≟mod 𝟙 = return refl
-  ‵ μ ≟mod ‵ κ = do
-    refl ← from-maybe modality-msg (non-triv-mod-eq? μ κ)
-    return refl
+  ‵ μ ≟mod ‵ κ = cong (‵_) <$> from-maybe modality-msg (non-triv-mod-eq? μ κ)
   _ ≟mod _ = throw-error modality-msg
 
 
-record MTComposition (mtb : MTBasis) : Set₁ where
+record MTComposition (mtm : MTMode) (mtμ : MTModality mtm) : Set₁ where
   no-eta-equality
 
-  open MTBasis mtb
+  open MTMode mtm
+  open MTModality mtμ
 
   field
     _ⓜnon-triv_ : ∀ {m n o} → NonTrivModality n o → NonTrivModality m n → Modality m o
@@ -79,10 +103,11 @@ record MTComposition (mtb : MTBasis) : Set₁ where
   ⟦ⓜ⟧-sound (‵ μ) (‵ κ) = ⟦ⓜ⟧-non-triv-sound μ κ
 
 
-record MTCompositionLaws (mtb : MTBasis) (mtc : MTComposition mtb) : Set where
+record MTCompositionLaws (mtm : MTMode) (mtμ : MTModality mtm) (mtc : MTComposition mtm mtμ) : Set where
   no-eta-equality
 
-  open MTBasis mtb
+  open MTMode mtm
+  open MTModality mtμ
   open MTComposition mtc
   
   field
@@ -103,10 +128,11 @@ record MTCompositionLaws (mtb : MTBasis) (mtc : MTComposition mtb) : Set where
   mod-assoc {μ = ‵ μ} {ρ = ‵ ρ} (‵ κ) = mod-non-triv-assoc μ ρ κ
 
 
-record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
+record MTTwoCell (mtm : MTMode) (mtμ : MTModality mtm) (mtc : MTComposition mtm mtμ) : Set₁ where
   no-eta-equality
 
-  open MTBasis mtb
+  open MTMode mtm
+  open MTModality mtμ
   open MTComposition mtc
 
   infixl 6 _ⓣ-vert_
@@ -129,15 +155,17 @@ record MTTwoCell (mtb : MTBasis) (mtc : MTComposition mtb) : Set₁ where
 
 
 record MTTwoCellLaws
-  (mtb : MTBasis)
-  (mtc : MTComposition mtb)
-  (mtc-laws : MTCompositionLaws mtb mtc)
-  (mt2 : MTTwoCell mtb mtc)
+  (mtm : MTMode)
+  (mtμ : MTModality mtm)
+  (mtc : MTComposition mtm mtμ)
+  (mtc-laws : MTCompositionLaws mtm mtμ mtc)
+  (mt2 : MTTwoCell mtm mtμ mtc)
   : Set₁
   where
   no-eta-equality
 
-  open MTBasis mtb
+  open MTMode mtm
+  open MTModality mtμ
   open MTComposition mtc
   open MTCompositionLaws mtc-laws
   open MTTwoCell mt2
@@ -164,16 +192,19 @@ record MTTwoCellLaws
                    DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-hor DRA.id-cell)
                    DRA.ⓣ-vert from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)
 
+
 record ModeTheory : Set₁ where
   no-eta-equality
   field
-    mtb : MTBasis
-    mtc : MTComposition mtb
-    mtc-laws : MTCompositionLaws mtb mtc
-    mt2 : MTTwoCell mtb mtc
-    mt2-laws : MTTwoCellLaws mtb mtc mtc-laws mt2
+    mtm : MTMode
+    mtμ : MTModality mtm
+    mtc : MTComposition mtm mtμ
+    mtc-laws : MTCompositionLaws mtm mtμ mtc
+    mt2 : MTTwoCell mtm mtμ mtc
+    mt2-laws : MTTwoCellLaws mtm mtμ mtc mtc-laws mt2
 
-  open MTBasis mtb public
+  open MTMode mtm public
+  open MTModality mtμ public
   open MTComposition mtc public
   open MTCompositionLaws mtc-laws public
   open MTTwoCell mt2 public
@@ -249,15 +280,15 @@ record ModeTheory : Set₁ where
               ⟦ eq-cell (mod-unitˡ {μ = μ}) ⟧two-cell
                 DRA.≅ᵗᶜ
               from (DRA.𝟙-unitˡ ⟦ μ ⟧mod) DRA.ⓣ-vert from (⟦ⓜ⟧-sound 𝟙 μ)
-  ⟦unitorˡ⟧ {μ = MTBasis.𝟙} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (record { key-subst-eq = M.id-subst-unitʳ _ }))
-  ⟦unitorˡ⟧ {μ = MTBasis.‵ μ} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (isoʳ (𝟙-unitˡ _)))
+  ⟦unitorˡ⟧ {μ = 𝟙} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (record { key-subst-eq = M.id-subst-unitʳ _ }))
+  ⟦unitorˡ⟧ {μ = ‵ μ} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (isoʳ (𝟙-unitˡ _)))
 
   ⟦unitorˡ-sym⟧ : ∀ {m n} {μ : Modality m n} →
                   ⟦ eq-cell (sym (mod-unitˡ {μ = μ})) ⟧two-cell
                     DRA.≅ᵗᶜ
                   to (⟦ⓜ⟧-sound 𝟙 μ) DRA.ⓣ-vert to (DRA.𝟙-unitˡ ⟦ μ ⟧mod)
-  ⟦unitorˡ-sym⟧ {μ = MTBasis.𝟙} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (record { key-subst-eq = M.id-subst-unitʳ _ }))
-  ⟦unitorˡ-sym⟧ {μ = MTBasis.‵ μ} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (isoʳ (𝟙-unitˡ _)))
+  ⟦unitorˡ-sym⟧ {μ = 𝟙} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (record { key-subst-eq = M.id-subst-unitʳ _ }))
+  ⟦unitorˡ-sym⟧ {μ = ‵ μ} = DRA.transᵗᶜ ⟦id-cell⟧-sound (DRA.symᵗᶜ (isoʳ (𝟙-unitˡ _)))
 
   -- Because 𝟙 is a strict right unit of ⓜ, the pseudofunctor law for
   -- the right unitor is actually trivial.

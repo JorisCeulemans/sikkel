@@ -286,15 +286,15 @@ module _ (Ξ : ProofCtx m) where
                                    (M.,cl-cong-tm M.const-closed (M.transᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl M.const-closed))
                                                                  (M.transᵗᵐ (M.suc'-cl-natural _)
                                                                  (M.transᵗᵐ (M.const-map-cong _ (M.symᵗᵐ (M.cl-tm-subst-cong-cl (𝟙-preserves-cl M.const-closed))))
-                                                                 (M.const-map-cong _ (M.transᵗᵐ (M.lift-cl-ξcl (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩) {σ = to-ctx-subst Ξ})
+                                                                 (M.const-map-cong _ (M.transᵗᵐ (M.lift-cl-ξcl (ty-closed-natural {m} ⟨ 𝟙 ∣ Nat' ⟩) {σ = to-ctx-subst Ξ})
                                                                                                 (M.ξcl-cong-cl (𝟙-preserves-cl M.const-closed)))))))))) _ ]
                   (M.ι[ M.ty-subst-cong-subst-2-2 _ (M.transˢ (M.symˢ M.⊚-assoc)
-                                                    (M.transˢ (M.⊚-congˡ (M.lift-cl-,cl-2ty (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩) (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩) _ _))
+                                                    (M.transˢ (M.⊚-congˡ (M.lift-cl-,cl-2ty (ty-closed-natural {m} ⟨ 𝟙 ∣ Nat' ⟩) (ty-closed-natural {m} ⟨ 𝟙 ∣ Nat' ⟩) _ _))
                                                     M.⊚-assoc)) ]
                   (M.ι[ M.ty-subst-cong-ty _ (
                           M.transᵗʸ (M.ty-subst-cong-subst (M.symˢ
                                       (M.transˢ (∷ˢ-sound {Δ = to-ctx Ξ} πˢ (suc (v0 {μ = 𝟙} {x = x})) x)
-                                                (M.,cl-cong (ty-closed-natural ⟨ 𝟙 ∣ Nat' ⟩)
+                                                (M.,cl-cong (ty-closed-natural {m} ⟨ 𝟙 ∣ Nat' ⟩)
                                                             (M.id-subst-unitˡ _)
                                                             (M.const-map-cong _ (M.symᵗᵐ (v0-sound (to-ctx Ξ) 𝟙 x Nat'))))))
                                       _)
