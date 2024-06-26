@@ -7,6 +7,7 @@ open import Model.BaseCategory
 module Model.CwF-Structure.Term {C : BaseCategory}  where
 
 open import Function using (id)
+open import Relation.Binary using (Setoid)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 open import Relation.Binary.Reasoning.Syntax
 open import Preliminaries
@@ -62,6 +63,13 @@ eq (symᵗᵐ t=t') γ = sym (eq t=t' γ)
 
 transᵗᵐ : {t1 t2 t3 : Tm Γ T} → t1 ≅ᵗᵐ t2 → t2 ≅ᵗᵐ t3 → t1 ≅ᵗᵐ t3
 eq (transᵗᵐ t1=t2 t2=t3) γ = trans (eq t1=t2 γ) (eq t2=t3 γ)
+
+tm-setoid : (Γ : Ctx C) (T : Ty Γ) → Setoid _ _
+Setoid.Carrier (tm-setoid Γ T) = Tm Γ T
+Setoid._≈_ (tm-setoid Γ T) = _≅ᵗᵐ_
+Relation.Binary.IsEquivalence.refl (Setoid.isEquivalence (tm-setoid Γ T)) = reflᵗᵐ
+Relation.Binary.IsEquivalence.sym (Setoid.isEquivalence (tm-setoid Γ T)) = symᵗᵐ
+Relation.Binary.IsEquivalence.trans (Setoid.isEquivalence (tm-setoid Γ T)) = transᵗᵐ
 
 module ≅ᵗᵐ-Reasoning {Γ}{T} where
   open begin-syntax {A = Tm Γ T} _≅ᵗᵐ_ id public

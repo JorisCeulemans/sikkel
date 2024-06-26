@@ -43,13 +43,12 @@ plus = lam[ "m" ∈ Nat' ] plus' (svar "m")
 sem-plus : M.Tm M.◇ (M.Nat' M.⇛ M.Nat' M.⇛ M.Nat')
 sem-plus = ⟦ plus {Γ = ◇ {★}} ⟧tm
 
-{-
 _+_ : ℕ → ℕ → ℕ
-_+_ = extract-term {!!} {!!} -- extract-term ? sem-plus
+_+_ = extract-tm-◇ plus
 
 _ : 16 + 9 ≡ 25
 _ = refl
--}
+
 
 -- ∀ n → plus n 0 = n
 plus-zeroʳ : bProp Γ

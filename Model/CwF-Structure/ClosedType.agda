@@ -4,10 +4,15 @@
 
 module Model.CwF-Structure.ClosedType where
 
-open import Data.Product
+open import Data.Product renaming (_,_ to [_,_])
+open import Data.Unit
+open import Function
+open import Function.Construct.Composition
+open import Function.Construct.Symmetry
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Model.BaseCategory
+open BaseCategory
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term
@@ -46,6 +51,20 @@ record IsClosedNatural {C} (U : ClosedTy C) : Set₁ where
                       transᵗʸ (ty-subst-cong-subst ε U) (closed-natural τ) ≅ᵉ closed-natural σ
 
 open IsClosedNatural public
+
+closed-ty-cell-iso-◇ : {T : ClosedTy C} (clT : IsClosedNatural T) (Γ : Ctx C)
+                       {x : Ob C} (γ : Γ ⟨ x ⟩) →
+                       (T {Γ}) ⟨ x , γ ⟩ ↔ (T {◇}) ⟨ x , tt ⟩
+closed-ty-cell-iso-◇ {T = T} clT Γ γ = mk↔ₛ′ (func (to e)) (func (from e)) (eq (isoˡ e)) (eq (isoʳ e))
+  where
+    e : (T {◇}) [ !◇ Γ ] ≅ᵗʸ T {Γ}
+    e = closed-natural clT (!◇ Γ)
+
+closed-ty-cell-iso : {T : ClosedTy C} (clT : IsClosedNatural T) (Γ Δ : Ctx C)
+                     {x : Ob C} (γ : Γ ⟨ x ⟩) (δ : Δ ⟨ x ⟩) →
+                     (T {Γ}) ⟨ x , γ ⟩ ↔ (T {Δ}) ⟨ x , δ ⟩
+closed-ty-cell-iso clT Γ Δ γ δ = ↔-sym (closed-ty-cell-iso-◇ clT Δ δ) ↔-∘ closed-ty-cell-iso-◇ clT Γ γ
+
 
 closed-substs-eq-2-2 : {Γ Δ Θ1 Θ2 : Ctx C} {σ1 : Θ1 ⇒ Δ} {τ1 : Γ ⇒ Θ1} {σ2 : Θ2 ⇒ Δ} {τ2 : Γ ⇒ Θ2} →
                        {A : ClosedTy C} (clA : IsClosedNatural A) (ε : σ1 ⊚ τ1 ≅ˢ σ2 ⊚ τ2) →
@@ -279,9 +298,9 @@ module _ {T : ClosedTy C} (clT : IsClosedNatural T) where
     where open ≅ˢ-Reasoning
 
   lift-cl-subst-⊹ : (σ : Γ ⇒ Δ) → (σ ⊹) ≅ˢ lift-cl-subst σ ⊚ from (,,-cong (closed-natural clT σ))
-  eq (lift-cl-subst-⊹ σ) (γ , t) =
-    cong (func σ γ ,_) (sym (trans (cong (func (to (closed-natural clT (σ ⊚ π)))) (eq (from-eq (closed-⊚ clT σ π)) t))
-                                   (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
+  eq (lift-cl-subst-⊹ σ) [ γ , t ] =
+    cong [ func σ γ ,_] (sym (trans (cong (func (to (closed-natural clT (σ ⊚ π)))) (eq (from-eq (closed-⊚ clT σ π)) t))
+                                    (eq (isoˡ (closed-natural clT (σ ⊚ π))) t)))
 
   /cl-⊚ : (σ : Γ ⇒ Δ) (t : Tm Δ T) → (t /cl⟨ clT ⟩) ⊚ σ ≅ˢ lift-cl-subst σ ⊚ ((t [ clT ∣ σ ]cl) /cl⟨ clT ⟩)
   /cl-⊚ σ t =
