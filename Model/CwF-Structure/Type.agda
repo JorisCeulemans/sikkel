@@ -112,6 +112,13 @@ ty-ctx-subst-inverseʳ : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} 
                         ty-ctx-subst T eγ (ty-ctx-subst T (sym eγ) t) ≡ t
 ty-ctx-subst-inverseʳ T = trans (ty-cong-2-1 T hom-idˡ) (ty-id T)
 
+ty-ctx-subst-iso : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} (eγ : γ ≡ γ') → (T ⟨ x , γ ⟩ ↔ T ⟨ x , γ' ⟩)
+ty-ctx-subst-iso T eγ = mk↔ₛ′
+  (ty-ctx-subst T eγ)
+  (ty-ctx-subst T (sym eγ))
+  (λ _ → ty-ctx-subst-inverseʳ T)
+  (λ _ → ty-ctx-subst-inverseˡ T)
+
 -- The following definition is needed when defining context extension.
 to-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
              {a b : A} (e : a ≡ b)
