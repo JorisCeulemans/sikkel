@@ -47,6 +47,7 @@ private variable
 -- type and an isomorphism between that type and the context's
 -- denotation as a presheaf over the trivial base category.
 record ExtractableCtx (Γ : Ctx ★) : Set₁ where
+  no-eta-equality
   field
     AgdaCtx : Set
     extract-ctx-iso : (⟦ Γ ⟧ctx M.⟨ tt ⟩) ↔ AgdaCtx
@@ -60,6 +61,7 @@ extract-ctx Γ {{exΓ}} = AgdaCtx
 -- The definition of extractability for MSTT types is more or less the
 -- same as for contexts.
 record ExtractableTy (T : Ty ★) : Set₁ where
+  no-eta-equality
   field
     AgdaTy : Set
     extract-ty-iso-◇ : ((⟦ T ⟧ty {M.◇}) M.⟨ tt , tt ⟩) ↔ AgdaTy
@@ -96,8 +98,8 @@ module ExtractTm
   {T : Ty ★} {{_ : ExtractableTy T}}
   where
 
-  extract-setoid : Setoid _ _
-  extract-setoid = extract-ctx Γ →-setoid extract-ty T
+  tm-extraction-setoid : Setoid _ _
+  tm-extraction-setoid = extract-ctx Γ →-setoid extract-ty T
 
   extract-semtm : SemTm ⟦ Γ ⟧ctx ⟦ T ⟧ty → extract-ctx Γ → extract-ty T
   extract-semtm t =
@@ -131,14 +133,14 @@ module ExtractTm
   M.eq (embed-extract-semtm t) γ =
     trans (extract-ty-iso-transport (Inverse.strictlyInverseʳ extract-ctx-iso _) _) (M.naturality t tt _)
 
-  extract-semtm-iso : Inverse (semtm-setoid ⟦ Γ ⟧ctx ⟦ T ⟧ty) extract-setoid
+  extract-semtm-iso : Inverse (semtm-setoid ⟦ Γ ⟧ctx ⟦ T ⟧ty) tm-extraction-setoid
   Inverse.to extract-semtm-iso = extract-semtm
   Inverse.from extract-semtm-iso = embed-semtm
   Inverse.to-cong extract-semtm-iso = extract-semtm-cong
   Inverse.from-cong extract-semtm-iso = embed-semtm-cong
   Inverse.inverse extract-semtm-iso =
-    [ strictlyInverseˡ⇒inverseˡ (semtm-setoid ⟦ Γ ⟧ctx ⟦ T ⟧ty) extract-setoid {f⁻¹ = embed-semtm} extract-semtm-cong extract-embed-semtm
-    , strictlyInverseʳ⇒inverseʳ (semtm-setoid ⟦ Γ ⟧ctx ⟦ T ⟧ty) extract-setoid embed-semtm-cong embed-extract-semtm
+    [ strictlyInverseˡ⇒inverseˡ (semtm-setoid ⟦ Γ ⟧ctx ⟦ T ⟧ty) tm-extraction-setoid {f⁻¹ = embed-semtm} extract-semtm-cong extract-embed-semtm
+    , strictlyInverseʳ⇒inverseʳ (semtm-setoid ⟦ Γ ⟧ctx ⟦ T ⟧ty) tm-extraction-setoid embed-semtm-cong embed-extract-semtm
     ]
 
   extract-tm : Tm Γ T → extract-ctx Γ → extract-ty T
