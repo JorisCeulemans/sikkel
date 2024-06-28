@@ -14,3 +14,4 @@ module Experimental.LogicalFramework.bProp
 
 open import Experimental.LogicalFramework.bProp.Syntax 𝒫 𝒷 public
 open import Experimental.LogicalFramework.bProp.Interpretation 𝒫 𝒷 ⟦𝒷⟧ public
+open import Experimental.LogicalFramework.bProp.Extraction 𝒫 𝒷 ⟦𝒷⟧ public
