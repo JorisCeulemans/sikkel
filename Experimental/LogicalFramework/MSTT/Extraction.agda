@@ -151,7 +151,7 @@ open ExtractTm public
 
 --------------------------------------------------
 -- Instances of extractability for many of the MSTT type formers and
--- context constructors.
+-- context constructors
 
 instance
   ◇-extractable : ExtractableCtx ◇

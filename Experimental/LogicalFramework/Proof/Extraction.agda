@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Extraction of proof contexts and evidence
+--------------------------------------------------
+
 open import Experimental.LogicalFramework.MSTT.Parameter
 open import Experimental.LogicalFramework.Parameter.bPropExtension
 open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
@@ -27,7 +31,16 @@ private variable
   T S : Ty m
 
 
+--------------------------------------------------
+-- Definition of extractability for proof contexts
 
+-- Contrary to MSTT contexts and types and to bProps, we do not define
+-- a proof context to be extractable when its denotation is isomorphic
+-- to an Agda type. The main reason for this is that it is not evident
+-- that an extractable proof context gives rise to an extractable
+-- context by removing all bProp assumptions via to-ctx (and that is
+-- needed to even state that extending an extractable proof context
+-- with an extractable proposition yields an extractable result).
 data ExtractableProofCtx : ProofCtx ★ → Set₁
 to-ctx-extractable : {Ξ : ProofCtx ★} → ExtractableProofCtx Ξ → ExtractableCtx (to-ctx Ξ)
 
@@ -52,6 +65,11 @@ to-ctx-extractable (extend-prop-extr {{exΞ}}) = to-ctx-extractable exΞ
 to-ctx-extractable (lock𝟙-pf-extr {{exΞ}}) = lock𝟙-extractable {{to-ctx-extractable exΞ}}
 
 
+-- If a proof context Ξ is extractable, it gives rise to an Agda type
+-- extract-ctx Ξ. This Agda type is intended to be isomorphic to the
+-- proof context's denotatation ⟦ Ξ ⟧pctx M.⟨ tt ⟩, but actually we
+-- only need one direction of this isomorphism to extract BiSikkel
+-- proofs to Agda proofs.
 extract-pfctx : (Ξ : ProofCtx ★) → {{ExtractableProofCtx Ξ}} → Set
 pfctx-extract-to-denotation : (Ξ : ProofCtx ★) {{exΞ : ExtractableProofCtx Ξ}} →
                               extract-pfctx Ξ → ⟦ Ξ ⟧pctx M.⟨ tt ⟩
@@ -83,6 +101,10 @@ extract-pfctx-to-ctx {Ξ} {{exΞ}} =
   ∘ M.func (to-ctx-subst Ξ)
   ∘ pfctx-extract-to-denotation Ξ
 
+
+--------------------------------------------------
+-- Extraction of evidence (i.e. semantic terms) of a bProp φ in a
+-- proof context Ξ to a dependent Agda function.
 
 module ExtractProof
   {Ξ : ProofCtx ★} {{exΞ : ExtractableProofCtx Ξ}}

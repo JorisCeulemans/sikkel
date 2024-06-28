@@ -1,3 +1,7 @@
+--------------------------------------------------
+-- Extraction of bProps
+--------------------------------------------------
+
 open import Experimental.LogicalFramework.MSTT.Parameter
 open import Experimental.LogicalFramework.Parameter.bPropExtension
 open import Experimental.LogicalFramework.Parameter.bPropExtensionSemantics
@@ -27,7 +31,11 @@ private variable
   T S : Ty m
 
 
+--------------------------------------------------
+-- Definition of extractability for BiSikkel propositions
 
+-- A bProp in an extractable MSTT context Γ is extractable if it is
+-- isomorphic to an Agda type family over extract-ctx Γ.
 record ExtractableProp {Γ : Ctx ★} {{exΓ : ExtractableCtx Γ}} (φ : bProp Γ) : Set₁ where
   no-eta-equality
   field
@@ -48,3 +56,13 @@ extract-bprop : {Γ : Ctx ★} → {{_ : ExtractableCtx Γ}} →
                 (φ : bProp Γ) → {{ExtractableProp φ}} →
                 extract-ctx Γ → Set
 extract-bprop φ = AgdaProp
+
+
+--------------------------------------------------
+-- Instances of extractability for many BiSikkel bProp constructors
+
+instance
+  ⊤ᵇ-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}} →
+                   ExtractableProp {Γ} ⊤ᵇ
+  ExtractableProp.AgdaProp ⊤ᵇ-extractable _ = ⊤
+  ExtractableProp.extract-prop-iso ⊤ᵇ-extractable _ = ↔-id ⊤
