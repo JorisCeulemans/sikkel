@@ -164,6 +164,8 @@ ExtPfArgs (info ∷ infos) (arg-names , args-names) Γ =
   Proof (Γ ++tel (add-names (arg-tel info) arg-names)) × ExtPfArgs infos args-names Γ
 
 
+-- More useful versions of the induction principles for Bool', Nat'
+-- and modal types.
 bool-induction : {Γ : Ctx m} {x : String} →
                  Proof Γ → Proof Γ → Proof (Γ ,, x ∈ Bool')
 bool-induction = bool-induction' Ag.refl
@@ -175,3 +177,26 @@ nat-induction hyp = nat-induction' hyp Ag.refl
 mod-induction : {Γ : Ctx m} (κ : Modality o n) (μ : Modality n m) (x : Name) {y : Name} →
                 Proof (Γ ,, μ ⓜ κ ∣ x ∈ T) → Proof (Γ ,, μ ∣ y ∈ ⟨ κ ∣ T ⟩)
 mod-induction κ μ x = mod-induction' κ μ x Ag.refl
+
+
+-- Equational reasoning with BiSikkel proofs
+module ≡ᵇ-Reasoning where
+
+  infix 1 begin_
+  infixr 2 _≡ᵇ⟨_⟩_ _≡ᵇ⟨⟩_ _≡ᵇ⟨_⟨_
+  infix 3 _∎
+
+  begin_ : (Tm Γ T × Proof Γ) → Proof Γ
+  begin (_ , p) = p
+
+  _≡ᵇ⟨_⟩_ : Tm Γ T → Proof Γ → (Tm Γ T × Proof Γ) → (Tm Γ T × Proof Γ)
+  t ≡ᵇ⟨ t=s ⟩ (s , s=r) = t , trans s t=s s=r
+
+  _≡ᵇ⟨⟩_ : Tm Γ T → (Tm Γ T × Proof Γ) → (Tm Γ T × Proof Γ)
+  t ≡ᵇ⟨⟩ (s , s=r) = t , s=r
+
+  _≡ᵇ⟨_⟨_ : Tm Γ T → Proof Γ → (Tm Γ T × Proof Γ) → (Tm Γ T × Proof Γ)
+  t ≡ᵇ⟨ s=t ⟨ (s , s=r) = t , (trans s (sym s=t) s=r)
+
+  _∎ : Tm Γ T → (Tm Γ T × Proof Γ)
+  t ∎ = t , refl
