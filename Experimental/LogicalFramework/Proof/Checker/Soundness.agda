@@ -26,6 +26,7 @@ open import Experimental.LogicalFramework.MSTT.Soundness.Variable 𝒫
 open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.bProp.Soundness.Substitution 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
+open import Experimental.LogicalFramework.Proof.Checker.ResultType 𝒫 𝒷 ⟦𝒷⟧
 
 private variable
   m n o : Mode
@@ -100,9 +101,6 @@ to-ctx-/-commute-𝟙 {T = T} Ξ φ t =
 --                       M.[ dra-intro ⟦ ρ ⟧mod (⟦ s ⟧tm M.[ ty-closed-natural S ∣ to-ctx-subst ((Ξ ,,ᵛ μ ∣ x ∈ T) ,lock⟨ ρ ⟩) ]cl)
 --                           M.//cl⟨ ty-closed-natural ⟨ ρ ∣ S ⟩ ⟩ ]
 -- to-ctx-//-commute Ξ φ s = {!!}
-
-Evidence : (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) → Set
-Evidence Ξ φ = SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])
 
 module _ (Ξ : ProofCtx m) where
   refl-sound : (t1 t2 : Tm (to-ctx Ξ) T) →

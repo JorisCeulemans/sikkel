@@ -8,6 +8,7 @@ module Experimental.LogicalFramework.Proof.Checker.ResultType
   (⟦𝒷⟧ : bPropExtSem ℳ 𝒯 𝓉 𝒷)
   where
 
+open import Data.Empty
 open import Data.List
 open import Data.Product
 open import Data.String hiding (_++_)
@@ -46,15 +47,27 @@ split-sem-goals : (gls1 gls2 : List Goal) → SemGoals (gls1 ++ gls2) → SemGoa
 split-sem-goals []          gls2 sgls         = tt , sgls
 split-sem-goals (gl ∷ gls1) gls2 (sgl , sgls) = let (sgls1 , sgls2) = split-sem-goals gls1 gls2 sgls in (sgl , sgls1) , sgls2
 
+Evidence : (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) → Set
+Evidence Ξ φ = SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])
+
 record PCResult (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) : Set where
   constructor ⟅_,_⟆
   field
     goals : List Goal
-    denotation : SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])
+    denotation : SemGoals goals → Evidence Ξ φ
+open PCResult
 
 pc-result : (goals : List Goal) →
-            (SemGoals goals → SemTm ⟦ Ξ ⟧pctx (⟦ φ ⟧bprop M.[ to-ctx-subst Ξ ])) →
+            (SemGoals goals → Evidence Ξ φ) →
             PCResult Ξ φ
 pc-result = ⟅_,_⟆
 
 syntax pc-result goals (λ sgoals → b) = ⟅ goals , sgoals ↦ b ⟆
+
+
+ContainsNoGoals : PCResult Ξ φ → Set
+ContainsNoGoals ⟅ []    , _ ⟆ = ⊤
+ContainsNoGoals ⟅ _ ∷ _ , _ ⟆ = ⊥
+
+denotation-no-goals : (pr : PCResult Ξ φ) → {ContainsNoGoals pr} → Evidence Ξ φ
+denotation-no-goals ⟅ [] , ⟦pr⟧ ⟆ = ⟦pr⟧ tt

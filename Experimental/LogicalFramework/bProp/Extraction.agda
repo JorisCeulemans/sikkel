@@ -78,7 +78,7 @@ cancel-iso-to r {x} {y} e =
   trans (cong (Inverse.from r) e) (
   Inverse.strictlyInverseʳ r y))
 
-module Instances
+module _
   {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
   where
 
@@ -202,5 +202,3 @@ module Instances
                           ExtractableProp ⟨ 𝟙 ∣ φ ⟩
   ExtractableProp.AgdaProp (mod𝟙-prop-extractable {φ}) = extract-bprop φ
   ExtractableProp.extract-prop-iso (mod𝟙-prop-extractable {φ}) = extract-prop-iso {φ = φ}
-
-open Instances public
