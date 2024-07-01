@@ -164,3 +164,14 @@ eq (,,-cong-ext-subst e) _ = refl
 -- Context extension which includes a variable name
 _,,_∈_ : (Γ : Ctx C) → String → (T : Ty Γ) → Ctx C
 Γ ,, v ∈ T = Γ ,, T
+
+
+module PropositionalEquality where
+  ty-ctx-ext-prop-eq-subst : {Γ : Ctx C} {T : Ty Γ} (S : Ty (Γ ,, T))
+                             {x : Ob}
+                             {γ : Γ ⟨ x ⟩} {t1 t2 : T ⟨ x , γ ⟩} →
+                             (et : t1 ≡ t2) (s : S ⟨ x , [ γ , t1 ] ⟩) →
+                             subst (λ t → S ⟨ x , [ γ , t ] ⟩) et s
+                               ≡
+                             S ⟪ hom-id , to-Σ-ty-eq T (ctx-id Γ) (trans (sym (ty-comp T)) (trans (ty-cong T hom-idˡ) (trans (ty-id T) et))) ⟫ s
+  ty-ctx-ext-prop-eq-subst S refl s = sym (strong-ty-id S)

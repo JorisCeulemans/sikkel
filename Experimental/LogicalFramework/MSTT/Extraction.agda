@@ -185,11 +185,11 @@ instance
   ExtractableTy.AgdaTy Bool'-extractable = Bool
   ExtractableTy.extract-ty-iso-◇ Bool'-extractable = ↔-id Bool
 
-to-★-pshfun : {sT sS : SemTy {M.★} M.◇} →
-              (sT M.⟨ tt , tt ⟩ → sS M.⟨ tt , tt ⟩) →
-              M.PshFun sT sS tt tt
-to-★-pshfun f M.$⟨ _ , _ ⟩ t = f t
-M.naturality (to-★-pshfun {sT} {sS} f) = trans (cong f (M.strong-ty-id sT)) (sym (M.strong-ty-id sS))
+to-★-pshfun-◇ : {sT sS : SemTy {M.★} M.◇} →
+                (sT M.⟨ tt , tt ⟩ → sS M.⟨ tt , tt ⟩) →
+                M.PshFun sT sS tt tt
+to-★-pshfun-◇ f M.$⟨ _ , _ ⟩ t = f t
+M.naturality (to-★-pshfun-◇ {sT} {sS} f) = trans (cong f (M.strong-ty-id sT)) (sym (M.strong-ty-id sS))
 
 instance
   ⇛-extractable : {T S : Ty ★} → {{ExtractableTy T}} → {{ExtractableTy S}} →
@@ -197,7 +197,7 @@ instance
   ExtractableTy.AgdaTy (⇛-extractable {T} {S}) = extract-ty T → extract-ty S
   ExtractableTy.extract-ty-iso-◇ (⇛-extractable {T} {S}) = mk↔ₛ′
     (λ psh-f t → Inverse.to (extract-ty-iso-◇ {S}) (psh-f M.$⟨ tt , refl ⟩ Inverse.from (extract-ty-iso-◇ {T}) t))
-    (λ f → to-★-pshfun (Inverse.from (extract-ty-iso-◇ {S}) ∘ f ∘ Inverse.to (extract-ty-iso-◇ {T})))
+    (λ f → to-★-pshfun-◇ (Inverse.from (extract-ty-iso-◇ {S}) ∘ f ∘ Inverse.to (extract-ty-iso-◇ {T})))
     (λ f → funext λ _ → trans (Inverse.strictlyInverseˡ (extract-ty-iso-◇ {S}) _) (cong f (Inverse.strictlyInverseˡ (extract-ty-iso-◇ {T}) _)))
     (λ psh-f → M.to-pshfun-eq (λ { _ refl _ → trans (Inverse.strictlyInverseʳ (extract-ty-iso-◇ {S}) _)
                                                     (cong (psh-f M.$⟨ tt , refl ⟩_) (Inverse.strictlyInverseʳ (extract-ty-iso-◇ {T}) _)) }))
