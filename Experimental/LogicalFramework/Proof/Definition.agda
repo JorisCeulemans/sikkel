@@ -68,7 +68,7 @@ data Proof where
   by-normalization : Proof Γ
 
   -- Expanding definitions of MSTT terms
-  by-unfold-def : Proof Γ  -- Ξ ⊢ def _ {t} ≡ᵇ t
+  by-unfold-global-def : Proof Γ  -- Ξ ⊢ def _ {t} ≡ᵇ t
 
   -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
   ⊤ᵇ-intro : Proof Γ  -- Ξ ⊢ ⊤ᵇ

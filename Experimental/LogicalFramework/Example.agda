@@ -30,7 +30,7 @@ private variable
 -- Proving some properties of natural number addition
 
 id : Tm Γ (T ⇛ T)
-id = mkdef "id" $ lam[ "x" ∈ _ ] svar "x"
+id = lam[ "x" ∈ _ ] svar "x"
 
 plus-helper : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ Nat')
 plus-helper = lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] suc (svar "f" ∙ svar "n"))
@@ -39,7 +39,7 @@ plus' : Tm Γ Nat' → Tm Γ (Nat' ⇛ Nat')
 plus' m = nat-rec id plus-helper m
 
 plus : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
-plus = mkdef "plus" $ lam[ "m" ∈ Nat' ] plus' (svar "m")
+plus = mk-global-def "plus" $ lam[ "m" ∈ Nat' ] plus' (svar "m")
 
 sem-plus : M.Tm M.◇ (M.Nat' M.⇛ M.Nat' M.⇛ M.Nat')
 sem-plus = ⟦ plus {◇} ⟧tm
@@ -224,11 +224,11 @@ extract-test1 = extract-proof-◇ extract-test1-proof extract-test1-prop
 
 
 id-bool not : Tm Γ (Bool' ⇛ Bool')
-id-bool = mkdef "id-bool" $ lam[ "b" ∈ Bool' ] svar "b"
-not = mkdef "not" $ lam[ "y" ∈ Bool' ] if (svar "y") false true
+id-bool = mk-global-def "id-bool" $ lam[ "b" ∈ Bool' ] svar "b"
+not = mk-global-def "not" $ lam[ "y" ∈ Bool' ] if (svar "y") false true
 
 xor : Tm Γ (Bool' ⇛ Bool' ⇛ Bool')
-xor = mkdef "xor" $
+xor = mk-global-def "xor" $
   lam[ "x" ∈ Bool' ] if (svar "x") (weaken-tm not) (weaken-tm id-bool)
 
 extract-xor : Bool → Bool → Bool

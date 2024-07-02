@@ -119,7 +119,7 @@ record TravStructSoundness
   traverse-tm-sound {Γ = Γ} (Tm.ext c names tm-args refl) σ =
     M.transᵗᵐ (apply-sem-tm-constructor-natural {Γ = Γ} ⟦ c ⟧tm-code (⟦⟧tm-code-natural c) ⟦ σ ⟧trav _)
               (apply-sem-tm-constructor-cong {Γ = Γ} ⟦ c ⟧tm-code (⟦⟧tm-code-cong c) (traverse-ext-tmargs-sound tm-args σ))
-  traverse-tm-sound (def {T = T} _ {t}) σ = M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural T) (M.◇-terminal _ _ _)
+  traverse-tm-sound (global-def {T = T} _ {t}) σ = M.cl-tm-subst-cong-subst-2-1 (ty-closed-natural T) (M.◇-terminal _ _ _)
 
   traverse-ext-tmargs-sound {arginfos = []}          _            σ = tt
   traverse-ext-tmargs-sound {arginfos = arginfo ∷ _} (arg , args) σ =

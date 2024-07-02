@@ -87,12 +87,12 @@ is-suc-tm? : (t : Tm Γ T) → PCM (IsSucTm t)
 is-suc-tm? (suc n) = return (suc-tm n)
 is-suc-tm? _ = throw-error "successor of natural number expected"
 
-data IsDef : Tm Γ T → Set where
-  def : {Γ : Ctx m} (name : DefName) (t : Tm ◇ T) → IsDef {Γ = Γ} (def name {t})
+data IsGlobalDef : Tm Γ T → Set where
+  global-def : {Γ : Ctx m} (name : DefName) (t : Tm ◇ T) → IsGlobalDef {Γ = Γ} (global-def name {t})
 
-is-def? : (t : Tm Γ T) → PCM (IsDef t)
-is-def? (def name {t}) = return (def name t)
-is-def? _ = throw-error "Tried to expand a definition, but no definition is present."
+is-global-def? : (t : Tm Γ T) → PCM (IsGlobalDef t)
+is-global-def? (global-def name {t}) = return (global-def name t)
+is-global-def? _ = throw-error "Tried to expand a definition, but no definition is present."
 
 
 data IsFunTy : Ty m → Set where

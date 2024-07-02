@@ -118,7 +118,7 @@ data Tm where
     --   instantiation of MSTT with specific term extensions should
     --   rather provide more convenient term formers via pattern
     --   synonyms.
-  def : DefName → {Tm ◇ T} → Tm Γ T
+  global-def : DefName → {Tm ◇ T} → Tm Γ T
     -- ^ This constructor is used to mark definitions to which we want
     --   to refer by name (hence the body of the definition is an
     --   implicit argument of the constructor). The `def` constructor
@@ -153,8 +153,8 @@ var-lt : (Λ : LockTele n m) → Var x T Γ Λ → Tm (Γ ,ˡᵗ Λ) T
 var-lt ◇              v = var' _ {v}
 var-lt (lock⟨ μ ⟩, Λ) v = var-lt Λ (vlock v)
 
-mkdef : DefName → Tm ◇ T → Tm Γ T
-mkdef name t = def name {t}
+mk-global-def : DefName → Tm ◇ T → Tm Γ T
+mk-global-def name t = global-def name {t}
 
 
 --------------------------------------------------

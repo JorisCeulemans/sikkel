@@ -142,7 +142,7 @@ module _ (Ξ : ProofCtx m) where
 
   by-unfold-def-sound : (name : DefName) (t1 : Tm ◇ T) (t2 : Tm (to-ctx Ξ) T) →
                         ⟦ t1 [ []ʳ {Γ = to-ctx Ξ} ]tmʳ ⟧tm M.≅ᵗᵐ ⟦ t2 ⟧tm →
-                        Evidence Ξ (def name {t1} ≡ᵇ t2)
+                        Evidence Ξ (global-def name {t1} ≡ᵇ t2)
   by-unfold-def-sound name t1 t2 et =
     M.≅ᵗᵐ-to-Id (M.transᵗᵐ (tm-ren-sound t1 []ʳ) et) M.[ _ ]'
 

@@ -71,7 +71,7 @@ record TravStruct (Trav : ∀ {m} → Ctx m → Ctx m → Set) : Set where
   traverse-tm (fst p) σ = fst (traverse-tm p σ)
   traverse-tm (snd p) σ = snd (traverse-tm p σ)
   traverse-tm (ext c names args ty-eq) σ = ext c names (traverse-ext-tmargs args σ) ty-eq
-  traverse-tm (def name {t}) σ = def name {t}
+  traverse-tm (global-def name {t}) σ = global-def name {t}
 
   traverse-ext-tmargs {arginfos = []}                             _            σ = tt
   traverse-ext-tmargs {arginfos = arginfo ∷ arginfos} {names , _} (arg , args) σ =

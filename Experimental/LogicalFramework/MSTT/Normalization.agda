@@ -130,10 +130,10 @@ normalize (suc n) (snd p) = normalize-snd <$> normalize (suc n) p
     normalize-snd (normres (pair _ ns) ep) = normres ns (M.transᵗᵐ (M.snd-cong ep) (M.⊠-β-snd _ _))
     normalize-snd (normres np          ep) = normres (snd np) (M.snd-cong ep)
 normalize (suc n) (ext c names args refl) = normalize-tm-code (normalize n) c args
-normalize (suc n) (def {Γ = Γ} name {t}) = normalize-def <$> normalize n (t [ []ʳ ]tmʳ)
+normalize (suc n) (global-def {Γ = Γ} name {t}) = normalize-glob-def <$> normalize n (t [ []ʳ ]tmʳ)
   where
-    normalize-def : NormalizeResult {Γ = Γ} (t [ []ʳ ]tmʳ) → NormalizeResult (def name {t})
-    normalize-def (normres nt et) = normres nt (M.transᵗᵐ (tm-ren-sound t []ʳ) et)
+    normalize-glob-def : NormalizeResult {Γ = Γ} (t [ []ʳ ]tmʳ) → NormalizeResult (global-def name {t})
+    normalize-glob-def (normres nt et) = normres nt (M.transᵗᵐ (tm-ren-sound t []ʳ) et)
 
 normalize-tm : Fuel → Tm Γ T → Maybe (Tm Γ T)
 normalize-tm n t = map NormalizeResult.nt (normalize n t)
