@@ -4,8 +4,6 @@
 
 module Model.CwF-Structure.ContextFunctor where
 
-open import Level
-
 open import Model.BaseCategory
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
@@ -136,7 +134,7 @@ transf-op (id-ctx-transf Φ) Γ = id-subst (ctx-op Φ Γ)
 naturality (id-ctx-transf Φ) σ = transˢ (id-subst-unitˡ (ctx-fmap Φ σ))
                                         (symˢ (id-subst-unitʳ (ctx-fmap Φ σ)))
 
--- Vertical composition of natural transformations.
+-- Vertical composition of natural transformations
 _ⓝ-vert_ : {Φ Ψ Ω : CtxFunctor C D} → CtxNatTransf Ψ Ω → CtxNatTransf Φ Ψ → CtxNatTransf Φ Ω
 transf-op (η ⓝ-vert ζ) Γ = transf-op η Γ ⊚ transf-op ζ Γ
 naturality (_ⓝ-vert_ {Φ = Φ} {Ψ} {Ω} η ζ) {Δ = Δ} {Γ} σ = begin

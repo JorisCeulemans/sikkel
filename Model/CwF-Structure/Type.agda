@@ -331,6 +331,9 @@ from-eq (symᵗʸ-invˡ {e = e}) = isoʳ e
 symᵗʸ-invʳ : {e : T ≅ᵗʸ S} → transᵗʸ e (symᵗʸ e) ≅ᵉ reflᵗʸ
 from-eq (symᵗʸ-invʳ {e = e}) = isoˡ e
 
+symᵗʸ-reflᵗʸ : symᵗʸ (reflᵗʸ {T = T}) ≅ᵉ reflᵗʸ
+from-eq symᵗʸ-reflᵗʸ = reflⁿ
+
 symᵗʸ-transᵗʸ : {e : T ≅ᵗʸ S} {e' : S ≅ᵗʸ R} → symᵗʸ (transᵗʸ e e') ≅ᵉ transᵗʸ (symᵗʸ e') (symᵗʸ e)
 from-eq symᵗʸ-transᵗʸ = reflⁿ
 
@@ -599,13 +602,19 @@ ty-subst-cong-subst-2-2-natural-from : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ
                                        ty-subst-map τ1 (ty-subst-map τ2 φ) ⊙ from (ty-subst-cong-subst-2-2 T ε)
 eq (ty-subst-cong-subst-2-2-natural-from φ ε) t = naturality φ
 
-
 ty-subst-cong-subst-2-2-natural-to : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
                                      {T S : Ty Θ} (φ : T ↣ S) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
                                      to (ty-subst-cong-subst-2-2 S ε) ⊙ ty-subst-map τ1 (ty-subst-map τ2 φ)
                                        ≅ⁿ
                                      ty-subst-map σ1 (ty-subst-map σ2 φ) ⊙ to (ty-subst-cong-subst-2-2 T ε)
 eq (ty-subst-cong-subst-2-2-natural-to φ ε) t = naturality φ
+
+ty-subst-cong-subst-2-2-natural : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
+                                  {T S : Ty Θ} (e : T ≅ᵗʸ S) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
+                                  transᵗʸ (ty-subst-cong-subst-2-2 T ε) (ty-subst-cong-ty τ1 (ty-subst-cong-ty τ2 e))
+                                    ≅ᵉ
+                                  transᵗʸ (ty-subst-cong-ty σ1 (ty-subst-cong-ty σ2 e)) (ty-subst-cong-subst-2-2 S ε)
+from-eq (ty-subst-cong-subst-2-2-natural e ε) = symⁿ (ty-subst-cong-subst-2-2-natural-from (from e) ε)
 
 
 -- Nicer syntax for substitutions coming from context equality
