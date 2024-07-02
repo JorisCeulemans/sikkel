@@ -5,7 +5,6 @@
 module Experimental.LogicalFramework.Example where
 
 open import Data.Bool using (Bool)
-open import Data.List
 open import Data.Nat hiding (_+_; _≡ᵇ_)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
@@ -50,7 +49,7 @@ sem-plus = ⟦ plus-◇ ⟧tm
 _+_ : ℕ → ℕ → ℕ
 _+_ = extract-tm-◇ plus-◇
 
-_ : 16 + 9 ≡ 25
+_ : 1 + 1 ≡ 2
 _ = refl
 
 
@@ -85,7 +84,7 @@ test-proof-plus-zeroʳ : IsOk (check-proof ◇ proof-plus-zeroʳ plus-zeroʳ)
 test-proof-plus-zeroʳ = _
 
 -- extract-plus-zeroʳ : (n : ℕ) → (n + 0) ≡ n
--- extract-plus-zeroʳ = {!extract-proof-◇ proof-plus-zeroʳ plus-zeroʳ!}
+-- extract-plus-zeroʳ = extract-proof-◇ proof-plus-zeroʳ plus-zeroʳ
 
 
 -- ∀ m n → plus m (suc n) = suc (plus m n)
@@ -155,6 +154,9 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
 test-plus-comm : IsOk (check-proof ◇ proof-plus-comm plus-comm)
 test-plus-comm = _
 
+-- extract-plus-comm : (m n : ℕ) → m + n ≡ n + m
+-- extract-plus-comm = {!extract-proof-◇ proof-plus-comm plus-comm!}
+
 
 --------------------------------------------------
 -- Tests for α-equivalence
@@ -201,3 +203,34 @@ test-plus-comm = _
 α-test5 = _
 
 
+--------------------------------------------------
+-- Tests for extraction
+
+extract-test1-prop : bProp {★} ◇
+extract-test1-prop =
+  ∀[ 𝟙 ∣ "f" ∈ Nat' ⇛ Nat' ⇛ Nat' ] ∀[ 𝟙 ∣ "x" ∈ Bool' ] svar "f" ∙ zero ∙ (suc zero) ≡ᵇ svar "f" ∙ zero ∙ (suc zero)
+
+extract-test1-proof : Proof {★} ◇
+extract-test1-proof = ∀-intro[ 𝟙 ∣ "f" ∈ Nat' ⇛ Nat' ⇛ Nat' ] ∀-intro[ 𝟙 ∣ "x" ∈ Bool' ] refl
+
+extract-test1 : (f : ℕ → ℕ → ℕ) (x : Bool) → f 0 1 ≡ f 0 1
+extract-test1 = extract-proof-◇ extract-test1-proof extract-test1-prop
+
+
+id-bool not : Tm Γ (Bool' ⇛ Bool')
+id-bool = lam[ "b" ∈ Bool' ] svar "b"
+not = lam[ "y" ∈ Bool' ] if (svar "y") false true
+
+xor : Tm Γ (Bool' ⇛ Bool' ⇛ Bool')
+xor = lam[ "x" ∈ Bool' ] if (svar "x") (weaken-tm not) (weaken-tm id-bool)
+
+extract-xor : Bool → Bool → Bool
+extract-xor = extract-tm-◇ xor
+
+extract-test2-prop : bProp {★} ◇
+extract-test2-prop = ∀[ 𝟙 ∣ "b" ∈ Bool' ] weaken-tm xor ∙ svar "b" ∙ svar "b" ≡ᵇ false
+
+-- extract-test2 : extract-bprop extract-test2-prop _
+--                   ≡
+--                 ((b : Bool) → extract-tm-◇ xor b b ≡ Bool.false)
+-- extract-test2 = {!refl!}

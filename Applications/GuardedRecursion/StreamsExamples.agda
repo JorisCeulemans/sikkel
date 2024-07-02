@@ -82,7 +82,7 @@ g-nats-sem = ⟦ g-nats ⟧tm
 
 
 --------------------------------------------------
--- The follwing definitions are an implementation of all examples involving streams on pages 8-10 of the paper
+-- The following definitions are an implementation of all examples involving streams on pages 8-10 of the paper
 --   Ranald Clouston, Aleš Bizjak, Hans Bugge Grathwohl, and Lars Birkedal.
 --   The Guarded Lambda-Calculus: Programming and Reasoning with Guarded Recursion for Coinductive Types.
 --   Logical Methods of Computer Science (LMCS), 12(3), 2016.
