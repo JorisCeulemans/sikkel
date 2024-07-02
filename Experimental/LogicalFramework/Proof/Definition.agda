@@ -67,6 +67,9 @@ data Proof where
   -- Integration of normalization procedure in proofs
   by-normalization : Proof Γ
 
+  -- Expanding definitions of MSTT terms
+  by-unfold-def : Proof Γ  -- Ξ ⊢ def _ {t} ≡ᵇ t
+
   -- Introduction and elimination for logical combinators ⊤ᵇ, ⊥ᵇ, ⊃, ∧ and ∀
   ⊤ᵇ-intro : Proof Γ  -- Ξ ⊢ ⊤ᵇ
   ⊥ᵇ-elim : Proof Γ  -- Ξ ⊢ ⊥ᵇ

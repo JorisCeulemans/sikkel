@@ -14,7 +14,7 @@ open import Data.Empty
 open import Data.List
 open import Data.Maybe as Maybe hiding (Is-just; to-witness)
 open import Data.Product
-import Data.String as Name
+open import Data.String as Name using (String)
 open import Data.Unit
 open import Relation.Nullary
 import Relation.Binary.PropositionalEquality as PropEq
@@ -81,6 +81,9 @@ unvlocks (lock⟨ μ ⟩, Θ) v = unvlock (unvlocks Θ v)
 --------------------------------------------------
 -- Definition of MSTT terms
 
+DefName : Set
+DefName = String
+
 TmArgBoundNames : List (TmArgInfo m) → Set
 TmArgBoundNames []                   = ⊤
 TmArgBoundNames (arginfo ∷ arginfos) = Names (tmarg-tel arginfo) × TmArgBoundNames arginfos
@@ -111,8 +114,18 @@ data Tm where
         ExtTmArgs (tm-code-arginfos c) names Γ →
         T ≡ tm-code-ty c →
         Tm Γ T
-    -- ^ This constructor is not intended for direct use. An instantiation of MSTT with
-    --   specific term extensions should rather provide more convenient term formers via pattern synonyms.
+    -- ^ This constructor is not intended for direct use. An
+    --   instantiation of MSTT with specific term extensions should
+    --   rather provide more convenient term formers via pattern
+    --   synonyms.
+  def : DefName → {Tm ◇ T} → Tm Γ T
+    -- ^ This constructor is used to mark definitions to which we want
+    --   to refer by name (hence the body of the definition is an
+    --   implicit argument of the constructor). The `def` constructor
+    --   should be completely transparent to the normalizer and
+    --   decision procedure for α-equivalence. Since the body lives in
+    --   the empty context, this constructor also enables proper
+    --   extraction of BiSikkel proofs.
 
 ExtTmArgs []                   _                        Γ = ⊤
 ExtTmArgs (arginfo ∷ arginfos) (arg-names , args-names) Γ =
@@ -139,6 +152,9 @@ syntax mod-elim ρ μ x t s = let⟨ ρ ⟩ mod⟨ μ ⟩ x ← t in' s
 var-lt : (Λ : LockTele n m) → Var x T Γ Λ → Tm (Γ ,ˡᵗ Λ) T
 var-lt ◇              v = var' _ {v}
 var-lt (lock⟨ μ ⟩, Λ) v = var-lt Λ (vlock v)
+
+mkdef : DefName → Tm ◇ T → Tm Γ T
+mkdef name t = def name {t}
 
 
 --------------------------------------------------

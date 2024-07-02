@@ -140,6 +140,12 @@ module _ (Ξ : ProofCtx m) where
   by-normalization-sound t1 t2 nt1 nt2 et1 et2 ent =
     M.≅ᵗᵐ-to-Id (M.transᵗᵐ et1 (M.transᵗᵐ ent (M.symᵗᵐ et2))) M.[ _ ]'
 
+  by-unfold-def-sound : (name : DefName) (t1 : Tm ◇ T) (t2 : Tm (to-ctx Ξ) T) →
+                        ⟦ t1 [ []ʳ {Γ = to-ctx Ξ} ]tmʳ ⟧tm M.≅ᵗᵐ ⟦ t2 ⟧tm →
+                        Evidence Ξ (def name {t1} ≡ᵇ t2)
+  by-unfold-def-sound name t1 t2 et =
+    M.≅ᵗᵐ-to-Id (M.transᵗᵐ (tm-ren-sound t1 []ʳ) et) M.[ _ ]'
+
   ⊤ᵇ-intro-sound : (φ : bProp (to-ctx Ξ)) →
                    ⟦ φ ⟧bprop M.≅ᵗʸ M.Unit' →
                    Evidence Ξ φ

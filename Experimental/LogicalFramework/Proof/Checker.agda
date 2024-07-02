@@ -81,6 +81,11 @@ check-proof Ξ by-normalization φ = do
   normres nt2 et2 ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t2)
   ent ← nt1 ≟tm nt2
   return ⟅ [] , _ ↦ by-normalization-sound Ξ t1 t2 nt1 nt2 et1 et2 ent ⟆
+check-proof Ξ by-unfold-def φ = do
+  is-eq d1 t2 ← is-eq? φ
+  def name t1 ← is-def? d1
+  et ← (t1 [ []ʳ ]tmʳ) ≟tm t2
+  return ⟅ [] , _ ↦ by-unfold-def-sound Ξ name t1 t2 et ⟆
 check-proof Ξ ⊤ᵇ-intro φ = do
   φ=⊤ ← φ ≟bprop ⊤ᵇ
   return ⟅ [] , _ ↦ ⊤ᵇ-intro-sound Ξ φ φ=⊤ ⟆

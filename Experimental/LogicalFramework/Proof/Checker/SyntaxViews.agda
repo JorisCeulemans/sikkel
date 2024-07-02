@@ -87,6 +87,13 @@ is-suc-tm? : (t : Tm Γ T) → PCM (IsSucTm t)
 is-suc-tm? (suc n) = return (suc-tm n)
 is-suc-tm? _ = throw-error "successor of natural number expected"
 
+data IsDef : Tm Γ T → Set where
+  def : {Γ : Ctx m} (name : DefName) (t : Tm ◇ T) → IsDef {Γ = Γ} (def name {t})
+
+is-def? : (t : Tm Γ T) → PCM (IsDef t)
+is-def? (def name {t}) = return (def name t)
+is-def? _ = throw-error "Tried to expand a definition, but no definition is present."
+
 
 data IsFunTy : Ty m → Set where
   is-fun-ty : (μ : Modality n m) (T : Ty n) (S : Ty m) → IsFunTy (⟨ μ ∣ T ⟩⇛ S)

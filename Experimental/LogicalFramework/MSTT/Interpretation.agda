@@ -76,6 +76,7 @@ open import Experimental.LogicalFramework.MSTT.Interpretation.TypeContext ℳ �
 ⟦ fst p ⟧tm = M.fst ⟦ p ⟧tm
 ⟦ snd p ⟧tm = M.snd ⟦ p ⟧tm
 ⟦ ext c bound-names args refl ⟧tm = apply-sem-tm-constructor ⟦ c ⟧tm-code ⟦ args ⟧tmextargs
+⟦ def {T = T} _ {t} ⟧tm = ⟦ t ⟧tm M.[ ty-closed-natural T ∣ M.!◇ _ ]cl
 
 ⟦_⟧tmextargs {arginfos = []}                 _            = tt
 ⟦_⟧tmextargs {arginfos = arginfo ∷ arginfos} (arg , args) =

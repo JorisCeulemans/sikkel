@@ -6,6 +6,7 @@ module Experimental.LogicalFramework.Example where
 
 open import Data.Bool using (Bool)
 open import Data.Nat hiding (_+_; _≡ᵇ_)
+open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
 open import Experimental.LogicalFramework.Instances.Trivial
@@ -29,7 +30,7 @@ private variable
 -- Proving some properties of natural number addition
 
 id : Tm Γ (T ⇛ T)
-id = lam[ "x" ∈ _ ] svar "x"
+id = mkdef "id" $ lam[ "x" ∈ _ ] svar "x"
 
 plus-helper : Tm Γ ((Nat' ⇛ Nat') ⇛ Nat' ⇛ Nat')
 plus-helper = lam[ "f" ∈ Nat' ⇛ Nat' ] (lam[ "n" ∈ Nat' ] suc (svar "f" ∙ svar "n"))
@@ -38,16 +39,13 @@ plus' : Tm Γ Nat' → Tm Γ (Nat' ⇛ Nat')
 plus' m = nat-rec id plus-helper m
 
 plus : Tm Γ (Nat' ⇛ Nat' ⇛ Nat')
-plus = lam[ "m" ∈ Nat' ] plus' (svar "m")
-
-plus-◇ : Tm ◇ (Nat' ⇛ Nat' ⇛ Nat')
-plus-◇ = plus
+plus = mkdef "plus" $ lam[ "m" ∈ Nat' ] plus' (svar "m")
 
 sem-plus : M.Tm M.◇ (M.Nat' M.⇛ M.Nat' M.⇛ M.Nat')
-sem-plus = ⟦ plus-◇ ⟧tm
+sem-plus = ⟦ plus {◇} ⟧tm
 
 _+_ : ℕ → ℕ → ℕ
-_+_ = extract-tm-◇ plus-◇
+_+_ = extract-tm-◇ plus
 
 _ : 1 + 1 ≡ 2
 _ = refl
@@ -80,11 +78,19 @@ proof-plus-zeroʳ {Γ = Γ} =
       ≡ᵇ⟨ cong-suc (plus ∙ (svar "n") ∙ zero) (svar "n") (assumption' "ind-hyp" {𝟙} {𝟙} id-cell) ⟩
         suc (svar "n") ∎
 
+-- Verifying that proof-plus-zeroʳ is indeed a valid proof of
+-- plus-zeroʳ using the proof checker. This should type-check
+-- relatively fast.
 test-proof-plus-zeroʳ : IsOk (check-proof ◇ proof-plus-zeroʳ plus-zeroʳ)
 test-proof-plus-zeroʳ = _
 
--- extract-plus-zeroʳ : (n : ℕ) → (n + 0) ≡ n
--- extract-plus-zeroʳ = extract-proof-◇ proof-plus-zeroʳ plus-zeroʳ
+-- Combining the result of the type checker with proof
+-- extraction. Type checking this is slow because Agda has to compare
+-- the type (n : ℕ) → (n + 0) ≡ n with extract-bprop plus-zeroʳ, which
+-- are both big types since the expansion of _+_ (extracted from an
+-- MSTT definition) is big.
+extract-plus-zeroʳ : (n : ℕ) → (n + 0) ≡ n
+extract-plus-zeroʳ = extract-proof-◇ proof-plus-zeroʳ plus-zeroʳ
 
 
 -- ∀ m n → plus m (suc n) = suc (plus m n)
@@ -113,8 +119,8 @@ proof-plus-sucʳ = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
 test-plus-sucʳ : IsOk (check-proof ◇ proof-plus-sucʳ plus-sucʳ)
 test-plus-sucʳ = _
 
--- extract-plus-sucʳ : (m n : ℕ) → (m + suc n) ≡ suc (m + n)
--- extract-plus-sucʳ = {!extract-proof-◇ proof-plus-sucʳ plus-sucʳ!}
+extract-plus-sucʳ : (m n : ℕ) → (m + suc n) ≡ suc (m + n)
+extract-plus-sucʳ = extract-proof-◇ proof-plus-sucʳ plus-sucʳ
 
 
 -- ∀ m n → plus m n = plus n m
@@ -154,8 +160,8 @@ proof-plus-comm = ∀-intro[ 𝟙 ∣ "m" ∈ Nat' ] nat-induction "ind-hyp"
 test-plus-comm : IsOk (check-proof ◇ proof-plus-comm plus-comm)
 test-plus-comm = _
 
--- extract-plus-comm : (m n : ℕ) → m + n ≡ n + m
--- extract-plus-comm = {!extract-proof-◇ proof-plus-comm plus-comm!}
+extract-plus-comm : (m n : ℕ) → m + n ≡ n + m
+extract-plus-comm = extract-proof-◇ proof-plus-comm plus-comm
 
 
 --------------------------------------------------
@@ -218,19 +224,20 @@ extract-test1 = extract-proof-◇ extract-test1-proof extract-test1-prop
 
 
 id-bool not : Tm Γ (Bool' ⇛ Bool')
-id-bool = lam[ "b" ∈ Bool' ] svar "b"
-not = lam[ "y" ∈ Bool' ] if (svar "y") false true
+id-bool = mkdef "id-bool" $ lam[ "b" ∈ Bool' ] svar "b"
+not = mkdef "not" $ lam[ "y" ∈ Bool' ] if (svar "y") false true
 
 xor : Tm Γ (Bool' ⇛ Bool' ⇛ Bool')
-xor = lam[ "x" ∈ Bool' ] if (svar "x") (weaken-tm not) (weaken-tm id-bool)
+xor = mkdef "xor" $
+  lam[ "x" ∈ Bool' ] if (svar "x") (weaken-tm not) (weaken-tm id-bool)
 
 extract-xor : Bool → Bool → Bool
 extract-xor = extract-tm-◇ xor
 
 extract-test2-prop : bProp {★} ◇
-extract-test2-prop = ∀[ 𝟙 ∣ "b" ∈ Bool' ] weaken-tm xor ∙ svar "b" ∙ svar "b" ≡ᵇ false
+extract-test2-prop = ∀[ 𝟙 ∣ "b" ∈ Bool' ] xor ∙ svar "b" ∙ svar "b" ≡ᵇ false
 
--- extract-test2 : extract-bprop extract-test2-prop _
---                   ≡
---                 ((b : Bool) → extract-tm-◇ xor b b ≡ Bool.false)
--- extract-test2 = {!refl!}
+extract-test2 : extract-bprop extract-test2-prop _
+                  ≡
+                ((b : Bool) → extract-tm-◇ xor b b ≡ Bool.false)
+extract-test2 = refl

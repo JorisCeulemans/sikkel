@@ -191,6 +191,10 @@ tm-α-equiv-helper (ext c1 names1 args1 ty-eq1) (ext c2 names2 args2 ty-eq2) eΓ
   eargs ← ext-tmargs-α-equiv-helper args1 args2 eΓ
   return (M.transᵗᵐ (apply-sem-tm-constructor-natural ⟦ c1 ⟧tm-code (⟦⟧tm-code-natural c1) (alpha-equiv-sub eΓ) ⟦ args1 ⟧tmextargs)
                     (apply-sem-tm-constructor-cong ⟦ c1 ⟧tm-code (⟦⟧tm-code-cong c1) eargs))
+tm-α-equiv-helper {T = T} (def _ {t1}) (def _ {t2}) eΓ = do
+  et ← tm-α-equiv-helper t1 t2 ◇
+  return (M.transᵗᵐ (M.cl-tm-subst-cong-subst-2-2 (ty-closed-natural T) (M.◇-terminal _ _ _))
+                    (M.cl-tm-subst-cong-tm (ty-closed-natural T) et))
 tm-α-equiv-helper _ _ _ = throw-error tm-msg
 
 ext-tmargs-α-equiv-helper {arginfos = []}                 _              _              eΓ = return _
