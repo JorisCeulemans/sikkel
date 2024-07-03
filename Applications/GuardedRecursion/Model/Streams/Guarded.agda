@@ -17,6 +17,7 @@ open import Level renaming (zero to lzero; suc to lsuc)
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.Type.Function
+open import Model.DRA
 open import Applications.GuardedRecursion.Model.Modalities
 
 private
@@ -210,6 +211,37 @@ module _ {A : Ty (now Γ)} where
   eq (gstream-β-tail a s) {x = zero}  γ = refl
   eq (gstream-β-tail a s) {x = suc _} γ = map-inverse (λ _ → trans (ty-cong-2-1 A refl) (ty-id A))
 
+
+module _ {A : Ty (now Δ)} (σ : Γ ⇒ Δ) where
+  g-head-natural : (s : Tm Δ (GStream A)) →
+                   (g-head s) [ σ ]'
+                     ≅ᵗᵐ
+                   ι[ constantly-ty-natural σ ] (g-head (ι⁻¹[ gstream-natural σ ] (s [ σ ]')))
+  eq (g-head-natural s) γ = sym (trans (cong (A ⟪ tt , _ ⟫_) (map-head (s ⟨ _ , _ ⟩'))) (trans (sym (ty-comp A)) (strong-ty-id A)))
+
+  g-tail-natural : (s : Tm Δ (GStream A)) →
+                   (g-tail s) [ σ ]'
+                     ≅ᵗᵐ
+                   ι[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (g-tail (ι⁻¹[ gstream-natural σ ] (s [ σ ]')))
+  eq (g-tail-natural s) {x = zero}  γ = refl
+  eq (g-tail-natural s) {x = suc _} γ =
+    sym (trans (cong (map _) first-≤-refl) (
+         trans (sym (map-∘ _ _ _)) (
+         trans (sym (map-∘ _ _ _)) (
+         trans (cong (map _) (map-tail (s ⟨ _ , _ ⟩'))) (
+         trans (sym (map-∘ _ _ _)) (map-cong (λ _ → sym (trans (trans (trans (ty-cong A refl) (ty-comp A)) (ty-comp A)) (ty-comp A))) _))))))
+
+  g-cons-natural : (h : Tm Δ (constantly-ty A)) (t : Tm Δ (▻' (GStream A))) →
+                   (g-cons h t) [ σ ]'
+                     ≅ᵗᵐ
+                   ι[ gstream-natural σ ] (g-cons (ι⁻¹[ constantly-ty-natural σ ] (h [ σ ]'))
+                                                  (ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (t [ σ ]')))
+  eq (g-cons-natural h t) {x = zero}  γ = sym (cong (_∷ []) (trans (sym (ty-comp A)) (strong-ty-id A)))
+  eq (g-cons-natural h t) {x = suc _} γ = sym (cong₂ _∷_
+    (trans (sym (ty-comp A)) (strong-ty-id A))
+    (trans (sym (map-∘ _ _ _)) (trans (sym (map-∘ _ _ _)) (trans (sym (map-∘ _ _ _)) (
+      trans (cong (map _) first-≤-refl) (map-cong (λ _ → sym (trans (trans (trans (ty-cong A refl) (ty-comp A)) (ty-comp A)) (ty-comp A))) _))))))
+
 gstream-cong : {A : Ty (now Γ)} {A' : Ty (now Γ)} →
                A ≅ᵗʸ A' → GStream A ≅ᵗʸ GStream A'
 func (from (gstream-cong A=A')) = map (func (from A=A'))
@@ -232,6 +264,49 @@ naturality (to (gstream-cong {A = A}{A' = A'} A=A')) {t = v} =
   where open ≡-Reasoning
 eq (isoˡ (gstream-cong A=A')) _ = map-inverse (eq (isoˡ A=A'))
 eq (isoʳ (gstream-cong A=A')) _ = map-inverse (eq (isoʳ A=A'))
+
+module _ {A : Ty (now Γ)} where
+  g-head-cong : {s s' : Tm Γ (GStream A)} → s ≅ᵗᵐ s' → g-head s ≅ᵗᵐ g-head s'
+  eq (g-head-cong 𝒆) γ = cong head (eq 𝒆 γ)
+
+  g-tail-cong : {s s' : Tm Γ (GStream A)} → s ≅ᵗᵐ s' → g-tail s ≅ᵗᵐ g-tail s'
+  eq (g-tail-cong 𝒆) {x = zero}  γ = refl
+  eq (g-tail-cong 𝒆) {x = suc _} γ = cong (map _ ∘ tail) (eq 𝒆 γ)
+
+  g-cons-cong : {a a' : Tm Γ (constantly-ty A)} {s s' : Tm Γ (▻' (GStream A))} →
+                a ≅ᵗᵐ a' → s ≅ᵗᵐ s' → g-cons a s ≅ᵗᵐ g-cons a' s'
+  eq (g-cons-cong 𝒆a 𝒆s) {x = zero}  γ = cong (_∷ []) (eq 𝒆a γ)
+  eq (g-cons-cong 𝒆a 𝒆s) {x = suc _} γ = cong₂ _∷_ (eq 𝒆a γ) (cong (map _) (eq 𝒆s γ))
+
+module _ {A A' : Ty (now Γ)} {e : A ≅ᵗʸ A'} where
+  -- Possible optimisation: the versions with ι⁻¹ can easily be
+  -- derived from the versions for ι. For this purpose, we should
+  -- formalise the general notion of semantic term former.
+  g-head-ι : {s : Tm Γ (GStream A')} → ι[ dra-cong constantly e ] (g-head s) ≅ᵗᵐ g-head (ι[ gstream-cong e ] s)
+  eq (g-head-ι {s = s}) γ = sym (map-head (s ⟨ _ , γ ⟩'))
+
+  g-head-ι⁻¹ : {s : Tm Γ (GStream A)} → ι⁻¹[ dra-cong constantly e ] (g-head s) ≅ᵗᵐ g-head (ι⁻¹[ gstream-cong e ] s)
+  eq (g-head-ι⁻¹ {s = s}) γ = sym (map-head (s ⟨ _ , γ ⟩'))
+
+  g-tail-ι : {s : Tm Γ (GStream A')} → ι[ ▻'-cong (gstream-cong e) ] (g-tail s) ≅ᵗᵐ g-tail (ι[ gstream-cong e ] s)
+  eq (g-tail-ι {s = s}) {x = zero}  γ = refl
+  eq (g-tail-ι {s = s}) {x = suc _} γ = trans (map-map-cong (λ a → sym (naturality (to e))))
+                                              (cong (map _) (sym (map-tail (s ⟨ _ , γ ⟩'))))
+
+  g-tail-ι⁻¹ : {s : Tm Γ (GStream A)} → ι⁻¹[ ▻'-cong (gstream-cong e) ] (g-tail s) ≅ᵗᵐ g-tail (ι⁻¹[ gstream-cong e ] s)
+  eq (g-tail-ι⁻¹ {s = s}) {x = zero}  γ = refl
+  eq (g-tail-ι⁻¹ {s = s}) {x = suc _} γ = trans (map-map-cong (λ _ → sym (naturality (from e))))
+                                                (cong (map _) (sym (map-tail (s ⟨ _ , γ ⟩'))))
+
+  g-cons-ι : {a : Tm Γ (constantly-ty A')} {s : Tm Γ (▻' (GStream A'))} →
+             ι[ gstream-cong e ] (g-cons a s) ≅ᵗᵐ g-cons (ι[ dra-cong constantly e ] a) (ι[ ▻'-cong (gstream-cong e) ] s)
+  eq (g-cons-ι {s = s}) {x = zero}  γ = refl
+  eq (g-cons-ι {s = s}) {x = suc _} γ = cong (_ ∷_) (map-map-cong (λ y → sym (naturality (to e))))
+
+  g-cons-ι⁻¹ : {a : Tm Γ (constantly-ty A)} {s : Tm Γ (▻' (GStream A))} →
+               ι⁻¹[ gstream-cong e ] (g-cons a s) ≅ᵗᵐ g-cons (ι⁻¹[ dra-cong constantly e ] a) (ι⁻¹[ ▻'-cong (gstream-cong e) ] s)
+  eq (g-cons-ι⁻¹ {s = s}) {x = zero}  γ = refl
+  eq (g-cons-ι⁻¹ {s = s}) {x = suc _} γ = cong (_ ∷_) (map-map-cong (λ y → sym (naturality (from e))))
 
 gstream-closed : {A : ClosedTy ★} → IsClosedNatural A → IsClosedNatural (GStream A)
 closed-natural (gstream-closed clA) σ = transᵗʸ (gstream-natural σ) (gstream-cong (closed-natural clA (now-subst σ)))
@@ -257,3 +332,114 @@ eq (from-eq (closed-subst-eq (gstream-closed {A} clA) ε)) v =
                                 (eq (from-eq (closed-subst-eq clA (now-subst-cong ε))) _)) _)
   (trans (map-∘ _ _ _)
   (cong (map _ ∘ map _) first-≤-refl)))
+
+module _ {A : ClosedTy ★} (clA : IsClosedNatural A) where
+  g-cl-tail : Tm Γ (GStream A) → Tm Γ (▻ (GStream A))
+  g-cl-tail s = ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] g-tail s
+
+  g-cl-cons : Tm Γ (constantly-ty A) → Tm Γ (▻ (GStream A)) → Tm Γ (GStream A)
+  g-cl-cons h t = g-cons h (ι[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] t)
+
+module _ {A : ClosedTy ★} (clA : IsClosedNatural A) {Γ Δ : Ctx ω} (σ : Γ ⇒ Δ) where
+  g-head-cl-natural : {s : Tm Δ (GStream A)} →
+                      (g-head s) [ dra-closed constantly clA ∣ σ ]cl ≅ᵗᵐ g-head (s [ gstream-closed clA ∣ σ ]cl)
+  g-head-cl-natural {s} =
+    begin
+      ι⁻¹[ transᵗʸ (constantly-ty-natural σ) (dra-cong constantly (closed-natural clA (now-subst σ))) ] ((g-head s) [ σ ]')
+    ≅⟨ ι⁻¹-cong (g-head-natural σ s) ⟩
+      ι⁻¹[ transᵗʸ (constantly-ty-natural σ) (dra-cong constantly (closed-natural clA (now-subst σ))) ] (ι[ constantly-ty-natural σ ]
+        g-head (ι⁻¹[ gstream-natural σ ] (s [ σ ]')))
+    ≅⟨ transᵗᵐ ι⁻¹-trans (ι⁻¹-cong ι-symˡ) ⟩
+      ι⁻¹[ dra-cong constantly (closed-natural clA (now-subst σ)) ] g-head (ι⁻¹[ gstream-natural σ ] (s [ σ ]'))
+    ≅⟨ g-head-ι⁻¹ ⟩
+      g-head (ι⁻¹[ gstream-cong (closed-natural clA (now-subst σ)) ] (ι⁻¹[ gstream-natural σ ] (s [ σ ]')))
+    ≅⟨ g-head-cong ι⁻¹-trans ⟨
+      g-head (ι⁻¹[ closed-natural (gstream-closed clA) σ ] (s [ σ ]')) ∎
+    where open ≅ᵗᵐ-Reasoning
+
+  g-tail-cl-natural : {s : Tm Δ (GStream A)} →
+                      (g-cl-tail clA s) [ dra-closed later (gstream-closed clA) ∣ σ ]cl
+                        ≅ᵗᵐ
+                      g-cl-tail clA (s [ gstream-closed clA ∣ σ ]cl)
+  g-tail-cl-natural {s} =
+    begin
+      ι⁻¹[ closed-natural (dra-closed later (gstream-closed clA)) σ ] (
+          (ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ]
+          g-tail s)
+        [ σ ]')
+    ≅⟨ ι⁻¹-cong ι⁻¹-subst-commute ⟨
+      ι⁻¹[ closed-natural (dra-closed later (gstream-closed clA)) σ ] (
+      ι⁻¹[ ty-subst-cong-ty σ (closed-ty-eq (cl-▻'-▻ (gstream-closed clA))) ] (
+      (g-tail s) [ σ ]'))
+    ≅⟨ ι⁻¹-congᵉ-2-2 (closed-ty-eq-natural (cl-▻'-▻ (gstream-closed clA)) σ) ⟩
+      ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] (
+      ι⁻¹[ closed-natural (▻'-closed (gstream-closed clA)) σ ] (
+      (g-tail s) [ σ ]'))
+    ≅⟨ ι⁻¹-cong (ι⁻¹-cong (g-tail-natural σ s)) ⟩
+      ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] (
+      ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (transᵗʸ (gstream-natural σ) (gstream-cong (closed-natural clA (now-subst σ))))) ] (
+      ι[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ]
+      g-tail (ι⁻¹[ gstream-natural σ ] (s [ σ ]'))))
+    ≅⟨ ι⁻¹-cong (transᵗᵐ (ι⁻¹-congᵉ (transᵉ (transᵗʸ-congʳ ▻'-cong-trans) (symᵉ transᵗʸ-assoc))) ι⁻¹-trans) ⟩
+      ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] (
+      ι⁻¹[ ▻'-cong (gstream-cong (closed-natural clA (now-subst σ))) ] (
+      ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (
+      ι[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ]
+      g-tail (ι⁻¹[ gstream-natural σ ] (s [ σ ]')))))
+    ≅⟨ ι⁻¹-cong (ι⁻¹-cong ι-symˡ) ⟩
+      ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] (
+      ι⁻¹[ ▻'-cong (gstream-cong (closed-natural clA (now-subst σ))) ]
+      g-tail (ι⁻¹[ gstream-natural σ ] (s [ σ ]')))
+    ≅⟨ ι⁻¹-cong g-tail-ι⁻¹ ⟩
+      ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ]
+      g-tail (
+        ι⁻¹[ gstream-cong (closed-natural clA (now-subst σ)) ] (
+        ι⁻¹[ gstream-natural σ ] (s [ σ ]')))
+    ≅⟨ ι⁻¹-cong (g-tail-cong (symᵗᵐ ι⁻¹-trans)) ⟩
+      ι⁻¹[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ]
+      g-tail
+        (ι⁻¹[ closed-natural (gstream-closed clA) σ ] (s [ σ ]')) ∎
+    where open ≅ᵗᵐ-Reasoning
+
+  g-cons-cl-natural : {h : Tm Δ (constantly-ty A)} {t : Tm Δ (▻ (GStream A))} →
+                      (g-cl-cons clA h t) [ gstream-closed clA ∣ σ ]cl
+                        ≅ᵗᵐ
+                      g-cl-cons clA (h [ dra-closed constantly clA ∣ σ ]cl) (t [ dra-closed later (gstream-closed clA) ∣ σ ]cl)
+  g-cons-cl-natural {h} {t} =
+    begin
+      ι⁻¹[ closed-natural (gstream-closed clA) σ ] (
+      (g-cons h (ι[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] t))
+        [ σ ]')
+    ≅⟨ ι⁻¹-cong (g-cons-natural σ h _) ⟩
+      ι⁻¹[ closed-natural (gstream-closed clA) σ ] (
+      ι[ gstream-natural σ ]
+      g-cons (ι⁻¹[ constantly-ty-natural σ ] (h [ σ ]'))
+             (ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (
+               (ι[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] t) [ σ ]')))
+    ≅⟨ ι-congᵉ-2-1 (transᵉ (transᵗʸ-congˡ symᵗʸ-transᵗʸ) (transᵉ transᵗʸ-assoc transᵗʸ-cancelʳ-symˡ)) ⟩
+      ι⁻¹[ gstream-cong (closed-natural clA (now-subst σ)) ]
+      g-cons (ι⁻¹[ constantly-ty-natural σ ] (h [ σ ]'))
+             (ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (
+               (ι[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] t) [ σ ]'))
+    ≅⟨ g-cons-ι⁻¹ ⟩
+      g-cons (ι⁻¹[ dra-cong constantly (closed-natural clA (now-subst σ)) ] (ι⁻¹[ constantly-ty-natural σ ] (h [ σ ]')))
+             (ι⁻¹[ ▻'-cong (gstream-cong (closed-natural clA (now-subst σ))) ] (
+               ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (
+               (ι[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] t) [ σ ]')))
+    ≅⟨ g-cons-cong ι⁻¹-trans (ι⁻¹-cong (ι⁻¹-cong ι-subst-commute)) ⟨
+      g-cons (ι⁻¹[ closed-natural (dra-closed constantly clA) σ ] (h [ σ ]'))
+             (ι⁻¹[ ▻'-cong (gstream-cong (closed-natural clA (now-subst σ))) ] (
+               ι⁻¹[ transᵗʸ (▻'-natural σ) (▻'-cong (gstream-natural σ)) ] (
+               ι[ ty-subst-cong-ty σ (closed-ty-eq (cl-▻'-▻ (gstream-closed clA))) ] (
+               t [ σ ]'))))
+    ≅⟨ g-cons-cong reflᵗᵐ (ι⁻¹-congᵉ-2-1 (transᵉ transᵗʸ-assoc (transᵗʸ-congʳ (symᵉ ▻'-cong-trans)))) ⟩
+      g-cons (ι⁻¹[ closed-natural (dra-closed constantly clA) σ ] (h [ σ ]'))
+             (ι⁻¹[ closed-natural (▻'-closed (gstream-closed clA)) σ ] (
+               ι[ ty-subst-cong-ty σ (closed-ty-eq (cl-▻'-▻ (gstream-closed clA))) ] (
+               t [ σ ]')))
+    ≅⟨ g-cons-cong reflᵗᵐ (ι-congᵉ-2-2 (move-symᵗʸ-out (closed-ty-eq-natural (cl-▻'-▻ (gstream-closed clA)) σ))) ⟩
+      g-cons (ι⁻¹[ closed-natural (dra-closed constantly clA) σ ] (h [ σ ]'))
+             (ι[ closed-ty-eq (cl-▻'-▻ (gstream-closed clA)) ] (
+               ι⁻¹[ closed-natural (dra-closed later (gstream-closed clA)) σ ] (
+               t [ σ ]'))) ∎
+    where open ≅ᵗᵐ-Reasoning
