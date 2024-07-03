@@ -589,6 +589,13 @@ ty-subst-cong-subst-2-0-iso : {σ : Γ ⇒ Δ} {τ : Δ ⇒ Γ} (T : Ty Δ)
                               ty-subst-cong-ty σ (ty-subst-cong-subst-2-0 T ε) ≅ᵉ ty-subst-cong-subst-2-0 (T [ σ ]) ε'
 eq (from-eq (ty-subst-cong-subst-2-0-iso T ε ε')) _ = ty-cong T refl
 
+ty-subst-cong-subst-2-1-natural : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
+                                  {T S : Ty Θ} (e : T ≅ᵗʸ S) (ε : σ2 ⊚ σ1 ≅ˢ τ) →
+                                  transᵗʸ (ty-subst-cong-subst-2-1 T ε) (ty-subst-cong-ty τ e)
+                                    ≅ᵉ
+                                  transᵗʸ (ty-subst-cong-ty σ1 (ty-subst-cong-ty σ2 e)) (ty-subst-cong-subst-2-1 S ε)
+eq (from-eq (ty-subst-cong-subst-2-1-natural e ε)) _ = sym (naturality (from e))
+
 ty-subst-cong-subst-2-2-id : {σ : Γ ⇒ Δ} (T : Ty Δ) →
                              transᵗʸ (ty-subst-cong-subst-2-2 T (transˢ (id-subst-unitˡ σ) (symˢ (id-subst-unitʳ σ)))) (ty-subst-id (T [ σ ]))
                                ≅ᵉ
@@ -615,6 +622,11 @@ ty-subst-cong-subst-2-2-natural : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ 
                                     ≅ᵉ
                                   transᵗʸ (ty-subst-cong-ty σ1 (ty-subst-cong-ty σ2 e)) (ty-subst-cong-subst-2-2 S ε)
 from-eq (ty-subst-cong-subst-2-2-natural e ε) = symⁿ (ty-subst-cong-subst-2-2-natural-from (from e) ε)
+
+ty-subst-cong-subst-2-2-sym : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
+                              (T : Ty Θ) → {ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1} →
+                              ty-subst-cong-subst-2-2 T (symˢ ε) ≅ᵉ symᵗʸ (ty-subst-cong-subst-2-2 T ε)
+from-eq (ty-subst-cong-subst-2-2-sym T) = ⊙-assoc
 
 
 -- Nicer syntax for substitutions coming from context equality

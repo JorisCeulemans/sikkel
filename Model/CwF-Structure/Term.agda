@@ -238,6 +238,12 @@ tm-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
                           t [ σ2 ]' [ σ1 ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-1 T ε ] (t [ τ ]')
 eq (tm-subst-cong-subst-2-1 t ε) γ = sym (naturality t _ _)
 
+tm-subst-cong-subst-2-0 : {σ : Γ ⇒ Δ} {τ : Δ ⇒ Γ}
+                          {T : Ty Δ} (t : Tm Δ T)
+                          (ε : σ ⊚ τ ≅ˢ id-subst Δ) →
+                          t [ σ ]' [ τ ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-0 T ε ] t
+eq (tm-subst-cong-subst-2-0 t ε) γ = sym (naturality t _ _)
+
 tm-subst-cong-subst-2-2 : {Δ' : Ctx C} {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ1 : Γ ⇒ Δ'} {τ2 : Δ' ⇒ Θ}
                           {T : Ty Θ} (t : Tm Θ T) (ε : σ2 ⊚ σ1 ≅ˢ τ2 ⊚ τ1) →
                           t [ σ2 ]' [ σ1 ]' ≅ᵗᵐ ι[ ty-subst-cong-subst-2-2 T ε ] (t [ τ2 ]' [ τ1 ]')
@@ -249,3 +255,9 @@ eq (tm-subst-cong-subst-2-2 t ε) γ = sym (naturality t _ _)
 
 ιc⁻¹[_]'_ : {T : Ty Γ} → (Γ=Δ : Γ ≅ᶜ Δ) → Tm Γ T → Tm Δ (ιc⁻¹[ Γ=Δ ] T)
 ιc⁻¹[ Γ=Δ ]' t = t [ to Γ=Δ ]'
+
+ιc'-cong : {S : Ty Δ} (Γ=Δ : Γ ≅ᶜ Δ) {s s' : Tm Δ S} → s ≅ᵗᵐ s' → ιc[ Γ=Δ ]' s ≅ᵗᵐ ιc[ Γ=Δ ]' s'
+ιc'-cong Γ=Δ 𝒆 = tm-subst-cong-tm (from Γ=Δ) 𝒆
+
+ιc⁻¹'-cong : {T : Ty Γ} (Γ=Δ : Γ ≅ᶜ Δ) {t t' : Tm Γ T} → t ≅ᵗᵐ t' → ιc⁻¹[ Γ=Δ ]' t ≅ᵗᵐ ιc⁻¹[ Γ=Δ ]' t'
+ιc⁻¹'-cong Γ=Δ 𝒆 = tm-subst-cong-tm (to Γ=Δ) 𝒆

@@ -88,6 +88,14 @@ closed-substs-eq-2-1 clA ε =
   transᵉ (transᵗʸ-congʳ (symᵉ (closed-subst-eq clA ε)))
   (symᵉ transᵗʸ-assoc))
 
+closed-substs-eq-2-0 : {Γ Δ : Ctx C} {σ1 : Δ ⇒ Γ} {σ2 : Γ ⇒ Δ} →
+                       {A : ClosedTy C} (clA : IsClosedNatural A) (ε : σ1 ⊚ σ2 ≅ˢ id-subst Γ) →
+                       transᵗʸ (ty-subst-cong-ty σ2 (closed-natural clA σ1)) (closed-natural clA σ2)
+                         ≅ᵉ
+                       ty-subst-cong-subst-2-0 A ε
+closed-substs-eq-2-0 clA ε =
+  transᵉ (closed-substs-eq-2-1 clA ε) (transᵗʸ-congʳ (closed-id clA))
+
 
 --------------------------------------------------
 -- A type in the empty context gives rise to a closed type.
