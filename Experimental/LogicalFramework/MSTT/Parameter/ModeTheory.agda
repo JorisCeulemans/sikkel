@@ -184,12 +184,12 @@ record MTTwoCellLaws
                           DRA.≅ᵗᶜ
                         (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)
     ⟦associator⟧ : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) →
-                   (DRA.id-cell DRA.ⓣ-hor from (⟦ⓜ⟧-sound ρ κ))
-                   DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ (ρ ⓜ κ))
+                   ((DRA.id-cell DRA.ⓣ-hor from (⟦ⓜ⟧-sound ρ κ))
+                   DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))
                    DRA.ⓣ-vert ⟦ eq-cell (mod-assoc κ) ⟧two-cell
                      DRA.≅ᵗᶜ
-                   from (DRA.ⓓ-assoc ⟦ μ ⟧mod ⟦ ρ ⟧mod ⟦ κ ⟧mod)
-                   DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-hor DRA.id-cell)
+                   (from (DRA.ⓓ-assoc ⟦ μ ⟧mod ⟦ ρ ⟧mod ⟦ κ ⟧mod)
+                   DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-hor DRA.id-cell))
                    DRA.ⓣ-vert from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)
 
 
@@ -269,9 +269,9 @@ record ModeTheory : Set₁ where
     begin
       ⟦ α ⓣ-hor β ⟧two-cell DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
     ≅⟨ DRA.ⓣ-vert-congˡ (DRA.transᵗᶜ (DRA.symᵗᶜ DRA.ⓣ-vert-assoc) (DRA.transᵗᶜ (DRA.ⓣ-vert-congˡ (isoˡ (⟦ⓜ⟧-sound μ' ρ'))) DRA.ⓣ-vert-unitˡ)) ⟨
-      to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ⟦ α ⓣ-hor β ⟧two-cell) DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
+      (to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ⟦ α ⓣ-hor β ⟧two-cell)) DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
     ≅⟨ DRA.ⓣ-vert-congˡ (DRA.ⓣ-vert-congʳ (⟦ⓜ⟧-sound-natural α β)) ⟩
-      to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)) DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
+      (to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ((⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ))) DRA.ⓣ-vert to (⟦ⓜ⟧-sound μ ρ)
     ≅⟨ DRA.transᵗᶜ DRA.ⓣ-vert-assoc (DRA.ⓣ-vert-congʳ (DRA.transᵗᶜ (DRA.transᵗᶜ DRA.ⓣ-vert-assoc (DRA.ⓣ-vert-congʳ (isoʳ (⟦ⓜ⟧-sound μ ρ)))) DRA.ⓣ-vert-unitʳ)) ⟩
       to (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) ∎
     where open DRA.≅ᵗᶜ-Reasoning

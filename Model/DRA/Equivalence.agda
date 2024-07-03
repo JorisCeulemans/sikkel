@@ -322,8 +322,8 @@ key-subst-eq 𝟙-ⓓ-triangle = id-subst-unitˡ _
 
 ⓓ-pentagon : {C1 C2 C3 C4 C5 : BaseCategory}
              {μ : DRA C4 C5} {ρ : DRA C3 C4} {κ : DRA C2 C3} {θ : DRA C1 C2} →
-             (id-cell ⓣ-hor from (ⓓ-assoc ρ κ θ))
-             ⓣ-vert from (ⓓ-assoc μ (ρ ⓓ κ) θ)
+             ((id-cell ⓣ-hor from (ⓓ-assoc ρ κ θ))
+             ⓣ-vert from (ⓓ-assoc μ (ρ ⓓ κ) θ))
              ⓣ-vert (from (ⓓ-assoc μ ρ κ) ⓣ-hor id-cell)
                ≅ᵗᶜ
              from (ⓓ-assoc μ ρ (κ ⓓ θ))

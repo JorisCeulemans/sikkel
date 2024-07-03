@@ -20,7 +20,7 @@ private
     C D E : BaseCategory
 
 infix 1 _≅ᵗᶜ_
-infixl 20 _ⓣ-vert_ _ⓣ-hor_
+infixl 20 _ⓣ-vert_
 
 
 --------------------------------------------------

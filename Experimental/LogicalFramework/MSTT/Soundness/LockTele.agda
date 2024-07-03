@@ -67,7 +67,7 @@ whiskerˡᵗ-right-sound Θ Ψ {Λ} α =
   begin
     ⟦ eq-cell (++ˡᵗ-locks Ψ) ⟧two-cell
     DRA.ⓣ-vert (to (⟦ⓜ⟧-sound (locksˡᵗ Ψ) (locksˡᵗ Λ))
-    DRA.ⓣ-vert (⟦ α ⟧two-cell DRA.ⓣ-hor DRA.id-cell
+    DRA.ⓣ-vert ((⟦ α ⟧two-cell DRA.ⓣ-hor DRA.id-cell)
     DRA.ⓣ-vert (from (⟦ⓜ⟧-sound (locksˡᵗ Θ) (locksˡᵗ Λ))
     DRA.ⓣ-vert ⟦ eq-cell (Ag.sym (++ˡᵗ-locks Θ)) ⟧two-cell)))
   ≅⟨ DRA.ⓣ-vert-congʳ (DRA.ⓣ-vert-congʳ (transᵗᶜ DRA.ⓣ-vert-assoc (DRA.ⓣ-vert-congˡ (DRA.ⓣ-hor-congʳ ⟦id-cell⟧-sound)))) ⟨
