@@ -21,26 +21,26 @@ private
 
 
 --------------------------------------------------
--- The "now" functor
+-- The "now" context functor
 
-now : Ctx ω → Ctx ★
-now Γ ⟨ _ ⟩ = Γ ⟨ 0 ⟩
-now Γ ⟪ _ ⟫ γ = γ
-ctx-id (now Γ) = refl
-ctx-comp (now Γ) = refl
+pick-0 : BaseFunctor ★ ω
+BaseFunctor.ob pick-0 _ = 0
+BaseFunctor.hom pick-0 _ = ≤-refl
+BaseFunctor.id-law pick-0 = refl
+BaseFunctor.comp-law pick-0 = refl
 
-now-subst : Δ ⇒ Γ → now Δ ⇒ now Γ
-func (now-subst σ) = func σ
-_⇒_.naturality (now-subst σ) = refl
+now-functor : CtxFunctor ω ★
+now-functor = lift-functor pick-0
 
-now-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → now-subst σ ≅ˢ now-subst τ
-eq (now-subst-cong σ=τ) δ = eq σ=τ δ
-
-now-subst-id : now-subst (id-subst Γ) ≅ˢ id-subst (now Γ)
-eq now-subst-id _ = refl
-
-now-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → now-subst (σ ⊚ τ) ≅ˢ now-subst σ ⊚ now-subst τ
-eq (now-subst-⊚ σ τ) _ = refl
+open CtxFunctor now-functor renaming (ctx-op to now) using () public
+open IsCtxFunctor (is-functor now-functor) renaming
+  ( ctx-map to now-subst
+  ; ctx-map-cong to now-subst-cong
+  ; ctx-map-id to now-subst-id
+  ; ctx-map-⊚ to now-subst-⊚
+  )
+  using ()
+  public
 
 
 --------------------------------------------------
@@ -48,7 +48,7 @@ eq (now-subst-⊚ σ τ) _ = refl
 
 constantly-ty : Ty (now Γ) → Ty Γ
 constantly-ty {Γ = Γ} T ⟨ n , γ ⟩ = T ⟨ tt , Γ ⟪ z≤n ⟫ γ ⟩
-_⟪_,_⟫_ (constantly-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ tt , proof ⟫_
+_⟪_,_⟫_ (constantly-ty {Γ = Γ} T) m≤n {γy = γn}{γx = γm} eγ = T ⟪ tt , trans (ctx-id Γ) proof ⟫_
   where
     open ≡-Reasoning
     proof : Γ ⟪ z≤n ⟫ γn ≡ Γ ⟪ z≤n ⟫ γm
@@ -72,14 +72,14 @@ module _ {T : Ty (now Γ)} where
 
   unconstantly-tm : Tm Γ (constantly-ty T) → Tm (now Γ) T
   unconstantly-tm t ⟨ _ , γ ⟩' = ty-ctx-subst T (ctx-id Γ) (t ⟨ 0 , γ ⟩')
-  Tm.naturality (unconstantly-tm t) tt refl = ty-id T
+  Tm.naturality (unconstantly-tm t) tt refl = trans (ty-cong-2-2 T refl) (cong (T ⟪ _ , _ ⟫_) (Tm.naturality t ≤-refl refl))
 
   constantly-ty-η : (t : Tm Γ (constantly-ty T)) → constantly-tm (unconstantly-tm t) ≅ᵗᵐ t
   eq (constantly-ty-η t) {n} γ =
     begin
-      T ⟪ tt , ctx-id Γ ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
-    ≡⟨ cong (T ⟪ tt , ctx-id Γ ⟫_) (Tm.naturality t z≤n refl) ⟨
-      T ⟪ tt , ctx-id Γ ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
+      T ⟪ tt , _ ⟫ (t ⟨ 0 , Γ ⟪ z≤n ⟫ γ ⟩')
+    ≡⟨ cong (T ⟪ tt , _ ⟫_) (Tm.naturality t z≤n refl) ⟨
+      T ⟪ tt , _ ⟫ T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
     ≡⟨ ty-cong-2-1 T refl ⟩
       T ⟪ tt , _ ⟫ (t ⟨ n , γ ⟩')
     ≡⟨ Tm.naturality t ≤-refl (ctx-id Γ) ⟩
@@ -133,7 +133,7 @@ eq (isoˡ (constantly-ty-natural σ {T})) t =
   begin
     T ⟪ tt , _ ⟫ (T ⟪ tt , _ ⟫ t)
   ≡⟨ ty-cong-2-1 T refl ⟩
-    T ⟪ tt , refl ⟫ t
+    T ⟪ tt , _ ⟫ t
   ≡⟨ ty-id T ⟩
     t ∎
   where open ≡-Reasoning
@@ -141,7 +141,7 @@ eq (isoʳ (constantly-ty-natural σ {T})) t =
   begin
     T ⟪ tt , _ ⟫ (T ⟪ tt , _ ⟫ t)
   ≡⟨ ty-cong-2-1 T refl ⟩
-    T ⟪ tt , refl ⟫ t
+    T ⟪ tt , _ ⟫ t
   ≡⟨ ty-id T ⟩
     t ∎
   where open ≡-Reasoning
@@ -156,7 +156,7 @@ constantly-ty-natural-id-map : {T : Ty (now Γ)} →
   constantly-ty-map (ty-subst-id-from T ⊙ ty-subst-eq-subst-morph now-subst-id T) ⊙ from (constantly-ty-natural (id-subst Γ))
     ≅ⁿ
   ty-subst-id-from (constantly-ty T)
-eq (constantly-ty-natural-id-map {T = T}) _ = trans (ty-id T) (ty-id T)
+eq (constantly-ty-natural-id-map {T = T}) _ = trans (strong-ty-id T) (strong-ty-id T)
 
 constantly-ty-natural-⊚-map : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (now Θ)} →
   constantly-ty-map (ty-subst-comp-from T (now-subst τ) (now-subst σ))
@@ -186,17 +186,6 @@ module _ (σ : Δ ⇒ Γ) {T : Ty (now Γ)} where
 
 --------------------------------------------------
 -- Constantly as a DRA
-
-instance
-  now-is-functor : IsCtxFunctor now
-  ctx-map {{now-is-functor}} = now-subst
-  ctx-map-cong {{now-is-functor}} = now-subst-cong
-  ctx-map-id {{now-is-functor}} = now-subst-id
-  ctx-map-⊚ {{now-is-functor}} = now-subst-⊚
-
-now-functor : CtxFunctor ω ★
-ctx-op now-functor = now
-is-functor now-functor = now-is-functor
 
 constantly : DRA ★ ω
 ctx-functor constantly = now-functor

@@ -21,24 +21,24 @@ private
 --------------------------------------------------
 -- The "earlier" context functor
 
-◄ : Ctx ω → Ctx ω
-◄ Γ ⟨ n ⟩ = Γ ⟨ suc n ⟩
-◄ Γ ⟪ m≤n ⟫ γ = Γ ⟪ s≤s m≤n ⟫ γ
-ctx-id (◄ Γ) = ctx-id Γ
-ctx-comp (◄ Γ) = ctx-comp Γ
+suc-functor : BaseFunctor ω ω
+BaseFunctor.ob suc-functor = suc
+BaseFunctor.hom suc-functor = s≤s
+BaseFunctor.id-law suc-functor = refl
+BaseFunctor.comp-law suc-functor = refl
 
-◄-subst : (σ : Δ ⇒ Γ) → ◄ Δ ⇒ ◄ Γ
-func (◄-subst σ) {n} = func σ {suc n}
-naturality (◄-subst σ) {f = m≤n} = naturality σ {f = s≤s m≤n}
+earlier-functor : CtxFunctor ω ω
+earlier-functor = lift-functor suc-functor
 
-◄-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → ◄-subst σ ≅ˢ ◄-subst τ
-eq (◄-subst-cong σ=τ) δ = eq σ=τ δ
-
-◄-subst-id : ◄-subst (id-subst Γ) ≅ˢ id-subst (◄ Γ)
-eq ◄-subst-id _ = refl
-
-◄-subst-⊚ : (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → ◄-subst (τ ⊚ σ) ≅ˢ ◄-subst τ ⊚ ◄-subst σ
-eq (◄-subst-⊚ τ σ) _ = refl
+open CtxFunctor earlier-functor renaming (ctx-op to ◄) using () public
+open IsCtxFunctor (is-functor earlier-functor) renaming
+  ( ctx-map to ◄-subst
+  ; ctx-map-cong to ◄-subst-cong
+  ; ctx-map-id to ◄-subst-id
+  ; ctx-map-⊚ to ◄-subst-⊚
+  )
+  using ()
+  public
 
 
 --------------------------------------------------
@@ -52,9 +52,9 @@ eq (◄-subst-⊚ τ σ) _ = refl
 ty-cong (▻ T) {f = z≤n} {f' = z≤n} e = refl
 ty-cong (▻ T) {f = s≤s m≤n} {f' = s≤s .m≤n} refl = ty-cong T refl
 ty-id (▻ T) {zero} = refl
-ty-id (▻ T) {suc n} = ty-id T
+ty-id (▻ T) {suc n} = strong-ty-id T
 ty-comp (▻ T) {f = z≤n} {g = m≤n} = refl
-ty-comp (▻ T) {f = s≤s k≤m} {g = s≤s m≤n} = ty-comp T
+ty-comp (▻ T) {f = s≤s k≤m} {g = s≤s m≤n} = strong-ty-comp T
 
 module _ {T : Ty (◄ Γ)} where
   next : Tm (◄ Γ) T → Tm Γ (▻ T)
@@ -173,23 +173,12 @@ later-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (◄ Δ)} (ε : σ ≅�
                              ▻-natural-from τ ⊙ ty-subst-eq-subst-morph ε (▻ T)
                                ≅ⁿ
                              ▻-map (ty-subst-eq-subst-morph (◄-subst-cong ε) T) ⊙ ▻-natural-from σ
-eq (later-natural-subst-eq-map _) {zero}  _ = refl
-eq (later-natural-subst-eq-map _) {suc n} _ = refl
+eq (later-natural-subst-eq-map         _) {zero}  _ = refl
+eq (later-natural-subst-eq-map {T = T} _) {suc n} _ = ty-cong T refl
 
 
 --------------------------------------------------
 -- Later as a DRA
-
-instance
-  ◄-is-functor : IsCtxFunctor ◄
-  ctx-map {{◄-is-functor}} = ◄-subst
-  ctx-map-cong {{◄-is-functor}} = ◄-subst-cong
-  ctx-map-id {{◄-is-functor}} = ◄-subst-id
-  ctx-map-⊚ {{◄-is-functor}} = ◄-subst-⊚
-
-earlier-functor : CtxFunctor ω ω
-ctx-op earlier-functor = ◄
-is-functor earlier-functor = ◄-is-functor
 
 later : DRA ω ω
 ctx-functor later = earlier-functor

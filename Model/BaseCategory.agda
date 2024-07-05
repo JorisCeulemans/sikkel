@@ -125,7 +125,7 @@ _∙_ (Type-groupoid X) y=z x=y = trans x=y y=z
 hom-idʳ (Type-groupoid X) = refl
 hom-idˡ (Type-groupoid X) = trans-reflʳ _
 
-record Functor (C D : BaseCategory) : Set where
+record BaseFunctor (C D : BaseCategory) : Set where
   open BaseCategory
   field
     ob : Ob C → Ob D

@@ -34,8 +34,8 @@ CtxNatTransf.naturality (transf frv≤frvⓓltr) σ = from-earlier-natural _
 forever-later : forever ⓓ later ≅ᵈ forever
 from forever-later = frvⓓltr≤frv
 to forever-later = frv≤frvⓓltr
-eq (key-subst-eq (isoˡ forever-later)) _ = refl
-eq (key-subst-eq (isoʳ forever-later)) _ = refl
+eq (key-subst-eq (isoˡ forever-later) {Γ = Γ}) _ = ctx-id Γ
+eq (key-subst-eq (isoʳ forever-later) {Γ = Γ}) _ = ctx-id Γ
 
 forever-later'-ty : {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) →
                     forever-ty (▻' T) ≅ᵗʸ forever-ty T
@@ -47,12 +47,12 @@ forever-later'-ty = eq-dra-tyˡ forever-later
 
 frvⓓcst≤𝟙 : TwoCell (forever ⓓ constantly) 𝟙
 func (transf-op (transf frvⓓcst≤𝟙) Γ) γ = γ
-_⇒_.naturality (transf-op (transf frvⓓcst≤𝟙) Γ) {f = tt} = sym (ctx-id Γ)
+_⇒_.naturality (transf-op (transf frvⓓcst≤𝟙) Γ) {f = tt} = refl
 eq (CtxNatTransf.naturality (transf frvⓓcst≤𝟙) σ) _ = refl
 
 𝟙≤frvⓓcst : TwoCell 𝟙 (forever ⓓ constantly)
 func (transf-op (transf 𝟙≤frvⓓcst) Γ) γ = γ
-_⇒_.naturality (transf-op (transf 𝟙≤frvⓓcst) Γ) {f = tt} = ctx-id Γ
+_⇒_.naturality (transf-op (transf 𝟙≤frvⓓcst) Γ) {f = tt} = refl
 eq (CtxNatTransf.naturality (transf 𝟙≤frvⓓcst) σ) _ = refl
 
 forever-constantly : forever ⓓ constantly ≅ᵈ 𝟙
@@ -67,7 +67,7 @@ now-constantly-ctx-intro clA t = unconstantly-tm (unforever-tm (ι[ eq-dra-ty-cl
 
 to-constantly-now-ctx : (Γ : Ctx ω) → (Γ ⇒ constantly-ctx (now Γ))
 func (to-constantly-now-ctx Γ) = Γ ⟪ z≤n ⟫_
-_⇒_.naturality (to-constantly-now-ctx Γ) = ctx-comp Γ
+_⇒_.naturality (to-constantly-now-ctx Γ) = ctx-cong-2-2 Γ refl
 
 to-constantly-now-ctx-natural : {Δ Γ : Ctx ω} (σ : Δ ⇒ Γ) →
     to-constantly-now-ctx Γ ⊚ σ ≅ˢ ctx-fmap (constantly-ctx-functor ⓕ now-functor) σ ⊚ to-constantly-now-ctx Δ

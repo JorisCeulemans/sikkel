@@ -9,3 +9,4 @@ open import Model.CwF-Structure.ContextExtension public
 open import Model.CwF-Structure.ClosedType public
 open import Model.CwF-Structure.ContextFunctor public
 open import Model.CwF-Structure.Type.ContextTransformation public
+open import Model.CwF-Structure.FunctorLift public

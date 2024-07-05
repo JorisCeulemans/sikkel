@@ -145,15 +145,17 @@ module _ {A : Ty (now Γ)} where
   g-tail s ⟨ suc n , γ ⟩' = map (ty-ctx-subst A (ctx-comp Γ)) (tail (s ⟨ suc n , γ ⟩'))
   naturality (g-tail s) z≤n eγ = refl
   naturality (g-tail s) {x = suc m} {y = suc n} {γy = γn} {γx = γm} (s≤s m≤n) eγ =
-    let α = _ in
+    let α = _
+        β = _
+    in
     begin
-      map (A ⟪ tt , α ⟫_) (first-≤ (s≤s m≤n) (map (A ⟪ tt , ctx-comp Γ ⟫_) (tail (s ⟨ suc n , γn ⟩'))))
-    ≡⟨ trans (map-tail (first-≤ (s≤s (s≤s m≤n)) (map (A ⟪ tt , _ ⟫_) (s ⟨ suc n , γn ⟩')))) (
-       trans (cong (map (A ⟪ tt , α ⟫_)) (first-≤-tail (map (A ⟪ tt , _ ⟫_) (s ⟨ suc n , γn ⟩')))) (
+      map (A ⟪ tt , α ⟫_) (first-≤ (s≤s m≤n) (map (A ⟪ tt , β ⟫_) (tail (s ⟨ suc n , γn ⟩'))))
+    ≡⟨ trans (map-tail (first-≤ (s≤s (s≤s m≤n)) (map (A ⟪ tt , β ⟫_) (s ⟨ suc n , γn ⟩')))) (
+       trans (cong (map (A ⟪ tt , α ⟫_)) (first-≤-tail (map (A ⟪ tt , β ⟫_) (s ⟨ suc n , γn ⟩')))) (
        (cong (map (A ⟪ tt , α ⟫_)) (cong (first-≤ (s≤s m≤n)) (map-tail (s ⟨ suc n , γn ⟩')))))) ⟨
-      tail (map (A ⟪ tt , α ⟫_) (first-≤ (s≤s (s≤s m≤n)) (map (A ⟪ tt , ctx-comp Γ ⟫_) (s ⟨ suc n , γn ⟩'))))
+      tail (map (A ⟪ tt , α ⟫_) (first-≤ (s≤s (s≤s m≤n)) (map (A ⟪ tt , β ⟫_) (s ⟨ suc n , γn ⟩'))))
     ≡⟨ cong tail (cong (map (A ⟪ tt , α ⟫_)) (map-first-≤ {m≤n = s≤s (s≤s m≤n)} {as = s ⟨ suc n , γn ⟩'})) ⟨
-      tail (map (A ⟪ tt , α ⟫_) (map (A ⟪ tt , ctx-comp Γ ⟫_) (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩'))))
+      tail (map (A ⟪ tt , α ⟫_) (map (A ⟪ tt , β ⟫_) (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩'))))
     ≡⟨ cong tail (map-map-cong (λ _ → ty-cong-2-2 A refl) {as = first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩')}) ⟩
       tail (map (ty-ctx-subst A (ctx-comp Γ)) (map (A ⟪ tt , _ ⟫_) (first-≤ (s≤s (s≤s m≤n)) (s ⟨ suc n , γn ⟩'))))
     ≡⟨ cong tail (cong (map (ty-ctx-subst A (ctx-comp Γ))) (naturality s (s≤s m≤n) eγ)) ⟩
@@ -308,20 +310,21 @@ module _ {A A' : Ty (now Γ)} {e : A ≅ᵗʸ A'} where
   eq (g-cons-ι⁻¹ {s = s}) {x = zero}  γ = refl
   eq (g-cons-ι⁻¹ {s = s}) {x = suc _} γ = cong (_ ∷_) (map-map-cong (λ y → sym (naturality (from e))))
 
+
 gstream-closed : {A : ClosedTy ★} → IsClosedNatural A → IsClosedNatural (GStream A)
 closed-natural (gstream-closed clA) σ = transᵗʸ (gstream-natural σ) (gstream-cong (closed-natural clA (now-subst σ)))
 eq (from-eq (closed-id (gstream-closed {A} clA))) v =
-  trans (trans (map-cong (λ a → trans (trans (cong (func (from (closed-natural clA _))) (sym (ty-id A)))
+  trans (trans (map-cong (λ a → trans (trans (cong (func (from (closed-natural clA _))) (sym (strong-ty-id A)))
                                              (eq (from-eq (closed-subst-eq clA (symˢ now-subst-id))) a))
                                       (eq (from-eq (closed-id clA)) a)) _)
                (map-id _))
-        (trans (map-cong (λ _ → ty-id A) v)
+        (trans (map-cong (λ _ → strong-ty-id A) v)
                (map-id v))
 eq (from-eq (closed-⊚ (gstream-closed {A} clA) σ τ)) v =
   trans (cong (map _) (map-map-cong (λ _ → naturality (from (closed-natural clA (now-subst σ))))))
   (trans (sym (map-∘ _ (func (from (closed-natural clA (now-subst σ)))) _))
   (trans (map-cong (λ a → trans (eq (from-eq (closed-⊚ clA (now-subst σ) (now-subst τ))) a)
-                                (trans (cong (func (from (closed-natural clA _))) (sym (ty-id A)))
+                                (trans (cong (func (from (closed-natural clA _))) (sym (strong-ty-id A)))
                                        (eq (from-eq (closed-subst-eq clA (now-subst-⊚ σ τ))) a))) _)
   (cong (map _)
   (trans (sym (map-∘ _ _ v))

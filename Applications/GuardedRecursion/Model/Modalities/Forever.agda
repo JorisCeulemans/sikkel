@@ -22,24 +22,24 @@ private
 --------------------------------------------------
 -- The constantly context functor
 
-constantly-ctx : Ctx ★ → Ctx ω
-constantly-ctx Γ ⟨ _ ⟩ = Γ ⟨ tt ⟩
-constantly-ctx Γ ⟪ _ ⟫ γ = γ
-ctx-id (constantly-ctx Γ) = refl
-ctx-comp (constantly-ctx Γ) = refl
+ω-to-★ : BaseFunctor ω ★
+BaseFunctor.ob ω-to-★ _ = tt
+BaseFunctor.hom ω-to-★ _ = tt
+BaseFunctor.id-law ω-to-★ = refl
+BaseFunctor.comp-law ω-to-★ = refl
 
-constantly-subst : Δ ⇒ Γ → constantly-ctx Δ ⇒ constantly-ctx Γ
-func (constantly-subst σ) = func σ
-_⇒_.naturality (constantly-subst σ) = refl
+constantly-ctx-functor : CtxFunctor ★ ω
+constantly-ctx-functor = lift-functor ω-to-★
 
-constantly-subst-cong : {σ τ : Δ ⇒ Γ} → σ ≅ˢ τ → constantly-subst σ ≅ˢ constantly-subst τ
-eq (constantly-subst-cong σ=τ) δ = eq σ=τ δ
-
-constantly-subst-id : constantly-subst (id-subst Γ) ≅ˢ id-subst (constantly-ctx Γ)
-eq constantly-subst-id _ = refl
-
-constantly-subst-⊚ : (σ : Γ ⇒ Θ) (τ : Δ ⇒ Γ) → constantly-subst (σ ⊚ τ) ≅ˢ constantly-subst σ ⊚ constantly-subst τ
-eq (constantly-subst-⊚ σ τ) _ = refl
+open CtxFunctor constantly-ctx-functor renaming (ctx-op to constantly-ctx) using () public
+open IsCtxFunctor (is-functor constantly-ctx-functor) renaming
+  ( ctx-map to constantly-subst
+  ; ctx-map-cong to constantly-subst-cong
+  ; ctx-map-id to constantly-subst-id
+  ; ctx-map-⊚ to constantly-subst-⊚
+  )
+  using ()
+  public
 
 
 --------------------------------------------------
@@ -52,14 +52,14 @@ record OmegaLimit {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) (γ : Γ ⟨ tt �
   constructor ω-lim
   field
     limit : (n : ℕ) → T ⟨ n , γ ⟩
-    limit-natural : {m n : ℕ} (m≤n : m ≤ n) → T ⟪ m≤n , refl ⟫ (limit n) ≡ limit m
+    limit-natural : {m n : ℕ} (m≤n : m ≤ n) → T ⟪ m≤n , ctx-id Γ ⟫ (limit n) ≡ limit m
 open OmegaLimit
 
 ω-limit-cast : {T : Ty (constantly-ctx Γ)} {γx γy : Γ ⟨ tt ⟩} → γy ≡ γx →
               OmegaLimit T γy → OmegaLimit T γx
-limit (ω-limit-cast {T = T} eγ l) = λ n → T ⟪ ≤-refl , eγ ⟫ limit l n
+limit (ω-limit-cast {Γ = Γ} {T = T} eγ l) = λ n → T ⟪ ≤-refl , trans (ctx-id Γ) eγ ⟫ limit l n
 limit-natural (ω-limit-cast {T = T} eγ l) =
-  λ m≤n → trans (ty-cong-2-2 T (≤-irrelevant _ _)) (cong (T ⟪ ≤-refl , eγ ⟫_) (limit-natural l m≤n))
+  λ m≤n → trans (ty-cong-2-2 T (≤-irrelevant _ _)) (cong (T ⟪ ≤-refl , _ ⟫_) (limit-natural l m≤n))
 
 to-ω-limit-eq : {T : Ty (constantly-ctx Γ)} {γ : Γ ⟨ tt ⟩} {l l' : OmegaLimit T γ} →
                 (∀ n → limit l n ≡ limit l' n) →
@@ -81,12 +81,15 @@ ty-comp (forever-ty T) = to-ω-limit-eq (λ _ → sym (ty-cong-2-1 T (≤-irrele
 module _ {T : Ty (constantly-ctx Γ)} where
   forever-tm : Tm (constantly-ctx Γ) T → Tm Γ (forever-ty T)
   limit (forever-tm t ⟨ tt , γ ⟩') = λ n → t ⟨ n , γ ⟩'
-  limit-natural (forever-tm t ⟨ tt , γ ⟩') m≤n = Tm.naturality t m≤n refl
+  limit-natural (forever-tm t ⟨ tt , γ ⟩') m≤n = Tm.naturality t m≤n (ctx-id Γ)
   Tm.naturality (forever-tm t) _ _ = to-ω-limit-eq (λ _ → Tm.naturality t ≤-refl _)
 
   unforever-tm : Tm Γ (forever-ty T) → Tm (constantly-ctx Γ) T
   unforever-tm t ⟨ n , γ ⟩' = limit (t ⟨ tt , γ ⟩') n
-  Tm.naturality (unforever-tm t) m≤n refl = limit-natural (t ⟨ tt , _ ⟩') m≤n
+  Tm.naturality (unforever-tm t) m≤n eγ =
+    trans (sym (ty-cong-2-1 T (≤-irrelevant _ _))) (
+    trans (cong (T ⟪ m≤n , _ ⟫_) (
+    cong (λ f → limit f _) (Tm.naturality t tt eγ))) (limit-natural (t ⟨ tt , _ ⟩') m≤n))
 
   forever-ty-β : (t : Tm (constantly-ctx Γ) T) → unforever-tm (forever-tm t) ≅ᵗᵐ t
   eq (forever-ty-β t) _ = refl
@@ -147,7 +150,7 @@ forever-ty-natural-id-map : {T : Ty (constantly-ctx Γ)} →
   forever-ty-map (ty-subst-id-from T ⊙ ty-subst-eq-subst-morph constantly-subst-id T) ⊙ from (forever-ty-natural (id-subst Γ))
     ≅ⁿ
   ty-subst-id-from (forever-ty T)
-eq (forever-ty-natural-id-map {T = T}) _ = to-ω-limit-eq (λ _ → ty-id T)
+eq (forever-ty-natural-id-map {T = T}) _ = to-ω-limit-eq (λ _ → strong-ty-id T)
 
 forever-ty-natural-⊚-map : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (constantly-ctx Θ)} →
   forever-ty-map (ty-subst-comp-from T (constantly-subst τ) (constantly-subst σ))
@@ -157,7 +160,7 @@ forever-ty-natural-⊚-map : (τ : Δ ⇒ Θ) (σ : Γ ⇒ Δ) {T : Ty (constant
   forever-ty-map (ty-subst-eq-subst-morph (constantly-subst-⊚ τ σ) T)
   ⊙ from (forever-ty-natural (τ ⊚ σ))
   ⊙ ty-subst-comp-from (forever-ty T) τ σ
-eq (forever-ty-natural-⊚-map τ σ {T}) _ = to-ω-limit-eq (λ _ → sym (ty-id T))
+eq (forever-ty-natural-⊚-map τ σ {T}) _ = to-ω-limit-eq (λ _ → sym (strong-ty-id T))
 
 forever-ty-natural-subst-eq-map : {σ τ : Γ ⇒ Δ} {T : Ty (constantly-ctx Δ)} (ε : σ ≅ˢ τ) →
   from (forever-ty-natural τ) ⊙ ty-subst-eq-subst-morph ε (forever-ty T)
@@ -177,17 +180,6 @@ module _ (σ : Δ ⇒ Γ) {T : Ty (constantly-ctx Γ)} where
 
 --------------------------------------------------
 -- Forever as a DRA
-
-instance
-  constantly-ctx-is-functor : IsCtxFunctor constantly-ctx
-  ctx-map {{constantly-ctx-is-functor}} = constantly-subst
-  ctx-map-cong {{constantly-ctx-is-functor}} = constantly-subst-cong
-  ctx-map-id {{constantly-ctx-is-functor}} = constantly-subst-id
-  ctx-map-⊚ {{constantly-ctx-is-functor}} = constantly-subst-⊚
-
-constantly-ctx-functor : CtxFunctor ★ ω
-ctx-op constantly-ctx-functor = constantly-ctx
-is-functor constantly-ctx-functor = constantly-ctx-is-functor
 
 forever : DRA ω ★
 ctx-functor forever = constantly-ctx-functor

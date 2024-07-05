@@ -60,6 +60,13 @@ module _ {C : BaseCategory} where
       γx ∎
     where open ≡-Reasoning
 
+  ctx-cong-2-2 : (Γ : Ctx C) {x y y' z : Ob}
+                 {f : Hom x y} {g : Hom y z} {f' : Hom x y'} {g' : Hom y' z} →
+                 g ∙ f ≡ g' ∙ f' →
+                 {γ : Γ ⟨ z ⟩} →
+                 Γ ⟪ f ⟫ (Γ ⟪ g ⟫ γ) ≡ Γ ⟪ f' ⟫ (Γ ⟪ g' ⟫ γ)
+  ctx-cong-2-2 Γ e = trans (sym (ctx-comp Γ)) (trans (cong (Γ ⟪_⟫ _) e) (ctx-comp Γ))
+
   -- The type of substitutions from context Δ to context Γ
   record _⇒_ (Δ : Ctx C) (Γ : Ctx C) : Set where
     constructor MkSubst
