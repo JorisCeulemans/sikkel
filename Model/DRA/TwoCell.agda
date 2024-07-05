@@ -377,12 +377,16 @@ record _≅ᵗᶜ_ {μ ρ : DRA C D} (α β : TwoCell μ ρ) : Set₁ where
     key-subst-eq : ∀ {Γ} → key-subst α {Γ} ≅ˢ key-subst β
 open _≅ᵗᶜ_ public
 
+transf-eq-to-cell-eq : {μ ρ : DRA C D} {α β : TwoCell μ ρ} →
+                       transf α ≅ᶜᵗ transf β → α ≅ᵗᶜ β
+key-subst-eq (transf-eq-to-cell-eq 𝓮) = transf-op-eq 𝓮
+
 module _ {μ ρ : DRA C D} where
   reflᵗᶜ : {α : TwoCell μ ρ} → α ≅ᵗᶜ α
   key-subst-eq reflᵗᶜ = reflˢ
 
   symᵗᶜ : {α β : TwoCell μ ρ} → α ≅ᵗᶜ β → β ≅ᵗᶜ α
-  key-subst-eq (symᵗᶜ α=β) = symˢ (key-subst-eq α=β)
+  key-subst-eq (symᵗᶜ 𝓮) = symˢ (key-subst-eq 𝓮)
 
   transᵗᶜ : {α1 α2 α3 : TwoCell μ ρ} → α1 ≅ᵗᶜ α2 → α2 ≅ᵗᶜ α3 → α1 ≅ᵗᶜ α3
   key-subst-eq (transᵗᶜ 𝓮 𝓮') = transˢ (key-subst-eq 𝓮) (key-subst-eq 𝓮')

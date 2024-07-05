@@ -7,7 +7,7 @@ module Model.BaseCategory where
 open import Data.Nat using (ℕ; _≤_)
 open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality hiding (naturality)
 
 open import Model.Helpers
 
@@ -133,3 +133,20 @@ record BaseFunctor (C D : BaseCategory) : Set where
     id-law : ∀ {x} → hom (hom-id C {x}) ≡ hom-id D {ob x}
     comp-law : ∀ {x y z} {f : Hom C x y} {g : Hom C y z} →
                hom (g ∙[ C ] f) ≡ (hom g) ∙[ D ] (hom f)
+
+
+record BaseNatTransf {C D : BaseCategory} (F G : BaseFunctor C D) : Set where
+  open BaseCategory
+  open BaseFunctor
+
+  field
+    transf-op : (x : Ob C) → Hom D (ob F x) (ob G x)
+    naturality : {x y : Ob C} (f : Hom C x y) →
+                 transf-op y ∙[ D ] hom F f ≡ hom G f ∙[ D ] transf-op x
+
+record _≅ᵇᵗ_ {C D : BaseCategory} {F G : BaseFunctor C D} (α β : BaseNatTransf F G) : Set where
+  open BaseCategory
+  open BaseNatTransf
+
+  field
+    transf-op-eq : (x : Ob C) → transf-op α x ≡ transf-op β x

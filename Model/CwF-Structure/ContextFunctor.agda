@@ -4,6 +4,10 @@
 
 module Model.CwF-Structure.ContextFunctor where
 
+open import Function using (id)
+open import Relation.Binary.Reasoning.Syntax
+open import Preliminaries
+
 open import Model.BaseCategory
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
@@ -172,3 +176,24 @@ naturality (_ⓝ-hor_ {Φ = Φ} {Φ'} {Ψ} {Ψ'} η ζ) {Δ = Δ} {Γ} σ = begi
   ≅⟨ ⊚-assoc ⟩
     ctx-fmap Φ' (ctx-fmap Ψ' σ) ⊚ ((transf-op η (ctx-op Ψ' Δ) ⊚ ctx-fmap Φ (transf-op ζ Δ))) ∎
   where open ≅ˢ-Reasoning
+
+
+record _≅ᶜᵗ_ {Φ Ψ : CtxFunctor C D} (α β : CtxNatTransf Φ Ψ) : Set₁ where
+  field
+    transf-op-eq : ∀ {Γ} → transf-op α Γ ≅ˢ transf-op β Γ
+open _≅ᶜᵗ_ public
+
+module _ {Φ Ψ : CtxFunctor C D} where
+  reflᶜᵗ : {α : CtxNatTransf Φ Ψ} → α ≅ᶜᵗ α
+  transf-op-eq reflᶜᵗ = reflˢ
+
+  symᶜᵗ : {α β : CtxNatTransf Φ Ψ} → α ≅ᶜᵗ β → β ≅ᶜᵗ α
+  transf-op-eq (symᶜᵗ 𝓮) = symˢ (transf-op-eq 𝓮)
+
+  transᶜᵗ : {α1 α2 α3 : CtxNatTransf Φ Ψ} → α1 ≅ᶜᵗ α2 → α2 ≅ᶜᵗ α3 → α1 ≅ᶜᵗ α3
+  transf-op-eq (transᶜᵗ 𝓮 𝓮') = transˢ (transf-op-eq 𝓮) (transf-op-eq 𝓮')
+
+module ≅ᶜᵗ-Reasoning {C D} {Φ Ψ : CtxFunctor C D} where
+  open begin-syntax {A = CtxNatTransf Φ Ψ} _≅ᶜᵗ_ id public
+  open ≅-syntax {A = CtxNatTransf Φ Ψ} _≅ᶜᵗ_ _≅ᶜᵗ_ transᶜᵗ symᶜᵗ public
+  open end-syntax {A = CtxNatTransf Φ Ψ} _≅ᶜᵗ_ reflᶜᵗ public
