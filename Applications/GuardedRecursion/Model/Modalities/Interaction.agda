@@ -38,9 +38,10 @@ eq (key-subst-eq (isoˡ forever-later) {Γ = Γ}) _ = ctx-id Γ
 eq (key-subst-eq (isoʳ forever-later) {Γ = Γ}) _ = ctx-id Γ
 
 forever-later^[_] : (n : ℕ) → forever ⓓ later^[ n ] ≅ᵈ forever
-forever-later^[ zero  ] = 𝟙-unitʳ _
-forever-later^[ suc n ] =
-  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (transᵈ (ⓓ-congˡ _ forever-later) forever-later^[ n ])
+forever-later^[ zero        ] = 𝟙-unitʳ _
+forever-later^[ suc zero    ] = forever-later
+forever-later^[ suc (suc n) ] =
+  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (transᵈ (ⓓ-congˡ _ forever-later) forever-later^[  suc n ])
 
 forever-later'-ty : {Γ : Ctx ★} (T : Ty (constantly-ctx Γ)) →
                     forever-ty (▻' T) ≅ᵗʸ forever-ty T

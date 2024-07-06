@@ -225,18 +225,24 @@ module _ {Γ : Ctx ω} {T T' : Ty (◄ Γ)} {T=T' : T ≅ᵗʸ T'} where
 -- Composition of later with itself
 
 later^[_] : ℕ → DRA ω ω
-later^[ zero  ] = 𝟙
-later^[ suc k ] = later ⓓ later^[ k ]
+later^[ zero        ] = 𝟙
+later^[ suc zero    ] = later
+later^[ suc (suc n) ] = later ⓓ later^[ suc n ]
 
 later^m+n : (m : ℕ) {n : ℕ} → later^[ m + n ] ≅ᵈ later^[ m ] ⓓ later^[ n ]
 later^m+n zero = symᵈ (𝟙-unitˡ _)
-later^m+n (suc m) = transᵈ (ⓓ-congʳ _ (later^m+n m)) (symᵈ (ⓓ-assoc _ _ _))
+later^m+n (suc zero) {n = zero}  = symᵈ (𝟙-unitʳ _)
+later^m+n (suc zero) {n = suc n} = reflᵈ
+later^m+n (suc (suc m)) = transᵈ (ⓓ-congʳ _ (later^m+n (suc m))) (symᵈ (ⓓ-assoc _ _ _))
 
 laters-later-commute : (n : ℕ) → later ⓓ later^[ n ] ≅ᵈ later^[ n ] ⓓ later
 laters-later-commute zero = transᵈ (𝟙-unitʳ _) (symᵈ (𝟙-unitˡ _))
-laters-later-commute (suc n) = transᵈ (ⓓ-congʳ _ (laters-later-commute n)) (symᵈ (ⓓ-assoc _ _ _))
+laters-later-commute (suc zero) = reflᵈ
+laters-later-commute (suc (suc n)) =
+  transᵈ (ⓓ-congʳ _ (laters-later-commute (suc n))) (symᵈ (ⓓ-assoc _ _ _))
 
 laters-lock-is-lifted : (n : ℕ) → IsLiftedFunctor (ctx-functor (later^[ n ]))
 laters-lock-is-lifted zero = is-lifted-id
-laters-lock-is-lifted (suc n) =
-  laters-lock-is-lifted n ⓕ-lifted is-lifted-lift
+laters-lock-is-lifted (suc zero) = is-lifted-lift
+laters-lock-is-lifted (suc (suc n)) =
+  laters-lock-is-lifted (suc n) ⓕ-lifted is-lifted-lift

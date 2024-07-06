@@ -106,8 +106,10 @@ later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[ l ]ⓜconstantlyⓜforeve
   transᵈ (ⓓ-congˡ _ (M.later^m+n (suc k))) (ⓓ-assoc _ _ _)
 ⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[1+ l ] =
   transᵈ (ⓓ-congʳ _ (M.later^m+n (suc k))) (
-  transᵈ (ⓓ-congʳ _ (ⓓ-congˡ _ (M.laters-later-commute k))) (
-  transᵈ (ⓓ-congʳ _ (ⓓ-assoc _ _ _)) (symᵈ (ⓓ-assoc _ _ _))))
+  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
+  transᵈ (ⓓ-congˡ _ (M.laters-later-commute (suc k))) (
+  transᵈ (ⓓ-assoc _ _ _) (
+  ⓓ-congʳ _ (symᵈ (M.later^m+n 1 {l}))))))
 ⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ l ]ⓜconstantlyⓜforever =
   transᵈ (ⓓ-congˡ _ (ⓓ-congˡ _ (M.later^m+n (suc k)))) (
   transᵈ (ⓓ-congˡ _ (ⓓ-assoc _ _ _)) (ⓓ-assoc _ _ _))
