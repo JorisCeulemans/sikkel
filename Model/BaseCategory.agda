@@ -144,9 +144,40 @@ record BaseNatTransf {C D : BaseCategory} (F G : BaseFunctor C D) : Set where
     naturality : {x y : Ob C} (f : Hom C x y) →
                  transf-op y ∙[ D ] hom F f ≡ hom G f ∙[ D ] transf-op x
 
+open BaseNatTransf
+
+module _ {C D : BaseCategory} where
+  id-base-transf : {F : BaseFunctor C D} → BaseNatTransf F F
+  transf-op id-base-transf x = hom-id D
+  naturality id-base-transf f = trans (hom-idˡ D) (sym (hom-idʳ D))
+
+  _ⓑ-vert_ : {F G H : BaseFunctor C D} →
+             BaseNatTransf G H → BaseNatTransf F G → BaseNatTransf F H
+  transf-op (β ⓑ-vert α) x = transf-op β x ∙[ D ] transf-op α x
+  naturality (β ⓑ-vert α) f =
+    trans (∙assoc D) (
+    trans (cong (λ z → transf-op β _ ∙[ D ] z) (naturality α f)) (
+    trans (sym (∙assoc D)) (
+    trans (cong (λ z → z ∙[ D ] transf-op α _) (naturality β f)) (
+    ∙assoc D))))
+
+
 record _≅ᵇᵗ_ {C D : BaseCategory} {F G : BaseFunctor C D} (α β : BaseNatTransf F G) : Set where
   open BaseCategory
   open BaseNatTransf
 
   field
     transf-op-eq : (x : Ob C) → transf-op α x ≡ transf-op β x
+
+open _≅ᵇᵗ_
+
+
+module _ {C D : BaseCategory} {F G : BaseFunctor C D} where
+  reflᵇᵗ : {α : BaseNatTransf F G} → α ≅ᵇᵗ α
+  transf-op-eq reflᵇᵗ _ = refl
+
+  symᵇᵗ : {α β : BaseNatTransf F G} → α ≅ᵇᵗ β → β ≅ᵇᵗ α
+  transf-op-eq (symᵇᵗ 𝓮) x = sym (transf-op-eq 𝓮 x)
+
+  transᵇᵗ : {α1 α2 α3 : BaseNatTransf F G} → α1 ≅ᵇᵗ α2 → α2 ≅ᵇᵗ α3 → α1 ≅ᵇᵗ α3
+  transf-op-eq (transᵇᵗ 𝓮 𝓮') x = trans (transf-op-eq 𝓮 x) (transf-op-eq 𝓮' x)
