@@ -69,7 +69,32 @@ module _ (F : BaseFunctor C D) where
   IsCtxFunctor.ctx-map-⊚ (is-functor lift-functor) = lift-subst-⊚
 
 
--- The lifted context functor can be extended to a CwF morphism, but
+-- We can show that lifting preserves the identity functor and functor
+-- composition.
+
+lift-id-functor : lift-functor (id-base-functor {C = C}) ≅ᶜᶠ id-ctx-functor
+func (transf-op (from lift-id-functor) Γ) γ = γ
+naturality (transf-op (from lift-id-functor) Γ) = refl
+eq (naturality (from lift-id-functor) σ) _ = refl
+func (transf-op (to lift-id-functor) Γ) γ = γ
+naturality (transf-op (to lift-id-functor) Γ) = refl
+eq (naturality (to lift-id-functor) σ) _ = refl
+eq (transf-op-eq (isoˡ lift-id-functor)) _ = refl
+eq (transf-op-eq (isoʳ lift-id-functor)) _ = refl
+
+lift-compose-functor : {C D E : BaseCategory} {G : BaseFunctor D E} {F : BaseFunctor C D} →
+                       lift-functor (base-functor-comp G F) ≅ᶜᶠ (lift-functor F ⓕ lift-functor G)
+func (transf-op (from lift-compose-functor) Γ) γ = γ
+naturality (transf-op (from lift-compose-functor) Γ) = refl
+eq (naturality (from lift-compose-functor) σ) _ = refl
+func (transf-op (to lift-compose-functor) Γ) γ = γ
+naturality (transf-op (to lift-compose-functor) Γ) = refl
+eq (naturality (to lift-compose-functor) σ) _ = refl
+eq (transf-op-eq (isoˡ lift-compose-functor)) _ = refl
+eq (transf-op-eq (isoʳ lift-compose-functor)) _ = refl
+
+
+-- A lifted context functor can be extended to a CwF morphism, but
 -- this is not used anywhere.
 module CwF-Morphism (F : BaseFunctor C D) where
 

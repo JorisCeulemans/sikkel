@@ -134,6 +134,21 @@ record BaseFunctor (C D : BaseCategory) : Set where
     comp-law : ∀ {x y z} {f : Hom C x y} {g : Hom C y z} →
                hom (g ∙[ C ] f) ≡ (hom g) ∙[ D ] (hom f)
 
+open BaseFunctor
+
+id-base-functor : {C : BaseCategory} → BaseFunctor C C
+ob id-base-functor x = x
+hom id-base-functor f = f
+id-law id-base-functor = refl
+comp-law id-base-functor = refl
+
+base-functor-comp : {C D E : BaseCategory} →
+                    BaseFunctor D E → BaseFunctor C D → BaseFunctor C E
+ob (base-functor-comp G F) x = ob G (ob F x)
+hom (base-functor-comp G F) f = hom G (hom F f)
+id-law (base-functor-comp G F) = trans (cong (hom G) (id-law F)) (id-law G)
+comp-law (base-functor-comp G F) = trans (cong (hom G) (comp-law F)) (comp-law G)
+
 
 record BaseNatTransf {C D : BaseCategory} (F G : BaseFunctor C D) : Set where
   open BaseCategory
