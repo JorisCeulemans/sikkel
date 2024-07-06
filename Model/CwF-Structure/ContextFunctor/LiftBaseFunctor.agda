@@ -23,7 +23,7 @@ open BaseCategory
 open BaseFunctor
 
 private variable
-  C D : BaseCategory
+  C D E : BaseCategory
 
 module _ (F : BaseFunctor C D) where
 
@@ -92,6 +92,27 @@ naturality (transf-op (to lift-compose-functor) Γ) = refl
 eq (naturality (to lift-compose-functor) σ) _ = refl
 eq (transf-op-eq (isoˡ lift-compose-functor)) _ = refl
 eq (transf-op-eq (isoʳ lift-compose-functor)) _ = refl
+
+record IsLiftedFunctor (Φ : CtxFunctor D C) : Set₁ where
+  constructor is-lifted-functor
+  field
+    F : BaseFunctor C D
+    is-lifted : lift-functor F ≅ᶜᶠ Φ
+
+open IsLiftedFunctor renaming (F to base-functor) public
+
+
+is-lifted-lift : {F : BaseFunctor C D} → IsLiftedFunctor (lift-functor F)
+is-lifted-lift {F = F} = is-lifted-functor F reflᶜᶠ
+
+is-lifted-id : IsLiftedFunctor (id-ctx-functor {C})
+is-lifted-id = is-lifted-functor id-base-functor lift-id-functor
+
+_ⓕ-lifted_ : {Ψ : CtxFunctor D E} → IsLiftedFunctor Ψ →
+             {Φ : CtxFunctor C D} → IsLiftedFunctor Φ →
+             IsLiftedFunctor (Ψ ⓕ Φ)
+is-lifted-functor F eF ⓕ-lifted is-lifted-functor G eG =
+  is-lifted-functor (base-functor-comp G F) (transᶜᶠ lift-compose-functor (transᶜᶠ (ⓕ-congˡ eF) (ⓕ-congʳ eG)))
 
 
 -- A lifted context functor can be extended to a CwF morphism, but

@@ -14,6 +14,7 @@ open import Model.Helpers
 -- We only support small base categories with object and morphism types in Set₀.
 -- This is sufficient for the current applications like guarded recursion.
 record BaseCategory : Set₁ where
+  no-eta-equality
   field
     Ob : Set
     Hom : Ob → Ob → Set
@@ -35,6 +36,11 @@ category-composition = _∙_
 
 syntax category-composition C g f = g ∙[ C ] f
 
+
+IsPreorder : BaseCategory → Set
+IsPreorder C = {x y : Ob C} (f g : Hom C x y) → f ≡ g
+
+
 ω : BaseCategory
 Ob ω = ℕ
 Hom ω m n = m ≤ n
@@ -44,6 +50,9 @@ _∙_ ω m≤n k≤m = ≤-trans k≤m m≤n
 hom-idʳ ω = ≤-irrelevant _ _
 hom-idˡ ω = ≤-irrelevant _ _
 
+ω-is-preorder : IsPreorder ω
+ω-is-preorder = ≤-irrelevant
+
 ★ : BaseCategory
 Ob ★ = ⊤
 Hom ★ _ _ = ⊤
@@ -52,6 +61,9 @@ _∙_ ★ _ _ = tt
 ∙assoc ★ = refl
 hom-idʳ ★ = refl
 hom-idˡ ★ = refl
+
+★-is-preorder : IsPreorder ★
+★-is-preorder _ _ = refl
 
 data 𝟚-Obj : Set where
   type-obj : 𝟚-Obj
@@ -126,6 +138,7 @@ hom-idʳ (Type-groupoid X) = refl
 hom-idˡ (Type-groupoid X) = trans-reflʳ _
 
 record BaseFunctor (C D : BaseCategory) : Set where
+  no-eta-equality
   open BaseCategory
   field
     ob : Ob C → Ob D
@@ -151,6 +164,7 @@ comp-law (base-functor-comp G F) = trans (cong (hom G) (comp-law F)) (comp-law G
 
 
 record BaseNatTransf {C D : BaseCategory} (F G : BaseFunctor C D) : Set where
+  no-eta-equality
   open BaseCategory
   open BaseFunctor
 
@@ -178,6 +192,7 @@ module _ {C D : BaseCategory} where
 
 
 record _≅ᵇᵗ_ {C D : BaseCategory} {F G : BaseFunctor C D} (α β : BaseNatTransf F G) : Set where
+  no-eta-equality
   open BaseCategory
   open BaseNatTransf
 
@@ -196,3 +211,9 @@ module _ {C D : BaseCategory} {F G : BaseFunctor C D} where
 
   transᵇᵗ : {α1 α2 α3 : BaseNatTransf F G} → α1 ≅ᵇᵗ α2 → α2 ≅ᵇᵗ α3 → α1 ≅ᵇᵗ α3
   transf-op-eq (transᵇᵗ 𝓮 𝓮') x = trans (transf-op-eq 𝓮 x) (transf-op-eq 𝓮' x)
+
+
+preorder-nat-transf-irrelevant : {C D : BaseCategory} → IsPreorder D →
+                                 {F G : BaseFunctor C D} {α β : BaseNatTransf F G} →
+                                 α ≅ᵇᵗ β
+transf-op-eq (preorder-nat-transf-irrelevant preD) _ = preD _ _

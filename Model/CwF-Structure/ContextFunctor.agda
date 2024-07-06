@@ -18,7 +18,7 @@ open import Model.CwF-Structure.Type
 
 private
   variable
-    C D : BaseCategory
+    C D E : BaseCategory
 
 infix 1 _≅ᶜᵗ_ _≅ᶜᶠ_
 infixl 20 _ⓝ-vert_
@@ -292,6 +292,28 @@ isoʳ (transᶜᶠ Ψ=Φ Φ=Ω) =
   ≅⟨ isoʳ Φ=Ω ⟩
     id-ctx-transf _ ∎
   where open ≅ᶜᵗ-Reasoning
+
+ⓕ-congʳ : {Ψ : CtxFunctor D E} {Φ Φ' : CtxFunctor C D} →
+          Φ ≅ᶜᶠ Φ' → Ψ ⓕ Φ ≅ᶜᶠ Ψ ⓕ Φ'
+from (ⓕ-congʳ Φ~Φ') = id-ctx-transf _ ⓝ-hor from Φ~Φ'
+to (ⓕ-congʳ Φ~Φ') = id-ctx-transf _ ⓝ-hor to Φ~Φ'
+transf-op-eq (isoˡ (ⓕ-congʳ {Ψ = Ψ} Φ~Φ')) =
+  transˢ (⊚-congʳ (id-subst-unitˡ _)) (transˢ (⊚-congˡ (id-subst-unitˡ _)) (ctx-fmap-inverse Ψ (transf-op-eq (isoˡ Φ~Φ'))))
+transf-op-eq (isoʳ (ⓕ-congʳ {Ψ = Ψ} Φ~Φ')) =
+  transˢ (⊚-congʳ (id-subst-unitˡ _)) (transˢ (⊚-congˡ (id-subst-unitˡ _)) (ctx-fmap-inverse Ψ (transf-op-eq (isoʳ Φ~Φ'))))
+
+ⓕ-congˡ : {Ψ Ψ' : CtxFunctor D E} {Φ : CtxFunctor C D} →
+          Ψ ≅ᶜᶠ Ψ' → Ψ ⓕ Φ ≅ᶜᶠ Ψ' ⓕ Φ
+from (ⓕ-congˡ Ψ~Ψ') = from Ψ~Ψ' ⓝ-hor id-ctx-transf _
+to (ⓕ-congˡ Ψ~Ψ') = to Ψ~Ψ' ⓝ-hor id-ctx-transf _
+transf-op-eq (isoˡ (ⓕ-congˡ {Ψ = Ψ} {Ψ'} Ψ~Ψ')) =
+  transˢ (⊚-congʳ (transˢ (⊚-congʳ (ctx-fmap-id Ψ)) (id-subst-unitʳ _))) (
+  transˢ (⊚-congˡ (transˢ (⊚-congʳ (ctx-fmap-id Ψ')) (id-subst-unitʳ _))) (
+  transf-op-eq (isoˡ Ψ~Ψ')))
+transf-op-eq (isoʳ (ⓕ-congˡ {Ψ = Ψ} {Ψ'} Ψ~Ψ')) =
+  transˢ (⊚-congʳ (transˢ (⊚-congʳ (ctx-fmap-id Ψ')) (id-subst-unitʳ _))) (
+  transˢ (⊚-congˡ (transˢ (⊚-congʳ (ctx-fmap-id Ψ)) (id-subst-unitʳ _))) (
+  transf-op-eq (isoʳ Ψ~Ψ')))
 
 
 -- From a natural isomorphism between context functors, we can

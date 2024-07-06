@@ -3,6 +3,7 @@ module Model.CwF-Structure.ContextFunctor.LiftBaseNatTransf where
 open import Data.Product renaming (_,_ to [_,_])
 open import Function
 open import Function.Consequences.Setoid
+import Function.Construct.Composition as Composition
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality hiding (naturality)
 
@@ -113,3 +114,19 @@ Inverse.inverse (lift-transf-iso F G) =
   [ strictlyInverseˡ⇒inverseˡ (base-transf-setoid F G) (ctx-transf-setoid _ _) lift-transf-cong lift-unlift-transf
   , strictlyInverseʳ⇒inverseʳ (base-transf-setoid F G) (ctx-transf-setoid _ _) {f = lift-transf} unlift-transf-cong unlift-lift-transf
   ]
+
+
+lifted-functor-transf-eq : {Φ Ψ : CtxFunctor C D} (ilΦ : IsLiftedFunctor Φ) (ilΨ : IsLiftedFunctor Ψ)
+                           {β β' : CtxNatTransf Φ Ψ} →
+                           unlift-transf (Inverse.from (ctx-functor-iso-transf-iso (is-lifted ilΦ) (is-lifted ilΨ)) β)
+                             ≅ᵇᵗ unlift-transf (Inverse.from (ctx-functor-iso-transf-iso (is-lifted ilΦ) (is-lifted ilΨ)) β')
+                           →
+                           β ≅ᶜᵗ β'
+lifted-functor-transf-eq {Φ = Φ} {Ψ} ilΦ ilΨ =
+  let inverse = Composition.inverse (lift-transf-iso (base-functor ilΨ) (base-functor ilΦ))
+                                    (ctx-functor-iso-transf-iso (is-lifted ilΦ) (is-lifted ilΨ))
+  in
+  inverseʳ⇒injective (ctx-transf-setoid Φ Ψ)
+                     (base-transf-setoid (base-functor ilΨ) (base-functor ilΦ))
+                     (Inverse.from inverse)
+                     (Inverse.inverseˡ inverse)
