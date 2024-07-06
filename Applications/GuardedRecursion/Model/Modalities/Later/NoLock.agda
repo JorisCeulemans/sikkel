@@ -47,6 +47,11 @@ eq (from-earlier-natural σ) δ = naturality σ
 transf-op (transf 𝟙≤later) = from-earlier
 CtxNatTransf.naturality (transf 𝟙≤later) = from-earlier-natural
 
+laters≤laters : {m n : ℕ} → m ≤ n → TwoCell later^[ m ] later^[ n ]
+laters≤laters {n = zero } z≤n = id-cell
+laters≤laters {n = suc n} z≤n = (𝟙≤later ⓣ-hor laters≤laters {n = n} z≤n) ⓣ-vert to (𝟙-unitˡ _)
+laters≤laters (s≤s m≤n) = id-cell ⓣ-hor laters≤laters m≤n
+
 
 --------------------------------------------------
 -- Combining ▻ with the natural transformation

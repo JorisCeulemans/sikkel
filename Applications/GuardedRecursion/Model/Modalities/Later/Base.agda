@@ -11,6 +11,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.DRA.Basics
+open import Model.DRA.Equivalence
 
 private
   variable
@@ -218,3 +219,24 @@ module _ {Γ : Ctx ω} {T T' : Ty (◄ Γ)} {T=T' : T ≅ᵗʸ T'} where
 
   prev-ι⁻¹ : (t : Tm Γ (▻ T)) → ι⁻¹[ T=T' ] (prev t) ≅ᵗᵐ prev (ι⁻¹[ ▻-cong T=T' ] t)
   prev-ι⁻¹ t = dra-elim-ι⁻¹ later t
+
+
+--------------------------------------------------
+-- Composition of later with itself
+
+later^[_] : ℕ → DRA ω ω
+later^[ zero  ] = 𝟙
+later^[ suc k ] = later ⓓ later^[ k ]
+
+later^m+n : (m : ℕ) {n : ℕ} → later^[ m + n ] ≅ᵈ later^[ m ] ⓓ later^[ n ]
+later^m+n zero = symᵈ (𝟙-unitˡ _)
+later^m+n (suc m) = transᵈ (ⓓ-congʳ _ (later^m+n m)) (symᵈ (ⓓ-assoc _ _ _))
+
+laters-later-commute : (n : ℕ) → later ⓓ later^[ n ] ≅ᵈ later^[ n ] ⓓ later
+laters-later-commute zero = transᵈ (𝟙-unitʳ _) (symᵈ (𝟙-unitˡ _))
+laters-later-commute (suc n) = transᵈ (ⓓ-congʳ _ (laters-later-commute n)) (symᵈ (ⓓ-assoc _ _ _))
+
+laters-lock-is-lifted : (n : ℕ) → IsLiftedFunctor (ctx-functor (later^[ n ]))
+laters-lock-is-lifted zero = is-lifted-id
+laters-lock-is-lifted (suc n) =
+  laters-lock-is-lifted n ⓕ-lifted is-lifted-lift

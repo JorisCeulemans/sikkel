@@ -7,7 +7,8 @@ open import Data.Nat.Properties
   renaming (_≟_ to _≟nat_)
 open import Relation.Binary.PropositionalEquality
 
-open import Model.BaseCategory as M using (BaseCategory)
+open import Model.BaseCategory as M hiding (ω; ★)
+import Model.CwF-Structure as M
 open import Model.DRA as DRA hiding (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; TwoCell; id-cell; _ⓣ-vert_; _ⓣ-hor_)
 import Applications.GuardedRecursion.Model.Modalities as M
 
@@ -15,14 +16,23 @@ open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 
 
 
-data Mode : Set where
-  ★ ω : Mode
+data NonTrivMode : Set where
+  nt-ω : NonTrivMode
 
-mode-eq? : (m n : Mode) → Maybe (m ≡ n)
-mode-eq? ★ ★ = just refl
-mode-eq? ★ ω = nothing
-mode-eq? ω ★ = nothing
-mode-eq? ω ω = just refl
+non-triv-mode-eq? : (m n : NonTrivMode) → Maybe (m ≡ n)
+non-triv-mode-eq? nt-ω nt-ω = just refl
+
+⟦_⟧non-triv-mode : NonTrivMode → BaseCategory
+⟦ nt-ω ⟧non-triv-mode = M.ω
+
+guarded-mtm : MTMode
+MTMode.NonTrivMode guarded-mtm = NonTrivMode
+MTMode.non-triv-mode-eq? guarded-mtm = non-triv-mode-eq?
+MTMode.⟦_⟧non-triv-mode guarded-mtm = ⟦_⟧non-triv-mode
+
+open MTMode guarded-mtm using (Mode; ★; ‵_; ⟦_⟧mode)
+
+pattern ω = ‵ nt-ω
 
 private variable
   m n o p : Mode
@@ -44,48 +54,27 @@ non-triv-mod-eq? later^[ k ]ⓜconstantlyⓜforever later^[1+ l ] = nothing
 non-triv-mod-eq? later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜforever =
   map (cong later^[_]ⓜconstantlyⓜforever) (decToMaybe (k ≟nat l))
 
-⟦_⟧mode : Mode → BaseCategory
-⟦ ★ ⟧mode = M.★
-⟦ ω ⟧mode = M.ω
-
 ⟦_⟧non-triv-mod : NonTrivModality m n → DRA ⟦ m ⟧mode ⟦ n ⟧mode
 ⟦ nt-forever ⟧non-triv-mod = M.forever
-⟦ later^[ zero  ]ⓜconstantly ⟧non-triv-mod = M.constantly
-⟦ later^[ suc k ]ⓜconstantly ⟧non-triv-mod = M.later ⓓ ⟦ later^[ k ]ⓜconstantly ⟧non-triv-mod
-⟦ later^[1+ zero  ] ⟧non-triv-mod = M.later
-⟦ later^[1+ suc k ] ⟧non-triv-mod = M.later ⓓ ⟦ later^[1+ k ] ⟧non-triv-mod
-⟦ later^[ zero  ]ⓜconstantlyⓜforever ⟧non-triv-mod = M.constantly ⓓ M.forever
-⟦ later^[ suc k ]ⓜconstantlyⓜforever ⟧non-triv-mod = M.later ⓓ ⟦ later^[ k ]ⓜconstantlyⓜforever ⟧non-triv-mod
+⟦ later^[ k ]ⓜconstantly ⟧non-triv-mod = M.later^[ k ] ⓓ M.constantly
+⟦ later^[1+ k ] ⟧non-triv-mod = M.later^[ suc k ]
+⟦ later^[ k ]ⓜconstantlyⓜforever ⟧non-triv-mod = M.later^[ k ] ⓓ M.constantly ⓓ M.forever
 
+guarded-mtμ : MTModality guarded-mtm
+MTModality.NonTrivModality guarded-mtμ = NonTrivModality
+MTModality.non-triv-mod-eq? guarded-mtμ = non-triv-mod-eq?
+MTModality.⟦_⟧non-triv-mod guarded-mtμ = ⟦_⟧non-triv-mod
 
-guarded-mtb : MTBasis
-MTBasis.Mode guarded-mtb = Mode
-MTBasis.NonTrivModality guarded-mtb = NonTrivModality
-MTBasis.mode-eq? guarded-mtb = mode-eq?
-MTBasis.non-triv-mod-eq? guarded-mtb = non-triv-mod-eq?
-MTBasis.⟦_⟧mode guarded-mtb = ⟦_⟧mode
-MTBasis.⟦_⟧non-triv-mod guarded-mtb = ⟦_⟧non-triv-mod
-
-open MTBasis guarded-mtb using (Modality; ‵_; 𝟙; ⟦_⟧mod)
+open MTModality guarded-mtμ using (Modality; ‵_; 𝟙; ⟦_⟧mod)
 
 private variable
   μ ρ κ : Modality m n
 
+pattern later = ‵ later^[1+ 0 ]
 
-later : Modality ω ω
-later = ‵ later^[1+ 0 ]
+pattern constantly = ‵ later^[ 0 ]ⓜconstantly
 
-{-# DISPLAY ‵_ (later^[1+_] 0) = later #-}
-
-constantly : Modality ★ ω
-constantly = ‵ later^[ 0 ]ⓜconstantly
-
-{-# DISPLAY ‵_ (later^[_]ⓜconstantly 0) = constantly #-}
-
-forever : Modality ω ★
-forever = ‵ nt-forever
-
-{-# DISPLAY ‵_ nt-forever = forever #-}
+pattern forever = ‵ nt-forever
 
 
 _ⓜnon-triv_ : NonTrivModality n o → NonTrivModality m n → Modality m o
@@ -100,65 +89,49 @@ later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[ l ]ⓜconstantly = ‵ la
 later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[1+ l ] = ‵ later^[ k ]ⓜconstantlyⓜforever
 later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[ l ]ⓜconstantlyⓜforever = ‵ later^[ k ]ⓜconstantlyⓜforever
 
-⟦ⓜ⟧-sound : (μ : NonTrivModality n o) (κ : NonTrivModality m n) → ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵈ ⟦ μ ⟧non-triv-mod ⓓ ⟦ κ ⟧non-triv-mod
-⟦ⓜ⟧-sound nt-forever later^[ zero  ]ⓜconstantly = symᵈ M.forever-constantly
-⟦ⓜ⟧-sound nt-forever later^[ suc k ]ⓜconstantly =
-  transᵈ (transᵈ (⟦ⓜ⟧-sound (nt-forever) (later^[ k ]ⓜconstantly))
-                 (ⓓ-congˡ _ (symᵈ M.forever-later)))
-         (ⓓ-assoc _ _ _)
-⟦ⓜ⟧-sound nt-forever later^[1+ zero  ] = symᵈ M.forever-later
-⟦ⓜ⟧-sound nt-forever later^[1+ suc k ] =
-  transᵈ (transᵈ (⟦ⓜ⟧-sound (nt-forever) (later^[1+ k ]))
-                 (ⓓ-congˡ _ (symᵈ M.forever-later)))
-         (ⓓ-assoc _ _ _)
-⟦ⓜ⟧-sound nt-forever later^[ zero  ]ⓜconstantlyⓜforever =
-  transᵈ (transᵈ (symᵈ (DRA.𝟙-unitˡ _)) (ⓓ-congˡ _ (symᵈ M.forever-constantly))) (ⓓ-assoc _ _ _)
-⟦ⓜ⟧-sound nt-forever later^[ suc k ]ⓜconstantlyⓜforever =
-  transᵈ (transᵈ (⟦ⓜ⟧-sound (nt-forever) (later^[ k ]ⓜconstantlyⓜforever))
-                 (ⓓ-congˡ _ (symᵈ M.forever-later)))
-         (ⓓ-assoc _ _ _)
-⟦ⓜ⟧-sound later^[ zero  ]ⓜconstantly nt-forever = reflᵈ
-⟦ⓜ⟧-sound later^[ suc k ]ⓜconstantly nt-forever =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[ k ]ⓜconstantly) nt-forever)) (symᵈ (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[1+ zero  ] later^[ l ]ⓜconstantly = reflᵈ
-⟦ⓜ⟧-sound later^[1+ suc k ] later^[ l ]ⓜconstantly =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[1+ k ]) (later^[ l ]ⓜconstantly))) (symᵈ (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[1+ zero  ] later^[1+ l ] = reflᵈ
-⟦ⓜ⟧-sound later^[1+ suc k ] later^[1+ l ] =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[1+ k ]) (later^[1+ l ]))) (symᵈ (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[1+ zero  ] later^[ l ]ⓜconstantlyⓜforever = reflᵈ
-⟦ⓜ⟧-sound later^[1+ suc k ] later^[ l ]ⓜconstantlyⓜforever =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[1+ k ]) (later^[ l ]ⓜconstantlyⓜforever))) (symᵈ (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[ zero ]ⓜconstantlyⓜforever later^[ zero  ]ⓜconstantly =
-  symᵈ (transᵈ (transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ M.forever-constantly)) (DRA.𝟙-unitʳ _))
-⟦ⓜ⟧-sound later^[ zero ]ⓜconstantlyⓜforever later^[ suc l ]ⓜconstantly =
-  transᵈ (transᵈ (⟦ⓜ⟧-sound (later^[ zero ]ⓜconstantlyⓜforever) (later^[ l ]ⓜconstantly))
-                 (ⓓ-congˡ _ (transᵈ (ⓓ-congʳ _ (symᵈ M.forever-later)) (symᵈ (ⓓ-assoc _ _ _)))))
-         (ⓓ-assoc _ _ _)
-⟦ⓜ⟧-sound later^[ suc k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantly =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[ k ]ⓜconstantlyⓜforever) (later^[ l ]ⓜconstantly))) (symᵈ (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[ zero ]ⓜconstantlyⓜforever later^[1+ zero  ] =
-  symᵈ (transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ M.forever-later))
-⟦ⓜ⟧-sound later^[ zero ]ⓜconstantlyⓜforever later^[1+ suc l ] =
-  transᵈ (⟦ⓜ⟧-sound (later^[ zero  ]ⓜconstantlyⓜforever) (later^[1+ l ]))
-         (transᵈ (ⓓ-congˡ _ (transᵈ (ⓓ-congʳ _ (symᵈ M.forever-later)) (symᵈ (ⓓ-assoc _ _ _)))) (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[ suc k ]ⓜconstantlyⓜforever later^[1+ l ] =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[ k ]ⓜconstantlyⓜforever) (later^[1+ l ]))) (symᵈ (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[ zero ]ⓜconstantlyⓜforever later^[ zero  ]ⓜconstantlyⓜforever =
-  transᵈ (ⓓ-congʳ _ (symᵈ (transᵈ (ⓓ-congˡ _ M.forever-constantly) (𝟙-unitˡ _))))
-         (transᵈ (ⓓ-congʳ _ (ⓓ-assoc _ _ _)) (symᵈ (ⓓ-assoc _ _ _)))
-⟦ⓜ⟧-sound later^[ zero ]ⓜconstantlyⓜforever later^[ suc l ]ⓜconstantlyⓜforever =
-  transᵈ (⟦ⓜ⟧-sound (later^[ zero  ]ⓜconstantlyⓜforever) (later^[ l ]ⓜconstantlyⓜforever))
-         (transᵈ (ⓓ-congˡ _ (transᵈ (ⓓ-congʳ _ (symᵈ M.forever-later)) (symᵈ (ⓓ-assoc _ _ _)))) (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-sound later^[ suc k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜforever =
-  transᵈ (ⓓ-congʳ _ (⟦ⓜ⟧-sound (later^[ k ]ⓜconstantlyⓜforever) (later^[ l ]ⓜconstantlyⓜforever))) (symᵈ (ⓓ-assoc _ _ _))
+⟦ⓜ⟧-non-triv-sound : (μ : NonTrivModality n o) (κ : NonTrivModality m n) → ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵈ ⟦ μ ⟧non-triv-mod ⓓ ⟦ κ ⟧non-triv-mod
+⟦ⓜ⟧-non-triv-sound nt-forever later^[ l ]ⓜconstantly =
+  transᵈ (symᵈ M.forever-constantly) (
+  transᵈ (symᵈ (ⓓ-congˡ _ M.forever-later^[ l ])) (
+  ⓓ-assoc _ _ _))
+⟦ⓜ⟧-non-triv-sound nt-forever later^[1+ l ] = symᵈ M.forever-later^[ suc l ]
+⟦ⓜ⟧-non-triv-sound nt-forever later^[ l ]ⓜconstantlyⓜforever =
+  transᵈ (symᵈ (𝟙-unitˡ _)) (
+  transᵈ (ⓓ-congˡ _ (symᵈ (
+  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
+  transᵈ (ⓓ-congˡ _ M.forever-later^[ l ]) M.forever-constantly)))) (
+  ⓓ-assoc _ _ _))
+⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantly nt-forever = reflᵈ
+⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ l ]ⓜconstantly =
+  transᵈ (ⓓ-congˡ _ (M.later^m+n (suc k))) (ⓓ-assoc _ _ _)
+⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[1+ l ] =
+  transᵈ (ⓓ-congʳ _ (M.later^m+n (suc k))) (
+  transᵈ (ⓓ-congʳ _ (ⓓ-congˡ _ (M.laters-later-commute k))) (
+  transᵈ (ⓓ-congʳ _ (ⓓ-assoc _ _ _)) (symᵈ (ⓓ-assoc _ _ _))))
+⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ l ]ⓜconstantlyⓜforever =
+  transᵈ (ⓓ-congˡ _ (ⓓ-congˡ _ (M.later^m+n (suc k)))) (
+  transᵈ (ⓓ-congˡ _ (ⓓ-assoc _ _ _)) (ⓓ-assoc _ _ _))
+⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantly = symᵈ (
+  transᵈ (transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ (
+  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
+  transᵈ (ⓓ-congˡ _ M.forever-later^[ l ])
+  M.forever-constantly)))) (
+  𝟙-unitʳ _))
+⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantlyⓜforever later^[1+ l ] = symᵈ (
+  transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ (M.forever-later^[ suc l ])))
+⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜforever = symᵈ (
+  transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ (
+  transᵈ (transᵈ (symᵈ (ⓓ-assoc _ _ _)) (ⓓ-congˡ _ (
+  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
+  transᵈ (ⓓ-congˡ _ M.forever-later^[ l ])
+  M.forever-constantly)))) (
+  𝟙-unitˡ _))))
 
-
-guarded-mtc : MTComposition guarded-mtb
+guarded-mtc : MTComposition guarded-mtm guarded-mtμ
 MTComposition._ⓜnon-triv_ guarded-mtc = _ⓜnon-triv_
-MTComposition.⟦ⓜ⟧-non-triv-sound guarded-mtc = ⟦ⓜ⟧-sound
+MTComposition.⟦ⓜ⟧-non-triv-sound guarded-mtc = ⟦ⓜ⟧-non-triv-sound
 
-open MTComposition guarded-mtc using (_ⓜ_)
+open MTComposition guarded-mtc using (_ⓜ_; ⟦ⓜ⟧-sound)
 
 
 mod-non-triv-assoc : (μ : NonTrivModality o p) (ρ : NonTrivModality n o) (κ : NonTrivModality m n) →
@@ -191,8 +164,10 @@ mod-non-triv-assoc later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantly�
 mod-non-triv-assoc later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜforever later^[1+ m ] = refl
 mod-non-triv-assoc later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜforever later^[ m ]ⓜconstantlyⓜforever = refl
 
-guarded-mtcl : MTCompositionLaws guarded-mtb guarded-mtc
-MTCompositionLaws.mod-non-triv-assoc guarded-mtcl = mod-non-triv-assoc
+guarded-mtc-laws : MTCompositionLaws guarded-mtm guarded-mtμ guarded-mtc
+MTCompositionLaws.mod-non-triv-assoc guarded-mtc-laws = mod-non-triv-assoc
+
+open MTCompositionLaws guarded-mtc-laws using (mod-assoc)
 
 
 data TwoCell : (μ ρ : Modality m n) → Set where
@@ -287,35 +262,114 @@ two-cell-eq? (cstⓜfrv≤ltr k≤l) (cstⓜfrv≤ltr k≤l') = just (cong cst�
 
 ⟦_⟧two-cell : TwoCell μ κ → DRA.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 ⟦ id𝟙 ⟧two-cell = DRA.id-cell
-⟦ ltrⓜcst {l = zero } z≤n ⟧two-cell = DRA.id-cell
-⟦ ltrⓜcst {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltrⓜcst {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
-⟦ ltrⓜcst (s≤s k≤l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ ltrⓜcst k≤l ⟧two-cell
+⟦ ltrⓜcst k≤l ⟧two-cell = M.laters≤laters k≤l DRA.ⓣ-hor DRA.id-cell
 ⟦ id-frv ⟧two-cell = DRA.id-cell
-⟦ ltr {l = zero } z≤n ⟧two-cell = DRA.id-cell
-⟦ ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltr {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
-⟦ ltr (s≤s k≤l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ ltr k≤l ⟧two-cell
-⟦ 𝟙≤ltr {k = zero } ⟧two-cell = M.𝟙≤later
-⟦ 𝟙≤ltr {k = suc k} ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ 𝟙≤ltr {k = k} ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
-⟦ ltrⓜcstⓜfrv {l = zero } z≤n ⟧two-cell = DRA.id-cell
-⟦ ltrⓜcstⓜfrv {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ ltrⓜcstⓜfrv {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
-⟦ ltrⓜcstⓜfrv (s≤s k≤l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ ltrⓜcstⓜfrv k≤l ⟧two-cell
-⟦ cstⓜfrv≤𝟙 ⟧two-cell = M.constantly∘forever≤𝟙
-⟦ cstⓜfrv≤ltr {l = zero } z≤n ⟧two-cell = M.𝟙≤later DRA.ⓣ-vert M.constantly∘forever≤𝟙
-⟦ cstⓜfrv≤ltr {l = suc l} z≤n ⟧two-cell = (M.𝟙≤later DRA.ⓣ-hor ⟦ cstⓜfrv≤ltr {l = l} z≤n ⟧two-cell) DRA.ⓣ-vert from (symᵈ (DRA.𝟙-unitˡ _))
-⟦ cstⓜfrv≤ltr {l = zero } (s≤s z≤n)   ⟧two-cell = from (DRA.𝟙-unitʳ _) DRA.ⓣ-vert (DRA.id-cell DRA.ⓣ-hor M.constantly∘forever≤𝟙)
-⟦ cstⓜfrv≤ltr {l = suc l} (s≤s k≤1+l) ⟧two-cell = DRA.id-cell DRA.ⓣ-hor ⟦ cstⓜfrv≤ltr {l = l} k≤1+l ⟧two-cell
+⟦ ltr k≤l ⟧two-cell = M.laters≤laters (s≤s k≤l)
+⟦ 𝟙≤ltr {k = k} ⟧two-cell = M.laters≤laters {n = suc k} z≤n
+⟦ ltrⓜcstⓜfrv k≤l ⟧two-cell = (M.laters≤laters k≤l DRA.ⓣ-hor DRA.id-cell) DRA.ⓣ-hor DRA.id-cell
+⟦ cstⓜfrv≤𝟙 ⟧two-cell = M.constantly∘forever≤𝟙 DRA.ⓣ-vert DRA.from (ⓓ-congˡ _ (𝟙-unitˡ _))
+⟦ cstⓜfrv≤ltr k≤1+l ⟧two-cell =
+  DRA.from (𝟙-unitʳ _)
+  DRA.ⓣ-vert (M.laters≤laters k≤1+l DRA.ⓣ-hor M.constantly∘forever≤𝟙)
+  DRA.ⓣ-vert DRA.from (ⓓ-assoc _ _ _)
 
-guarded-mt2c : MTTwoCell guarded-mtb guarded-mtc
-MTTwoCell.TwoCell guarded-mt2c = TwoCell
-MTTwoCell.id-cell guarded-mt2c = id-cell
-MTTwoCell._ⓣ-vert_ guarded-mt2c = _ⓣ-vert_
-MTTwoCell._ⓣ-hor_ guarded-mt2c = _ⓣ-hor_
-MTTwoCell.two-cell-eq? guarded-mt2c = two-cell-eq?
-MTTwoCell.⟦_⟧two-cell guarded-mt2c = ⟦_⟧two-cell
+guarded-mt2 : MTTwoCell guarded-mtm guarded-mtμ guarded-mtc
+MTTwoCell.TwoCell guarded-mt2 = TwoCell
+MTTwoCell.id-cell guarded-mt2 = id-cell
+MTTwoCell._ⓣ-vert_ guarded-mt2 = _ⓣ-vert_
+MTTwoCell._ⓣ-hor_ guarded-mt2 = _ⓣ-hor_
+MTTwoCell.two-cell-eq? guarded-mt2 = two-cell-eq?
+MTTwoCell.⟦_⟧two-cell guarded-mt2 = ⟦_⟧two-cell
+
+open MTTwoCell guarded-mt2 using (eq-cell)
+
+
+mode-is-preorder : (m : Mode) → IsPreorder ⟦ m ⟧mode
+mode-is-preorder ★ = ★-is-preorder
+mode-is-preorder ω = ω-is-preorder
+
+lock-is-lifted : (μ : Modality m n) → M.IsLiftedFunctor (DRA.ctx-functor ⟦ μ ⟧mod)
+lock-is-lifted 𝟙 = M.is-lifted-id
+lock-is-lifted (‵ nt-forever) = M.is-lifted-lift
+lock-is-lifted (‵ later^[ k ]ⓜconstantly) = M.is-lifted-lift M.ⓕ-lifted M.laters-lock-is-lifted k
+lock-is-lifted (‵ later^[1+ k ]) = M.laters-lock-is-lifted (suc k)
+lock-is-lifted (‵ later^[ k ]ⓜconstantlyⓜforever) =
+  M.is-lifted-lift M.ⓕ-lifted (M.is-lifted-lift M.ⓕ-lifted M.laters-lock-is-lifted k)
+
+sem-2-cell-unique : {m n : Mode} (μ ρ : Modality m n) {α β : DRA.TwoCell ⟦ μ ⟧mod ⟦ ρ ⟧mod} →
+                    α ≅ᵗᶜ β
+sem-2-cell-unique {n = n} μ ρ =
+  transf-eq-to-cell-eq (M.lifted-functor-transf-eq (lock-is-lifted ρ)
+                                                   (lock-is-lifted μ)
+                                                   (preorder-nat-transf-irrelevant (mode-is-preorder n)))
+
+⟦id-cell⟧-sound : ∀ {m n} {μ : Modality m n} → ⟦ id-cell {μ = μ} ⟧two-cell DRA.≅ᵗᶜ DRA.id-cell
+⟦id-cell⟧-sound {μ = μ} = sem-2-cell-unique μ μ
+
+⟦ⓣ-vert⟧-sound : ∀ {m n} {μ κ ρ : Modality m n}
+                 (β : TwoCell κ ρ) (α : TwoCell μ κ) →
+                 ⟦ β ⓣ-vert α ⟧two-cell DRA.≅ᵗᶜ ⟦ β ⟧two-cell DRA.ⓣ-vert ⟦ α ⟧two-cell
+⟦ⓣ-vert⟧-sound {μ = μ} {κ} {ρ} β α = sem-2-cell-unique μ ρ
+
+⟦ⓜ⟧-sound-natural-helper : ∀ {m n o} {μ μ' : Modality n o} {ρ ρ' : Modality m n}
+                           (α : TwoCell μ μ') (β : TwoCell ρ ρ') →
+                           ⟦ α ⓣ-hor β ⟧two-cell
+                             DRA.≅ᵗᶜ
+                           to (⟦ⓜ⟧-sound μ' ρ')
+                           DRA.ⓣ-vert ((⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell)
+                           DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ))
+⟦ⓜ⟧-sound-natural-helper {μ = μ} {μ'} {ρ} {ρ'} α β = sem-2-cell-unique (μ ⓜ ρ) (μ' ⓜ ρ')
+
+⟦ⓜ⟧-sound-natural : ∀ {m n o} {μ μ' : Modality n o} {ρ ρ' : Modality m n}
+                    (α : TwoCell μ μ') (β : TwoCell ρ ρ') →
+                    from (⟦ⓜ⟧-sound μ' ρ') DRA.ⓣ-vert ⟦ α ⓣ-hor β ⟧two-cell
+                      DRA.≅ᵗᶜ
+                    (⟦ α ⟧two-cell DRA.ⓣ-hor ⟦ β ⟧two-cell) DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ ρ)
+⟦ⓜ⟧-sound-natural {μ' = μ'} {ρ' = ρ'} α β =
+  transᵗᶜ (ⓣ-vert-congʳ (⟦ⓜ⟧-sound-natural-helper α β)) (
+  transᵗᶜ (symᵗᶜ ⓣ-vert-assoc) (
+  transᵗᶜ (ⓣ-vert-congˡ (isoʳ (⟦ⓜ⟧-sound μ' ρ')))
+  ⓣ-vert-unitˡ))
+
+
+⟦associator⟧-helper : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) →
+                      ⟦ eq-cell (mod-assoc κ) ⟧two-cell
+                        DRA.≅ᵗᶜ
+                      to (⟦ⓜ⟧-sound μ (ρ ⓜ κ)) DRA.ⓣ-vert
+                      ((DRA.id-cell DRA.ⓣ-hor to (⟦ⓜ⟧-sound ρ κ))
+                      DRA.ⓣ-vert
+                      ((from (DRA.ⓓ-assoc ⟦ μ ⟧mod ⟦ ρ ⟧mod ⟦ κ ⟧mod)
+                      DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-hor DRA.id-cell))
+                      DRA.ⓣ-vert from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)))
+⟦associator⟧-helper {μ = μ} {ρ} κ = sem-2-cell-unique ((μ ⓜ ρ) ⓜ κ) (μ ⓜ (ρ ⓜ κ))
+
+⟦associator⟧ : ∀ {m n o p} {μ : Modality o p} {ρ : Modality n o} (κ : Modality m n) →
+               ((DRA.id-cell DRA.ⓣ-hor from (⟦ⓜ⟧-sound ρ κ))
+               DRA.ⓣ-vert from (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))
+               DRA.ⓣ-vert ⟦ eq-cell (mod-assoc κ) ⟧two-cell
+                 DRA.≅ᵗᶜ
+               (from (DRA.ⓓ-assoc ⟦ μ ⟧mod ⟦ ρ ⟧mod ⟦ κ ⟧mod)
+               DRA.ⓣ-vert (from (⟦ⓜ⟧-sound μ ρ) DRA.ⓣ-hor DRA.id-cell))
+               DRA.ⓣ-vert from (⟦ⓜ⟧-sound (μ ⓜ ρ) κ)
+⟦associator⟧ {μ = μ} {ρ} κ =
+  transᵗᶜ (ⓣ-vert-congʳ (⟦associator⟧-helper κ)) (
+  transᵗᶜ (transᵗᶜ ⓣ-vert-assoc (ⓣ-vert-congʳ (symᵗᶜ ⓣ-vert-assoc))) (
+  transᵗᶜ (ⓣ-vert-congʳ (transᵗᶜ (ⓣ-vert-congˡ (isoʳ (⟦ⓜ⟧-sound μ (ρ ⓜ κ)))) ⓣ-vert-unitˡ)) (
+  transᵗᶜ (symᵗᶜ ⓣ-vert-assoc) (
+  transᵗᶜ (ⓣ-vert-congˡ (transᵗᶜ (symᵗᶜ 2-cell-interchange) (transᵗᶜ (ⓣ-hor-cong ⓣ-vert-unitˡ (isoʳ (⟦ⓜ⟧-sound ρ κ))) ⓣ-hor-id)))
+  ⓣ-vert-unitˡ))))
+
+guarded-mt2-laws : MTTwoCellLaws guarded-mtm guarded-mtμ guarded-mtc guarded-mtc-laws guarded-mt2
+MTTwoCellLaws.⟦id-cell⟧-sound guarded-mt2-laws {μ = μ} = ⟦id-cell⟧-sound {μ = μ}
+MTTwoCellLaws.⟦ⓣ-vert⟧-sound guarded-mt2-laws = ⟦ⓣ-vert⟧-sound
+MTTwoCellLaws.⟦ⓜ⟧-sound-natural guarded-mt2-laws = ⟦ⓜ⟧-sound-natural
+MTTwoCellLaws.⟦associator⟧ guarded-mt2-laws = ⟦associator⟧
 
 
 guarded-mt : ModeTheory
-ModeTheory.mtb guarded-mt = guarded-mtb
+ModeTheory.mtm guarded-mt = guarded-mtm
+ModeTheory.mtμ guarded-mt = guarded-mtμ
 ModeTheory.mtc guarded-mt = guarded-mtc
-ModeTheory.mtc-laws guarded-mt = guarded-mtcl
-ModeTheory.mt2 guarded-mt = guarded-mt2c
+ModeTheory.mtc-laws guarded-mt = guarded-mtc-laws
+ModeTheory.mt2 guarded-mt = guarded-mt2
+ModeTheory.mt2-laws guarded-mt = guarded-mt2-laws
