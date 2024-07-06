@@ -4,7 +4,10 @@
 
 module Model.CwF-Structure.ContextFunctor where
 
-open import Function using (id)
+open import Data.Product renaming (_,_ to [_,_])
+open import Function
+import Function.Construct.Composition as Composition
+open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.Reasoning.Syntax
 open import Preliminaries
 
@@ -16,6 +19,9 @@ open import Model.CwF-Structure.Type
 private
   variable
     C D : BaseCategory
+
+infix 1 _≅ᶜᵗ_ _≅ᶜᶠ_
+infixl 20 _ⓝ-vert_
 
 
 --------------------------------------------------
@@ -107,6 +113,9 @@ record CtxFunctor (C D : BaseCategory) : Set₁ where
 
 open CtxFunctor public
 
+private variable
+  Φ Ψ Ω : CtxFunctor C D
+
 id-ctx-functor : CtxFunctor C C
 ctx-op id-ctx-functor = λ Γ → Γ
 is-functor id-ctx-functor = id-is-ctx-functor
@@ -197,3 +206,122 @@ module ≅ᶜᵗ-Reasoning {C D} {Φ Ψ : CtxFunctor C D} where
   open begin-syntax {A = CtxNatTransf Φ Ψ} _≅ᶜᵗ_ id public
   open ≅-syntax {A = CtxNatTransf Φ Ψ} _≅ᶜᵗ_ _≅ᶜᵗ_ transᶜᵗ symᶜᵗ public
   open end-syntax {A = CtxNatTransf Φ Ψ} _≅ᶜᵗ_ reflᶜᵗ public
+
+
+ctx-transf-setoid : (Φ Ψ : CtxFunctor C D) → Setoid _ _
+Setoid.Carrier (ctx-transf-setoid Φ Ψ) = CtxNatTransf Φ Ψ
+Setoid._≈_ (ctx-transf-setoid Φ Ψ) = _≅ᶜᵗ_
+IsEquivalence.refl (Setoid.isEquivalence (ctx-transf-setoid Φ Ψ)) = reflᶜᵗ
+IsEquivalence.sym (Setoid.isEquivalence (ctx-transf-setoid Φ Ψ)) = symᶜᵗ
+IsEquivalence.trans (Setoid.isEquivalence (ctx-transf-setoid Φ Ψ)) = transᶜᵗ
+
+
+ⓝ-vert-unitʳ : {α : CtxNatTransf Φ Ψ} → α ⓝ-vert id-ctx-transf Φ ≅ᶜᵗ α
+transf-op-eq ⓝ-vert-unitʳ = id-subst-unitʳ _
+
+ⓝ-vert-unitˡ : {α : CtxNatTransf Φ Ψ} → id-ctx-transf Ψ ⓝ-vert α ≅ᶜᵗ α
+transf-op-eq ⓝ-vert-unitˡ = id-subst-unitˡ _
+
+ⓝ-vert-assoc : {Φ1 Φ2 Φ3 Φ4 : CtxFunctor C D}
+               {α34 : CtxNatTransf Φ3 Φ4} {α23 : CtxNatTransf Φ2 Φ3} {α12 : CtxNatTransf Φ1 Φ2} →
+               (α34 ⓝ-vert α23) ⓝ-vert α12 ≅ᶜᵗ α34 ⓝ-vert (α23 ⓝ-vert α12)
+transf-op-eq ⓝ-vert-assoc = ⊚-assoc
+
+ⓝ-vert-congʳ : {β : CtxNatTransf Ψ Ω} {α α' : CtxNatTransf Φ Ψ} →
+               α ≅ᶜᵗ α' → β ⓝ-vert α ≅ᶜᵗ β ⓝ-vert α'
+transf-op-eq (ⓝ-vert-congʳ eα) = ⊚-congʳ (transf-op-eq eα)
+
+ⓝ-vert-congˡ : {β β' : CtxNatTransf Ψ Ω} {α : CtxNatTransf Φ Ψ} →
+               β ≅ᶜᵗ β' → β ⓝ-vert α ≅ᶜᵗ β' ⓝ-vert α
+transf-op-eq (ⓝ-vert-congˡ eα) = ⊚-congˡ (transf-op-eq eα)
+
+
+--------------------------------------------------
+-- Natural isomorphisms between context functors
+
+record _≅ᶜᶠ_ (Φ Ψ : CtxFunctor C D) : Set₁ where
+  no-eta-equality
+
+  field
+    from : CtxNatTransf Φ Ψ
+    to : CtxNatTransf Ψ Φ
+    isoˡ : to ⓝ-vert from ≅ᶜᵗ id-ctx-transf Φ
+    isoʳ : from ⓝ-vert to ≅ᶜᵗ id-ctx-transf Ψ
+open _≅ᶜᶠ_ public
+
+reflᶜᶠ : Φ ≅ᶜᶠ Φ
+from (reflᶜᶠ {Φ = Φ}) = id-ctx-transf Φ
+to (reflᶜᶠ {Φ = Φ}) = id-ctx-transf Φ
+isoˡ reflᶜᶠ = ⓝ-vert-unitˡ
+isoʳ reflᶜᶠ = ⓝ-vert-unitˡ
+
+symᶜᶠ : Ψ ≅ᶜᶠ Φ → Φ ≅ᶜᶠ Ψ
+from (symᶜᶠ Ψ=Φ) = to Ψ=Φ
+to (symᶜᶠ Ψ=Φ) = from Ψ=Φ
+isoˡ (symᶜᶠ Ψ=Φ) = isoʳ Ψ=Φ
+isoʳ (symᶜᶠ Ψ=Φ) = isoˡ Ψ=Φ
+
+transᶜᶠ : Ψ ≅ᶜᶠ Φ → Φ ≅ᶜᶠ Ω → Ψ ≅ᶜᶠ Ω
+from (transᶜᶠ Ψ=Φ Φ=Ω) = from Φ=Ω ⓝ-vert from Ψ=Φ
+to (transᶜᶠ Ψ=Φ Φ=Ω) = to Ψ=Φ ⓝ-vert to Φ=Ω
+isoˡ (transᶜᶠ Ψ=Φ Φ=Ω) =
+  begin
+    (to Ψ=Φ ⓝ-vert to Φ=Ω) ⓝ-vert (from Φ=Ω ⓝ-vert from Ψ=Φ)
+  ≅⟨ ⓝ-vert-assoc ⟩
+    to Ψ=Φ ⓝ-vert (to Φ=Ω ⓝ-vert (from Φ=Ω ⓝ-vert from Ψ=Φ))
+  ≅⟨ ⓝ-vert-congʳ ⓝ-vert-assoc ⟨
+    to Ψ=Φ ⓝ-vert ((to Φ=Ω ⓝ-vert from Φ=Ω) ⓝ-vert from Ψ=Φ)
+  ≅⟨ ⓝ-vert-congʳ (ⓝ-vert-congˡ (isoˡ Φ=Ω)) ⟩
+    to Ψ=Φ ⓝ-vert (id-ctx-transf _ ⓝ-vert from Ψ=Φ)
+  ≅⟨ ⓝ-vert-congʳ ⓝ-vert-unitˡ ⟩
+    to Ψ=Φ ⓝ-vert from Ψ=Φ
+  ≅⟨ isoˡ Ψ=Φ ⟩
+    id-ctx-transf _ ∎
+  where open ≅ᶜᵗ-Reasoning
+isoʳ (transᶜᶠ Ψ=Φ Φ=Ω) =
+  begin
+    (from Φ=Ω ⓝ-vert from Ψ=Φ) ⓝ-vert (to Ψ=Φ ⓝ-vert to Φ=Ω)
+  ≅⟨ ⓝ-vert-assoc ⟩
+    from Φ=Ω ⓝ-vert (from Ψ=Φ ⓝ-vert (to Ψ=Φ ⓝ-vert to Φ=Ω))
+  ≅⟨ ⓝ-vert-congʳ ⓝ-vert-assoc ⟨
+    from Φ=Ω ⓝ-vert ((from Ψ=Φ ⓝ-vert to Ψ=Φ) ⓝ-vert to Φ=Ω)
+  ≅⟨ ⓝ-vert-congʳ (ⓝ-vert-congˡ (isoʳ Ψ=Φ)) ⟩
+    from Φ=Ω ⓝ-vert (id-ctx-transf _ ⓝ-vert to Φ=Ω)
+  ≅⟨ ⓝ-vert-congʳ ⓝ-vert-unitˡ ⟩
+    from Φ=Ω ⓝ-vert to Φ=Ω
+  ≅⟨ isoʳ Φ=Ω ⟩
+    id-ctx-transf _ ∎
+  where open ≅ᶜᵗ-Reasoning
+
+
+-- From a natural isomorphism between context functors, we can
+-- construct Agda isomorphisms for the types of natural
+-- transformations to and from these functors.
+
+ctx-functor-iso-transf-isoʳ : {Φ Ψ Ψ' : CtxFunctor C D} → Ψ ≅ᶜᶠ Ψ' →
+                              Inverse (ctx-transf-setoid Φ Ψ) (ctx-transf-setoid Φ Ψ')
+Inverse.to (ctx-functor-iso-transf-isoʳ Ψ~Ψ') α = from Ψ~Ψ' ⓝ-vert α
+Inverse.from (ctx-functor-iso-transf-isoʳ Ψ~Ψ') α = to Ψ~Ψ' ⓝ-vert α
+Inverse.to-cong (ctx-functor-iso-transf-isoʳ Ψ~Ψ') = ⓝ-vert-congʳ
+Inverse.from-cong (ctx-functor-iso-transf-isoʳ Ψ~Ψ') = ⓝ-vert-congʳ
+Inverse.inverse (ctx-functor-iso-transf-isoʳ Ψ~Ψ') =
+  [ (λ eα → transᶜᵗ (ⓝ-vert-congʳ eα) (transᶜᵗ (symᶜᵗ ⓝ-vert-assoc) (transᶜᵗ (ⓝ-vert-congˡ (isoʳ Ψ~Ψ')) ⓝ-vert-unitˡ)))
+  , (λ eα → transᶜᵗ (ⓝ-vert-congʳ eα) (transᶜᵗ (symᶜᵗ ⓝ-vert-assoc) (transᶜᵗ (ⓝ-vert-congˡ (isoˡ Ψ~Ψ')) ⓝ-vert-unitˡ)))
+  ]
+
+ctx-functor-iso-transf-isoˡ : {Φ Φ' Ψ : CtxFunctor C D} → Φ ≅ᶜᶠ Φ' →
+                              Inverse (ctx-transf-setoid Φ Ψ) (ctx-transf-setoid Φ' Ψ)
+Inverse.to (ctx-functor-iso-transf-isoˡ Φ~Φ') α = α ⓝ-vert to Φ~Φ'
+Inverse.from (ctx-functor-iso-transf-isoˡ Φ~Φ') α = α ⓝ-vert from Φ~Φ'
+Inverse.to-cong (ctx-functor-iso-transf-isoˡ Φ~Φ') = ⓝ-vert-congˡ
+Inverse.from-cong (ctx-functor-iso-transf-isoˡ Φ~Φ') = ⓝ-vert-congˡ
+Inverse.inverse (ctx-functor-iso-transf-isoˡ Φ~Φ') =
+  [ (λ eα → transᶜᵗ (ⓝ-vert-congˡ eα) (transᶜᵗ ⓝ-vert-assoc (transᶜᵗ (ⓝ-vert-congʳ (isoʳ Φ~Φ')) ⓝ-vert-unitʳ)))
+  , (λ eα → transᶜᵗ (ⓝ-vert-congˡ eα) (transᶜᵗ ⓝ-vert-assoc (transᶜᵗ (ⓝ-vert-congʳ (isoˡ Φ~Φ')) ⓝ-vert-unitʳ)))
+  ]
+
+ctx-functor-iso-transf-iso : {Φ Φ' Ψ Ψ' : CtxFunctor C D} →
+                             Φ ≅ᶜᶠ Φ' → Ψ ≅ᶜᶠ Ψ' →
+                             Inverse (ctx-transf-setoid Φ Ψ) (ctx-transf-setoid Φ' Ψ')
+ctx-functor-iso-transf-iso Φ~Φ' Ψ~Ψ' =
+  Composition.inverse (ctx-functor-iso-transf-isoˡ Φ~Φ') (ctx-functor-iso-transf-isoʳ Ψ~Ψ')
