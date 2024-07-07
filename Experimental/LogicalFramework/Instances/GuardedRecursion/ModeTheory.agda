@@ -56,7 +56,10 @@ non-triv-mod-eq? later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantlyⓜf
 
 ⟦_⟧non-triv-mod : NonTrivModality m n → DRA ⟦ m ⟧mode ⟦ n ⟧mode
 ⟦ nt-forever ⟧non-triv-mod = M.forever
-⟦ later^[ k ]ⓜconstantly ⟧non-triv-mod = M.later^[ k ] ⓓ M.constantly
+⟦ later^[ zero  ]ⓜconstantly ⟧non-triv-mod = M.constantly
+⟦ later^[ suc k ]ⓜconstantly ⟧non-triv-mod = M.later^[ suc k ] ⓓ M.constantly
+  -- ^ We case split on k because we want the interpretation of
+  --   constantly to be definitionally M.constantly for convenience.
 ⟦ later^[1+ k ] ⟧non-triv-mod = M.later^[ suc k ]
 ⟦ later^[ k ]ⓜconstantlyⓜforever ⟧non-triv-mod = M.later^[ k ] ⓓ M.constantly ⓓ M.forever
 
@@ -90,9 +93,10 @@ later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[1+ l ] = ‵ later^[ k ]�
 later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[ l ]ⓜconstantlyⓜforever = ‵ later^[ k ]ⓜconstantlyⓜforever
 
 ⟦ⓜ⟧-non-triv-sound : (μ : NonTrivModality n o) (κ : NonTrivModality m n) → ⟦ μ ⓜnon-triv κ ⟧mod ≅ᵈ ⟦ μ ⟧non-triv-mod ⓓ ⟦ κ ⟧non-triv-mod
-⟦ⓜ⟧-non-triv-sound nt-forever later^[ l ]ⓜconstantly =
+⟦ⓜ⟧-non-triv-sound nt-forever later^[ zero ]ⓜconstantly = symᵈ M.forever-constantly
+⟦ⓜ⟧-non-triv-sound nt-forever later^[ suc l ]ⓜconstantly =
   transᵈ (symᵈ M.forever-constantly) (
-  transᵈ (symᵈ (ⓓ-congˡ _ M.forever-later^[ l ])) (
+  transᵈ (symᵈ (ⓓ-congˡ _ M.forever-later^[ suc l ])) (
   ⓓ-assoc _ _ _))
 ⟦ⓜ⟧-non-triv-sound nt-forever later^[1+ l ] = symᵈ M.forever-later^[ suc l ]
 ⟦ⓜ⟧-non-triv-sound nt-forever later^[ l ]ⓜconstantlyⓜforever =
@@ -101,9 +105,12 @@ later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[ l ]ⓜconstantlyⓜforeve
   transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
   transᵈ (ⓓ-congˡ _ M.forever-later^[ l ]) M.forever-constantly)))) (
   ⓓ-assoc _ _ _))
-⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantly nt-forever = reflᵈ
-⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ l ]ⓜconstantly =
-  transᵈ (ⓓ-congˡ _ (M.later^m+n (suc k))) (ⓓ-assoc _ _ _)
+⟦ⓜ⟧-non-triv-sound later^[ zero  ]ⓜconstantly nt-forever = ⓓ-congˡ _ (𝟙-unitˡ _)
+⟦ⓜ⟧-non-triv-sound later^[ suc k ]ⓜconstantly nt-forever = reflᵈ
+⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ zero  ]ⓜconstantly =
+  ⓓ-congˡ _ (transᵈ (M.later^m+n (suc k)) (𝟙-unitʳ _))
+⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ suc l ]ⓜconstantly =
+   transᵈ (ⓓ-congˡ _ (M.later^m+n (suc k))) (ⓓ-assoc _ _ _)
 ⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[1+ l ] =
   transᵈ (ⓓ-congʳ _ (M.later^m+n (suc k))) (
   transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
@@ -113,10 +120,22 @@ later^[ k ]ⓜconstantlyⓜforever ⓜnon-triv later^[ l ]ⓜconstantlyⓜforeve
 ⟦ⓜ⟧-non-triv-sound later^[1+ k ] later^[ l ]ⓜconstantlyⓜforever =
   transᵈ (ⓓ-congˡ _ (ⓓ-congˡ _ (M.later^m+n (suc k)))) (
   transᵈ (ⓓ-congˡ _ (ⓓ-assoc _ _ _)) (ⓓ-assoc _ _ _))
-⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantlyⓜforever later^[ l ]ⓜconstantly = symᵈ (
+⟦ⓜ⟧-non-triv-sound later^[ zero  ]ⓜconstantlyⓜforever later^[ zero ]ⓜconstantly =
+  symᵈ (transᵈ (ⓓ-assoc _ _ _) (transᵈ (ⓓ-congʳ _ M.forever-constantly) (transᵈ (𝟙-unitʳ _) (𝟙-unitˡ _))))
+⟦ⓜ⟧-non-triv-sound later^[ suc k ]ⓜconstantlyⓜforever later^[ zero ]ⓜconstantly =
+  symᵈ (transᵈ (ⓓ-assoc _ _ _) (transᵈ (ⓓ-congʳ _ M.forever-constantly) (𝟙-unitʳ _)))
+⟦ⓜ⟧-non-triv-sound later^[ zero  ]ⓜconstantlyⓜforever later^[ suc l ]ⓜconstantly =
+  symᵈ (
   transᵈ (transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ (
   transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
-  transᵈ (ⓓ-congˡ _ M.forever-later^[ l ])
+  transᵈ (ⓓ-congˡ _ M.forever-later^[ suc l ])
+  M.forever-constantly)))) (
+  transᵈ (𝟙-unitʳ _) (𝟙-unitˡ _)))
+⟦ⓜ⟧-non-triv-sound later^[ suc k ]ⓜconstantlyⓜforever later^[ suc l ]ⓜconstantly =
+  symᵈ (
+  transᵈ (transᵈ (ⓓ-assoc _ _ _) (ⓓ-congʳ _ (
+  transᵈ (symᵈ (ⓓ-assoc _ _ _)) (
+  transᵈ (ⓓ-congˡ _ M.forever-later^[ suc l ])
   M.forever-constantly)))) (
   𝟙-unitʳ _))
 ⟦ⓜ⟧-non-triv-sound later^[ k ]ⓜconstantlyⓜforever later^[1+ l ] = symᵈ (
@@ -264,7 +283,10 @@ two-cell-eq? (cstⓜfrv≤ltr k≤l) (cstⓜfrv≤ltr k≤l') = just (cong cst�
 
 ⟦_⟧two-cell : TwoCell μ κ → DRA.TwoCell ⟦ μ ⟧mod ⟦ κ ⟧mod
 ⟦ id𝟙 ⟧two-cell = DRA.id-cell
-⟦ ltrⓜcst k≤l ⟧two-cell = M.laters≤laters k≤l DRA.ⓣ-hor DRA.id-cell
+⟦ ltrⓜcst {l = zero } z≤n ⟧two-cell = DRA.id-cell
+⟦ ltrⓜcst {l = suc l} z≤n ⟧two-cell =
+  (M.laters≤laters {n = suc l} z≤n DRA.ⓣ-hor DRA.id-cell) DRA.ⓣ-vert to (𝟙-unitˡ _)
+⟦ ltrⓜcst (s≤s k≤l) ⟧two-cell = M.laters≤laters (s≤s k≤l) DRA.ⓣ-hor DRA.id-cell
 ⟦ id-frv ⟧two-cell = DRA.id-cell
 ⟦ ltr k≤l ⟧two-cell = M.laters≤laters (s≤s k≤l)
 ⟦ 𝟙≤ltr {k = k} ⟧two-cell = M.laters≤laters {n = suc k} z≤n
@@ -293,7 +315,8 @@ mode-is-preorder ω = ω-is-preorder
 lock-is-lifted : (μ : Modality m n) → M.IsLiftedFunctor (DRA.ctx-functor ⟦ μ ⟧mod)
 lock-is-lifted 𝟙 = M.is-lifted-id
 lock-is-lifted (‵ nt-forever) = M.is-lifted-lift
-lock-is-lifted (‵ later^[ k ]ⓜconstantly) = M.is-lifted-lift M.ⓕ-lifted M.laters-lock-is-lifted k
+lock-is-lifted (‵ later^[ zero  ]ⓜconstantly) = M.is-lifted-lift
+lock-is-lifted (‵ later^[ suc k ]ⓜconstantly) = M.is-lifted-lift M.ⓕ-lifted M.laters-lock-is-lifted (suc k)
 lock-is-lifted (‵ later^[1+ k ]) = M.laters-lock-is-lifted (suc k)
 lock-is-lifted (‵ later^[ k ]ⓜconstantlyⓜforever) =
   M.is-lifted-lift M.ⓕ-lifted (M.is-lifted-lift M.ⓕ-lifted M.laters-lock-is-lifted k)
