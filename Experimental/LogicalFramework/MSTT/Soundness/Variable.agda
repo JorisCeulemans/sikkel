@@ -1,7 +1,10 @@
-open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics
 
 module Experimental.LogicalFramework.MSTT.Soundness.Variable
-  (𝒫 : MSTT-Parameter)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯) (⟦𝓉⟧ : TmExtSem ℳ 𝒯 𝓉)
   where
 
 import Relation.Binary.PropositionalEquality as Ag
@@ -11,10 +14,10 @@ open import Model.DRA as DRA hiding
   (⟨_∣_⟩; 𝟙; _,lock⟨_⟩; lock-fmap; lock-fmap-cong; lock-fmap-id; lock-fmap-⊚
   ; TwoCell; id-cell; _ⓣ-vert_; _ⓣ-hor_; key-subst; key-subst-natural; key-subst-eq)
 
-open MSTT-Parameter 𝒫
+open ModeTheory ℳ
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
-open import Experimental.LogicalFramework.MSTT.Soundness.LockTele 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.LockTele ℳ 𝒯 𝓉
 
 private variable
   m n o p : Mode

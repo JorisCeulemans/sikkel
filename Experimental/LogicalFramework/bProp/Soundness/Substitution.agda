@@ -20,7 +20,7 @@ import Experimental.DependentTypes.Model.IdentityType.AlternativeTerm as M
 import Experimental.DependentTypes.Model.Function as M
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.MSTT.Soundness.Substitution 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.Substitution ℳ 𝒯 𝓉 ⟦𝓉⟧
 open import Experimental.LogicalFramework.bProp.Syntax 𝒫 𝒷
 open import Experimental.LogicalFramework.bProp.Interpretation 𝒫 𝒷 ⟦𝒷⟧
 open Experimental.LogicalFramework.Parameter.bPropExtensionSemantics ℳ 𝒯 𝓉 hiding (bPropExtSem)

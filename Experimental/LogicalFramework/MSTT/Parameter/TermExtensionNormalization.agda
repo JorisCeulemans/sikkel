@@ -10,13 +10,12 @@ module Experimental.LogicalFramework.MSTT.Parameter.TermExtensionNormalization
 open import Data.Maybe
 
 open Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
-  renaming (TmArgInfo to DependencyInfo; tmarg-tel to dep-tel; tmarg-ty to dep-ty)
   hiding (TmExt)
 open TmExt 𝓉
 open import Experimental.LogicalFramework.MSTT.Syntax.Types ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Syntax.Contexts ℳ 𝒯
 open import Experimental.LogicalFramework.MSTT.Syntax.Terms ℳ 𝒯 𝓉
-open import Experimental.LogicalFramework.MSTT.Normalization.ResultType ℳ 𝒯 𝓉 ⟦𝓉⟧
+open import Experimental.LogicalFramework.MSTT.Normalization.ResultType ℳ 𝒯 𝓉 ⟦𝓉⟧ public
 
 open ModeTheory ℳ
 

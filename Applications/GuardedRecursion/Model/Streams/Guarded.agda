@@ -446,3 +446,22 @@ module _ {A : ClosedTy ★} (clA : IsClosedNatural A) {Γ Δ : Ctx ω} (σ : Γ 
                ι⁻¹[ closed-natural (dra-closed later (gstream-closed clA)) σ ] (
                t [ σ ]'))) ∎
     where open ≅ᵗᵐ-Reasoning
+
+module _ {A : ClosedTy ★} (clA : IsClosedNatural A) {Γ : Ctx ω} where
+  g-cl-tail-cong : {s1 s2 : Tm Γ (GStream A)} →
+                   s1 ≅ᵗᵐ s2 →
+                   g-cl-tail clA s1 ≅ᵗᵐ g-cl-tail clA s2
+  g-cl-tail-cong es = ι⁻¹-cong (g-tail-cong es)
+
+  g-cl-cons-cong : {h1 h2 : Tm Γ (constantly-ty A)} {t1 t2 : Tm Γ (▻ (GStream A))} →
+                   h1 ≅ᵗᵐ h2 → t1 ≅ᵗᵐ t2 →
+                   g-cl-cons clA h1 t1 ≅ᵗᵐ g-cl-cons clA h2 t2
+  g-cl-cons-cong eh et = g-cons-cong eh (ι-cong et)
+
+  gstream-cl-β-head : {h : Tm Γ (constantly-ty A)} {t : Tm Γ (▻ (GStream A))} →
+                      g-head (g-cl-cons clA h t) ≅ᵗᵐ h
+  gstream-cl-β-head = gstream-β-head _ _
+
+  gstream-cl-β-tail : {h : Tm Γ (constantly-ty A)} {t : Tm Γ (▻ (GStream A))} →
+                      g-cl-tail clA (g-cl-cons clA h t) ≅ᵗᵐ t
+  gstream-cl-β-tail = transᵗᵐ (ι⁻¹-cong (gstream-β-tail _ _)) ι-symˡ

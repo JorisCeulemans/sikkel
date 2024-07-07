@@ -1,7 +1,10 @@
-open import Experimental.LogicalFramework.MSTT.Parameter
+open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
+open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension using (TyExt)
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension using (TmExt)
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics using (TmExtSem)
 
 module Experimental.LogicalFramework.MSTT.Soundness.Substitution
-  (𝒫 : MSTT-Parameter)
+  (ℳ : ModeTheory) (𝒯 : TyExt ℳ) (𝓉 : TmExt ℳ 𝒯) (⟦𝓉⟧ : TmExtSem ℳ 𝒯 𝓉)
   where
 
 open import Data.List
@@ -17,14 +20,14 @@ import Model.Type.Constant as M
 import Model.Type.Function as M
 import Model.Type.Product as M
 
-open MSTT-Parameter 𝒫
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
-open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics ℳ 𝒯
+open ModeTheory ℳ
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯 hiding (TmExt)
+open import Experimental.LogicalFramework.MSTT.Parameter.TermExtensionSemantics ℳ 𝒯 hiding (TmExtSem)
 open TmExtSem ⟦𝓉⟧
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
-open import Experimental.LogicalFramework.MSTT.Soundness.LockTele 𝒫
-open import Experimental.LogicalFramework.MSTT.Soundness.Variable 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.LockTele ℳ 𝒯 𝓉
+open import Experimental.LogicalFramework.MSTT.Soundness.Variable ℳ 𝒯 𝓉 ⟦𝓉⟧
 
 private variable
   m n o : Mode

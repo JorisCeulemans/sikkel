@@ -24,7 +24,7 @@ open bPropExtSem ⟦𝒷⟧
 
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
-open import Experimental.LogicalFramework.MSTT.Soundness.Variable 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.Variable ℳ 𝒯 𝓉 ⟦𝓉⟧
 open import Experimental.LogicalFramework.bProp.Syntax 𝒫 𝒷
 open import Experimental.LogicalFramework.bProp.Interpretation 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.CheckingMonad

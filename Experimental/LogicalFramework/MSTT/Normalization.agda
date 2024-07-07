@@ -21,7 +21,7 @@ import Model.Type.Product as M
 open import Experimental.LogicalFramework.MSTT.Normalization.Helpers
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉
 open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
-open import Experimental.LogicalFramework.MSTT.Soundness.Substitution 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.Substitution ℳ 𝒯 𝓉 ⟦𝓉⟧
 
 private variable
   m n o : Mode

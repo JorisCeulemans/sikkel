@@ -12,7 +12,7 @@ open import Experimental.LogicalFramework.MSTT.Parameter.TypeExtension
 open import Experimental.LogicalFramework.Proof.CheckingMonad
 
 import Experimental.LogicalFramework.Instances.GuardedRecursion.ModeTheory as GMT
-open GMT using (guarded-mt; ω; ★)
+open GMT using (guarded-mt; ω)
 open ModeTheory guarded-mt
 
 -- Type extensions for guarded recursion (only guarded streams)

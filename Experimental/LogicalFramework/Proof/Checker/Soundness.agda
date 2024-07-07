@@ -21,8 +21,8 @@ import Model.Type.Function as M
 import Model.Type.Product as M
 
 open import Experimental.LogicalFramework.MSTT 𝒫
-open import Experimental.LogicalFramework.MSTT.Soundness.Substitution 𝒫
-open import Experimental.LogicalFramework.MSTT.Soundness.Variable 𝒫
+open import Experimental.LogicalFramework.MSTT.Soundness.Substitution ℳ 𝒯 𝓉 ⟦𝓉⟧
+open import Experimental.LogicalFramework.MSTT.Soundness.Variable ℳ 𝒯 𝓉 ⟦𝓉⟧
 open import Experimental.LogicalFramework.bProp 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.bProp.Soundness.Substitution 𝒫 𝒷 ⟦𝒷⟧
 open import Experimental.LogicalFramework.Proof.Context 𝒫 𝒷 ⟦𝒷⟧
