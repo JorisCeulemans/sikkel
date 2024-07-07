@@ -12,7 +12,7 @@ open import Experimental.LogicalFramework.Instances.GuardedRecursion.TermExtensi
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.bPropExtension
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.Soundness
 
-open import Experimental.LogicalFramework.Proof.Equality guarded-mstt guarded-bp-ext
+open import Experimental.LogicalFramework.Proof.AlphaEquivalence guarded-mstt guarded-bp-ext guarded-bp-ext-sem
 open import Experimental.LogicalFramework.Proof.Context guarded-mstt guarded-bp-ext guarded-bp-ext-sem
 open import Experimental.LogicalFramework.Proof.Checker.SyntaxViews guarded-mstt guarded-bp-ext guarded-bp-ext-sem
 open import Experimental.LogicalFramework.Proof.Checker.ResultType guarded-mstt guarded-bp-ext guarded-bp-ext-sem
@@ -29,51 +29,23 @@ private variable
 
 
 data ProofExtCode : Mode → Set where
-  gstream-β-head-code gstream-β-tail-code : ProofExtCode ω
   tmlöb-β-code : ProofExtCode ω
   pflöb-code : (x : Name) → ProofExtCode ω
 
 pf-code-tmarg-infos : ProofExtCode m → List (TmArgInfo m)
-pf-code-tmarg-infos gstream-β-head-code = []
-pf-code-tmarg-infos gstream-β-tail-code = []
 pf-code-tmarg-infos tmlöb-β-code = []
 pf-code-tmarg-infos (pflöb-code x) = []
 
 pf-code-bparg-infos : ProofExtCode m → List (ArgInfo m)
-pf-code-bparg-infos gstream-β-head-code = []
-pf-code-bparg-infos gstream-β-tail-code = []
 pf-code-bparg-infos tmlöb-β-code = []
 pf-code-bparg-infos (pflöb-code x) = []
 
 pf-code-pfarg-infos : ProofExtCode m → List (ArgInfo m)
-pf-code-pfarg-infos gstream-β-head-code = []
-pf-code-pfarg-infos gstream-β-tail-code = []
 pf-code-pfarg-infos tmlöb-β-code = []
 pf-code-pfarg-infos (pflöb-code x) =
   arg-info ◇ ∷
   []
 
-
-data IsGHead : Tm Γ T → Set where
-  is-g-head : ∀ {A} (s : Tm Γ (GStream A)) → IsGHead (g-head s)
-
-is-g-head? : (t : Tm Γ T) → PCM (IsGHead t)
-is-g-head? (g-head s) = return (is-g-head s)
-is-g-head? _ = throw-error "head of guarded stream expected"
-
-data IsGTail : Tm Γ T → Set where
-  is-g-tail : ∀ {A} (s : Tm Γ (GStream A)) → IsGTail (g-tail s)
-
-is-g-tail? : (t : Tm Γ T) → PCM (IsGTail t)
-is-g-tail? (g-tail s) = return (is-g-tail s)
-is-g-tail? _ = throw-error "tail of guarded stream expected"
-
-data IsGCons : Tm Γ T → Set where
-  is-g-cons : ∀ {A} (a : Tm (Γ ,lock⟨ constantly ⟩) A) (s : Tm (Γ ,lock⟨ later ⟩) (GStream A)) → IsGCons (g-cons a s)
-
-is-g-cons? : (t : Tm Γ T) → PCM (IsGCons t)
-is-g-cons? (g-cons a s) = return (is-g-cons a s)
-is-g-cons? _ = throw-error "cons of guarded stream expected"
 
 data IsLob : Tm Γ T → Set where
   is-lob : (x : Name) (T : Ty ω) (t : Tm (Γ ,, later ∣ x ∈ T) T) → IsLob (löb[later∣ x ∈ T ] t)
@@ -83,28 +55,17 @@ is-lob? (löb[later∣ x ∈ T ] t) = return (is-lob x T t)
 is-lob? _ = throw-error "löb induction expected"
 
 
-pf-code-check : (c : ProofExtCode m) (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ)) →
-                ExtTmArgs (pf-code-tmarg-infos c) (to-ctx Ξ) →
-                ExtBPArgs (pf-code-bparg-infos c) (to-ctx Ξ) →
-                ProofCheckExt (pf-code-pfarg-infos c) Ξ φ
-pf-code-check gstream-β-head-code Ξ φ _ _ = do
-  is-eq lhs rhs ← is-eq? φ
-  is-g-head s ← is-g-head? lhs
-  is-g-cons h t ← is-g-cons? s
-  refl ← rhs ≟tm (mod⟨ constantly ⟩ h)
-  return ⟅ [] , _ ↦ gstream-β-head-sound Ξ h t ⟆
-pf-code-check gstream-β-tail-code Ξ φ _ _ = do
-  is-eq lhs rhs ← is-eq? φ
-  is-g-tail tail-arg ← is-g-tail? lhs
-  is-g-cons h t ← is-g-cons? tail-arg
-  refl ← rhs ≟tm (mod⟨ later ⟩ t)
-  return ⟅ [] , _ ↦ gstream-β-tail-sound Ξ h t ⟆
-pf-code-check tmlöb-β-code Ξ φ _ _ = do
+pf-code-check : (c : ProofExtCode m) (Ξ : ProofCtx m) (φ : bProp (to-ctx Ξ))
+                {tmarg-names : TmArgBoundNames (pf-code-tmarg-infos c)} (tmargs : ExtTmArgs (pf-code-tmarg-infos c) tmarg-names (to-ctx Ξ))
+                {bparg-names : ArgBoundNames (pf-code-bparg-infos c)} (bpargs : ExtBPArgs (pf-code-bparg-infos c) bparg-names (to-ctx Ξ))
+                (pfarg-names : ArgBoundNames (pf-code-pfarg-infos c)) →
+                ProofCheckExt (pf-code-pfarg-infos c) pfarg-names Ξ φ
+pf-code-check tmlöb-β-code Ξ φ _ _ _ = do
   is-eq lhs rhs ← is-eq? φ
   is-lob x T t ← is-lob? lhs
-  refl ← rhs ≟tm (t [ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ]tmˢ)
-  return ⟅ [] , _ ↦ tmlöb-β-sound Ξ x t ⟆
-pf-code-check (pflöb-code x) Ξ φ _ _ = λ check-subpf → do
+  e-rhs ← rhs ≟tm (t [ ((löb[later∣ x ∈ T ] t) [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]tmʳ) / x ]tmˢ)
+  return ⟅ [] , _ ↦ tmlöb-β-sound Ξ x t rhs e-rhs ⟆
+pf-code-check (pflöb-code x) Ξ φ _ _ (_ , _) = λ check-subpf → do
   ⟅ goals , ⟦p⟧ ⟆ ← check-subpf (Ξ ,,ᵇ later ∣ x ∈ φ [ keyʳ (lock⟨ later ⟩, ◇) ◇ 𝟙≤ltr ]bpropʳ) φ Ag.refl
   return ⟅ goals , sgoals ↦ pf-löb-sound Ξ φ x (⟦p⟧ sgoals) ⟆
 

@@ -30,5 +30,5 @@ check-proof-nosem Ξ p φ = PCResult.goals <$> check-proof Ξ p φ
 _ : check-proof-nosem ◇ test (g-cons zero g-zeros ≡ᵇ g-cons zero g-zeros) ≡ PCM.ok []
 _ = Ag.refl
 
-_ : check-proof-nosem ◇ gstream-β-tail (g-tail (g-cons zero g-zeros) ≡ᵇ mod⟨ later ⟩ g-zeros) ≡ PCM.ok []
+_ : check-proof-nosem ◇ by-normalization (g-tail (g-cons zero g-zeros) ≡ᵇ mod⟨ later ⟩ g-zeros) ≡ PCM.ok []
 _ = Ag.refl

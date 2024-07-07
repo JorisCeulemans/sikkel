@@ -23,7 +23,5 @@ BiSikkelParameter.𝓅 guarded-param = guarded-pf-ext
 open import Experimental.LogicalFramework guarded-param public
 
 
-pattern gstream-β-head = ext gstream-β-head-code tt tt tt
-pattern gstream-β-tail = ext gstream-β-tail-code tt tt tt
-pattern tmlöb-β = ext tmlöb-β-code tt tt tt
-pattern pflöb x p = ext (pflöb-code x) tt tt (p , tt)
+pattern tmlöb-β = ext tmlöb-β-code tt tt tt tt tt tt
+pattern pflöb x p = ext (pflöb-code x) tt tt tt tt ((tt , tt) , tt) (p , tt)
