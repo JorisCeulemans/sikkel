@@ -65,7 +65,7 @@ data Proof where
           Proof Γ                 -- Ξ ⊢ φ [ t2 / x ]bprop
 
   -- Integration of normalization procedure in proofs
-  by-normalization : Proof Γ
+  with-normalization : Proof Γ → Proof Γ
 
   -- Expanding definitions of MSTT terms
   by-unfold-global-def : Proof Γ  -- Ξ ⊢ def _ {t} ≡ᵇ t
@@ -166,6 +166,9 @@ ExtPfArgs []             _                        Γ = ⊤
 ExtPfArgs (info ∷ infos) (arg-names , args-names) Γ =
   Proof (Γ ++tel (add-names (arg-tel info) arg-names)) × ExtPfArgs infos args-names Γ
 
+
+by-normalization : Proof Γ
+by-normalization = with-normalization refl
 
 -- More useful versions of the induction principles for Bool', Nat'
 -- and modal types.

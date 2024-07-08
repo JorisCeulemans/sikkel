@@ -75,12 +75,12 @@ check-proof Ξ (subst {μ = μ} {x = x} {T = T} φ t1 t2 pe p1) ψ = do
   return ⟅ goalse ++ goals1 , sgoals ↦
     (let sgoalse , sgoals1 = split-sem-goals goalse goals1 sgoals in
     subst-sound Ξ t1 t2 ψ φ (⟦pe⟧ sgoalse) (⟦p1⟧ sgoals1) ψ=φ[]) ⟆
-check-proof Ξ by-normalization φ = do
+check-proof Ξ (with-normalization p) φ = do
   is-eq t1 t2 ← is-eq? φ
   normres nt1 et1 ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t1)
   normres nt2 et2 ← from-maybe "Normalization requires too much fuel." (normalize proof-fuel t2)
-  ent ← nt1 ≟tm nt2
-  return ⟅ [] , _ ↦ by-normalization-sound Ξ t1 t2 nt1 nt2 et1 et2 ent ⟆
+  ⟅ goals , ⟦p⟧ ⟆ ← check-proof Ξ p (nt1 ≡ᵇ nt2)
+  return ⟅ goals , sgoals ↦ with-normalization-sound Ξ t1 t2 nt1 nt2 et1 et2 (⟦p⟧ sgoals) ⟆
 check-proof Ξ by-unfold-global-def φ = do
   is-eq d1 t2 ← is-eq? φ
   global-def name t1 ← is-global-def? d1

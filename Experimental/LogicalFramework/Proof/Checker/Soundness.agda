@@ -132,13 +132,16 @@ module _ (Ξ : ProofCtx m) where
          M.eq-reflect (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] pe))))) _ ]
     M.ι⁻¹[ to-ctx-/-commute Ξ φ t1 ] p1
 
-  by-normalization-sound : (t1 t2 nt1 nt2 : Tm (to-ctx Ξ) T) →
-                           ⟦ t1 ⟧tm M.≅ᵗᵐ ⟦ nt1 ⟧tm →
-                           ⟦ t2 ⟧tm M.≅ᵗᵐ ⟦ nt2 ⟧tm →
-                           ⟦ nt1 ⟧tm M.≅ᵗᵐ ⟦ nt2 ⟧tm →
-                           Evidence Ξ (t1 ≡ᵇ t2)
-  by-normalization-sound t1 t2 nt1 nt2 et1 et2 ent =
-    M.≅ᵗᵐ-to-Id (M.transᵗᵐ et1 (M.transᵗᵐ ent (M.symᵗᵐ et2))) M.[ _ ]'
+  with-normalization-sound : (t1 t2 nt1 nt2 : Tm (to-ctx Ξ) T) →
+                             ⟦ t1 ⟧tm M.≅ᵗᵐ ⟦ nt1 ⟧tm →
+                             ⟦ t2 ⟧tm M.≅ᵗᵐ ⟦ nt2 ⟧tm →
+                             Evidence Ξ (nt1 ≡ᵇ nt2) →
+                             Evidence Ξ (t1 ≡ᵇ t2)
+  with-normalization-sound {T = T} t1 t2 nt1 nt2 et1 et2 p =
+    M.ι[ M.Id-cl-natural (ty-closed-natural T) _ ]
+      M.trans' (M.≅ᵗᵐ-to-Id (M.cl-tm-subst-cong-tm (ty-closed-natural T) et1)) (
+      M.trans' (M.ι⁻¹[ M.Id-cl-natural (ty-closed-natural T) _ ] p) (
+      M.≅ᵗᵐ-to-Id (M.cl-tm-subst-cong-tm (ty-closed-natural T) (M.symᵗᵐ et2))))
 
   by-unfold-def-sound : (name : DefName) (t1 : Tm ◇ T) (t2 : Tm (to-ctx Ξ) T) →
                         ⟦ t1 [ []ʳ {Γ = to-ctx Ξ} ]tmʳ ⟧tm M.≅ᵗᵐ ⟦ t2 ⟧tm →
