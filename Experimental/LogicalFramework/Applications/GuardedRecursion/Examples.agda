@@ -16,7 +16,7 @@ g-map {A = A} {B} =
         let' mod⟨ constantly ⟩ "head-s" ← g-head (svar "s") in'
         let' mod⟨ later ⟩ "tail-s" ← g-tail (svar "s") in' (
         g-cons (svar "f" ∙ svar "head-s")
-                (svar "m" ∙ svar "tail-s"))
+               (svar "m" ∙ svar "tail-s"))
 
 g-iterate : Tm Γ (⟨ later ⓜ constantly ∣ A ⇛ A ⟩⇛ ⟨ constantly ∣ A ⟩⇛ GStream A)
 g-iterate {A = A} = lam[ later ⓜ constantly ∣ "f" ∈ A ⇛ A ]

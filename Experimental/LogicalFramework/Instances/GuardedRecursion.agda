@@ -24,4 +24,4 @@ open import Experimental.LogicalFramework guarded-param public
 
 
 pattern tmlöb-β = ext tmlöb-β-code tt tt tt tt tt tt
-pattern pflöb x p = ext (pflöb-code x) tt tt tt tt ((tt , tt) , tt) (p , tt)
+pattern pflöb x p = ext (pflöb-code x) tt tt tt tt (tt , tt) (p , tt)
