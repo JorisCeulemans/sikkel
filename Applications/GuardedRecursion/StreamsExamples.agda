@@ -10,6 +10,7 @@ open import Data.Unit
 open import Data.Vec hiding (take; head; tail)
 open import Relation.Binary.PropositionalEquality
 
+open import Preliminaries
 open import Model.CwF-Structure renaming (◇ to ′◇) hiding (_⇒_)
 open import Model.DRA renaming (⟨_∣_⟩ to ′⟨_∣_⟩) using ()
 open import Model.Type.Constant renaming (Nat' to ′Nat'; Bool' to ′Bool')

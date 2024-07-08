@@ -13,7 +13,6 @@ module Model.CwF-Structure.Reflection.SubstitutionSequence {C : BaseCategory} wh
 
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
-open import Model.Helpers
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.Type
 open import Model.CwF-Structure.Term

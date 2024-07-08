@@ -11,7 +11,7 @@ module Experimental.LogicalFramework.Proof.AlphaEquivalence
 open import Data.List using (List; []; _∷_)
 open import Data.Product using (_,_)
 
-open import Model.Helpers -- we need uip for term extension equivalence
+open import Preliminaries -- we need uip for term extension equivalence
 
 open import Experimental.LogicalFramework.MSTT.Parameter.TermExtension ℳ 𝒯
 open TmExt 𝓉

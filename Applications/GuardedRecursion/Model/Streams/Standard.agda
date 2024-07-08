@@ -11,6 +11,7 @@ open import Data.Vec.Properties
 open import Function using (id; _∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
+open import Preliminaries
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.DRA
@@ -35,33 +36,11 @@ stream-closed clA = dra-closed forever (gstream-closed clA)
 
 
 --------------------------------------------------
--- Definition of standard Agda streams (note that the standard library uses
--- sized types and we want to avoid any extension of standard Agda) & translation
--- of standard Sikkel streams to Agda streams.
+-- Instance of Extractable for standard streams
 
-record Stream {ℓ} (A : Set ℓ) : Set ℓ where
-  coinductive
-  field
-    head : A
-    tail : Stream A
-open Stream
-
-take : ∀ {ℓ} {A : Set ℓ} (n : ℕ) → Stream A → Vec A n
-take zero    s = []
-take (suc n) s = head s ∷ take n (tail s)
-
-take-first : ∀ {ℓ} {A : Set ℓ} {m n : ℕ} (m≤n : m ≤ n) (s : Stream A) →
-             first-≤ m≤n (take n s) ≡ take m s
-take-first z≤n       s = refl
-take-first (s≤s m≤n) s = cong (head s ∷_) (take-first m≤n (tail s))
-
-
---------------------------------------------------
--- Instance of Extractable for standard streams.
-
-vecs-to-stream : ∀ {ℓ} {A : Set ℓ} → (∀ n → Vec A (suc n)) → Stream A
-head (vecs-to-stream f) = Vec.head (f 0)
-tail (vecs-to-stream f) = vecs-to-stream (λ n → Vec.tail (f (suc n)))
+vecs-to-stream : {A : Set} → ((n : ℕ) → Vec A (suc n)) → Stream A
+head (vecs-to-stream vs) = Vec.head (vs 0)
+tail (vecs-to-stream vs) = vecs-to-stream (λ n → Vec.tail (vs (suc n)))
 
 extract-stream : {A : ClosedTy ★} → IsClosedNatural A → Extractable A → Extractable (Stream' A)
 translated-type (extract-stream clA exA) = Stream (translated-type exA)

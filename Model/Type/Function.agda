@@ -11,7 +11,7 @@ open import Data.String
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
-open import Model.Helpers
+open import Preliminaries
 open import Model.CwF-Structure
 open import Model.CwF-Structure.Reflection.SubstitutionSequence
 open BaseCategory C

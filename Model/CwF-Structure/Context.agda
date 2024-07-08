@@ -11,7 +11,6 @@ open import Relation.Binary.Reasoning.Syntax
 open import Preliminaries
 
 open import Model.BaseCategory
-open import Model.Helpers
 
 
 --------------------------------------------------

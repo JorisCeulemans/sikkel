@@ -26,7 +26,7 @@ open MSTT-Parameter 𝒫
 open import Experimental.LogicalFramework.MSTT.Syntax ℳ 𝒯 𝓉 hiding (refl)
 open import Experimental.LogicalFramework.MSTT.Interpretation ℳ 𝒯 𝓉 ⟦𝓉⟧
 
-open import Model.Helpers
+open import Preliminaries
 import Model.BaseCategory as M
 open import Model.CwF-Structure as M
   renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm; tm-setoid to semtm-setoid) using ()

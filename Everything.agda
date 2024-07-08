@@ -1,6 +1,7 @@
 module Everything where
 
-import Model.Helpers
+import Preliminaries
+
 import Model.BaseCategory
 import Model.CwF-Structure
 import Model.CwF-Structure.Reflection.Substitution

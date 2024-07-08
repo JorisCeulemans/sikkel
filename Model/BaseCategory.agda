@@ -9,7 +9,6 @@ open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
 open import Relation.Binary.PropositionalEquality hiding (naturality)
 
-open import Model.Helpers
 
 -- We only support small base categories with object and morphism types in Set₀.
 -- This is sufficient for the current applications like guarded recursion.

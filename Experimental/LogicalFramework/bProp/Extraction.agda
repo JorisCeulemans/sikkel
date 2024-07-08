@@ -20,7 +20,7 @@ open import Function.Construct.Composition
 open import Function.Construct.Identity
 open import Relation.Binary.PropositionalEquality
 
-open import Model.Helpers
+open import Preliminaries
 import Model.BaseCategory as M
 open import Model.CwF-Structure as M
   renaming (Ctx to SemCtx; Ty to SemTy; Tm to SemTm; tm-setoid to semtm-setoid) using ()

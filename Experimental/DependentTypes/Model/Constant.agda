@@ -5,7 +5,7 @@ module Experimental.DependentTypes.Model.Constant {C : BaseCategory} where
 open import Data.Product renaming (_,_ to [_,_])
 open import Relation.Binary.PropositionalEquality using (refl)
 
-open import Model.Helpers
+open import Preliminaries
 open import Model.CwF-Structure
 open import Model.Type.Constant
 open import Model.Type.Function

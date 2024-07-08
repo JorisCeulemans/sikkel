@@ -12,7 +12,6 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 open import Relation.Binary.Reasoning.Syntax
 open import Preliminaries
 
-open import Model.Helpers
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
 open import Model.CwF-Structure.Type

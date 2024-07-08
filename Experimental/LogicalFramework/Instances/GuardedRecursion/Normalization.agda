@@ -15,7 +15,6 @@ open import Experimental.LogicalFramework.MSTT.Normalization.Helpers
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.ModeTheory
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.TypeExtension
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.TermExtension
-open import Experimental.LogicalFramework.Instances.GuardedRecursion.TermExtension
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.MSTT.Syntax
 
 open import Experimental.LogicalFramework.MSTT.Syntax.Terms guarded-mt guarded-ty-ext guarded-tm-ext

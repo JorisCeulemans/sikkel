@@ -10,7 +10,6 @@ open import Data.Product using (Σ; Σ-syntax; proj₁; proj₂; _×_) renaming 
 open import Data.String
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
-open import Model.Helpers
 open import Model.CwF-Structure.Context
 open import Model.CwF-Structure.ContextEquivalence
 open import Model.CwF-Structure.Type

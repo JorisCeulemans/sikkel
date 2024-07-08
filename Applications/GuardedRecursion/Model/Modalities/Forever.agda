@@ -9,7 +9,7 @@ open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-irrelevant)
 open import Data.Unit using (⊤; tt)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
-open import Model.Helpers
+open import Preliminaries
 open import Model.BaseCategory
 open import Model.CwF-Structure
 open import Model.DRA

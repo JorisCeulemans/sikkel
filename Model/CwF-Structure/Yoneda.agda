@@ -9,7 +9,6 @@ module Model.CwF-Structure.Yoneda {C : BaseCategory} where
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
-open import Model.Helpers
 open import Model.CwF-Structure.Context
 
 open BaseCategory C

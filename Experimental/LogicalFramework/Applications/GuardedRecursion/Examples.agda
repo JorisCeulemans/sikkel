@@ -1,5 +1,10 @@
 module Experimental.LogicalFramework.Applications.GuardedRecursion.Examples where
 
+open import Data.Nat
+open import Data.Vec using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality as Ag
+
+open import Preliminaries
 open import Experimental.LogicalFramework.Instances.GuardedRecursion.MSTT
 
 private variable
@@ -40,6 +45,23 @@ Stream' A = ⟨ forever ∣ GStream A ⟩
 
 zeros : Tm Γ (Stream' Nat')
 zeros = mod⟨ forever ⟩ g-zeros
+
+zeros-extract : Stream ℕ
+zeros-extract = extract-tm-◇ zeros
+
+test-zeros-extract :
+  take 10 zeros-extract ≡ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ []
+test-zeros-extract = Ag.refl
+
+nats : Tm Γ (Stream' Nat')
+nats = mod⟨ forever ⟩ (g-iterate ∙ (lam[ "n" ∈ Nat' ] suc (svar "n")) ∙ zero)
+
+nats-extract : Stream ℕ
+nats-extract = extract-tm-◇ nats
+
+nats-extract-test :
+  take 10 nats-extract ≡ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ []
+nats-extract-test = Ag.refl
 
 
 head' : Tm Γ (Stream' A ⇛ A)
