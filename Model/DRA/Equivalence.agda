@@ -332,6 +332,12 @@ key-subst-eq (ⓓ-pentagon {μ = μ} {ρ} {κ} {θ})  =
   transˢ (⊚-congʳ (transˢ (id-subst-unitˡ _) (transˢ (id-subst-unitˡ _) (lock-fmap-id (ρ ⓓ κ ⓓ θ)))))
          (transˢ (id-subst-unitʳ _) (⊚-congʳ (lock-fmap-id θ)))
 
+𝟙-unitˡ-unitʳ-from : from (𝟙-unitˡ (𝟙 {C})) ≅ᵗᶜ from (𝟙-unitʳ 𝟙)
+key-subst-eq 𝟙-unitˡ-unitʳ-from = reflˢ
+
+𝟙-unitˡ-unitʳ-to : to (𝟙-unitˡ (𝟙 {C})) ≅ᵗᶜ to (𝟙-unitʳ 𝟙)
+key-subst-eq 𝟙-unitˡ-unitʳ-to = reflˢ
+
 
 eq-dra-closed : {μ ρ : DRA C D} → μ ≅ᵈ ρ →
                 {A : ClosedTy C} (clA : IsClosedNatural A) →

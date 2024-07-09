@@ -118,6 +118,10 @@ ty-ctx-subst-iso T eγ = mk↔ₛ′
   (λ _ → ty-ctx-subst-inverseʳ T)
   (λ _ → ty-ctx-subst-inverseˡ T)
 
+ty-ctx-subst-prop-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} (eγ : γ ≡ γ') {t : T ⟨ x , γ ⟩} →
+                          ty-ctx-subst T eγ t ≡ subst (λ g → T ⟨ x , g ⟩) eγ t
+ty-ctx-subst-prop-subst T refl = strong-ty-id T
+
 -- The following definition is needed when defining context extension.
 to-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
              {a b : A} (e : a ≡ b)

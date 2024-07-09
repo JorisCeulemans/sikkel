@@ -91,14 +91,18 @@ module _
     ExtractableProp.AgdaProp ⊥ᵇ-extractable _ = ⊥
     ExtractableProp.extract-prop-iso ⊥ᵇ-extractable _ = ↔-id ⊥
 
-    ≡ᵇ-extractable : {T : Ty ★} → {{ExtractableTy T}} →
-                     {t1 t2 : Tm Γ T} →
+    ≡ᵇ-extractable : {T : Ty ★} {{_ : ExtractableTy T}} →
+                     {t1 t2 : Tm Γ T} → {{ExtractableTm t1}} → {{ExtractableTm t2}} →
                      ExtractableProp (t1 ≡ᵇ t2)
     ExtractableProp.AgdaProp (≡ᵇ-extractable {t1 = t1} {t2}) γ =
       extract-tm t1 γ ≡ extract-tm t2 γ
-    ExtractableProp.extract-prop-iso (≡ᵇ-extractable {T}) γ = mk↔ₛ′
-      (cong (Inverse.to (extract-ty-iso {T})))
-      (cancel-iso-to (extract-ty-iso {T}))
+    ExtractableProp.extract-prop-iso (≡ᵇ-extractable {T} {t1} {t2}) γ = mk↔ₛ′
+      (λ sem-eq → trans (extract-tm-semtm {t = t1} γ) (
+                  trans (cong (Inverse.to (extract-ty-iso {T})) sem-eq) (
+                  sym (extract-tm-semtm {t = t2} γ))))
+      (λ e → cancel-iso-to (extract-ty-iso {T}) (
+               trans (sym (extract-tm-semtm {t = t1} γ)) (
+               trans e (extract-tm-semtm {t = t2} γ))))
       (λ _ → uip _ _)
       (λ _ → uip _ _)
 
