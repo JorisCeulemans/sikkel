@@ -170,6 +170,28 @@ ExtPfArgs (info ∷ infos) (arg-names , args-names) Γ =
 by-normalization : Proof Γ
 by-normalization = with-normalization refl
 
+-- t1 =ᵝ t1'
+-- Ξ ⊢ t1' ≡ᵇ t2
+-- --------------
+-- Ξ ⊢ t1 ≡ᵇ t2
+with-normalizationˡ : Tm Γ T → Proof Γ → Proof Γ
+with-normalizationˡ t1' p = trans t1' by-normalization p
+
+-- t2' =ᵝ t2
+-- Ξ ⊢ t1 ≡ᵇ t2'
+-- --------------
+-- Ξ ⊢ t1 ≡ᵇ t2
+with-normalizationʳ : Tm Γ T → Proof Γ → Proof Γ
+with-normalizationʳ t2' p = trans t2' p by-normalization
+
+-- t1 =ᵝ t1'
+-- t2 =ᵝ t2'
+-- Ξ ⊢ t1' ≡ᵇ t2'
+-- ---------------
+-- Ξ ⊢ t1 ≡ᵇ t2
+with-normalizationᵇ : (t1' t2' : Tm Γ T) → Proof Γ → Proof Γ
+with-normalizationᵇ t1' t2' p = trans t1' by-normalization (trans t2' p by-normalization)
+
 -- More useful versions of the induction principles for Bool', Nat'
 -- and modal types.
 bool-induction : {Γ : Ctx m} {x : String} →

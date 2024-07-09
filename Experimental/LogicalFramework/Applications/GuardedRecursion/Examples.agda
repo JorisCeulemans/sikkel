@@ -70,3 +70,15 @@ head' {A = A} =
     let' mod⟨ forever ⟩ "g-s" ← svar "s" in'
     triv⁻¹ (comp (mod⟨ forever ⟩
     let' mod⟨ constantly ⟩ "head-s" ← g-head (svar "g-s") in' (mod⟨ constantly ⟩ svar "head-s")))
+
+iterate : Tm Γ ((A ⇛ A) ⇛ A ⇛ Stream' A)
+iterate {A = A} = mk-global-def "iterate" (
+  lam[ "f" ∈ A ⇛ A ] (lam[ "a" ∈ A ] (mod⟨ forever ⟩ (g-iterate ∙ svar "f" ∙ svar "a"))))
+
+iterate' : Tm Γ ((A ⇛ A) ⇛ A ⇛ Stream' A)
+iterate' {A = A} = mk-global-def "iterate'" (
+  lam[ "f" ∈ A ⇛ A ] (lam[ "a" ∈ A ] (mod⟨ forever ⟩ (g-iterate' ∙ svar "f" ∙ svar "a"))))
+
+iterateℕ iterate'ℕ : (ℕ → ℕ) → ℕ → Stream ℕ
+iterateℕ = extract-tm-◇ (iterate {A = Nat'})
+iterate'ℕ = extract-tm-◇ (iterate' {A = Nat'})

@@ -165,3 +165,31 @@ g-iterate-iterate'-proof A =
 
 test-g-iterate-iterate' : IsOk (check-proof ◇ (g-iterate-iterate'-proof Nat') (∀[ constantly ∣ "f" ∈ Nat' ⇛ Nat' ] ∀[ constantly ∣ "a" ∈ Nat' ] g-iterate-iterate'))
 test-g-iterate-iterate' = tt
+
+-- Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᵇ t2
+-- --------------------------------
+-- Ξ ⊢ mod⟨ μ ⟩ t1 ≡ᵇ mod⟨ μ ⟩ t2
+mod-cong : (μ : Modality m n) (t1 t2 : Tm (Γ ,lock⟨ μ ⟩) T) →
+           Proof (Γ ,lock⟨ μ ⟩) → Proof Γ
+mod-cong μ t1 t2 p =
+  subst {x = "dummy"} (mod⟨ μ ⟩ (t1 [ πʳ ,lockʳ⟨ μ ⟩ ]tmʳ) ≡ᵇ mod⟨ μ ⟩ v0) t1 t2 p refl
+
+iterate-iterate' : (A : Ty ★) → bProp {★} Γ
+iterate-iterate' A =
+  ∀[ 𝟙 ∣ "f" ∈ A ⇛ A ] ∀[ 𝟙 ∣ "a" ∈ A ]
+    iterate ∙ svar "f" ∙ svar "a" ≡ᵇ iterate' ∙ svar "f" ∙ svar "a"
+
+iterate-iterate'-proof : (A : Ty ★) → Proof {★} Γ
+iterate-iterate'-proof A =
+  ∀-intro[ 𝟙 ∣ "f" ∈ A ⇛ A ] ∀-intro[ 𝟙 ∣ "a" ∈ A ]
+    with-normalizationᵇ (mod⟨ forever ⟩ (g-iterate ∙ svar "f" ∙ svar "a")) (mod⟨ forever ⟩ (g-iterate' ∙ svar "f" ∙ svar "a")) (
+    mod-cong forever (g-iterate ∙ svar "f" ∙ svar "a") (g-iterate' ∙ svar "f" ∙ svar "a")
+      (∀-elim constantly (∀[ constantly ∣ "a" ∈ A ] g-iterate ∙ svar "f" ∙ svar "a" ≡ᵇ g-iterate' ∙ svar "f" ∙ svar "a")
+        (∀-elim constantly (∀[ constantly ∣ "f" ∈ A ⇛ A ] ∀[ constantly ∣ "a" ∈ A ] g-iterate-iterate')
+          (g-iterate-iterate'-proof A)
+          (svar "f"))
+        (svar "a"))
+    )
+
+test-iterate-iterate'-proof : IsOk (check-proof ◇ (iterate-iterate'-proof Nat') (iterate-iterate' Nat'))
+test-iterate-iterate'-proof = tt
