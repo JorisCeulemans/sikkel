@@ -2,6 +2,7 @@ module Experimental.LogicalFramework.Applications.GuardedRecursion.Examples wher
 
 open import Data.Nat
 open import Data.Vec using ([]; _∷_)
+open import Function
 open import Relation.Binary.PropositionalEquality as Ag
 
 open import Preliminaries
@@ -44,7 +45,8 @@ Stream' : Ty ★ → Ty ★
 Stream' A = ⟨ forever ∣ GStream A ⟩
 
 zeros : Tm Γ (Stream' Nat')
-zeros = mod⟨ forever ⟩ g-zeros
+zeros = mk-global-def "zeros" $
+  mod⟨ forever ⟩ g-zeros
 
 zeros-extract : Stream ℕ
 zeros-extract = extract-tm-◇ zeros
@@ -54,7 +56,8 @@ test-zeros-extract :
 test-zeros-extract = Ag.refl
 
 nats : Tm Γ (Stream' Nat')
-nats = mod⟨ forever ⟩ (g-iterate ∙ (lam[ "n" ∈ Nat' ] suc (svar "n")) ∙ zero)
+nats = mk-global-def "nat" $
+  mod⟨ forever ⟩ (g-iterate ∙ (lam[ "n" ∈ Nat' ] suc (svar "n")) ∙ zero)
 
 nats-extract : Stream ℕ
 nats-extract = extract-tm-◇ nats
@@ -82,3 +85,7 @@ iterate' {A = A} = mk-global-def "iterate'" (
 iterateℕ iterate'ℕ : (ℕ → ℕ) → ℕ → Stream ℕ
 iterateℕ = extract-tm-◇ (iterate {A = Nat'})
 iterate'ℕ = extract-tm-◇ (iterate' {A = Nat'})
+
+iterate'ℕ-test :
+  take 10 (iterate'ℕ (2 *_) 1) ≡ 1 ∷ 2 ∷ 4 ∷ 8 ∷ 16 ∷ 32 ∷ 64 ∷ 128 ∷ 256 ∷ 512 ∷ []
+iterate'ℕ-test = Ag.refl

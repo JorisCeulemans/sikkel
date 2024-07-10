@@ -1,7 +1,10 @@
 module Experimental.LogicalFramework.Applications.GuardedRecursion.Proof.Example where
 
+open import Data.Nat hiding (_≡ᵇ_)
 open import Data.Unit
+import Relation.Binary.PropositionalEquality as Ag
 
+open import Preliminaries
 open import Experimental.LogicalFramework.Instances.GuardedRecursion
 open import Experimental.LogicalFramework.Applications.GuardedRecursion.Examples
 
@@ -166,6 +169,7 @@ g-iterate-iterate'-proof A =
 test-g-iterate-iterate' : IsOk (check-proof ◇ (g-iterate-iterate'-proof Nat') (∀[ constantly ∣ "f" ∈ Nat' ⇛ Nat' ] ∀[ constantly ∣ "a" ∈ Nat' ] g-iterate-iterate'))
 test-g-iterate-iterate' = tt
 
+
 -- Ξ ,lock⟨ μ ⟩ ⊢ t1 ≡ᵇ t2
 -- --------------------------------
 -- Ξ ⊢ mod⟨ μ ⟩ t1 ≡ᵇ mod⟨ μ ⟩ t2
@@ -193,3 +197,17 @@ iterate-iterate'-proof A =
 
 test-iterate-iterate'-proof : IsOk (check-proof ◇ (iterate-iterate'-proof Nat') (iterate-iterate' Nat'))
 test-iterate-iterate'-proof = tt
+
+
+
+-- A very simple example showcasing proof extraction (Agda is too slow
+-- for extraction of the examples above).
+
+extract-test-prop : bProp {★} ◇
+extract-test-prop = ∀[ 𝟙 ∣ "s" ∈ Stream' Nat' ] svar "s" ≡ᵇ svar "s"
+
+extract-test-proof : Proof {★} ◇
+extract-test-proof = ∀-intro[ 𝟙 ∣ "s" ∈ Stream' Nat' ] refl
+
+extract-test : (s : Stream ℕ) → s Ag.≡ s
+extract-test = extract-proof-◇ extract-test-proof extract-test-prop

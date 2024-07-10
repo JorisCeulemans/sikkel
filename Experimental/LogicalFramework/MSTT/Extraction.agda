@@ -9,8 +9,8 @@ module Experimental.LogicalFramework.MSTT.Extraction
   (𝒫 : MSTT-Parameter)
   where
 
-open import Data.Bool using (Bool)
-open import Data.Nat using (ℕ)
+open import Data.Bool using (Bool; true; false)
+open import Data.Nat using (ℕ; suc)
 open import Data.Product renaming (_,_ to [_,_])
 open import Data.Product.Function.NonDependent.Propositional using (_×-↔_)
 open import Data.Unit
@@ -242,9 +242,15 @@ extract-tm-◇ t = extract-tm t tt
 
 
 data Only𝟙 : LockTele ★ ★ → Set where
-  instance
-    ◇-only𝟙 : Only𝟙 ◇
-    lock𝟙-only𝟙 : {Λ : LockTele ★ ★} → {{Only𝟙 Λ}} → Only𝟙 (lock⟨ 𝟙 ⟩, Λ)
+  ◇-only𝟙 : Only𝟙 ◇
+  lock𝟙-only𝟙 : {Λ : LockTele ★ ★} → {{Only𝟙 Λ}} → Only𝟙 (lock⟨ 𝟙 ⟩, Λ)
+
+instance
+  ◇-only𝟙' : Only𝟙 ◇
+  ◇-only𝟙' = ◇-only𝟙
+
+  lock𝟙-only𝟙' : {Λ : LockTele ★ ★} → {{Only𝟙 Λ}} → Only𝟙 (lock⟨ 𝟙 ⟩, Λ)
+  lock𝟙-only𝟙' = lock𝟙-only𝟙
 
 unlock𝟙-only𝟙 : {Λ : LockTele ★ ★} → Only𝟙 (lock⟨ 𝟙 ⟩, Λ) → Only𝟙 Λ
 unlock𝟙-only𝟙 (lock𝟙-only𝟙 {{ol𝟙}}) = ol𝟙
@@ -285,18 +291,38 @@ only𝟙-sem-only𝟙-locks (lock𝟙-only𝟙 {Λ} {{ol𝟙}}) =
 
 
 data ExtractableVar {x : Name} {T : Ty ★} : {Γ : Ctx ★} {Λ : LockTele ★ ★} → Var x T Γ Λ → Set₁ where
-  instance
-    vzero-extr : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
-                 {Λ : LockTele ★ ★} {{ol𝟙 : Only𝟙 Λ}} →
-                 ExtractableVar {Γ = Γ ,, 𝟙 ∣ x ∈ T} {Λ} (vzero (only𝟙-locks ol𝟙))
-    vsuc-extr : {Γ : Ctx ★}
-                {Λ : LockTele ★ ★} {y : Name}
-                {S : Ty ★} {{_ : ExtractableTy S}}
-                {v : Var x T Γ Λ} → {{ExtractableVar v}} →
-                ExtractableVar {Γ = Γ ,, 𝟙 ∣ y ∈ S} (vsuc v)
-    vlock-extr : {Γ : Ctx ★} {Λ : LockTele ★ ★} →
-                 {v : Var x T Γ (lock⟨ 𝟙 ⟩, Λ)} → {{ExtractableVar v}} →
-                 ExtractableVar (vlock v)
+  vzero-extr : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
+               {Λ : LockTele ★ ★} {{ol𝟙 : Only𝟙 Λ}}
+               {α : TwoCell 𝟙 (locksˡᵗ Λ)} → {{α ≡ only𝟙-locks ol𝟙}} →
+               ExtractableVar {Γ = Γ ,, 𝟙 ∣ x ∈ T} {Λ} (vzero α)
+  vsuc-extr : {Γ : Ctx ★}
+              {Λ : LockTele ★ ★} {y : Name}
+              {S : Ty ★} {{_ : ExtractableTy S}}
+              {v : Var x T Γ Λ} → {{ExtractableVar v}} →
+              ExtractableVar {Γ = Γ ,, 𝟙 ∣ y ∈ S} (vsuc v)
+  vlock-extr : {Γ : Ctx ★} {Λ : LockTele ★ ★} →
+               {v : Var x T Γ (lock⟨ 𝟙 ⟩, Λ)} → {{ExtractableVar v}} →
+               ExtractableVar (vlock v)
+
+instance
+  vzero-extr' : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
+                {Λ : LockTele ★ ★} {{ol𝟙 : Only𝟙 Λ}}
+                {α : TwoCell 𝟙 (locksˡᵗ Λ)} → {{α ≡ only𝟙-locks ol𝟙}} →
+                ExtractableVar {Γ = Γ ,, 𝟙 ∣ x ∈ T} {Λ} (vzero α)
+  vzero-extr' = vzero-extr
+
+  vsuc-extr' : {Γ : Ctx ★}
+               {Λ : LockTele ★ ★} {y : Name}
+               {S : Ty ★} {{_ : ExtractableTy S}}
+               {v : Var x T Γ Λ} → {{ExtractableVar v}} →
+               ExtractableVar {Γ = Γ ,, 𝟙 ∣ y ∈ S} (vsuc v)
+  vsuc-extr' = vsuc-extr
+
+  vlock-extr' : {Γ : Ctx ★} {Λ : LockTele ★ ★} →
+                {v : Var x T Γ (lock⟨ 𝟙 ⟩, Λ)} → {{ExtractableVar v}} →
+                ExtractableVar (vlock v)
+  vlock-extr' = vlock-extr
+  
 
 extractable-var-ctx : {x : Name} {T : Ty ★} {{_ : ExtractableTy T}}
                       {Γ : Ctx ★} {Λ : LockTele ★ ★}
@@ -330,7 +356,7 @@ extract-var-iso : {x : Name} {T : Ty ★} {{_ : ExtractableTy T}}
                   Inverse.to (extract-ty-iso {T}) (
                     ⟦ v ⟧var M.⟨ tt , M.func (DRA.key-subst (DRA.from (only𝟙-sem (extractable-var-only𝟙 exv)))) (
                                       Inverse.from (extract-ctx-iso {Γ} {{extractable-var-ctx exv}}) γ) ⟩')
-extract-var-iso {T = T} {{exT}} {Λ = Λ} .(vzero _) {{ vzero-extr {Γ = Γ} {{ol𝟙 = ol𝟙}} }} [ γ , t ] = sym (
+extract-var-iso {T = T} {{exT}} {Λ = Λ} .(vzero _) {{ vzero-extr {Γ = Γ} {{ol𝟙 = ol𝟙}} {{refl}} }} [ γ , t ] = sym (
   trans (cong (Inverse.to (extract-ty-iso-◇ {T})) (
     trans (sym (M.eq (M.to-eq (M.closed-subst-eq (ty-closed-natural T) (M.◇-terminal _ _ (M.!◇ _ M.⊚ _ M.⊚ _)))) _)) (
     trans (cong (⟦ T ⟧ty M.⟪ _ , _ ⟫_) (
@@ -383,7 +409,6 @@ instance
     cong (Inverse.to (extract-ty-iso {T})) (M.naturality ⟦ v ⟧var tt (
       trans (M.ctx-id ⟦ Γ ⟧ctx) (M.eq (DRA.key-subst-eq (only𝟙-sem-◇ (extractable-var-only𝟙 exv))) _)))))
 
-instance
   mod𝟙tm-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
                        {T : Ty ★} {{_ : ExtractableTy T}}
                        {t : Tm (Γ ,lock⟨ 𝟙 ⟩) T} → {{ExtractableTm t}} →
@@ -411,10 +436,55 @@ instance
       trans (sym (M.naturality (M.to (M.closed-natural (ty-closed-natural S) (M.!◇ ⟦ Γ ⟧ctx))))) (
       M.strong-ty-id ⟦ S ⟧ty))))))
 
+  zero-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}} →
+                     ExtractableTm (zero {Γ = Γ})
+  extracted-tm {{zero-extractable}} _ = 0
+  extract-tm-semtm {{zero-extractable}} _ = refl
+
+  suc-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
+                    {t : Tm Γ Nat'} {{_ : ExtractableTm t}} →
+                    ExtractableTm (suc t)
+  extracted-tm {{suc-extractable {t = t}}} γ = suc (extract-tm t γ)
+  extract-tm-semtm {{suc-extractable {t = t}}} γ = cong suc (extract-tm-semtm {t = t} γ)
+
+  true-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}} →
+                     ExtractableTm (true {Γ = Γ})
+  extracted-tm {{true-extractable}} _ = true
+  extract-tm-semtm {{true-extractable}} _ = refl
+
+  false-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}} →
+                      ExtractableTm (false {Γ = Γ})
+  extracted-tm {{false-extractable}} _ = false
+  extract-tm-semtm {{false-extractable}} _ = refl
+
+  pair-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
+                     {T S : Ty ★} {{_ : ExtractableTy T}} {{_ : ExtractableTy S}}
+                     {t : Tm Γ T} {{_ : ExtractableTm t}}
+                     {s : Tm Γ S} {{_ : ExtractableTm s}} →
+                     ExtractableTm (pair t s)
+  extracted-tm {{pair-extractable {t = t} {s = s}}} γ = [ extract-tm t γ , extract-tm s γ ]
+  extract-tm-semtm {{pair-extractable {t = t} {s = s}}} γ =
+    cong₂ [_,_] (extract-tm-semtm {t = t} γ) (extract-tm-semtm {t = s} γ)
+
+  fst-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
+                    {T S : Ty ★} {{_ : ExtractableTy T}} {{_ : ExtractableTy S}}
+                    {p : Tm Γ (T ⊠ S)} {{_ : ExtractableTm p}} →
+                    ExtractableTm (fst p)
+  extracted-tm {{fst-extractable {p = p}}} γ = proj₁ (extract-tm p γ)
+  extract-tm-semtm {{fst-extractable {p = p}}} γ = cong proj₁ (extract-tm-semtm {t = p} γ)
+
+  snd-extractable : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
+                    {T S : Ty ★} {{_ : ExtractableTy T}} {{_ : ExtractableTy S}}
+                    {p : Tm Γ (T ⊠ S)} {{_ : ExtractableTm p}} →
+                    ExtractableTm (snd p)
+  extracted-tm {{snd-extractable {p = p}}} γ = proj₂ (extract-tm p γ)
+  extract-tm-semtm {{snd-extractable {p = p}}} γ = cong proj₂ (extract-tm-semtm {t = p} γ)
+
+
 global-extract : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
                  {T : Ty ★} {{_ : ExtractableTy T}} (t : Tm ◇ T) →
                  extract-ctx Γ → extract-ty T
-global-extract {T = T} t γ = extract-semtm {Γ = ◇} {T = T} ⟦ t ⟧tm tt
+global-extract {T = T} t _ = extract-semtm {Γ = ◇} {T = T} ⟦ t ⟧tm tt
 
 global-extract-proof : {Γ : Ctx ★} {{_ : ExtractableCtx Γ}}
                        {T : Ty ★} {{_ : ExtractableTy T}} (t : Tm ◇ T) →
