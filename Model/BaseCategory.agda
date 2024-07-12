@@ -64,31 +64,31 @@ hom-idˡ ★ = refl
 ★-is-preorder : IsPreorder ★
 ★-is-preorder _ _ = refl
 
-data 𝟚-Obj : Set where
-  type-obj : 𝟚-Obj
-  pred-obj : 𝟚-Obj
+data ↑-Obj : Set where
+  type-obj : ↑-Obj
+  pred-obj : ↑-Obj
 
-data 𝟚-Hom : 𝟚-Obj → 𝟚-Obj → Set where
-  type-id : 𝟚-Hom type-obj type-obj
-  pred-id : 𝟚-Hom pred-obj pred-obj
-  type-pred : 𝟚-Hom type-obj pred-obj
+data ↑-Hom : ↑-Obj → ↑-Obj → Set where
+  type-id : ↑-Hom type-obj type-obj
+  pred-id : ↑-Hom pred-obj pred-obj
+  type-pred : ↑-Hom type-obj pred-obj
 
-𝟚 : BaseCategory
-Ob 𝟚 = 𝟚-Obj
-Hom 𝟚 = 𝟚-Hom
-hom-id 𝟚 {type-obj} = type-id
-hom-id 𝟚 {pred-obj} = pred-id
-_∙_ 𝟚 g type-id = g
-_∙_ 𝟚 g pred-id = g
-_∙_ 𝟚 pred-id type-pred = type-pred
-∙assoc 𝟚 {f = type-id} = refl
-∙assoc 𝟚 {f = pred-id} = refl
-∙assoc 𝟚 {f = type-pred} {pred-id} = refl
-hom-idʳ 𝟚 {x = type-obj} = refl
-hom-idʳ 𝟚 {x = pred-obj} = refl
-hom-idˡ 𝟚 {f = type-id} = refl
-hom-idˡ 𝟚 {f = pred-id} = refl
-hom-idˡ 𝟚 {f = type-pred} = refl
+↑ : BaseCategory
+Ob ↑ = ↑-Obj
+Hom ↑ = ↑-Hom
+hom-id ↑ {type-obj} = type-id
+hom-id ↑ {pred-obj} = pred-id
+_∙_ ↑ g type-id = g
+_∙_ ↑ g pred-id = g
+_∙_ ↑ pred-id type-pred = type-pred
+∙assoc ↑ {f = type-id} = refl
+∙assoc ↑ {f = pred-id} = refl
+∙assoc ↑ {f = type-pred} {pred-id} = refl
+hom-idʳ ↑ {x = type-obj} = refl
+hom-idʳ ↑ {x = pred-obj} = refl
+hom-idˡ ↑ {f = type-id} = refl
+hom-idˡ ↑ {f = pred-id} = refl
+hom-idˡ ↑ {f = type-pred} = refl
 
 data ⋀-Obj : Set where
   left : ⋀-Obj

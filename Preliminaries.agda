@@ -260,6 +260,10 @@ stream-gv-stream-bisimilar : (s : Stream A) →
                              Bisimilar (growing-vec-to-stream (stream-to-growing-vec s)) s
 stream-gv-stream-bisimilar s = take-equal-bisimilar (stream-gv-stream-take s)
 
+
+-- Stream extensionality should only be used in the isomorphism below,
+-- nowhere else in the library. Only the extraction mechanism for
+-- streams relies on this principle.
 postulate
   streamext : ∀ {ℓ} {A : Set ℓ} {s1 s2 : Stream A} → Bisimilar s1 s2 → s1 ≡ s2
 

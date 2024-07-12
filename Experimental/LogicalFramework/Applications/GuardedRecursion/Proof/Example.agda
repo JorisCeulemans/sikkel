@@ -200,14 +200,24 @@ test-iterate-iterate'-proof = tt
 
 
 
--- A very simple example showcasing proof extraction (Agda is too slow
--- for extraction of the examples above).
+-- Two very simple examples showcasing proof extraction (Agda is too
+-- slow for extraction of the examples above).
 
-extract-test-prop : bProp {★} ◇
-extract-test-prop = ∀[ 𝟙 ∣ "s" ∈ Stream' Nat' ] svar "s" ≡ᵇ svar "s"
+stream-refl-prop : bProp {★} ◇
+stream-refl-prop = ∀[ 𝟙 ∣ "s" ∈ Stream' Nat' ] svar "s" ≡ᵇ svar "s"
 
-extract-test-proof : Proof {★} ◇
-extract-test-proof = ∀-intro[ 𝟙 ∣ "s" ∈ Stream' Nat' ] refl
+stream-refl-proof : Proof {★} ◇
+stream-refl-proof = ∀-intro[ 𝟙 ∣ "s" ∈ Stream' Nat' ] refl
 
-extract-test : (s : Stream ℕ) → s Ag.≡ s
-extract-test = extract-proof-◇ extract-test-proof extract-test-prop
+stream-refl-extract : (s : Stream ℕ) → s Ag.≡ s
+stream-refl-extract = extract-proof-◇ stream-refl-proof stream-refl-prop
+
+-- An example with a term containing Löb recursion.
+zeros-refl-prop : bProp {★} ◇
+zeros-refl-prop = zeros ≡ᵇ zeros
+
+zeros-refl-proof : Proof {★} ◇
+zeros-refl-proof = refl
+
+zeros-refl-extract : zeros-extract Ag.≡ zeros-extract
+zeros-refl-extract = extract-proof-◇ zeros-refl-proof zeros-refl-prop
