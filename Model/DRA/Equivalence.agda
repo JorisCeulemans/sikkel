@@ -4,10 +4,11 @@
 
 module Model.DRA.Equivalence where
 
+open import Data.Product renaming (_,_ to [_,_])
+open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
+
 open import Model.DRA.Basics
 open import Model.DRA.TwoCell
-
-open import Relation.Binary.PropositionalEquality hiding ([_]; naturality)
 
 open import Model.BaseCategory
 open import Model.CwF-Structure
@@ -216,17 +217,17 @@ eq-dra-elim-closed {μ = μ} {ρ} ℯ {T = T} clT t =
 
 𝟙-unitʳ : (μ : DRA C D) → μ ⓓ 𝟙 ≅ᵈ μ
 transf-op (transf (from (𝟙-unitʳ μ))) _ = id-subst _
-eq (naturality (transf (from (𝟙-unitʳ μ))) _) _ = refl
+naturality (transf (from (𝟙-unitʳ μ))) _ = transˢ (id-subst-unitˡ _) (symˢ (id-subst-unitʳ _))
 transf-op (transf (to (𝟙-unitʳ μ))) _ = id-subst _
-eq (naturality (transf (to (𝟙-unitʳ μ))) _) _ = refl
+naturality (transf (to (𝟙-unitʳ μ))) _ = transˢ (id-subst-unitˡ _) (symˢ (id-subst-unitʳ _))
 eq (key-subst-eq (isoˡ (𝟙-unitʳ μ))) _ = refl
 eq (key-subst-eq (isoʳ (𝟙-unitʳ μ))) _ = refl
 
 𝟙-unitˡ : (μ : DRA C D) → 𝟙 ⓓ μ ≅ᵈ μ
 transf-op (transf (from (𝟙-unitˡ μ))) _ = id-subst _
-eq (naturality (transf (from (𝟙-unitˡ μ))) _) _ = refl
+naturality (transf (from (𝟙-unitˡ μ))) _ = transˢ (id-subst-unitˡ _) (symˢ (id-subst-unitʳ _))
 transf-op (transf (to (𝟙-unitˡ μ))) _ = id-subst _
-eq (naturality (transf (to (𝟙-unitˡ μ))) _) _ = refl
+naturality (transf (to (𝟙-unitˡ μ))) _ = transˢ (id-subst-unitˡ _) (symˢ (id-subst-unitʳ _))
 eq (key-subst-eq (isoˡ (𝟙-unitˡ μ))) _ = refl
 eq (key-subst-eq (isoʳ (𝟙-unitˡ μ))) _ = refl
 
@@ -355,3 +356,19 @@ closed-ty-eq-natural (eq-dra-closed {ρ = ρ} ℯ clA) σ =
     transᵉ (transᵉ (transᵗʸ-congʳ (dra-cong-trans ρ)) (symᵉ transᵗʸ-assoc)) (
   transᵉ (transᵗʸ-congˡ (eq-dra-tyʳ-cong ℯ (closed-natural clA _))) (
     transᵗʸ-assoc)))) (symᵉ transᵗʸ-assoc)))))))))
+
+
+-- a property of coe-trans for 𝟙-unitˡ
+coe-tm-𝟙-unitˡ : {μ : DRA C D} {Γ : Ctx D} {T : Ty (lock μ Γ)} →
+                 coe-tm (from (𝟙-unitˡ μ)) ≅ᵗᵐ ι[ ty-subst-cong-ty π (dra-cong μ (ty-subst-id T)) ] ξ
+coe-tm-𝟙-unitˡ {μ = μ} =
+  transᵗᵐ (ι-cong (dra-intro-cong μ (ι-cong (tm-subst-id _)))) (
+  transᵗᵐ (ι-cong (dra-intro-cong μ (ι-congᵉ-2-1 (ty-subst-cong-subst-2-2-id _)))) (
+  transᵗᵐ (ι-cong (dra-intro-cong μ (dra-elim-ι μ _))) (
+  transᵗᵐ (ι-cong (dra-η μ _)) (
+  transᵗᵐ (ι-congᵉ-2-2 (dra-natural-ty-eq μ π (ty-subst-id _))) (
+  ι-cong (transᵗᵐ (ι-cong (ι⁻¹-congᵉ (transᵉ reflᵗʸ-unitˡ dra-cong-𝟙))) ι-symʳ))))))
+
+coe-trans-𝟙-unitˡ : {μ : DRA C D} {Γ : Ctx D} {T : Ty (lock μ Γ)} →
+                    coe-trans (from (𝟙-unitˡ μ)) ≅ⁿ dra-map μ (ty-subst-id-to T)
+eq (coe-trans-𝟙-unitˡ {μ = μ}) {γ = γ} t = eq (coe-tm-𝟙-unitˡ {μ = μ}) [ γ , t ]

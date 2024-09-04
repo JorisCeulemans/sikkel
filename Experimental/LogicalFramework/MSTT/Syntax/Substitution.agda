@@ -292,6 +292,7 @@ open RenM
   renaming
     ( RenSub to Ren
     ; id to idʳ
+    ; _⊚a_ to _⊚aʳ_
     ; _[_]tmʳˢ to infixl 8 _[_]tmʳ
     ; liftʳˢ to liftʳ
     ; []ʳˢ to []ʳ

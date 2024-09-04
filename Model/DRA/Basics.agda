@@ -325,6 +325,12 @@ module _ (μ : DRA C D) {T : ClosedTy C} (clT : IsClosedNatural T) where
     (transᵗᵐ (dra-elim-ι μ _)
     (dra-elim-cong μ (transᵗᵐ (ι-congᵉ (dra-cong-sym μ)) (symᵗᵐ ι⁻¹-trans))))
 
+dra-closed-congᶜⁿ : (μ : DRA C D)
+                    {A : ClosedTy C}
+                    {clA clA' : IsClosedNatural A} →
+                    clA ≅ᶜⁿ clA' → dra-closed μ clA ≅ᶜⁿ dra-closed μ clA'
+closed-natural-eq (dra-closed-congᶜⁿ μ e) σ = transᵗʸ-congʳ (dra-cong-cong μ (closed-natural-eq e (lock-fmap μ σ)))
+
 dra-closed-cong : (μ : DRA C D)
                   {A B : ClosedTy C}
                   {clA : IsClosedNatural A} {clB : IsClosedNatural B} →
