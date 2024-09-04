@@ -2,7 +2,7 @@
 -- Definition of the mode theory for parametricity
 --------------------------------------------------
 
-module Applications.Parametricity.MSTT.ModeTheory where
+module Applications.BinaryParametricity.MSTT.ModeTheory where
 
 open import Data.String
 open import Relation.Binary.PropositionalEquality
@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality
 open import Model.BaseCategory as M hiding (★; ⋀)
 open import Model.CwF-Structure as M
 open import Model.DRA as DRA hiding (𝟙; id-cell)
-open import Applications.Parametricity.Model as M hiding (forget-left; forget-right)
+open import Applications.BinaryParametricity.Model as M hiding (forget-left; forget-right)
 
 open import MSTT.TCMonad
 open import MSTT.Parameter.ModeTheory

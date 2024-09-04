@@ -3,15 +3,15 @@
 --   + definition of some synonyms.
 --------------------------------------------------
 
-open import Applications.Parametricity.MSTT.TypeExtension.RelExtension
+open import Applications.BinaryParametricity.MSTT.TypeExtension.RelExtension
 
-module Applications.Parametricity.MSTT.Syntax.Type (rel-ext : RelExt) where
+module Applications.BinaryParametricity.MSTT.Syntax.Type (rel-ext : RelExt) where
 
 open import Data.Product
 open import Data.Unit
 
-open import Applications.Parametricity.MSTT.ModeTheory
-open import Applications.Parametricity.MSTT.TypeExtension rel-ext
+open import Applications.BinaryParametricity.MSTT.ModeTheory
+open import Applications.BinaryParametricity.MSTT.TypeExtension rel-ext
 
 
 import MSTT.Syntax.Type par-mode-theory par-ty-ext as GRType

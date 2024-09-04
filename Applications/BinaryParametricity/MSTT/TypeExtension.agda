@@ -2,18 +2,18 @@
 -- Specification of new type constructors for parametricity
 --------------------------------------------------
 
-open import Applications.Parametricity.MSTT.TypeExtension.RelExtension
+open import Applications.BinaryParametricity.MSTT.TypeExtension.RelExtension
 
-module Applications.Parametricity.MSTT.TypeExtension (rel-ext : RelExt) where
+module Applications.BinaryParametricity.MSTT.TypeExtension (rel-ext : RelExt) where
 
 open import Data.List
 open import Relation.Binary.PropositionalEquality
 
 open import Model.CwF-Structure as M
-open import Applications.Parametricity.Model as M hiding (FromRel)
+open import Applications.BinaryParametricity.Model as M hiding (FromRel)
 
 open import MSTT.TCMonad
-open import Applications.Parametricity.MSTT.ModeTheory
+open import Applications.BinaryParametricity.MSTT.ModeTheory
 open import MSTT.Parameter.TypeExtension par-mode-theory
 
 open RelExt rel-ext

@@ -2,23 +2,23 @@
 -- Specification of new term constructors for parametricity
 --------------------------------------------------
 
-open import Applications.Parametricity.MSTT.TypeExtension.RelExtension
+open import Applications.BinaryParametricity.MSTT.TypeExtension.RelExtension
 
-module Applications.Parametricity.MSTT.TermExtension (rel-ext : RelExt) where
+module Applications.BinaryParametricity.MSTT.TermExtension (rel-ext : RelExt) where
 
 open import Data.List
 
 open import Model.CwF-Structure as M
 import Model.Type.Function as M
-open import Applications.Parametricity.Model as M using (_⟨→⟩_)
+open import Applications.BinaryParametricity.Model as M using (_⟨→⟩_)
 
-open import Applications.Parametricity.MSTT.ModeTheory
-open import Applications.Parametricity.MSTT.TypeExtension rel-ext
+open import Applications.BinaryParametricity.MSTT.ModeTheory
+open import Applications.BinaryParametricity.MSTT.TypeExtension rel-ext
 open import MSTT.Parameter.TermExtension par-mode-theory par-ty-ext
 
 open import MSTT.TCMonad
 open import MSTT.TypeChecker.ResultType par-mode-theory par-ty-ext
-open import Applications.Parametricity.MSTT.Syntax.Type
+open import Applications.BinaryParametricity.MSTT.Syntax.Type
 open import MSTT.InterpretTypes par-mode-theory par-ty-ext
 
 open RelExt rel-ext

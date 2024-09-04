@@ -33,6 +33,6 @@ import Applications.GuardedRecursion.Model.Streams.Standard
 import Applications.GuardedRecursion.MSTT
 import Applications.GuardedRecursion.StreamsExamples
 
-import Applications.Parametricity.Model
-import Applications.Parametricity.MSTT
-import Applications.Parametricity.IntegerExample
+import Applications.BinaryParametricity.Model
+import Applications.BinaryParametricity.MSTT
+import Applications.BinaryParametricity.IntegerExample

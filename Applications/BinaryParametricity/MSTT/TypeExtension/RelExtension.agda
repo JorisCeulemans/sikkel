@@ -6,7 +6,7 @@
 -- are encoded by a universe defined in this file.
 --------------------------------------------------
 
-module Applications.Parametricity.MSTT.TypeExtension.RelExtension where
+module Applications.BinaryParametricity.MSTT.TypeExtension.RelExtension where
 
 open import Data.String hiding (Left; Right)
 open import Function using (_∘_)

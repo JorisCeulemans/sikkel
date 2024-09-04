@@ -4,7 +4,7 @@
 -- binary parametricity
 --------------------------------------------------
 
-module Applications.Parametricity.Model where
+module Applications.BinaryParametricity.Model where
 
 open import Data.Empty
 open import Data.Product renaming (_,_ to [_,_])

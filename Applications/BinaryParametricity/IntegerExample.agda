@@ -3,7 +3,7 @@
 -- binary parametricity
 --------------------------------------------------
 
-module Applications.Parametricity.IntegerExample where
+module Applications.BinaryParametricity.IntegerExample where
 
 open import Data.Nat
 open import Data.Nat.Properties
@@ -17,10 +17,10 @@ open import Model.BaseCategory hiding (★; ⋀)
 open import Model.Type.Function hiding (_⇛_; lam; lam[_∈_]_)
 open import Extraction
 
-open import Applications.Parametricity.Model as M using (_⟨→⟩_)
-open import Applications.Parametricity.MSTT.TypeExtension.RelExtension
+open import Applications.BinaryParametricity.Model as M using (_⟨→⟩_)
+open import Applications.BinaryParametricity.MSTT.TypeExtension.RelExtension
 open import MSTT.TCMonad using (return)
-import Applications.Parametricity.MSTT
+import Applications.BinaryParametricity.MSTT
 
 
 --------------------------------------------------
@@ -107,7 +107,7 @@ RelExt.interpret-code z-rel-ext ℤ-code =
 --------------------------------------------------
 -- Definition of some basic operations in MSTT
 
-open Applications.Parametricity.MSTT z-rel-ext
+open Applications.BinaryParametricity.MSTT z-rel-ext
 
 private
   variable
