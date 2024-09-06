@@ -232,3 +232,7 @@ check-proof-explicit-constraint Ξ Ag.refl pf φ = check-proof Ξ pf φ
 check-proof-ext {infos = []}    Ξ φ _                f = f
 check-proof-ext {infos = _ ∷ _} Ξ φ (pfarg , pfargs) f =
   check-proof-ext Ξ φ pfargs (f (λ Ξ' ψ e → check-proof-explicit-constraint Ξ' e pfarg ψ))
+
+
+show-goals : (Ξ : ProofCtx m) → Proof (to-ctx Ξ) → (φ : bProp (to-ctx Ξ)) → PCM (List Goal)
+show-goals Ξ p φ = PCResult.goals <$> check-proof Ξ p φ

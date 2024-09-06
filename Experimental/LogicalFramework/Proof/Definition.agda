@@ -101,7 +101,8 @@ data Proof where
                     Proof (Γ ,, μ ∣ x ∈ T)  -- Ξ ,,ᵛ μ ∣ x ∈ T ⊢ φ
                     →
                     Proof Γ                 -- Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ
-  ∀-elim : (μ : Modality n m) (φ : bProp Γ) →
+  ∀-elim : (μ : Modality n m) (ψ : bProp Γ) →
+                                      -- ψ = ∀[ μ ∣ x ∈ T ] φ
            Proof Γ →                  -- Ξ ⊢ ∀[ μ ∣ x ∈ T ] φ
            (t : Tm (Γ ,lock⟨ μ ⟩) T)  -- to-ctx Ξ ,lock⟨ μ ⟩ ⊢ t : T
            →
