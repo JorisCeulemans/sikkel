@@ -606,6 +606,10 @@ data IsBit : Pred ℕ 0ℓ where
   0-bit : IsBit 0
   1-bit : IsBit 1
 
+isbit-hprop : {n : ℕ} {x y : IsBit n} → x ≡ y
+isbit-hprop {x = 0-bit} {0-bit} = refl
+isbit-hprop {x = 1-bit} {1-bit} = refl
+
 PrimBinaryBool : Ty {C = ↑} ◇
 PrimBinaryBool = PrimFromPred ℕ IsBit
 

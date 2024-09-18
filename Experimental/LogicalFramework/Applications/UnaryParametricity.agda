@@ -1,5 +1,6 @@
 module Experimental.LogicalFramework.Applications.UnaryParametricity where
 
+open import Data.Nat
 open import Data.Unit
 
 open import Experimental.LogicalFramework.Instances.UnaryParametricity
@@ -21,6 +22,13 @@ private variable
 
 ∨'-forget : Tm {★} Γ ⟨ forget ∣ EncBool ⇛ EncBool ⇛ EncBool ⟩
 ∨'-forget = mod⟨ forget ⟩ ∨'
+
+∨'-★ : Tm {★} Γ (⟨ forget ∣ EncBool ⟩ ⇛ ⟨ forget ∣ EncBool ⟩ ⇛ ⟨ forget ∣ EncBool ⟩)
+∨'-★ = mk-global-def "∨" (
+  lam[ "a" ∈ ⟨ forget ∣ EncBool ⟩ ] lam[ "b" ∈ ⟨ forget ∣ EncBool ⟩ ] (∨'-forget ⊛ svar "a" ⊛ svar "b"))
+
+∨'-agda : ℕ → ℕ → ℕ
+∨'-agda = extract-tm-◇ ∨'-★
 
 
 -- Step 1: Applying the parametricity principle to ∨'-forget
@@ -92,22 +100,22 @@ step4-test : IsOk (check-proof ◇ step4-proof step4-prop)
 step4-test = tt
 
 
--- Final result: Using the fact that the term in the conclusion of
+-- Step 5: Using the fact that the term in the conclusion of
 -- step 4 is β-equivalent to the term in the conclusion below.
-final-prop : bProp {★} Γ
-final-prop = ∀[ forget ∣ "a" ∈ EncBool ] ∀[ forget ∣ "b" ∈ EncBool ]
+step5-prop : bProp {★} Γ
+step5-prop = ∀[ forget ∣ "a" ∈ EncBool ] ∀[ forget ∣ "b" ∈ EncBool ]
   Pred EncBool (mod⟨ forget ⟩ svar "a")
   ⊃ Pred EncBool (mod⟨ forget ⟩ svar "b")
-  ⊃ Pred EncBool (∨'-forget ⊛ (mod⟨ forget ⟩ svar "a") ⊛ (mod⟨ forget ⟩ svar "b"))
+  ⊃ Pred EncBool (∨'-★ ∙ (mod⟨ forget ⟩ svar "a") ∙ (mod⟨ forget ⟩ svar "b"))
 
-final-proof : Proof {★} Γ
-final-proof =
+step5-proof : Proof {★} Γ
+step5-proof =
   ∀-intro[ forget ∣ "a" ∈ EncBool ] ∀-intro[ forget ∣ "b" ∈ EncBool ]
   ⊃-intro "preda" (⊃-intro "predb" (
   subst {x = "x"}
         (Pred EncBool (svar "x"))
         (let' mod⟨ forget ⟩ "f" ← lock𝟙-tm (f [ πʳ ]tmʳ) in' (mod⟨ forget ⟩ (svar "f" ∙ svar "b")))
-        (∨'-forget ⊛ (mod⟨ forget ⟩ svar "a") ⊛ (mod⟨ forget ⟩ svar "b"))
+        (∨'-★ ∙ (mod⟨ forget ⟩ svar "a") ∙ (mod⟨ forget ⟩ svar "b"))
         by-normalization
         (⊃-elim 𝟙 (Pred EncBool (mod⟨ forget ⟩ svar "b")) (⊃-elim 𝟙 (Pred EncBool (mod⟨ forget ⟩ svar "a")) (
           ∀-elim forget
@@ -119,37 +127,48 @@ final-proof =
           (assumption' "preda" {μ = 𝟙} id-cell))
           (assumption' "predb" {μ = 𝟙} id-cell))))
 
+step5-test : IsOk (check-proof ◇ step5-proof step5-prop)
+step5-test = tt
+
+
+-- Final step: Using modal induction to show a variant of step5-prop
+-- for ∨'-★.
+final-prop : bProp {★} Γ
+final-prop = ∀[ 𝟙 ∣ "a" ∈ ⟨ forget ∣ EncBool ⟩ ] ∀[ 𝟙 ∣ "b" ∈ ⟨ forget ∣ EncBool ⟩ ]
+  Pred EncBool (svar "a")
+  ⊃ Pred EncBool (svar "b")
+  ⊃ Pred EncBool (∨'-★ ∙ svar "a" ∙ svar "b")
+
+final-proof : Proof {★} Γ
+final-proof =
+  ∀-intro[ 𝟙 ∣ "a" ∈ ⟨ forget ∣ EncBool ⟩ ] ∀-intro[ 𝟙 ∣ "b" ∈ ⟨ forget ∣ EncBool ⟩ ]
+  mod-induction forget 𝟙 "y" (
+  ∀-elim 𝟙 (∀[ 𝟙 ∣ "â" ∈ ⟨ forget ∣ EncBool ⟩ ]
+               Pred EncBool (svar "â") ⊃ Pred EncBool (mod⟨ forget ⟩ svar "y") ⊃ Pred EncBool (∨'-★ ∙ svar "â" ∙ (mod⟨ forget ⟩ svar "y")))
+         (∀-intro[ 𝟙 ∣ "â" ∈ ⟨ forget ∣ EncBool ⟩ ]
+           mod-induction forget 𝟙 "x"
+           (∀-elim forget (∀[ forget ∣ "b" ∈ EncBool ]
+                              Pred EncBool (mod⟨ forget ⟩ svar "x")
+                              ⊃ Pred EncBool (mod⟨ forget ⟩ svar "b")
+                              ⊃ Pred EncBool (∨'-★ ∙ (mod⟨ forget ⟩ svar "x") ∙ (mod⟨ forget ⟩ svar "b")))
+             (∀-elim forget step5-prop step5-proof (svar "x"))
+             (svar "y")))
+         (svar "a"))
+
 final-test : IsOk (check-proof ◇ final-proof final-prop)
 final-test = tt
 
+open import Applications.UnaryParametricity.Model
+open import Relation.Binary.PropositionalEquality as Ag
 
+final-test-extract : _
+final-test-extract = extract-proof-◇ final-proof final-prop {tt} {tt}
+
+extract-correct-type : extract-bprop {◇} final-prop tt ≡ ((m n : ℕ) → IsBit m → IsBit n → IsBit (∨'-agda m n))
+extract-correct-type = Ag.refl
 
 {-
--- TODO: We could imagine wanting to prove the result below. In order
--- to do this, we need a better version of the proof rule
--- mod-induction (more similar to the MTT modal eliminator, where a
--- term of a boxed type gets substituted in the conclusion). This
--- could be implemented from the existing rule mod-induction, together
--- with a new principle allowing to substitute terms in proofs that
--- have a program variable in their context. The result below will
--- probably also allow for extraction by making ⟨ forget ∣ EncBool ⟩
--- extractable as ℕ.
 
-∨'-nat : Tm {★} Γ (⟨ forget ∣ EncBool ⟩ ⇛ ⟨ forget ∣ EncBool ⟩ ⇛ ⟨ forget ∣ EncBool ⟩)
-∨'-nat = mk-global-def "∨" (
-  lam[ "a" ∈ ⟨ forget ∣ EncBool ⟩ ] lam[ "b" ∈ ⟨ forget ∣ EncBool ⟩ ] (∨'-forget ⊛ svar "a" ⊛ svar "b"))
 
-some-other-prop : bProp {★} Γ
-some-other-prop = ∀[ 𝟙 ∣ "a" ∈ ⟨ forget ∣ EncBool ⟩ ] ∀[ 𝟙 ∣ "b" ∈ ⟨ forget ∣ EncBool ⟩ ]
-  Pred EncBool (svar "a")
-  ⊃ Pred EncBool (svar "b")
-  ⊃ Pred EncBool (∨'-nat ∙ svar "a" ∙ svar "b")
 
-some-other-proof : Proof {★} Γ
-some-other-proof =
-  ∀-intro[ 𝟙 ∣ "a" ∈ ⟨ forget ∣ EncBool ⟩ ] ∀-intro[ 𝟙 ∣ "b" ∈ ⟨ forget ∣ EncBool ⟩ ]
-  {!!}
-
-some-other-test : IsOk (check-proof ◇ some-other-proof some-other-prop)
-some-other-test = {!show-goals ◇ some-other-proof some-other-prop!}
 -}

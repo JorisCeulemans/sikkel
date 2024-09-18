@@ -1,6 +1,8 @@
 module Experimental.LogicalFramework.Instances.UnaryParametricity.MSTT where
 
+open import Data.Nat
 open import Data.Unit
+open import Function.Construct.Identity
 
 open import Experimental.LogicalFramework.MSTT.Parameter.ModeTheory
 open import Experimental.LogicalFramework.MSTT.Parameter
@@ -30,3 +32,9 @@ pattern enc-true = ext true-code tt tt refl
 pattern enc-false = ext false-code tt tt refl
 pattern ∧' = ext and-code tt tt refl
 pattern ¬' = ext not-code tt tt refl
+
+
+instance
+  forgetEncBoolExtractable : ExtractableTy ⟨ forget ∣ EncBool ⟩
+  ExtractableTy.AgdaTy forgetEncBoolExtractable = ℕ
+  ExtractableTy.extract-ty-iso-◇ forgetEncBoolExtractable = ↔-id _
